@@ -14,6 +14,7 @@ enum HammerspoonLogType: Int, CaseIterable, Identifiable {
     case Info
     case Warning
     case Error
+    case Console
 
     var id: Self { self }
     var asString: String {
@@ -26,24 +27,15 @@ enum HammerspoonLogType: Int, CaseIterable, Identifiable {
             return "Warning"
         case .Error:
             return "Error"
-        }
-    }
-    var osLogType: OSLogType {
-        switch (self) {
-        case .Trace:
-                .debug
-        case .Error:
-                .error
-        case .Warning:
-                .error
-        case .Info:
-                .info
+        case .Console:
+            return "JS"
         }
     }
 }
 
 struct HammerspoonLogEntry: Identifiable, Equatable, Hashable {
     let id = UUID()
+    let date = Date()
     let logType: HammerspoonLogType
     let msg: String
 
@@ -71,12 +63,13 @@ final class HammerspoonLog: Sendable {
 
     func log(_ level: HammerspoonLogType, _ msg: String) {
         entries.append(HammerspoonLogEntry(logType: level, msg: msg))
+        // FIXME: Make the 100 here, configurable
         if entries.count > 100 {
             entries.removeFirst()
         }
     }
 
-    func clear() {
+    func clearLog() {
         entries.removeAll()
     }
 }
@@ -105,4 +98,9 @@ func AKError(_ msg: String) {
 func AKTrace(_ msg: String) {
     Logger.Hammerspoon.debug("\(msg)")
     AKLog(.Trace, msg)
+}
+
+func AKConsole(_ msg: String) {
+    Logger.Hammerspoon.info("JS Console: \(msg)")
+    AKLog(.Console, msg)
 }

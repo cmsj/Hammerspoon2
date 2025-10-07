@@ -34,7 +34,7 @@ class JSEngine {
     func injectLogging() {
         // Provide console.log
         let consoleLog: @convention(block) (Any?) -> Void = { message in
-            AKInfo("JS console: \(message ?? "nil")")
+            AKConsole(message as? String ?? "nil")
         }
 
         let console = JSValue(newObjectIn: context)!

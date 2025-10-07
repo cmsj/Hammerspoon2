@@ -11,7 +11,7 @@ import SwiftUI
 
 func runJSCTest() {
     let engine = JSEngine.shared
-    try? engine.createContext()
+//    try? engine.createContext()
 
     // Inject TimerManager
 //    let timerManager = HammerTimerManager()
