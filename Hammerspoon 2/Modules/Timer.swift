@@ -118,7 +118,7 @@ import JavaScriptCore
 
 @objc class HSTimer: NSObject, HSModule, HSTimerAPI {
     @objc var name = "Timer"
-    var timers: [Timer] = []
+    var timers: [Timer:JSValue] = [:]
 
     required override init() {
 
@@ -130,17 +130,20 @@ import JavaScriptCore
                                          selector: #selector(timerDidFire(_:)),
                                          userInfo: nil,
                                          repeats: true)
+        timers[timer] = block
         RunLoop.current.add(timer, forMode: .common)
         return timer
     }
 
     @objc private func timerDidFire(_ someTimer: Timer) {
         print("*** scheduledTimer block fired")
-//        block(someTimer)
+        if let block = timers[someTimer] {
+            block.call(withArguments: [])
+        }
     }
 
     @objc func clear() {
-        timers.forEach { $0.invalidate() }
-        timers = []
+        timers.forEach { $0.0.invalidate() }
+        timers = [:]
     }
 }

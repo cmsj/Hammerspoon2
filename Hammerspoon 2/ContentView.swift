@@ -20,6 +20,7 @@ func runJSCTest() {
     // JS Script
     let script = """
     console.log("I AM JAVASCRIPT, WATCH ME RUN");
+    console.log("Running on: " + hs.appInfo.appName + " : " + hs.appInfo.version);
     console.log("Root: " + hs);
     console.log("Timer Module (subscript): " + hs["timer"]);
     console.log("Timer Module (property): " + hs.timer);

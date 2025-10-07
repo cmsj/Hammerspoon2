@@ -9,12 +9,13 @@ import Foundation
 import JavaScriptCore
 
 @objc protocol ModuleRootAPI: JSExport {
+    @objc var appInfo: HSAppInfo { get }
     @objc var timer: HSTimer { get }
+    @objc var hashing: HSHashing { get }
 }
 
 @objc class ModuleRoot: NSObject, ModuleRootAPI {
     @objc var modules: [String: any HSModule] = [:]
-    @objc var timer: HSTimer { get { getOrCreate(name: "timer", type: HSTimer.self) } }
 
     private func getOrCreate<T>(name: String, type: T.Type) -> T where T:HSModule {
         if let result = modules[name] as? T {
@@ -25,4 +26,9 @@ import JavaScriptCore
             return module
         }
     }
+
+    // ModuleRootAPI conformance
+    @objc var appInfo: HSAppInfo { get { getOrCreate(name: "appInfo", type: HSAppInfo.self)}}
+    @objc var timer: HSTimer { get { getOrCreate(name: "timer", type: HSTimer.self)}}
+    @objc var hashing: HSHashing { get { getOrCreate(name: "hashing", type: HSHashing.self)}}
 }
