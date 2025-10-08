@@ -24,6 +24,30 @@ struct Hammerspoon_2App: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
+        MenuBarExtra("Hammerspoon 2", systemImage: "hammer") { // FIXME: Use the real logo here
+            let managerManager = ManagerManager.shared
+
+            Button("Reload Config") {
+                try? managerManager.boot()
+            }
+
+            Divider()
+
+            Button("Preferences") {
+                // FIXME: TODO
+            }
+            Button("Open Console") {
+                if let url = URL(string:"hammerspoon2://openConsole") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+
+            Divider()
+
+            Button("Quit") {
+                managerManager.shutdown()
+            }
+        }
         Window("Content", id: "content") {
             ContentView()
         }

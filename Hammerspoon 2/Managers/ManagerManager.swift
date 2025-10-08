@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AppKit
 
 class ManagerManager {
     static let shared = ManagerManager()
@@ -21,5 +22,9 @@ class ManagerManager {
             return
         }
         try engine.evalFromURL(settings.configLocation)
+    }
+
+    func shutdown() {
+        NSApp.terminate(self)
     }
 }

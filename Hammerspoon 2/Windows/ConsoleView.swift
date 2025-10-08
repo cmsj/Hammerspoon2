@@ -84,7 +84,6 @@ struct ConsoleView: View {
                 switch command {
                 case "openConsole":
                     // This is handled by SwiftUI for us
-                    AKTrace("Ignoring openConsole")
                     break
                 case "closeConsole":
                     AKTrace("Handling closeConsole")
