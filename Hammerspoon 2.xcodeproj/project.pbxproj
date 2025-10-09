@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4F488B2F2E97E79800A2B5F4 /* Sparkle */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		4F5641912E8333840099EB4C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -39,6 +43,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -90,6 +95,7 @@
 			);
 			name = "Hammerspoon 2";
 			packageProductDependencies = (
+				4F488B2F2E97E79800A2B5F4 /* Sparkle */,
 			);
 			productName = "Hammerspoon 2";
 			productReference = 4F5641832E8333830099EB4C /* Hammerspoon 2.app */;
@@ -146,6 +152,9 @@
 			);
 			mainGroup = 4F56417A2E8333830099EB4C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4F488B2E2E97E79800A2B5F4 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4F5641842E8333830099EB4C /* Products */;
 			projectDirPath = "";
@@ -483,6 +492,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4F488B2E2E97E79800A2B5F4 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4F488B2F2E97E79800A2B5F4 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4F488B2E2E97E79800A2B5F4 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4F56417B2E8333830099EB4C /* Project object */;
 }

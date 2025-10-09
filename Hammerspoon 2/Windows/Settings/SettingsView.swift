@@ -17,6 +17,10 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Configuration", systemImage: "gearshape")
                 }
+            SettingsAdvancedView()
+                .tabItem {
+                    Label("Advanced", systemImage: "hammer")
+                }
         }
         .frame(width: 750, height: 400)
         .onKeyPress { action in

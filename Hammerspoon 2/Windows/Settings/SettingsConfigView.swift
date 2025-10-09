@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Sparkle
 
 enum ConfigFilePickerValues: String, CaseIterable, Identifiable {
     case url, select
@@ -18,6 +19,12 @@ struct SettingsConfigView: View {
     @State private var icon = NSImage(size: .init(width: 12, height: 12))
 
     @ScaledMetric(relativeTo: .body) var iconSize: CGFloat = 12
+
+    private let updaterController: SPUStandardUpdaterController
+
+    init() {
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    }
 
     var body: some View {
         HStack {

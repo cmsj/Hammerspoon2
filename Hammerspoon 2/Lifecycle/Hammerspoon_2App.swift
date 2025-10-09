@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Sparkle
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -22,6 +23,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct Hammerspoon_2App: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @Environment(\.openSettings) private var openSettings
+    private let updaterController: SPUStandardUpdaterController
+
+    init() {
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    }
 
     var body: some Scene {
         MenuBarExtra("Hammerspoon 2", systemImage: "hammer") { // FIXME: Use the real logo here
@@ -33,14 +40,19 @@ struct Hammerspoon_2App: App {
 
             Divider()
 
-            Button("Preferences") {
-                // FIXME: TODO
+            Button("Settings") {
+                openSettings()
             }
+
             Button("Open Console") {
                 if let url = URL(string:"hammerspoon2://openConsole") {
                     NSWorkspace.shared.open(url)
                 }
             }
+
+            Divider()
+
+            CheckForUpdatesView(updater: updaterController.updater)
 
             Divider()
 

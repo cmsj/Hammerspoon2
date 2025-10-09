@@ -15,5 +15,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>SUFeedURL</key>
+	<string>https://www.hammerspoon.org/appcast2.xml</string>
 </dict>
 </plist>
