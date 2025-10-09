@@ -23,7 +23,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct Hammerspoon_2App: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     @Environment(\.openSettings) private var openSettings
+    @Environment(\.openWindow) private var openWindow
+
     private let updaterController: SPUStandardUpdaterController
 
     init() {
@@ -69,6 +72,27 @@ struct Hammerspoon_2App: App {
         }
         .restorationBehavior(.disabled)
         .handlesExternalEvents(matching: ["openConsole", "closeConsole"])
+        .commands {
+            // About
+            CommandGroup(replacing: CommandGroupPlacement.appInfo) {
+                Button(action: {
+                    openWindow(id: "about")
+                }) {
+                    Text("About Hammerspoon 2")
+                }
+            }
+        }
+
+        Window("About Hammerspoon 2", id: "about") {
+            AboutView()
+                .containerBackground(.thickMaterial, for: .window)
+                .windowResizeBehavior(.disabled)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .windowBackgroundDragBehavior(.enabled)
+        .defaultLaunchBehavior(.suppressed)
+        .restorationBehavior(.disabled)
 
         Settings() {
             SettingsView()
