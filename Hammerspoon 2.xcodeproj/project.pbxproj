@@ -363,6 +363,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_DOCC_FLAGS = "--source-service github --source-service-base-url https://github.com/hammerspoon/Hammerspoon2/blob/main --checkout-path \"$PROJECT_DIR\"";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -407,6 +408,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_DOCC_FLAGS = "--source-service github --source-service-base-url https://github.com/hammerspoon/Hammerspoon2/blob/main --checkout-path \"$PROJECT_DIR\"";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
