@@ -8,22 +8,6 @@
 import Foundation
 import SwiftUI
 
-///     @Observable
-///     final class StorageModel {
-///         @ObservationIgnored
-///         var name: String {
-///             get {
-///                 access(keyPath: \.name)
-///                 return UserDefaults.name
-///             }
-///             set {
-///                 withMutation(keyPath: \.name) {
-///                     UserDefaults.name = newValue
-///                 }
-///             }
-///         }
-///     }
-
 @Observable
 final class SettingsManager {
     static let shared = SettingsManager()

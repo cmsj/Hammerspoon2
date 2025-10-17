@@ -15,6 +15,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>Hammerspoon 2 requires accessibility permissions to control your Mac</string>
 	<key>SUFeedURL</key>
 	<string>https://www.hammerspoon.org/appcast2.xml</string>
 </dict>
