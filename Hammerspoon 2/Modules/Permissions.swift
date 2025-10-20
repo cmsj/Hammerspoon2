@@ -14,10 +14,12 @@ import JavaScriptCore
 }
 
 @_documentation(visibility: private)
-@objc class HSPermissions: HSModule, HSPermissionsAPI {
-    required init() {
-        super.init()
-        self.name = "hs.permissions"
+@objc class HSPermissions: NSObject, HSModuleAPI, HSPermissionsAPI {
+    var name = "hs.permissions"
+
+    override required init() {}
+    deinit {
+        print("Deinit of \(name)")
     }
 
     @objc func checkAccessibility() -> Bool {

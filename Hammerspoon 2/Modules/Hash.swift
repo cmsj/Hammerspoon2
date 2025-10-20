@@ -14,10 +14,12 @@ import JavaScriptCore
 }
 
 @_documentation(visibility: private)
-@objc class HSHashing: HSModule, HSHashingAPI {
-    required init() {
-        super.init()
-        self.name = "hs.hash"
+@objc class HSHashing: NSObject, HSModuleAPI, HSHashingAPI {
+    var name = "hs.hash"
+
+    override required init() {}
+    deinit {
+        print("Deinit of \(name)")
     }
 
     @objc func base64Encode(raw: String) -> String {

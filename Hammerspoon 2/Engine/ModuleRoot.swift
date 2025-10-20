@@ -25,9 +25,9 @@ import JavaScriptCore
 
 @_documentation(visibility: private)
 @objc class ModuleRoot: NSObject, ModuleRootAPI {
-    @objc var modules: [String: HSModule] = [:]
+    @objc var modules: [String: HSModuleAPI] = [:]
 
-    private func getOrCreate<T>(name: String, type: T.Type) -> T where T:HSModule {
+    private func getOrCreate<T>(name: String, type: T.Type) -> T where T:HSModuleAPI {
         AKTrace("Loading module: \(name)")
         if let result = modules[name] as? T {
             return result
@@ -38,7 +38,7 @@ import JavaScriptCore
         }
     }
 
-    // ModuleRootAPI conformance
+    // MARK: - ModuleRootAPI conformance
 
     // Core
     @objc func reload() {

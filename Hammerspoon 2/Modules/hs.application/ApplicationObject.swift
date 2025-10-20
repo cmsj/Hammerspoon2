@@ -54,7 +54,10 @@ import AXSwift
     @objc var bundlePath: String? { self.runningApplication.bundleURL?.path(percentEncoded: false) }
 
     @objc var isHidden: Bool {
-        get { self.runningApplication.isHidden }
+        get {
+            let value = try? self.axUIElement.attribute(.hidden) as Bool?
+            return value ?? false
+        }
         set { try? self.axUIElement.setAttribute(.hidden, value: newValue) }
     }
     @objc var isActive: Bool { self.runningApplication.isActive }

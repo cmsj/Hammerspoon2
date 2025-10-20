@@ -37,10 +37,12 @@ import AXSwift
 // MARK: - Implementations
 
 @_documentation(visibility: private)
-@objc class HSApplicationModule: HSModule, HSApplicationsAPI {
-    required init() {
-        super.init()
-        self.name = "hs.application"
+@objc class HSApplicationModule: NSObject, HSModuleAPI, HSApplicationsAPI {
+    var name = "hs.application"
+
+    override required init() {}
+    deinit {
+        print("Deinit of \(name)")
     }
 
     @objc func runningApplications() -> [HSApplication] {

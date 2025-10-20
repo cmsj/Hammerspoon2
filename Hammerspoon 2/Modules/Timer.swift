@@ -117,12 +117,14 @@ import JavaScriptCore
 }
 
 @_documentation(visibility: private)
-@objc class HSTimer: HSModule, HSTimerAPI {
+@objc class HSTimer: NSObject, HSModuleAPI, HSTimerAPI {
     var timers: [Timer:JSValue] = [:]
 
-    required init() {
-        super.init()
-        self.name = "hs.timer"
+    var name = "hs.timer"
+
+    override required init() {}
+    deinit {
+        print("Deinit of \(name)")
     }
 
     @objc func every(_ interval: Double, block: JSValue) -> Timer {

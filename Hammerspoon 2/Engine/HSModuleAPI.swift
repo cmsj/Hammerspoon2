@@ -13,13 +13,3 @@ import JavaScriptCore
     @objc var name: String { get }
     init()
 }
-
-@objc class HSModule: NSObject, HSModuleAPI {
-    @objc var name = "BASE MODULE (you should never see this)"
-
-    required override init() {}
-
-    deinit {
-        print("deinit of \(name)")
-    }
-}

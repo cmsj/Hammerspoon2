@@ -15,12 +15,14 @@ import AppKit
 }
 
 @_documentation(visibility: private)
-@objc class HSConsole: HSModule, HSConsoleAPI {
-    required init() {
-        super.init()
-        self.name = "hs.console"
+@objc class HSConsole: NSObject, HSModuleAPI, HSConsoleAPI {
+    var name = "hs.console"
+
+    override required init() {}
+    deinit {
+        print("Deinit of \(name)")
     }
-    
+
     @objc func open() {
         if let url = URL(string:"hammerspoon2://openConsole") {
             NSWorkspace.shared.open(url)
