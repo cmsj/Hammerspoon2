@@ -53,6 +53,18 @@ class JSEngine {
         }
     }
 
+    // MARK: - Engine JavaScript component
+    func injectEngineJS() {
+        guard let engineJS = Bundle.main.url(forResource: "engine", withExtension: "js") else {
+            fatalError("Unable to load engine.js - application bundle is corrupt")
+        }
+        do {
+            try evalFromURL(engineJS)
+        } catch {
+            AKError("engine.js error: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - JSContext Managing
     func createContext() throws(HammerspoonError) {
         AKTrace("createContext()")
@@ -68,6 +80,7 @@ class JSEngine {
 
         context?.name = "Hammerspoon \(id)"
         injectLogging()
+        injectEngineJS()
         self["hs"] = ModuleRoot()
     }
 
