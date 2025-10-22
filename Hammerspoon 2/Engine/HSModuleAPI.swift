@@ -12,4 +12,5 @@ import JavaScriptCore
 @objc protocol HSModuleAPI: JSExport {
     @objc var name: String { get }
     init()
+    func shutdown()
 }

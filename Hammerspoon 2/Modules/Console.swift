@@ -19,6 +19,7 @@ import AppKit
     var name = "hs.console"
 
     override required init() {}
+    func shutdown() {}
     deinit {
         print("Deinit of \(name)")
     }

@@ -33,15 +33,11 @@ import AXSwift
 @_documentation(visibility: private)
 @objc class HSApplication: NSObject, HSApplicationAPI {
     let runningApplication: NSRunningApplication
-    let axUIElement: Application
+    let axUIElement: Application?
 
-    init?(runningApplication: NSRunningApplication) {
+    init(runningApplication: NSRunningApplication) {
         self.runningApplication = runningApplication
-        if let axUIElement = Application(runningApplication) {
-            self.axUIElement = axUIElement
-        } else {
-            return nil
-        }
+        self.axUIElement = Application(runningApplication)
     }
 
     deinit {
@@ -55,10 +51,10 @@ import AXSwift
 
     @objc var isHidden: Bool {
         get {
-            let value = try? self.axUIElement.attribute(.hidden) as Bool?
+            let value = try? self.axUIElement?.attribute(.hidden) as Bool?
             return value ?? false
         }
-        set { try? self.axUIElement.setAttribute(.hidden, value: newValue) }
+        set { try? self.axUIElement?.setAttribute(.hidden, value: newValue) }
     }
     @objc var isActive: Bool { self.runningApplication.isActive }
 

@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4F0BB59F2EA5114D0083A4D4 /* AXSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4F0BB59E2EA5114D0083A4D4 /* AXSwift */; };
+		4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4F463E9F2EA7A669000A2135 /* AXSwift */; };
 		4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4F488B2F2E97E79800A2B5F4 /* Sparkle */; };
 		4FE3BB342EA301AE00C56330 /* JavaScript API.docc in Sources */ = {isa = PBXBuildFile; fileRef = 4FE3BB332EA301AE00C56330 /* JavaScript API.docc */; };
 /* End PBXBuildFile section */
@@ -47,7 +47,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */,
-				4F0BB59F2EA5114D0083A4D4 /* AXSwift in Frameworks */,
+				4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -101,7 +101,7 @@
 			name = "Hammerspoon 2";
 			packageProductDependencies = (
 				4F488B2F2E97E79800A2B5F4 /* Sparkle */,
-				4F0BB59E2EA5114D0083A4D4 /* AXSwift */,
+				4F463E9F2EA7A669000A2135 /* AXSwift */,
 			);
 			productName = "Hammerspoon 2";
 			productReference = 4F5641832E8333830099EB4C /* Hammerspoon 2.app */;
@@ -160,7 +160,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4F488B2E2E97E79800A2B5F4 /* XCRemoteSwiftPackageReference "Sparkle" */,
-				4F0BB59D2EA5114D0083A4D4 /* XCRemoteSwiftPackageReference "AXSwift" */,
+				4F463E9E2EA7A669000A2135 /* XCRemoteSwiftPackageReference "AXSwift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4F5641842E8333830099EB4C /* Products */;
@@ -384,6 +384,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_MEMORY_SAFETY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 			};
 			name = Debug;
@@ -429,6 +430,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_MEMORY_SAFETY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 			};
 			name = Release;
@@ -506,12 +508,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		4F0BB59D2EA5114D0083A4D4 /* XCRemoteSwiftPackageReference "AXSwift" */ = {
+		4F463E9E2EA7A669000A2135 /* XCRemoteSwiftPackageReference "AXSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/mredig/AXSwift";
+			repositoryURL = "https://github.com/cmsj/AXSwift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.3.2;
+				branch = main;
+				kind = branch;
 			};
 		};
 		4F488B2E2E97E79800A2B5F4 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
@@ -525,9 +527,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4F0BB59E2EA5114D0083A4D4 /* AXSwift */ = {
+		4F463E9F2EA7A669000A2135 /* AXSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 4F0BB59D2EA5114D0083A4D4 /* XCRemoteSwiftPackageReference "AXSwift" */;
+			package = 4F463E9E2EA7A669000A2135 /* XCRemoteSwiftPackageReference "AXSwift" */;
 			productName = AXSwift;
 		};
 		4F488B2F2E97E79800A2B5F4 /* Sparkle */ = {

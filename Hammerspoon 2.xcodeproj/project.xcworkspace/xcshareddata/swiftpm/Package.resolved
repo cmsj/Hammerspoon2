@@ -1,13 +1,13 @@
 {
-  "originHash" : "6de6ef8d2d8f6e2ade95969495c6b1f9a115be570d3e9f751c8ce0640fb18f53",
+  "originHash" : "cfa9a20a1622853da47e50d782585077440d47bf3753179ce122c9b9a2c4da42",
   "pins" : [
     {
       "identity" : "axswift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mredig/AXSwift",
+      "location" : "https://github.com/cmsj/AXSwift",
       "state" : {
-        "revision" : "81dcc36aced905d6464cc25e35f8d13184bbf21c",
-        "version" : "0.3.2"
+        "branch" : "main",
+        "revision" : "124ef9b0ffc45b6e09320e52aaccfb5db98a39cf"
       }
     },
     {

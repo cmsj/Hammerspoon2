@@ -28,13 +28,22 @@ import JavaScriptCore
     @objc var modules: [String: HSModuleAPI] = [:]
 
     private func getOrCreate<T>(name: String, type: T.Type) -> T where T:HSModuleAPI {
-        AKTrace("Loading module: \(name)")
         if let result = modules[name] as? T {
             return result
         } else {
+            AKTrace("Loading module: \(name)")
             let module = type.init()
             modules[name] = module
             return module
+        }
+    }
+
+    func shutdown() {
+        for moduleName in modules.keys {
+            AKTrace("Destroying module \(moduleName)")
+            let module = modules[moduleName]
+            module?.shutdown()
+            modules.removeValue(forKey: moduleName)
         }
     }
 

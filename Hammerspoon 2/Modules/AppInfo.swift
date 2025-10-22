@@ -22,6 +22,7 @@ import JavaScriptCore
 @objc class HSAppInfo: NSObject, HSModuleAPI, HSAppInfoAPI {
     var name = "hs.appinfo"
 
+    func shutdown() {}
     deinit {
         print("Deinit of \(name)")
     }

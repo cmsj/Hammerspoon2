@@ -18,6 +18,7 @@ import JavaScriptCore
     var name = "hs.permissions"
 
     override required init() {}
+    func shutdown() {}
     deinit {
         print("Deinit of \(name)")
     }

@@ -123,6 +123,7 @@ import JavaScriptCore
     var name = "hs.timer"
 
     override required init() {}
+    func shutdown() {}
     deinit {
         print("Deinit of \(name)")
     }

@@ -38,14 +38,35 @@ class JSEngine {
 
     // MARK: - Log handling
     func injectLogging() {
-        // Provide console.log
+        // Provide:
+        //  * console.log
+        //  * console.debug
+        //  * console.info
+        //  * console.warning
+        //  * console.error
         let consoleLog: @convention(block) (Any?) -> Void = { message in
             AKConsole(message as? String ?? "nil")
         }
+        let traceLog: @convention(block) (Any?) -> Void = { message in
+            AKTrace(message as? String ?? "nil")
+        }
+        let infoLog: @convention(block) (Any?) -> Void = { message in
+            AKInfo(message as? String ?? "nil")
+        }
+        let warningLog: @convention(block) (Any?) -> Void = { message in
+            AKWarning(message as? String ?? "nil")
+        }
+        let errorLog: @convention(block) (Any?) -> Void = { message in
+            AKError(message as? String ?? "nil")
+        }
 
         let console = JSValue(newObjectIn: context)!
-        console.setObject(consoleLog, forKeyedSubscript: "log" as (NSCopying & NSObjectProtocol))
-        context?.setObject(console, forKeyedSubscript: "console" as (NSCopying & NSObjectProtocol))
+        console.setObject(consoleLog, forKeyedSubscript: NSString("log"))
+        console.setObject(traceLog, forKeyedSubscript: NSString("debug"))
+        console.setObject(infoLog, forKeyedSubscript: NSString("info"))
+        console.setObject(warningLog, forKeyedSubscript: NSString("warning"))
+        console.setObject(errorLog, forKeyedSubscript: NSString("error"))
+        context?.setObject(console, forKeyedSubscript: NSString("console"))
 
         // Exception handler
         context?.exceptionHandler = { _, exception in
@@ -86,8 +107,12 @@ class JSEngine {
 
     func deleteContext() {
         AKTrace("deleteContext()")
-        // FIXME: This will need to go through and cleanup any resources currently held by our modules
-        // FIXME: This method also needs to be aware if a partial-context exists, e.g. vm is !nil, but context is nil
+
+        if let hs = self["hs"] as? JSValue, let moduleRoot = hs.toObjectOf(ModuleRoot.self) as? ModuleRoot {
+            moduleRoot.shutdown()
+            self["hs"] = nil
+        }
+
         context = nil
         vm = nil
     }
