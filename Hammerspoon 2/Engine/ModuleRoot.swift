@@ -34,6 +34,11 @@ import JavaScriptCore
             AKTrace("Loading module: \(name)")
             let module = type.init()
             modules[name] = module
+
+            if let moduleJS = Bundle.main.url(forResource: "hs.\(name)", withExtension: "js") {
+                try? _ = JSEngine.shared.evalFromURL(moduleJS)
+            }
+
             return module
         }
     }

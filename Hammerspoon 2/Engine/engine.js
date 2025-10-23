@@ -7,22 +7,8 @@
 
 // IMPORTANT NOTE: No code in this file can depend on any of the hs.foo modules, they have not been loaded when this code executes
 
+"use strict";
 console.log("engine.js loading...")
-// FIXME: This is not really useful, it came from https://levelup.gitconnected.com/extend-enum-cases-in-swift-workarounds-and-practical-use-cases-7fcc192f6567
-// FIXME: This was here because it might have helped with doing things like injecting all of the AXNotification values as an enum, but we should do that a different way - maybe just a frozen object directly injected from Swift?
-class Enum {
-    constructor(...properties) {
-        let value = 0;
-        properties.forEach( function (prop) {
-            const newValue = value;
-            Object.defineProperty(this, prop, {
-                get: function() { return newValue; }
-            });
-            value++;
-        }, this);
-        Object.freeze(this);
-    }
-}
 
 // MARK: - EventEmitter
 var EventEmitter = function () {
@@ -62,9 +48,3 @@ EventEmitter.prototype.emit = function (event) {
     }
 };
 
-EventEmitter.prototype.once = function (event, listener) {
-    this.on(event, function g () {
-        this.removeListener(event, g);
-        listener.apply(this, arguments);
-    });
-};
