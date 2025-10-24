@@ -9,13 +9,13 @@
 
 // 1:many event emitter for hs.application events that Swift can only map 1:1.
 class ApplicationModuleWatcherEmitter {
-    events = {}
+    #events = {}
 
     constructor() {}
 
-    handleEvent(event, appObject) {
-        if (Array.isArray(this.events[event] )) {
-            var listeners = this.events[event].slice();
+    #handleEvent(event, appObject) {
+        if (Array.isArray(this.#events[event] )) {
+            var listeners = this.#events[event].slice();
             const length = listeners.length;
 
             for (var i = 0; i < length; i++) {
@@ -25,30 +25,30 @@ class ApplicationModuleWatcherEmitter {
     }
 
     on(event, listener) {
-        if (!Array.isArray(this.events[event])) {
-            this.events[event] = [];
-            hs.application._addWatcher(event, (event, appObject) => { this.handleEvent(event, appObject) });
+        if (!Array.isArray(this.#events[event])) {
+            this.#events[event] = [];
+            hs.application._addWatcher(event, (event, appObject) => { this.#handleEvent(event, appObject) });
         }
 
-        if (this.events[event].includes(listener)) {
+        if (this.#events[event].includes(listener)) {
             console.error("hs.application.addWatcher(): The provided handler for '" + event + "' is already registered.")
             return;
         }
 
-        this.events[event].push(listener);
+        this.#events[event].push(listener);
     }
 
     removeListener(event, listener) {
         var idx;
 
-        if (Array.isArray(this.events[event])) {
-            idx = this.events[event].indexOf(listener);
+        if (Array.isArray(this.#events[event])) {
+            idx = this.#events[event].indexOf(listener);
 
             if (idx > -1) {
-                this.events[event].splice(idx, 1);
+                this.#events[event].splice(idx, 1);
             }
 
-            if (this.events[event].length == 0) {
+            if (this.#events[event].length == 0) {
                 hs.application._removeWatcher(event);
             }
         }
