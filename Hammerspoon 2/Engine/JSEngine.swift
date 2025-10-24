@@ -70,7 +70,7 @@ class JSEngine {
 
         // Exception handler
         context?.exceptionHandler = { _, exception in
-            AKError("JavaScript Error: \(exception?.toString() ?? "unknown")")
+            AKError("JavaScript Exception: \(exception?.toString() ?? "unknown")")
         }
     }
 
