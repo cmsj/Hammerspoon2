@@ -51,22 +51,6 @@ class HSApplicationWatcherObject {
 
     @objc func handleEvent(notification: NSNotification) {
         let eventApp = (notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.asHSApplication()
-//        var userInfo: [String:Any] = [:]
-//        if let eventApp: NSRunningApplication = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
-//            userInfo["name"] = eventApp.localizedName ?? notification.userInfo?["NSApplicationName"] as? String ?? "UNKNOWN"
-//            userInfo["processID"] = Int(eventApp.processIdentifier)
-//            userInfo["bundleID"] = eventApp.bundleIdentifier
-//            userInfo["bundleURL"] = eventApp.bundleURL?.absoluteString
-//            userInfo["bundlePath"] = eventApp.bundleURL?.path(percentEncoded: false)
-//            userInfo["executablePath"] = eventApp.executableURL?.path(percentEncoded: false)
-//            userInfo["executable"]
-//            userInfo["uptime"] = eventApp.launchDate?.timeIntervalSince1970
-//            userInfo["isActive"] = eventApp.isActive
-//            userInfo["isHidden"] = eventApp.isHidden
-//            userInfo["isTerminated"] = eventApp.isTerminated
-//        }
-//        print(notification.userInfo as Any)
-//        print(userInfo)
         callback.call(withArguments: [eventName, eventApp as Any])
     }
 }
@@ -137,17 +121,20 @@ class HSApplicationWatcherObject {
     }
 
     @objc(_addWatcher::) func _addWatcher(eventName: String, callback: JSValue) {
-        guard let event = eventNameToEvent(eventName: eventName) else { return }
+        guard let event = eventNameToEvent(eventName: eventName) else {
+            AKError("hs.application.addWatcher(): Unknown event name: \(eventName)")
+            return
+        }
 
         if watchers.keys.contains(event) {
             // No action required, we are already watching for this event
-            AKWarning("hs.application: There is already a watcher for \(eventName). Refusing to create a second.")
+            AKWarning("hs.application.addWatcher(): There is already a watcher for \(eventName). Refusing to create a second.")
             return
         }
 
         let watcherObject = HSApplicationWatcherObject(eventName: eventName, callback: callback)
 
-        AKTrace("hs.application: Adding watcher for \(event)")
+        AKTrace("hs.application.addWatcher(): Adding watcher for \(event)")
         let selector = #selector(HSApplicationWatcherObject.handleEvent(notification:))
         NSWorkspace.shared.notificationCenter.addObserver(watcherObject,
                                                           selector: selector,
@@ -157,10 +144,13 @@ class HSApplicationWatcherObject {
     }
 
     @objc(_removeWatcher:) func _removeWatcher(eventName: String) {
-        guard let event = eventNameToEvent(eventName: eventName) else { return }
+        guard let event = eventNameToEvent(eventName: eventName) else {
+            AKError("hs.application.removeWatcher(): Unknown event name: \(eventName)")
+            return
+        }
 
         if let watcherObject = watchers[event] {
-            AKTrace("hs.application: Removing watcher for \(event)")
+            AKTrace("hs.application.removeWatcher: Removing watcher for \(event)")
             NSWorkspace.shared.notificationCenter.removeObserver(watcherObject as Any, name: event, object: nil)
             watchers.removeValue(forKey: event)
         }

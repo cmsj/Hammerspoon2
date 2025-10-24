@@ -25,6 +25,10 @@ class ApplicationModuleWatcherEmitter {
     }
 
     on(event, listener) {
+        if (typeof listener !== 'function') {
+            throw new Error("hs.application.addWatcher(): The provided handler must be a function")
+        }
+
         if (!Array.isArray(this.#events[event])) {
             this.#events[event] = [];
             hs.application._addWatcher(event, (event, appObject) => { this.#handleEvent(event, appObject) });
