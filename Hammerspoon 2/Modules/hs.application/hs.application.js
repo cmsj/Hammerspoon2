@@ -7,15 +7,14 @@
 
 "use strict";
 
-// JS class to handle multiple watchers for hs.application events.
-// Calls out to underlying Swift API that can only handle 1:1 event-to-listener mapping
+// 1:many event emitter for hs.application events that Swift can only map 1:1.
 class ApplicationModuleWatcherEmitter {
     events = {}
 
     constructor() {}
 
     handleEvent(event, appObject) {
-        if (typeof this.events[event] === 'object') {
+        if (Array.isArray(this.events[event] )) {
             var listeners = this.events[event].slice();
             const length = listeners.length;
 
@@ -26,7 +25,7 @@ class ApplicationModuleWatcherEmitter {
     }
 
     on(event, listener) {
-        if (typeof this.events[event] !== 'object') {
+        if (!Array.isArray(this.events[event])) {
             this.events[event] = [];
             hs.application._addWatcher(event, (event, appObject) => { this.handleEvent(event, appObject) });
         }
@@ -42,7 +41,7 @@ class ApplicationModuleWatcherEmitter {
     removeListener(event, listener) {
         var idx;
 
-        if (typeof this.events[event] === 'object') {
+        if (Array.isArray(this.events[event])) {
             idx = this.events[event].indexOf(listener);
 
             if (idx > -1) {
