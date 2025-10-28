@@ -33,6 +33,9 @@ import UniformTypeIdentifiers
     /// Fetch the currently focused application
     /// - Returns: The matching application, or nil if none matched
     @objc func frontmost() -> HSApplication?
+    /// Fetch the application which currently owns the menu bar
+    /// - Returns: The matching application, or nil if none matched
+    @objc func menuBarOwner() -> HSApplication?
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     @objc(_addWatcher::) func _addWatcher(eventName: String, callback: JSValue)
@@ -100,6 +103,10 @@ class HSApplicationWatcherObject {
 
     @objc func frontmost() -> HSApplication? {
         return NSWorkspace.shared.frontmostApplication?.asHSApplication()
+    }
+
+    @objc func menuBarOwner() -> HSApplication? {
+        return NSWorkspace.shared.menuBarOwningApplication?.asHSApplication()
     }
 
     func eventNameToEvent(eventName: String) -> NSNotification.Name? {
