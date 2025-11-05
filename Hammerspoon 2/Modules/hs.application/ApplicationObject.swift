@@ -45,6 +45,9 @@ import AXSwift
     /// All windows of this application
     @objc var allWindows: [HSWindow] { get }
 
+    /// All visible (ie non-hidden) windows of this application
+    @objc var visibleWindows: [HSWindow] { get }
+
     /// The application's HSAXElement object, for use with the hs.ax APIs
     @objc func axElement() -> HSAXElement?
 }
@@ -104,6 +107,10 @@ import AXSwift
             return []
         }
         return allWindows.compactMap { HSWindow(element: $0, app: self.runningApplication) }
+    }
+
+    @objc var visibleWindows: [HSWindow] {
+        return allWindows.filter { $0.isVisible }
     }
 
     @objc func axElement() -> HSAXElement? {
