@@ -16,11 +16,12 @@ import JavaScriptCore
     // Modules
     @objc var appInfo: HSAppInfo { get }
     @objc var application: HSApplicationModule { get }
+    @objc var ax: HSAXModule { get }
     @objc var console: HSConsole { get }
     @objc var permissions: HSPermissions { get }
     @objc var timer: HSTimer { get }
     @objc var hashing: HSHashing { get }
-//    @objc var window: HSWindows { get }
+    @objc var window: HSWindowModule { get }
 }
 
 @_documentation(visibility: private)
@@ -66,9 +67,10 @@ import JavaScriptCore
     // Modules
     @objc var appInfo: HSAppInfo { get { getOrCreate(name: "appInfo", type: HSAppInfo.self)}}
     @objc var application: HSApplicationModule { get { getOrCreate(name: "application", type: HSApplicationModule.self)}}
+    @objc var ax: HSAXModule { get { getOrCreate(name: "ax", type: HSAXModule.self)}}
     @objc var console: HSConsole { get { getOrCreate(name: "console", type: HSConsole.self)}}
     @objc var permissions: HSPermissions { get { getOrCreate(name: "permissions", type: HSPermissions.self)}}
     @objc var timer: HSTimer { get { getOrCreate(name: "timer", type: HSTimer.self)}}
     @objc var hashing: HSHashing { get { getOrCreate(name: "hashing", type: HSHashing.self)}}
-//    @objc var window: HSWindows { get { getOrCreate(name: "window", type: HSWindows.self)}}
+    @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
 }

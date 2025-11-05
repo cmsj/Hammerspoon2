@@ -32,46 +32,12 @@ class JSEngine {
     }
 
     @discardableResult func evalFromURL(_ url: URL) throws -> Any? {
+        guard url.isFileURL else {
+            throw HammerspoonError(.jsEvalURLKind, msg: "Refusing to eval remote URL")
+        }
+
         let script = try String(contentsOf: url, encoding: .utf8)
         return eval(script)
-    }
-
-    // MARK: - Log handling
-    func injectLogging() {
-        // Provide:
-        //  * console.log
-        //  * console.debug
-        //  * console.info
-        //  * console.warning
-        //  * console.error
-        let consoleLog: @convention(block) (Any?) -> Void = { message in
-            AKConsole(message as? String ?? "nil")
-        }
-        let traceLog: @convention(block) (Any?) -> Void = { message in
-            AKTrace(message as? String ?? "nil")
-        }
-        let infoLog: @convention(block) (Any?) -> Void = { message in
-            AKInfo(message as? String ?? "nil")
-        }
-        let warningLog: @convention(block) (Any?) -> Void = { message in
-            AKWarning(message as? String ?? "nil")
-        }
-        let errorLog: @convention(block) (Any?) -> Void = { message in
-            AKError(message as? String ?? "nil")
-        }
-
-        let console = JSValue(newObjectIn: context)!
-        console.setObject(consoleLog, forKeyedSubscript: NSString("log"))
-        console.setObject(traceLog, forKeyedSubscript: NSString("debug"))
-        console.setObject(infoLog, forKeyedSubscript: NSString("info"))
-        console.setObject(warningLog, forKeyedSubscript: NSString("warning"))
-        console.setObject(errorLog, forKeyedSubscript: NSString("error"))
-        context?.setObject(console, forKeyedSubscript: NSString("console"))
-
-        // Exception handler
-        context?.exceptionHandler = { _, exception in
-            AKError("JavaScript Exception: \(exception?.toString() ?? "unknown")")
-        }
     }
 
     // MARK: - Engine JavaScript component
@@ -100,8 +66,11 @@ class JSEngine {
         }
 
         context?.name = "Hammerspoon \(id)"
-        injectLogging()
+
+        context?.injectTypeBridges()
+        context?.injectLogging()
         injectEngineJS()
+
         self["hs"] = ModuleRoot()
     }
 

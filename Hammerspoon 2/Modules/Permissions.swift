@@ -17,14 +17,14 @@ import JavaScriptCore
 @objc class HSPermissions: NSObject, HSModuleAPI, HSPermissionsAPI {
     var name = "hs.permissions"
 
-    override required init() {}
+    override required init() { super.init() }
     func shutdown() {}
     deinit {
         print("Deinit of \(name)")
     }
 
     @objc func checkAccessibility() -> Bool {
-        return PermissionsManager.shared.check(.accessibility) == .trusted
+        return PermissionsManager.shared.check(.accessibility)
     }
 
     @objc func requestAccessibility() {

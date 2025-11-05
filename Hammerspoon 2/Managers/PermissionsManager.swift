@@ -6,7 +6,7 @@
 //
 
 import Foundation
-@preconcurrency import ApplicationServices.HIServices.AXUIElement
+@unsafe @preconcurrency import ApplicationServices.HIServices.AXUIElement
 
 @_documentation(visibility: private)
 enum PermissionsState: Int {
@@ -25,17 +25,24 @@ enum PermissionsType: Int {
 class PermissionsManager {
     static let shared = PermissionsManager()
 
-    func check(_ permType: PermissionsType) -> PermissionsState {
+    func state(_ permType: PermissionsType) -> PermissionsState {
         switch permType {
         case .accessibility:
             return AXIsProcessTrusted() ? .trusted : .notTrusted
         }
     }
 
+    func check(_ permType: PermissionsType) -> Bool {
+        switch permType {
+        case .accessibility:
+            return AXIsProcessTrusted()
+        }
+    }
+
     func request(_ permType: PermissionsType) {
         switch permType {
         case .accessibility:
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+            let options = unsafe [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
             AXIsProcessTrustedWithOptions(options)
         }
     }

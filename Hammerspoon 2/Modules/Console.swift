@@ -18,7 +18,7 @@ import AppKit
 @objc class HSConsole: NSObject, HSModuleAPI, HSConsoleAPI {
     var name = "hs.console"
 
-    override required init() {}
+    override required init() { super.init() }
     func shutdown() {}
     deinit {
         print("Deinit of \(name)")

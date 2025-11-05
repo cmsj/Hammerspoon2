@@ -1,5 +1,5 @@
 {
-  "originHash" : "cfa9a20a1622853da47e50d782585077440d47bf3753179ce122c9b9a2c4da42",
+  "originHash" : "256b98abbe04f8c9e316276743f01f93ec14b99236d5b3f17e39d22149f507e4",
   "pins" : [
     {
       "identity" : "axswift",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/cmsj/AXSwift",
       "state" : {
         "branch" : "main",
-        "revision" : "124ef9b0ffc45b6e09320e52aaccfb5db98a39cf"
+        "revision" : "900b61b2acd7db40d1fc245a71d9176dd2d8e5d3"
       }
     },
     {

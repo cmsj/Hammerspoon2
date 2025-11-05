@@ -17,7 +17,7 @@ import JavaScriptCore
 @objc class HSHashing: NSObject, HSModuleAPI, HSHashingAPI {
     var name = "hs.hash"
 
-    override required init() {}
+    override required init() { super.init() }
     func shutdown() {}
     deinit {
         print("Deinit of \(name)")

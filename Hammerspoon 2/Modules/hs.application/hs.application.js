@@ -7,7 +7,7 @@
 
 "use strict";
 
-// 1:many event emitter for hs.application events that Swift can only map 1:1.
+// one-to-many event emitter for hs.application events that Swift can only map 1:1.
 class ApplicationModuleWatcherEmitter {
     #events = {}
 

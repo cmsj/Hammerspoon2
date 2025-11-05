@@ -11,6 +11,7 @@ import Foundation
 struct HammerspoonError: Error, Equatable, CustomLocalizedStringResourceConvertible {
     enum ErrorKind: String {
         case vmCreation = "Creating JS VM"
+        case jsEvalURLKind = "Invalid JS URL"
         case unknown = "Unknown"
     }
 

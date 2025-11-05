@@ -6,8 +6,48 @@
 //
 
 import Foundation
+import JavaScriptCore
 import Synchronization
 import os
+
+extension JSContext {
+    func injectLogging() {
+        // Provide:
+        //  * console.log
+        //  * console.debug
+        //  * console.info
+        //  * console.warning
+        //  * console.error
+        let consoleLog: @convention(block) (Any?) -> Void = { message in
+            AKConsole(message as? String ?? "nil")
+        }
+        let traceLog: @convention(block) (Any?) -> Void = { message in
+            AKTrace(message as? String ?? "nil")
+        }
+        let infoLog: @convention(block) (Any?) -> Void = { message in
+            AKInfo(message as? String ?? "nil")
+        }
+        let warningLog: @convention(block) (Any?) -> Void = { message in
+            AKWarning(message as? String ?? "nil")
+        }
+        let errorLog: @convention(block) (Any?) -> Void = { message in
+            AKError(message as? String ?? "nil")
+        }
+
+        let console = JSValue(newObjectIn: self)!
+        console.setObject(consoleLog, forKeyedSubscript: NSString("log"))
+        console.setObject(traceLog, forKeyedSubscript: NSString("debug"))
+        console.setObject(infoLog, forKeyedSubscript: NSString("info"))
+        console.setObject(warningLog, forKeyedSubscript: NSString("warning"))
+        console.setObject(errorLog, forKeyedSubscript: NSString("error"))
+        self.setObject(console, forKeyedSubscript: NSString("console"))
+
+        // Exception handler
+        self.exceptionHandler = { _, exception in
+            AKError("JavaScript Exception: \(exception?.toString() ?? "unknown")")
+        }
+    }
+}
 
 @_documentation(visibility: private)
 enum HammerspoonLogType: Int, CaseIterable, Identifiable {
