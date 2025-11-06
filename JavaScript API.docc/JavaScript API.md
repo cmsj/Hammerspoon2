@@ -14,6 +14,12 @@ This documentation describes the API provided by Hammerspoon 2 for your JavaScri
 
 Hammerspoon 2 something something dark side. Something something complete.
 
-### Modules
+### Topics
 
-hs.application
+### hs.application
+- ``HSApplicationModuleAPI``
+- ``HSApplicationAPI``
+
+### hs.window
+- ``HSWindowModuleAPI``
+- ``HSWindowAPI``
