@@ -17,16 +17,13 @@ import JavaScriptCore
     @objc var repeats: Bool { get }
 
     /// Start the timer
-    /// - Returns: The timer object for chaining
-    @objc func start() -> HSTimerObject
+    @objc func start()
 
     /// Stop the timer
-    /// - Returns: The timer object for chaining
-    @objc func stop() -> HSTimerObject
+    @objc func stop()
 
     /// Immediately fire the timer's callback
-    /// - Returns: The timer object for chaining
-    @objc func fire() -> HSTimerObject
+    @objc func fire()
 
     /// Check if the timer is currently running
     /// - Returns: true if the timer is running, false otherwise
@@ -38,8 +35,7 @@ import JavaScriptCore
 
     /// Set when the timer should next fire
     /// - Parameter seconds: Number of seconds from now when the timer should fire
-    /// - Returns: The timer object for chaining
-    @objc func setNextTrigger(_ seconds: TimeInterval) -> HSTimerObject
+    @objc func setNextTrigger(_ seconds: TimeInterval)
 }
 
 @_documentation(visibility: private)
@@ -64,10 +60,10 @@ import JavaScriptCore
         print("deinit of HSTimerObject: interval=\(interval), repeats=\(repeats)")
     }
 
-    @objc func start() -> HSTimerObject {
+    @objc func start() {
         // If already running, don't create a new timer
         if timer?.isValid == true {
-            return self
+            return
         }
 
         timer = Timer.scheduledTimer(timeInterval: interval,
@@ -80,20 +76,16 @@ import JavaScriptCore
         if let timer = timer {
             RunLoop.current.add(timer, forMode: .common)
         }
-
-        return self
     }
 
-    @discardableResult @objc func stop() -> HSTimerObject {
+    @objc func stop() {
         timer?.invalidate()
         timer = nil
-        return self
     }
 
-    @objc func fire() -> HSTimerObject {
+    @objc func fire() {
         // Fire immediately, bypassing the timer
         timerDidFire()
-        return self
     }
 
     @objc func running() -> Bool {
@@ -110,15 +102,15 @@ import JavaScriptCore
         return fireDate.timeIntervalSince(now)
     }
 
-    @objc func setNextTrigger(_ seconds: TimeInterval) -> HSTimerObject {
+    @objc func setNextTrigger(_ seconds: TimeInterval) {
         guard let timer = timer, timer.isValid else {
             AKWarning("hs.timer:setNextTrigger(): Timer is not running")
-            return self
+            return
         }
 
         let newFireDate = Date(timeIntervalSinceNow: seconds)
         timer.fireDate = newFireDate
-        return self
+        return
     }
 
     @objc private func timerDidFire() {

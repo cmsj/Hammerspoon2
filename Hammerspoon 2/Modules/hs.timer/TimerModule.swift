@@ -87,12 +87,14 @@ import JavaScriptCore
 
     @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimerObject {
         let timer = HSTimerObject(interval: seconds, repeats: false, callback: callback)
-        return timer.start()
+        timer.start()
+        return timer
     }
 
     @objc func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimerObject {
         let timer = HSTimerObject(interval: interval, repeats: true, callback: callback)
-        return timer.start()
+        timer.start()
+        return timer
     }
 
     @objc func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval = 0, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimerObject {
@@ -110,7 +112,8 @@ import JavaScriptCore
 
         // If repeatInterval is specified, we'll need to reschedule after each fire
         // This is handled in JavaScript for simplicity
-        return timer.start()
+        timer.start()
+        return timer
     }
 
     // MARK: - Utility functions
