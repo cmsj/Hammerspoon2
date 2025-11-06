@@ -29,4 +29,5 @@ xcuserdata/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprint
+*.xcbkptlist
 
