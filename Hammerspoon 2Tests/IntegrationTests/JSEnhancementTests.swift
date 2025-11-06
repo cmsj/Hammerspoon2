@@ -164,7 +164,7 @@ struct JSEnhancementTests {
 
         // timer.delayed uses timer.doAfter internally
         harness.eval("""
-        var delayed = hs.timer.delayed(0.05, enhancementTest);
+        var delayed = hs.timer.delayed(0.05, () => { __test_callback('enhancementTest') });
         delayed.start();
         """)
 
@@ -194,7 +194,7 @@ struct JSEnhancementTests {
                 count++;
                 return count >= 3;
             },
-            predicateComplete,
+            () => { __test_callback('predicateComplete') },
             0.02
         );
         """)
@@ -226,7 +226,7 @@ struct JSEnhancementTests {
                 whileCount++;
                 return whileCount < 5;
             },
-            whileAction,
+            () => { __test_callback('whileAction') },
             0.02
         );
         """)
@@ -303,7 +303,7 @@ struct JSEnhancementTests {
         }
 
         harness.eval("""
-        var searchDebounce = hs.timer.delayed(timer.seconds('200ms'), performSearch);
+        var searchDebounce = hs.timer.delayed(timer.seconds('200ms'), () => { __test_callback('performSearch') });
 
         function onSearchTextChanged() {
             searchDebounce.start();
@@ -371,11 +371,11 @@ struct JSEnhancementTests {
                 attempts++;
                 return attempts >= maxAttempts;
             },
-            onComplete,
+            () => { __test_callback('onComplete') },
             hs.timer.seconds('20ms')
         );
 
-        var timeoutTimer = hs.timer.doAfter(timer.seconds('500ms'), onTimeout);
+        var timeoutTimer = hs.timer.doAfter(timer.seconds('500ms'), () => { __test_callback('onTimeout') });
         """)
 
         // Should complete before timeout
