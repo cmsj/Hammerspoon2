@@ -12,10 +12,60 @@ import JavaScriptCore
 class JSEngine {
     static let shared = JSEngine()
 
-    var id = UUID()
+    private(set) var id = UUID()
     private var vm: JSVirtualMachine?
     private var context: JSContext?
 
+    // MARK: - Engine JavaScript component
+    private func injectEngineJS() {
+        guard let engineJS = Bundle.main.url(forResource: "engine", withExtension: "js") else {
+            fatalError("Unable to load engine.js - application bundle is corrupt")
+        }
+        do {
+            try evalFromURL(engineJS)
+        } catch {
+            AKError("engine.js error: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - JSContext Managing
+    private func createContext() throws(HammerspoonError) {
+        AKTrace("createContext()")
+        vm = JSVirtualMachine()
+        guard vm != nil else {
+            throw HammerspoonError(.vmCreation, msg: "Unknown error (vm)")
+        }
+
+        context = JSContext(virtualMachine: vm)
+        guard context != nil else {
+            throw HammerspoonError(.vmCreation, msg: "Unknown error (context)")
+        }
+
+        id = UUID()
+        context?.name = "Hammerspoon \(id)"
+
+        context?.injectTypeBridges()
+        context?.injectLogging()
+        injectEngineJS()
+
+        self["hs"] = ModuleRoot()
+    }
+
+    private func deleteContext() {
+        AKTrace("deleteContext()")
+
+        if let hs = self["hs"] as? JSValue, let moduleRoot = hs.toObjectOf(ModuleRoot.self) as? ModuleRoot {
+            moduleRoot.shutdown()
+            self["hs"] = nil
+        }
+
+        context = nil
+        vm = nil
+    }
+}
+
+// MARK: - JSEngineProtocol Conformance
+extension JSEngine: JSEngineProtocol {
     subscript(key: String) -> Any? {
         get {
             AKTrace("JSEngine subscript get for: \(key)")
@@ -40,52 +90,6 @@ class JSEngine {
         return eval(script)
     }
 
-    // MARK: - Engine JavaScript component
-    func injectEngineJS() {
-        guard let engineJS = Bundle.main.url(forResource: "engine", withExtension: "js") else {
-            fatalError("Unable to load engine.js - application bundle is corrupt")
-        }
-        do {
-            try evalFromURL(engineJS)
-        } catch {
-            AKError("engine.js error: \(error.localizedDescription)")
-        }
-    }
-
-    // MARK: - JSContext Managing
-    func createContext() throws(HammerspoonError) {
-        AKTrace("createContext()")
-        vm = JSVirtualMachine()
-        guard vm != nil else {
-            throw HammerspoonError(.vmCreation, msg: "Unknown error (vm)")
-        }
-
-        context = JSContext(virtualMachine: vm)
-        guard context != nil else {
-            throw HammerspoonError(.vmCreation, msg: "Unknown error (context)")
-        }
-
-        context?.name = "Hammerspoon \(id)"
-
-        context?.injectTypeBridges()
-        context?.injectLogging()
-        injectEngineJS()
-
-        self["hs"] = ModuleRoot()
-    }
-
-    func deleteContext() {
-        AKTrace("deleteContext()")
-
-        if let hs = self["hs"] as? JSValue, let moduleRoot = hs.toObjectOf(ModuleRoot.self) as? ModuleRoot {
-            moduleRoot.shutdown()
-            self["hs"] = nil
-        }
-
-        context = nil
-        vm = nil
-    }
-
     func resetContext() throws {
         if hasContext() {
             AKTrace("resetContext()")
@@ -97,10 +101,5 @@ class JSEngine {
     func hasContext() -> Bool {
         return vm != nil || context != nil
     }
-}
-
-// MARK: - JSEngineProtocol Conformance
-extension JSEngine: JSEngineProtocol {
-    // All required methods are already implemented in the class
 }
 
