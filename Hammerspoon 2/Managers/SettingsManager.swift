@@ -34,7 +34,11 @@ final class SettingsManager {
             Keys.configLocation.rawValue: Keys.configLocation.defaultValue
         ])
     }
+}
 
+// MARK: - SettingsManagerProtocol Conformance
+extension SettingsManager: SettingsManagerProtocol {
+    // All required methods are already implemented in the class
     @ObservationIgnored
     var configLocation: URL {
         get {
@@ -65,9 +69,4 @@ final class SettingsManager {
         UserDefaults.standard.removeObject(forKey: Keys.configLocation.rawValue)
         UserDefaults.standard.removeObject(forKey: Keys.consoleHistoryLength.rawValue)
     }
-}
-
-// MARK: - SettingsManagerProtocol Conformance
-extension SettingsManager: SettingsManagerProtocol {
-    // All required methods are already implemented in the class
 }
