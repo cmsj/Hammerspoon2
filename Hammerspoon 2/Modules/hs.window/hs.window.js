@@ -201,5 +201,3 @@ hs.window.tiling = {
         return win.setFrame(halfWidth, halfHeight, halfWidth, halfHeight);
     }
 };
-
-console.info("hs.window JavaScript enhancements loaded");

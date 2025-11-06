@@ -98,5 +98,3 @@ hs.ax.printHierarchy = function(element, depth = 0) {
         }
     }
 };
-
-console.info("hs.ax JavaScript enhancements loaded");
