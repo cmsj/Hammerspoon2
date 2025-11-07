@@ -75,68 +75,43 @@ import AVFoundation
     }
 
     // MARK: - Screen Recording
-    // FIXME: Things below here should be implemented in PermissionsManager
     @objc func checkScreenRecording() -> Bool {
-        return CGPreflightScreenCaptureAccess()
+        return PermissionsManager.shared.check(.screencapture)
     }
 
     @objc func requestScreenRecording() {
-        CGRequestScreenCaptureAccess()
+        PermissionsManager.shared.request(.screencapture)
     }
 
     // MARK: - Camera
 
     @objc func checkCamera() -> Bool {
-        let status = AVCaptureDevice.authorizationStatus(for: .video)
-        return status == .authorized
+        return PermissionsManager.shared.check(.camera)
     }
 
     @objc func requestCamera(_ callback: JSValue? = nil) {
-        let currentStatus = AVCaptureDevice.authorizationStatus(for: .video)
-
-        switch currentStatus {
-        case .authorized:
-            callback?.call(withArguments: [true])
-        case .notDetermined:
-            cameraCallback = callback
-            AVCaptureDevice.requestAccess(for: .video) { granted in
-                DispatchQueue.main.async {
-                    self.cameraCallback?.call(withArguments: [granted])
-                    self.cameraCallback = nil
-                }
+        cameraCallback = callback
+        PermissionsManager.shared.request(.camera) { result in
+            DispatchQueue.main.async {
+                self.cameraCallback?.call(withArguments: [result])
+                self.cameraCallback = nil
             }
-        case .denied, .restricted:
-            callback?.call(withArguments: [false])
-        @unknown default:
-            callback?.call(withArguments: [false])
         }
     }
 
     // MARK: - Microphone
 
     @objc func checkMicrophone() -> Bool {
-        let status = AVCaptureDevice.authorizationStatus(for: .audio)
-        return status == .authorized
+        return PermissionsManager.shared.check(.microphone)
     }
 
     @objc func requestMicrophone(_ callback: JSValue? = nil) {
-        let currentStatus = AVCaptureDevice.authorizationStatus(for: .audio)
-
-        switch currentStatus {
-        case .authorized:
-            callback?.call(withArguments: [true])
-        case .notDetermined:
-            microphoneCallback = callback
-            AVCaptureDevice.requestAccess(for: .audio) { granted in
-                DispatchQueue.main.async {
-                    self.microphoneCallback?.call(withArguments: [granted])
-                    self.microphoneCallback = nil
-                }
+        microphoneCallback = callback
+        PermissionsManager.shared.request(.microphone) { result in
+            DispatchQueue.main.async {
+                self.microphoneCallback?.call(withArguments: [result])
+                self.microphoneCallback = nil
             }
-        case .denied, .restricted:
-            callback?.call(withArguments: [false])
-        @unknown default:
-            callback?.call(withArguments: [false])
         }
     }
 }

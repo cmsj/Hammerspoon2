@@ -7,6 +7,7 @@
 
 import Foundation
 @unsafe @preconcurrency import ApplicationServices.HIServices.AXUIElement
+import AVFoundation
 
 @_documentation(visibility: private)
 enum PermissionsState: Int {
@@ -18,6 +19,9 @@ enum PermissionsState: Int {
 @_documentation(visibility: private)
 enum PermissionsType: Int {
     case accessibility = 0
+    case camera
+    case microphone
+    case screencapture
 }
 
 @_documentation(visibility: private)
@@ -29,6 +33,14 @@ class PermissionsManager {
         switch permType {
         case .accessibility:
             return AXIsProcessTrusted() ? .trusted : .notTrusted
+        case .camera:
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            return status == .authorized ? .trusted : .notTrusted
+        case .microphone:
+            let status = AVCaptureDevice.authorizationStatus(for: .audio)
+            return status == .authorized ? .trusted : .notTrusted
+        case .screencapture:
+            return CGPreflightScreenCaptureAccess() ? .trusted : .notTrusted
         }
     }
 
@@ -36,14 +48,46 @@ class PermissionsManager {
         switch permType {
         case .accessibility:
             return AXIsProcessTrusted()
+        case .camera:
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            return status == .authorized
+        case .microphone:
+            let status = AVCaptureDevice.authorizationStatus(for: .audio)
+            return status == .authorized
+        case .screencapture:
+            return CGPreflightScreenCaptureAccess()
         }
     }
 
-    func request(_ permType: PermissionsType) {
+    func request(_ permType: PermissionsType, callback: (@Sendable (Bool) -> Void)? = nil) {
         switch permType {
         case .accessibility:
             let options = unsafe [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
             AXIsProcessTrustedWithOptions(options)
+        case .camera:
+            let currentStatus = AVCaptureDevice.authorizationStatus(for: .video)
+
+            switch currentStatus {
+            case .notDetermined:
+                AVCaptureDevice.requestAccess(for: .video, completionHandler: callback ?? { _ in })
+            case .authorized:
+                callback?(true)
+            default:
+                callback?(false)
+            }
+        case .microphone:
+            let currentStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+
+            switch currentStatus {
+            case .notDetermined:
+                AVCaptureDevice.requestAccess(for: .audio, completionHandler: callback ?? { _ in })
+            case .authorized:
+                callback?(true)
+            default:
+                callback?(false)
+            }
+        case .screencapture:
+            CGRequestScreenCaptureAccess()
         }
     }
 }
