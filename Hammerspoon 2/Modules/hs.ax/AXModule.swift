@@ -31,9 +31,15 @@ import AXSwift
     @objc func windowElement(_ window: HSWindow) -> HSAXElement?
     
     /// Get the accessibility element at the specific screen position
-    /// - Parameter hsPoint: An HSPoint object containing screen coordinates
+    /// - Parameter point: An HSPoint object containing screen coordinates
     /// - Returns: The AXElement at that position, or nil if none found
     @objc func elementAtPoint(_ point: HSPoint) -> HSAXElement?
+    
+    /// A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()
+    @objc var notificationTypes: [String:String] { get }
+
+    @_documentation(visibility: private)
+    @objc func _createObserver(_ pid: Int) -> HSAXObserver?
 }
 
 // MARK: - Implementation
@@ -43,8 +49,21 @@ import AXSwift
 @objc class HSAXModule: NSObject, HSModuleAPI, HSAXModuleAPI {
     var name = "hs.ax"
 
+    @objc var _notificationTypes: [String:String] = [:]
+
     // MARK: - Module lifecycle
-    override required init() { super.init() }
+    override required init() {
+        for notificationType in UIElement.AXNotification.allCases {
+            var name = notificationType.rawValue
+            if name.hasPrefix("AX") {
+                name = name.deletingPrefix("AX")
+            }
+            name.lowerFirstLetter()
+
+            _notificationTypes[name] = notificationType.rawValue
+        }
+        super.init()
+    }
 
     func shutdown() {
         // No cleanup needed for this module
@@ -100,5 +119,18 @@ import AXSwift
 
     func requestAccessibility() {
         PermissionsManager.shared.request(.accessibility)
+    }
+
+    @objc var notificationTypes: [String:String] {
+        return _notificationTypes
+    }
+
+    @objc func _createObserver(_ pid: Int) -> HSAXObserver? {
+        guard isAccessibilityEnabled() else {
+            AKError("hs.ax.createObserver(): Accessibility permissions not granted")
+            return nil
+        }
+
+        return HSAXObserver(pid: pid_t(pid))
     }
 }
