@@ -3,6 +3,8 @@
 
 "use strict";
 
+// FIXME: Consider adding API to introspect what watchers exist and what events they are watching
+
 // Observer management - stores observers by PID and their emitters
 const observers = new Map(); // pid -> { observer, emitters: Map(element+notification -> emitter) }
 
