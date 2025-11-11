@@ -14,6 +14,8 @@ import AXSwift
 
 /// Object representing an Accessibility observer that can watch for notifications on AX elements
 @objc protocol HSAXObserverAPI: JSExport {
+    @objc func shutdown()
+
     /// Start the observer
     /// - Returns: The observer object for chaining
     @objc func start() -> HSAXObserver
@@ -53,6 +55,7 @@ import AXSwift
 // MARK: - Observer Implementation
 
 @_documentation(visibility: private)
+@MainActor
 @objc class HSAXObserver: NSObject, HSAXObserverAPI {
     private let observer: AXObserver
     private let _pid: pid_t
@@ -80,10 +83,16 @@ import AXSwift
         super.init()
     }
 
-    deinit {
+    func shutdown() {
+        // FIXME: This isn't actually removing the watchers, just forgetting them
+        watchers.removeAll()
+    }
+
+    isolated deinit {
         // Note: Cannot call AKTrace or stop() from deinit due to actor isolation
         // The observer will be cleaned up automatically
-        watchers.removeAll()
+        print("Deinit of HSAXObserver for \(_pid)")
+        shutdown()
     }
 
     @objc func start() -> HSAXObserver {

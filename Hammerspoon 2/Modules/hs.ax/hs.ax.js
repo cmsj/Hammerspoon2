@@ -79,7 +79,7 @@ class AXObserverEmitter {
 }
 
 // User-facing API for adding watchers
-hs.ax.addWatcher = function(application, notification, listener) {
+hs.ax.addWatcher2 = function(application, notification, listener) {
     if (!application || !notification || !listener) {
         throw new Error("hs.ax.addWatcher(): application, notification, and listener are required");
     }

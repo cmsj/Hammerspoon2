@@ -40,6 +40,8 @@ import AXSwift
 
     @_documentation(visibility: private)
     @objc func _createObserver(_ pid: Int) -> HSAXObserver?
+
+    @objc func addWatcher(_ application: HSApplication, _ notification: String, _ callback: JSValue) -> HSAXObserver?
 }
 
 // MARK: - Implementation
@@ -48,6 +50,7 @@ import AXSwift
 @MainActor
 @objc class HSAXModule: NSObject, HSModuleAPI, HSAXModuleAPI {
     var name = "hs.ax"
+    private var watchers: [pid_t:HSAXObserver] = [:]
 
     @objc var _notificationTypes: [String:String] = [:]
 
@@ -132,5 +135,21 @@ import AXSwift
         }
 
         return HSAXObserver(pid: pid_t(pid))
+    }
+
+    @objc func addWatcher(_ application: HSApplication, _ notification: String, _ callback: JSValue) -> HSAXObserver? {
+        guard isAccessibilityEnabled() else {
+            AKError("hs.ax.addWatcher(): Accessibility permissions not granted")
+            return nil
+        }
+
+        let pid = application.runningApplication.processIdentifier
+        if !watchers.keys.contains(pid) {
+            watchers[pid] = HSAXObserver(pid: pid)
+        }
+
+        let watcher = watchers[pid]
+
+        return watcher
     }
 }
