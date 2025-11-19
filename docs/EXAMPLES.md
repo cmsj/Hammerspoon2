@@ -49,27 +49,24 @@ This document shows examples of how the documentation system processes Swift and
 
 ```javascript
 /**
- * @module hs.timer
+ * @namespace hs.timer
  */
+globalThis['hs.timer'] = {};
 
 /**
  * Create a new timer
- * - Parameters:
- *   - interval: The interval in seconds at which the timer should fire
- *   - callback: A JavaScript function to call when the timer fires
- *   - continueOnError: If true, the timer will continue running even if the callback throws an error
- * - Returns: A timer object. Call start() to begin the timer.
+ *
  * @param {number} interval
  * @param {JSValue} callback
  * @param {boolean} continueOnError
  * @returns {HSTimerObject} A timer object. Call start() to begin the timer.
- * @memberof hs.timer
- * @instance
  */
-function _new(interval, callback, continueOnError) {}
+hs.timer._new = function(interval, callback, continueOnError) {};
 ```
 
-Note: `new` is a JavaScript keyword, so it's escaped to `_new`.
+Note: 
+- `new` is a JavaScript keyword, so it's escaped to `_new`.
+- The DocC format (`- Parameters:`, `- Returns:`) is automatically stripped, keeping only the main description.
 
 ## Example 2: JavaScript Enhancement File
 
@@ -228,9 +225,15 @@ Total:             66/97 (68%)
 ### For Swift Files
 
 1. Use `///` comments for all public API methods and properties
-2. Document parameters with `- Parameter name: description`
-3. Document return values with `- Returns: description`
-4. Keep documentation concise but complete
+2. Use Apple's standard DocC format:
+   - `- Parameter name: description` for single parameters
+   - `- Parameters:` with indented parameter list for multiple parameters
+   - `- Returns: description` for return values
+   - `- Note: description` for additional notes
+3. Keep documentation concise but complete
+4. The system will automatically convert DocC format to JSDoc
+
+**Important**: The documentation system automatically strips the DocC markup (`- Parameters:`, `- Returns:`, etc.) when generating JSDoc, keeping only the main description and creating proper `@param` and `@returns` tags.
 
 Example:
 ```swift
@@ -238,6 +241,18 @@ Example:
 /// - Returns: The focused window, or nil if none
 @objc func focusedWindow() -> HSWindow?
 ```
+
+Multi-parameter example:
+```swift
+/// Create a new timer
+/// - Parameters:
+///   - interval: The interval in seconds at which the timer should fire
+///   - callback: A JavaScript function to call when the timer fires
+/// - Returns: A timer object. Call start() to begin the timer.
+@objc func new(_ interval: TimeInterval, _ callback: JSValue) -> HSTimerObject
+```
+
+This will be converted to clean JSDoc with just "Create a new timer" as the description.
 
 ### For JavaScript Files
 
