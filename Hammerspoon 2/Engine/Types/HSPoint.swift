@@ -13,13 +13,23 @@ import CoreGraphics
 // MARK: - Existing Bridge Classes (from before)
 // ---------------------------------------------------------------
 
-@objc protocol HSPointJSExports: JSExport {
+/// This is a JavaScript object used to represent coordinates, or "points", as used in various places throughout Hammerspoon's API, particularly where dealing with positions on a screen. Behind the scenes it is a wrapper for the CGPoint type in Swift/ObjectiveC.
+@objc protocol HSPointAPI: HSTypeAPI, JSExport {
+    /// A coordinate for the x-axis position of this point
     var x: Double { get set }
+
+    /// A coordinate for the y-axis position of this point
     var y: Double { get set }
+    
+    /// Create a new HSPoint object
+    /// - Parameters:
+    ///   - x: A coordinate for this point on the x-axis
+    ///   - y: A coordinate for this point on the y-axis
     init(x: Double, y: Double)
 }
 
-@objc class HSPoint: NSObject, HSPointJSExports {
+@objc class HSPoint: NSObject, HSPointAPI {
+    @objc var typeName = "HSPoint"
     var point: CGPoint
 
     var x: Double {
