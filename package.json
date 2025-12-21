@@ -7,21 +7,13 @@
     "docs:extract": "node scripts/extract-docs.js",
     "docs:generate": "npm run docs:extract && npm run docs:html",
     "docs:html": "node scripts/generate-html.js",
-    "docs:html:jsdoc": "jsdoc -c jsdoc.config.json",
     "docs:coverage": "node scripts/docs-coverage.js",
     "docs:test": "bash scripts/test-docs.sh",
-    "docs:clean": "rm -rf docs/api docs/json docs/html"
-  },
-  "devDependencies": {
-    "docdash": "^2.0.2",
-    "jsdoc": "^4.0.3",
-    "jsdoc-to-markdown": "^8.0.3",
-    "clean-jsdoc-theme": "^4.2.14"
+    "docs:clean": "rm -rf docs/json docs/html"
   },
   "keywords": [
     "hammerspoon",
-    "documentation",
-    "jsdoc"
+    "documentation"
   ],
   "author": "Hammerspoon",
   "license": "MIT"

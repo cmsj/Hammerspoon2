@@ -49,14 +49,25 @@ echo "Running HTML documentation generation..."
 npm run docs:html
 
 # Check HTML output
-if [ ! -f "docs/api/index.html" ]; then
+if [ ! -f "docs/html/index.html" ]; then
     echo "❌ index.html not generated"
     exit 1
 fi
 echo "✓ HTML documentation generated"
 
-HTML_FILE_COUNT=$(find docs/api -name "*.html" | wc -l)
+HTML_FILE_COUNT=$(find docs/html -name "*.html" | wc -l)
 echo "  Generated $HTML_FILE_COUNT HTML files"
+
+# Check CSS and JS assets
+if [ ! -f "docs/html/styles.css" ]; then
+    echo "❌ styles.css not generated"
+    exit 1
+fi
+if [ ! -f "docs/html/script.js" ]; then
+    echo "❌ script.js not generated"
+    exit 1
+fi
+echo "✓ Assets generated"
 
 # Summary
 echo
@@ -65,7 +76,7 @@ echo "✅ All tests passed!"
 echo
 echo "Documentation available at:"
 echo "  - JSON: docs/json/"
-echo "  - HTML: docs/api/index.html"
+echo "  - HTML: docs/html/index.html"
 echo
 echo "To view HTML documentation:"
-echo "  open docs/api/index.html"
+echo "  open docs/html/index.html"
