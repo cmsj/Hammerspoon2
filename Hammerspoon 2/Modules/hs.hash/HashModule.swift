@@ -15,12 +15,12 @@ import CryptoKit
 @objc protocol HSHashModuleAPI: JSExport {
     // Base64 encoding
     /// Encode a string to base64
-    /// - Parameter raw: The string to encode
+    /// - Parameter data: The string to encode
     /// - Returns: Base64 encoded string
     @objc func base64Encode(_ data: String) -> String
 
     /// Decode a base64 string
-    /// - Parameter raw: The base64 string to decode
+    /// - Parameter data: The base64 string to decode
     /// - Returns: Decoded string, or nil if the input is invalid
     @objc func base64Decode(_ data: String) -> String?
 

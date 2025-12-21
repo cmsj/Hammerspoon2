@@ -11,7 +11,7 @@ import Cocoa
 import AXSwift
 
 /// Object representing an application
-@objc protocol HSApplicationAPI: JSExport {
+@objc protocol HSApplicationAPI: HSTypeAPI, JSExport {
     /// POSIX Process Identifier
     @objc var pid: Int { get }
 
@@ -31,9 +31,11 @@ import AXSwift
     @objc var isActive: Bool { get }
 
     /// Terminate the application
+    /// - Returns: True if the application was terminated, otherwise false
     @objc func kill() -> Bool
 
     /// Force-terminate the application
+    /// - Returns: True if the application was force-terminated, otherwise false
     @objc func kill9() -> Bool
 
     /// The main window of this application, or nil if there is no main window
@@ -49,11 +51,13 @@ import AXSwift
     @objc var visibleWindows: [HSWindow] { get }
 
     /// The application's HSAXElement object, for use with the hs.ax APIs
+    /// - Returns: An HSAXElement object, or nil if it could not be obtained
     @objc func axElement() -> HSAXElement?
 }
 
 @_documentation(visibility: private)
 @objc class HSApplication: NSObject, HSApplicationAPI {
+    @objc var typeName = "HSApplication"
     let runningApplication: NSRunningApplication
     let axUIElement: Application?
 

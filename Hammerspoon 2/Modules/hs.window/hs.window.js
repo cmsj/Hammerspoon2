@@ -6,6 +6,9 @@
 hs.window.focused = hs.window.focusedWindow;
 
 // Filter windows by title
+/// Find windows by title
+/// Parameter title: The window title to search for. All windows with titles that include this string, will be matched
+/// Returns: An array of HSWindow objects with matching titles
 hs.window.findByTitle = function(title) {
     return hs.window.allWindows().filter(win => {
         return win.title && win.title.includes(title);
@@ -13,6 +16,8 @@ hs.window.findByTitle = function(title) {
 };
 
 // Get windows for the current application
+/// Get all windows for the current application
+/// Returns: An array of HSWindow objects
 hs.window.currentWindows = function() {
     const app = hs.application.frontmost();
     if (!app) {
@@ -21,7 +26,9 @@ hs.window.currentWindows = function() {
     return hs.window.windowsForApp(app.pid);
 };
 
-// Move window to left half of screen
+/// Move a window to left half of screen
+/// Parameter win: An HSWindow object
+/// Returns: True if the operation was successful, otherwise False
 hs.window.moveToLeftHalf = function(win) {
     win = win || hs.window.focusedWindow();
     if (!win) {
@@ -40,7 +47,9 @@ hs.window.moveToLeftHalf = function(win) {
     return win.setFrame(0, 0, Math.floor(screenWidth / 2), screenHeight);
 };
 
-// Move window to right half of screen
+/// Move a window to right half of screen
+/// Parameter win: An HSWindow object
+/// Returns: True if the operation was successful, otherwise False
 hs.window.moveToRightHalf = function(win) {
     win = win || hs.window.focusedWindow();
     if (!win) {
@@ -60,7 +69,9 @@ hs.window.moveToRightHalf = function(win) {
     return win.setFrame(halfWidth, 0, halfWidth, screenHeight);
 };
 
-// Maximize window
+/// Maximize a window
+/// Parameter win: An HSWindow object
+/// Returns: True if the operation was successful, otherwise false
 hs.window.maximize = function(win) {
     win = win || hs.window.focusedWindow();
     if (!win) {
@@ -77,6 +88,8 @@ hs.window.maximize = function(win) {
 // Cycle through windows
 hs.window._cycleIndex = 0;
 
+// FIXME: This seems kinda lame, and can only be called by one function at a time. Decide if we want this, most likely remove it.
+/// SKIP_DOCS
 hs.window.cycleWindows = function() {
     const windows = hs.window.orderedWindows().filter(w => w.isVisible);
     if (windows.length === 0) {
@@ -87,6 +100,7 @@ hs.window.cycleWindows = function() {
     windows[hs.window._cycleIndex].focus();
 };
 
+// FIXME: Everything below this seems dumb and out of place. Figure out what to do about submodules, since that isn't a concept we've introduced so far.
 // Window grid functionality
 hs.window.grid = {
     // Set window to occupy a grid position

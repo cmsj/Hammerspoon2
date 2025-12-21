@@ -21,6 +21,16 @@ const OUTPUT_JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_COMBINED_DIR = path.join(OUTPUT_JSON_DIR, 'combined');
 
 /**
+ * Check if documentation contains SKIP_DOCS marker
+ */
+function shouldSkipDocs(docLines) {
+    if (Array.isArray(docLines)) {
+        return docLines.some(line => line.trim() === 'SKIP_DOCS');
+    }
+    return typeof docLines === 'string' && docLines.includes('SKIP_DOCS');
+}
+
+/**
  * Parse Swift file to extract JSExport protocol information
  */
 function parseSwiftFile(filePath) {
@@ -59,6 +69,11 @@ function parseSwiftFile(filePath) {
 
         const rawProtocolDoc = protocolDoc.join('\n');
         const protocolDescription = formatDocCToJSDoc(rawProtocolDoc);
+
+        // Skip this protocol if it has SKIP_DOCS marker
+        if (shouldSkipDocs(protocolDoc)) {
+            continue;
+        }
 
         // Find matching closing brace for the protocol
         let braceCount = 1;
@@ -209,27 +224,35 @@ function parseSwiftFile(filePath) {
                     }
                     
                     const rawDoc = currentDoc.join('\n');
-                    protocol.methods.push({
-                        name: methodName,
-                        signature: fullSignature,
-                        rawDocumentation: rawDoc,
-                        description: formatDocCToJSDoc(rawDoc),
-                        params: extractParams(fullSignature, currentDoc),
-                        returns: extractReturns(fullSignature, currentDoc)
-                    });
-                    
+
+                    // Skip this method if it has SKIP_DOCS marker
+                    if (!shouldSkipDocs(currentDoc)) {
+                        protocol.methods.push({
+                            name: methodName,
+                            signature: fullSignature,
+                            rawDocumentation: rawDoc,
+                            description: formatDocCToJSDoc(rawDoc),
+                            params: extractParams(fullSignature, currentDoc),
+                            returns: extractReturns(fullSignature, currentDoc)
+                        });
+                    }
+
                     // Move i forward if we read multiple lines
                     i = j;
                 } else if (methodMatch[2]) {
                     // It's a property
                     const propName = methodMatch[2];
                     const rawDoc = currentDoc.join('\n');
-                    protocol.properties.push({
-                        name: propName,
-                        signature: line.replace(/@objc\s*/, ''),
-                        rawDocumentation: rawDoc,
-                        description: formatDocCToJSDoc(rawDoc)
-                    });
+
+                    // Skip this property if it has SKIP_DOCS marker
+                    if (!shouldSkipDocs(currentDoc)) {
+                        protocol.properties.push({
+                            name: propName,
+                            signature: line.replace(/@objc\s*/, ''),
+                            rawDocumentation: rawDoc,
+                            description: formatDocCToJSDoc(rawDoc)
+                        });
+                    }
                 }
                 currentDoc = [];
             }
@@ -389,16 +412,16 @@ function extractReturns(signature, docLines) {
 function parseJavaScriptFile(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
     const functions = [];
-    
+
     // Match JSDoc comments followed by function definitions
     const jsdocRegex = /\/\*\*([^*]*(?:\*(?!\/)[^*]*)*)\*\/\s*(?:(\w+(?:\.\w+)*)\s*=\s*function\s*\(([^)]*)\)|function\s+(\w+)\s*\(([^)]*)\))/g;
     let match;
-    
+
     while ((match = jsdocRegex.exec(content)) !== null) {
         const docComment = match[1];
         const functionName = match[2] || match[4];
         const params = match[3] || match[5];
-        
+
         if (functionName) {
             functions.push({
                 name: functionName,
@@ -406,6 +429,45 @@ function parseJavaScriptFile(filePath) {
                 documentation: parseJSDoc(docComment),
                 type: 'function'
             });
+        }
+    }
+
+    // Also match Swift-style /// comments followed by function definitions
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // Check if this line is a function definition
+        const funcMatch = line.match(/(\w+(?:\.\w+)*)\s*=\s*function\s*\(([^)]*)\)/);
+        if (funcMatch) {
+            const functionName = funcMatch[1];
+            const params = funcMatch[2];
+
+            // Check if already captured by JSDoc regex
+            if (functions.find(f => f.name === functionName)) {
+                continue;
+            }
+
+            // Look backwards for /// comments
+            const docLines = [];
+            for (let j = i - 1; j >= 0; j--) {
+                const prevLine = lines[j].trim();
+                if (prevLine.startsWith('///')) {
+                    docLines.unshift(prevLine.replace(/^\/\/\/\s*/, ''));
+                } else if (prevLine && !prevLine.startsWith('//')) {
+                    break;
+                }
+            }
+
+            if (docLines.length > 0) {
+                const docText = docLines.join('\n');
+                functions.push({
+                    name: functionName,
+                    params: params.split(',').map(p => p.trim()).filter(p => p),
+                    documentation: parseDocCStyleComment(docText),
+                    type: 'function'
+                });
+            }
         }
     }
     
@@ -427,6 +489,50 @@ function parseJavaScriptFile(filePath) {
     }
     
     return functions;
+}
+
+/**
+ * Parse DocC-style comment (used in Swift and some JavaScript files)
+ */
+function parseDocCStyleComment(docText) {
+    const lines = docText.split('\n').map(line => line.trim());
+    const descriptions = extractParamDescriptions(lines);
+
+    const doc = {
+        description: '',
+        params: [],
+        returns: null
+    };
+
+    // Extract main description (lines before Parameters/Returns)
+    const descLines = [];
+    for (const line of lines) {
+        if (line.startsWith('- Parameter') || line.startsWith('- Parameters') || line.startsWith('- Returns')) {
+            break;
+        }
+        descLines.push(line);
+    }
+    doc.description = descLines.join(' ').trim();
+
+    // Extract parameters - they're in the descriptions map
+    for (const [paramName, paramDesc] of Object.entries(descriptions)) {
+        doc.params.push({
+            name: paramName,
+            type: 'any',
+            description: paramDesc
+        });
+    }
+
+    // Extract returns
+    const returnsMatch = docText.match(/- Returns?:\s*(.+)/);
+    if (returnsMatch) {
+        doc.returns = {
+            type: 'any',
+            description: returnsMatch[1].trim()
+        };
+    }
+
+    return doc;
 }
 
 /**

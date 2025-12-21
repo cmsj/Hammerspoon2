@@ -10,14 +10,16 @@ import JavaScriptCore
 import Carbon
 
 /// Object representing a system-wide hotkey
-@objc protocol HSHotkeyObjectAPI: JSExport {
+@objc protocol HSHotkeyAPI: HSTypeAPI, JSExport {
     /// Enable the hotkey
+    /// - Returns: True if the hotkey was enabled, otherwise False
     @objc func enable() -> Bool
 
     /// Disable the hotkey
     @objc func disable()
 
     /// Check if the hotkey is currently enabled
+    /// - Returns: True if the hotkey is enabled, otherwise False
     @objc func isEnabled() -> Bool
 
     /// Delete the hotkey (disables and clears callbacks)
@@ -26,7 +28,8 @@ import Carbon
 
 @_documentation(visibility: private)
 @MainActor
-@objc @safe class HSHotkeyObject: NSObject, HSHotkeyObjectAPI {
+@objc @safe class HSHotkeyObject: NSObject, HSHotkeyAPI {
+    @objc var typeName = "HSHotkey"
     private let keyCode: UInt32
     private let modifiers: UInt32
     private let callbackPressed: JSValue?

@@ -63,9 +63,19 @@ class ApplicationModuleWatcherEmitter {
 hs.application._watcherEmitter = new ApplicationModuleWatcherEmitter();
 
 // User facing hs.application API for adding/removing watchers
+
+/// Create a watcher for application events
+/// - Parameters:
+///    - event: The event type to listen for
+///    - listener: A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
 hs.application.addWatcher = function (event, listener) {
     hs.application._watcherEmitter.on(event, listener);
 }
+
+/// Remove a watcher for application events
+/// - Parameters:
+///   - event: The event type to stop listening for
+///   - listener: The javascript function/lambda that was previously being used to handle the event
 hs.application.removeWatcher = function (event, listener) {
     hs.application._watcherEmitter.removeListener(event, listener);
 }

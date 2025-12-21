@@ -11,7 +11,7 @@ import AppKit
 import AXSwift
 
 /// Object representing a window
-@objc protocol HSWindowAPI: JSExport {
+@objc protocol HSWindowAPI: HSTypeAPI, JSExport {
     // MARK: - Basic Properties
 
     /// The window's title
@@ -90,6 +90,7 @@ import AXSwift
 
 @_documentation(visibility: private)
 @objc class HSWindow: NSObject, HSWindowAPI {
+    @objc var typeName = "HSWindow"
     let element: UIElement
     let app: NSRunningApplication
 

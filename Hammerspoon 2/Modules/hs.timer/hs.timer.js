@@ -8,24 +8,38 @@
 "use strict";
 
 // Time conversion utilities
+/// Converts minutes to seconds
+/// Parameter n: A number of minutes
+/// Returns: The equivalent number of seconds
 hs.timer.minutes = function(n) {
     return n * 60;
 };
 
+/// Converts hours to seconds
+/// Parameter n: A number of hours
+/// Returns: The equivalent number of seconds
 hs.timer.hours = function(n) {
     return n * 3600;
 };
 
+/// Converts days to seconds
+/// Parameter n: A number of days
+/// Returns: The equivalent number of seconds
 hs.timer.days = function(n) {
     return n * 86400;
 };
 
+/// Converts weeks to seconds
+/// Parameter n: A number of weeks
+/// Returns: The equivalent number of seconds
 hs.timer.weeks = function(n) {
     return n * 604800;
 };
 
 // Parse time strings
 // Supports formats like "HH:MM:SS", "HH:MM", "5m", "2h", "1d", etc.
+// FIXME: Decide if we want this or not, and if its name should change. If we want it, document it.
+/// SKIP_DOCS
 hs.timer.seconds = function(timeString) {
     if (typeof timeString !== 'string') {
         throw new Error("hs.timer.seconds(): argument must be a string");
@@ -70,6 +84,11 @@ hs.timer.seconds = function(timeString) {
 
 // Predicate-based timers
 
+/// Repeat a function/lambda until a given predicate function/lambda returns true
+/// Parameters:
+///  - predicateFn: A function/lambda to test if the timer should continue. Return True to end the timer, False to continue it
+///  - actionFn: A function/lambda to call until the predicateFn returns true
+///  - checkInterval: How often, in seconds, to call actionFn
 hs.timer.doUntil = function(predicateFn, actionFn, checkInterval) {
     if (typeof predicateFn !== 'function') {
         throw new Error("hs.timer.doUntil(): predicate must be a function");
@@ -89,9 +108,14 @@ hs.timer.doUntil = function(predicateFn, actionFn, checkInterval) {
         }
     });
 
-    return timer.start();
+    timer.start();
 };
 
+/// Repeat a function/lambda while a given predicate function/lambda returns true
+/// Parameters:
+///  - predicateFn: A function/lambda to test if the timer should continue. Return True to continue the timer, False to end it
+///  - actionFn: A function/lambda to call while the predicateFn returns true
+///  - checkInterval: How often, in seconds, to call actionFn
 hs.timer.doWhile = function(predicateFn, actionFn, checkInterval) {
     if (typeof predicateFn !== 'function') {
         throw new Error("hs.timer.doWhile(): predicate must be a function");
@@ -110,9 +134,14 @@ hs.timer.doWhile = function(predicateFn, actionFn, checkInterval) {
         }
     });
 
-    return timer.start();
+    timer.start();
 };
 
+/// Wait to call a function/lambda until a given predicate function/lambda returns true
+/// Parameters:
+///  - predicateFn: A function/lambda to test if the actionFn should be called. Return True to call the actionFn, False to continue waiting
+///  - actionFn: A function/lambda to call when the predicateFn returns true. This will only be called once and then the timer will stop.
+///  - checkInterval: How often, in seconds, to call predicateFn
 hs.timer.waitUntil = function(predicateFn, actionFn, checkInterval) {
     if (typeof predicateFn !== 'function') {
         throw new Error("hs.timer.waitUntil(): predicate must be a function");
@@ -133,6 +162,11 @@ hs.timer.waitUntil = function(predicateFn, actionFn, checkInterval) {
     return timer.start();
 };
 
+/// Wait to call a function/lambda until a given predicate function/lambda returns false
+/// Parameters:
+///  - predicateFn: A function/lambda to test if the actionFn should be called. Return False to call the actionFn, True to continue waiting
+///  - actionFn: A function/lambda to call when the predicateFn returns False. This will only be called once and then the timer will stop.
+///  - checkInterval: How often, in seconds, to call predicateFn
 hs.timer.waitWhile = function(predicateFn, actionFn, checkInterval) {
     if (typeof predicateFn !== 'function') {
         throw new Error("hs.timer.waitWhile(): predicate must be a function");
@@ -154,6 +188,8 @@ hs.timer.waitWhile = function(predicateFn, actionFn, checkInterval) {
 };
 
 // Delayed timer implementation - fires only after a period of inactivity
+// FIXME: This seems like a bad idea, and I'm pretty sure it's buggy, like `timer` should be inside `delayedObj`. Decide if we want this or not. Document if we do.
+/// SKIP_DOCS
 hs.timer.delayed = function(delay, fn) {
     if (typeof fn !== 'function') {
         throw new Error("hs.timer.delayed(): callback must be a function");

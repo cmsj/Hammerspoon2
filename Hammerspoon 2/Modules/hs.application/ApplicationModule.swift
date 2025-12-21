@@ -51,6 +51,11 @@ import UniformTypeIdentifiers
     /// - Parameter bundleID: The application bundle identifier to search for (e.g. "com.apple.Safari")
     /// - Returns: An array of strings containing any filesystem paths that were found
     @objc func pathsForBundleID(_ bundleID: String) -> [String]
+
+    /// SKIP_DOCS
+    /// Fetch a dictionary of information about an application bundle, given its path
+    /// - Parameter bundlePath: The path to a bundle (e.g. "/Applications/Safari.app")
+    /// - Returns: A dictionary of information about the bundle
     @objc func infoForBundlePath(_ bundlePath: String) -> [String: Any]?
     
     /// Fetch filesystem path for an application able to open a given file type
@@ -68,7 +73,9 @@ import UniformTypeIdentifiers
     @objc func launchOrFocus(_ bundleID: String)
 
     // NOTE: These are not documented because they are private API for our JavaScript code
+    /// SKIP_DOCS
     @objc(_addWatcher::) func _addWatcher(eventName: String, callback: JSValue)
+    /// SKIP_DOCS
     @objc(_removeWatcher:) func _removeWatcher(eventName: String)
 }
 

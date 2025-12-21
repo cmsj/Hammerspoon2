@@ -39,7 +39,9 @@ import AXSwift
     @objc var notificationTypes: [String: String] { get }
 
     // NOTE: These are private API for JavaScript code to use
+    /// SKIP_DOCS
     @objc(_addWatcher:::) func _addWatcher(_ application: HSApplication, notification: String, callback: JSValue)
+    /// SKIP_DOCS
     @objc(_removeWatcher::) func _removeWatcher(_ application: HSApplication, notification: String)
 }
 

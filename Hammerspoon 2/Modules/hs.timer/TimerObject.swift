@@ -9,7 +9,7 @@ import Foundation
 import JavaScriptCore
 
 /// Object representing a timer
-@objc protocol HSTimerObjectAPI: JSExport {
+@objc protocol HSTimerObjectAPI: HSTypeAPI, JSExport {
     /// The timer's interval in seconds
     @objc var interval: TimeInterval { get }
 
@@ -40,6 +40,7 @@ import JavaScriptCore
 
 @_documentation(visibility: private)
 @objc class HSTimerObject: NSObject, HSTimerObjectAPI {
+    @objc var typeName = "HSTimer"
     private var timer: Timer?
     private let callback: JSValue
     private let continueOnError: Bool

@@ -14,54 +14,67 @@ const path = require('path');
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'html');
 const COMBINED_DIR = path.join(JSON_DIR, 'combined');
+const TEMPLATES_DIR = path.join(__dirname, 'templates');
 
 // Ensure output directory exists
 if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
+// Load templates
+let htmlTemplate = '';
+let cssTemplate = '';
+let scriptTemplate = '';
+
+function loadTemplates() {
+    htmlTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'page.html'), 'utf8');
+    cssTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'styles.css'), 'utf8');
+    scriptTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'script.js'), 'utf8');
+}
+
 /**
- * Generate the base HTML template
+ * Generate HTML page from template
  */
-function htmlTemplate(title, content, currentPage = '') {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title} - Hammerspoon 2 API</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <h1><a href="index.html">Hammerspoon 2</a></h1>
-            <p class="version">API Documentation</p>
-        </div>
+function generatePage(title, content, currentPage = '') {
+    return htmlTemplate
+        .replace('{{TITLE}}', title)
+        .replace('{{CONTENT}}', content)
+        .replace('{{CURRENT_PAGE}}', currentPage);
+}
 
-        <div class="nav-section">
-            <h2>Modules</h2>
-            <div id="modules-nav"></div>
-        </div>
+/**
+ * Validate that required documentation fields are present
+ */
+function validateMethod(method, context) {
+    if (!method.description || method.description.trim() === '') {
+        throw new Error(`Missing description for method ${context}.${method.name}`);
+    }
 
-        <div class="nav-section">
-            <h2>Types</h2>
-            <div id="types-nav"></div>
-        </div>
-    </nav>
+    // Validate parameters have descriptions
+    if (method.params) {
+        for (const param of method.params) {
+            if (!param.description || param.description.trim() === '') {
+                throw new Error(`Missing description for parameter "${param.name}" in ${context}.${method.name}`);
+            }
+        }
+    }
 
-    <main class="content">
-        ${content}
-    </main>
+    // Validate returns has description if present
+    if (method.returns && (!method.returns.description || method.returns.description.trim() === '')) {
+        throw new Error(`Missing description for return value in ${context}.${method.name}`);
+    }
+}
 
-    <script src="script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            loadNavigation('${currentPage}');
-        });
-    </script>
-</body>
-</html>`;
+function validateProperty(property, context) {
+    if (!property.description || property.description.trim() === '') {
+        throw new Error(`Missing description for property ${context}.${property.name}`);
+    }
+}
+
+function validateType(protocol, typeName) {
+    if (!protocol.description || protocol.description.trim() === '') {
+        throw new Error(`Missing description for type ${typeName}`);
+    }
 }
 
 /**
@@ -121,10 +134,11 @@ function generateModulePage(moduleData) {
             moduleMethods.push({
                 name: func.name,
                 signature: `function ${func.name}(${func.params.join(', ')})`,
-                documentation: func.documentation?.description || '',
-                params: func.params.map((name, idx) => ({
+                description: func.documentation?.description || '',
+                params: func.documentation?.params || func.params.map((name, idx) => ({
                     name: name,
-                    type: func.documentation?.params?.[idx]?.type || 'any'
+                    type: 'any',
+                    description: ''
                 })),
                 returns: func.documentation?.returns || null
             });
@@ -139,10 +153,12 @@ function generateModulePage(moduleData) {
 
         <div class="section">`;
 
-    // Add type definitions section
+    // Always show type definitions section
+    content += `
+            <h2>Types</h2>`;
+
     if (typeDefinitions.length > 0) {
         content += `
-            <h2>Types</h2>
             <p>This module provides the following types:</p>
             <ul class="type-list">`;
 
@@ -156,68 +172,79 @@ function generateModulePage(moduleData) {
 
         content += `
             </ul>`;
+    } else {
+        content += `
+            <p>This module does not provide any types.</p>`;
     }
 
-    // Add module methods section
-    if (moduleMethods.length > 0) {
-        content += `
+    // Always show module methods section
+    content += `
             <h2>Methods</h2>`;
 
+    if (moduleMethods.length > 0) {
         for (const method of moduleMethods) {
+            // Validate method has required documentation
+            validateMethod(method, moduleName);
+
             const params = method.params || [];
             const paramStr = params.map(p => p.name).join(', ');
 
             content += `
             <div class="method" id="${method.name}">
-                <h3>${moduleName}.${method.name}(${paramStr})</h3>`;
-
-            if (method.description) {
-                content += `
+                <h3>${moduleName}.${method.name}(${paramStr})</h3>
                 <p class="description">${method.description}</p>`;
-            }
+
+            // Always show parameters section
+            content += `
+                <h4>Parameters</h4>`;
 
             if (params.length > 0) {
                 content += `
-                <h4>Parameters</h4>
                 <ul class="params">`;
 
                 for (const param of params) {
                     content += `
                     <li>
                         <code>${param.name}</code>
-                        <span class="type">${formatType(param.type)}</span>`;
-
-                    if (param.description) {
-                        content += `
-                        <p class="param-desc">${param.description}</p>`;
-                    }
-
-                    content += `
+                        <span class="type">${formatType(param.type)}</span>
+                        <p class="param-desc">${param.description}</p>
                     </li>`;
                 }
 
                 content += `
                 </ul>`;
+            } else {
+                content += `
+                <p>None</p>`;
             }
+
+            // Always show returns section
+            content += `
+                <h4>Returns</h4>`;
 
             if (method.returns) {
                 content += `
-                <h4>Returns</h4>
                 <p>
                     <span class="type">${formatType(method.returns.type)}</span>
-                    ${method.returns.description ? ` - ${method.returns.description}` : ''}
+                     - ${method.returns.description}
                 </p>`;
+            } else {
+                content += `
+                <p>Nothing</p>`;
             }
 
             content += `
             </div>`;
         }
+    } else {
+        content += `
+            <p>This module has no methods.</p>`;
     }
 
     content += `
         </div>`;
 
-    const html = htmlTemplate(moduleName, content, moduleName);
+    const html = generatePage(moduleName, content, moduleName);
     const outputPath = path.join(OUTPUT_DIR, `${moduleName}.html`);
     fs.writeFileSync(outputPath, html);
     console.log(`  ✓ Generated ${moduleName}.html`);
@@ -227,29 +254,34 @@ function generateModulePage(moduleData) {
  * Generate type documentation page
  */
 function generateTypePage(typeName, protocol, isGlobal = false) {
+    // Validate type has required documentation
+    validateType(protocol, typeName);
+
     let content = `
         <div class="page-header">
             <h1>${typeName}</h1>
             <p class="module-type">Type</p>
         </div>`;
 
-    // Add type description if available
-    if (protocol.description) {
-        content += `
+    // Always show type description
+    content += `
         <div class="section">
             <p class="type-description">${protocol.description}</p>
         </div>`;
-    }
 
     content += `
         <div class="section">`;
 
-    // Add properties section
-    if (protocol.properties && protocol.properties.length > 0) {
-        content += `
+    // Always show properties section
+    content += `
             <h2>Properties</h2>`;
 
-        for (const prop of protocol.properties) {
+    const properties = protocol.properties || [];
+    if (properties.length > 0) {
+        for (const prop of properties) {
+            // Validate property has required documentation
+            validateProperty(prop, typeName);
+
             // Extract type from signature
             const typeMatch = prop.signature.match(/var\s+\w+\s*:\s*([^{]+)/);
             const propType = typeMatch ? typeMatch[1].trim() : 'any';
@@ -257,28 +289,26 @@ function generateTypePage(typeName, protocol, isGlobal = false) {
             content += `
             <div class="property" id="${prop.name}">
                 <h3>${prop.name}</h3>
-                <p class="type">${formatType(propType)}</p>`;
-
-            if (prop.description) {
-                content += `
-                <p class="description">${prop.description}</p>`;
-            }
-
-            content += `
+                <p class="type">${formatType(propType)}</p>
+                <p class="description">${prop.description}</p>
             </div>`;
         }
+    } else {
+        content += `
+            <p>This type has no properties.</p>`;
     }
 
-    // Add methods section
-    if (protocol.methods && protocol.methods.length > 0) {
-        content += `
+    // Always show methods section
+    content += `
             <h2>Methods</h2>`;
 
-        for (const method of protocol.methods) {
-            // Skip init methods for global types (they're shown as constructors)
-            if (method.name === 'init' && !isGlobal) {
-                continue;
-            }
+    const methods = protocol.methods || [];
+    const filteredMethods = methods.filter(m => m.name !== 'init' || isGlobal);
+
+    if (filteredMethods.length > 0) {
+        for (const method of filteredMethods) {
+            // Validate method has required documentation
+            validateMethod(method, typeName);
 
             const params = method.params || [];
             const paramStr = params.map(p => p.name).join(', ');
@@ -291,55 +321,60 @@ function generateTypePage(typeName, protocol, isGlobal = false) {
                 <h3>
                     ${isStatic ? `<span class="static-badge">static</span> ` : ''}
                     ${isStatic ? `${typeName}.` : ''}${methodName}(${paramStr})
-                </h3>`;
-
-            if (method.description) {
-                content += `
+                </h3>
                 <p class="description">${method.description}</p>`;
-            }
+
+            // Always show parameters section
+            content += `
+                <h4>Parameters</h4>`;
 
             if (params.length > 0) {
                 content += `
-                <h4>Parameters</h4>
                 <ul class="params">`;
 
                 for (const param of params) {
                     content += `
                     <li>
                         <code>${param.name}</code>
-                        <span class="type">${formatType(param.type)}</span>`;
-
-                    if (param.description) {
-                        content += `
-                        <p class="param-desc">${param.description}</p>`;
-                    }
-
-                    content += `
+                        <span class="type">${formatType(param.type)}</span>
+                        <p class="param-desc">${param.description}</p>
                     </li>`;
                 }
 
                 content += `
                 </ul>`;
+            } else {
+                content += `
+                <p>None</p>`;
             }
+
+            // Always show returns section
+            content += `
+                <h4>Returns</h4>`;
 
             if (method.returns) {
                 content += `
-                <h4>Returns</h4>
                 <p>
                     <span class="type">${formatType(method.returns.type)}</span>
-                    ${method.returns.description ? ` - ${method.returns.description}` : ''}
+                     - ${method.returns.description}
                 </p>`;
+            } else {
+                content += `
+                <p>Nothing</p>`;
             }
 
             content += `
             </div>`;
         }
+    } else {
+        content += `
+            <p>This type has no methods.</p>`;
     }
 
     content += `
         </div>`;
 
-    const html = htmlTemplate(typeName, content, typeName);
+    const html = generatePage(typeName, content, typeName);
     const outputPath = path.join(OUTPUT_DIR, `${typeName}.html`);
     fs.writeFileSync(outputPath, html);
     console.log(`  ✓ Generated ${typeName}.html`);
@@ -381,7 +416,7 @@ function generateIndexPage(modules, types) {
         </div>
     `;
 
-    const html = htmlTemplate('Home', content, 'index');
+    const html = generatePage('Home', content, 'index');
     const outputPath = path.join(OUTPUT_DIR, 'index.html');
     fs.writeFileSync(outputPath, html);
     console.log(`  ✓ Generated index.html`);
@@ -391,38 +426,15 @@ function generateIndexPage(modules, types) {
  * Generate JavaScript for navigation
  */
 function generateJavaScript(modules, types) {
-    const script = `
-// Navigation data
-const navigationData = {
-    modules: ${JSON.stringify(modules.map(m => ({ name: m.name, url: m.name + '.html' })))},
-    types: ${JSON.stringify(types.map(t => ({ name: t, url: t + '.html' })))}
-};
+    const navigationData = {
+        modules: modules.map(m => ({ name: m.name, url: m.name + '.html' })),
+        types: types.map(t => ({ name: t, url: t + '.html' }))
+    };
 
-// Load navigation
-function loadNavigation(currentPage) {
-    const modulesNav = document.getElementById('modules-nav');
-    const typesNav = document.getElementById('types-nav');
-
-    if (modulesNav) {
-        modulesNav.innerHTML = navigationData.modules.map(m =>
-            \`<a href="\${m.url}" class="\${currentPage === m.name ? 'active' : ''}">\${m.name}</a>\`
-        ).join('');
-    }
-
-    if (typesNav) {
-        typesNav.innerHTML = navigationData.types.map(t =>
-            \`<a href="\${t.url}" class="\${currentPage === t.name ? 'active' : ''}">\${t.name}</a>\`
-        ).join('');
-    }
-}
-
-// Theme support
-document.addEventListener('DOMContentLoaded', () => {
-    // Check for saved theme preference or default to dark
-    const theme = localStorage.getItem('theme') || 'dark';
-    document.body.setAttribute('data-theme', theme);
-});
-`;
+    const script = scriptTemplate.replace(
+        '{{NAVIGATION_DATA}}',
+        JSON.stringify(navigationData, null, 2)
+    );
 
     const outputPath = path.join(OUTPUT_DIR, 'script.js');
     fs.writeFileSync(outputPath, script);
@@ -433,299 +445,8 @@ document.addEventListener('DOMContentLoaded', () => {
  * Generate CSS
  */
 function generateCSS() {
-    const css = `
-:root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --bg-code: #f8f8f8;
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --accent: #007acc;
-    --border: #e0e0e0;
-    --shadow: rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] {
-    --bg-primary: #1e1e1e;
-    --bg-secondary: #252526;
-    --bg-code: #2d2d30;
-    --text-primary: #d4d4d4;
-    --text-secondary: #9d9d9d;
-    --accent: #4fc3f7;
-    --border: #3c3c3c;
-    --shadow: rgba(0, 0, 0, 0.3);
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    display: flex;
-    min-height: 100vh;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    line-height: 1.6;
-}
-
-/* Sidebar */
-.sidebar {
-    width: 280px;
-    background: var(--bg-secondary);
-    border-right: 1px solid var(--border);
-    padding: 2rem 0;
-    overflow-y: auto;
-    position: fixed;
-    height: 100vh;
-}
-
-.sidebar-header {
-    padding: 0 1.5rem 1.5rem;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 1.5rem;
-}
-
-.sidebar-header h1 {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
-}
-
-.sidebar-header .version {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-.nav-section {
-    margin-bottom: 1.5rem;
-    padding: 0 1.5rem;
-}
-
-.nav-section h2 {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-}
-
-.nav-section a {
-    display: block;
-    padding: 0.5rem 0.75rem;
-    color: var(--text-primary);
-    text-decoration: none;
-    border-radius: 4px;
-    margin-bottom: 0.25rem;
-    transition: background 0.2s;
-}
-
-.nav-section a:hover {
-    background: var(--bg-primary);
-}
-
-.nav-section a.active {
-    background: var(--accent);
-    color: white;
-}
-
-/* Main Content */
-.content {
-    margin-left: 280px;
-    flex: 1;
-    padding: 3rem;
-    max-width: 1200px;
-}
-
-.page-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border);
-}
-
-.page-header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.page-header .module-type {
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
-
-.section {
-    margin-bottom: 3rem;
-}
-
-.section h2 {
-    font-size: 1.75rem;
-    margin: 2rem 0 1rem;
-    color: var(--text-primary);
-}
-
-.section h3 {
-    font-size: 1.25rem;
-    margin: 1rem 0 0.5rem;
-    color: var(--accent);
-}
-
-.section h4 {
-    font-size: 1rem;
-    margin: 1rem 0 0.5rem;
-    font-weight: 600;
-}
-
-/* Grid for cards */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.5rem;
-    text-decoration: none;
-    color: var(--text-primary);
-    transition: all 0.2s;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px var(--shadow);
-    border-color: var(--accent);
-}
-
-.card h3 {
-    color: var(--accent);
-    margin-bottom: 0.5rem;
-}
-
-.card p {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-/* Methods and Properties */
-.method, .property {
-    background: var(--bg-secondary);
-    border-left: 3px solid var(--accent);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-radius: 4px;
-}
-
-.method h3, .property h3 {
-    margin-top: 0;
-    font-family: 'Courier New', monospace;
-    font-size: 1.1rem;
-}
-
-.static-badge {
-    background: var(--accent);
-    color: white;
-    padding: 0.125rem 0.5rem;
-    border-radius: 3px;
-    font-size: 0.75rem;
-    font-weight: normal;
-    margin-right: 0.5rem;
-}
-
-.description {
-    margin: 0.75rem 0;
-    color: var(--text-primary);
-}
-
-.params {
-    list-style: none;
-    margin: 0.5rem 0;
-}
-
-.params li {
-    padding: 0.5rem;
-    background: var(--bg-code);
-    margin-bottom: 0.5rem;
-    border-radius: 4px;
-}
-
-.params code {
-    font-weight: 600;
-    margin-right: 0.5rem;
-}
-
-.type {
-    color: var(--accent);
-    font-family: 'Courier New', monospace;
-    font-size: 0.875rem;
-}
-
-.type-list {
-    list-style: none;
-    margin: 1rem 0;
-}
-
-.type-list li {
-    margin: 0.5rem 0;
-}
-
-.type-link {
-    color: var(--accent);
-    text-decoration: none;
-    font-size: 1.1rem;
-}
-
-.type-link:hover {
-    text-decoration: underline;
-}
-
-.type-description {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    color: var(--text-primary);
-    margin: 1rem 0;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border-left: 4px solid var(--accent);
-    border-radius: 4px;
-}
-
-.param-desc {
-    margin: 0.5rem 0 0 0;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    line-height: 1.5;
-}
-
-code {
-    background: var(--bg-code);
-    padding: 0.125rem 0.375rem;
-    border-radius: 3px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9em;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        position: relative;
-        height: auto;
-    }
-
-    .content {
-        margin-left: 0;
-        padding: 1.5rem;
-    }
-}
-`;
-
     const outputPath = path.join(OUTPUT_DIR, 'styles.css');
-    fs.writeFileSync(outputPath, css);
+    fs.writeFileSync(outputPath, cssTemplate);
     console.log(`  ✓ Generated styles.css`);
 }
 
@@ -734,6 +455,9 @@ code {
  */
 function main() {
     console.log('Generating Hammerspoon 2 HTML Documentation...\n');
+
+    // Load templates
+    loadTemplates();
 
     // Load index
     const indexPath = path.join(JSON_DIR, 'index.json');
