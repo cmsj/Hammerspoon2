@@ -18,21 +18,21 @@ import JavaScriptCore
     ///   - callback: A JavaScript function to call when the timer fires
     ///   - continueOnError: If true, the timer will continue running even if the callback throws an error
     /// - Returns: A timer object. Call start() to begin the timer.
-    @objc func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimerObject
+    @objc func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer
 
     /// Create and start a one-shot timer
     /// - Parameters:
     ///   - seconds: Number of seconds to wait before firing
     ///   - callback: A JavaScript function to call when the timer fires
     /// - Returns: A timer object (already started)
-    @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimerObject
+    @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer
 
     /// Create and start a repeating timer
     /// - Parameters:
     ///   - interval: The interval in seconds at which the timer should fire
     ///   - callback: A JavaScript function to call when the timer fires
     /// - Returns: A timer object (already started)
-    @objc func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimerObject
+    @objc func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimer
 
     /// Create and start a timer that fires at a specific time
     /// - Parameters:
@@ -42,7 +42,7 @@ import JavaScriptCore
     ///   - continueOnError: If true, the timer will continue running even if the callback throws an error
     /// - Returns: A timer object (already started)
     @objc(doAt::::)
-    func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimerObject
+    func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer
 
     /// Block execution for a specified number of microseconds (strongly discouraged)
     /// - Parameter microseconds: Number of microseconds to sleep
@@ -81,23 +81,23 @@ import JavaScriptCore
 
     // MARK: - Timer constructors
 
-    @objc func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimerObject {
-        return HSTimerObject(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError)
+    @objc func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimer {
+        return HSTimer(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError)
     }
 
-    @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimerObject {
-        let timer = HSTimerObject(interval: seconds, repeats: false, callback: callback)
+    @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer {
+        let timer = HSTimer(interval: seconds, repeats: false, callback: callback)
         timer.start()
         return timer
     }
 
-    @objc func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimerObject {
-        let timer = HSTimerObject(interval: interval, repeats: true, callback: callback)
+    @objc func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimer {
+        let timer = HSTimer(interval: interval, repeats: true, callback: callback)
         timer.start()
         return timer
     }
 
-    @objc func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval = 0, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimerObject {
+    @objc func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval = 0, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimer {
         // Calculate seconds until target time (time is seconds since midnight)
         let now = localTime()
         var secondsUntilTarget = time - now
@@ -108,7 +108,7 @@ import JavaScriptCore
         }
 
         // Create initial one-shot timer to fire at the target time
-        let timer = HSTimerObject(interval: secondsUntilTarget, repeats: false, callback: callback, continueOnError: continueOnError)
+        let timer = HSTimer(interval: secondsUntilTarget, repeats: false, callback: callback, continueOnError: continueOnError)
 
         // If repeatInterval is specified, we'll need to reschedule after each fire
         // This is handled in JavaScript for simplicity

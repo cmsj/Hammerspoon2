@@ -28,7 +28,7 @@ import Carbon
 
 @_documentation(visibility: private)
 @MainActor
-@objc @safe class HSHotkeyObject: NSObject, HSHotkeyAPI {
+@objc @safe class HSHotkey: NSObject, HSHotkeyAPI {
     @objc var typeName = "HSHotkey"
     private let keyCode: UInt32
     private let modifiers: UInt32
@@ -149,7 +149,7 @@ import Carbon
 class HotkeyManager {
     static let shared = HotkeyManager()
 
-    private var hotkeys: [UInt32: HSHotkeyObject] = [:]
+    private var hotkeys: [UInt32: HSHotkey] = [:]
     nonisolated(unsafe) private var eventHandler: EventHandlerRef?
     let context = UnsafeMutablePointer<HotkeyManager>.allocate(capacity: 1)
 
@@ -219,7 +219,7 @@ class HotkeyManager {
         }
     }
 
-    func register(hotkeyID: UInt32, hotkey: HSHotkeyObject) {
+    func register(hotkeyID: UInt32, hotkey: HSHotkey) {
         hotkeys[hotkeyID] = hotkey
     }
 

@@ -20,7 +20,7 @@ import Carbon
     ///   - callbackPressed: A JavaScript function to call when the hotkey is pressed
     ///   - callbackReleased: A JavaScript function to call when the hotkey is released
     /// - Returns: A hotkey object, or nil if binding failed
-    @objc func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkeyObject?
+    @objc func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkey?
 
     /// Bind a hotkey with a message description
     /// - Parameters:
@@ -31,7 +31,7 @@ import Carbon
     ///   - callbackReleased: A JavaScript function to call when the hotkey is released
     /// - Returns: A hotkey object, or nil if binding failed
     @objc(bindSpec:::::)
-    func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkeyObject?
+    func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkey?
 
     /// Get the system-wide mapping of key names to key codes
     /// - Returns: A dictionary mapping key names to numeric key codes
@@ -49,7 +49,7 @@ import Carbon
     var name = "hs.hotkey"
 
     // Track active hotkeys for cleanup
-    private var activeHotkeys: [HSHotkeyObject] = []
+    private var activeHotkeys: [HSHotkey] = []
 
     // MARK: - Module lifecycle
 
@@ -71,11 +71,11 @@ import Carbon
 
     // MARK: - Hotkey binding
 
-    @objc func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkeyObject? {
+    @objc func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkey? {
         return bindSpec(mods, key, nil, callbackPressed, callbackReleased)
     }
 
-    @objc func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkeyObject? {
+    @objc func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkey? {
         // Parse modifiers
         guard let modifierFlags = parseModifiers(mods) else {
             AKError("hs.hotkey.bind: Invalid modifiers")
@@ -99,7 +99,7 @@ import Carbon
         }
 
         // Create and enable the hotkey
-        let hotkey = HSHotkeyObject(keyCode: keyCode, modifiers: modifierFlags, callbackPressed: callbackPressed, callbackReleased: callbackReleased)
+        let hotkey = HSHotkey(keyCode: keyCode, modifiers: modifierFlags, callbackPressed: callbackPressed, callbackReleased: callbackReleased)
 
         if !hotkey.enable() {
             AKError("hs.hotkey.bind: Failed to enable hotkey")
