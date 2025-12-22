@@ -15,8 +15,15 @@ import SwiftUI
 
 /// Module for accessing information about the Hammerspoon application itself
 @objc protocol HSAlertModuleAPI: JSExport {
+    /// Create a new HSAlert object
+    /// - Returns: An HSAlert object
     @objc func newAlert() -> HSAlert
+    /// Show an HSAlert object
+    /// - Parameter alert: The HSAlert object to show
     @objc func showAlert(_ alert: HSAlert)
+    /// Show an alert to the user
+    /// - Parameter message: The text to include in the alert
+    @objc func show(_ message: String)
 }
 
 // MARK: - Implementation
@@ -68,5 +75,12 @@ import SwiftUI
             try? await Task.sleep(for: .seconds(alert.expire))
             window.orderOut(nil)
         }
+    }
+
+    @objc func show(_ message: String) {
+        let alert = newAlert()
+        alert.font = .title()
+        alert.message = message
+        showAlert(alert)
     }
 }

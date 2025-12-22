@@ -1,0 +1,23 @@
+{
+  "name": "hammerspoon2-docs",
+  "version": "1.0.0",
+  "description": "Documentation extraction for Hammerspoon 2 JavaScript API",
+  "private": true,
+  "scripts": {
+    "docs:extract": "node scripts/extract-docs.js",
+    "docs:generate": "npm run docs:extract && npm run docs:html",
+    "docs:html": "node scripts/generate-html.js",
+    "docs:coverage": "node scripts/docs-coverage.js",
+    "docs:test": "bash scripts/test-docs.sh",
+    "docs:clean": "rm -rf docs/json docs/html"
+  },
+  "keywords": [
+    "hammerspoon",
+    "documentation"
+  ],
+  "author": "Chris Jones <cmsj@tenshu.net>",
+  "license": "MIT",
+  "devDependencies": {
+    "nunjucks": "^3.2.4"
+  }
+}

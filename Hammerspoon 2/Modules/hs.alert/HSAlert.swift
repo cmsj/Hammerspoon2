@@ -9,14 +9,21 @@ import Foundation
 import JavaScriptCore
 import SwiftUI
 
-@objc protocol HSAlertAPI: JSExport {
+/// An object for use with hs.alert API
+@objc protocol HSAlertAPI: HSTypeAPI, JSExport {
+    /// The message to display in an alert
     @objc var message: String { get set }
+    /// How many seconds the alert should be shown for
     @objc var expire: Int { get set }
+    /// An HSFont describing the font to use in the alert
     @objc var font: HSFont { get set }
+    /// How many points of padding to use in the alert
     @objc var padding: Int { get set }
 }
 
 @objc class HSAlert: NSObject, HSAlertAPI {
+    @objc var typeName = "HSAlert"
+
     @objc var message: String = ""
     @objc var expire: Int = 5
     @objc var font: HSFont = HSFont.body()

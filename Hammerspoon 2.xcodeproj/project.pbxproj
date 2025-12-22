@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4F463E9F2EA7A669000A2135 /* AXSwift */; };
 		4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4F488B2F2E97E79800A2B5F4 /* Sparkle */; };
-		4FE3BB342EA301AE00C56330 /* JavaScript API.docc in Sources */ = {isa = PBXBuildFile; fileRef = 4FE3BB332EA301AE00C56330 /* JavaScript API.docc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,7 +24,16 @@
 /* Begin PBXFileReference section */
 		4F5641832E8333830099EB4C /* Hammerspoon 2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Hammerspoon 2.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F5641902E8333840099EB4C /* Hammerspoon 2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Hammerspoon 2Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		4FE3BB332EA301AE00C56330 /* JavaScript API.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = "JavaScript API.docc"; sourceTree = "<group>"; };
+		4F973B072EF89EE6006A6709 /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
+		4F973B082EF89EE6006A6709 /* styles.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = styles.css; sourceTree = "<group>"; };
+		4F973B0D2EF89EE6006A6709 /* docs-coverage.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "docs-coverage.js"; sourceTree = "<group>"; };
+		4F973B0E2EF89EE6006A6709 /* extract-docs.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "extract-docs.js"; sourceTree = "<group>"; };
+		4F973B0F2EF89EE6006A6709 /* generate-html.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "generate-html.js"; sourceTree = "<group>"; };
+		4F973B102EF89EE6006A6709 /* test-docs.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "test-docs.sh"; sourceTree = "<group>"; };
+		4F973B122EF9523A006A6709 /* base.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = base.njk; sourceTree = "<group>"; };
+		4F973B132EF9523A006A6709 /* index.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = index.njk; sourceTree = "<group>"; };
+		4F973B142EF9523A006A6709 /* module.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = module.njk; sourceTree = "<group>"; };
+		4F973B152EF9523A006A6709 /* type.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = type.njk; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -64,7 +72,7 @@
 		4F56417A2E8333830099EB4C = {
 			isa = PBXGroup;
 			children = (
-				4FE3BB332EA301AE00C56330 /* JavaScript API.docc */,
+				4F973B112EF89EE6006A6709 /* scripts */,
 				4F5641852E8333830099EB4C /* Hammerspoon 2 */,
 				4F5641932E8333840099EB4C /* Hammerspoon 2Tests */,
 				4F5641842E8333830099EB4C /* Products */,
@@ -78,6 +86,31 @@
 				4F5641902E8333840099EB4C /* Hammerspoon 2Tests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		4F973B0C2EF89EE6006A6709 /* templates */ = {
+			isa = PBXGroup;
+			children = (
+				4F973B122EF9523A006A6709 /* base.njk */,
+				4F973B132EF9523A006A6709 /* index.njk */,
+				4F973B142EF9523A006A6709 /* module.njk */,
+				4F973B152EF9523A006A6709 /* type.njk */,
+				4F973B072EF89EE6006A6709 /* script.js */,
+				4F973B082EF89EE6006A6709 /* styles.css */,
+			);
+			path = templates;
+			sourceTree = "<group>";
+		};
+		4F973B112EF89EE6006A6709 /* scripts */ = {
+			isa = PBXGroup;
+			children = (
+				4F973B0C2EF89EE6006A6709 /* templates */,
+				4F973B0D2EF89EE6006A6709 /* docs-coverage.js */,
+				4F973B0E2EF89EE6006A6709 /* extract-docs.js */,
+				4F973B0F2EF89EE6006A6709 /* generate-html.js */,
+				4F973B102EF89EE6006A6709 /* test-docs.sh */,
+			);
+			path = scripts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -195,7 +228,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4FE3BB342EA301AE00C56330 /* JavaScript API.docc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

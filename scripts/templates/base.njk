@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h1><a href="index.html">Hammerspoon 2</a></h1>
+            <p class="version">API Documentation</p>
+        </div>
+
+        <div class="nav-section">
+            <h2>Modules</h2>
+            <div id="modules-nav"></div>
+        </div>
+
+        <div class="nav-section">
+            <h2>Types</h2>
+            <div id="types-nav"></div>
+        </div>
+    </nav>
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('{{ currentPage }}');
+        });
+    </script>
+</body>
+</html>

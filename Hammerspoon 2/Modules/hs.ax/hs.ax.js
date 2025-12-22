@@ -70,6 +70,11 @@ class AXModuleWatcherEmitter {
 hs.ax._watcherEmitter = new AXModuleWatcherEmitter();
 
 // User-facing API for adding watchers
+/// Add a watcher for application AX events
+/// Parameters:
+///  - application: An HSApplication object
+///  - notification: An event name
+///  - listener: A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to
 hs.ax.addWatcher = function(application, notification, listener) {
     if (!application || !application.pid) {
         throw new Error("hs.ax.addWatcher(): First argument must be an HSApplication object");
@@ -85,6 +90,11 @@ hs.ax.addWatcher = function(application, notification, listener) {
 }
 
 // User-facing API for removing watchers
+/// Remove a watcher for application AX events
+/// Parameters:
+///  - application: An HSApplication object
+///  - notification: The event name to stop watching
+///  - listener: The function/lambda provided when adding the watcher
 hs.ax.removeWatcher = function(application, notification, listener) {
     if (!application || !application.pid) {
         throw new Error("hs.ax.removeWatcher(): First argument must be an HSApplication object");
@@ -100,6 +110,8 @@ hs.ax.removeWatcher = function(application, notification, listener) {
 }
 
 // Convenience function to get the focused element
+/// Fetch the focused UI element
+/// Returns: An HSAXElement representing the focused UI element, or null if none was found
 hs.ax.focusedElement = function() {
     const focusedApp = hs.application.frontmost();
     if (!focusedApp) {
@@ -123,6 +135,11 @@ hs.ax.focusedElement = function() {
 };
 
 // Helper to search for elements by role
+/// Find AX elements for a given role
+/// Parameters:
+///  - role: The role name to search for
+///  - parent: An HSAXElement object to search. If none is supplied, the search will be conducted system-wide
+/// Returns: An array of found elements
 hs.ax.findByRole = function(role, parent) {
     const searchRoot = parent || hs.ax.systemWideElement();
     if (!searchRoot) {
@@ -149,6 +166,11 @@ hs.ax.findByRole = function(role, parent) {
 };
 
 // Helper to search for elements by title
+/// Find AX elements by title
+/// Parameters:
+///  - title: The name to search for
+///  - parent: An HSAXElement object to search. If none is supplied, the search will be conducted system-wide
+/// Returns: An array of found elements
 hs.ax.findByTitle = function(title, parent) {
     const searchRoot = parent || hs.ax.systemWideElement();
     if (!searchRoot) {
@@ -175,6 +197,10 @@ hs.ax.findByTitle = function(title, parent) {
 };
 
 // Helper to print element hierarchy
+/// Prints the hierarchy of a given element to the Console
+/// Parameters:
+///  - element: An HSAXElement
+///  - depth: This parameter should not be supplied
 hs.ax.printHierarchy = function(element, depth = 0) {
     element = element || hs.ax.systemWideElement();
     if (!element) {

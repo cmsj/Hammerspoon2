@@ -10,7 +10,7 @@ import JavaScriptCore
 import AXSwift
 
 /// Object representing an Accessibility element
-@objc protocol HSAXElementAPI: JSExport {
+@objc protocol HSAXElementAPI: HSTypeAPI, JSExport {
     // MARK: - Basic Properties
 
     /// The element's role (e.g., "AXWindow", "AXButton")
@@ -51,31 +51,46 @@ import AXSwift
     @objc var parent: HSAXElement? { get }
 
     /// The element's children
+    /// - Returns: An array of HSAXElement objects
     @objc func children() -> [HSAXElement]
 
     /// Get a specific child by index
+    /// - Parameter index: The index to fetch
+    /// - Returns: An HSAXElement object, if a child exists at the given index
     @objc func childAtIndex(_ index: Int) -> HSAXElement?
 
     // MARK: - Attributes
 
     /// Get all available attribute names
+    /// - Returns: An array of attribute names
     @objc func attributeNames() -> [String]
 
     /// Get the value of a specific attribute
+    /// - Parameter attribute: The attribute name to fetch the value for
+    /// - Returns: The requested value, or nil if none was found
     @objc func attributeValue(_ attribute: String) -> Any?
 
     /// Set the value of a specific attribute
+    /// - Parameters:
+    ///   - attribute: The attribute name to set
+    ///   - value: The value to set
+    /// - Returns: True if the operation succeeded, otherwise False
     @objc func setAttributeValue(_ attribute: String, value: Any) -> Bool
 
     /// Check if an attribute is settable
+    /// - Parameter attribute: An attribute name
+    /// - Returns: True if the attribute is settable, otherwise False
     @objc func isAttributeSettable(_ attribute: String) -> Bool
 
     // MARK: - Actions
 
     /// Get all available action names
+    /// - Returns: An array of available action names
     @objc func actionNames() -> [String]
 
     /// Perform a specific action
+    /// - Parameter action: The action to perform
+    /// - Returns: True if the action succeeded, otherwise False
     @objc func performAction(_ action: String) -> Bool
 
     // MARK: - Utility
@@ -86,6 +101,7 @@ import AXSwift
 
 @_documentation(visibility: private)
 @objc class HSAXElement: NSObject, HSAXElementAPI {
+    @objc var typeName = "HSAXElement"
     let element: UIElement
 
     init(element: UIElement) {

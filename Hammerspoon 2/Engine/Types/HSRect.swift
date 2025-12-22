@@ -13,18 +13,37 @@ import CoreGraphics
 // MARK: - Existing Bridge Classes (from before)
 // ---------------------------------------------------------------
 
-@objc protocol HSRectJSExports: JSExport {
+/// This is a JavaScript object used to represent a rectangle, as used in various places throughout Hammerspoon's API, particularly where dealing with portions of a display. Behind the scenes it is a wrapper for the CGRect type in Swift/ObjectiveC.
+@objc protocol HSRectAPI: HSTypeAPI, JSExport {
+    /// An x-axis coordinate for the top-left point of the rectangle
     var x: Double { get set }
-    var y: Double { get set }
-    var w: Double { get set }
-    var h: Double { get set }
-    var origin: HSPoint { get set }
-    var size: HSSize { get set }
 
+    /// A y-axis coordinate for the top-left point of the rectangle
+    var y: Double { get set }
+
+    /// The width of the rectangle
+    var w: Double { get set }
+
+    /// The height of the rectangle
+    var h: Double { get set }
+
+    /// The "origin" of the rectangle, ie the coordinates of its top left corner, as an HSPoint object
+    var origin: HSPoint { get set }
+
+    /// The size of the rectangle, ie its width and height, as an HSSize object
+    var size: HSSize { get set }
+    
+    /// Create a new HSRect object
+    /// - Parameters:
+    ///   - x: The x-axis coordinate of the top-left corner
+    ///   - y: The y-axis coordinate of the top-left corner
+    ///   - w: The width of the rectangle
+    ///   - h: The height of the rectangle
     init(x: Double, y: Double, w: Double, h: Double)
 }
 
-@objc class HSRect: NSObject, HSRectJSExports {
+@objc class HSRect: NSObject, HSRectAPI {
+    @objc var typeName = "HSRect"
     var rect: CGRect
 
     var x: Double {

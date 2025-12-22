@@ -30,8 +30,8 @@
             filePath = "Hammerspoon 2/Modules/hs.alert/AlertModule.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "57"
-            endingLineNumber = "57"
+            startingLineNumber = "64"
+            endingLineNumber = "64"
             landmarkName = "showAlert(_:)"
             landmarkType = "7">
          </BreakpointContent>

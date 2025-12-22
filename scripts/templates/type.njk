@@ -1,0 +1,70 @@
+{% extends "base.njk" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ typeName }}</h1>
+    <p class="module-type">Type</p>
+</div>
+
+<div class="section">
+    <p class="type-description">{{ protocol.description }}</p>
+</div>
+
+<div class="section">
+    <h2>Properties</h2>
+    {% if protocol.properties.length > 0 %}
+        {% for prop in protocol.properties %}
+        <div class="property" id="{{ prop.name }}">
+            <h3>{{ prop.name }}</h3>
+            <p class="type">{{ prop.signature | extractPropertyType | formatType }}</p>
+            <p class="description">{{ prop.description }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>This type has no properties.</p>
+    {% endif %}
+
+    <h2>Methods</h2>
+    {% set filteredMethods = protocol.methods | filterInitMethods(isGlobal) %}
+    {% if filteredMethods.length > 0 %}
+        {% for method in filteredMethods %}
+        {% set isStatic = method.signature and 'static func' in method.signature %}
+        {% set methodName = 'constructor' if method.name == 'init' else method.name %}
+        <div class="method" id="{{ methodName }}">
+            <h3>
+                {% if isStatic %}<span class="static-badge">static</span> {% endif %}
+                {% if isStatic %}{{ typeName }}.{% endif %}{{ methodName }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %})
+            </h3>
+            <p class="description">{{ method.description }}</p>
+
+            <h4>Parameters</h4>
+            {% if method.params.length > 0 %}
+            <ul class="params">
+                {% for param in method.params %}
+                <li>
+                    <code>{{ param.name }}</code>
+                    <span class="type">{{ param.type | formatType }}</span>
+                    <p class="param-desc">{{ param.description }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>None</p>
+            {% endif %}
+
+            <h4>Returns</h4>
+            {% if method.returns %}
+            <p>
+                <span class="type">{{ method.returns.type | formatType }}</span>
+                 - {{ method.returns.description }}
+            </p>
+            {% else %}
+            <p>Nothing</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>This type has no methods.</p>
+    {% endif %}
+</div>
+{% endblock %}

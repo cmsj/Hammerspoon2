@@ -13,13 +13,23 @@ import CoreGraphics
 // MARK: - Existing Bridge Classes (from before)
 // ---------------------------------------------------------------
 
-@objc protocol HSSizeJSExports: JSExport {
+/// This is a JavaScript object used to represent the size of a rectangle, as used in various places throughout Hammerspoon's API, particularly where dealing with portions of a display. Behind the scenes it is a wrapper for the CGSize type in Swift/ObjectiveC.
+@objc protocol HSSizeAPI: JSExport {
+    /// The width of the rectangle
     var w: Double { get set }
+
+    /// The height of the rectangle
     var h: Double { get set }
+    
+    /// Create a new HSSize object
+    /// - Parameters:
+    ///   - w: The width of the rectangle
+    ///   - h: The height of the rectangle
     init(w: Double, h: Double)
 }
 
-@objc class HSSize: NSObject, HSSizeJSExports {
+@objc class HSSize: NSObject, HSSizeAPI {
+    @objc var typeName = "HSSize"
     var size: CGSize
 
     var w: Double {

@@ -22,7 +22,7 @@ DerivedData/
 *.mode2v3
 !default.mode2v3
 *.perspectivev3
-!default.perspectivev3
+!default.perspectivex3
 **/xcuserdata/
 
 ## Other
@@ -30,3 +30,14 @@ DerivedData/
 *.xccheckout
 *.xcscmblueprint
 **/*.xcbkptlist
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Documentation artifacts (keep the generated docs for now, but they could be regenerated)
+# Uncomment these if you want to exclude generated docs from git:
+docs/api/
+docs/json/**
+docs/html/**
+
