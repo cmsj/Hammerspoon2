@@ -8,7 +8,7 @@
 import Foundation
 import JavaScriptCore
 
-/// Object representing a timer
+/// Object representing a timer. You should not instantiate these yourself, but rather, use the methods in hs.timer to create them for you.
 @objc protocol HSTimerAPI: HSTypeAPI, JSExport {
     /// The timer's interval in seconds
     @objc var interval: TimeInterval { get }

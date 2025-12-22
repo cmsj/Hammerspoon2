@@ -23,10 +23,6 @@ import SwiftUI
     /// Create a new HSAlert object
     /// - Parameter message: The mssage to show in the alert
     init(message: String)
-    
-    /// Does a lol
-    /// - Returns: lol
-    func lol() -> String
 }
 
 @objc class HSAlert: NSObject, HSAlertAPI {
@@ -50,9 +46,5 @@ import SwiftUI
 
     var swiftUIFont: Font {
         return font.font
-    }
-
-    func lol() -> String {
-        return "lol"
     }
 }

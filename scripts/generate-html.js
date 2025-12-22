@@ -279,7 +279,7 @@ function main() {
         for (const protocol of moduleData.swift.protocols) {
             if (protocol.type === 'typedef') {
                 const typeName = protocol.name.replace(/API$/, '');
-                generateTypePage(typeName, protocol, false);
+                generateTypePage(typeName, protocol, true);
             }
         }
     }

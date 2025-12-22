@@ -9,7 +9,7 @@ import Foundation
 import JavaScriptCore
 import AXSwift
 
-/// Object representing an Accessibility element
+/// Object representing an Accessibility element. You should not instantiate this directly, but rather, use the hs.ax methods to create these as required.
 @objc protocol HSAXElementAPI: HSTypeAPI, JSExport {
     // MARK: - Basic Properties
 

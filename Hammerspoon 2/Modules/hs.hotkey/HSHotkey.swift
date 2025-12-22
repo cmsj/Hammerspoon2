@@ -9,7 +9,7 @@ import Foundation
 import JavaScriptCore
 import Carbon
 
-/// Object representing a system-wide hotkey
+/// Object representing a system-wide hotkey. You should not create these objects directly, but rather, use the methods in hs.hotkey to instantiate these.
 @objc protocol HSHotkeyAPI: HSTypeAPI, JSExport {
     /// Enable the hotkey
     /// - Returns: True if the hotkey was enabled, otherwise False

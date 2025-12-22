@@ -10,7 +10,7 @@ import JavaScriptCore
 import AppKit
 import AXSwift
 
-/// Object representing a window
+/// Object representing a window. You should not instantiate these directly, but rather, use the methods in hs.window to create them for you.
 @objc protocol HSWindowAPI: HSTypeAPI, JSExport {
     // MARK: - Basic Properties
 
