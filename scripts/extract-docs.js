@@ -442,9 +442,17 @@ function extractReturns(signature, docLines) {
 /**
  * Parse JavaScript file to extract JSDoc comments and function definitions
  */
-function parseJavaScriptFile(filePath) {
+function parseJavaScriptFile(filePath, moduleName = null) {
     const content = fs.readFileSync(filePath, 'utf8');
     const functions = [];
+
+    // Helper to strip module prefix from function names
+    const stripModulePrefix = (name) => {
+        if (moduleName && name.startsWith(moduleName + '.')) {
+            return name.substring(moduleName.length + 1);
+        }
+        return name;
+    };
 
     // Match JSDoc comments followed by function definitions
     const jsdocRegex = /\/\*\*([^*]*(?:\*(?!\/)[^*]*)*)\*\/\s*(?:(\w+(?:\.\w+)*)\s*=\s*function\s*\(([^)]*)\)|function\s+(\w+)\s*\(([^)]*)\))/g;
@@ -457,7 +465,7 @@ function parseJavaScriptFile(filePath) {
 
         if (functionName) {
             functions.push({
-                name: functionName,
+                name: stripModulePrefix(functionName),
                 params: params.split(',').map(p => p.trim()).filter(p => p),
                 documentation: parseJSDoc(docComment),
                 type: 'function'
@@ -495,7 +503,7 @@ function parseJavaScriptFile(filePath) {
             if (docLines.length > 0) {
                 const docText = docLines.join('\n');
                 functions.push({
-                    name: functionName,
+                    name: stripModulePrefix(functionName),
                     params: params.split(',').map(p => p.trim()).filter(p => p),
                     documentation: parseDocCStyleComment(docText),
                     type: 'function'
@@ -509,18 +517,19 @@ function parseJavaScriptFile(filePath) {
     while ((match = simpleRegex.exec(content)) !== null) {
         const functionName = match[1];
         const params = match[2];
-        
+        const strippedName = stripModulePrefix(functionName);
+
         // Only add if not already captured by JSDoc regex
-        if (!functions.find(f => f.name === functionName)) {
+        if (!functions.find(f => f.name === strippedName)) {
             functions.push({
-                name: functionName,
+                name: strippedName,
                 params: params.split(',').map(p => p.trim()).filter(p => p),
                 documentation: { description: '', params: [], returns: null },
                 type: 'function'
             });
         }
     }
-    
+
     return functions;
 }
 
@@ -709,7 +718,7 @@ function processModule(moduleName, modulePath) {
                 moduleData.swift.protocols.push(...protocols);
             }
         } else if (file.endsWith('.js')) {
-            const functions = parseJavaScriptFile(filePath);
+            const functions = parseJavaScriptFile(filePath, moduleName);
             moduleData.javascript.functions.push(...functions);
         }
     }
