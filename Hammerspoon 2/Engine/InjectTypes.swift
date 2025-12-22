@@ -17,6 +17,7 @@ extension JSContext {
             "HSRect":  HSRect.self,
 
             "HSFont":  HSFont.self,
+            "HSAlert": HSAlert.self,
         ]
 
         typeBridges.forEach { key, value in

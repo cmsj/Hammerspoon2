@@ -15,9 +15,6 @@ import SwiftUI
 
 /// Module for accessing information about the Hammerspoon application itself
 @objc protocol HSAlertModuleAPI: JSExport {
-    /// Create a new HSAlert object
-    /// - Returns: An HSAlert object
-    @objc func newAlert() -> HSAlert
     /// Show an HSAlert object
     /// - Parameter alert: The HSAlert object to show
     @objc func showAlert(_ alert: HSAlert)
@@ -56,10 +53,6 @@ import SwiftUI
         return window
     }
 
-    @objc func newAlert() -> HSAlert {
-        return HSAlert()
-    }
-
     @objc func showAlert(_ alert: HSAlert) {
         guard let screen = NSScreen.main else {
             AKError("Unable to find main screen for alert")
@@ -78,9 +71,8 @@ import SwiftUI
     }
 
     @objc func show(_ message: String) {
-        let alert = newAlert()
+        let alert = HSAlert(message: message)
         alert.font = .title()
-        alert.message = message
         showAlert(alert)
     }
 }

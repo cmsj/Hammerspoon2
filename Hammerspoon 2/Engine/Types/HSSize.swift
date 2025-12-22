@@ -14,7 +14,7 @@ import CoreGraphics
 // ---------------------------------------------------------------
 
 /// This is a JavaScript object used to represent the size of a rectangle, as used in various places throughout Hammerspoon's API, particularly where dealing with portions of a display. Behind the scenes it is a wrapper for the CGSize type in Swift/ObjectiveC.
-@objc protocol HSSizeAPI: JSExport {
+@objc protocol HSSizeAPI: HSTypeAPI, JSExport {
     /// The width of the rectangle
     var w: Double { get set }
 

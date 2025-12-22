@@ -12,13 +12,21 @@ import SwiftUI
 /// An object for use with hs.alert API
 @objc protocol HSAlertAPI: HSTypeAPI, JSExport {
     /// The message to display in an alert
-    @objc var message: String { get set }
+    var message: String { get set }
     /// How many seconds the alert should be shown for
-    @objc var expire: Int { get set }
+    var expire: Int { get set }
     /// An HSFont describing the font to use in the alert
-    @objc var font: HSFont { get set }
+    var font: HSFont { get set }
     /// How many points of padding to use in the alert
-    @objc var padding: Int { get set }
+    var padding: Int { get set }
+    
+    /// Create a new HSAlert object
+    /// - Parameter message: The mssage to show in the alert
+    init(message: String)
+    
+    /// Does a lol
+    /// - Returns: lol
+    func lol() -> String
 }
 
 @objc class HSAlert: NSObject, HSAlertAPI {
@@ -29,6 +37,10 @@ import SwiftUI
     @objc var font: HSFont = HSFont.body()
     @objc var padding: Int = -1
 
+    required init(message: String) {
+        self.message = message
+    }
+
     var swiftUIPadding: CGFloat? {
         guard padding >= 0 else {
             return nil
@@ -38,5 +50,9 @@ import SwiftUI
 
     var swiftUIFont: Font {
         return font.font
+    }
+
+    func lol() -> String {
+        return "lol"
     }
 }

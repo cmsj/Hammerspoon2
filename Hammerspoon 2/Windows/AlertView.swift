@@ -42,7 +42,6 @@ struct AlertView: View {
 }
 
 #Preview("Alert") {
-    let alertObject = HSAlert()
-    alertObject.message = "TESTING"
-    return AlertView(message: alertObject)
+    let alertObject = HSAlert(message: "TESTING")
+    AlertView(message: alertObject)
 }

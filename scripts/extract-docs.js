@@ -36,13 +36,19 @@ function shouldSkipDocs(docLines) {
 function parseSwiftFile(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
     const protocols = [];
+    let moduleDocumentation = null;
     
     // Find all @objc protocol definitions that extend JSExport or HSTypeAPI
     // We need to manually handle brace matching because protocols can have nested braces
     const protocolStartRegex = /@objc\s+protocol\s+(\w+)\s*:\s*([^{]+)\{/g;
     let match;
-    
+    let firstProtocolIndex = null;
+
     while ((match = protocolStartRegex.exec(content)) !== null) {
+        // Track the first protocol for module-level documentation
+        if (firstProtocolIndex === null) {
+            firstProtocolIndex = match.index;
+        }
         const protocolName = match[1];
         const inheritanceList = match[2].trim();
 
@@ -260,8 +266,35 @@ function parseSwiftFile(filePath) {
         
         protocols.push(protocol);
     }
-    
-    return protocols;
+
+    // Extract module-level documentation (before the first protocol)
+    if (firstProtocolIndex !== null) {
+        const beforeFirstProtocol = content.substring(0, firstProtocolIndex);
+        const lines = beforeFirstProtocol.split('\n');
+        const moduleDoc = [];
+
+        // Walk backwards from the first protocol to collect /// comments
+        // Stop when we hit imports or other non-doc content
+        for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i].trim();
+            if (line.startsWith('///')) {
+                moduleDoc.unshift(line.replace(/^\/\/\/\s*/, ''));
+            } else if (line && !line.startsWith('//')) {
+                // Stop if we hit a non-comment, non-empty line
+                break;
+            }
+        }
+
+        if (moduleDoc.length > 0) {
+            const rawModuleDoc = moduleDoc.join('\n');
+            moduleDocumentation = {
+                rawDocumentation: rawModuleDoc,
+                description: formatDocCToJSDoc(rawModuleDoc)
+            };
+        }
+    }
+
+    return { protocols, moduleDocumentation };
 }
 
 /**
@@ -651,12 +684,21 @@ function processModule(moduleName, modulePath) {
 
     // Find all Swift and JavaScript files in the module directory
     const files = fs.readdirSync(modulePath);
+    let collectedModuleDoc = null;
 
     for (const file of files) {
         const filePath = path.join(modulePath, file);
 
         if (file.endsWith('.swift')) {
-            const protocols = parseSwiftFile(filePath);
+            const { protocols, moduleDocumentation } = parseSwiftFile(filePath);
+
+            // Collect module-level documentation (prefer from Module.swift files)
+            if (moduleDocumentation && !collectedModuleDoc) {
+                collectedModuleDoc = moduleDocumentation;
+            } else if (moduleDocumentation && file.includes('Module.swift')) {
+                // Override with Module.swift documentation if we find it
+                collectedModuleDoc = moduleDocumentation;
+            }
 
             // Categorize as Module or Object based on naming convention
             if (file.includes('Module.swift')) {
@@ -670,6 +712,12 @@ function processModule(moduleName, modulePath) {
             const functions = parseJavaScriptFile(filePath);
             moduleData.javascript.functions.push(...functions);
         }
+    }
+
+    // Add module-level documentation if we found any
+    if (collectedModuleDoc) {
+        moduleData.description = collectedModuleDoc.description;
+        moduleData.rawDocumentation = collectedModuleDoc.rawDocumentation;
     }
 
     return moduleData;
@@ -693,7 +741,7 @@ function processTypes(typesPath) {
 
     for (const file of files) {
         const filePath = path.join(typesPath, file);
-        const protocols = parseSwiftFile(filePath);
+        const { protocols } = parseSwiftFile(filePath);
         typesData.swift.protocols.push(...protocols.map(p => ({ ...p, category: 'type' })));
     }
 
