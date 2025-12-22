@@ -144,14 +144,11 @@ function generateModulePage(moduleData) {
         for (const func of moduleData.javascript.functions) {
             moduleMethods.push({
                 name: func.name,
-                signature: `function ${func.name}(${func.params.join(', ')})`,
-                description: func.documentation?.description || '',
-                params: func.documentation?.params || func.params.map((name, idx) => ({
-                    name: name,
-                    type: 'any',
-                    description: ''
-                })),
-                returns: func.documentation?.returns || null
+                signature: `function ${func.name}(${func.params.map(p => p.name).join(', ')})`,
+                rawDocumentation: func.rawDocumentation || '',
+                description: func.description || '',
+                params: func.params || [],
+                returns: func.returns || null
             });
         }
     }

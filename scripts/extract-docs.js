@@ -307,14 +307,15 @@ function extractParamDescriptions(docLines) {
     for (const line of docLines) {
         const trimmed = line.trim();
 
-        // Check for Parameters section (with or without colon)
-        if (trimmed === '- Parameters:' || trimmed === '- Parameters') {
+        // Check for Parameters section (with or without leading dash)
+        if (trimmed === '- Parameters:' || trimmed === '- Parameters' ||
+            trimmed === 'Parameters:' || trimmed === 'Parameters') {
             inParams = true;
             continue;
         }
 
-        // Check for single Parameter
-        const singleParamMatch = trimmed.match(/^-\s+Parameter\s+(\w+)\s*:\s*(.+)$/);
+        // Check for single Parameter (with or without leading dash)
+        const singleParamMatch = trimmed.match(/^-?\s*Parameter\s+(\w+)\s*:\s*(.+)$/);
         if (singleParamMatch) {
             descriptions[singleParamMatch[1]] = singleParamMatch[2].trim();
             continue;
@@ -327,8 +328,9 @@ function extractParamDescriptions(docLines) {
                 descriptions[paramMatch[1]] = paramMatch[2].trim();
                 continue;
             }
-            // Stop if we hit a non-parameter line (unless it's a continuation)
-            if (trimmed.startsWith('- ') && !trimmed.match(/^-\s+\w+\s*:/)) {
+            // Stop if we hit a non-parameter line or Returns section
+            if ((trimmed.startsWith('- ') && !trimmed.match(/^-\s+\w+\s*:/)) ||
+                trimmed.startsWith('Returns:') || trimmed.startsWith('- Returns:')) {
                 inParams = false;
             }
         }
@@ -464,10 +466,13 @@ function parseJavaScriptFile(filePath, moduleName = null) {
         const params = match[3] || match[5];
 
         if (functionName) {
+            const parsed = parseJSDoc(docComment);
             functions.push({
                 name: stripModulePrefix(functionName),
-                params: params.split(',').map(p => p.trim()).filter(p => p),
-                documentation: parseJSDoc(docComment),
+                rawDocumentation: docComment.trim(),
+                description: parsed.description,
+                params: parsed.params,
+                returns: parsed.returns,
                 type: 'function'
             });
         }
@@ -502,10 +507,13 @@ function parseJavaScriptFile(filePath, moduleName = null) {
 
             if (docLines.length > 0) {
                 const docText = docLines.join('\n');
+                const parsed = parseDocCStyleComment(docText);
                 functions.push({
                     name: stripModulePrefix(functionName),
-                    params: params.split(',').map(p => p.trim()).filter(p => p),
-                    documentation: parseDocCStyleComment(docText),
+                    rawDocumentation: docText,
+                    description: formatDocCToJSDoc(docText),
+                    params: parsed.params,
+                    returns: parsed.returns,
                     type: 'function'
                 });
             }
@@ -523,8 +531,14 @@ function parseJavaScriptFile(filePath, moduleName = null) {
         if (!functions.find(f => f.name === strippedName)) {
             functions.push({
                 name: strippedName,
-                params: params.split(',').map(p => p.trim()).filter(p => p),
-                documentation: { description: '', params: [], returns: null },
+                rawDocumentation: '',
+                description: '',
+                params: params.split(',').map(p => p.trim()).filter(p => p).map(name => ({
+                    name: name,
+                    type: 'any',
+                    description: ''
+                })),
+                returns: null,
                 type: 'function'
             });
         }
@@ -549,7 +563,8 @@ function parseDocCStyleComment(docText) {
     // Extract main description (lines before Parameters/Returns)
     const descLines = [];
     for (const line of lines) {
-        if (line.startsWith('- Parameter') || line.startsWith('- Parameters') || line.startsWith('- Returns')) {
+        if (line.startsWith('- Parameter') || line.startsWith('- Parameters') || line.startsWith('- Returns') ||
+            line.startsWith('Parameter') || line.startsWith('Parameters') || line.startsWith('Returns')) {
             break;
         }
         descLines.push(line);
@@ -565,8 +580,8 @@ function parseDocCStyleComment(docText) {
         });
     }
 
-    // Extract returns
-    const returnsMatch = docText.match(/- Returns?:\s*(.+)/);
+    // Extract returns (with or without leading dash)
+    const returnsMatch = docText.match(/-?\s*Returns?:\s*(.+)/);
     if (returnsMatch) {
         doc.returns = {
             type: 'any',
@@ -763,46 +778,47 @@ function processTypes(typesPath) {
  */
 function formatDocCToJSDoc(documentation) {
     if (!documentation) return '';
-    
+
     const lines = documentation.split('\n');
     const result = [];
     let inParamsList = false;
-    
+
     for (const line of lines) {
         const trimmed = line.trim();
-        
-        // Skip parameter list headers and individual parameter lines
-        if (trimmed === '- Parameters:' || trimmed.startsWith('- Parameters:')) {
+
+        // Skip parameter list headers (with or without leading dash)
+        if (trimmed === '- Parameters:' || trimmed.startsWith('- Parameters:') ||
+            trimmed === 'Parameters:' || trimmed.startsWith('Parameters:')) {
             inParamsList = true;
             continue;
         }
-        
-        // Skip returns line (we handle this separately)
-        if (trimmed.startsWith('- Returns:')) {
+
+        // Skip returns line (with or without leading dash)
+        if (trimmed.startsWith('- Returns:') || trimmed.startsWith('Returns:')) {
             break;
         }
-        
+
         // Skip individual parameter documentation (starts with "- paramName:")
         if (inParamsList && trimmed.match(/^-\s+\w+:/)) {
             continue;
         }
-        
+
         // If we hit a non-parameter line, we're out of the params list
         if (inParamsList && !trimmed.startsWith('-')) {
             inParamsList = false;
         }
-        
+
         // Skip Note: lines for now (could be added as @note in future)
-        if (trimmed.startsWith('- Note:')) {
+        if (trimmed.startsWith('- Note:') || trimmed.startsWith('Note:')) {
             continue;
         }
-        
+
         // Keep the main description line
-        if (!trimmed.startsWith('-') && trimmed) {
+        if (!trimmed.startsWith('-') && trimmed && !trimmed.endsWith(':')) {
             result.push(trimmed);
         }
     }
-    
+
     return result.join(' ');
 }
 
@@ -881,28 +897,22 @@ function generateCombinedJSDoc(moduleData) {
     // Add JavaScript functions
     for (const func of moduleData.javascript.functions) {
         output += `/**\n`;
-        if (func.documentation && func.documentation.description) {
-            output += ` * ${func.documentation.description}\n`;
+        if (func.description) {
+            output += ` * ${func.description}\n`;
             output += ` *\n`;
         }
-        if (func.documentation && func.documentation.params) {
-            for (const param of func.documentation.params) {
+        if (func.params && func.params.length > 0) {
+            for (const param of func.params) {
                 const desc = param.description ? ' ' + param.description : '';
                 output += ` * @param {${param.type}} ${param.name}${desc}\n`;
             }
         }
-        if (func.documentation && func.documentation.returns) {
-            const desc = func.documentation.returns.description ? ' ' + func.documentation.returns.description : '';
-            output += ` * @returns {${func.documentation.returns.type}}${desc}\n`;
-        }
-        if (func.documentation && func.documentation.examples && func.documentation.examples.length > 0) {
-            output += ` * @example\n`;
-            for (const example of func.documentation.examples) {
-                output += ` * ${example}\n`;
-            }
+        if (func.returns) {
+            const desc = func.returns.description ? ' ' + func.returns.description : '';
+            output += ` * @returns {${func.returns.type}}${desc}\n`;
         }
         output += ` */\n`;
-        output += `${func.name} = function(${func.params.join(', ')}) {};\n\n`;
+        output += `${func.name} = function(${func.params.map(p => p.name).join(', ')}) {};\n\n`;
     }
 
     return output;
