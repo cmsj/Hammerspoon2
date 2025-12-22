@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{TITLE}} - Hammerspoon 2 API</title>
+    <title>{{ title }} - Hammerspoon 2 API</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -25,13 +25,13 @@
     </nav>
 
     <main class="content">
-        {{CONTENT}}
+        {% block content %}{% endblock %}
     </main>
 
     <script src="script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            loadNavigation('{{CURRENT_PAGE}}');
+            loadNavigation('{{ currentPage }}');
         });
     </script>
 </body>

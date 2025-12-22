@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const nunjucks = require('nunjucks');
 
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'html');
@@ -21,54 +22,35 @@ if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-// Load templates
-let htmlTemplate = '';
+// Configure Nunjucks
+const env = nunjucks.configure(TEMPLATES_DIR, {
+    autoescape: true,
+    trimBlocks: true,
+    lstripBlocks: true
+});
+
+// Add custom filters
+env.addFilter('formatType', function(swiftType) {
+    return formatType(swiftType);
+});
+
+env.addFilter('extractPropertyType', function(signature) {
+    const typeMatch = signature.match(/var\s+\w+\s*:\s*([^{]+)/);
+    return typeMatch ? typeMatch[1].trim() : 'any';
+});
+
+env.addFilter('filterInitMethods', function(methods, isGlobal) {
+    if (!methods) return [];
+    return methods.filter(m => m.name !== 'init' || isGlobal);
+});
+
+// Load static asset templates (CSS and JS are not Nunjucks templates)
 let cssTemplate = '';
 let scriptTemplate = '';
-let moduleContentTemplate = '';
-let typeContentTemplate = '';
-let indexContentTemplate = '';
-let methodTemplate = '';
-let propertyTemplate = '';
-let parameterTemplate = '';
-let typeLinkTemplate = '';
-let moduleCardTemplate = '';
-let typeCardTemplate = '';
 
-function loadTemplates() {
-    htmlTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'page.html'), 'utf8');
+function loadAssetTemplates() {
     cssTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'styles.css'), 'utf8');
     scriptTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'script.js'), 'utf8');
-    moduleContentTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'module-content.html'), 'utf8');
-    typeContentTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'type-content.html'), 'utf8');
-    indexContentTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'index-content.html'), 'utf8');
-    methodTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'method.html'), 'utf8');
-    propertyTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'property.html'), 'utf8');
-    parameterTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'parameter.html'), 'utf8');
-    typeLinkTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'type-link.html'), 'utf8');
-    moduleCardTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'module-card.html'), 'utf8');
-    typeCardTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'type-card.html'), 'utf8');
-}
-
-/**
- * Simple template replacement helper
- */
-function fillTemplate(template, replacements) {
-    let result = template;
-    for (const [key, value] of Object.entries(replacements)) {
-        result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
-    }
-    return result;
-}
-
-/**
- * Generate HTML page from template
- */
-function generatePage(title, content, currentPage = '') {
-    return htmlTemplate
-        .replace('{{TITLE}}', title)
-        .replace('{{CONTENT}}', content)
-        .replace('{{CURRENT_PAGE}}', currentPage);
 }
 
 /**
@@ -104,81 +86,6 @@ function validateType(protocol, typeName) {
     if (!protocol.description || protocol.description.trim() === '') {
         throw new Error(`Missing description for type ${typeName}`);
     }
-}
-
-/**
- * Generate HTML for a single parameter
- */
-function generateParameter(param) {
-    return fillTemplate(parameterTemplate, {
-        PARAM_NAME: param.name,
-        PARAM_TYPE: formatType(param.type),
-        PARAM_DESCRIPTION: param.description
-    });
-}
-
-/**
- * Generate HTML for parameters section
- */
-function generateParameters(params) {
-    if (params.length === 0) {
-        return '<p>None</p>';
-    }
-    return '<ul class="params">\n' + params.map(generateParameter).join('\n') + '\n</ul>';
-}
-
-/**
- * Generate HTML for returns section
- */
-function generateReturns(returns) {
-    if (!returns) {
-        return '<p>Nothing</p>';
-    }
-    return `<p><span class="type">${formatType(returns.type)}</span> - ${returns.description}</p>`;
-}
-
-/**
- * Generate HTML for a single method
- */
-function generateMethod(method, context, isStatic = false) {
-    const params = method.params || [];
-    const paramStr = params.map(p => p.name).join(', ');
-    const methodName = method.name === 'init' ? 'constructor' : method.name;
-
-    const staticBadge = isStatic ? '<span class="static-badge">static</span> ' : '';
-    const prefix = isStatic ? `${context}.` : '';
-
-    return fillTemplate(methodTemplate, {
-        METHOD_ID: methodName,
-        STATIC_BADGE: staticBadge,
-        METHOD_SIGNATURE: `${prefix}${methodName}(${paramStr})`,
-        METHOD_RAWSIGNATURE: method.signature,
-        DESCRIPTION: method.description,
-        PARAMETERS: generateParameters(params),
-        RETURNS: generateReturns(method.returns)
-    });
-}
-
-/**
- * Generate HTML for a single property
- */
-function generateProperty(prop, propType) {
-    return fillTemplate(propertyTemplate, {
-        PROPERTY_ID: prop.name,
-        PROPERTY_NAME: prop.name,
-        PROPERTY_TYPE: formatType(propType),
-        DESCRIPTION: prop.description
-    });
-}
-
-/**
- * Generate HTML for a type link
- */
-function generateTypeLink(typeName) {
-    return fillTemplate(typeLinkTemplate, {
-        TYPE_URL: `${typeName}.html`,
-        TYPE_NAME: typeName
-    });
 }
 
 /**
@@ -249,38 +156,20 @@ function generateModulePage(moduleData) {
         }
     }
 
-    // Generate types content
-    let typesContent;
-    if (typeDefinitions.length > 0) {
-        const typeLinks = typeDefinitions.map(td => {
-            const typeName = td.name.replace(/API$/, '');
-            return generateTypeLink(typeName);
-        }).join('\n');
-        typesContent = `<p>This module provides the following types:</p>\n<ul class="type-list">\n${typeLinks}\n</ul>`;
-    } else {
-        typesContent = '<p>This module does not provide any types.</p>';
+    // Validate all methods
+    for (const method of moduleMethods) {
+        validateMethod(method, moduleName);
     }
 
-    // Generate methods content
-    let methodsContent;
-    if (moduleMethods.length > 0) {
-        methodsContent = moduleMethods.map(method => {
-            // Validate method has required documentation
-            validateMethod(method, moduleName);
-            return generateMethod(method, moduleName, false);
-        }).join('\n');
-    } else {
-        methodsContent = '<p>This module has no methods.</p>';
-    }
-
-    // Fill in the module content template
-    const content = fillTemplate(moduleContentTemplate, {
-        MODULE_NAME: moduleName,
-        TYPES_CONTENT: typesContent,
-        METHODS_CONTENT: methodsContent
+    // Render template
+    const html = nunjucks.render('module.njk', {
+        title: moduleName,
+        currentPage: moduleName,
+        module: moduleData,
+        typeDefinitions: typeDefinitions,
+        methods: moduleMethods
     });
 
-    const html = generatePage(moduleName, content, moduleName);
     const outputPath = path.join(OUTPUT_DIR, `${moduleName}.html`);
     fs.writeFileSync(outputPath, html);
     console.log(`  ✓ Generated ${moduleName}.html`);
@@ -293,52 +182,29 @@ function generateTypePage(typeName, protocol, isGlobal = false) {
     // Validate type has required documentation
     validateType(protocol, typeName);
 
-    // Generate properties content
+    // Validate properties
     const properties = protocol.properties || [];
-    let propertiesContent;
-    if (properties.length > 0) {
-        propertiesContent = properties.map(prop => {
-            // Validate property has required documentation
-            validateProperty(prop, typeName);
-
-            // Extract type from signature
-            const typeMatch = prop.signature.match(/var\s+\w+\s*:\s*([^{]+)/);
-            const propType = typeMatch ? typeMatch[1].trim() : 'any';
-
-            return generateProperty(prop, propType);
-        }).join('\n');
-    } else {
-        propertiesContent = '<p>This type has no properties.</p>';
+    for (const prop of properties) {
+        validateProperty(prop, typeName);
     }
 
-    // Generate methods content
+    // Validate methods
     const methods = protocol.methods || [];
-    const filteredMethods = methods.filter(m => m.name !== 'init' || isGlobal);
-    let methodsContent;
-
-    if (filteredMethods.length > 0) {
-        methodsContent = filteredMethods.map(method => {
-            // Validate method has required documentation
+    for (const method of methods) {
+        if (method.name !== 'init' || isGlobal) {
             validateMethod(method, typeName);
-
-            // Check if it's a static method by looking at the signature
-            const isStatic = method.signature && method.signature.includes('static func');
-
-            return generateMethod(method, typeName, isStatic);
-        }).join('\n');
-    } else {
-        methodsContent = '<p>This type has no methods.</p>';
+        }
     }
 
-    // Fill in the type content template
-    const content = fillTemplate(typeContentTemplate, {
-        TYPE_NAME: typeName,
-        TYPE_DESCRIPTION: protocol.description,
-        PROPERTIES_CONTENT: propertiesContent,
-        METHODS_CONTENT: methodsContent
+    // Render template
+    const html = nunjucks.render('type.njk', {
+        title: typeName,
+        currentPage: typeName,
+        typeName: typeName,
+        protocol: protocol,
+        isGlobal: isGlobal
     });
 
-    const html = generatePage(typeName, content, typeName);
     const outputPath = path.join(OUTPUT_DIR, `${typeName}.html`);
     fs.writeFileSync(outputPath, html);
     console.log(`  ✓ Generated ${typeName}.html`);
@@ -348,30 +214,14 @@ function generateTypePage(typeName, protocol, isGlobal = false) {
  * Generate index page
  */
 function generateIndexPage(modules, types) {
-    // Generate module cards
-    const modulesGrid = modules.map(m => {
-        return fillTemplate(moduleCardTemplate, {
-            MODULE_URL: `${m.name}.html`,
-            MODULE_NAME: m.name,
-            MODULE_INFO: `${m.swiftProtocols} protocols, ${m.javascriptFunctions} functions`
-        });
-    }).join('\n');
-
-    // Generate type cards
-    const typesGrid = types.map(t => {
-        return fillTemplate(typeCardTemplate, {
-            TYPE_URL: `${t}.html`,
-            TYPE_NAME: t
-        });
-    }).join('\n');
-
-    // Fill in the index content template
-    const content = fillTemplate(indexContentTemplate, {
-        MODULES_GRID: modulesGrid,
-        TYPES_GRID: typesGrid
+    // Render template
+    const html = nunjucks.render('index.njk', {
+        title: 'Home',
+        currentPage: 'index',
+        modules: modules,
+        types: types
     });
 
-    const html = generatePage('Home', content, 'index');
     const outputPath = path.join(OUTPUT_DIR, 'index.html');
     fs.writeFileSync(outputPath, html);
     console.log(`  ✓ Generated index.html`);
@@ -411,8 +261,8 @@ function generateCSS() {
 function main() {
     console.log('Generating Hammerspoon 2 HTML Documentation...\n');
 
-    // Load templates
-    loadTemplates();
+    // Load asset templates (CSS and JS)
+    loadAssetTemplates();
 
     // Load index
     const indexPath = path.join(JSON_DIR, 'index.json');

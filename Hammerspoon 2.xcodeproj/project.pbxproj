@@ -24,22 +24,16 @@
 /* Begin PBXFileReference section */
 		4F5641832E8333830099EB4C /* Hammerspoon 2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Hammerspoon 2.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F5641902E8333840099EB4C /* Hammerspoon 2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Hammerspoon 2Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		4F973B002EF89EE6006A6709 /* index-content.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "index-content.html"; sourceTree = "<group>"; };
-		4F973B012EF89EE6006A6709 /* method.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = method.html; sourceTree = "<group>"; };
-		4F973B022EF89EE6006A6709 /* module-card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "module-card.html"; sourceTree = "<group>"; };
-		4F973B032EF89EE6006A6709 /* module-content.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "module-content.html"; sourceTree = "<group>"; };
-		4F973B042EF89EE6006A6709 /* page.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = page.html; sourceTree = "<group>"; };
-		4F973B052EF89EE6006A6709 /* parameter.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = parameter.html; sourceTree = "<group>"; };
-		4F973B062EF89EE6006A6709 /* property.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = property.html; sourceTree = "<group>"; };
 		4F973B072EF89EE6006A6709 /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
 		4F973B082EF89EE6006A6709 /* styles.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = styles.css; sourceTree = "<group>"; };
-		4F973B092EF89EE6006A6709 /* type-card.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "type-card.html"; sourceTree = "<group>"; };
-		4F973B0A2EF89EE6006A6709 /* type-content.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "type-content.html"; sourceTree = "<group>"; };
-		4F973B0B2EF89EE6006A6709 /* type-link.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "type-link.html"; sourceTree = "<group>"; };
 		4F973B0D2EF89EE6006A6709 /* docs-coverage.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "docs-coverage.js"; sourceTree = "<group>"; };
 		4F973B0E2EF89EE6006A6709 /* extract-docs.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "extract-docs.js"; sourceTree = "<group>"; };
 		4F973B0F2EF89EE6006A6709 /* generate-html.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "generate-html.js"; sourceTree = "<group>"; };
 		4F973B102EF89EE6006A6709 /* test-docs.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "test-docs.sh"; sourceTree = "<group>"; };
+		4F973B122EF9523A006A6709 /* base.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = base.njk; sourceTree = "<group>"; };
+		4F973B132EF9523A006A6709 /* index.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = index.njk; sourceTree = "<group>"; };
+		4F973B142EF9523A006A6709 /* module.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = module.njk; sourceTree = "<group>"; };
+		4F973B152EF9523A006A6709 /* type.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = type.njk; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -97,18 +91,12 @@
 		4F973B0C2EF89EE6006A6709 /* templates */ = {
 			isa = PBXGroup;
 			children = (
-				4F973B002EF89EE6006A6709 /* index-content.html */,
-				4F973B012EF89EE6006A6709 /* method.html */,
-				4F973B022EF89EE6006A6709 /* module-card.html */,
-				4F973B032EF89EE6006A6709 /* module-content.html */,
-				4F973B042EF89EE6006A6709 /* page.html */,
-				4F973B052EF89EE6006A6709 /* parameter.html */,
-				4F973B062EF89EE6006A6709 /* property.html */,
+				4F973B122EF9523A006A6709 /* base.njk */,
+				4F973B132EF9523A006A6709 /* index.njk */,
+				4F973B142EF9523A006A6709 /* module.njk */,
+				4F973B152EF9523A006A6709 /* type.njk */,
 				4F973B072EF89EE6006A6709 /* script.js */,
 				4F973B082EF89EE6006A6709 /* styles.css */,
-				4F973B092EF89EE6006A6709 /* type-card.html */,
-				4F973B0A2EF89EE6006A6709 /* type-content.html */,
-				4F973B0B2EF89EE6006A6709 /* type-link.html */,
 			);
 			path = templates;
 			sourceTree = "<group>";

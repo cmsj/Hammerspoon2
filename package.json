@@ -16,5 +16,8 @@
     "documentation"
   ],
   "author": "Chris Jones <cmsj@tenshu.net>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "nunjucks": "^3.2.4"
+  }
 }
