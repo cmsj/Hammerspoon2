@@ -15,6 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const REPO_ROOT = path.join(__dirname, '..');
 const MODULES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Modules');
 const TYPES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Engine', 'Types');
 const OUTPUT_JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
@@ -33,11 +34,19 @@ function shouldSkipDocs(docLines) {
 /**
  * Parse Swift file to extract JSExport protocol information
  */
-function parseSwiftFile(filePath) {
+function parseSwiftFile(filePath, repoRoot) {
     const content = fs.readFileSync(filePath, 'utf8');
     const protocols = [];
     let moduleDocumentation = null;
-    
+
+    // Calculate relative path from repo root
+    const relativePath = path.relative(repoRoot, filePath);
+
+    // Helper to get line number from character position
+    const getLineNumber = (charPos) => {
+        return content.substring(0, charPos).split('\n').length;
+    };
+
     // Find all @objc protocol definitions that extend JSExport or HSTypeAPI
     // We need to manually handle brace matching because protocols can have nested braces
     const protocolStartRegex = /@objc\s+protocol\s+(\w+)\s*:\s*([^{]+)\{/g;
@@ -105,14 +114,17 @@ function parseSwiftFile(filePath) {
             methods: [],
             properties: []
         };
-        
+
         // Extract doc comments and method/property signatures
         const lines = protocolBody.split('\n');
         let currentDoc = [];
         let pendingObjcSelector = false;  // Track if we saw @objc(selector) on previous line
+        let charOffset = bodyStart;  // Track character position in original content
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
+            const lineStartPos = charOffset;
+            charOffset += lines[i].length + 1; // +1 for newline
 
             // Collect documentation comments
             if (line.startsWith('///')) {
@@ -239,7 +251,10 @@ function parseSwiftFile(filePath) {
                             rawDocumentation: rawDoc,
                             description: formatDocCToJSDoc(rawDoc),
                             params: extractParams(fullSignature, currentDoc),
-                            returns: extractReturns(fullSignature, currentDoc)
+                            returns: extractReturns(fullSignature, currentDoc),
+                            source: 'swift',
+                            filePath: relativePath,
+                            lineNumber: getLineNumber(lineStartPos)
                         });
                     }
 
@@ -256,7 +271,10 @@ function parseSwiftFile(filePath) {
                             name: propName,
                             signature: line.replace(/@objc\s*/, ''),
                             rawDocumentation: rawDoc,
-                            description: formatDocCToJSDoc(rawDoc)
+                            description: formatDocCToJSDoc(rawDoc),
+                            source: 'swift',
+                            filePath: relativePath,
+                            lineNumber: getLineNumber(lineStartPos)
                         });
                     }
                 }
@@ -444,9 +462,17 @@ function extractReturns(signature, docLines) {
 /**
  * Parse JavaScript file to extract JSDoc comments and function definitions
  */
-function parseJavaScriptFile(filePath, moduleName = null) {
+function parseJavaScriptFile(filePath, moduleName = null, repoRoot = REPO_ROOT) {
     const content = fs.readFileSync(filePath, 'utf8');
     const functions = [];
+
+    // Calculate relative path from repo root
+    const relativePath = path.relative(repoRoot, filePath);
+
+    // Helper to get line number from character position
+    const getLineNumber = (charPos) => {
+        return content.substring(0, charPos).split('\n').length;
+    };
 
     // Helper to strip module prefix from function names
     const stripModulePrefix = (name) => {
@@ -473,6 +499,9 @@ function parseJavaScriptFile(filePath, moduleName = null) {
                 description: parsed.description,
                 params: parsed.params,
                 returns: parsed.returns,
+                source: 'javascript',
+                filePath: relativePath,
+                lineNumber: getLineNumber(match.index),
                 type: 'function'
             });
         }
@@ -514,6 +543,9 @@ function parseJavaScriptFile(filePath, moduleName = null) {
                     description: formatDocCToJSDoc(docText),
                     params: parsed.params,
                     returns: parsed.returns,
+                    source: 'javascript',
+                    filePath: relativePath,
+                    lineNumber: i + 1, // Line numbers are 1-indexed
                     type: 'function'
                 });
             }
@@ -539,6 +571,9 @@ function parseJavaScriptFile(filePath, moduleName = null) {
                     description: ''
                 })),
                 returns: null,
+                source: 'javascript',
+                filePath: relativePath,
+                lineNumber: getLineNumber(match.index),
                 type: 'function'
             });
         }
@@ -697,13 +732,8 @@ function processModule(moduleName, modulePath) {
 
     const moduleData = {
         name: moduleName,
-        swift: {
-            protocols: [],
-            objects: []
-        },
-        javascript: {
-            functions: []
-        }
+        methods: [],  // All module-level methods (Swift + JS)
+        types: []     // Type definitions (protocols with type: 'typedef')
     };
 
     // Find all Swift and JavaScript files in the module directory
@@ -714,7 +744,7 @@ function processModule(moduleName, modulePath) {
         const filePath = path.join(modulePath, file);
 
         if (file.endsWith('.swift')) {
-            const { protocols, moduleDocumentation } = parseSwiftFile(filePath);
+            const { protocols, moduleDocumentation } = parseSwiftFile(filePath, REPO_ROOT);
 
             // Collect module-level documentation (prefer from Module.swift files)
             if (moduleDocumentation && !collectedModuleDoc) {
@@ -724,17 +754,22 @@ function processModule(moduleName, modulePath) {
                 collectedModuleDoc = moduleDocumentation;
             }
 
-            // Categorize as Module or Object based on naming convention
-            if (file.includes('Module.swift')) {
-                moduleData.swift.protocols.push(...protocols.map(p => ({ ...p, category: 'module' })));
-            } else if (file.includes('Object.swift')) {
-                moduleData.swift.protocols.push(...protocols.map(p => ({ ...p, category: 'object' })));
-            } else {
-                moduleData.swift.protocols.push(...protocols);
+            // Process each protocol
+            for (const protocol of protocols) {
+                if (protocol.type === 'typedef') {
+                    // Type definitions go into types array
+                    moduleData.types.push(protocol);
+                } else {
+                    // Regular protocols - extract their methods
+                    if (protocol.methods) {
+                        moduleData.methods.push(...protocol.methods);
+                    }
+                }
             }
         } else if (file.endsWith('.js')) {
             const functions = parseJavaScriptFile(filePath, moduleName);
-            moduleData.javascript.functions.push(...functions);
+            // JavaScript functions are already in the correct format
+            moduleData.methods.push(...functions);
         }
     }
 
@@ -755,9 +790,7 @@ function processTypes(typesPath) {
 
     const typesData = {
         name: 'Types',
-        swift: {
-            protocols: []
-        }
+        types: []  // All type definitions
     };
 
     // Find all Swift files in the types directory
@@ -765,8 +798,9 @@ function processTypes(typesPath) {
 
     for (const file of files) {
         const filePath = path.join(typesPath, file);
-        const { protocols } = parseSwiftFile(filePath);
-        typesData.swift.protocols.push(...protocols.map(p => ({ ...p, category: 'type' })));
+        const { protocols } = parseSwiftFile(filePath, REPO_ROOT);
+        // All protocols in Engine/Types are type definitions
+        typesData.types.push(...protocols.map(p => ({ ...p, category: 'type' })));
     }
 
     return typesData;
@@ -834,85 +868,53 @@ function generateCombinedJSDoc(moduleData) {
     let output = `/**\n * @namespace ${moduleData.name}\n */\n`;
     output += `${namespaceVar} = {};\n\n`;
 
-    // First, generate @typedef for any type protocols (those extending HSTypeAPI)
-    for (const protocol of moduleData.swift.protocols) {
-        if (protocol.type === 'typedef') {
-            // Extract the type name from the protocol name (e.g., HSAlertAPI -> HSAlert)
-            // The actual type name should be the protocol name minus 'API' suffix
-            const typeName = protocol.name.replace(/API$/, '');
+    // First, generate @typedef for any type definitions
+    for (const typeDef of moduleData.types || []) {
+        // Extract the type name from the protocol name (e.g., HSAlertAPI -> HSAlert)
+        const typeName = typeDef.name.replace(/API$/, '');
 
-            output += `/**\n`;
-            output += ` * @typedef {Object} ${typeName}\n`;
-
-            // Add property definitions
-            for (const prop of protocol.properties) {
-                const propType = swiftTypeToJSDoc(extractPropertyType(prop.signature));
-                output += ` * @property {${propType}} ${prop.name}`;
-                if (prop.description) {
-                    output += ` - ${prop.description}`;
-                }
-                output += `\n`;
-            }
-
-            output += ` */\n\n`;
-        }
-    }
-
-    // Add Swift protocol methods as JSDoc
-    for (const protocol of moduleData.swift.protocols) {
-        // Add methods (including those from typedef protocols)
-        for (const method of protocol.methods) {
-            const escapedName = escapeFunctionName(method.name);
-
-            output += `/**\n`;
-            if (method.description) {
-                output += ` * ${method.description}\n`;
-                output += ` *\n`;
-            }
-            for (const param of method.params) {
-                output += ` * @param {${swiftTypeToJSDoc(param.type)}} ${param.name}\n`;
-            }
-            if (method.returns) {
-                const returnDesc = method.returns.description || '';
-                output += ` * @returns {${swiftTypeToJSDoc(method.returns.type)}}${returnDesc ? ' ' + returnDesc : ''}\n`;
-            }
-            output += ` */\n`;
-            output += `${moduleData.name}.${escapedName} = function(${method.params.map(p => p.name).join(', ')}) {};\n\n`;
-        }
-
-        // Add properties (but skip properties from typedef protocols since they're in the @typedef)
-        if (protocol.type !== 'typedef') {
-            for (const prop of protocol.properties) {
-                output += `/**\n`;
-                if (prop.description) {
-                    output += ` * ${prop.description}\n`;
-                }
-                output += ` * @type {*}\n`;
-                output += ` */\n`;
-                output += `${moduleData.name}.${prop.name};\n\n`;
-            }
-        }
-    }
-
-    // Add JavaScript functions
-    for (const func of moduleData.javascript.functions) {
         output += `/**\n`;
-        if (func.description) {
-            output += ` * ${func.description}\n`;
+        output += ` * @typedef {Object} ${typeName}\n`;
+
+        // Add property definitions
+        for (const prop of typeDef.properties || []) {
+            const propType = swiftTypeToJSDoc(extractPropertyType(prop.signature));
+            output += ` * @property {${propType}} ${prop.name}`;
+            if (prop.description) {
+                output += ` - ${prop.description}`;
+            }
+            output += `\n`;
+        }
+
+        output += ` */\n\n`;
+    }
+
+    // Add all module methods (both Swift and JavaScript)
+    for (const method of moduleData.methods || []) {
+        const escapedName = escapeFunctionName(method.name);
+
+        output += `/**\n`;
+        if (method.description) {
+            output += ` * ${method.description}\n`;
             output += ` *\n`;
         }
-        if (func.params && func.params.length > 0) {
-            for (const param of func.params) {
+        if (method.params && method.params.length > 0) {
+            for (const param of method.params) {
+                const paramType = method.source === 'swift' ? swiftTypeToJSDoc(param.type) : param.type;
                 const desc = param.description ? ' ' + param.description : '';
-                output += ` * @param {${param.type}} ${param.name}${desc}\n`;
+                output += ` * @param {${paramType}} ${param.name}${desc}\n`;
             }
         }
-        if (func.returns) {
-            const desc = func.returns.description ? ' ' + func.returns.description : '';
-            output += ` * @returns {${func.returns.type}}${desc}\n`;
+        if (method.returns) {
+            const returnType = method.source === 'swift' ? swiftTypeToJSDoc(method.returns.type) : method.returns.type;
+            const desc = method.returns.description ? ' ' + method.returns.description : '';
+            output += ` * @returns {${returnType}}${desc}\n`;
         }
         output += ` */\n`;
-        output += `${func.name} = function(${func.params.map(p => p.name).join(', ')}) {};\n\n`;
+
+        // For methods from this module, use module.name prefix
+        const functionName = method.name.includes('.') ? method.name : `${moduleData.name}.${escapedName}`;
+        output += `${functionName} = function(${(method.params || []).map(p => p.name).join(', ')}) {};\n\n`;
     }
 
     return output;
@@ -924,7 +926,7 @@ function generateCombinedJSDoc(moduleData) {
 function generateTypesJSDoc(typesData) {
     let output = '// Global Type Definitions\n\n';
 
-    for (const protocol of typesData.swift.protocols) {
+    for (const protocol of typesData.types || []) {
         // Extract the class/type name from the protocol name
         // HSFontAPI -> HSFont, HSPointJSExports -> HSPoint
         const typeName = protocol.name.replace(/(API|JSExports?)$/, '');
@@ -937,7 +939,7 @@ function generateTypesJSDoc(typesData) {
             output += `class ${typeName} {}\n\n`;
 
             // Add static methods
-            for (const method of protocol.methods) {
+            for (const method of protocol.methods || []) {
                 const escapedName = escapeFunctionName(method.name);
 
                 output += `/**\n`;
@@ -945,7 +947,7 @@ function generateTypesJSDoc(typesData) {
                     output += ` * ${method.description}\n`;
                     output += ` *\n`;
                 }
-                for (const param of method.params) {
+                for (const param of method.params || []) {
                     output += ` * @param {${swiftTypeToJSDoc(param.type)}} ${param.name}\n`;
                 }
                 if (method.returns) {
@@ -953,11 +955,11 @@ function generateTypesJSDoc(typesData) {
                     output += ` * @returns {${swiftTypeToJSDoc(method.returns.type)}}${returnDesc ? ' ' + returnDesc : ''}\n`;
                 }
                 output += ` */\n`;
-                output += `${typeName}.${escapedName} = function(${method.params.map(p => p.name).join(', ')}) {};\n\n`;
+                output += `${typeName}.${escapedName} = function(${(method.params || []).map(p => p.name).join(', ')}) {};\n\n`;
             }
 
             // Add properties as typedef if any
-            if (protocol.properties.length > 0) {
+            if ((protocol.properties || []).length > 0) {
                 output += `/**\n`;
                 output += ` * @typedef {Object} ${typeName}Instance\n`;
                 for (const prop of protocol.properties) {
@@ -976,7 +978,7 @@ function generateTypesJSDoc(typesData) {
             output += ` * @class ${typeName}\n`;
 
             // Add properties to the class documentation
-            for (const prop of protocol.properties) {
+            for (const prop of protocol.properties || []) {
                 const propType = swiftTypeToJSDoc(extractPropertyType(prop.signature));
                 output += ` * @property {${propType}} ${prop.name}`;
                 if (prop.description) {
@@ -988,22 +990,22 @@ function generateTypesJSDoc(typesData) {
             output += `class ${typeName} {\n`;
 
             // Add constructor if there are methods (look for init)
-            const initMethod = protocol.methods.find(m => m.name === 'init');
+            const initMethod = (protocol.methods || []).find(m => m.name === 'init');
             if (initMethod) {
                 output += `    /**\n`;
                 if (initMethod.description) {
                     output += `     * ${initMethod.description}\n`;
                     output += `     *\n`;
                 }
-                for (const param of initMethod.params) {
+                for (const param of initMethod.params || []) {
                     output += `     * @param {${swiftTypeToJSDoc(param.type)}} ${param.name}\n`;
                 }
                 output += `     */\n`;
-                output += `    constructor(${initMethod.params.map(p => p.name).join(', ')}) {}\n\n`;
+                output += `    constructor(${(initMethod.params || []).map(p => p.name).join(', ')}) {}\n\n`;
             }
 
             // Add other methods
-            for (const method of protocol.methods) {
+            for (const method of protocol.methods || []) {
                 if (method.name === 'init') continue; // Skip init, already handled as constructor
 
                 const escapedName = escapeFunctionName(method.name);
@@ -1013,7 +1015,7 @@ function generateTypesJSDoc(typesData) {
                     output += `     * ${method.description}\n`;
                     output += `     *\n`;
                 }
-                for (const param of method.params) {
+                for (const param of method.params || []) {
                     output += `     * @param {${swiftTypeToJSDoc(param.type)}} ${param.name}\n`;
                 }
                 if (method.returns) {
@@ -1021,7 +1023,7 @@ function generateTypesJSDoc(typesData) {
                     output += `     * @returns {${swiftTypeToJSDoc(method.returns.type)}}${returnDesc ? ' ' + returnDesc : ''}\n`;
                 }
                 output += `     */\n`;
-                output += `    ${escapedName}(${method.params.map(p => p.name).join(', ')}) {}\n\n`;
+                output += `    ${escapedName}(${(method.params || []).map(p => p.name).join(', ')}) {}\n\n`;
             }
 
             output += `}\n\n`;
@@ -1093,16 +1095,16 @@ function main() {
     const indexData = {
         modules: allModules.map(m => ({
             name: m.name,
-            swiftProtocols: m.swift.protocols.length,
-            javascriptFunctions: m.javascript.functions.length
+            methodCount: (m.methods || []).length,
+            typeCount: (m.types || []).length
         })),
         generatedAt: new Date().toISOString()
     };
 
     if (typesData) {
         indexData.types = {
-            count: typesData.swift.protocols.length,
-            protocols: typesData.swift.protocols.map(p => p.name)
+            count: (typesData.types || []).length,
+            protocols: (typesData.types || []).map(p => p.name)
         };
     }
 
@@ -1112,7 +1114,7 @@ function main() {
     console.log(`\n✅ Documentation extraction complete!`);
     console.log(`   - Processed ${allModules.length} modules`);
     if (typesData) {
-        console.log(`   - Processed ${typesData.swift.protocols.length} types`);
+        console.log(`   - Processed ${(typesData.types || []).length} types`);
     }
     console.log(`   - JSON files: docs/json/`);
     console.log(`   - Combined JSDoc: docs/json/combined/`);

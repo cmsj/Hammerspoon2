@@ -214,6 +214,27 @@ body {
     color: var(--text-primary);
 }
 
+.source-link {
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+}
+
+.source-link a {
+    color: var(--accent);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.source-link a:hover {
+    text-decoration: underline;
+}
+
+.source-link a::before {
+    content: "📄";
+    margin-right: 0.25rem;
+}
+
 .params {
     list-style: none;
     margin: 0.5rem 0;

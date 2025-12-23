@@ -63,6 +63,17 @@ env.addFilter('markdown', function(text) {
     return marked(text);
 });
 
+env.addFilter('githubSourceUrl', function(item) {
+    if (!item || !item.filePath || !item.lineNumber) {
+        return null;
+    }
+    // GitHub repo URL - update this if the repo changes
+    const baseUrl = 'https://github.com/cmsj/Hammerspoon2/blob/main';
+    // URL encode the file path
+    const encodedPath = item.filePath.split('/').map(encodeURIComponent).join('/');
+    return `${baseUrl}/${encodedPath}#L${item.lineNumber}`;
+});
+
 // Load static asset templates (CSS and JS are not Nunjucks templates)
 let cssTemplate = '';
 let scriptTemplate = '';
@@ -145,32 +156,9 @@ function formatType(swiftType) {
 function generateModulePage(moduleData) {
     const moduleName = moduleData.name;
 
-    // Separate module methods from type definitions
-    const moduleMethods = [];
-    const typeDefinitions = [];
-
-    for (const protocol of moduleData.swift.protocols) {
-        if (protocol.type === 'typedef') {
-            typeDefinitions.push(protocol);
-        } else {
-            // Regular module protocol - add all methods
-            moduleMethods.push(...protocol.methods);
-        }
-    }
-
-    // Add JavaScript functions as module methods
-    if (moduleData.javascript && moduleData.javascript.functions) {
-        for (const func of moduleData.javascript.functions) {
-            moduleMethods.push({
-                name: func.name,
-                signature: `function ${func.name}(${func.params.map(p => p.name).join(', ')})`,
-                rawDocumentation: func.rawDocumentation || '',
-                description: func.description || '',
-                params: func.params || [],
-                returns: func.returns || null
-            });
-        }
-    }
+    // With the flattened structure, we can use methods and types directly
+    const moduleMethods = moduleData.methods || [];
+    const typeDefinitions = moduleData.types || [];
 
     // Validate all methods
     for (const method of moduleMethods) {
@@ -302,11 +290,9 @@ function main() {
         generateModulePage(moduleData);
 
         // Generate type pages for types defined in this module
-        for (const protocol of moduleData.swift.protocols) {
-            if (protocol.type === 'typedef') {
-                const typeName = protocol.name.replace(/API$/, '');
-                generateTypePage(typeName, protocol, true);
-            }
+        for (const typeDef of moduleData.types || []) {
+            const typeName = typeDef.name.replace(/API$/, '');
+            generateTypePage(typeName, typeDef, true);
         }
     }
 
@@ -317,10 +303,10 @@ function main() {
         const typesPath = path.join(JSON_DIR, 'types.json');
         const typesData = JSON.parse(fs.readFileSync(typesPath, 'utf8'));
 
-        for (const protocol of typesData.swift.protocols) {
-            const typeName = protocol.name.replace(/(API|JSExports?)$/, '');
+        for (const typeDef of typesData.types || []) {
+            const typeName = typeDef.name.replace(/(API|JSExports?)$/, '');
             allTypes.push(typeName);
-            generateTypePage(typeName, protocol, true);
+            generateTypePage(typeName, typeDef, true);
         }
     }
 
@@ -329,12 +315,10 @@ function main() {
         const modulePath = path.join(JSON_DIR, `${module.name}.json`);
         const moduleData = JSON.parse(fs.readFileSync(modulePath, 'utf8'));
 
-        for (const protocol of moduleData.swift.protocols) {
-            if (protocol.type === 'typedef') {
-                const typeName = protocol.name.replace(/API$/, '');
-                if (!allTypes.includes(typeName)) {
-                    allTypes.push(typeName);
-                }
+        for (const typeDef of moduleData.types || []) {
+            const typeName = typeDef.name.replace(/API$/, '');
+            if (!allTypes.includes(typeName)) {
+                allTypes.push(typeName);
             }
         }
     }

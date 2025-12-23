@@ -35,6 +35,13 @@
             <a id="{{ method.name }}"></a>
             <h3><a href="#{{ method.name}}">{{ module.name }}.{{ method.name }}</a></h3>
             <p class="description">{{ method.description }}</p>
+            {% if method | githubSourceUrl %}
+            <p class="source-link">
+                <a href="{{ method | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">
+                    View source on GitHub
+                </a>
+            </p>
+            {% endif %}
             <hr />
             <h4>Declaration</h4>
             <pre><code class="language-javascript">{{ module.name }}.{{ method.name }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns.type}}{% else %}None{% endif %}</code></pre>
