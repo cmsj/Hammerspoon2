@@ -272,6 +272,16 @@ function generateCSS() {
 }
 
 /**
+ * Copy highlight.js from node_modules to output directory
+ */
+function copyHighlightJS() {
+    const hljsSource = path.join(__dirname, '..', 'node_modules', '@highlightjs', 'cdn-assets', 'highlight.min.js');
+    const hljsOutput = path.join(OUTPUT_DIR, 'highlight.min.js');
+    fs.copyFileSync(hljsSource, hljsOutput);
+    console.log(`  ✓ Copied highlight.min.js`);
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -336,6 +346,7 @@ function main() {
     // Generate JavaScript and CSS
     generateJavaScript(index.modules, allTypes);
     generateCSS();
+    copyHighlightJS();
 
     console.log(`\n✅ HTML documentation generated successfully!`);
     console.log(`   Output directory: ${OUTPUT_DIR}`);
