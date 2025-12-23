@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4F463E9F2EA7A669000A2135 /* AXSwift */; };
 		4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4F488B2F2E97E79800A2B5F4 /* Sparkle */; };
+		4F973BB72EFB3005006A6709 /* api.json in Resources */ = {isa = PBXBuildFile; fileRef = 4F973BB62EFB2FFC006A6709 /* api.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,6 +35,7 @@
 		4F973B132EF9523A006A6709 /* index.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = index.njk; sourceTree = "<group>"; };
 		4F973B142EF9523A006A6709 /* module.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = module.njk; sourceTree = "<group>"; };
 		4F973B152EF9523A006A6709 /* type.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = type.njk; sourceTree = "<group>"; };
+		4F973BB62EFB2FFC006A6709 /* api.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = api.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -72,6 +74,7 @@
 		4F56417A2E8333830099EB4C = {
 			isa = PBXGroup;
 			children = (
+				4F973BB62EFB2FFC006A6709 /* api.json */,
 				4F973B112EF89EE6006A6709 /* scripts */,
 				4F5641852E8333830099EB4C /* Hammerspoon 2 */,
 				4F5641932E8333840099EB4C /* Hammerspoon 2Tests */,
@@ -211,6 +214,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F973BB72EFB3005006A6709 /* api.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
