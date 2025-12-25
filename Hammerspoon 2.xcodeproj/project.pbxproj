@@ -399,7 +399,7 @@
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = VQCYSNZB89;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -418,7 +418,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				OTHER_DOCC_FLAGS = "--source-service github --source-service-base-url https://github.com/hammerspoon/Hammerspoon2/blob/main --checkout-path \"$PROJECT_DIR\"";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -445,7 +445,7 @@
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = VQCYSNZB89;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -464,7 +464,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				OTHER_DOCC_FLAGS = "--source-service github --source-service-base-url https://github.com/hammerspoon/Hammerspoon2/blob/main --checkout-path \"$PROJECT_DIR\"";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2";
 				PRODUCT_NAME = "$(TARGET_NAME)";

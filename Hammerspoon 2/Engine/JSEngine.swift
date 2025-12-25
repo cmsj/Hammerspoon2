@@ -43,12 +43,14 @@ class JSEngine {
                 return nil
             }
 
+            let fileURL = URL(fileURLWithPath: expandedPath)
+
             guard let fileContent = try? String(contentsOfFile: expandedPath, encoding: .utf8) else {
                 AKError("require(): Unable to read \(expandedPath)")
                 return nil
             }
 
-            return context.evaluateScript(fileContent)
+            return context.evaluateScript(fileContent, withSourceURL: fileURL)
         }
 
         context.setObject(require, forKeyedSubscript: "require" as NSString)
@@ -124,7 +126,7 @@ extension JSEngine: JSEngineProtocol {
         }
 
         let script = try String(contentsOf: url, encoding: .utf8)
-        return eval(script)
+        return context?.evaluateScript(script, withSourceURL: url)
     }
 
     func resetContext() throws {
