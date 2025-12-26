@@ -28,6 +28,7 @@
 		4F5641902E8333840099EB4C /* Hammerspoon 2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Hammerspoon 2Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F59E34E2EFC984900954462 /* api.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = api.json; path = docs/api.json; sourceTree = "<group>"; };
 		4F59E34F2EFC985500954462 /* hammerspoon.d.ts */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.typescript; name = hammerspoon.d.ts; path = docs/hammerspoon.d.ts; sourceTree = "<group>"; };
+		4F59E3522EFDEC7200954462 /* generate-typescript.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "generate-typescript.js"; sourceTree = "<group>"; };
 		4F973B072EF89EE6006A6709 /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
 		4F973B082EF89EE6006A6709 /* styles.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = styles.css; sourceTree = "<group>"; };
 		4F973B0D2EF89EE6006A6709 /* docs-coverage.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "docs-coverage.js"; sourceTree = "<group>"; };
@@ -122,6 +123,7 @@
 				4F973B0D2EF89EE6006A6709 /* docs-coverage.js */,
 				4F973B0E2EF89EE6006A6709 /* extract-docs.js */,
 				4F973B0F2EF89EE6006A6709 /* generate-html.js */,
+				4F59E3522EFDEC7200954462 /* generate-typescript.js */,
 				4F973B102EF89EE6006A6709 /* test-docs.sh */,
 			);
 			path = scripts;
@@ -418,6 +420,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.2;
 				OTHER_DOCC_FLAGS = "--source-service github --source-service-base-url https://github.com/hammerspoon/Hammerspoon2/blob/main --checkout-path \"$PROJECT_DIR\"";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2";
@@ -464,6 +467,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.2;
 				OTHER_DOCC_FLAGS = "--source-service github --source-service-base-url https://github.com/hammerspoon/Hammerspoon2/blob/main --checkout-path \"$PROJECT_DIR\"";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2";

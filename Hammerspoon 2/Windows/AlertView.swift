@@ -21,7 +21,7 @@ struct AlertView: View {
                     .font(message.swiftUIFont)
                     .multilineTextAlignment(.center)
                     .padding(.all, message.swiftUIPadding)
-                    .glassEffect()
+                    .optionalGlassEffect()
                 Spacer()
             }
             Spacer()
