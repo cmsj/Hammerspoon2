@@ -1,9 +1,13 @@
 # Feature: hs.ipc Module and hs2 Command-Line Tool
 
 **Revision**: 2025-12-27 - Verified and simplified for v1.0 implementation
-- Removed: Settings UI, CLI E2E tests, Legacy V1 protocol support
-- Simplified: Tab completion (minimal), integration tests (basic only)
-- Updated: JavaScript execution context (Option B - Shared with Scoping), thread safety requirements
+**Status**: READY FOR IMPLEMENTATION (verified 2025-12-27)
+- Removed: Settings UI, CLI E2E tests, Legacy V1 protocol support, UserDefaults configuration (colors/history)
+- Simplified: Tab completion (minimal), integration tests (basic only), REPL (no persistence)
+- Updated: JavaScript execution context (Option B - Shared with Scoping), thread safety (@MainActor)
+- Threading: Use @MainActor, direct JS invocation (no async dispatch)
+- Bundle ID: Extract dynamically via Bundle.main.bundleIdentifier
+- REPL: Use libedit (BSD licensed, not GNU readline)
 
 ## Chore Description
 
@@ -15,7 +19,6 @@ This feature provides:
 2. **hs2 CLI Tool**: A standalone command-line executable that connects to Hammerspoon 2 via IPC to execute code, retrieve results, and provide an interactive JavaScript REPL
 3. **Protocol Implementation**: Message-based protocol supporting command execution, output streaming, error handling, console mirroring, and tab completion
 4. **Installation Management**: Functions to install/uninstall the CLI tool system-wide via symlinks
-5. **Configuration Support**: Persistent settings for CLI colors, history, and behavior
 
 The implementation must maintain functional parity with the original Hammerspoon's `hs.ipc` and `hs` CLI tool, adapted for JavaScript instead of Lua.
 
@@ -36,6 +39,10 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Add `@objc var ipc: HSIPCModule { get }` property to `ModuleRootAPI` protocol
   - Add lazy loading implementation for the IPC module in `ModuleRoot` class
   - Registers the module with the JavaScript `hs` namespace
+
+- **`Hammerspoon 2/Engine/HSModuleAPI.swift`**
+  - No modifications required (protocol already exists)
+  - HSIPCModule will conform to this protocol
 
 - **`Hammerspoon 2/Engine/JSEngine.swift`**
   - No modifications required for v1.0
@@ -60,11 +67,9 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - `cliInstall([path], [silent])` → Install hs2 symlinks
     - `cliUninstall([path], [silent])` → Remove hs2 symlinks
     - `cliStatus([path], [silent])` → Check installation status
-    - `cliColors([colors])` → Get/set CLI color scheme
-    - `cliSaveHistory([enabled])` → Enable/disable history persistence
-    - `cliSaveHistorySize([size])` → Set max history entries
   - Manages default "Hammerspoon2" port
   - Handles shutdown cleanup
+  - Note: CLI color/history configuration deferred to v2.0
 
 - **`Hammerspoon 2/Modules/hs.ipc/HSMessagePort.swift`**
   - Defines `HSMessagePortAPI` protocol (JSExport) for message port objects
@@ -266,6 +271,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
 
 - Create `HSMessagePort.swift`
 - **Mark class with `@MainActor`** to ensure all operations run on main thread (required for JavaScriptCore)
+- **Threading Model**: Port created on main thread, callbacks execute on main thread, direct JavaScript invocation (no async dispatch needed)
 - Define `HSMessagePortAPI` protocol conforming to `JSExport`:
   - `@objc var name: String { get }`
   - `@objc var isValid: Bool { get }`
@@ -284,9 +290,10 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Create ports on main thread and add to `CFRunLoopGetMain()`
 - Implement CFMessagePort callback bridge:
   - Static C function `messagePortCallback(_:_:_:_:) -> CFDataRef?`
-  - **Wrap JavaScript callback invocation in `DispatchQueue.main.async`** to ensure main thread execution
+  - **Direct JavaScript callback invocation** (already on main thread due to @MainActor and CFRunLoopGetMain())
   - Converts CFDataRef to JSValue and invokes JavaScript callback
   - Returns response as CFDataRef
+  - Note: No DispatchQueue.main.async needed - port created on main thread with @MainActor ensures callbacks execute on main thread
 - Add recursive call depth protection (max 5 levels)
 - Implement `sendMessage()` with CFMessagePortSendRequest
 - Handle timeout conversion and error reporting
@@ -305,9 +312,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - `@objc func cliInstall(_ path: String?, _ silent: Bool) -> Bool`
   - `@objc func cliUninstall(_ path: String?, _ silent: Bool) -> Bool`
   - `@objc func cliStatus(_ path: String?, _ silent: Bool) -> Bool`
-  - `@objc func cliColors(_ colors: JSValue?) -> JSValue`
-  - `@objc func cliSaveHistory(_ enabled: JSValue?) -> JSValue`
-  - `@objc func cliSaveHistorySize(_ size: JSValue?) -> JSValue`
+  - Note: cliColors, cliSaveHistory, cliSaveHistorySize deferred to v2.0
 - Implement `HSIPCModule` class conforming to `HSModuleAPI` and `HSIPCModuleAPI`
 - Add property: `var name = "hs.ipc"`
 - Implement `localPort()`:
@@ -332,24 +337,6 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - Verify symlinks exist and point to current bundle
     - Return Boolean status
     - Log results unless silent mode
-- Implement CLI configuration functions using **direct UserDefaults access** (not SettingsManager):
-  - Use keys matching original Hammerspoon format for compatibility:
-    - `ipc.cli.color_initial` → Banner color (default: `"\u{001B}[35m"`)
-    - `ipc.cli.color_input` → Input prompt color (default: `"\u{001B}[33m"`)
-    - `ipc.cli.color_output` → Output color (default: `"\u{001B}[36m"`)
-    - `ipc.cli.color_error` → Error color (default: `"\u{001B}[31m"`)
-    - `ipc.cli.saveHistory` → History persistence (default: `false`)
-    - `ipc.cli.historyLimit` → History size (default: `1000`)
-  - `cliColors()`: Get/set color scheme dictionary
-    - If no argument, return current colors from UserDefaults
-    - If dictionary provided, validate and save to UserDefaults
-    - JavaScript keys: `initial`, `input`, `output`, `error` (map to UserDefaults keys above)
-  - `cliSaveHistory()`: Get/set history persistence
-    - If no argument, return current setting from `ipc.cli.saveHistory`
-    - If Boolean provided, save to UserDefaults
-  - `cliSaveHistorySize()`: Get/set history size
-    - If no argument, return current size from `ipc.cli.historyLimit`
-    - If number provided, validate (1-10000) and save
 - Implement `shutdown()`:
   - Cleanup any active ports (if tracked)
   - No default port cleanup needed (handled by JavaScript layer)
@@ -475,7 +462,8 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Type: Command Line Tool
   - Language: Swift
   - Link against: `CoreFoundation.framework`, `AppKit.framework`
-  - Add linker flag: `-lreadline`
+  - Note: libedit provided by macOS automatically (no explicit linker flag needed)
+  - If linker errors occur, may need `-ledit` flag
 - Create directory `hs2/` for source files
 - Create `hs2/main.swift`:
   - Import Foundation, CoreFoundation, AppKit
@@ -509,7 +497,8 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Determine interactive mode: `interactive = !readStdin && isatty(STDOUT_FILENO) && commandsToExecute.isEmpty && fileName == nil`
   - Check if Hammerspoon 2 is running:
     - Use `NSRunningApplication.runningApplications(withBundleIdentifier:)`
-    - Bundle ID: `"net.tenshu.Hammerspoon-2"` (update to actual)
+    - Bundle ID: Extract from parent app's bundle using `Bundle.main.bundleIdentifier!`
+    - Note: hs2 is embedded in app bundle, so Bundle.main refers to Hammerspoon 2.app
     - If not running and `exitIfNotRunning`, exit with `EX_TEMPFAIL`
     - If not running and not `autoLaunch`, show alert:
       ```swift
@@ -526,8 +515,9 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
       ```
     - If `autoLaunch`, launch Hammerspoon 2:
       ```swift
+      let bundleID = Bundle.main.bundleIdentifier!
       NSWorkspace.shared.launchApplication(
-          withBundleIdentifier: "com.example.Hammerspoon2",
+          withBundleIdentifier: bundleID,
           options: .withoutActivation,
           additionalEventParamDescriptor: nil,
           launchIdentifier: nil
@@ -631,27 +621,19 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
 - Define `HSInteractiveREPL` class:
   - Properties:
     - `client: HSClient`
-    - `historyFilePath: URL`
-    - `historyLimit: Int`
-    - `saveHistory: Bool`
+    - `historyFilePath: URL` (hardcoded to `~/.config/Hammerspoon2/.cli.history`)
   - Initializer:
     ```swift
     init(client: HSClient) {
         self.client = client
-        // Get settings from UserDefaults (com.example.Hammerspoon2 domain)
-        let defaults = UserDefaults(suiteName: "com.example.Hammerspoon2")
-        self.saveHistory = defaults?.bool(forKey: "ipcCliSaveHistory") ?? false
-        self.historyLimit = defaults?.integer(forKey: "ipcCliHistorySize") ?? 1000
-        // Determine history file location from configLocation setting
-        let configURL = defaults?.url(forKey: "configLocation") ??
-                        URL(filePath: NSString("~/.config/Hammerspoon2/init.js").expandingTildeInPath)
-        self.historyFilePath = configURL.deletingLastPathComponent()
-                                        .appendingPathComponent(".cli.history")
+        // v1.0: Hardcode history location (persistence deferred to v2.0)
+        let configDir = URL(fileURLWithPath: NSString("~/.config/Hammerspoon2").expandingTildeInPath)
+        self.historyFilePath = configDir.appendingPathComponent(".cli.history")
     }
     ```
+  - Note: History works in-session only (not persisted across sessions in v1.0)
   - Implement `run()`:
     - Call `setupReadline()`
-    - Call `loadHistory()` if `saveHistory`
     - Print banner with `colorBanner`
     - Main loop:
       ```swift
@@ -665,27 +647,19 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
           free(input)
 
           if !line.isEmpty {
-              add_history(line)
+              add_history(line)  // In-memory history only for v1.0
               _ = client.executeCommand(line)
           }
       }
       ```
-    - Call `saveHistoryToDisk()` if `saveHistory`
+    - Note: No history persistence in v1.0 (loadHistory/saveHistory deferred to v2.0)
   - Implement `setupReadline()`:
     - Set completion function:
       ```swift
       rl_attempted_completion_function = completionFunction
       rl_completion_append_character = 0  // No space after completion
       ```
-  - Implement `loadHistory()`:
-    ```swift
-    read_history(historyFilePath.path)
-    ```
-  - Implement `saveHistoryToDisk()`:
-    ```swift
-    write_history(historyFilePath.path)
-    history_truncate_file(historyFilePath.path, Int32(historyLimit))
-    ```
+    - Note: Use libedit (BSD licensed) via `#include <editline/readline.h>`
   - Implement completion bridge:
     - Create static/global storage for completion state
     - Implement C-compatible callback function:
@@ -776,8 +750,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Add required frameworks:
     - CoreFoundation.framework
     - AppKit.framework
-  - Add linker flags:
-    - `-lreadline`
+  - Note: libedit (editline) provided by macOS, no explicit linker flag typically needed
   - Set product name: `hs2`
   - Configure signing and hardening:
     - Enable hardened runtime
@@ -909,7 +882,7 @@ ls -lh /tmp/hs2test/share/man/man1/hs2.1
 
 # Test interactive mode (manual test, exit with Ctrl-D)
 /tmp/hs2test/bin/hs2 -i
-# Expected: REPL prompt, tab completion working
+# Expected: REPL prompt, tab completion working, in-session history (up arrow)
 
 # Test stdin input
 echo "console.log('hello')" | /tmp/hs2test/bin/hs2 -s
@@ -923,9 +896,7 @@ echo "console.log('hello')" | /tmp/hs2test/bin/hs2 -s
 /tmp/hs2test/bin/hs2 -C -c "console.log('mirrored')"
 # Expected: Output appears both in terminal and Console window
 
-# Test timeout
-/tmp/hs2test/bin/hs2 -t 1 -c "new Promise(() => {})"
-# Expected: Timeout error after 1 second
+# Note: Color and history persistence tests deferred to v2.0
 
 # Test CLI uninstallation
 # (Execute in Hammerspoon 2 Console)
@@ -966,9 +937,8 @@ Inter-process communication module enabling external processes to communicate wi
 - `cliInstall([path], [silent])` - Install hs2 command-line tool
 - `cliUninstall([path], [silent])` - Remove hs2 symlinks
 - `cliStatus([path], [silent])` - Check installation status
-- `cliColors([colors])` - Configure CLI color scheme
-- `cliSaveHistory([enabled])` - Enable history persistence
-- `cliSaveHistorySize([size])` - Set history entry limit
+
+**Note**: CLI color configuration and history persistence functions deferred to v2.0
 
 **Message Port Objects** (HSMessagePort):
 - `name` - Port name string
@@ -1049,9 +1019,9 @@ hs.application.launchOrFocus("Safari");
 - `-t seconds` - Set timeout (default: 4.0)
 - `-h` - Display help
 
-**Tab Completion**: Available in interactive mode, completes against `hs.*` namespace and JavaScript globals.
+**Tab Completion**: Available in interactive mode, completes against `hs.*` namespace (minimal in v1.0).
 
-**Command History**: Persistent history stored in `~/.config/Hammerspoon2/.cli.history` (when enabled).
+**Command History**: In-session history via up/down arrows (persistence deferred to v2.0).
 ````
 
 ### Create docs/IPC.md
@@ -1073,17 +1043,17 @@ New Components:
 - JavaScript protocol handler for REGISTER/COMMAND/QUERY messages
 - hs2 command-line tool (Swift) with full argument parsing
 - HSClient class managing IPC client lifecycle and communication
-- HSInteractiveREPL class providing readline-based REPL with tab
-  completion and persistent history
+- HSInteractiveREPL class providing libedit-based REPL with tab
+  completion and in-session history
 - Man page documentation for hs2 tool
 
 Module Features:
 - Create local (server) and remote (client) message ports
 - Bidirectional communication with callback support
 - CLI installation/uninstallation via symlinks
-- Configuration for colors, history, and behavior
 - Isolated execution environments per CLI instance
 - Console output mirroring support
+- Note: Color/history configuration deferred to v2.0
 
 CLI Features:
 - Execute JavaScript code from command line (-c flag)
@@ -1091,14 +1061,10 @@ CLI Features:
 - File execution support
 - Stdin piping support (-s flag)
 - Auto-launch Hammerspoon 2 if not running (-A flag)
-- Configurable timeout, colors, and quiet mode
-- Readline integration with command history persistence
+- Configurable timeout and quiet mode
+- libedit integration with in-session command history
 - POSIX-compliant exit codes
-
-Settings Integration:
-- Added IPC-related preferences to SettingsManager
-- Color scheme configuration (banner, input, output, error)
-- History persistence and size settings
+- Bundle ID extracted dynamically (no hardcoding)
 
 Testing:
 - Integration tests for message port operations
@@ -1112,8 +1078,15 @@ Documentation:
 - Created comprehensive IPC.md protocol specification
 - Added hs2.1 man page
 
-This implementation maintains functional parity with original Hammerspoon's
-hs.ipc/hs tool while adapting for JavaScript and Hammerspoon 2 architecture.
+This implementation provides core IPC functionality from original Hammerspoon's
+hs.ipc/hs tool, adapted for JavaScript and Hammerspoon 2 architecture.
+
+v1.0 Scope Changes:
+- Core IPC and CLI functionality implemented
+- UserDefaults configuration (colors, history persistence) deferred to v2.0
+- libedit used instead of GNU readline (BSD licensing)
+- Bundle ID extracted dynamically (no hardcoding)
+- Threading model: @MainActor with direct JS invocation
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
@@ -1138,10 +1111,11 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ### Compatibility Notes
 
-1. **Legacy mode (V1)**: Implement for backward compatibility with hypothetical old clients, but primary focus is V2 protocol
+1. **Legacy mode (V1)**: Removed in v1.0 (deferred to v2.0 if needed)
 2. **Port naming**: Changed from "Hammerspoon" to "Hammerspoon2" to avoid conflicts if original Hammerspoon is installed
-3. **Bundle identifier**: Update actual bundle ID in code (currently placeholder "com.example.Hammerspoon2")
+3. **Bundle identifier**: Extracted dynamically via `Bundle.main.bundleIdentifier!` (no hardcoding)
 4. **Binary naming**: Using "hs2" instead of "hs" to distinguish from original Hammerspoon CLI
+5. **Configuration**: UserDefaults-based colors/history deferred to v2.0 for simplicity
 
 ### Testing Challenges
 
@@ -1167,13 +1141,14 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 4. **Completion algorithm**: Must use JavaScript reflection instead of Lua metatable inspection
 5. **JSON encoding**: Use native `JSON.stringify()` instead of `hs.json.encode()`
 
-### readline Integration
+### libedit Integration (DECISION: Use libedit)
 
-1. **Linking**: Must link against system libreadline (`-lreadline` linker flag)
-2. **License**: GNU Readline is GPL - consider legal implications or use libedit alternative
-3. **libedit alternative**: macOS provides BSD-licensed libedit with readline compatibility layer
-4. **Recommendation**: Use `libedit` (editline) instead of GNU readline to avoid GPL licensing issues
-5. **API compatibility**: Most readline functions available in libedit, test thoroughly
+1. **Choice**: Using libedit (BSD licensed) instead of GNU Readline (GPL)
+2. **Availability**: macOS provides libedit with readline compatibility layer at `/usr/include/editline/readline.h`
+3. **Linking**: Typically no explicit linker flag needed - provided by system
+4. **Header**: Use `#include <editline/readline.h>` for readline-compatible API
+5. **API compatibility**: Most readline functions available (readline, add_history, etc.)
+6. **License**: BSD license avoids GPL concerns for distribution
 
 ### CFMessagePort Edge Cases
 
@@ -1195,13 +1170,16 @@ The implementation is complete when:
 6. ✅ hs2 can execute simple commands: `hs2 -c "1+1"` returns "2"
 7. ✅ hs2 interactive mode provides REPL with prompt and code execution
 8. ✅ Tab completion queries Hammerspoon and returns relevant completions
-9. ✅ Command history persists across hs2 sessions when enabled
+9. ✅ Command history works in-session (up/down arrows)
 10. ✅ CLI installation creates functional symlinks
 11. ✅ CLI uninstallation removes symlinks cleanly
 12. ✅ Error messages are clear and actionable
 13. ✅ Exit codes conform to POSIX standards
-14. ✅ Colors can be configured via settings
-15. ✅ All integration tests pass
-16. ✅ No memory leaks detected under Instruments
-17. ✅ Documentation is complete and accurate
+14. ✅ All integration tests pass
+15. ✅ No memory leaks detected under Instruments
+16. ✅ Documentation is complete and accurate
+17. ✅ Bundle ID extracted dynamically (no hardcoded values)
+18. ✅ libedit integration working (BSD licensed)
+
+Note: Color configuration and history persistence deferred to v2.0
 
