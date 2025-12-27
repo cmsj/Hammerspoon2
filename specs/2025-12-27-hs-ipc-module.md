@@ -176,7 +176,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - **Thread Safety**: All CFMessagePort operations run on dedicated thread, callbacks marshalled to main thread for JavaScript execution
 
 - **`hs2/HSInteractiveREPL.swift`**
-  - Interactive REPL implementation using GNU Readline
+  - Interactive REPL implementation using libedit
   - Properties:
     - `client`: Reference to HSClient
     - `historyFilePath`: URL to `~/.config/Hammerspoon2/.cli.history`
@@ -190,7 +190,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - `completionFunction(_:state:)`: Tab completion callback
   - Tab completion via `hs.completionsForInputString()` query to Hammerspoon 2
   - Command history with persistent storage
-  - Readline integration: `libreadline` (via `-lreadline` linker flag)
+  - Readline integration: `libedit`
 
 - **`hs2/Resources/hs2.1`** (man page)
   - Manual page documentation for hs2 command
@@ -509,7 +509,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Determine interactive mode: `interactive = !readStdin && isatty(STDOUT_FILENO) && commandsToExecute.isEmpty && fileName == nil`
   - Check if Hammerspoon 2 is running:
     - Use `NSRunningApplication.runningApplications(withBundleIdentifier:)`
-    - Bundle ID: `"com.example.Hammerspoon2"` (update to actual)
+    - Bundle ID: `"net.tenshu.Hammerspoon-2"` (update to actual)
     - If not running and `exitIfNotRunning`, exit with `EX_TEMPFAIL`
     - If not running and not `autoLaunch`, show alert:
       ```swift
@@ -1204,54 +1204,4 @@ The implementation is complete when:
 15. ✅ All integration tests pass
 16. ✅ No memory leaks detected under Instruments
 17. ✅ Documentation is complete and accurate
-
----
-
-## v1.0 Implementation Scope Summary
-
-This specification has been verified and simplified for v1.0 implementation (2025-12-27).
-
-### Changes from Original Plan
-
-**Removed Features (Deferred to v2.0+):**
-1. **Settings UI** (Step 12) - Users configure via JavaScript API instead
-2. **CLI End-to-End Tests** (Step 14) - Manual testing only
-3. **Legacy V1 Protocol Support** - Removed MSGID_LEGACY, MSGID_LEGACYCHECK, legacy mode detection
-
-**Simplified Features:**
-4. **Tab Completion** - Minimal implementation (only `hs.*` module names, not deep properties/methods)
-5. **Integration Tests** - Basic smoke tests only (module loads, ports work, messages send)
-
-**Architecture Decisions:**
-- **JavaScript Execution Context**: Option B (Shared Context with Explicit Scoping)
-  - All CLI instances share main JavaScript context
-  - Instance-specific `_cli` and `print` injected via Function parameters
-  - Global scope shared intentionally for integration with main app
-- **Settings Storage**: Direct UserDefaults access (not SettingsManager)
-  - Uses original Hammerspoon key format: `ipc.cli.color_initial`, etc.
-- **Thread Safety**: `@MainActor` annotations on HSMessagePort and HSIPCModule
-  - CFMessagePort callbacks dispatched to main thread for JavaScript execution
-- **Licensing**: Use libedit (BSD licensed) via `-lreadline` linker flag
-
-### Final Step Count
-
-- **Original**: 16 steps
-- **v1.0**: 14 steps (removed Steps 12 and 14, renumbered)
-
-### Implementation Priority
-
-**Core deliverables** (must work for v1.0):
-- hs.ipc module with message ports
-- hs2 CLI tool with REPL and execution modes
-- Protocol v2.0 (REGISTER, COMMAND, QUERY)
-- CLI installation/configuration functions
-- Basic tab completion
-- Man page documentation
-
-**Deferred to future versions**:
-- Settings UI for IPC configuration
-- Advanced tab completion (deep properties, methods, globals)
-- Comprehensive test suite
-- End-to-end CLI testing
-- Legacy protocol compatibility
 
