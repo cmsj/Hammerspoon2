@@ -1,5 +1,10 @@
 # Feature: hs.ipc Module and hs2 Command-Line Tool
 
+**Revision**: 2025-12-27 - Verified and simplified for v1.0 implementation
+- Removed: Settings UI, CLI E2E tests, Legacy V1 protocol support
+- Simplified: Tab completion (minimal), integration tests (basic only)
+- Updated: JavaScript execution context (Option B - Shared with Scoping), thread safety requirements
+
 ## Chore Description
 
 Implement the `hs.ipc` module for inter-process communication (IPC) between Hammerspoon 2 and external processes, along with a command-line tool named `hs2` that enables users to execute JavaScript code, interact with Hammerspoon 2 from shell scripts, and access an interactive REPL from the terminal.
@@ -32,20 +37,10 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Add lazy loading implementation for the IPC module in `ModuleRoot` class
   - Registers the module with the JavaScript `hs` namespace
 
-- **`Hammerspoon 2/Managers/SettingsManager.swift`**
-  - Add IPC-related settings keys for CLI configuration:
-    - `ipcCliColorBanner` (default: `\u{001B}[35m` - magenta)
-    - `ipcCliColorInput` (default: `\u{001B}[33m` - yellow)
-    - `ipcCliColorOutput` (default: `\u{001B}[36m` - cyan)
-    - `ipcCliColorError` (default: `\u{001B}[31m` - red)
-    - `ipcCliSaveHistory` (default: `false`)
-    - `ipcCliHistorySize` (default: `1000`)
-  - These settings control the behavior of CLI instances connected via IPC
-
 - **`Hammerspoon 2/Engine/JSEngine.swift`**
-  - Potential modifications to support IPC-driven code execution context isolation
-  - May need to expose methods for executing code in isolated environments per CLI instance
-  - Review if global `print()` function needs IPC-aware replacement
+  - No modifications required for v1.0
+  - IPC will use shared JavaScript context (Option B: Shared with Scoping)
+  - Instance-specific `_cli` and `print` injected via function parameters
 
 - **`Hammerspoon 2.xcodeproj/project.pbxproj`** (Xcode project file)
   - Add new source files to the project
@@ -91,10 +86,8 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     enum IPCMessageID: Int32 {
         case register = 100
         case unregister = 200
-        case legacyCheck = 900
         case command = 500
         case query = 501
-        case legacy = 0
         case error = -1
         case output = 1
         case returnValue = 2
@@ -102,23 +95,30 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     }
     ```
   - Protocol version constant: `"2.0"`
+  - Message encoding format: `"instanceID\0payload"` for COMMAND/REGISTER/QUERY, plain payload for others
   - Helper functions for message encoding/decoding
   - Instance ID parsing and validation
 
 - **`Hammerspoon 2/Modules/hs.ipc/hs.ipc.js`**
   - JavaScript companion file loaded with the module
-  - Implements default message handler (equivalent to `ipc.lua` logic):
-    - LEGACYCHECK (900): Return version string `"version:2.0"`
-    - REGISTER (100): Parse instance ID and arguments, create isolated environment
+  - Implements default message handler:
+    - REGISTER (100): Parse instance ID and arguments, create instance object with isolated `_cli` and `print`
     - UNREGISTER (200): Cleanup instance
-    - COMMAND (500): Execute code and return results
+    - COMMAND (500): Execute code with instance-specific context (Option B: Function parameter injection)
     - QUERY (501): Execute code with query semantics
   - Manages registered CLI instances dictionary:
     ```javascript
     hs.ipc.__registeredCLIInstances = {};
     hs.ipc.__defaultHandler = function(port, msgID, data) { ... };
     ```
-  - Implements `print()` replacement for console mirroring
+  - Execution pattern (Option B - Shared Context with Scoping):
+    ```javascript
+    // Instance-specific objects injected as function parameters
+    let fn = new Function('_cli', 'print', code);
+    result = fn(instance._cli, instance.print);
+    // Global scope shared, _cli and print isolated per instance
+    ```
+  - Implements `print()` replacement for console mirroring to all connected CLIs
   - Creates default port: `hs.ipc.__default = hs.ipc.localPort("Hammerspoon2", hs.ipc.__defaultHandler)`
   - Helper functions for message parsing and response formatting
 
@@ -136,7 +136,6 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - `-n` : Disable colors
     - `-N` : Force colors
     - `-C` : Enable console mirroring
-    - `-P` : Enable legacy compatibility mode
     - `-q` : Quiet mode (suppress output except errors)
     - `-t seconds` : Set timeout (default: 4.0)
     - `-h` : Display help
@@ -172,9 +171,9 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - `executeCommand(_:)`: Sends COMMAND/QUERY message
     - `sendToRemote(_:msgID:wantResponse:error:)`: Low-level message sending
     - `localPortCallback()`: Static C function for CFMessagePort callback
-  - Implements protocol version detection (V1 legacy vs V2)
   - Manages CFRunLoop for bidirectional communication
   - Routes received messages to stdout/stderr with color coding
+  - **Thread Safety**: All CFMessagePort operations run on dedicated thread, callbacks marshalled to main thread for JavaScript execution
 
 - **`hs2/HSInteractiveREPL.swift`**
   - Interactive REPL implementation using GNU Readline
@@ -240,8 +239,24 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
 
 - Create directory `Hammerspoon 2/Modules/hs.ipc/`
 - Create `IPCProtocol.swift` defining message IDs and protocol constants
-- Define `IPCMessageID` enum with all message types
+- Define `IPCMessageID` enum with message types (removed: `legacyCheck`, `legacy`):
+  ```swift
+  enum IPCMessageID: Int32 {
+      case register = 100
+      case unregister = 200
+      case command = 500
+      case query = 501
+      case error = -1
+      case output = 1
+      case returnValue = 2
+      case console = 3
+  }
+  ```
 - Add protocol version constant `IPCProtocolVersion = "2.0"`
+- Document message encoding format:
+  - REGISTER/COMMAND/QUERY: `"instanceID\0payload"` (null-delimited)
+  - Other messages: Plain payload
+  - Use UTF-8 encoding throughout
 - Create helper functions for message encoding/decoding:
   - `encodeMessage(instanceID: String?, payload: String) -> Data`
   - `decodeMessage(data: Data) -> (instanceID: String?, payload: String)`
@@ -250,6 +265,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
 ### Step 2: Implement Message Port Wrapper
 
 - Create `HSMessagePort.swift`
+- **Mark class with `@MainActor`** to ensure all operations run on main thread (required for JavaScriptCore)
 - Define `HSMessagePortAPI` protocol conforming to `JSExport`:
   - `@objc var name: String { get }`
   - `@objc var isValid: Bool { get }`
@@ -265,8 +281,10 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
 - Implement initializers:
   - `init(localPortName: String, callback: JSValue)` for server ports
   - `init(remotePortName: String)` for client ports
+  - Create ports on main thread and add to `CFRunLoopGetMain()`
 - Implement CFMessagePort callback bridge:
   - Static C function `messagePortCallback(_:_:_:_:) -> CFDataRef?`
+  - **Wrap JavaScript callback invocation in `DispatchQueue.main.async`** to ensure main thread execution
   - Converts CFDataRef to JSValue and invokes JavaScript callback
   - Returns response as CFDataRef
 - Add recursive call depth protection (max 5 levels)
@@ -277,7 +295,6 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Remove from run loop
   - Release CFMessagePortRef
 - Add `deinit` with logging
-- Ensure thread safety (use @MainActor if needed)
 
 ### Step 3: Implement IPC Module
 
@@ -315,25 +332,46 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - Verify symlinks exist and point to current bundle
     - Return Boolean status
     - Log results unless silent mode
-- Implement CLI configuration functions:
+- Implement CLI configuration functions using **direct UserDefaults access** (not SettingsManager):
+  - Use keys matching original Hammerspoon format for compatibility:
+    - `ipc.cli.color_initial` → Banner color (default: `"\u{001B}[35m"`)
+    - `ipc.cli.color_input` → Input prompt color (default: `"\u{001B}[33m"`)
+    - `ipc.cli.color_output` → Output color (default: `"\u{001B}[36m"`)
+    - `ipc.cli.color_error` → Error color (default: `"\u{001B}[31m"`)
+    - `ipc.cli.saveHistory` → History persistence (default: `false`)
+    - `ipc.cli.historyLimit` → History size (default: `1000`)
   - `cliColors()`: Get/set color scheme dictionary
     - If no argument, return current colors from UserDefaults
     - If dictionary provided, validate and save to UserDefaults
-    - Keys: `banner`, `input`, `output`, `error`
+    - JavaScript keys: `initial`, `input`, `output`, `error` (map to UserDefaults keys above)
   - `cliSaveHistory()`: Get/set history persistence
-    - If no argument, return current setting
+    - If no argument, return current setting from `ipc.cli.saveHistory`
     - If Boolean provided, save to UserDefaults
   - `cliSaveHistorySize()`: Get/set history size
-    - If no argument, return current size
+    - If no argument, return current size from `ipc.cli.historyLimit`
     - If number provided, validate (1-10000) and save
 - Implement `shutdown()`:
   - Cleanup any active ports (if tracked)
   - No default port cleanup needed (handled by JavaScript layer)
 - Add error handling with `HammerspoonError`
+- **Mark class with `@MainActor`** for thread safety
 
 ### Step 4: Create JavaScript Protocol Handler
 
 - Create `Hammerspoon 2/Modules/hs.ipc/hs.ipc.js`
+- Define message ID constants (must match IPCProtocol.swift):
+  ```javascript
+  const MSG_ID = {
+    REGISTER: 100,
+    UNREGISTER: 200,
+    COMMAND: 500,
+    QUERY: 501,
+    ERROR: -1,
+    OUTPUT: 1,
+    RETURN: 2,
+    CONSOLE: 3
+  };
+  ```
 - Define internal structures:
   ```javascript
   hs.ipc.__registeredCLIInstances = {};
@@ -341,48 +379,60 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   ```
 - Implement default message handler `hs.ipc.__defaultHandler(port, msgID, data)`:
   - Extract message ID and payload from data
-  - LEGACYCHECK (msgID=900):
-    - Return `"version:2.0"` as response
-  - REGISTER (msgID=100):
-    - Parse `instanceID` and JSON arguments from payload
-    - Parse flags: `quiet`, `console`, `legacy`
-    - Create isolated environment for instance:
+  - **REGISTER (msgID=100)**:
+    - Parse `instanceID` and JSON arguments from payload (format: `"instanceID\0{...json...}"`)
+    - Parse flags: `quiet`, `console`
+    - Create instance object with isolated `_cli` and `print` (Option B: Shared Context with Scoping):
       ```javascript
       hs.ipc.__registeredCLIInstances[instanceID] = {
         _cli: {
           remote: hs.ipc.remotePort(instanceID),
           quietMode: quiet,
           console: console,
-          legacy: legacy
+          args: scriptArguments // Custom arguments from CLI
         },
-        print: function(...args) { /* custom print */ }
+        print: function(...args) {
+          if (this._cli.quietMode) return;
+          let output = args.map(a => String(a)).join('\t') + '\n';
+          this._cli.remote.sendMessage(output, MSG_ID.OUTPUT);
+        }
       };
       ```
-    - Copy global namespace into instance environment
     - Return `"ok"` response
-  - UNREGISTER (msgID=200):
-    - Parse instanceID
+  - **UNREGISTER (msgID=200)**:
+    - Parse instanceID from data
     - Delete instance from `__registeredCLIInstances`
     - Call `delete()` on remote port
-    - No response needed
-  - COMMAND (msgID=500) / QUERY (msgID=501):
-    - Parse instanceID and code
-    - Retrieve instance environment
-    - Try to compile and execute code:
+    - No response needed (one-way message)
+  - **COMMAND (msgID=500) / QUERY (msgID=501)**:
+    - Parse instanceID and code from data (format: `"instanceID\0code"`)
+    - Retrieve instance object
+    - Execute code using Option B pattern (Function parameter injection):
       ```javascript
-      let fn = new Function('return ' + code);
-      let result = fn.call(instanceEnv);
-      ```
-    - If that fails, try without `return`:
-      ```javascript
-      fn = new Function(code);
-      result = fn.call(instanceEnv);
+      let instance = hs.ipc.__registeredCLIInstances[instanceID];
+
+      // Try with return first
+      try {
+        let fn = new Function('_cli', 'print', 'return ' + code);
+        result = fn(instance._cli, instance.print);
+      } catch (e1) {
+        // Try without return
+        try {
+          let fn = new Function('_cli', 'print', code);
+          result = fn(instance._cli, instance.print);
+        } catch (e2) {
+          // Send error response
+          instance._cli.remote.sendMessage(String(e2) + '\n', MSG_ID.ERROR);
+          return "error";
+        }
+      }
       ```
     - Format result for transmission:
-      - Success: Send result with MSG_ID.RETURN (2)
-      - Error: Send error message with MSG_ID.ERROR (-1)
-    - Send response via instance's remote port
-- Implement print() replacement:
+      - Success: Send result with `MSG_ID.RETURN` (2) if COMMAND, return as string if QUERY
+      - Error: Send error message with `MSG_ID.ERROR` (-1)
+    - For COMMAND: Return "ok" or "error" status
+    - For QUERY: Return result directly
+- Implement print() replacement for console mirroring:
   - `hs.ipc.print = function(...args)`:
     - Call original print
     - For each registered CLI instance with console mirroring enabled:
@@ -410,26 +460,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
         get { getOrCreate(name: "ipc", type: HSIPCModule.self) }
     }
     ```
-- Modify `Hammerspoon 2/Managers/SettingsManager.swift`:
-  - Add to `Keys` enum:
-    ```swift
-    case ipcCliColorBanner
-    case ipcCliColorInput
-    case ipcCliColorOutput
-    case ipcCliColorError
-    case ipcCliSaveHistory
-    case ipcCliHistorySize
-    ```
-  - Add default values in `defaultValue`:
-    ```swift
-    case .ipcCliColorBanner: return "\u{001B}[35m"
-    case .ipcCliColorInput: return "\u{001B}[33m"
-    case .ipcCliColorOutput: return "\u{001B}[36m"
-    case .ipcCliColorError: return "\u{001B}[31m"
-    case .ipcCliSaveHistory: return false
-    case .ipcCliHistorySize: return 1000
-    ```
-  - Add computed properties for each setting (similar to existing pattern)
+- **No SettingsManager modifications needed** - IPC module uses direct UserDefaults access
 - Add new files to Xcode project:
   - Create group `hs.ipc` under `Modules`
   - Add all Swift files
@@ -544,9 +575,8 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - Create autorelease pool
     - Create remote port: `CFMessagePortCreateRemote(nil, remoteName as CFString)`
     - Check for errors, set `exitCode = EX_UNAVAILABLE` if failed
-    - Perform legacy check: Send msgID=900 with "1+1"
-    - Parse response: if starts with "version:", use V2 protocol
-    - If V2, create local port: `CFMessagePortCreateLocal(nil, localName as CFString, localPortCallback, &context, &error)`
+    - Create local port: `CFMessagePortCreateLocal(nil, localName as CFString, localPortCallback, &context, &error)`
+    - Check for errors, set `exitCode = EX_UNAVAILABLE` if failed
     - Add local port to run loop:
       ```swift
       let runLoopSource = CFMessagePortCreateRunLoopSource(nil, localPort, 0)
@@ -560,7 +590,6 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
       let args = [
           "quiet": quietMode,
           "console": consoleMirroring,
-          "legacy": legacyMode,
           "customArgs": customArgs
       ]
       let json = try JSONSerialization.data(withJSONObject: args)
@@ -573,9 +602,8 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - No response expected
   - Implement `executeCommand(_ command: String) -> Bool`:
     - Construct command message: `"\(localName)\0\(command)"`
-    - Send with msgID=500 (or 0 for legacy)
-    - If V2, verify response is "ok" and return true
-    - If V1, output response directly and return true
+    - Send with msgID=500
+    - Verify response is "ok" and return true
     - Return false on error, set `exitCode`
   - Implement `sendToRemote(_:msgID:wantResponse:) -> Data?`:
     - Create message data
@@ -684,25 +712,29 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
     - Parse JSON array response
     - Return matches one by one using `strdup()`
 
-### Step 9: Implement completionsForInputString in Hammerspoon 2
+### Step 9: Implement completionsForInputString in Hammerspoon 2 (Minimal)
 
-- Review original implementation in `hs_repo_old/extensions/_coresetup/_coresetup.lua`
-- Create JavaScript equivalent in a suitable location (e.g., `engine.js` or dedicated file)
-- Implement `hs.completionsForInputString(inputString)`:
-  - Parse input to determine completion context:
-    - Global namespace completion (no prefix)
-    - `hs.` namespace completion
-    - Object method completion (contains `:` or `.`)
-  - Use JavaScript reflection:
-    - `Object.keys()` for property enumeration
-    - `Object.getOwnPropertyNames()` for comprehensive listing
-    - Check prototype chains for object methods
-  - Filter results based on input prefix
-  - Return array of completion strings
-  - Handle edge cases:
-    - Empty input (return common globals)
-    - Invalid syntax (return empty array)
-    - Deep nesting (limit to prevent performance issues)
+- Create JavaScript function in `engine.js` or hs.ipc.js
+- **Minimal implementation for v1.0** - only complete `hs.*` module names:
+  ```javascript
+  hs.completionsForInputString = function(inputString) {
+    if (inputString.startsWith("hs.")) {
+      // Return hs.* module names
+      let prefix = "hs.";
+      let modules = Object.keys(hs).filter(k => k !== "__proto__");
+      let completions = modules.map(m => prefix + m);
+      return completions.filter(c => c.startsWith(inputString));
+    }
+    return [];
+  };
+  ```
+- **Defer to v2.0**: Deep property completion, method completion, global namespace completion
+- **Enhancement candidates** (not for v1.0):
+  - Complete object properties and methods
+  - Complete global variables
+  - Complete function parameters
+  - Handle deep nesting (e.g., `hs.timer.doAfter`)
+  - Use prototype chain inspection
 
 ### Step 10: Create Man Page
 
@@ -756,116 +788,36 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Ensure binary has correct install path
   - Test that symlink creation works
 
-### Step 12: Add IPC Settings to Settings UI
-
-- Modify `Hammerspoon 2/Windows/Settings/SettingsAdvancedView.swift` or create new settings tab
-- Add IPC settings section:
-  - **CLI Colors**:
-    - Color pickers or text fields for each color:
-      - Banner color
-      - Input prompt color
-      - Output color
-      - Error color
-    - Reset to defaults button
-    - Live preview showing colors
-  - **CLI History**:
-    - Toggle for "Save command history"
-    - Stepper/text field for history size (1-10000)
-    - Button to clear history file
-  - **CLI Installation**:
-    - Status indicator showing installation state
-    - Install button (calls `hs.ipc.cliInstall()`)
-    - Uninstall button (calls `hs.ipc.cliUninstall()`)
-    - Path text field for custom installation location
-- Bind controls to SettingsManager properties
-- Add validation and error handling
-- Show success/error alerts for installation actions
-
-### Step 13: Write Integration Tests
+### Step 12: Write Integration Tests (Basic)
 
 - Create `Hammerspoon 2Tests/IntegrationTests/HSIPCIntegrationTests.swift`
 - Import XCTest and test framework
-- Test cases:
+- **Basic smoke tests only** (defer comprehensive tests to v2.0):
+  - `testModuleLoads()`:
+    - Verify `hs.ipc` module loads without errors
+    - Verify module has expected properties (`localPort`, `remotePort`, `cliInstall`, etc.)
   - `testLocalPortCreation()`:
     - Create local port via JavaScript
     - Verify port is valid
     - Verify name is correct
-    - Verify isRemote is false
-  - `testRemotePortCreation()`:
-    - Create remote port (will fail if no server)
-    - Verify error handling
-  - `testMessagePortCommunication()`:
-    - Create local port with callback
+    - Call delete() and verify cleanup
+  - `testMessageRoundtrip()`:
+    - Create local port with simple callback
     - Create remote port to same name
-    - Send message from remote
+    - Send test message
     - Verify callback receives message
-    - Verify response is received
-  - `testPortInvalidation()`:
-    - Create port
-    - Call delete()
-    - Verify isValid returns false
-    - Verify subsequent sends fail gracefully
-  - `testIPCProtocolHandlerRegistration()`:
-    - Simulate REGISTER message
-    - Verify instance is created
-    - Verify environment is isolated
-  - `testIPCProtocolHandlerCommand()`:
-    - Register instance
-    - Send COMMAND with simple code
-    - Verify response
-  - `testIPCProtocolHandlerUnregister()`:
-    - Register instance
-    - Send UNREGISTER
-    - Verify cleanup
+    - Verify response returned
   - `testCLIInstallation()`:
-    - Call cliInstall with test path
-    - Verify symlinks exist
+    - Call cliInstall with `/tmp/hs2test` path
+    - Verify symlinks created
     - Call cliUninstall
     - Verify symlinks removed
-  - `testCLIConfiguration()`:
-    - Get default colors
-    - Set custom colors
-    - Verify persistence
-    - Reset to defaults
+    - Use temporary directory, cleanup in tearDown
 - Use `JSTestHarness` for JavaScript evaluation
-- Mock file system operations where appropriate
-- Add teardown to cleanup test ports and files
+- Keep tests simple - verify basic functionality works
+- **Deferred to v2.0**: Edge cases, error conditions, concurrent CLIs, protocol handler details
 
-### Step 14: Write CLI End-to-End Tests
-
-- Create `Hammerspoon 2Tests/IntegrationTests/HSIPCHS2CLITests.swift`
-- Test cases (require running Hammerspoon 2 instance):
-  - `testHS2BasicExecution()`:
-    - Launch hs2 with `-c "1 + 1"`
-    - Verify output is "2"
-    - Verify exit code is 0
-  - `testHS2ErrorHandling()`:
-    - Launch hs2 with `-c "invalid syntax"`
-    - Verify error message on stderr
-    - Verify exit code is EX_DATAERR
-  - `testHS2Timeout()`:
-    - Launch hs2 with `-t 0.1` and slow operation
-    - Verify timeout error
-    - Verify exit code is EX_UNAVAILABLE
-  - `testHS2QuietMode()`:
-    - Launch hs2 with `-q -c "print('test')"`
-    - Verify no stdout (print suppressed)
-  - `testHS2StdinInput()`:
-    - Pipe code to hs2 via stdin
-    - Verify execution
-  - `testHS2FileExecution()`:
-    - Create test .js file
-    - Execute with hs2
-    - Verify results
-  - `testHS2CustomArguments()`:
-    - Pass custom arguments after `--`
-    - Verify they're accessible in code
-- Use `Process` class to launch hs2
-- Capture stdout/stderr via pipes
-- Parse and verify output
-- Clean up test files
-
-### Step 15: Update Documentation
+### Step 13: Update Documentation
 
 - Update `CLAUDE.md` to document hs.ipc module:
   - Add to "Implemented Modules" section
@@ -892,7 +844,7 @@ The original uses Lua as the scripting language; Hammerspoon 2 uses JavaScript. 
   - Troubleshooting guide
 - Update README if exists with hs2 installation instructions
 
-### Step 16: Build and Validate
+### Step 14: Build and Validate
 
 - Build entire project in Xcode
 - Fix any compilation errors
@@ -1252,3 +1204,54 @@ The implementation is complete when:
 15. ✅ All integration tests pass
 16. ✅ No memory leaks detected under Instruments
 17. ✅ Documentation is complete and accurate
+
+---
+
+## v1.0 Implementation Scope Summary
+
+This specification has been verified and simplified for v1.0 implementation (2025-12-27).
+
+### Changes from Original Plan
+
+**Removed Features (Deferred to v2.0+):**
+1. **Settings UI** (Step 12) - Users configure via JavaScript API instead
+2. **CLI End-to-End Tests** (Step 14) - Manual testing only
+3. **Legacy V1 Protocol Support** - Removed MSGID_LEGACY, MSGID_LEGACYCHECK, legacy mode detection
+
+**Simplified Features:**
+4. **Tab Completion** - Minimal implementation (only `hs.*` module names, not deep properties/methods)
+5. **Integration Tests** - Basic smoke tests only (module loads, ports work, messages send)
+
+**Architecture Decisions:**
+- **JavaScript Execution Context**: Option B (Shared Context with Explicit Scoping)
+  - All CLI instances share main JavaScript context
+  - Instance-specific `_cli` and `print` injected via Function parameters
+  - Global scope shared intentionally for integration with main app
+- **Settings Storage**: Direct UserDefaults access (not SettingsManager)
+  - Uses original Hammerspoon key format: `ipc.cli.color_initial`, etc.
+- **Thread Safety**: `@MainActor` annotations on HSMessagePort and HSIPCModule
+  - CFMessagePort callbacks dispatched to main thread for JavaScript execution
+- **Licensing**: Use libedit (BSD licensed) via `-lreadline` linker flag
+
+### Final Step Count
+
+- **Original**: 16 steps
+- **v1.0**: 14 steps (removed Steps 12 and 14, renumbered)
+
+### Implementation Priority
+
+**Core deliverables** (must work for v1.0):
+- hs.ipc module with message ports
+- hs2 CLI tool with REPL and execution modes
+- Protocol v2.0 (REGISTER, COMMAND, QUERY)
+- CLI installation/configuration functions
+- Basic tab completion
+- Man page documentation
+
+**Deferred to future versions**:
+- Settings UI for IPC configuration
+- Advanced tab completion (deep properties, methods, globals)
+- Comprehensive test suite
+- End-to-end CLI testing
+- Legacy protocol compatibility
+
