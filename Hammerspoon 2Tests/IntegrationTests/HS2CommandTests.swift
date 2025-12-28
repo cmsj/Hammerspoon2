@@ -271,21 +271,115 @@ class HS2CommandTests: XCTestCase {
 
     func testSyntaxError() {
         let (_, stderr, exitCode) = runHS2Command(["-c", "this is invalid syntax;;"], quiet: true)
-        XCTAssertNotEqual(exitCode, 0, "Should exit with error on syntax error")
+        XCTAssertEqual(exitCode, 0, "Should exit 0 - IPC succeeded even though JS errored")
         XCTAssertTrue(stderr.contains("Error") || stderr.contains("error"),
-                     "Should output error message")
+                     "Should output error message to stderr")
     }
 
     func testRuntimeError() {
         let code = "throw new Error('Test error');"
         let (_, stderr, exitCode) = runHS2Command(["-c", code], quiet: true)
-        XCTAssertNotEqual(exitCode, 0, "Should exit with error on runtime error")
+        XCTAssertEqual(exitCode, 0, "Should exit 0 - IPC succeeded even though JS errored")
+        XCTAssertTrue(stderr.contains("Error") || stderr.contains("Test error"),
+                     "Should output error message to stderr")
     }
 
     func testUndefinedVariable() {
         let code = "print(undefinedVariable);"
         let (_, stderr, exitCode) = runHS2Command(["-c", code], quiet: true)
-        XCTAssertNotEqual(exitCode, 0, "Should exit with error on undefined variable")
+        XCTAssertEqual(exitCode, 0, "Should exit 0 - IPC succeeded even though JS errored")
+        XCTAssertTrue(stderr.contains("ReferenceError") || stderr.contains("undefined"),
+                     "Should output error about undefined variable")
+    }
+
+    // MARK: - Error Recovery Tests
+
+    func testErrorRecovery_SingleError() {
+        // Single error command should print error but exit 0
+        let (_, stderr, exitCode) = runHS2Command(["-c", "throw new Error('test error')"], quiet: true)
+        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (IPC succeeded)")
+        XCTAssertTrue(stderr.contains("Error"), "Error should be printed to stderr")
+    }
+
+    func testErrorRecovery_ErrorInFirstPosition() {
+        // Error in first command should not prevent second command from executing
+        let (stdout, stderr, exitCode) = runHS2Command([
+            "-c", "throw new Error('first error')",
+            "-c", "print('second command')"
+        ], quiet: true)
+
+        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (all IPC succeeded)")
+        XCTAssertTrue(stderr.contains("first error"), "First error should be in stderr")
+        XCTAssertTrue(stdout.contains("second command"), "Second command should execute")
+    }
+
+    func testErrorRecovery_ErrorInMiddlePosition() {
+        // Error in middle should not prevent other commands from executing
+        let (stdout, stderr, exitCode) = runHS2Command([
+            "-c", "print('first')",
+            "-c", "undefinedVariable",
+            "-c", "print('third')"
+        ], quiet: true)
+
+        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (all IPC succeeded)")
+        XCTAssertTrue(stdout.contains("first"), "First command should execute")
+        XCTAssertTrue(stderr.contains("ReferenceError") || stderr.contains("undefined"),
+                     "Error should be in stderr")
+        XCTAssertTrue(stdout.contains("third"), "Third command should execute")
+    }
+
+    func testErrorRecovery_ErrorInLastPosition() {
+        // All commands should execute even if last one errors
+        let (stdout, stderr, exitCode) = runHS2Command([
+            "-c", "print('first')",
+            "-c", "print('second')",
+            "-c", "throw new Error('last error')"
+        ], quiet: true)
+
+        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (all IPC succeeded)")
+        XCTAssertTrue(stdout.contains("first"), "First command should execute")
+        XCTAssertTrue(stdout.contains("second"), "Second command should execute")
+        XCTAssertTrue(stderr.contains("last error"), "Error should be in stderr")
+    }
+
+    func testErrorRecovery_SyntaxErrorRecovery() {
+        // Syntax errors should also allow continued execution
+        let (stdout, stderr, exitCode) = runHS2Command([
+            "-c", "invalid syntax {{",
+            "-c", "print('after syntax error')"
+        ], quiet: true)
+
+        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (IPC succeeded)")
+        XCTAssertTrue(stderr.contains("Error") || stderr.contains("Syntax"),
+                     "Syntax error should be in stderr")
+        XCTAssertTrue(stdout.contains("after syntax error"),
+                     "Command after syntax error should execute")
+    }
+
+    func testErrorRecovery_MultipleErrors() {
+        // Multiple errors should all be reported, all commands execute
+        let (stdout, stderr, exitCode) = runHS2Command([
+            "-c", "throw new Error('error 1')",
+            "-c", "print('middle')",
+            "-c", "throw new Error('error 2')"
+        ], quiet: true)
+
+        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (all IPC succeeded)")
+        XCTAssertTrue(stderr.contains("error 1"), "First error should be in stderr")
+        XCTAssertTrue(stderr.contains("error 2"), "Second error should be in stderr")
+        XCTAssertTrue(stdout.contains("middle"), "Middle command should execute")
+    }
+
+    func testErrorRecovery_SuccessfulCommandsStillWork() {
+        // Verify successful commands work as expected
+        let (stdout, _, exitCode) = runHS2Command([
+            "-c", "print('hello')",
+            "-c", "print(1 + 1)"
+        ], quiet: true)
+
+        XCTAssertEqual(exitCode, 0, "Exit code should be 0")
+        XCTAssertTrue(stdout.contains("hello"), "First output should be present")
+        XCTAssertTrue(stdout.contains("2"), "Second output should be present")
     }
 
     // MARK: - File Execution Tests
@@ -388,8 +482,10 @@ class HS2CommandTests: XCTestCase {
     }
 
     func testErrorExitCode() {
-        let (_, _, exitCode) = runHS2Command(["-c", "throw new Error('fail')"], quiet: true)
-        XCTAssertNotEqual(exitCode, 0, "Should exit with non-zero on error")
+        let (_, stderr, exitCode) = runHS2Command(["-c", "throw new Error('fail')"], quiet: true)
+        XCTAssertEqual(exitCode, 0, "Should exit 0 - IPC succeeded even though JS errored")
+        XCTAssertTrue(stderr.contains("Error") || stderr.contains("fail"),
+                     "Error should be printed to stderr")
     }
 
     // MARK: - Command-line Flag Tests

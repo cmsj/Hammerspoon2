@@ -84,10 +84,10 @@ while i < CommandLine.arguments.count {
         useColors = false
 
     case "-N":
-        consoleMirroring = false
+        useColors = true
 
     case "-C":
-        useColors = true
+        consoleMirroring = true
 
     case "-q":
         quietMode = true
@@ -116,8 +116,8 @@ while i < CommandLine.arguments.count {
               -c <code>       Execute code string
               -m <name>       Remote port name (default: hammerspoon)
               -n              Disable colored output
-              -N              Disable console mirroring
-              -C              Force colored output
+              -N              Force colored output
+              -C              Enable console mirroring
               -q              Quiet mode (suppress output)
               -t <seconds>    IPC timeout (default: 4.0)
               -h, --help      Show this help

@@ -42,6 +42,39 @@ Communication between `hs2` (client) and Hammerspoon 2 (server) uses a CFMessage
 
 **Resource Leak Fix (2025-12-28)**: The UNREGISTER handler now properly cleans up both `__registeredCLIInstances` AND `__remotePorts` to prevent accumulation of dead port objects.
 
+## Error Handling
+
+### JavaScript Errors vs IPC Errors
+
+hs2 distinguishes between two types of errors:
+
+1. **JavaScript Errors** - Errors in user code (syntax errors, exceptions, undefined variables)
+   - Reported to stderr with color coding
+   - Execution continues to next `-c` command
+   - Exit code remains 0 (IPC communication succeeded)
+
+2. **IPC/Communication Errors** - Failures in communicating with Hammerspoon
+   - Connection failures, timeouts, protocol errors
+   - Execution stops immediately
+   - Exit code set to non-zero (e.g., 69 for EX_UNAVAILABLE)
+
+### Multiple Command Execution
+
+When multiple `-c` commands are specified, all will execute even if earlier ones error:
+
+```bash
+# Both commands execute, even though first has error
+hs2 -c "throw new Error('oops')" -c "console.log('still runs')"
+```
+
+### Exit Code Semantics
+
+- **Exit code 0**: IPC communication succeeded (user code may have had errors)
+- **Exit code 69 (EX_UNAVAILABLE)**: Cannot connect to Hammerspoon
+- **Exit code 65 (EX_DATAERR)**: IPC protocol error
+
+To check for JavaScript errors, parse stderr output rather than relying on exit codes.
+
 ## Known Limitations
 
 ### Message Port Limits
