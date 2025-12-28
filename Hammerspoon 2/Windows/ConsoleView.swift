@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 @_documentation(visibility: private)
 struct ConsoleView: View {
@@ -35,31 +37,31 @@ struct ConsoleView: View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading) {
-                        ForEach(logs.entries.filter {
-                            if $0.logType.rawValue < minimumLogLevel.rawValue { return false }
-                            if searchString == "" {
-                                return true
-                            } else {
-                                return $0.msg.contains(searchString)
-                            }
-                        }) { entry in
-                            let date = entry.date.formatted(
-                                .verbatim(
-                                    "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
-                                    locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
-                                )
-                            )
-                            Text("\(date) - \(entry.logType.asString): \(entry.msg)")
-                                .id(entry.id)
-                                .multilineTextAlignment(.leading)
-                                .fontDesign(.monospaced)
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    // Single Text view for all logs to enable multi-line selection
+                    let filteredEntries = logs.entries.filter {
+                        if $0.logType.rawValue < minimumLogLevel.rawValue { return false }
+                        if searchString == "" {
+                            return true
+                        } else {
+                            return $0.msg.contains(searchString)
                         }
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity)
+                    let logText = filteredEntries.map { entry in
+                        let date = entry.date.formatted(
+                            .verbatim(
+                                "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
+                                locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
+                            )
+                        )
+                        return "\(date) - \(entry.logType.asString): \(entry.msg)"
+                    }.joined(separator: "\n")
+
+                    Text(logText)
+                        .multilineTextAlignment(.leading)
+                        .fontDesign(.monospaced)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
                 }
                 .onChange(of: logs.entries) {
                     proxy.scrollTo(logs.entries.last?.id)
@@ -99,6 +101,9 @@ struct ConsoleView: View {
                     return .handled
                 })
                 .onSubmit {
+                    // Echo the command
+                    AKInfo("> \(evalString)")
+
                     evalHistory.append(evalString)
                     evalIndex = -1
                     if let result = JSEngine.shared.eval(evalString) {
@@ -119,6 +124,31 @@ struct ConsoleView: View {
                 Picker("Minimum log level", selection: $minimumLogLevel) {
                     ForEach(HammerspoonLogType.allCases) { item in
                         Text(item.asString)
+                    }
+                }
+            }
+            ToolbarItem(id: "saveLogs") {
+                Button("Save to File") {
+                    let savePanel = NSSavePanel()
+                    savePanel.allowedContentTypes = [.plainText]
+                    savePanel.nameFieldStringValue = "hammerspoon-console-\(Date().timeIntervalSince1970).txt"
+                    savePanel.begin { response in
+                        if response == .OK, let url = savePanel.url {
+                            let logText = logs.entries
+                                .filter { $0.logType.rawValue >= minimumLogLevel.rawValue }
+                                .map { entry in
+                                    let date = entry.date.formatted(
+                                        .verbatim(
+                                            "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
+                                            locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
+                                        )
+                                    )
+                                    return "\(date) - \(entry.logType.asString): \(entry.msg)"
+                                }
+                                .joined(separator: "\n")
+
+                            try? logText.write(to: url, atomically: true, encoding: .utf8)
+                        }
                     }
                 }
             }
