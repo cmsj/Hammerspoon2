@@ -246,6 +246,27 @@ run_stress_tests() {
         echo -e "${RED}FAIL${NC}"
         TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
+
+    echo -n "  Multiple console.log in rapid succession (15 calls) ... "
+    failed=0
+    for i in {1..15}; do
+        if ! "$HS2_BINARY" -q -c "console.log('console.log test $i')" >/dev/null 2>&1; then
+            failed=1
+            echo -e "\n    Failed on iteration $i"
+            break
+        fi
+        # Small delay to allow port cleanup
+        sleep 0.1
+    done
+
+    TESTS_RUN=$((TESTS_RUN + 1))
+    if [ $failed -eq 0 ]; then
+        echo -e "${GREEN}PASS${NC}"
+        TESTS_PASSED=$((TESTS_PASSED + 1))
+    else
+        echo -e "${RED}FAIL${NC}"
+        TESTS_FAILED=$((TESTS_FAILED + 1))
+    fi
 }
 
 print_summary() {
