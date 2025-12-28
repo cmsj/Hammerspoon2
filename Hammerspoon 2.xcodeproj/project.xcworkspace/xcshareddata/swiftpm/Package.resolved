@@ -1,5 +1,5 @@
 {
-  "originHash" : "256b98abbe04f8c9e316276743f01f93ec14b99236d5b3f17e39d22149f507e4",
+  "originHash" : "92e377f70d692204de061c74b38080da0e7cee12e0fa5c74b96aa2d1b8b125f5",
   "pins" : [
     {
       "identity" : "axswift",
@@ -8,6 +8,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "33e7e2fce473c299ea538f3925a48f399faa1be0"
+      }
+    },
+    {
+      "identity" : "internalesmoduleforswiftjavascriptcore",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ghostflyby/InternalESModuleForSwiftJavaScriptCore",
+      "state" : {
+        "revision" : "a8a08024acf416b507e541fcfa0b59e8600cdd28",
+        "version" : "1.0.1"
       }
     },
     {

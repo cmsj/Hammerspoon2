@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import InternalESModuleForSwiftJavaScriptCore
 import JavaScriptCore
 
 @_documentation(visibility: private)
@@ -15,6 +16,7 @@ class JSEngine {
     private(set) var id = UUID()
     private var vm: JSVirtualMachine?
     private var context: JSContext?
+    private var moduleLoader: MultiRootFSModuleLoader?
 
     // MARK: - Engine JavaScript component
     private func injectEngineJS() {
@@ -28,39 +30,11 @@ class JSEngine {
         }
     }
 
-    private func injectRequire() {
-        guard let context else {
-            AKError("require(): Cannot set require() before context is available. This is a bug.")
-            return
-        }
-
-        let require: @convention(block) (String) -> (JSValue?) = { path in
-            let expandedPath = NSString(string: path).expandingTildeInPath
-
-            // Return void or throw an error here.
-            guard FileManager.default.fileExists(atPath: expandedPath) else {
-                AKError("require(): \(expandedPath) could not be found. Current working directory is \(FileManager.default.currentDirectoryPath)")
-                return nil
-            }
-
-            let fileURL = URL(fileURLWithPath: expandedPath)
-
-            guard let fileContent = try? String(contentsOfFile: expandedPath, encoding: .utf8) else {
-                AKError("require(): Unable to read \(expandedPath)")
-                return nil
-            }
-
-            return context.evaluateScript(fileContent, withSourceURL: fileURL)
-        }
-
-        context.setObject(require, forKeyedSubscript: "require" as NSString)
-    }
-
     // MARK: - JSContext Managing
     private func createContext() throws(HammerspoonError) {
         AKTrace("createContext()")
         vm = JSVirtualMachine()
-        guard vm != nil else {
+        guard let vm else {
             throw HammerspoonError(.vmCreation, msg: "Unknown error (vm)")
         }
 
@@ -72,13 +46,20 @@ class JSEngine {
         id = UUID()
         context.name = "Hammerspoon \(id)"
 
+        var baseURLs = [
+            URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
+        ]
+        if let bundleURL = Bundle.main.resourceURL {
+            baseURLs.append(bundleURL)
+        }
+        let moduleLoader = MultiRootFSModuleLoader(virtualMachine: vm, baseURLs: baseURLs)
+        self.moduleLoader = moduleLoader
+        context.moduleLoaderDelegate = moduleLoader
+
         // This is our startup sequence.
 
         // First ensure the console namespace is populated
         self["console"] = ConsoleModule()
-
-        // Now ensure that require() exists
-        injectRequire()
 
         // Inject custom types we want to bridge between JS and Swift
         context.injectTypeBridges()
@@ -93,13 +74,16 @@ class JSEngine {
     private func deleteContext() {
         AKTrace("deleteContext()")
 
-        if let hs = self["hs"] as? JSValue, let moduleRoot = hs.toObjectOf(ModuleRoot.self) as? ModuleRoot {
+        if let hs = self["hs"] as? JSValue,
+            let moduleRoot = hs.toObjectOf(ModuleRoot.self) as? ModuleRoot
+        {
             moduleRoot.shutdown()
             self["hs"] = nil
         }
 
         context = nil
         vm = nil
+        moduleLoader = nil
     }
 }
 
@@ -125,8 +109,39 @@ extension JSEngine: JSEngineProtocol {
             throw HammerspoonError(.jsEvalURLKind, msg: "Refusing to eval remote URL")
         }
 
-        let script = try String(contentsOf: url, encoding: .utf8)
-        return context?.evaluateScript(script, withSourceURL: url)
+        guard let context else {
+            throw HammerspoonError(.unknown, msg: "JavaScript context is not available")
+        }
+        do {
+            guard let module = try moduleLoader?.module(for: url) else {
+                throw HammerspoonError(.jsModuleEvaluation, msg: "Unable to resolve module URL")
+            }
+            return try context.evaluate(esModule: module)
+        } catch {
+            throw HammerspoonError(.jsModuleEvaluation, msg: "\(error)")
+        }
+
+    }
+
+    @discardableResult func evalFromURL(_ url: URL) async throws -> Any? {
+        guard url.isFileURL else {
+            throw HammerspoonError(.jsEvalURLKind, msg: "Refusing to eval remote URL")
+        }
+
+        guard let context else {
+            throw HammerspoonError(.unknown, msg: "JavaScript context is not available")
+        }
+        do {
+            guard let module = try moduleLoader?.module(for: url) else {
+                throw HammerspoonError(.jsModuleEvaluation, msg: "Unable to resolve module URL")
+            }
+            let promise = try context.evaluate(esModule: module)
+            try await awaitPromise(promise, in: context)
+            return promise
+        } catch {
+            throw HammerspoonError(.jsModuleEvaluation, msg: "\(error)")
+        }
+
     }
 
     func resetContext() throws {
@@ -140,5 +155,29 @@ extension JSEngine: JSEngineProtocol {
     func hasContext() -> Bool {
         return vm != nil || context != nil
     }
+
+    private func awaitPromise(_ value: JSValue, in context: JSContext) async throws {
+        guard value.hasProperty("then") else {
+            throw PromiseAwaitError.invalidPromise
+        }
+        return try await withCheckedThrowingContinuation { continuation in
+            let resolve: @convention(block) (JSValue) -> Void = { _ in
+                continuation.resume()
+            }
+            let reject: @convention(block) (JSValue) -> Void = { error in
+                let message = error.toString() ?? "Promise rejected"
+                continuation.resume(throwing: PromiseAwaitError.rejected(message))
+            }
+            let resolveValue = JSValue(object: resolve, in: context)
+            let rejectValue = JSValue(object: reject, in: context)
+            _ = value.invokeMethod(
+                "then", withArguments: [resolveValue as Any, rejectValue as Any])
+        }
+    }
 }
 
+@_documentation(visibility: private)
+enum PromiseAwaitError: Error {
+    case invalidPromise
+    case rejected(String)
+}

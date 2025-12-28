@@ -53,6 +53,15 @@ class MockJSEngine: JSEngineProtocol {
         return result
     }
 
+    @discardableResult func evalFromURL(_ url: URL) async throws -> Any? {
+        if shouldThrowOnEvalFromURL {
+            throw HammerspoonError(.vmCreation, msg: "Mock error: evalFromURL failed")
+        }
+        let result = evalFromURLReturnValue
+        evalFromURLCalls.append((url: url, result: result))
+        return result
+    }
+
     func resetContext() throws {
         if shouldThrowOnReset {
             throw HammerspoonError(.vmCreation, msg: "Mock error: resetContext failed")
