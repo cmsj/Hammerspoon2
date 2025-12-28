@@ -301,9 +301,10 @@ if interactive {
     }
 }
 
-// Unregister and stop run loop after allowing time for output messages
+// Unregister and stop run loop after allowing time for cleanup
 client.unregister()
-client.stopRunLoopAfterDelay(0.3)
+Thread.sleep(forTimeInterval: 0.05)  // Small delay to allow server to process UNREGISTER
+client.stopRunLoopAfterDelay(0.5)
 
 // Wait for client thread to finish (with timeout)
 let maxWait: TimeInterval = 5.0
@@ -311,6 +312,9 @@ let startTime = Date()
 while !client.isDone && Date().timeIntervalSince(startTime) < maxWait {
     Thread.sleep(forTimeInterval: 0.1)
 }
+
+// Additional delay to allow kernel to reclaim ports
+Thread.sleep(forTimeInterval: 0.05)
 
 // Exit with client's exit code
 exit(client.exitCode)
