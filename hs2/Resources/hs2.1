@@ -1,0 +1,215 @@
+.\" Man page for hs2
+.\" Contact chris@hammerspoon.org to correct errors or typos.
+.TH hs2 1 "December 2025" "Hammerspoon 2" "User Commands"
+.SH NAME
+hs2 \- Hammerspoon 2 command line interface
+.SH SYNOPSIS
+.B hs2
+[\fB\-AaisCqnN\fR]
+[\fB\-c\fR \fIcode\fR]
+[\fB\-m\fR \fIname\fR]
+[\fB\-t\fR \fIseconds\fR]
+[\fIfile\fR]
+[\fB\-\-\fR \fIarguments\fR]
+.SH DESCRIPTION
+.B hs2
+is a command-line tool for interacting with Hammerspoon 2, a powerful macOS automation application. It allows you to execute JavaScript code in the Hammerspoon 2 environment, either interactively or from the command line.
+.PP
+Hammerspoon 2 uses JavaScript (via JavaScriptCore) as its scripting language, providing access to native macOS APIs for window management, application control, hotkey binding, and much more.
+.PP
+The
+.B hs2
+tool communicates with a running Hammerspoon 2 instance via IPC (CFMessagePort), allowing you to:
+.IP \(bu 2
+Execute JavaScript code from the terminal
+.IP \(bu 2
+Run JavaScript scripts as command-line tools
+.IP \(bu 2
+Use an interactive REPL for development and testing
+.IP \(bu 2
+Integrate Hammerspoon 2 automation into shell scripts
+.SH OPTIONS
+.TP
+.B \-A
+Auto-launch Hammerspoon 2 if it is not currently running. Without this option, if Hammerspoon 2 is not running, the user will be prompted via a dialog box.
+.TP
+.B \-a
+Exit with an error if Hammerspoon 2 is not running, rather than prompting to launch it.
+.TP
+.B \-i
+Force interactive mode (REPL). By default, interactive mode is activated when no code, file, or stdin input is provided and stdout is a TTY.
+.TP
+.B \-s
+Read JavaScript code from standard input. This option is automatically enabled when stdin is not a TTY (i.e., when input is piped).
+.TP
+.BI \-c " code"
+Execute the specified JavaScript code. This option can be repeated to execute multiple code snippets in sequence.
+.TP
+.BI \-m " name"
+Connect to a custom IPC message port. Default is "Hammerspoon2". This allows communication with alternative Hammerspoon 2 instances or custom IPC servers.
+.TP
+.B \-n
+Disable colored output. By default, colors are enabled when stdout is a TTY.
+.TP
+.B \-N
+Force colored output, even when stdout is not a TTY.
+.TP
+.B \-C
+Enable console mirroring. When enabled, output from Hammerspoon 2's console (console.log, etc.) will be mirrored to the terminal.
+.TP
+.B \-q
+Quiet mode. Suppresses normal output; only errors are displayed.
+.TP
+.BI \-t " seconds"
+Set the IPC timeout in seconds. Default is 4.0. This affects how long
+.B hs2
+will wait for responses from Hammerspoon 2.
+.TP
+.B \-h
+Display help information and exit.
+.TP
+.B \-\-
+Stop parsing options. All arguments after
+.B \-\-
+are available to the JavaScript code via
+.BR _cli.args .
+.SH EXAMPLES
+.SS Execute a simple command
+.nf
+.RS
+hs2 \-c "hs.alert.show('Hello from terminal')"
+.RE
+.fi
+.PP
+.SS Start an interactive REPL
+.nf
+.RS
+hs2 \-i
+.RE
+.fi
+.PP
+.SS Execute a JavaScript file
+.nf
+.RS
+hs2 ~/scripts/window\-manager.js
+.RE
+.fi
+.PP
+.SS Pipe commands to hs2
+.nf
+.RS
+echo "console.log(hs.application.frontmostApplication().title())" | hs2
+.RE
+.fi
+.PP
+.SS Execute code with custom arguments
+.nf
+.RS
+hs2 \-c "console.log('Arguments:', _cli.args)" \-\- arg1 arg2 arg3
+.RE
+.fi
+.PP
+.SS Use in a shebang script
+Create a file
+.I automation.js
+with:
+.nf
+.RS
+#!/usr/local/bin/hs2
+console.log("Running automation script");
+hs.application.launchOrFocus("Safari");
+.RE
+.fi
+.PP
+Make it executable and run:
+.nf
+.RS
+chmod +x automation.js
+./automation.js
+.RE
+.fi
+.PP
+.SS Auto-launch Hammerspoon 2 if needed
+.nf
+.RS
+hs2 \-A \-c "hs.alert.show('Launched!')"
+.RE
+.fi
+.SH INTERACTIVE MODE
+When run in interactive mode (REPL),
+.B hs2
+provides a JavaScript prompt where you can execute code line by line. Features include:
+.IP \(bu 2
+Command history (in-session via up/down arrows)
+.IP \(bu 2
+Tab completion for hs.* module names
+.IP \(bu 2
+Syntax highlighting via terminal colors
+.IP \(bu 2
+Multi-line editing
+.PP
+To exit the REPL, press
+.B Ctrl\-D
+or enter
+.BR quit() .
+.SH SPECIAL VARIABLES
+When JavaScript code is executed via
+.BR hs2 ,
+the following special variables are available:
+.TP
+.B _cli.remote
+A reference to the IPC message port used for communication with Hammerspoon 2.
+.TP
+.B _cli.quietMode
+Boolean indicating whether quiet mode (\-q) is enabled.
+.TP
+.B _cli.console
+Boolean indicating whether console mirroring (\-C) is enabled.
+.TP
+.B _cli.args
+Array of custom arguments passed after
+.BR \-\- .
+.TP
+.B print(...)
+Enhanced print function that outputs to the terminal (via IPC) rather than Hammerspoon 2's console.
+.SH FILES
+.TP
+.I ~/.config/Hammerspoon2/init.js
+Default Hammerspoon 2 configuration file.
+.TP
+.I ~/.config/Hammerspoon2/.cli.history
+Command history file for interactive REPL sessions (v2.0+).
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 64
+Invalid command-line arguments.
+.TP
+.B 65
+JavaScript execution error (non-interactive mode only).
+.TP
+.B 66
+Error reading input file or stdin.
+.TP
+.B 69
+Hammerspoon 2 not reachable or IPC error.
+.TP
+.B 75
+Temporary failure (e.g., during Hammerspoon 2 startup).
+.SH SEE ALSO
+.BR hammerspoon (1)
+.PP
+Hammerspoon 2 website:
+.I https://www.hammerspoon.org
+.PP
+Hammerspoon 2 documentation:
+.I https://www.hammerspoon.org/docs/
+.SH AUTHOR
+Hammerspoon 2 and hs2 were written by the Hammerspoon development team.
+.PP
+This manual page was adapted for Hammerspoon 2 from the original Hammerspoon documentation.
+.SH BUGS
+Report bugs to:
+.I https://github.com/Hammerspoon/hammerspoon/issues
