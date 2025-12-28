@@ -236,7 +236,10 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
                 } catch (e) {
                     console.error("[IPC] Failed to send error message to client:", e);
                 }
-                return "error";
+                // Return "ok" to indicate IPC protocol succeeded even though JavaScript evaluation failed.
+                // This allows the CLI to continue executing subsequent commands instead of exiting.
+                // The actual error message was already sent to the client via MSG_ID.ERROR above.
+                return "ok";
             }
 
             // Format and send result

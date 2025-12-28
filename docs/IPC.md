@@ -161,6 +161,49 @@ return value\n
 console output\n
 ```
 
+## IPC Error Handling Philosophy
+
+### Protocol Errors vs User Code Errors
+
+The IPC module distinguishes between two error categories:
+
+1. **Protocol/IPC Errors**: Problems with the communication channel itself
+   - Invalid message format
+   - Failed to create ports
+   - Instance not registered
+   - Message port timeout
+
+2. **User Code Errors**: JavaScript evaluation errors
+   - Syntax errors
+   - Runtime exceptions
+   - Undefined variables
+
+### Server-Side Behavior (hs.ipc.js)
+
+When handling COMMAND/QUERY messages:
+- JavaScript evaluation errors: Send error via MSG_ID.ERROR, return "ok"
+- Protocol errors: Return "error: <description>"
+
+This allows the client to:
+- Continue execution after user code errors (REPL behavior)
+- Stop execution on protocol failures (communication broken)
+
+### Client-Side Behavior (HSClient.swift)
+
+The `executeCommand()` method returns:
+- `true`: IPC succeeded (command was executed, even if it errored)
+- `false`: IPC failed (communication problem)
+
+Error messages are delivered asynchronously via `localPortCallback()` and printed to stderr.
+
+### CLI Tool Behavior (hs2)
+
+When executing multiple `-c` commands:
+- JavaScript errors: Printed to stderr, execution continues
+- IPC errors: Execution stops, non-zero exit code
+
+Exit codes indicate IPC success, not JavaScript correctness.
+
 ## JavaScript Execution Context
 
 ### Instance Isolation
@@ -231,9 +274,9 @@ hs2 [options] [file] [-- arguments]
 
 | Code | Name | Description |
 |------|------|-------------|
-| 0 | EX_OK | Success |
+| 0 | EX_OK | Success (IPC communication succeeded, even if user code had errors) |
 | 64 | EX_USAGE | Invalid arguments |
-| 65 | EX_DATAERR | JavaScript error (non-interactive) |
+| 65 | EX_DATAERR | IPC protocol/communication error |
 | 66 | EX_NOINPUT | Error reading stdin/file |
 | 69 | EX_UNAVAILABLE | Hammerspoon 2 not reachable |
 | 75 | EX_TEMPFAIL | Temporary failure (e.g., startup) |
