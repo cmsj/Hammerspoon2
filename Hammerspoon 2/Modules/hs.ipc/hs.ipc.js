@@ -19,7 +19,10 @@ const MSG_ID = {
 };
 
 // Storage for registered CLI instances
+// Always clear instances on module load - forces re-registration after reload
+// This is safe because hs.reload() destroys the entire JS context
 hs.ipc.__registeredCLIInstances = {};
+console.log("[IPC] Initialized __registeredCLIInstances (cleared any previous instances)");
 
 // Store original print function
 hs.ipc.__originalPrint = (typeof print !== 'undefined') ? print : console.log;
@@ -28,6 +31,18 @@ hs.ipc.__originalPrint = (typeof print !== 'undefined') ? print : console.log;
 // DEFENSIVE: Wrapped in try-catch to ensure Hammerspoon never crashes from IPC errors
 hs.ipc.__defaultHandler = function(port, msgID, data) {
     try {
+        // DEFENSIVE: Ensure storage objects exist before processing any message
+        // This prevents TypeError if objects become undefined during runtime
+        if (!hs.ipc.__registeredCLIInstances) {
+            console.log("[IPC] CRITICAL: __registeredCLIInstances was undefined, re-initializing");
+            hs.ipc.__registeredCLIInstances = {};
+        }
+        if (!hs.ipc.__remotePorts) {
+            console.log("[IPC] CRITICAL: __remotePorts was undefined, re-initializing");
+            hs.ipc.__remotePorts = {};
+        }
+        console.log("[IPC] Storage check complete. Instances:", Object.keys(hs.ipc.__registeredCLIInstances).length, "RemotePorts:", hs.ipc.__remotePorts ? Object.keys(hs.ipc.__remotePorts).length : 0);
+
         // Parse message based on type
         if (msgID === MSG_ID.REGISTER) {
             // REGISTER: instanceID\0{...json...}
@@ -79,6 +94,13 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
                 },
                 print: function(...args) {
                     console.log("[DEBUG] Instance print called for", instanceID, "args:", args);
+                    // DEFENSIVE: Check if storage still exists (can be cleared on reload)
+                    if (!hs.ipc.__registeredCLIInstances) {
+                        console.log("[IPC] CRITICAL: __registeredCLIInstances undefined in instance.print() for", instanceID);
+                        console.log("[IPC] WARNING: Print output lost - instance storage cleared (likely due to reload)");
+                        return;
+                    }
+
                     const instance = hs.ipc.__registeredCLIInstances[instanceID];
                     if (!instance) {
                         console.log("[DEBUG] Instance not found!");
@@ -147,10 +169,17 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
             const instanceID = data.substring(0, nullIndex);
             const code = data.substring(nullIndex + 1);
 
+            // DEFENSIVE: Verify storage object exists before accessing
+            if (!hs.ipc.__registeredCLIInstances) {
+                console.log("[IPC] CRITICAL: __registeredCLIInstances undefined during COMMAND/QUERY, re-initializing");
+                hs.ipc.__registeredCLIInstances = {};
+            }
+
             const instance = hs.ipc.__registeredCLIInstances[instanceID];
             if (!instance) {
-                console.log("[DEBUG] Instance", instanceID, "not registered");
-                return "error: instance not registered";
+                console.log("[IPC] ERROR: Instance", instanceID, "not registered. Storage object exists:", !!hs.ipc.__registeredCLIInstances);
+                console.log("[IPC] ERROR: Registered instances:", hs.ipc.__registeredCLIInstances ? Object.keys(hs.ipc.__registeredCLIInstances) : 'undefined');
+                return "error: instance not registered - client must reconnect";
             }
 
             console.log("[DEBUG] Executing code for instance", instanceID, ":", code);
@@ -246,6 +275,17 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
 hs.ipc.print = function(...args) {
     // Call original print
     hs.ipc.__originalPrint(...args);
+
+    // DEFENSIVE: Ensure storage object exists before iterating
+    if (!hs.ipc.__registeredCLIInstances) {
+        console.log("[IPC] CRITICAL: __registeredCLIInstances undefined in hs.ipc.print(), re-initializing");
+        console.log("[IPC] WARNING: Console mirroring skipped due to missing storage");
+        hs.ipc.__registeredCLIInstances = {};
+        // Cannot mirror to instances that don't exist, but we've recovered the object
+        // Just call original print and return
+        hs.ipc.__originalPrint(...args);
+        return;
+    }
 
     // Mirror to all CLI instances with console mirroring enabled
     const output = args.map(a => String(a)).join('\t') + '\n';
