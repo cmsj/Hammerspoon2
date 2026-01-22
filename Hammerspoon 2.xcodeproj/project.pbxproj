@@ -11,6 +11,7 @@
 		4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4F488B2F2E97E79800A2B5F4 /* Sparkle */; };
 		4F59E3502EFC986100954462 /* hammerspoon.d.ts in Resources */ = {isa = PBXBuildFile; fileRef = 4F59E34F2EFC985500954462 /* hammerspoon.d.ts */; };
 		4F59E3512EFC986100954462 /* api.json in Resources */ = {isa = PBXBuildFile; fileRef = 4F59E34E2EFC984900954462 /* api.json */; };
+		4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 4FACE0032F12345678900000 /* JavaScriptCoreExtras */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 			files = (
 				4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */,
 				4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */,
+				4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -151,6 +153,7 @@
 			packageProductDependencies = (
 				4F488B2F2E97E79800A2B5F4 /* Sparkle */,
 				4F463E9F2EA7A669000A2135 /* AXSwift */,
+				4FACE0032F12345678900000 /* JavaScriptCoreExtras */,
 			);
 			productName = "Hammerspoon 2";
 			productReference = 4F5641832E8333830099EB4C /* Hammerspoon 2.app */;
@@ -210,6 +213,7 @@
 			packageReferences = (
 				4F488B2E2E97E79800A2B5F4 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				4F463E9E2EA7A669000A2135 /* XCRemoteSwiftPackageReference "AXSwift" */,
+				4FACE0012F12345678900000 /* XCRemoteSwiftPackageReference "javascript-core-extras" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4F5641842E8333830099EB4C /* Products */;
@@ -576,6 +580,14 @@
 				minimumVersion = 2.8.0;
 			};
 		};
+		4FACE0012F12345678900000 /* XCRemoteSwiftPackageReference "javascript-core-extras" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cmsj/javascript-core-extras";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -588,6 +600,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4F488B2E2E97E79800A2B5F4 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		4FACE0032F12345678900000 /* JavaScriptCoreExtras */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FACE0012F12345678900000 /* XCRemoteSwiftPackageReference "javascript-core-extras" */;
+			productName = JavaScriptCoreExtras;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

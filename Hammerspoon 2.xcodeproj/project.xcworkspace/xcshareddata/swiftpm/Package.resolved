@@ -1,5 +1,5 @@
 {
-  "originHash" : "256b98abbe04f8c9e316276743f01f93ec14b99236d5b3f17e39d22149f507e4",
+  "originHash" : "055c4fbbb7dee940076e101ead49631687dc8b98484477c11d944890ad6d1eb5",
   "pins" : [
     {
       "identity" : "axswift",
@@ -11,12 +11,30 @@
       }
     },
     {
+      "identity" : "javascript-core-extras",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/cmsj/javascript-core-extras",
+      "state" : {
+        "branch" : "main",
+        "revision" : "a69352b4b7c69c1f3d66743ed70112ecc24f0e29"
+      }
+    },
+    {
       "identity" : "sparkle",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
       "state" : {
         "revision" : "9a1d2a19d3595fcf8d9c447173f9a1687b3dcadb",
         "version" : "2.8.0"
+      }
+    },
+    {
+      "identity" : "xctest-dynamic-overlay",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
+      "state" : {
+        "revision" : "34e463e98ab8541c604af706c99bed7160f5ec70",
+        "version" : "1.8.1"
       }
     }
   ],

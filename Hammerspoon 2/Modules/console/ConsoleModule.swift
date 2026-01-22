@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 
 /// These functions are provided to maintain convenience with the console.log() function present in many JavaScript instances.
 @objc protocol ConsoleModuleAPI: JSExport {
@@ -21,11 +22,11 @@ import JavaScriptCore
     /// Log a warning to the Hammerspoon Log WIndow
     /// - Parameter message: A warning message
     @objc func warn(_ message: String)
-    
+
     /// Log an informational message to the Hammerspoon Log Window
     /// - Parameter message: An informational message
     @objc func info(_ message: String)
-    
+
     /// Log a debug message to the Hammerspoon Log Window
     /// - Parameter message: A debug message
     @objc func debug(_ message: String)
@@ -35,7 +36,7 @@ import JavaScriptCore
     @objc func log(_ message: String) {
         AKConsole(message)
     }
-    
+
     @objc func error(_ message: String) {
         AKError(message)
     }
@@ -50,5 +51,13 @@ import JavaScriptCore
 
     @objc func debug(_ message: String) {
         AKTrace(message)
+    }
+}
+
+// MARK: - JSContextInstallable
+
+struct ConsoleModuleInstaller: JSContextInstallable {
+    func install(in context: JSContext) throws {
+        context.setObject(ConsoleModule(), forKeyedSubscript: "console" as NSString)
     }
 }

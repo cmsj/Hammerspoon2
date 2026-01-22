@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 
 @_documentation(visibility: private)
 @objc protocol ModuleRootAPI: JSExport {
@@ -77,4 +78,12 @@ import JavaScriptCore
     @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
     @objc var timer: HSTimerModule { get { getOrCreate(name: "timer", type: HSTimerModule.self)}}
     @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
+}
+
+// MARK: - JSContextInstallable
+
+struct ModuleRootInstaller: JSContextInstallable {
+    func install(in context: JSContext) throws {
+        context.setObject(ModuleRoot(), forKeyedSubscript: "hs" as NSString)
+    }
 }

@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 
 @_documentation(visibility: private)
 class JSEngine {
@@ -16,45 +17,7 @@ class JSEngine {
     private var vm: JSVirtualMachine?
     private var context: JSContext?
 
-    // MARK: - Engine JavaScript component
-    private func injectEngineJS() {
-        guard let engineJS = Bundle.main.url(forResource: "engine", withExtension: "js") else {
-            fatalError("Unable to load engine.js - application bundle is corrupt")
-        }
-        do {
-            try evalFromURL(engineJS)
-        } catch {
-            AKError("engine.js error: \(error.localizedDescription)")
-        }
-    }
 
-    private func injectRequire() {
-        guard let context else {
-            AKError("require(): Cannot set require() before context is available. This is a bug.")
-            return
-        }
-
-        let require: @convention(block) (String) -> (JSValue?) = { path in
-            let expandedPath = NSString(string: path).expandingTildeInPath
-
-            // Return void or throw an error here.
-            guard FileManager.default.fileExists(atPath: expandedPath) else {
-                AKError("require(): \(expandedPath) could not be found. Current working directory is \(FileManager.default.currentDirectoryPath)")
-                return nil
-            }
-
-            let fileURL = URL(fileURLWithPath: expandedPath)
-
-            guard let fileContent = try? String(contentsOfFile: expandedPath, encoding: .utf8) else {
-                AKError("require(): Unable to read \(expandedPath)")
-                return nil
-            }
-
-            return context.evaluateScript(fileContent, withSourceURL: fileURL)
-        }
-
-        context.setObject(require, forKeyedSubscript: "require" as NSString)
-    }
 
     // MARK: - JSContext Managing
     private func createContext() throws(HammerspoonError) {
@@ -72,22 +35,18 @@ class JSEngine {
         id = UUID()
         context.name = "Hammerspoon \(id)"
 
-        // This is our startup sequence.
-
-        // First ensure the console namespace is populated
-        self["console"] = ConsoleModule()
-
-        // Now ensure that require() exists
-        injectRequire()
-
-        // Inject custom types we want to bridge between JS and Swift
-        context.injectTypeBridges()
-
-        // Load and run engine.js
-        injectEngineJS()
-
-        // Prepare the hs namespace
-        self["hs"] = ModuleRoot()
+        // This is our startup sequence - install all components in order
+        do {
+            try context.install([
+                ConsoleModuleInstaller(),      // console namespace
+                RequireInstaller(),            // require() function
+                TypeBridgesInstaller(),        // HSPoint, HSSize, HSRect, HSFont, HSAlert
+                .bundled(path: "engine.js", in: .main),  // EventEmitter class
+                ModuleRootInstaller(),         // hs namespace
+            ])
+        } catch {
+            throw HammerspoonError(.vmCreation, msg: "Failed to install context components: \(error.localizedDescription)")
+        }
     }
 
     private func deleteContext() {
@@ -139,6 +98,33 @@ extension JSEngine: JSEngineProtocol {
 
     func hasContext() -> Bool {
         return vm != nil || context != nil
+    }
+}
+
+// MARK: - JSContextInstallable Implementations
+
+struct RequireInstaller: JSContextInstallable {
+    func install(in context: JSContext) throws {
+        let require: @convention(block) (String) -> (JSValue?) = { path in
+            let expandedPath = NSString(string: path).expandingTildeInPath
+
+            // Return void or throw an error here.
+            guard FileManager.default.fileExists(atPath: expandedPath) else {
+                AKError("require(): \(expandedPath) could not be found. Current working directory is \(FileManager.default.currentDirectoryPath)")
+                return nil
+            }
+
+            let fileURL = URL(fileURLWithPath: expandedPath)
+
+            guard let fileContent = try? String(contentsOfFile: expandedPath, encoding: .utf8) else {
+                AKError("require(): Unable to read \(expandedPath)")
+                return nil
+            }
+
+            return context.evaluateScript(fileContent, withSourceURL: fileURL)
+        }
+
+        context.setObject(require, forKeyedSubscript: "require" as NSString)
     }
 }
 
