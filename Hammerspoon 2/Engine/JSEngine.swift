@@ -99,6 +99,32 @@ extension JSEngine: JSEngineProtocol {
     func hasContext() -> Bool {
         return vm != nil || context != nil
     }
+
+    /// Creates a Promise that wraps an async operation
+    /// - Parameter body: A closure that receives a JSPromiseHolder to resolve/reject the promise
+    /// - Returns: A JSValue representing the Promise, or nil if context is unavailable
+    @MainActor
+    func createPromise(body: @escaping @MainActor (JSPromiseHolder) -> Void) -> JSValue? {
+        guard let context = context else {
+            AKError("JSEngine.createPromise: No context available")
+            return nil
+        }
+        return wrapAsyncInJSPromise(in: context, body: body)
+    }
+
+    /// Creates a Promise that resolves immediately with the given value
+    /// - Parameter value: The value to resolve with
+    /// - Returns: A JSValue representing the resolved Promise
+    func createResolvedPromise(with value: Any?) -> JSValue? {
+        return context?.createResolvedPromise(with: value)
+    }
+
+    /// Creates a Promise that rejects immediately with the given error
+    /// - Parameter error: The error message
+    /// - Returns: A JSValue representing the rejected Promise
+    func createRejectedPromise(with error: String) -> JSValue? {
+        return context?.createRejectedPromise(with: error)
+    }
 }
 
 // MARK: - JSContextInstallable Implementations

@@ -70,7 +70,8 @@ import UniformTypeIdentifiers
     
     /// Launch an application, or give it focus if it's already running
     /// - Parameter bundleID: A bundle identifier for the app to launch/focus (e.g. "com.apple.Safari")
-    @objc func launchOrFocus(_ bundleID: String)
+    /// - Returns: A Promise that resolves to true if successful, false otherwise
+    @objc func launchOrFocus(_ bundleID: String) -> JSValue?
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
@@ -253,11 +254,25 @@ class HSApplicationWatcherObject {
         return NSWorkspace.shared.urlsForApplications(toOpen: utType).compactMap { $0.path(percentEncoded: false) }
     }
 
-    @objc func launchOrFocus(_ bundleID: String) {
+    @objc func launchOrFocus(_ bundleID: String) -> JSValue? {
         guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
-            return
+            return JSEngine.shared.createResolvedPromise(with: false)
         }
-        NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration(), completionHandler: nil)
+
+        return JSEngine.shared.createPromise { holder in
+            NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration()) { app, error in
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated {
+                        if let error = error {
+                            AKError("hs.application.launchOrFocus: \(error.localizedDescription)")
+                            holder.resolveWith(false)
+                        } else {
+                            holder.resolveWith(app != nil)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

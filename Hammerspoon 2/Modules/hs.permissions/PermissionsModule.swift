@@ -33,18 +33,16 @@ import AVFoundation
     @objc func checkCamera() -> Bool
 
     /// Request Camera permission (shows system dialog if not granted)
-    /// - Parameter callback: Optional callback that receives true if granted, false if denied
-    @objc(requestCamera:)
-    func requestCamera(_ callback: JSValue?)
+    /// - Returns: A Promise that resolves to true if granted, false if denied
+    @objc func requestCamera() -> JSValue?
 
     /// Check if the app has Microphone permission
     /// - Returns: true if permission is granted, false otherwise
     @objc func checkMicrophone() -> Bool
 
     /// Request Microphone permission (shows system dialog if not granted)
-    /// - Parameter callback: Optional callback that receives true if granted, false if denied
-    @objc(requestMicrophone:)
-    func requestMicrophone(_ callback: JSValue?)
+    /// - Returns: A Promise that resolves to true if granted, false if denied
+    @objc func requestMicrophone() -> JSValue?
 }
 
 // MARK: - Implementation
@@ -52,8 +50,6 @@ import AVFoundation
 @_documentation(visibility: private)
 @objc class HSPermissionsModule: NSObject, HSModuleAPI, HSPermissionsModuleAPI {
     var name = "hs.permissions"
-    var cameraCallback: JSValue? = nil
-    var microphoneCallback: JSValue? = nil
 
     // MARK: - Module lifecycle
     override required init() { super.init() }
@@ -89,12 +85,14 @@ import AVFoundation
         return PermissionsManager.shared.check(.camera)
     }
 
-    @objc func requestCamera(_ callback: JSValue? = nil) {
-        cameraCallback = callback
-        PermissionsManager.shared.request(.camera) { result in
-            DispatchQueue.main.async {
-                self.cameraCallback?.call(withArguments: [result])
-                self.cameraCallback = nil
+    @objc func requestCamera() -> JSValue? {
+        return JSEngine.shared.createPromise { holder in
+            PermissionsManager.shared.request(.camera) { result in
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated {
+                        holder.resolveWith(result)
+                    }
+                }
             }
         }
     }
@@ -105,12 +103,14 @@ import AVFoundation
         return PermissionsManager.shared.check(.microphone)
     }
 
-    @objc func requestMicrophone(_ callback: JSValue? = nil) {
-        microphoneCallback = callback
-        PermissionsManager.shared.request(.microphone) { result in
-            DispatchQueue.main.async {
-                self.microphoneCallback?.call(withArguments: [result])
-                self.microphoneCallback = nil
+    @objc func requestMicrophone() -> JSValue? {
+        return JSEngine.shared.createPromise { holder in
+            PermissionsManager.shared.request(.microphone) { result in
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated {
+                        holder.resolveWith(result)
+                    }
+                }
             }
         }
     }
