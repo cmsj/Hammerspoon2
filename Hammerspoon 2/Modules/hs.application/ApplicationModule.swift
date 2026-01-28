@@ -70,8 +70,8 @@ import UniformTypeIdentifiers
     
     /// Launch an application, or give it focus if it's already running
     /// - Parameter bundleID: A bundle identifier for the app to launch/focus (e.g. "com.apple.Safari")
-    /// - Returns: A Promise that resolves to true if successful, false otherwise
-    @objc func launchOrFocus(_ bundleID: String) -> JSValue?
+    /// - Returns: {Promise<boolean>} A Promise that resolves to true if successful, false otherwise
+    @objc func launchOrFocus(_ bundleID: String) -> JSPromise?
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
@@ -254,7 +254,7 @@ class HSApplicationWatcherObject {
         return NSWorkspace.shared.urlsForApplications(toOpen: utType).compactMap { $0.path(percentEncoded: false) }
     }
 
-    @objc func launchOrFocus(_ bundleID: String) -> JSValue? {
+    @objc func launchOrFocus(_ bundleID: String) -> JSPromise? {
         guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
             return JSEngine.shared.createResolvedPromise(with: false)
         }

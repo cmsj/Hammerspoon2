@@ -33,16 +33,16 @@ import AVFoundation
     @objc func checkCamera() -> Bool
 
     /// Request Camera permission (shows system dialog if not granted)
-    /// - Returns: A Promise that resolves to true if granted, false if denied
-    @objc func requestCamera() -> JSValue?
+    /// - Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied
+    @objc func requestCamera() -> JSPromise?
 
     /// Check if the app has Microphone permission
     /// - Returns: true if permission is granted, false otherwise
     @objc func checkMicrophone() -> Bool
 
     /// Request Microphone permission (shows system dialog if not granted)
-    /// - Returns: A Promise that resolves to true if granted, false if denied
-    @objc func requestMicrophone() -> JSValue?
+    /// - Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied
+    @objc func requestMicrophone() -> JSPromise?
 }
 
 // MARK: - Implementation
@@ -85,7 +85,7 @@ import AVFoundation
         return PermissionsManager.shared.check(.camera)
     }
 
-    @objc func requestCamera() -> JSValue? {
+    @objc func requestCamera() -> JSPromise? {
         return JSEngine.shared.createPromise { holder in
             PermissionsManager.shared.request(.camera) { result in
                 DispatchQueue.main.async {
@@ -103,7 +103,7 @@ import AVFoundation
         return PermissionsManager.shared.check(.microphone)
     }
 
-    @objc func requestMicrophone() -> JSValue? {
+    @objc func requestMicrophone() -> JSPromise? {
         return JSEngine.shared.createPromise { holder in
             PermissionsManager.shared.request(.microphone) { result in
                 DispatchQueue.main.async {

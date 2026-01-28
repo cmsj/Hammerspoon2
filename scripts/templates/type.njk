@@ -71,7 +71,7 @@
             <h4>Returns</h4>
             {% if method.returns %}
             <p>
-                <span class="type">{{ method.returns.type | formatType }}</span>
+                <span class="type">{{ method.returns | formatReturnType | safe }}</span>
                  - {{ method.returns.description }}
             </p>
             {% else %}

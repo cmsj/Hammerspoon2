@@ -18,7 +18,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 15
+          "lineNumber": 16
         },
         {
           "name": "error",
@@ -35,7 +35,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 19
+          "lineNumber": 20
         },
         {
           "name": "warn",
@@ -52,7 +52,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 23
+          "lineNumber": 24
         },
         {
           "name": "info",
@@ -69,7 +69,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 27
+          "lineNumber": 28
         },
         {
           "name": "debug",
@@ -86,7 +86,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 31
+          "lineNumber": 32
         }
       ],
       "properties": [],
@@ -478,8 +478,8 @@
         },
         {
           "name": "launchOrFocus",
-          "signature": "func launchOrFocus(_ bundleID: String)",
-          "rawDocumentation": "Launch an application, or give it focus if it's already running\n- Parameter bundleID: A bundle identifier for the app to launch/focus (e.g. \"com.apple.Safari\")",
+          "signature": "func launchOrFocus(_ bundleID: String) -> JSPromise?",
+          "rawDocumentation": "Launch an application, or give it focus if it's already running\n- Parameter bundleID: A bundle identifier for the app to launch/focus (e.g. \"com.apple.Safari\")\n- Returns: {Promise<boolean>} A Promise that resolves to true if successful, false otherwise",
           "description": "Launch an application, or give it focus if it's already running",
           "params": [
             {
@@ -488,10 +488,14 @@
               "description": "A bundle identifier for the app to launch/focus (e.g. \"com.apple.Safari\")"
             }
           ],
-          "returns": null,
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A Promise that resolves to true if successful, false otherwise",
+            "promiseType": "boolean"
+          },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
-          "lineNumber": 73
+          "lineNumber": 74
         },
         {
           "name": "addWatcher",
@@ -1782,20 +1786,18 @@
         },
         {
           "name": "requestCamera",
-          "signature": "func requestCamera(_ callback: JSValue?)",
-          "rawDocumentation": "Request Camera permission (shows system dialog if not granted)\n- Parameter callback: Optional callback that receives true if granted, false if denied",
+          "signature": "func requestCamera() -> JSPromise?",
+          "rawDocumentation": "Request Camera permission (shows system dialog if not granted)\n- Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied",
           "description": "Request Camera permission (shows system dialog if not granted)",
-          "params": [
-            {
-              "name": "callback",
-              "type": "JSValue?",
-              "description": "Optional callback that receives true if granted, false if denied"
-            }
-          ],
-          "returns": null,
+          "params": [],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A Promise that resolves to true if granted, false if denied",
+            "promiseType": "boolean"
+          },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
-          "lineNumber": 38
+          "lineNumber": 37
         },
         {
           "name": "checkMicrophone",
@@ -1809,24 +1811,22 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
-          "lineNumber": 42
+          "lineNumber": 41
         },
         {
           "name": "requestMicrophone",
-          "signature": "func requestMicrophone(_ callback: JSValue?)",
-          "rawDocumentation": "Request Microphone permission (shows system dialog if not granted)\n- Parameter callback: Optional callback that receives true if granted, false if denied",
+          "signature": "func requestMicrophone() -> JSPromise?",
+          "rawDocumentation": "Request Microphone permission (shows system dialog if not granted)\n- Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied",
           "description": "Request Microphone permission (shows system dialog if not granted)",
-          "params": [
-            {
-              "name": "callback",
-              "type": "JSValue?",
-              "description": "Optional callback that receives true if granted, false if denied"
-            }
-          ],
-          "returns": null,
+          "params": [],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A Promise that resolves to true if granted, false if denied",
+            "promiseType": "boolean"
+          },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
-          "lineNumber": 47
+          "lineNumber": 45
         }
       ],
       "properties": [],
@@ -3219,5 +3219,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2025-12-24T22:03:19.177Z"
+  "generatedAt": "2026-01-26T23:19:41.215Z"
 }

@@ -44,8 +44,13 @@ const env = nunjucks.configure(TEMPLATES_DIR, {
 });
 
 // Add custom filters
-env.addFilter('formatType', function(swiftType) {
-    return formatType(swiftType);
+env.addFilter('formatType', function(swiftType, promiseType) {
+    return formatType(swiftType, promiseType);
+});
+
+env.addFilter('formatReturnType', function(returns) {
+    if (!returns) return 'void';
+    return formatType(returns.type, returns.promiseType);
 });
 
 env.addFilter('extractPropertyType', function(signature) {
@@ -120,8 +125,10 @@ function validateType(protocol, typeName) {
 
 /**
  * Convert Swift type to display type
+ * @param {string} swiftType - The Swift type to convert
+ * @param {string|null} promiseType - If this is a JSPromise, the inner type from documentation
  */
-function formatType(swiftType) {
+function formatType(swiftType, promiseType = null) {
     const typeMap = {
         'String': 'string',
         'Int': 'number',
@@ -132,6 +139,12 @@ function formatType(swiftType) {
         'UInt32': 'number',
         'Any': 'any'
     };
+
+    // Handle JSPromise - convert to Promise<T>
+    if (swiftType === 'JSPromise?' || swiftType === 'JSPromise') {
+        const innerType = promiseType ? formatType(promiseType) : 'any';
+        return `Promise&lt;${innerType}&gt;`;
+    }
 
     // Handle arrays
     if (swiftType.match(/^\[([^\]:]+)\]$/)) {

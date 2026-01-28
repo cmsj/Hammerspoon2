@@ -407,8 +407,9 @@ declare namespace hs.application {
     /**
      * Launch an application, or give it focus if it's already running
      * @param bundleID A bundle identifier for the app to launch/focus (e.g. "com.apple.Safari")
+     * @returns A Promise that resolves to true if successful, false otherwise
      */
-    function launchOrFocus(bundleID: string): void;
+    function launchOrFocus(bundleID: string): Promise<boolean>;
 
     /**
      * Create a watcher for application events
@@ -935,9 +936,9 @@ declare namespace hs.permissions {
 
     /**
      * Request Camera permission (shows system dialog if not granted)
-     * @param callback Optional callback that receives true if granted, false if denied
+     * @returns A Promise that resolves to true if granted, false if denied
      */
-    function requestCamera(callback: JSValue | undefined): void;
+    function requestCamera(): Promise<boolean>;
 
     /**
      * Check if the app has Microphone permission
@@ -947,9 +948,9 @@ declare namespace hs.permissions {
 
     /**
      * Request Microphone permission (shows system dialog if not granted)
-     * @param callback Optional callback that receives true if granted, false if denied
+     * @returns A Promise that resolves to true if granted, false if denied
      */
-    function requestMicrophone(callback: JSValue | undefined): void;
+    function requestMicrophone(): Promise<boolean>;
 
 }
 

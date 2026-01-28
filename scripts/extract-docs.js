@@ -433,6 +433,7 @@ function extractPropertyType(signature) {
 
 /**
  * Extract return type from Swift function signature
+ * Supports JSDoc-style type annotations in documentation: {Promise<Type>}
  */
 function extractReturns(signature, docLines) {
     // Match return type - handle arrays, dictionaries, optionals, and complex types
@@ -441,20 +442,39 @@ function extractReturns(signature, docLines) {
     if (returnMatch) {
         // Look for return description in documentation
         let returnDesc = '';
+        let promiseType = null;
+
         for (const line of docLines) {
             const trimmed = line.trim();
-            // Match both "Returns:" and "- Returns:"
-            const descMatch = trimmed.match(/^-?\s*Returns?\s*:\s*(.+)$/);
+            // Match both "Returns:" and "- Returns:" with optional {Type} annotation
+            // Format: "- Returns: {Promise<boolean>} A promise that resolves to..."
+            const descMatch = trimmed.match(/^-?\s*Returns?\s*:\s*(?:\{([^}]+)\}\s+)?(.*)$/);
             if (descMatch) {
-                returnDesc = descMatch[1].trim();
+                const typeAnnotation = descMatch[1];
+                returnDesc = descMatch[2].trim();
+
+                // Check if there's a Promise type annotation
+                if (typeAnnotation) {
+                    const promiseMatch = typeAnnotation.match(/^Promise<(.+)>$/);
+                    if (promiseMatch) {
+                        promiseType = promiseMatch[1];
+                    }
+                }
                 break;
             }
         }
 
-        return {
+        const result = {
             type: returnMatch[1].trim(),
             description: returnDesc
         };
+
+        // Add promiseType if we found one in the documentation
+        if (promiseType) {
+            result.promiseType = promiseType;
+        }
+
+        return result;
     }
     return null;
 }
@@ -658,10 +678,19 @@ function parseJSDoc(docText) {
             currentSection = 'returns';
             const returnMatch = line.match(/@returns?\s+(?:\{([^}]+)\}\s+)?(.*)/);
             if (returnMatch) {
-                doc.returns = {
-                    type: returnMatch[1] || 'any',
+                const typeAnnotation = returnMatch[1] || 'any';
+                const result = {
+                    type: typeAnnotation,
                     description: returnMatch[2]
                 };
+
+                // Check if this is a Promise type and extract the inner type
+                const promiseMatch = typeAnnotation.match(/^Promise<(.+)>$/);
+                if (promiseMatch) {
+                    result.promiseType = promiseMatch[1];
+                }
+
+                doc.returns = result;
             }
         } else if (line.startsWith('@example')) {
             currentSection = 'example';

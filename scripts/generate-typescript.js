@@ -16,8 +16,10 @@ const OUTPUT_FILE = path.join(__dirname, '..', 'docs', 'hammerspoon.d.ts');
 
 /**
  * Convert Swift type to TypeScript type
+ * @param {string} swiftType - The Swift type to convert
+ * @param {string|null} promiseType - If this is a JSPromise, the inner type from documentation
  */
-function swiftTypeToTS(swiftType) {
+function swiftTypeToTS(swiftType, promiseType = null) {
     const typeMap = {
         'String': 'string',
         'Int': 'number',
@@ -29,6 +31,13 @@ function swiftTypeToTS(swiftType) {
         'Any': 'any',
         'Void': 'void'
     };
+
+    // Handle JSPromise - convert to Promise<T>
+    // JSPromise? -> Promise<T> (the ? is expected since promises can fail to create)
+    if (swiftType === 'JSPromise?' || swiftType === 'JSPromise') {
+        const innerType = promiseType ? swiftTypeToTS(promiseType) : 'any';
+        return `Promise<${innerType}>`;
+    }
 
     // Handle arrays
     if (swiftType.match(/^\[([^\]:]+)\]$/)) {
@@ -105,7 +114,7 @@ function generateModuleDefinitions(moduleData) {
         }).join(', ');
 
         const returnType = method.returns
-            ? (method.source === 'swift' ? swiftTypeToTS(method.returns.type) : method.returns.type)
+            ? (method.source === 'swift' ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : method.returns.type)
             : 'void';
 
         output += `    function ${method.name}(${params}): ${returnType};\n\n`;
@@ -192,7 +201,7 @@ function generateTypeDefinition(protocol) {
                 return `${p.name}: ${swiftTypeToTS(p.type)}`;
             }).join(', ');
 
-            const returnType = method.returns ? swiftTypeToTS(method.returns.type) : 'void';
+            const returnType = method.returns ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : 'void';
 
             output += `    static ${method.name}(${params}): ${returnType};\n\n`;
         }
@@ -265,7 +274,7 @@ function generateTypeDefinition(protocol) {
                 return `${p.name}: ${swiftTypeToTS(p.type)}`;
             }).join(', ');
 
-            const returnType = method.returns ? swiftTypeToTS(method.returns.type) : 'void';
+            const returnType = method.returns ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : 'void';
 
             output += `    ${method.name}(${params}): ${returnType};\n\n`;
         }

@@ -16,6 +16,10 @@
 import Foundation
 import JavaScriptCore
 
+/// Type alias for JSValue when it represents a JavaScript Promise.
+/// This helps documentation generators identify promise-returning functions.
+public typealias JSPromise = JSValue
+
 // Helper class to hold Promise resolve/reject functions
 // Pattern inspired by SwiftyJSCore's JSPromiseHolder
 //
@@ -65,7 +69,7 @@ final class JSPromiseHolder {
 /// ```
 @_documentation(visibility: private)
 @MainActor
-func wrapAsyncInJSPromise(in context: JSContext, body: @escaping @MainActor (JSPromiseHolder) -> Void) -> JSValue? {
+func wrapAsyncInJSPromise(in context: JSContext, body: @escaping @MainActor (JSPromiseHolder) -> Void) -> JSPromise? {
     // Create the Promise executor function
     let executor: @convention(block) (JSValue, JSValue) -> Void = { resolve, reject in
         MainActor.assumeIsolated {
@@ -88,7 +92,7 @@ func wrapAsyncInJSPromise(in context: JSContext, body: @escaping @MainActor (JSP
 extension JSContext {
     /// Creates a Promise that resolves with the given value
     @MainActor
-    func createResolvedPromise(with value: Any?) -> JSValue? {
+    func createResolvedPromise(with value: Any?) -> JSPromise? {
         guard let promiseConstructor = self.objectForKeyedSubscript("Promise") else {
             return nil
         }
@@ -97,7 +101,7 @@ extension JSContext {
 
     /// Creates a Promise that rejects with the given error message
     @MainActor
-    func createRejectedPromise(with error: String) -> JSValue? {
+    func createRejectedPromise(with error: String) -> JSPromise? {
         guard let promiseConstructor = self.objectForKeyedSubscript("Promise") else {
             return nil
         }
