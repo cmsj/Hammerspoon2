@@ -24,6 +24,22 @@ import Carbon
 
     /// Delete the hotkey (disables and clears callbacks)
     @objc func delete()
+
+    /// Get the callback function for when the hotkey is pressed
+    /// - Returns: The callback function, or null if not set
+    @objc func getCallbackPressed() -> JSValue?
+
+    /// Get the callback function for when the hotkey is released
+    /// - Returns: The callback function, or null if not set
+    @objc func getCallbackReleased() -> JSValue?
+
+    /// Set the callback function for when the hotkey is pressed
+    /// - Parameter callback: The callback function to set, or null to clear
+    @objc func setCallbackPressed(_ callback: JSValue?)
+
+    /// Set the callback function for when the hotkey is released
+    /// - Parameter callback: The callback function to set, or null to clear
+    @objc func setCallbackReleased(_ callback: JSValue?)
 }
 
 @_documentation(visibility: private)
@@ -32,8 +48,8 @@ import Carbon
     @objc var typeName = "HSHotkey"
     private let keyCode: UInt32
     private let modifiers: UInt32
-    private let callbackPressed: JSValue?
-    private let callbackReleased: JSValue?
+    private var callbackPressed: JSValue?
+    private var callbackReleased: JSValue?
     nonisolated(unsafe) private var carbonHotKeyRef: EventHotKeyRef?
     private var enabled = false
     private let hotkeyID: UInt32
@@ -107,6 +123,22 @@ import Carbon
     @objc func delete() {
         disable()
         HotkeyManager.shared.unregister(hotkeyID: hotkeyID)
+    }
+
+    @objc func getCallbackPressed() -> JSValue? {
+        return callbackPressed
+    }
+
+    @objc func getCallbackReleased() -> JSValue? {
+        return callbackReleased
+    }
+
+    @objc func setCallbackPressed(_ callback: JSValue?) {
+        callbackPressed = callback
+    }
+
+    @objc func setCallbackReleased(_ callback: JSValue?) {
+        callbackReleased = callback
     }
 
     /// Internal method called by HotkeyManager when the hotkey is triggered
