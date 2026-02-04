@@ -18,14 +18,15 @@ import JavaScriptCore
     ///   - arguments: An array of arguments to pass to the executable
     ///   - callbackOrEnvironment: Either a callback function or an environment dictionary
     ///   - streamCallbackOrEnvironment: Either a streaming callback function or an environment dictionary (if first param was a callback)
+    ///   - streamCallback: Optional streaming callback when environment is provided as third parameter
     /// - Returns: A task object. Call start() to begin execution.
     /// - Note: This function has flexible arguments to support both old and new API styles:
     ///   - new(path, args, callback) - Simple callback when task completes
     ///   - new(path, args, callback, streamCallback) - Callback for completion and streaming output
     ///   - new(path, args, environment, callback) - Environment variables and callback
     ///   - new(path, args, environment, callback, streamCallback) - Full control
-    @objc(new::::)
-    func new(_ launchPath: String, _ arguments: [String], _ callbackOrEnvironment: JSValue?, _ streamCallbackOrEnvironment: JSValue?) -> HSTask
+    @objc(new:::::)
+    func new(_ launchPath: String, _ arguments: [String], _ callbackOrEnvironment: JSValue?, _ streamCallbackOrEnvironment: JSValue?, _ streamCallback: JSValue?) -> HSTask
 }
 
 // MARK: - Implementation
@@ -56,7 +57,7 @@ import JavaScriptCore
 
     // MARK: - Task constructors
 
-    @objc func new(_ launchPath: String, _ arguments: [String], _ callbackOrEnvironment: JSValue? = nil, _ streamCallbackOrEnvironment: JSValue? = nil) -> HSTask {
+    @objc func new(_ launchPath: String, _ arguments: [String], _ callbackOrEnvironment: JSValue? = nil, _ streamCallbackOrEnvironment: JSValue? = nil, _ streamCallback: JSValue? = nil) -> HSTask {
         var environment: [String: String]? = nil
         var terminationCallback: JSValue? = nil
         var streamingCallback: JSValue? = nil
@@ -71,6 +72,8 @@ import JavaScriptCore
                 }
                 // The termination callback is the next parameter
                 terminationCallback = streamCallbackOrEnvironment
+                // The streaming callback is the 5th parameter
+                streamingCallback = streamCallback
             } else if callbackOrEnv.isFunction {
                 // It's the termination callback
                 terminationCallback = callbackOrEnv

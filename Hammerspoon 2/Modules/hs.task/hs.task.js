@@ -64,12 +64,19 @@
 
             // Create termination callback
             const terminationCallback = function(exitCode, reason) {
-                resolve({
+                const result = {
                     exitCode: exitCode,
                     stdout: stdout,
                     stderr: stderr,
                     reason: reason
-                });
+                };
+
+                // Reject promise on non-zero exit codes or abnormal termination
+                if (exitCode !== 0 || (reason && reason !== 'exit')) {
+                    reject(result);
+                } else {
+                    resolve(result);
+                }
             };
 
             // Create and start the task
