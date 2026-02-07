@@ -148,8 +148,8 @@ import JavaScriptCoreExtras
         self.stdinPipe = stdinPipe
 
         // Set up streaming callbacks if provided
-        if let streamingCallback = streamingCallback {
-            setupStreamingCallbacks(stdout: stdoutPipe, stderr: stderrPipe, callback: streamingCallback)
+        if streamingCallback != nil {
+            setupStreamingCallbacks(stdout: stdoutPipe, stderr: stderrPipe)
         }
 
         // Set up termination handler
@@ -163,7 +163,7 @@ import JavaScriptCoreExtras
                 // Call termination callback if provided
                 if let callback = self.terminationCallback, callback.isFunction {
                     callback.call(withArguments: [process.terminationStatus, self.exitReason ?? "unknown"])
-                    
+
                     // Check for JavaScript errors
                     if let context = callback.context,
                        let exception = context.exception,
@@ -265,16 +265,17 @@ import JavaScriptCoreExtras
 
     // MARK: - Private helpers
 
-    private func setupStreamingCallbacks(stdout: Pipe, stderr: Pipe, callback: JSValue) {
+    private func setupStreamingCallbacks(stdout: Pipe, stderr: Pipe) {
         // Set up stdout reading
-        stdout.fileHandleForReading.readabilityHandler = { [weak self, weak callback] handle in
-            guard let self = self, let callback = callback else { return }
+        stdout.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            guard let self = self else { return }
 
             let data = handle.availableData
             guard !data.isEmpty else { return }
 
             if let output = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async {
+                Task { @MainActor in
+                    guard let callback = self.streamingCallback else { return }
                     callback.call(withArguments: ["stdout", output])
 
                     // Check for JavaScript errors
@@ -289,14 +290,15 @@ import JavaScriptCoreExtras
         }
 
         // Set up stderr reading
-        stderr.fileHandleForReading.readabilityHandler = { [weak self, weak callback] handle in
-            guard let self = self, let callback = callback else { return }
+        stderr.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            guard let self = self else { return }
 
             let data = handle.availableData
             guard !data.isEmpty else { return }
 
             if let output = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async {
+                Task { @MainActor in
+                    guard let callback = self.streamingCallback else { return }
                     callback.call(withArguments: ["stderr", output])
 
                     // Check for JavaScript errors
