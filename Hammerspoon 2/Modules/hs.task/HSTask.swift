@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 
 /// Object representing an external process task
 @objc protocol HSTaskAPI: HSTypeAPI, JSExport {
@@ -155,14 +156,14 @@ import JavaScriptCore
         process.terminationHandler = { [weak self] process in
             guard let self = self else { return }
 
-            self.exitCode = process.terminationStatus
-            self.exitReason = self.getTerminationReasonString(process.terminationReason)
+            Task { @MainActor in
+                self.exitCode = process.terminationStatus
+                self.exitReason = self.getTerminationReasonString(process.terminationReason)
 
-            // Call termination callback if provided
-            if let callback = self.terminationCallback, callback.isFunction {
-                DispatchQueue.main.async {
+                // Call termination callback if provided
+                if let callback = self.terminationCallback, callback.isFunction {
                     callback.call(withArguments: [process.terminationStatus, self.exitReason ?? "unknown"])
-
+                    
                     // Check for JavaScript errors
                     if let context = callback.context,
                        let exception = context.exception,

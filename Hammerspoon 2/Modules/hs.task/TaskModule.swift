@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 
 // MARK: - Declare our JavaScript API
 
