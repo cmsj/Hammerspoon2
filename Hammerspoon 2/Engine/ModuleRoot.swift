@@ -23,6 +23,7 @@ import JavaScriptCoreExtras
     @objc var hashing: HSHashModule { get }
     @objc var hotkey: HSHotkeyModule { get }
     @objc var permissions: HSPermissionsModule { get }
+    @objc var task: HSTaskModule { get }
     @objc var timer: HSTimerModule { get }
     @objc var window: HSWindowModule { get }
 }
@@ -76,6 +77,7 @@ import JavaScriptCoreExtras
     @objc var hashing: HSHashModule { get { getOrCreate(name: "hashing", type: HSHashModule.self)}}
     @objc var hotkey: HSHotkeyModule { get { getOrCreate(name: "hotkey", type: HSHotkeyModule.self)}}
     @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
+    @objc var task: HSTaskModule { get { getOrCreate(name: "task", type: HSTaskModule.self)}}
     @objc var timer: HSTimerModule { get { getOrCreate(name: "timer", type: HSTimerModule.self)}}
     @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
 }
