@@ -17,17 +17,12 @@ import JavaScriptCoreExtras
     /// - Parameters:
     ///   - launchPath: The full path to the executable to run
     ///   - arguments: An array of arguments to pass to the executable
-    ///   - callbackOrEnvironment: Either a callback function or an environment dictionary
-    ///   - streamCallbackOrEnvironment: Either a streaming callback function or an environment dictionary (if first param was a callback)
-    ///   - streamCallback: Optional streaming callback when environment is provided as third parameter
+    ///   - completionCallback: Optional callback function called when the task terminates
+    ///   - environment: Optional dictionary of environment variables for the task
+    ///   - streamingCallback: Optional callback function called when the task produces output
     /// - Returns: A task object. Call start() to begin execution.
-    /// - Note: This function has flexible arguments to support both old and new API styles:
-    ///   - new(path, args, callback) - Simple callback when task completes
-    ///   - new(path, args, callback, streamCallback) - Callback for completion and streaming output
-    ///   - new(path, args, environment, callback) - Environment variables and callback
-    ///   - new(path, args, environment, callback, streamCallback) - Full control
     @objc(new:::::)
-    func new(_ launchPath: String, _ arguments: [String], _ callbackOrEnvironment: JSValue?, _ streamCallbackOrEnvironment: JSValue?, _ streamCallback: JSValue?) -> HSTask
+    func new(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask
 }
 
 // MARK: - Implementation
@@ -58,40 +53,18 @@ import JavaScriptCoreExtras
 
     // MARK: - Task constructors
 
-    @objc func new(_ launchPath: String, _ arguments: [String], _ callbackOrEnvironment: JSValue? = nil, _ streamCallbackOrEnvironment: JSValue? = nil, _ streamCallback: JSValue? = nil) -> HSTask {
-        var environment: [String: String]? = nil
-        var terminationCallback: JSValue? = nil
-        var streamingCallback: JSValue? = nil
-
-        // Parse the flexible arguments
-        // If callbackOrEnvironment is a dictionary, it's the environment
-        if let callbackOrEnv = callbackOrEnvironment {
-            if callbackOrEnv.isObject && !callbackOrEnv.isFunction {
-                // It's a dictionary (environment)
-                if let envDict = callbackOrEnv.toDictionary() as? [String: String] {
-                    environment = envDict
-                }
-                // The termination callback is the next parameter
-                terminationCallback = streamCallbackOrEnvironment
-                // The streaming callback is the 5th parameter
-                streamingCallback = streamCallback
-            } else if callbackOrEnv.isFunction {
-                // It's the termination callback
-                terminationCallback = callbackOrEnv
-                // Check if streamCallbackOrEnvironment is also a function (streaming callback)
-                if let streamOrEnv = streamCallbackOrEnvironment {
-                    if streamOrEnv.isFunction {
-                        streamingCallback = streamOrEnv
-                    }
-                }
-            }
+    @objc func new(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue? = nil, _ environment: JSValue? = nil, _ streamingCallback: JSValue? = nil) -> HSTask {
+        // Parse environment dictionary if provided
+        var envDict: [String: String]? = nil
+        if let envValue = environment, envValue.isObject && !envValue.isFunction {
+            envDict = envValue.toDictionary() as? [String: String]
         }
 
         let task = HSTask(
             launchPath: launchPath,
             arguments: arguments,
-            environment: environment,
-            terminationCallback: terminationCallback,
+            environment: envDict,
+            terminationCallback: completionCallback,
             streamingCallback: streamingCallback
         )
 

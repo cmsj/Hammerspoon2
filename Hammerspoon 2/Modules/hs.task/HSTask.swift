@@ -45,23 +45,13 @@ import JavaScriptCoreExtras
     /// Close the task's stdin
     @objc func closeInput()
 
-    /// Get the task's environment variables
-    /// - Returns: A dictionary of environment variables
-    @objc func environment() -> [String: String]
+    /// The environment variables for the task
+    /// - Note: Can only be modified before calling start()
+    @objc var environment: [String: String] { get set }
 
-    /// Set an environment variable for the task (must be called before start())
-    /// - Parameters:
-    ///   - key: The environment variable name
-    ///   - value: The environment variable value
-    @objc func setEnvironmentVariable(_ key: String, _ value: String)
-
-    /// Get the working directory of the task
-    /// - Returns: The current working directory path
-    @objc func workingDirectory() -> String?
-
-    /// Set the working directory for the task (must be called before start())
-    /// - Parameter path: The directory path
-    @objc func setWorkingDirectory(_ path: String)
+    /// The working directory for the task
+    /// - Note: Can only be modified before calling start()
+    @objc var workingDirectory: String? { get set }
 
     /// Get the termination status of the task
     /// - Returns: The exit code, or nil if the task hasn't terminated
@@ -78,8 +68,8 @@ import JavaScriptCoreExtras
 
     private let launchPath: String
     private let arguments: [String]
-    private var env: [String: String]
-    private var workingDir: String?
+    private var _environment: [String: String]
+    private var _workingDirectory: String?
     private let terminationCallback: JSValue?
     private let streamingCallback: JSValue?
 
@@ -92,10 +82,34 @@ import JavaScriptCoreExtras
     private var exitCode: Int32?
     private var exitReason: String?
 
+    /// The environment variables for the task
+    @objc var environment: [String: String] {
+        get { _environment }
+        set {
+            guard !hasStarted else {
+                AKWarning("hs.task.environment: Cannot modify environment after task has started")
+                return
+            }
+            _environment = newValue
+        }
+    }
+
+    /// The working directory for the task
+    @objc var workingDirectory: String? {
+        get { _workingDirectory }
+        set {
+            guard !hasStarted else {
+                AKWarning("hs.task.workingDirectory: Cannot modify working directory after task has started")
+                return
+            }
+            _workingDirectory = newValue
+        }
+    }
+
     init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSValue?, streamingCallback: JSValue?) {
         self.launchPath = launchPath
         self.arguments = arguments
-        self.env = environment ?? ProcessInfo.processInfo.environment
+        self._environment = environment ?? ProcessInfo.processInfo.environment
         self.terminationCallback = terminationCallback
         self.streamingCallback = streamingCallback
         super.init()
@@ -127,9 +141,9 @@ import JavaScriptCoreExtras
         let process = Process()
         process.executableURL = URL(fileURLWithPath: launchPath)
         process.arguments = arguments
-        process.environment = env
+        process.environment = _environment
 
-        if let workingDir = workingDir {
+        if let workingDir = _workingDirectory {
             process.currentDirectoryURL = URL(fileURLWithPath: workingDir)
         }
 
@@ -228,30 +242,6 @@ import JavaScriptCoreExtras
         } catch {
             AKError("hs.task:closeInput(): Failed to close stdin: \(error.localizedDescription)")
         }
-    }
-
-    @objc func environment() -> [String: String] {
-        return env
-    }
-
-    @objc func setEnvironmentVariable(_ key: String, _ value: String) {
-        guard !hasStarted else {
-            AKWarning("hs.task:setEnvironmentVariable(): Cannot set environment after task has started")
-            return
-        }
-        env[key] = value
-    }
-
-    @objc func workingDirectory() -> String? {
-        return workingDir
-    }
-
-    @objc func setWorkingDirectory(_ path: String) {
-        guard !hasStarted else {
-            AKWarning("hs.task:setWorkingDirectory(): Cannot set working directory after task has started")
-            return
-        }
-        workingDir = path
     }
 
     @objc func terminationStatus() -> NSNumber? {
