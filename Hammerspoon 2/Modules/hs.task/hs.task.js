@@ -6,9 +6,6 @@
 (function() {
     'use strict';
 
-    // Store the original constructor
-    const originalNew = hs.task.new;
-
     /**
      * Create and run a task asynchronously
      * @param {string} launchPath - Full path to the executable
@@ -34,7 +31,7 @@
                 const terminationCallback = options;
                 streamCallback = legacyStreamCallback;
 
-                const task = originalNew.call(hs.task, launchPath, args, terminationCallback, streamCallback);
+                const task = hs.task.new.call(hs.task, launchPath, args, terminationCallback, streamCallback);
                 task.start();
                 return; // Legacy mode doesn't return a promise
             }
@@ -80,7 +77,7 @@
             };
 
             // Create and start the task
-            const task = originalNew.call(hs.task, launchPath, args, environment, terminationCallback, streamCallback);
+            const task = hs.task.new.call(hs.task, launchPath, args, environment, terminationCallback, streamCallback);
 
             if (workingDirectory) {
                 task.setWorkingDirectory(workingDirectory);
@@ -215,7 +212,7 @@
                 streamCallback = this.outputCallback;
             }
 
-            const task = originalNew.call(hs.task, this.launchPath, this.args, this.env, null, streamCallback);
+            const task = hs.task.new.call(hs.task, this.launchPath, this.args, this.env, null, streamCallback);
 
             if (this.cwd) {
                 task.setWorkingDirectory(this.cwd);
