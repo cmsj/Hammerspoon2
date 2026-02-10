@@ -1,0 +1,76 @@
+name: Test Suite
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Setup Node.js for docs linter
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Run documentation linter
+        run: ./scripts/test-docs.sh
+
+      - name: Resolve Swift package dependencies
+        run: xcodebuild -resolvePackageDependencies -scheme Development
+
+      - name: Build for testing
+        run: |
+          xcodebuild build-for-testing \
+            -scheme Development \
+            -destination 'platform=macOS'
+
+      - name: Run tests
+        run: |
+          set -o pipefail && xcodebuild test \
+            -scheme Development \
+            -destination 'platform=macOS' \
+            -parallel-testing-enabled NO \
+            -resultBundlePath TestResults.xcresult \
+            | tee xcodebuild.log
+
+      - name: Publish test results to PR
+        uses: slidoapp/xcresulttool@v1
+        if: always() && github.event_name == 'pull_request'
+        with:
+          path: TestResults.xcresult
+          show-passed-tests: false
+          title: Test Results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            TestResults.xcresult
+            xcodebuild.log
+          retention-days: 30
