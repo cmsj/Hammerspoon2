@@ -77,10 +77,10 @@
             };
 
             // Create and start the task
-            const task = hs.task.new.call(hs.task, launchPath, args, environment, terminationCallback, streamCallback);
+            const task = hs.task.new.call(hs.task, launchPath, args, terminationCallback, environment, streamCallback);
 
             if (workingDirectory) {
-                task.setWorkingDirectory(workingDirectory);
+                task.workingDirectory = workingDirectory;
             }
 
             task.start();
@@ -212,10 +212,10 @@
                 streamCallback = this.outputCallback;
             }
 
-            const task = hs.task.new.call(hs.task, this.launchPath, this.args, this.env, null, streamCallback);
+            const task = hs.task.new.call(hs.task, this.launchPath, this.args, null, this.env, streamCallback);
 
             if (this.cwd) {
-                task.setWorkingDirectory(this.cwd);
+                task.workingDirectory = this.cwd;
             }
 
             return task;
