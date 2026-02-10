@@ -778,6 +778,7 @@ import JavaScriptCore
 
         let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved || promiseRejected }
         #expect(success, "Builder task should complete or reject")
+        #expect(promiseResolved, "PRomise should be resolved")
         #expect(!promiseRejected, "Promise should not be rejected. Error: \(errorMessage)")
         #expect(capturedOutput.contains("arg1 arg2 arg3"), "Should pass all arguments")
     }
