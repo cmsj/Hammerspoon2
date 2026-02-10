@@ -7,6 +7,9 @@
 
 "use strict";
 
+// Alias for compatibility with enhancements (they use .new(), but the Swift API is .create())
+hs.timer.new = hs.timer.create;
+
 // Time conversion utilities
 /// Converts minutes to seconds
 /// Parameter n: A number of minutes

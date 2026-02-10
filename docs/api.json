@@ -1711,7 +1711,26 @@
               "lineNumber": 26
             }
           ],
-          "properties": []
+          "properties": [
+            {
+              "name": "callbackPressed",
+              "signature": "var callbackPressed: JSValue? { get set }",
+              "rawDocumentation": "The callback function to be called when the hotkey is pressed",
+              "description": "The callback function to be called when the hotkey is pressed",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
+              "lineNumber": 29
+            },
+            {
+              "name": "callbackReleased",
+              "signature": "var callbackReleased: JSValue? { get set }",
+              "rawDocumentation": "The callback function to be called when the hotkey is released",
+              "description": "The callback function to be called when the hotkey is released",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
+              "lineNumber": 32
+            }
+          ]
         }
       ],
       "description": "Module for creating and managing system-wide hotkeys",
@@ -1833,6 +1852,354 @@
       "types": [],
       "description": "Module for checking and requesting system permissions",
       "rawDocumentation": "Module for checking and requesting system permissions"
+    },
+    {
+      "name": "hs.task",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "func new(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask",
+          "rawDocumentation": "Create a new task\n- Parameters:\n- launchPath: The full path to the executable to run\n- arguments: An array of arguments to pass to the executable\n- completionCallback: Optional callback function called when the task terminates\n- environment: Optional dictionary of environment variables for the task\n- streamingCallback: Optional callback function called when the task produces output\n- Returns: A task object. Call start() to begin execution.",
+          "description": "Create a new task",
+          "params": [
+            {
+              "name": "launchPath",
+              "type": "String",
+              "description": "The full path to the executable to run"
+            },
+            {
+              "name": "arguments",
+              "type": "[String]",
+              "description": "An array of arguments to pass to the executable"
+            },
+            {
+              "name": "completionCallback",
+              "type": "JSValue?",
+              "description": "Optional callback function called when the task terminates"
+            },
+            {
+              "name": "environment",
+              "type": "JSValue?",
+              "description": "Optional dictionary of environment variables for the task"
+            },
+            {
+              "name": "streamingCallback",
+              "type": "JSValue?",
+              "description": "Optional callback function called when the task produces output"
+            }
+          ],
+          "returns": {
+            "type": "HSTask",
+            "description": "A task object. Call start() to begin execution."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.task/TaskModule.swift",
+          "lineNumber": 25
+        },
+        {
+          "name": "run",
+          "rawDocumentation": "* Create and run a task asynchronously\n     * @param {string} launchPath - Full path to the executable\n     * @param {string[]} args - Array of arguments\n     * @param {Object|Function} options - Options object or legacy callback\n     * @param {Object} options.environment - Environment variables (optional)\n     * @param {string} options.workingDirectory - Working directory (optional)\n     * @param {Function} options.onOutput - Callback for streaming output: (stream, data) => {} (optional)\n     * @param {Function} legacyStreamCallback - Legacy streaming callback (optional)\n     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}",
+          "description": "Create and run a task asynchronously",
+          "params": [
+            {
+              "name": "launchPath",
+              "type": "string",
+              "description": "- Full path to the executable"
+            },
+            {
+              "name": "args",
+              "type": "string[]",
+              "description": "- Array of arguments"
+            },
+            {
+              "name": "options",
+              "type": "Object|Function",
+              "description": "- Options object or legacy callback"
+            },
+            {
+              "name": "options",
+              "type": "Object",
+              "description": ".environment - Environment variables (optional)"
+            },
+            {
+              "name": "options",
+              "type": "string",
+              "description": ".workingDirectory - Working directory (optional)"
+            },
+            {
+              "name": "options",
+              "type": "Function",
+              "description": ".onOutput - Callback for streaming output: (stream, data) => {} (optional)"
+            },
+            {
+              "name": "legacyStreamCallback",
+              "type": "Function",
+              "description": "- Legacy streaming callback (optional)"
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "{Promise<{exitCode: number, stdout: string, stderr: string}>}"
+          },
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
+          "lineNumber": 9,
+          "type": "function"
+        },
+        {
+          "name": "shell",
+          "rawDocumentation": "* Run a shell command asynchronously\n     * @param {string} command - Shell command to execute\n     * @param {Object} options - Options (same as run)\n     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}",
+          "description": "Run a shell command asynchronously",
+          "params": [
+            {
+              "name": "command",
+              "type": "string",
+              "description": "- Shell command to execute"
+            },
+            {
+              "name": "options",
+              "type": "Object",
+              "description": "- Options (same as run)"
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "{Promise<{exitCode: number, stdout: string, stderr: string}>}"
+          },
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
+          "lineNumber": 95,
+          "type": "function"
+        },
+        {
+          "name": "parallel",
+          "rawDocumentation": "* Run multiple tasks in parallel\n     * @param {Array} tasks - Array of task specifications: [{path, args, options}, ...]\n     * @returns {Promise<Array>} Array of results",
+          "description": "Run multiple tasks in parallel",
+          "params": [
+            {
+              "name": "tasks",
+              "type": "Array",
+              "description": "- Array of task specifications: [{path, args, options}, ...]"
+            }
+          ],
+          "returns": {
+            "type": "Promise<Array>",
+            "description": "Array of results",
+            "promiseType": "Array"
+          },
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
+          "lineNumber": 105,
+          "type": "function"
+        },
+        {
+          "name": "builder",
+          "rawDocumentation": "* Create a task builder for fluent API\n     * @param {string} launchPath - Full path to the executable\n     * @returns {TaskBuilder}",
+          "description": "Create a task builder for fluent API",
+          "params": [
+            {
+              "name": "launchPath",
+              "type": "string",
+              "description": "- Full path to the executable"
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "{TaskBuilder}"
+          },
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
+          "lineNumber": 131,
+          "type": "function"
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSTaskAPI",
+          "type": "typedef",
+          "rawDocumentation": "Object representing an external process task",
+          "description": "Object representing an external process task",
+          "methods": [
+            {
+              "name": "start",
+              "signature": "func start() -> HSTask",
+              "rawDocumentation": "Start the task\n- Returns: The task object for chaining",
+              "description": "Start the task",
+              "params": [],
+              "returns": {
+                "type": "HSTask",
+                "description": "The task object for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 16
+            },
+            {
+              "name": "terminate",
+              "signature": "func terminate()",
+              "rawDocumentation": "Terminate the task (send SIGTERM)",
+              "description": "Terminate the task (send SIGTERM)",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 19
+            },
+            {
+              "name": "kill9",
+              "signature": "func kill9()",
+              "rawDocumentation": "Terminate the task with extreme prejudice (send SIGKILL)",
+              "description": "Terminate the task with extreme prejudice (send SIGKILL)",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 22
+            },
+            {
+              "name": "interrupt",
+              "signature": "func interrupt()",
+              "rawDocumentation": "Interrupt the task (send SIGINT)",
+              "description": "Interrupt the task (send SIGINT)",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 25
+            },
+            {
+              "name": "pause",
+              "signature": "func pause()",
+              "rawDocumentation": "Pause the task (send SIGSTOP)",
+              "description": "Pause the task (send SIGSTOP)",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 28
+            },
+            {
+              "name": "resume",
+              "signature": "func resume()",
+              "rawDocumentation": "Resume the task (send SIGCONT)",
+              "description": "Resume the task (send SIGCONT)",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 31
+            },
+            {
+              "name": "waitUntilExit",
+              "signature": "func waitUntilExit()",
+              "rawDocumentation": "Wait for the task to complete (blocking)",
+              "description": "Wait for the task to complete (blocking)",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 34
+            },
+            {
+              "name": "sendInput",
+              "signature": "func sendInput(_ data: String)",
+              "rawDocumentation": "Write data to the task's stdin\n- Parameter data: The string data to write",
+              "description": "Write data to the task's stdin",
+              "params": [
+                {
+                  "name": "data",
+                  "type": "String",
+                  "description": "The string data to write"
+                }
+              ],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 38
+            },
+            {
+              "name": "closeInput",
+              "signature": "func closeInput()",
+              "rawDocumentation": "Close the task's stdin",
+              "description": "Close the task's stdin",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 41
+            },
+            {
+              "name": "terminationStatus",
+              "signature": "func terminationStatus() -> NSNumber?",
+              "rawDocumentation": "Get the termination status of the task\n- Returns: The exit code, or nil if the task hasn't terminated",
+              "description": "Get the termination status of the task",
+              "params": [],
+              "returns": {
+                "type": "NSNumber?",
+                "description": "The exit code, or nil if the task hasn't terminated"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 61
+            },
+            {
+              "name": "terminationReason",
+              "signature": "func terminationReason() -> String?",
+              "rawDocumentation": "Get the termination reason\n- Returns: A string describing why the task terminated, or nil if still running",
+              "description": "Get the termination reason",
+              "params": [],
+              "returns": {
+                "type": "String?",
+                "description": "A string describing why the task terminated, or nil if still running"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 65
+            }
+          ],
+          "properties": [
+            {
+              "name": "isRunning",
+              "signature": "var isRunning: Bool { get }",
+              "rawDocumentation": "Check if the task is currently running\n- Note: true if the task is running, false otherwise",
+              "description": "Check if the task is currently running",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 45
+            },
+            {
+              "name": "pid",
+              "signature": "var pid: Int32 { get }",
+              "rawDocumentation": "The process ID of the running task\n- Note: The value will be -1 if the task is not running",
+              "description": "The process ID of the running task",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 49
+            },
+            {
+              "name": "environment",
+              "signature": "var environment: [String: String] { get set }",
+              "rawDocumentation": "The environment variables for the task\n- Note: Can only be modified before calling start()",
+              "description": "The environment variables for the task",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 53
+            },
+            {
+              "name": "workingDirectory",
+              "signature": "var workingDirectory: String? { get set }",
+              "rawDocumentation": "The working directory for the task\n- Note: Can only be modified before calling start()",
+              "description": "The working directory for the task",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 57
+            }
+          ]
+        }
+      ],
+      "description": "Module for running external processes",
+      "rawDocumentation": "Module for running external processes"
     },
     {
       "name": "hs.timer",
@@ -3219,5 +3586,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-01-26T23:19:41.215Z"
+  "generatedAt": "2026-02-10T12:58:06.346Z"
 }

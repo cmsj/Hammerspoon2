@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import Testing
 @testable import Hammerspoon_2
 
@@ -44,7 +45,11 @@ class JSTestHarness {
         }
 
         // Inject type bridges (for HSRect, HSPoint, etc.)
-        context.injectTypeBridges()
+        do {
+            try context.install([TypeBridgesInstaller()])
+        } catch {
+            print("⚠️ Failed to install type bridges: \(error)")
+        }
 
         // Create the hs namespace object
         setupHSNamespace()

@@ -11,6 +11,7 @@ import Foundation
 /// Mock implementation of FileSystemProtocol for testing
 class MockFileSystem: FileSystemProtocol {
     var existingFiles: Set<String> = []
+    var existingDirectories: Set<String> = []
     var fileContents: [URL: String] = [:]
 
     // Configure behavior
@@ -18,11 +19,15 @@ class MockFileSystem: FileSystemProtocol {
     var contentsOfError: Error?
 
     func fileExists(atPath path: String) -> Bool {
-        return existingFiles.contains(path)
+        return existingFiles.contains(path) || existingDirectories.contains(path)
     }
 
     func fileExists(atPath path: String, isDirectory: UnsafeMutablePointer<ObjCBool>?) -> Bool {
-        return existingFiles.contains(path)
+        let exists = existingFiles.contains(path) || existingDirectories.contains(path)
+        if exists, let isDirectory = isDirectory {
+            isDirectory.pointee = ObjCBool(existingDirectories.contains(path))
+        }
+        return exists
     }
 
     func contentsOf(url: URL) throws -> String {
@@ -48,15 +53,35 @@ class MockFileSystem: FileSystemProtocol {
     func addFile(atPath path: String, contents: String = "") {
         existingFiles.insert(path)
         fileContents[URL(fileURLWithPath: path)] = contents
+
+        // Also add parent directories
+        let url = URL(fileURLWithPath: path)
+        var parentURL = url.deletingLastPathComponent()
+        while parentURL.path != "/" {
+            existingDirectories.insert(parentURL.path)
+            parentURL = parentURL.deletingLastPathComponent()
+        }
     }
 
     func addFile(at url: URL, contents: String = "") {
         existingFiles.insert(url.path)
         fileContents[url] = contents
+
+        // Also add parent directories
+        var parentURL = url.deletingLastPathComponent()
+        while parentURL.path != "/" {
+            existingDirectories.insert(parentURL.path)
+            parentURL = parentURL.deletingLastPathComponent()
+        }
+    }
+
+    func addDirectory(atPath path: String) {
+        existingDirectories.insert(path)
     }
 
     func reset() {
         existingFiles.removeAll()
+        existingDirectories.removeAll()
         fileContents.removeAll()
         shouldThrowOnContentsOf = false
         contentsOfError = nil
