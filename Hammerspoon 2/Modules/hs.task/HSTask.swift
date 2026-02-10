@@ -11,20 +11,15 @@ import JavaScriptCoreExtras
 
 /// Object representing an external process task
 @objc protocol HSTaskAPI: HSTypeAPI, JSExport {
-    /// The process ID of the running task
-    /// - Returns: The PID, or -1 if the task is not running
-    @objc func pid() -> Int32
-
-    /// Check if the task is currently running
-    /// - Returns: true if the task is running, false otherwise
-    @objc func isRunning() -> Bool
-
     /// Start the task
     /// - Returns: The task object for chaining
     @objc func start() -> HSTask
 
-    /// Terminate the task
+    /// Terminate the task (send SIGTERM)
     @objc func terminate()
+
+    /// Terminate the task with extreme prejudice (send SIGKILL)
+    @objc func kill9()
 
     /// Interrupt the task (send SIGINT)
     @objc func interrupt()
@@ -45,6 +40,14 @@ import JavaScriptCoreExtras
     /// Close the task's stdin
     @objc func closeInput()
 
+    /// Check if the task is currently running
+    /// - Note: true if the task is running, false otherwise
+    @objc var isRunning: Bool { get }
+
+    /// The process ID of the running task
+    /// - Note: The value will be -1 if the task is not running
+    @objc var pid: Int32 { get }
+
     /// The environment variables for the task
     /// - Note: Can only be modified before calling start()
     @objc var environment: [String: String] { get set }
@@ -60,6 +63,9 @@ import JavaScriptCoreExtras
     /// Get the termination reason
     /// - Returns: A string describing why the task terminated, or nil if still running
     @objc func terminationReason() -> String?
+
+    /// SKIP_DOCS
+    @objc func _shutdown()
 }
 
 @_documentation(visibility: private)
@@ -106,6 +112,14 @@ import JavaScriptCoreExtras
         }
     }
 
+    @objc var pid: Int32 {
+        process?.processIdentifier ?? -1
+    }
+
+    @objc var isRunning: Bool {
+        return process?.isRunning ?? false
+    }
+
     init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSValue?, streamingCallback: JSValue?) {
         self.launchPath = launchPath
         self.arguments = arguments
@@ -120,14 +134,6 @@ import JavaScriptCoreExtras
             process.terminate()
         }
         print("deinit of HSTask: \(launchPath)")
-    }
-
-    @objc func pid() -> Int32 {
-        return process?.processIdentifier ?? -1
-    }
-
-    @objc func isRunning() -> Bool {
-        return process?.isRunning ?? false
     }
 
     @objc func start() -> HSTask {
@@ -199,6 +205,22 @@ import JavaScriptCoreExtras
         return self
     }
 
+    // This is called when HS is restarting/exiting, to clean up this HSTask.
+    // We will send it a SIGTERM, then attempt to wait a few seconds and send a SIGKILL.
+    // FIXME: When HS is exiting, the SIGKILL tasks likely won't ever get called.
+    @objc func _shutdown() {
+        guard let process, process.isRunning else { return }
+
+        let pid = process.processIdentifier
+
+        terminate()
+        Task.detached {
+            try? await Task.sleep(for: .seconds(5))
+
+            kill(pid, SIGKILL)
+        }
+    }
+
     @objc func terminate() {
         process?.terminate()
     }
@@ -215,6 +237,11 @@ import JavaScriptCoreExtras
     @objc func resume() {
         guard let process = process, process.isRunning else { return }
         kill(process.processIdentifier, SIGCONT)
+    }
+
+    @objc func kill9() {
+        guard let process = process, process.isRunning else { return }
+        kill(process.processIdentifier, SIGKILL)
     }
 
     @objc func waitUntilExit() {

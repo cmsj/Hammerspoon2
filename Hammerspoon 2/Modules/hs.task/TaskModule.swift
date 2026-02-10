@@ -31,20 +31,20 @@ import JavaScriptCoreExtras
 @objc class HSTaskModule: NSObject, HSModuleAPI, HSTaskModuleAPI {
     var name = "hs.task"
 
-    // Keep track of all running tasks
-    private var tasks: [HSTask] = []
+    // Keep weak references to tasks for shutdown cleanup
+    // Uses weak references to allow JavaScript garbage collection
+    // Running tasks stay alive via their Process termination handler closure
+    private var tasks = NSHashTable<HSTask>.weakObjects()
 
     // MARK: - Module lifecycle
     override required init() { super.init() }
 
     func shutdown() {
-        // Terminate all running tasks
-        for task in tasks {
-            if task.isRunning() {
-                task.terminate()
-            }
+        // Terminate all running tasks that still exist
+        for task in tasks.allObjects.filter({ $0.isRunning }) {
+            task._shutdown()
         }
-        tasks.removeAll()
+        tasks.removeAllObjects()
     }
 
     deinit {
@@ -68,7 +68,7 @@ import JavaScriptCoreExtras
             streamingCallback: streamingCallback
         )
 
-        tasks.append(task)
+        tasks.add(task)
         return task
     }
 }
