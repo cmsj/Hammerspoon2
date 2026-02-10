@@ -13,7 +13,7 @@ import JavaScriptCore
 ///
 /// These tests verify task creation, process execution, callbacks, and JavaScript enhancements.
 /// Tests use real system commands (/bin/echo, /bin/sh, etc.) to verify actual process behavior.
-struct HSTaskIntegrationTests {
+@Suite(.serialized) struct HSTaskIntegrationTests {
 
     // MARK: - Basic Task Creation Tests
 
@@ -175,7 +175,7 @@ struct HSTaskIntegrationTests {
         harness.eval("task.start()")
 
         // Should be running now
-        Thread.sleep(forTimeInterval: 0.05)
+        try? await Task.sleep(for: .seconds(0.05))
         harness.expectTrue("task.isRunning === true")
 
         // Wait for completion
@@ -183,7 +183,7 @@ struct HSTaskIntegrationTests {
         #expect(success, "Task should complete")
 
         // Should not be running anymore
-        Thread.sleep(forTimeInterval: 0.1)
+        try? await Task.sleep(for: .seconds(0.1))
         harness.expectTrue("task.isRunning === false")
     }
 
@@ -242,7 +242,7 @@ struct HSTaskIntegrationTests {
         #expect(success, "Task should complete")
 
         // After termination
-        Thread.sleep(forTimeInterval: 0.1)
+        try? await Task.sleep(for: .seconds(0.1))
         harness.expectEqual("task.terminationStatus()", 42)
     }
 
@@ -266,7 +266,7 @@ struct HSTaskIntegrationTests {
         let success = await harness.waitForAsync(timeout: 2.0) { taskCompleted }
         #expect(success, "Task should complete")
 
-        Thread.sleep(forTimeInterval: 0.1)
+        try? await Task.sleep(for: .seconds(0.1))
         harness.expectEqual("task.terminationReason()", "exit")
     }
 
@@ -289,7 +289,7 @@ struct HSTaskIntegrationTests {
         task.start();
         """)
 
-        Thread.sleep(forTimeInterval: 0.1)
+        try? await Task.sleep(for: .seconds(0.1))
         harness.expectTrue("task.isRunning === true")
 
         // Terminate the task
@@ -377,7 +377,7 @@ struct HSTaskIntegrationTests {
 
         // Cleanup
         harness.eval("task.closeInput()")
-        Thread.sleep(forTimeInterval: 0.2)
+        try? await Task.sleep(for: .seconds(0.2))
     }
 
     @Test("closeInput closes stdin and signals EOF")
@@ -398,7 +398,7 @@ struct HSTaskIntegrationTests {
         task.sendInput('test\\n');
         """)
 
-        Thread.sleep(forTimeInterval: 0.1)
+        try? await Task.sleep(for: .seconds(0.1))
         harness.expectTrue("task.isRunning === true")
 
         // Close stdin - cat should exit
@@ -462,13 +462,13 @@ struct HSTaskIntegrationTests {
                 onOutput(data);
             }
         );
-        task.workingDirectory = '/tmp';
+        task.workingDirectory = '/private/tmp';
         task.start();
         """)
 
         let success = await harness.waitForAsync(timeout: 2.0) { outputReceived }
         #expect(success, "Should receive output")
-        #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/tmp", "Working directory should be /tmp")
+        #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/private/tmp", "Working directory should be /private/tmp")
     }
 
     @Test("Cannot modify environment after task starts")
@@ -605,7 +605,7 @@ struct HSTaskIntegrationTests {
 
         harness.eval("""
         hs.task.run('/bin/pwd', [], {
-            workingDirectory: '/tmp'
+            workingDirectory: '/private/tmp'
         }).then(function(result) {
             onResolve(result.stdout);
         });
@@ -613,7 +613,7 @@ struct HSTaskIntegrationTests {
 
         let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Promise should resolve")
-        #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/tmp", "Should use custom working directory")
+        #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/private/tmp", "Should use custom working directory")
     }
 
     @Test("hs.task.run() supports environment option")
@@ -1024,10 +1024,10 @@ struct HSTaskIntegrationTests {
         """)
 
         let success = await harness.waitForAsync(timeout: 2.0) { linesReceived >= 3 }
-        #expect(success, "Should receive all sent lines")
+        #expect(success, "Should receive all sent lines, not \(linesReceived)")
 
         harness.eval("interactiveTask.closeInput()")
-        Thread.sleep(forTimeInterval: 0.2)
+        try? await Task.sleep(for: .seconds(0.2))
     }
 
     @Test("Timeout pattern with task termination works")

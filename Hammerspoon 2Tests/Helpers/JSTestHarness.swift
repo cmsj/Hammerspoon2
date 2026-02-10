@@ -329,7 +329,7 @@ class JSTestHarness {
 extension JSTestHarness {
     /// Load multiple modules at once
     func loadModules(_ modules: [(type: any HSModuleAPI.Type, name: String)]) {
-        for (type, name) in modules {
+        for (_, name) in modules {
             // We need to use runtime type information here
             // This is a limitation of Swift's type system
             switch name {
