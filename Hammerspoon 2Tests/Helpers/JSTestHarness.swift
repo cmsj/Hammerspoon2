@@ -66,6 +66,17 @@ class JSTestHarness {
         context.setObject(swiftHandler, forKeyedSubscript: "__test_callback" as NSString)
     }
 
+    /// Drain the MainActor queue to ensure all pending tasks complete
+    /// This prevents interference between tests
+    @MainActor
+    static func drainMainActorQueue() async {
+        // Yield to allow any pending MainActor tasks to execute
+        for _ in 0..<5 {
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+    }
+
     // MARK: - Module Loading
 
     /// Load a module into the test context under hs namespace

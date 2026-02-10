@@ -15,6 +15,13 @@ import JavaScriptCore
 /// Tests use real system commands (/bin/echo, /bin/sh, etc.) to verify actual process behavior.
 @Suite(.serialized) struct HSTaskIntegrationTests {
 
+    // MARK: - Test Lifecycle
+
+    init() async {
+        // Drain MainActor queue before each test to prevent interference
+        await JSTestHarness.drainMainActorQueue()
+    }
+
     // MARK: - Basic Task Creation Tests
 
     @Test("hs.task.new() creates a task object")

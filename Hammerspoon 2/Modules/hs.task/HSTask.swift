@@ -176,17 +176,27 @@ import JavaScriptCoreExtras
         process.terminationHandler = { [weak self] process in
             guard let self = self else { return }
 
-            Task { @MainActor in
-                self.exitCode = process.terminationStatus
-                self.exitReason = self.getTerminationReasonString(process.terminationReason)
+            // Store exit code before dispatching
+            let exitCode = process.terminationStatus
+            let terminationReason = process.terminationReason
+
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+
+                // Compute exit reason and update state
+                let exitReason = self.getTerminationReasonString(terminationReason)
+                self.exitCode = exitCode
+                self.exitReason = exitReason
 
                 // Call termination callback if provided
-                if let callback = self.terminationCallback, callback.isFunction {
-                    callback.call(withArguments: [process.terminationStatus, self.exitReason ?? "unknown"])
+                if let callback = self.terminationCallback, callback.isFunction, !callback.isUndefined {
+                    // Check if context is still valid before calling
+                    guard let context = callback.context else { return }
+
+                    callback.call(withArguments: [exitCode, exitReason ?? "unknown"])
 
                     // Check for JavaScript errors
-                    if let context = callback.context,
-                       let exception = context.exception,
+                    if let exception = context.exception,
                        !exception.isUndefined {
                         AKError("hs.task: Error in termination callback: \(exception.toString() ?? "unknown error")")
                         context.exception = nil
@@ -289,19 +299,22 @@ import JavaScriptCoreExtras
 
             let data = handle.availableData
             guard !data.isEmpty else { return }
+            guard let output = String(data: data, encoding: .utf8) else { return }
 
-            Task { @MainActor in
-                if let output = String(data: data, encoding: .utf8) {
-                    guard let callback = self.streamingCallback else { return }
-                    callback.call(withArguments: ["stdout", output])
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                guard let callback = self.streamingCallback, !callback.isUndefined else { return }
 
-                    // Check for JavaScript errors
-                    if let context = callback.context,
-                       let exception = context.exception,
-                       !exception.isUndefined {
-                        AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
-                        context.exception = nil
-                    }
+                // Check if context is still valid before calling
+                guard let context = callback.context else { return }
+
+                callback.call(withArguments: ["stdout", output])
+
+                // Check for JavaScript errors
+                if let exception = context.exception,
+                   !exception.isUndefined {
+                    AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
+                    context.exception = nil
                 }
             }
         }
@@ -312,19 +325,22 @@ import JavaScriptCoreExtras
 
             let data = handle.availableData
             guard !data.isEmpty else { return }
+            guard let output = String(data: data, encoding: .utf8) else { return }
 
-            Task { @MainActor in
-                if let output = String(data: data, encoding: .utf8) {
-                    guard let callback = self.streamingCallback else { return }
-                    callback.call(withArguments: ["stderr", output])
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                guard let callback = self.streamingCallback, !callback.isUndefined else { return }
 
-                    // Check for JavaScript errors
-                    if let context = callback.context,
-                       let exception = context.exception,
-                       !exception.isUndefined {
-                        AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
-                        context.exception = nil
-                    }
+                // Check if context is still valid before calling
+                guard let context = callback.context else { return }
+
+                callback.call(withArguments: ["stderr", output])
+
+                // Check for JavaScript errors
+                if let exception = context.exception,
+                   !exception.isUndefined {
+                    AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
+                    context.exception = nil
                 }
             }
         }

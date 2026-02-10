@@ -44,20 +44,19 @@
             }
 
             // Create streaming callback that accumulates output
-            if (onOutput || !onOutput) {
-                streamCallback = function(stream, data) {
-                    if (stream === 'stdout') {
-                        stdout += data;
-                    } else if (stream === 'stderr') {
-                        stderr += data;
-                    }
+            // Always create this to capture stdout/stderr for the promise result
+            streamCallback = function(stream, data) {
+                if (stream === 'stdout') {
+                    stdout += data;
+                } else if (stream === 'stderr') {
+                    stderr += data;
+                }
 
-                    // Call user's onOutput callback if provided
-                    if (onOutput) {
-                        onOutput(stream, data);
-                    }
-                };
-            }
+                // Call user's onOutput callback if provided
+                if (onOutput) {
+                    onOutput(stream, data);
+                }
+            };
 
             // Create termination callback
             const terminationCallback = function(exitCode, reason) {
