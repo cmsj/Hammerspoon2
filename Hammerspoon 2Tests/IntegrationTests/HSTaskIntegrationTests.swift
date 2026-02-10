@@ -51,13 +51,13 @@ import JavaScriptCore
         harness.expectTrue("typeof t.sendInput === 'function'")
         harness.expectTrue("typeof t.closeInput === 'function'")
 
-        // State query methods
-        harness.expectTrue("typeof t.terminationStatus === 'function'")
-        harness.expectTrue("typeof t.terminationReason === 'function'")
-
         // Properties
         harness.expectTrue("typeof t.isRunning === 'boolean'")
         harness.expectTrue("typeof t.pid === 'number'")
+
+        // State properties (can be null/undefined initially)
+        harness.expectTrue("t.terminationStatus == null || typeof t.terminationStatus === 'number'")
+        harness.expectTrue("t.terminationReason == null || typeof t.terminationReason === 'string'")
     }
 
     // MARK: - Task Execution Tests
@@ -233,17 +233,17 @@ import JavaScriptCore
         });
         """)
 
-        // Before termination
-        harness.expectTrue("task.terminationStatus() === null")
+        // Before termination (can be null or undefined)
+        harness.expectTrue("task.terminationStatus == null")
 
         // Start and wait
         harness.eval("task.start()")
         let success = await harness.waitForAsync(timeout: 2.0) { taskCompleted }
         #expect(success, "Task should complete")
 
-        // After termination
-        try? await Task.sleep(for: .seconds(0.1))
-        harness.expectEqual("task.terminationStatus()", 42)
+        // After termination - give extra time for MainActor tasks to complete
+        try? await Task.sleep(for: .seconds(0.2))
+        harness.expectEqual("task.terminationStatus", 42)
     }
 
     @Test("terminationReason returns exit for normal termination")
@@ -267,7 +267,7 @@ import JavaScriptCore
         #expect(success, "Task should complete")
 
         try? await Task.sleep(for: .seconds(0.1))
-        harness.expectEqual("task.terminationReason()", "exit")
+        harness.expectEqual("task.terminationReason", "exit")
     }
 
     // MARK: - Signal Control Tests
@@ -300,7 +300,7 @@ import JavaScriptCore
     }
 
     @Test("pause and resume control task execution")
-    func testPauseResume() {
+    func testPauseResume() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -318,13 +318,13 @@ import JavaScriptCore
         task.start();
         """)
 
-        Thread.sleep(forTimeInterval: 0.15)
+        try? await Task.sleep(for: .seconds(0.15))
 
         // Pause the task
         harness.eval("task.pause()")
         let countWhilePaused = harness.eval("outputCount") as? Int ?? -1
 
-        Thread.sleep(forTimeInterval: 0.25)
+        try? await Task.sleep(for: .seconds(0.25))
 
         // Count should not increase much while paused
         let countAfterPause = harness.eval("outputCount") as? Int ?? -1
@@ -332,7 +332,7 @@ import JavaScriptCore
 
         // Resume the task
         harness.eval("task.resume()")
-        Thread.sleep(forTimeInterval: 0.3)
+        try? await Task.sleep(for: .seconds(0.3))
 
         // Count should increase after resume
         let countAfterResume = harness.eval("outputCount") as? Int ?? -1
@@ -340,7 +340,7 @@ import JavaScriptCore
 
         // Cleanup
         harness.eval("if (task.isRunning) task.terminate()")
-        Thread.sleep(forTimeInterval: 0.1)
+        try? await Task.sleep(for: .seconds(0.1))
     }
 
     // MARK: - stdin Tests
@@ -752,10 +752,16 @@ import JavaScriptCore
         harness.loadModule(HSTaskModule.self, as: "task")
 
         var promiseResolved = false
+        var promiseRejected = false
         var capturedOutput = ""
+        var errorMessage = ""
         harness.registerCallback("onResolve") { (stdout: String) in
             promiseResolved = true
             capturedOutput = stdout
+        }
+        harness.registerCallback("onReject") { (msg: String) in
+            promiseRejected = true
+            errorMessage = msg
         }
 
         harness.eval("""
@@ -764,11 +770,15 @@ import JavaScriptCore
             .run()
             .then(function(result) {
                 onResolve(result.stdout);
+            })
+            .catch(function(error) {
+                onReject(JSON.stringify(error));
             });
         """)
 
-        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
-        #expect(success, "Builder task should complete")
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved || promiseRejected }
+        #expect(success, "Builder task should complete or reject")
+        #expect(!promiseRejected, "Promise should not be rejected. Error: \(errorMessage)")
         #expect(capturedOutput.contains("arg1 arg2 arg3"), "Should pass all arguments")
     }
 
@@ -813,7 +823,7 @@ import JavaScriptCore
 
         harness.eval("""
         hs.task.builder('/bin/pwd')
-            .inDirectory('/tmp')
+            .inDirectory('/private/tmp')
             .run()
             .then(function(result) {
                 onResolve(result.stdout);
@@ -822,7 +832,7 @@ import JavaScriptCore
 
         let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Builder task should complete")
-        #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/tmp", "Should use builder working directory")
+        #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/private/tmp", "Should use builder working directory")
     }
 
     @Test("TaskBuilder.onOutput() sets streaming callback")
@@ -1002,9 +1012,9 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
-        var linesReceived = 0
-        harness.registerCallback("onLine") {
-            linesReceived += 1
+        var allOutput = ""
+        harness.registerCallback("onOutput") { (output: String) in
+            allOutput += output
         }
 
         harness.eval("""
@@ -1014,7 +1024,7 @@ import JavaScriptCore
             null,
             null,
             function(stream, data) {
-                __test_callback('onLine');
+                onOutput(data);
             }
         );
         interactiveTask.start();
@@ -1023,8 +1033,17 @@ import JavaScriptCore
         interactiveTask.sendInput('Third line\\n');
         """)
 
-        let success = await harness.waitForAsync(timeout: 2.0) { linesReceived >= 3 }
-        #expect(success, "Should receive all sent lines, not \(linesReceived)")
+        // Wait for all output to be received
+        let success = await harness.waitForAsync(timeout: 2.0) {
+            allOutput.contains("First line") &&
+            allOutput.contains("Second line") &&
+            allOutput.contains("Third line")
+        }
+        #expect(success, "Should receive all three lines")
+
+        // Verify we got all three lines
+        let lines = allOutput.split(separator: "\n").filter { !$0.isEmpty }
+        #expect(lines.count >= 3, "Should have at least 3 lines of output")
 
         harness.eval("interactiveTask.closeInput()")
         try? await Task.sleep(for: .seconds(0.2))

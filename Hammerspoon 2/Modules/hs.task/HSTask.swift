@@ -56,13 +56,13 @@ import JavaScriptCoreExtras
     /// - Note: Can only be modified before calling start()
     @objc var workingDirectory: String? { get set }
 
-    /// Get the termination status of the task
-    /// - Returns: The exit code, or nil if the task hasn't terminated
-    @objc func terminationStatus() -> NSNumber?
+    /// The termination status of the task
+    /// - Note: Returns the exit code, or nil if the task hasn't terminated
+    @objc var terminationStatus: NSNumber? { get }
 
-    /// Get the termination reason
-    /// - Returns: A string describing why the task terminated, or nil if still running
-    @objc func terminationReason() -> String?
+    /// The termination reason
+    /// - Note: Returns a string describing why the task terminated, or nil if still running
+    @objc var terminationReason: String? { get }
 
     /// SKIP_DOCS
     @objc func _shutdown()
@@ -271,12 +271,12 @@ import JavaScriptCoreExtras
         }
     }
 
-    @objc func terminationStatus() -> NSNumber? {
+    @objc var terminationStatus: NSNumber? {
         guard let exitCode = exitCode else { return nil }
         return NSNumber(value: exitCode)
     }
 
-    @objc func terminationReason() -> String? {
+    @objc var terminationReason: String? {
         return exitReason
     }
 
