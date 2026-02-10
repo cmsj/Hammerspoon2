@@ -10,7 +10,7 @@ on:
 jobs:
   test:
     name: Run Tests
-    runs-on: macos-latest
+    runs-on: macos-26-large
     timeout-minutes: 30
     permissions:
       contents: read
@@ -24,8 +24,10 @@ jobs:
       - name: Select Xcode version
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+      - name: Show Xcode and macOS version
+        run: |
+          xcodebuild -version
+          sw_vers
 
       - name: Setup Node.js for docs linter
         uses: actions/setup-node@v4
@@ -46,7 +48,10 @@ jobs:
         run: |
           xcodebuild build-for-testing \
             -scheme Development \
-            -destination 'platform=macOS'
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Run tests
         run: |
@@ -55,6 +60,9 @@ jobs:
             -destination 'platform=macOS' \
             -parallel-testing-enabled NO \
             -resultBundlePath TestResults.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
             | tee xcodebuild.log
 
       - name: Publish test results to PR
