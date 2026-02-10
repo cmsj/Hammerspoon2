@@ -63,7 +63,7 @@ struct HSTaskIntegrationTests {
     // MARK: - Task Execution Tests
 
     @Test("Task executes and fires termination callback")
-    func testTaskExecution() {
+    func testTaskExecution() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -81,13 +81,13 @@ struct HSTaskIntegrationTests {
         task.start();
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { callbackFired }
+        let success = await harness.waitForAsync(timeout: 2.0) { callbackFired }
         #expect(success, "Task termination callback should fire")
         #expect(receivedExitCode == 0, "Exit code should be 0 for successful task")
     }
 
     @Test("Task captures stdout via streaming callback")
-    func testStdoutStreaming() {
+    func testStdoutStreaming() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -113,13 +113,13 @@ struct HSTaskIntegrationTests {
         task.start();
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { stdoutReceived }
+        let success = await harness.waitForAsync(timeout: 2.0) { stdoutReceived }
         #expect(success, "Should receive stdout output")
         #expect(capturedOutput.contains("Hello from stdout"), "Output should contain expected text")
     }
 
     @Test("Task captures stderr via streaming callback")
-    func testStderrStreaming() {
+    func testStderrStreaming() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -145,7 +145,7 @@ struct HSTaskIntegrationTests {
         task.start();
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { stderrReceived }
+        let success = await harness.waitForAsync(timeout: 2.0) { stderrReceived }
         #expect(success, "Should receive stderr output")
         #expect(capturedError.contains("Error message"), "Error output should contain expected text")
     }
@@ -153,7 +153,7 @@ struct HSTaskIntegrationTests {
     // MARK: - Task State Tests
 
     @Test("isRunning reflects task state correctly")
-    func testIsRunning() {
+    func testIsRunning() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -179,7 +179,7 @@ struct HSTaskIntegrationTests {
         harness.expectTrue("task.isRunning === true")
 
         // Wait for completion
-        let success = harness.waitFor(timeout: 2.0) { taskCompleted }
+        let success = await harness.waitForAsync(timeout: 2.0) { taskCompleted }
         #expect(success, "Task should complete")
 
         // Should not be running anymore
@@ -218,7 +218,7 @@ struct HSTaskIntegrationTests {
     }
 
     @Test("terminationStatus returns exit code")
-    func testTerminationStatus() {
+    func testTerminationStatus() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -238,7 +238,7 @@ struct HSTaskIntegrationTests {
 
         // Start and wait
         harness.eval("task.start()")
-        let success = harness.waitFor(timeout: 2.0) { taskCompleted }
+        let success = await harness.waitForAsync(timeout: 2.0) { taskCompleted }
         #expect(success, "Task should complete")
 
         // After termination
@@ -247,7 +247,7 @@ struct HSTaskIntegrationTests {
     }
 
     @Test("terminationReason returns exit for normal termination")
-    func testTerminationReason() {
+    func testTerminationReason() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -263,7 +263,7 @@ struct HSTaskIntegrationTests {
         task.start();
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { taskCompleted }
+        let success = await harness.waitForAsync(timeout: 2.0) { taskCompleted }
         #expect(success, "Task should complete")
 
         Thread.sleep(forTimeInterval: 0.1)
@@ -273,7 +273,7 @@ struct HSTaskIntegrationTests {
     // MARK: - Signal Control Tests
 
     @Test("terminate stops a running task")
-    func testTerminate() {
+    func testTerminate() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -295,7 +295,7 @@ struct HSTaskIntegrationTests {
         // Terminate the task
         harness.eval("task.terminate()")
 
-        let success = harness.waitFor(timeout: 2.0) { taskTerminated }
+        let success = await harness.waitForAsync(timeout: 2.0) { taskTerminated }
         #expect(success, "Task should terminate")
     }
 
@@ -346,7 +346,7 @@ struct HSTaskIntegrationTests {
     // MARK: - stdin Tests
 
     @Test("sendInput writes to task stdin")
-    func testSendInput() {
+    func testSendInput() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -371,7 +371,7 @@ struct HSTaskIntegrationTests {
         task.sendInput('Hello stdin\\n');
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { echoReceived }
+        let success = await harness.waitForAsync(timeout: 2.0) { echoReceived }
         #expect(success, "Should receive echoed input")
         #expect(echoedText.contains("Hello stdin"), "Echoed text should match input")
 
@@ -381,7 +381,7 @@ struct HSTaskIntegrationTests {
     }
 
     @Test("closeInput closes stdin and signals EOF")
-    func testCloseInput() {
+    func testCloseInput() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -404,14 +404,14 @@ struct HSTaskIntegrationTests {
         // Close stdin - cat should exit
         harness.eval("task.closeInput()")
 
-        let success = harness.waitFor(timeout: 2.0) { taskExited }
+        let success = await harness.waitForAsync(timeout: 2.0) { taskExited }
         #expect(success, "Task should exit after stdin closes")
     }
 
     // MARK: - Environment and Working Directory Tests
 
     @Test("Task respects custom environment variables")
-    func testEnvironmentVariables() {
+    func testEnvironmentVariables() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -435,13 +435,13 @@ struct HSTaskIntegrationTests {
         task.start();
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { outputReceived }
+        let success = await harness.waitForAsync(timeout: 2.0) { outputReceived }
         #expect(success, "Should receive output")
         #expect(capturedOutput.contains("CustomValue123"), "Should see custom environment variable value")
     }
 
     @Test("Task respects custom working directory")
-    func testWorkingDirectory() {
+    func testWorkingDirectory() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -466,7 +466,7 @@ struct HSTaskIntegrationTests {
         task.start();
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { outputReceived }
+        let success = await harness.waitForAsync(timeout: 2.0) { outputReceived }
         #expect(success, "Should receive output")
         #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/tmp", "Working directory should be /tmp")
     }
@@ -515,7 +515,7 @@ struct HSTaskIntegrationTests {
     }
 
     @Test("hs.task.run() returns Promise with stdout/stderr/exitCode")
-    func testRunReturnsPromise() {
+    func testRunReturnsPromise() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -537,14 +537,14 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Promise should resolve")
         #expect(capturedStdout.contains("Hello async"), "Should capture stdout")
         #expect(capturedExitCode == 0, "Exit code should be 0")
     }
 
     @Test("hs.task.run() rejects on non-zero exit code")
-    func testRunRejectsOnFailure() {
+    func testRunRejectsOnFailure() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -561,13 +561,13 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseRejected }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseRejected }
         #expect(success, "Promise should reject on failure")
         #expect(capturedExitCode == 5, "Should capture non-zero exit code")
     }
 
     @Test("hs.task.run() supports onOutput streaming callback")
-    func testRunOnOutput() {
+    func testRunOnOutput() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -586,13 +586,13 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { streamingFired }
+        let success = await harness.waitForAsync(timeout: 2.0) { streamingFired }
         #expect(success, "Streaming callback should fire")
         #expect(streamedData.contains("Streaming test"), "Should stream output")
     }
 
     @Test("hs.task.run() supports workingDirectory option")
-    func testRunWorkingDirectory() {
+    func testRunWorkingDirectory() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -611,13 +611,13 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Promise should resolve")
         #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/tmp", "Should use custom working directory")
     }
 
     @Test("hs.task.run() supports environment option")
-    func testRunEnvironment() {
+    func testRunEnvironment() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -636,7 +636,7 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Promise should resolve")
         #expect(capturedEnv.contains("test123"), "Should use custom environment")
     }
@@ -652,7 +652,7 @@ struct HSTaskIntegrationTests {
     }
 
     @Test("hs.task.shell() executes shell commands")
-    func testShell() {
+    func testShell() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -669,13 +669,13 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Shell command should complete")
         #expect(capturedOutput.contains("Shell command test"), "Should execute shell command")
     }
 
     @Test("hs.task.parallel() runs tasks concurrently")
-    func testParallel() {
+    func testParallel() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -696,13 +696,13 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Parallel tasks should complete")
         #expect(resultsCount == 3, "Should return 3 results")
     }
 
     @Test("hs.task.sequence() runs tasks sequentially")
-    func testSequence() {
+    func testSequence() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -723,7 +723,7 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Sequential tasks should complete")
         #expect(resultsCount == 3, "Should return 3 results")
     }
@@ -747,7 +747,7 @@ struct HSTaskIntegrationTests {
     }
 
     @Test("TaskBuilder.withArgs() adds arguments")
-    func testBuilderWithArgs() {
+    func testBuilderWithArgs() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -767,13 +767,13 @@ struct HSTaskIntegrationTests {
             });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Builder task should complete")
         #expect(capturedOutput.contains("arg1 arg2 arg3"), "Should pass all arguments")
     }
 
     @Test("TaskBuilder.withEnvironment() sets environment")
-    func testBuilderWithEnvironment() {
+    func testBuilderWithEnvironment() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -794,13 +794,13 @@ struct HSTaskIntegrationTests {
             });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Builder task should complete")
         #expect(capturedEnv.contains("builder_test"), "Should use builder environment")
     }
 
     @Test("TaskBuilder.inDirectory() sets working directory")
-    func testBuilderInDirectory() {
+    func testBuilderInDirectory() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -820,13 +820,13 @@ struct HSTaskIntegrationTests {
             });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Builder task should complete")
         #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/tmp", "Should use builder working directory")
     }
 
     @Test("TaskBuilder.onOutput() sets streaming callback")
-    func testBuilderOnOutput() {
+    func testBuilderOnOutput() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -846,7 +846,7 @@ struct HSTaskIntegrationTests {
             .run();
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { streamingFired }
+        let success = await harness.waitForAsync(timeout: 2.0) { streamingFired }
         #expect(success, "Builder streaming should fire")
         #expect(streamedData.contains("builder output test"), "Should stream builder output")
     }
@@ -872,7 +872,7 @@ struct HSTaskIntegrationTests {
     }
 
     @Test("TaskBuilder supports method chaining")
-    func testBuilderChaining() {
+    func testBuilderChaining() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -893,14 +893,14 @@ struct HSTaskIntegrationTests {
             });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Chained builder should complete")
     }
 
     // MARK: - Real-World Use Case Tests
 
     @Test("Command pipeline pattern works")
-    func testCommandPipeline() {
+    func testCommandPipeline() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -925,13 +925,13 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { pipelineComplete }
+        let success = await harness.waitForAsync(timeout: 2.0) { pipelineComplete }
         #expect(success, "Pipeline should complete")
         #expect(resultCount == 3, "All pipeline steps should execute")
     }
 
     @Test("Background task monitoring pattern works")
-    func testBackgroundMonitoring() {
+    func testBackgroundMonitoring() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -955,13 +955,13 @@ struct HSTaskIntegrationTests {
         monitoredTask.start();
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { outputLines >= 3 }
+        let success = await harness.waitForAsync(timeout: 2.0) { outputLines >= 3 }
         #expect(success, "Should monitor background task output")
         #expect(outputLines >= 3, "Should capture all output lines")
     }
 
     @Test("Error handling pattern with retries works")
-    func testErrorHandlingWithRetries() {
+    func testErrorHandlingWithRetries() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -992,13 +992,13 @@ struct HSTaskIntegrationTests {
         runWithRetry();
         """)
 
-        let success = harness.waitFor(timeout: 3.0) { finalResult }
+        let success = await harness.waitForAsync(timeout: 3.0) { finalResult }
         #expect(success, "Retry pattern should complete")
         #expect(attemptCount == 3, "Should retry specified number of times")
     }
 
     @Test("Interactive input pattern works")
-    func testInteractiveInput() {
+    func testInteractiveInput() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -1023,7 +1023,7 @@ struct HSTaskIntegrationTests {
         interactiveTask.sendInput('Third line\\n');
         """)
 
-        let success = harness.waitFor(timeout: 2.0) { linesReceived >= 3 }
+        let success = await harness.waitForAsync(timeout: 2.0) { linesReceived >= 3 }
         #expect(success, "Should receive all sent lines")
 
         harness.eval("interactiveTask.closeInput()")
@@ -1031,7 +1031,7 @@ struct HSTaskIntegrationTests {
     }
 
     @Test("Timeout pattern with task termination works")
-    func testTimeoutPattern() {
+    func testTimeoutPattern() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
         harness.loadModule(HSTimerModule.self, as: "timer")
@@ -1053,7 +1053,7 @@ struct HSTaskIntegrationTests {
         });
         """)
 
-        let success = harness.waitFor(timeout: 1.0) { timeoutFired }
+        let success = await harness.waitForAsync(timeout: 1.0) { timeoutFired }
         #expect(success, "Timeout should fire and terminate task")
     }
 }

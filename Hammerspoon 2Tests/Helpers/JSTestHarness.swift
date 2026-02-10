@@ -212,6 +212,27 @@ class JSTestHarness {
         return false
     }
 
+    /// Async wait for a condition to be true (with timeout) - supports MainActor tasks
+    /// - Parameters:
+    ///   - timeout: Maximum time to wait in seconds
+    ///   - condition: Closure that returns true when the condition is met
+    /// - Returns: True if condition was met, false if timeout occurred
+    @discardableResult
+    func waitForAsync(timeout: TimeInterval = 2.0, condition: @escaping () -> Bool) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        while Date() < deadline {
+            // Use Task.sleep to properly yield and allow MainActor tasks to execute
+            try? await Task.sleep(for: .milliseconds(10))
+
+            if condition() {
+                return true
+            }
+        }
+
+        return false
+    }
+
     // MARK: - Assertions
 
     /// Assert that a JavaScript expression evaluates to true
