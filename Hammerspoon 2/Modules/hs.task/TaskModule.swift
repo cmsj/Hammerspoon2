@@ -27,6 +27,27 @@ import JavaScriptCoreExtras
 
 // MARK: - Implementation
 
+// Actor to safely track active tasks across threads
+private actor TaskTracker {
+    private var activeTasks = Set<ObjectIdentifier>()
+
+    func register(_ task: HSTask) {
+        activeTasks.insert(ObjectIdentifier(task))
+    }
+
+    func unregister(_ task: HSTask) {
+        activeTasks.remove(ObjectIdentifier(task))
+    }
+
+    func count() -> Int {
+        return activeTasks.count
+    }
+
+    func clear() {
+        activeTasks.removeAll()
+    }
+}
+
 @_documentation(visibility: private)
 @objc class HSTaskModule: NSObject, HSModuleAPI, HSTaskModuleAPI {
     var name = "hs.task"
@@ -35,6 +56,9 @@ import JavaScriptCoreExtras
     // Uses weak references to allow JavaScript garbage collection
     // Running tasks stay alive via their Process termination handler closure
     private var tasks = NSHashTable<HSTask>.weakObjects()
+
+    // Track active tasks for testing purposes (thread-safe via actor)
+    private let taskTracker = TaskTracker()
 
     // MARK: - Module lifecycle
     override required init() { super.init() }
@@ -45,10 +69,45 @@ import JavaScriptCoreExtras
             task._shutdown()
         }
         tasks.removeAllObjects()
+
+        Task {
+            await taskTracker.clear()
+        }
     }
 
     deinit {
         print("Deinit of \(name)")
+    }
+
+    // MARK: - Task Tracking (for testing)
+
+    func registerActiveTask(_ task: HSTask) {
+        Task {
+            await taskTracker.register(task)
+        }
+    }
+
+    func unregisterActiveTask(_ task: HSTask) {
+        Task {
+            await taskTracker.unregister(task)
+        }
+    }
+
+    @MainActor
+    func waitForAllTasksToComplete(timeout: TimeInterval = 5.0) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        while Date() < deadline {
+            let count = await taskTracker.count()
+
+            if count == 0 {
+                return true
+            }
+
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+
+        return false
     }
 
     // MARK: - Task constructors
@@ -65,7 +124,8 @@ import JavaScriptCoreExtras
             arguments: arguments,
             environment: envDict,
             terminationCallback: completionCallback,
-            streamingCallback: streamingCallback
+            streamingCallback: streamingCallback,
+            module: self
         )
 
         tasks.add(task)

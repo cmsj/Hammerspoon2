@@ -44,20 +44,19 @@
             }
 
             // Create streaming callback that accumulates output
-            if (onOutput || !onOutput) {
-                streamCallback = function(stream, data) {
-                    if (stream === 'stdout') {
-                        stdout += data;
-                    } else if (stream === 'stderr') {
-                        stderr += data;
-                    }
+            // Always create this to capture stdout/stderr for the promise result
+            streamCallback = function(stream, data) {
+                if (stream === 'stdout') {
+                    stdout += data;
+                } else if (stream === 'stderr') {
+                    stderr += data;
+                }
 
-                    // Call user's onOutput callback if provided
-                    if (onOutput) {
-                        onOutput(stream, data);
-                    }
-                };
-            }
+                // Call user's onOutput callback if provided
+                if (onOutput) {
+                    onOutput(stream, data);
+                }
+            };
 
             // Create termination callback
             const terminationCallback = function(exitCode, reason) {
@@ -77,10 +76,10 @@
             };
 
             // Create and start the task
-            const task = hs.task.new.call(hs.task, launchPath, args, environment, terminationCallback, streamCallback);
+            const task = hs.task.new.call(hs.task, launchPath, args, terminationCallback, environment, streamCallback);
 
             if (workingDirectory) {
-                task.setWorkingDirectory(workingDirectory);
+                task.workingDirectory = workingDirectory;
             }
 
             task.start();
@@ -212,10 +211,10 @@
                 streamCallback = this.outputCallback;
             }
 
-            const task = hs.task.new.call(hs.task, this.launchPath, this.args, this.env, null, streamCallback);
+            const task = hs.task.new.call(hs.task, this.launchPath, this.args, null, this.env, streamCallback);
 
             if (this.cwd) {
-                task.setWorkingDirectory(this.cwd);
+                task.workingDirectory = this.cwd;
             }
 
             return task;

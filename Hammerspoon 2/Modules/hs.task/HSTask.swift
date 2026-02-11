@@ -56,13 +56,13 @@ import JavaScriptCoreExtras
     /// - Note: Can only be modified before calling start()
     @objc var workingDirectory: String? { get set }
 
-    /// Get the termination status of the task
-    /// - Returns: The exit code, or nil if the task hasn't terminated
-    @objc func terminationStatus() -> NSNumber?
+    /// The termination status of the task
+    /// - Note: Returns the exit code, or nil if the task hasn't terminated
+    @objc var terminationStatus: NSNumber? { get }
 
-    /// Get the termination reason
-    /// - Returns: A string describing why the task terminated, or nil if still running
-    @objc func terminationReason() -> String?
+    /// The termination reason
+    /// - Note: Returns a string describing why the task terminated, or nil if still running
+    @objc var terminationReason: String? { get }
 
     /// SKIP_DOCS
     @objc func _shutdown()
@@ -87,6 +87,9 @@ import JavaScriptCoreExtras
     private var hasStarted = false
     private var exitCode: Int32?
     private var exitReason: String?
+
+    // Reference to module for task tracking
+    private weak var module: HSTaskModule?
 
     /// The environment variables for the task
     @objc var environment: [String: String] {
@@ -120,12 +123,13 @@ import JavaScriptCoreExtras
         return process?.isRunning ?? false
     }
 
-    init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSValue?, streamingCallback: JSValue?) {
+    init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSValue?, streamingCallback: JSValue?, module: HSTaskModule?) {
         self.launchPath = launchPath
         self.arguments = arguments
         self._environment = environment ?? ProcessInfo.processInfo.environment
         self.terminationCallback = terminationCallback
         self.streamingCallback = streamingCallback
+        self.module = module
         super.init()
     }
 
@@ -143,6 +147,9 @@ import JavaScriptCoreExtras
         }
 
         hasStarted = true
+
+        // Register this task as active
+        module?.registerActiveTask(self)
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: launchPath)
@@ -176,22 +183,39 @@ import JavaScriptCoreExtras
         process.terminationHandler = { [weak self] process in
             guard let self = self else { return }
 
-            Task { @MainActor in
-                self.exitCode = process.terminationStatus
-                self.exitReason = self.getTerminationReasonString(process.terminationReason)
+            // Store exit code before dispatching
+            let exitCode = process.terminationStatus
+            let terminationReason = process.terminationReason
+
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+
+                // Compute exit reason and update state
+                let exitReason = self.getTerminationReasonString(terminationReason)
+                self.exitCode = exitCode
+                self.exitReason = exitReason
 
                 // Call termination callback if provided
-                if let callback = self.terminationCallback, callback.isFunction {
-                    callback.call(withArguments: [process.terminationStatus, self.exitReason ?? "unknown"])
+                if let callback = self.terminationCallback, callback.isFunction, !callback.isUndefined {
+                    // Check if context is still valid before calling
+                    guard let context = callback.context else {
+                        // Unregister task if callback context is gone
+                        self.module?.unregisterActiveTask(self)
+                        return
+                    }
+
+                    callback.call(withArguments: [exitCode, exitReason ?? "unknown"])
 
                     // Check for JavaScript errors
-                    if let context = callback.context,
-                       let exception = context.exception,
+                    if let exception = context.exception,
                        !exception.isUndefined {
                         AKError("hs.task: Error in termination callback: \(exception.toString() ?? "unknown error")")
                         context.exception = nil
                     }
                 }
+
+                // Unregister task after all callbacks complete
+                self.module?.unregisterActiveTask(self)
             }
         }
 
@@ -200,6 +224,8 @@ import JavaScriptCoreExtras
             try process.run()
         } catch {
             AKError("hs.task:start(): Failed to start task: \(error.localizedDescription)")
+            // Unregister if we failed to start
+            module?.unregisterActiveTask(self)
         }
 
         return self
@@ -271,12 +297,12 @@ import JavaScriptCoreExtras
         }
     }
 
-    @objc func terminationStatus() -> NSNumber? {
+    @objc var terminationStatus: NSNumber? {
         guard let exitCode = exitCode else { return nil }
         return NSNumber(value: exitCode)
     }
 
-    @objc func terminationReason() -> String? {
+    @objc var terminationReason: String? {
         return exitReason
     }
 
@@ -289,19 +315,22 @@ import JavaScriptCoreExtras
 
             let data = handle.availableData
             guard !data.isEmpty else { return }
+            guard let output = String(data: data, encoding: .utf8) else { return }
 
-            if let output = String(data: data, encoding: .utf8) {
-                Task { @MainActor in
-                    guard let callback = self.streamingCallback else { return }
-                    callback.call(withArguments: ["stdout", output])
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                guard let callback = self.streamingCallback, !callback.isUndefined else { return }
 
-                    // Check for JavaScript errors
-                    if let context = callback.context,
-                       let exception = context.exception,
-                       !exception.isUndefined {
-                        AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
-                        context.exception = nil
-                    }
+                // Check if context is still valid before calling
+                guard let context = callback.context else { return }
+
+                callback.call(withArguments: ["stdout", output])
+
+                // Check for JavaScript errors
+                if let exception = context.exception,
+                   !exception.isUndefined {
+                    AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
+                    context.exception = nil
                 }
             }
         }
@@ -312,19 +341,22 @@ import JavaScriptCoreExtras
 
             let data = handle.availableData
             guard !data.isEmpty else { return }
+            guard let output = String(data: data, encoding: .utf8) else { return }
 
-            if let output = String(data: data, encoding: .utf8) {
-                Task { @MainActor in
-                    guard let callback = self.streamingCallback else { return }
-                    callback.call(withArguments: ["stderr", output])
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                guard let callback = self.streamingCallback, !callback.isUndefined else { return }
 
-                    // Check for JavaScript errors
-                    if let context = callback.context,
-                       let exception = context.exception,
-                       !exception.isUndefined {
-                        AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
-                        context.exception = nil
-                    }
+                // Check if context is still valid before calling
+                guard let context = callback.context else { return }
+
+                callback.call(withArguments: ["stderr", output])
+
+                // Check for JavaScript errors
+                if let exception = context.exception,
+                   !exception.isUndefined {
+                    AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
+                    context.exception = nil
                 }
             }
         }
