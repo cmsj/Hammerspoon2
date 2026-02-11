@@ -88,6 +88,9 @@ import JavaScriptCoreExtras
     private var exitCode: Int32?
     private var exitReason: String?
 
+    // Reference to module for task tracking
+    private weak var module: HSTaskModule?
+
     /// The environment variables for the task
     @objc var environment: [String: String] {
         get { _environment }
@@ -120,12 +123,13 @@ import JavaScriptCoreExtras
         return process?.isRunning ?? false
     }
 
-    init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSValue?, streamingCallback: JSValue?) {
+    init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSValue?, streamingCallback: JSValue?, module: HSTaskModule?) {
         self.launchPath = launchPath
         self.arguments = arguments
         self._environment = environment ?? ProcessInfo.processInfo.environment
         self.terminationCallback = terminationCallback
         self.streamingCallback = streamingCallback
+        self.module = module
         super.init()
     }
 
@@ -143,6 +147,9 @@ import JavaScriptCoreExtras
         }
 
         hasStarted = true
+
+        // Register this task as active
+        module?.registerActiveTask(self)
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: launchPath)
@@ -191,7 +198,11 @@ import JavaScriptCoreExtras
                 // Call termination callback if provided
                 if let callback = self.terminationCallback, callback.isFunction, !callback.isUndefined {
                     // Check if context is still valid before calling
-                    guard let context = callback.context else { return }
+                    guard let context = callback.context else {
+                        // Unregister task if callback context is gone
+                        self.module?.unregisterActiveTask(self)
+                        return
+                    }
 
                     callback.call(withArguments: [exitCode, exitReason ?? "unknown"])
 
@@ -202,6 +213,9 @@ import JavaScriptCoreExtras
                         context.exception = nil
                     }
                 }
+
+                // Unregister task after all callbacks complete
+                self.module?.unregisterActiveTask(self)
             }
         }
 
@@ -210,6 +224,8 @@ import JavaScriptCoreExtras
             try process.run()
         } catch {
             AKError("hs.task:start(): Failed to start task: \(error.localizedDescription)")
+            // Unregister if we failed to start
+            module?.unregisterActiveTask(self)
         }
 
         return self

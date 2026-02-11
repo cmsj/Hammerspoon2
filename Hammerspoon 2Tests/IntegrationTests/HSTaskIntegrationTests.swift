@@ -788,6 +788,9 @@ import JavaScriptCore
         #expect(promiseResolved, "PRomise should be resolved")
         #expect(!promiseRejected, "Promise should not be rejected. Error: \(errorMessage)")
         #expect(capturedOutput.contains("arg1 arg2 arg3"), "Should pass all arguments")
+
+        // Ensure all tasks complete before test ends
+        await harness.cleanup()
     }
 
     @Test("TaskBuilder.withEnvironment() sets environment")

@@ -33,6 +33,9 @@ class JSTestHarness {
     /// Callback storage for async testing
     private var callbacks: [String: () -> Void] = [:]
 
+    /// Track loaded task module for cleanup
+    private var taskModule: HSTaskModule?
+
     init() {
         vm = JSVirtualMachine()
         context = JSContext(virtualMachine: vm)!
@@ -70,10 +73,27 @@ class JSTestHarness {
     /// This prevents interference between tests
     @MainActor
     static func drainMainActorQueue() async {
-        // Yield to allow any pending MainActor tasks to execute
-        for _ in 0..<5 {
+        // Optimized draining - less aggressive but still effective
+        for _ in 0..<3 {
             await Task.yield()
-            try? await Task.sleep(for: .milliseconds(100))
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+    }
+
+    /// Clean up after a test - wait for all tasks and drain queue
+    /// This is the key to 100% reliable tests
+    @MainActor
+    func cleanup() async {
+        // First wait for all tasks in this harness to complete
+        let success = await waitForTasksToComplete(timeout: 5.0)
+        if !success {
+            print("⚠️ Warning: Tasks did not complete within timeout")
+        }
+
+        // Then do a final drain to catch any lingering MainActor work
+        for _ in 0..<3 {
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(50))
         }
     }
 
@@ -85,6 +105,11 @@ class JSTestHarness {
     ///   - name: The JavaScript property name (without 'hs.' prefix)
     func loadModule<T: HSModuleAPI>(_ moduleType: T.Type, as name: String) {
         let module = moduleType.init()
+
+        // Track task module for cleanup
+        if name == "task", let taskMod = module as? HSTaskModule {
+            self.taskModule = taskMod
+        }
 
         // Get the hs object and set the module as a property
         guard let hs = context.objectForKeyedSubscript("hs") else {
@@ -112,6 +137,14 @@ class JSTestHarness {
                 }
             }
         }
+    }
+
+    /// Wait for all tasks in this harness to complete
+    /// Call this at the end of tests that create tasks to ensure cleanup
+    @MainActor
+    func waitForTasksToComplete(timeout: TimeInterval = 5.0) async -> Bool {
+        guard let module = taskModule else { return true }
+        return await module.waitForAllTasksToComplete(timeout: timeout)
     }
 
     /// Load the full ModuleRoot as 'hs' (mimics real environment)
