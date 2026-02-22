@@ -25,6 +25,7 @@ import JavaScriptCoreExtras
     @objc var permissions: HSPermissionsModule { get }
     @objc var task: HSTaskModule { get }
     @objc var timer: HSTimerModule { get }
+    @objc var ui: HSUIModule { get }
     @objc var window: HSWindowModule { get }
 }
 
@@ -79,6 +80,7 @@ import JavaScriptCoreExtras
     @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
     @objc var task: HSTaskModule { get { getOrCreate(name: "task", type: HSTaskModule.self)}}
     @objc var timer: HSTimerModule { get { getOrCreate(name: "timer", type: HSTimerModule.self)}}
+    @objc var ui: HSUIModule { get { getOrCreate(name: "ui", type: HSUIModule.self)}}
     @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
 }
 

@@ -35,6 +35,16 @@ class JSEngine {
         id = UUID()
         context.name = "Hammerspoon \(id)"
 
+        // Set up exception handler to catch JavaScript errors
+        context.exceptionHandler = { context, exception in
+            if let exception = exception {
+                AKError("JavaScript Exception: \(exception.toString() ?? "unknown")")
+                if let stack = exception.objectForKeyedSubscript("stack") {
+                    AKError("Stack trace: \(stack)")
+                }
+            }
+        }
+
         // This is our startup sequence - install all components in order
         do {
             try context.install([

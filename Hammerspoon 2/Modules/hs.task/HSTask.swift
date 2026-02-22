@@ -204,7 +204,7 @@ import JavaScriptCoreExtras
                         return
                     }
 
-                    callback.call(withArguments: [exitCode, exitReason ?? "unknown"])
+                    callback.call(withArguments: [exitCode, exitReason])
 
                     // Check for JavaScript errors
                     if let exception = context.exception,
