@@ -10,24 +10,186 @@
  * This is a JavaScript object used to represent macOS fonts. It includes a variety of static methods that can instantiate the various font sizes commonly used with UI elements, and also includes static methods for instantiating the system font at various sizes/weights, or any custom font available on the system.
  */
 declare class HSFont {
+    /**
+     * Body text style
+     * @returns An HSFont object
+     */
+    static body(): HSFont;
+
+    /**
+     * Callout text style
+     * @returns An HSFont object
+     */
+    static callout(): HSFont;
+
+    /**
+     * Caption text style
+     * @returns An HSFont object
+     */
+    static caption(): HSFont;
+
+    /**
+     * Caption2 text style
+     * @returns An HSFont object
+     */
+    static caption2(): HSFont;
+
+    /**
+     * Footnote text style
+     * @returns An HSFont object
+     */
+    static footnote(): HSFont;
+
+    /**
+     * Headline text style
+     * @returns An HSFont object
+     */
+    static headline(): HSFont;
+
+    /**
+     * Large Title text style
+     * @returns An HSFont object
+     */
+    static largeTitle(): HSFont;
+
+    /**
+     * Sub-headline text style
+     * @returns An HSFont object
+     */
+    static subheadline(): HSFont;
+
+    /**
+     * Title text style
+     * @returns An HSFont object
+     */
+    static title(): HSFont;
+
+    /**
+     * Title2 text style
+     * @returns An HSFont object
+     */
+    static title2(): HSFont;
+
+    /**
+     * Title3 text style
+     * @returns An HSFont object
+     */
+    static title3(): HSFont;
+
+    /**
+     * The system font in a custom size
+     * @param size The font size in points
+     * @returns An HSFont object
+     */
+    static system(size: number): HSFont;
+
+    /**
+     * The system font in a custom size with a choice of weights
+     * @param size The font size in points
+     * @param weight The font weight as a string (e.g. "ultralight", "thin", "light", "regular", "medium", "semibold", "bold", "heavy", "black")
+     * @returns An HSFont object
+     */
+    static system(size: number, weight: string): HSFont;
+
+    /**
+     * A font present on the system at a given size
+     * @param name A string containing the name of the font to instantiate
+     * @param size The font size in points
+     * @returns An HSFont object
+     */
+    static custom(name: string, size: number): HSFont;
+
 }
 
 /**
  * This is a JavaScript object used to represent coordinates, or "points", as used in various places throughout Hammerspoon's API, particularly where dealing with positions on a screen. Behind the scenes it is a wrapper for the CGPoint type in Swift/ObjectiveC.
  */
 declare class HSPoint {
+    /**
+     * Create a new HSPoint object
+     * @param x A coordinate for this point on the x-axis
+     * @param y A coordinate for this point on the y-axis
+     */
+    constructor(x: number, y: number);
+
+    /**
+     * A coordinate for the x-axis position of this point
+     */
+    x: number;
+
+    /**
+     * A coordinate for the y-axis position of this point
+     */
+    y: number;
+
 }
 
 /**
  * This is a JavaScript object used to represent a rectangle, as used in various places throughout Hammerspoon's API, particularly where dealing with portions of a display. Behind the scenes it is a wrapper for the CGRect type in Swift/ObjectiveC.
  */
 declare class HSRect {
+    /**
+     * Create a new HSRect object
+     * @param x The x-axis coordinate of the top-left corner
+     * @param y The y-axis coordinate of the top-left corner
+     * @param w The width of the rectangle
+     * @param h The height of the rectangle
+     */
+    constructor(x: number, y: number, w: number, h: number);
+
+    /**
+     * An x-axis coordinate for the top-left point of the rectangle
+     */
+    x: number;
+
+    /**
+     * A y-axis coordinate for the top-left point of the rectangle
+     */
+    y: number;
+
+    /**
+     * The width of the rectangle
+     */
+    w: number;
+
+    /**
+     * The height of the rectangle
+     */
+    h: number;
+
+    /**
+     * The "origin" of the rectangle, ie the coordinates of its top left corner, as an HSPoint object
+     */
+    origin: HSPoint;
+
+    /**
+     * The size of the rectangle, ie its width and height, as an HSSize object
+     */
+    size: HSSize;
+
 }
 
 /**
  * This is a JavaScript object used to represent the size of a rectangle, as used in various places throughout Hammerspoon's API, particularly where dealing with portions of a display. Behind the scenes it is a wrapper for the CGSize type in Swift/ObjectiveC.
  */
 declare class HSSize {
+    /**
+     * Create a new HSSize object
+     * @param w The width of the rectangle
+     * @param h The height of the rectangle
+     */
+    constructor(w: number, h: number);
+
+    /**
+     * The width of the rectangle
+     */
+    w: number;
+
+    /**
+     * The height of the rectangle
+     */
+    h: number;
+
 }
 
 // ========================================
@@ -38,30 +200,167 @@ declare class HSSize {
  * These functions are provided to maintain convenience with the console.log() function present in many JavaScript instances.
  */
 declare namespace console {
-}
+    /**
+     * Log a message to the Hammerspoon Log Window
+     * @param message A message to log
+     */
+    function log(message: string): void;
 
-/**
- * Module for accessing information about the Hammerspoon application itself
- */
-declare namespace hs.alert {
-}
+    /**
+     * Log an error to the Hammerspoon Log Window
+     * @param message An error message
+     */
+    function error(message: string): void;
 
-/**
- * An object for use with hs.alert API
- */
-declare class HSAlert {
+    /**
+     * Log a warning to the Hammerspoon Log WIndow
+     * @param message A warning message
+     */
+    function warn(message: string): void;
+
+    /**
+     * Log an informational message to the Hammerspoon Log Window
+     * @param message An informational message
+     */
+    function info(message: string): void;
+
+    /**
+     * Log a debug message to the Hammerspoon Log Window
+     * @param message A debug message
+     */
+    function debug(message: string): void;
+
 }
 
 /**
  * Module for accessing information about the Hammerspoon application itself
  */
 declare namespace hs.appinfo {
+    /**
+     * The application's internal name (e.g., "Hammerspoon 2")
+     */
+    const appName: string;
+
+    /**
+     * The application's display name shown to users
+     */
+    const displayName: string;
+
+    /**
+     * The application's version string (e.g., "2.0.0")
+     */
+    const version: string;
+
+    /**
+     * The application's build number
+     */
+    const build: string;
+
+    /**
+     * The minimum macOS version required to run this application
+     */
+    const minimumOSVersion: string;
+
+    /**
+     * The copyright notice for this application
+     */
+    const copyrightNotice: string;
+
+    /**
+     * The application's bundle identifier (e.g., "com.hammerspoon.Hammerspoon-2")
+     */
+    const bundleIdentifier: string;
+
+    /**
+     * The filesystem path to the application bundle
+     */
+    const bundlePath: string;
+
+    /**
+     * The filesystem path to the application's resource directory
+     */
+    const resourcePath: string;
+
 }
 
 /**
  * Module for interacting with applications
  */
 declare namespace hs.application {
+    /**
+     * Fetch all running applications
+     * @returns An array of all currently running applications
+     */
+    function runningApplications(): HSApplication[];
+
+    /**
+     * Fetch the first running application that matches a name
+     * @param name The applicaiton name to search for
+     * @returns The first matching application, or nil if none matched
+     */
+    function matchingName(name: string): HSApplication | undefined;
+
+    /**
+     * Fetch the first running application that matches a Bundle ID
+     * @param bundleID The identifier to search for
+     * @returns The first matching application, or nil if none matched
+     */
+    function matchingBundleID(bundleID: string): HSApplication | undefined;
+
+    /**
+     * Fetch the running application that matches a POSIX PID
+     * @param pid The PID to search for
+     * @returns The matching application, or nil if none matched
+     */
+    function fromPID(pid: number): HSApplication | undefined;
+
+    /**
+     * Fetch the currently focused application
+     * @returns The matching application, or nil if none matched
+     */
+    function frontmost(): HSApplication | undefined;
+
+    /**
+     * Fetch the application which currently owns the menu bar
+     * @returns The matching application, or nil if none matched
+     */
+    function menuBarOwner(): HSApplication | undefined;
+
+    /**
+     * Fetch the filesystem path for an application
+     * @param bundleID The application bundle identifier to search for (e.g. "com.apple.Safari")
+     * @returns The application's filesystem path, or nil if it was not found
+     */
+    function pathForBundleID(bundleID: string): string | undefined;
+
+    /**
+     * Fetch filesystem paths for an application
+     * @param bundleID The application bundle identifier to search for (e.g. "com.apple.Safari")
+     * @returns An array of strings containing any filesystem paths that were found
+     */
+    function pathsForBundleID(bundleID: string): string[];
+
+    /**
+     * Fetch filesystem path for an application able to open a given file type
+     * @param fileType The file type to search for. This can be a UTType identifier, a MIME type, or a filename extension
+     * @returns The path to an application for the given filetype, or il if none were found
+     */
+    function pathForFileType(fileType: string): string | undefined;
+
+    /**
+     * Fetch filesystem paths for applications able to open a given file type
+     * @param fileType The file type to search for. This can be a UTType identifier, a MIME type, or a filename extension
+     * @returns An array of strings containing the filesystem paths for any applications that were found
+     */
+    function pathsForFileType(fileType: string): string[];
+
+    /**
+     * Launch an application, or give it focus if it's already running
+     * @param bundleID A bundle identifier for the app to launch/focus (e.g. "com.apple.Safari")
+     * @returns A Promise that resolves to true if successful, false otherwise
+     */
+    function launchOrFocus(bundleID: string): Promise<boolean>;
+
     /**
      * Create a watcher for application events
      * @param event The event type to listen for
@@ -82,6 +381,74 @@ declare namespace hs.application {
  * Object representing an application. You should not instantiate this directly in JavaScript, but rather, use the methods from hs.application which will return appropriate HSApplication objects.
  */
 declare class HSApplication {
+    /**
+     * Terminate the application
+     * @returns True if the application was terminated, otherwise false
+     */
+    static kill(): boolean;
+
+    /**
+     * Force-terminate the application
+     * @returns True if the application was force-terminated, otherwise false
+     */
+    static kill9(): boolean;
+
+    /**
+     * The application's HSAXElement object, for use with the hs.ax APIs
+     * @returns An HSAXElement object, or nil if it could not be obtained
+     */
+    static axElement(): HSAXElement | undefined;
+
+    /**
+     * POSIX Process Identifier
+     */
+    pid: number;
+
+    /**
+     * Bundle Identifier (e.g. com.apple.Safari)
+     */
+    bundleID: string | undefined;
+
+    /**
+     * The application's title
+     */
+    title: string | undefined;
+
+    /**
+     * Location of the application on disk
+     */
+    bundlePath: string | undefined;
+
+    /**
+     * Is the application hidden
+     */
+    isHidden: boolean;
+
+    /**
+     * Is the application focused
+     */
+    isActive: boolean;
+
+    /**
+     * The main window of this application, or nil if there is no main window
+     */
+    mainWindow: HSWindow | undefined;
+
+    /**
+     * The focused window of this application, or nil if there is no focused window
+     */
+    focusedWindow: HSWindow | undefined;
+
+    /**
+     * All windows of this application
+     */
+    allWindows: HSWindow[];
+
+    /**
+     * All visible (ie non-hidden) windows of this application
+     */
+    visibleWindows: HSWindow[];
+
 }
 
 /**
@@ -101,6 +468,33 @@ hs.ax.addWatcher(app, "AXWindowCreated", (notification, element) => {
 **Note:** Requires accessibility permissions in System Preferences.
  */
 declare namespace hs.ax {
+    /**
+     * Get the system-wide accessibility element
+     * @returns The system-wide AXElement, or nil if accessibility is not available
+     */
+    function systemWideElement(): HSAXElement | undefined;
+
+    /**
+     * Get the accessibility element for an application
+     * @param element An HSApplication object
+     * @returns The AXElement for the application, or nil if accessibility is not available
+     */
+    function applicationElement(element: HSApplication): HSAXElement | undefined;
+
+    /**
+     * Get the accessibility element for a window
+     * @param window An HSWindow  object
+     * @returns The AXElement for the window, or nil if accessibility is not available
+     */
+    function windowElement(window: HSWindow): HSAXElement | undefined;
+
+    /**
+     * Get the accessibility element at the specific screen position
+     * @param point An HSPoint object containing screen coordinates
+     * @returns The AXElement at that position, or nil if none found
+     */
+    function elementAtPoint(point: HSPoint): HSAXElement | undefined;
+
     /**
      * Add a watcher for application AX events
      * @param application An HSApplication object
@@ -146,48 +540,408 @@ declare namespace hs.ax {
      */
     function printHierarchy(element: any, depth: any): void;
 
+    /**
+     * A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()
+     */
+    const notificationTypes: Record<string, string>;
+
 }
 
 /**
  * Object representing an Accessibility element. You should not instantiate this directly, but rather, use the hs.ax methods to create these as required.
  */
 declare class HSAXElement {
+    /**
+     * The element's children
+     * @returns An array of HSAXElement objects
+     */
+    static children(): HSAXElement[];
+
+    /**
+     * Get a specific child by index
+     * @param index The index to fetch
+     * @returns An HSAXElement object, if a child exists at the given index
+     */
+    static childAtIndex(index: number): HSAXElement | undefined;
+
+    /**
+     * Get all available attribute names
+     * @returns An array of attribute names
+     */
+    static attributeNames(): string[];
+
+    /**
+     * Get the value of a specific attribute
+     * @param attribute The attribute name to fetch the value for
+     * @returns The requested value, or nil if none was found
+     */
+    static attributeValue(attribute: string): any | undefined;
+
+    /**
+     * Set the value of a specific attribute
+     * @param attribute The attribute name to set
+     * @param value The value to set
+     * @returns True if the operation succeeded, otherwise False
+     */
+    static setAttributeValue(attribute: string, value: any): boolean;
+
+    /**
+     * Check if an attribute is settable
+     * @param attribute An attribute name
+     * @returns True if the attribute is settable, otherwise False
+     */
+    static isAttributeSettable(attribute: string): boolean;
+
+    /**
+     * Get all available action names
+     * @returns An array of available action names
+     */
+    static actionNames(): string[];
+
+    /**
+     * Perform a specific action
+     * @param action The action to perform
+     * @returns True if the action succeeded, otherwise False
+     */
+    static performAction(action: string): boolean;
+
+    /**
+     * The element's role (e.g., "AXWindow", "AXButton")
+     */
+    role: string | undefined;
+
+    /**
+     * The element's subrole
+     */
+    subrole: string | undefined;
+
+    /**
+     * The element's title
+     */
+    title: string | undefined;
+
+    /**
+     * The element's value
+     */
+    value: any | undefined;
+
+    /**
+     * The element's description
+     */
+    elementDescription: string | undefined;
+
+    /**
+     * Whether the element is enabled
+     */
+    isEnabled: boolean;
+
+    /**
+     * Whether the element is focused
+     */
+    isFocused: boolean;
+
+    /**
+     * The element's position on screen
+     */
+    position: HSPoint | undefined;
+
+    /**
+     * The element's size
+     */
+    size: HSSize | undefined;
+
+    /**
+     * The element's frame (position and size combined)
+     */
+    frame: HSRect | undefined;
+
+    /**
+     * The element's parent
+     */
+    parent: HSAXElement | undefined;
+
+    /**
+     * Get the process ID of the application that owns this element
+     */
+    pid: number;
+
 }
 
 /**
  * Module for controlling the Hammerspoon console
  */
 declare namespace hs.console {
+    /**
+     * Open the console window
+     */
+    function open(): void;
+
+    /**
+     * Close the console window
+     */
+    function close(): void;
+
+    /**
+     * Clear all console output
+     */
+    function clear(): void;
+
+    /**
+     * Print a message to the console
+     * @param message The message to print
+     */
+    function print(message: string): void;
+
+    /**
+     * Print a debug message to the console
+     * @param message The message to print
+     */
+    function debug(message: string): void;
+
+    /**
+     * Print an info message to the console
+     * @param message The message to print
+     */
+    function info(message: string): void;
+
+    /**
+     * Print a warning message to the console
+     * @param message The message to print
+     */
+    function warning(message: string): void;
+
+    /**
+     * Print an error message to the console
+     * @param message The message to print
+     */
+    function error(message: string): void;
+
 }
 
 /**
  * Module for hashing and encoding operations
  */
 declare namespace hs.hash {
+    /**
+     * Encode a string to base64
+     * @param data The string to encode
+     * @returns Base64 encoded string
+     */
+    function base64Encode(data: string): string;
+
+    /**
+     * Decode a base64 string
+     * @param data The base64 string to decode
+     * @returns Decoded string, or nil if the input is invalid
+     */
+    function base64Decode(data: string): string | undefined;
+
+    /**
+     * Generate MD5 hash of a string
+     * @param data The string to hash
+     * @returns Hexadecimal MD5 hash
+     */
+    function md5(data: string): string;
+
+    /**
+     * Generate SHA1 hash of a string
+     * @param data The string to hash
+     * @returns Hexadecimal SHA1 hash
+     */
+    function sha1(data: string): string;
+
+    /**
+     * Generate SHA256 hash of a string
+     * @param data The string to hash
+     * @returns Hexadecimal SHA256 hash
+     */
+    function sha256(data: string): string;
+
+    /**
+     * Generate SHA512 hash of a string
+     * @param data The string to hash
+     * @returns Hexadecimal SHA512 hash
+     */
+    function sha512(data: string): string;
+
+    /**
+     * Generate HMAC-MD5 of a string with a key
+     * @param key The secret key
+     * @param data The data to authenticate
+     * @returns Hexadecimal HMAC-MD5
+     */
+    function hmacMD5(key: string, data: string): string;
+
+    /**
+     * Generate HMAC-SHA1 of a string with a key
+     * @param key The secret key
+     * @param data The data to authenticate
+     * @returns Hexadecimal HMAC-SHA1
+     */
+    function hmacSHA1(key: string, data: string): string;
+
+    /**
+     * Generate HMAC-SHA256 of a string with a key
+     * @param key The secret key
+     * @param data The data to authenticate
+     * @returns Hexadecimal HMAC-SHA256
+     */
+    function hmacSHA256(key: string, data: string): string;
+
+    /**
+     * Generate HMAC-SHA512 of a string with a key
+     * @param key The secret key
+     * @param data The data to authenticate
+     * @returns Hexadecimal HMAC-SHA512
+     */
+    function hmacSHA512(key: string, data: string): string;
+
 }
 
 /**
  * Module for creating and managing system-wide hotkeys
  */
 declare namespace hs.hotkey {
+    /**
+     * Bind a hotkey
+     * @param mods An array of modifier key strings (e.g., ["cmd", "shift"])
+     * @param key The key name or character (e.g., "a", "space", "return")
+     * @param callbackPressed A JavaScript function to call when the hotkey is pressed
+     * @param callbackReleased A JavaScript function to call when the hotkey is released
+     * @returns A hotkey object, or nil if binding failed
+     */
+    function bind(mods: JSValue, key: string, callbackPressed: JSValue, callbackReleased: JSValue): HSHotkey | undefined;
+
+    /**
+     * Bind a hotkey with a message description
+     * @param mods An array of modifier key strings
+     * @param key The key name or character
+     * @param message A description of what this hotkey does (currently unused, for future features)
+     * @param callbackPressed A JavaScript function to call when the hotkey is pressed
+     * @param callbackReleased A JavaScript function to call when the hotkey is released
+     * @returns A hotkey object, or nil if binding failed
+     */
+    function bindSpec(mods: JSValue, key: string, message: string | undefined, callbackPressed: JSValue, callbackReleased: JSValue): HSHotkey | undefined;
+
+    /**
+     * Get the system-wide mapping of key names to key codes
+     * @returns A dictionary mapping key names to numeric key codes
+     */
+    function getKeyCodeMap(): Record<string, number>;
+
+    /**
+     * Get the mapping of modifier names to modifier flags
+     * @returns A dictionary mapping modifier names to their numeric values
+     */
+    function getModifierMap(): Record<string, number>;
+
 }
 
 /**
  * Object representing a system-wide hotkey. You should not create these objects directly, but rather, use the methods in hs.hotkey to instantiate these.
  */
 declare class HSHotkey {
+    /**
+     * Enable the hotkey
+     * @returns True if the hotkey was enabled, otherwise False
+     */
+    static enable(): boolean;
+
+    /**
+     * Disable the hotkey
+     */
+    static disable(): void;
+
+    /**
+     * Check if the hotkey is currently enabled
+     * @returns True if the hotkey is enabled, otherwise False
+     */
+    static isEnabled(): boolean;
+
+    /**
+     * Delete the hotkey (disables and clears callbacks)
+     */
+    static delete(): void;
+
+    /**
+     * The callback function to be called when the hotkey is pressed
+     */
+    callbackPressed: JSValue | undefined;
+
+    /**
+     * The callback function to be called when the hotkey is released
+     */
+    callbackReleased: JSValue | undefined;
+
 }
 
 /**
  * Module for checking and requesting system permissions
  */
 declare namespace hs.permissions {
+    /**
+     * Check if the app has Accessibility permission
+     * @returns true if permission is granted, false otherwise
+     */
+    function checkAccessibility(): boolean;
+
+    /**
+     * Request Accessibility permission (shows system dialog if not granted)
+     */
+    function requestAccessibility(): void;
+
+    /**
+     * Check if the app has Screen Recording permission
+     * @returns true if permission is granted, false otherwise
+     */
+    function checkScreenRecording(): boolean;
+
+    /**
+     * Request Screen Recording permission
+     */
+    function requestScreenRecording(): void;
+
+    /**
+     * Check if the app has Camera permission
+     * @returns true if permission is granted, false otherwise
+     */
+    function checkCamera(): boolean;
+
+    /**
+     * Request Camera permission (shows system dialog if not granted)
+     * @returns A Promise that resolves to true if granted, false if denied
+     */
+    function requestCamera(): Promise<boolean>;
+
+    /**
+     * Check if the app has Microphone permission
+     * @returns true if permission is granted, false otherwise
+     */
+    function checkMicrophone(): boolean;
+
+    /**
+     * Request Microphone permission (shows system dialog if not granted)
+     * @returns A Promise that resolves to true if granted, false if denied
+     */
+    function requestMicrophone(): Promise<boolean>;
+
 }
 
 /**
  * Module for running external processes
  */
 declare namespace hs.task {
+    /**
+     * Create a new task
+     * @param launchPath The full path to the executable to run
+     * @param arguments An array of arguments to pass to the executable
+     * @param completionCallback Optional callback function called when the task terminates
+     * @param environment Optional dictionary of environment variables for the task
+     * @param streamingCallback Optional callback function called when the task produces output
+     * @returns A task object. Call start() to begin execution.
+     */
+    function new(launchPath: string, arguments: string[], completionCallback: JSValue | undefined, environment: JSValue | undefined, streamingCallback: JSValue | undefined): HSTask;
+
     /**
      * Create and run a task asynchronously
      * @param launchPath - Full path to the executable
@@ -229,12 +983,148 @@ declare namespace hs.task {
  * Object representing an external process task
  */
 declare class HSTask {
+    /**
+     * Start the task
+     * @returns The task object for chaining
+     */
+    static start(): HSTask;
+
+    /**
+     * Terminate the task (send SIGTERM)
+     */
+    static terminate(): void;
+
+    /**
+     * Terminate the task with extreme prejudice (send SIGKILL)
+     */
+    static kill9(): void;
+
+    /**
+     * Interrupt the task (send SIGINT)
+     */
+    static interrupt(): void;
+
+    /**
+     * Pause the task (send SIGSTOP)
+     */
+    static pause(): void;
+
+    /**
+     * Resume the task (send SIGCONT)
+     */
+    static resume(): void;
+
+    /**
+     * Wait for the task to complete (blocking)
+     */
+    static waitUntilExit(): void;
+
+    /**
+     * Write data to the task's stdin
+     * @param data The string data to write
+     */
+    static sendInput(data: string): void;
+
+    /**
+     * Close the task's stdin
+     */
+    static closeInput(): void;
+
+    /**
+     * Check if the task is currently running
+     */
+    isRunning: boolean;
+
+    /**
+     * The process ID of the running task
+     */
+    pid: Int32;
+
+    /**
+     * The environment variables for the task
+     */
+    environment: Record<string, string>;
+
+    /**
+     * The working directory for the task
+     */
+    workingDirectory: string | undefined;
+
+    /**
+     * The termination status of the task
+     */
+    terminationStatus: NSNumber | undefined;
+
+    /**
+     * The termination reason
+     */
+    terminationReason: string | undefined;
+
 }
 
 /**
  * Module for creating and managing timers
  */
 declare namespace hs.timer {
+    /**
+     * Create a new timer
+     * @param interval The interval in seconds at which the timer should fire
+     * @param callback A JavaScript function to call when the timer fires
+     * @param continueOnError If true, the timer will continue running even if the callback throws an error
+     * @returns A timer object. Call start() to begin the timer.
+     */
+    function create(interval: number, callback: JSValue, continueOnError: boolean): HSTimer;
+
+    /**
+     * Create and start a one-shot timer
+     * @param seconds Number of seconds to wait before firing
+     * @param callback A JavaScript function to call when the timer fires
+     * @returns A timer object (already started)
+     */
+    function doAfter(seconds: number, callback: JSValue): HSTimer;
+
+    /**
+     * Create and start a repeating timer
+     * @param interval The interval in seconds at which the timer should fire
+     * @param callback A JavaScript function to call when the timer fires
+     * @returns A timer object (already started)
+     */
+    function doEvery(interval: number, callback: JSValue): HSTimer;
+
+    /**
+     * Create and start a timer that fires at a specific time
+     * @param time Seconds since midnight (local time) when the timer should first fire
+     * @param repeatInterval If provided, the timer will repeat at this interval. Pass 0 for one-shot.
+     * @param callback A JavaScript function to call when the timer fires
+     * @param continueOnError If true, the timer will continue running even if the callback throws an error
+     * @returns A timer object (already started)
+     */
+    function doAt(time: number, repeatInterval: number, callback: JSValue, continueOnError: boolean): HSTimer;
+
+    /**
+     * Block execution for a specified number of microseconds (strongly discouraged)
+     * @param microseconds Number of microseconds to sleep
+     */
+    function usleep(microseconds: number): void;
+
+    /**
+     * Get the current time as seconds since the UNIX epoch with sub-second precision
+     * @returns Fractional seconds since midnight, January 1, 1970 UTC
+     */
+    function secondsSinceEpoch(): number;
+
+    /**
+     * Get the number of nanoseconds since the system was booted (excluding sleep time)
+     * @returns Nanoseconds since boot
+     */
+    function absoluteTime(): UInt64;
+
+    /**
+     * Get the number of seconds since local midnight
+     * @returns Seconds since midnight in the local timezone
+     */
+    function localTime(): number;
+
     /**
      * Converts minutes to seconds
 Parameter n: A number of minutes
@@ -315,14 +1205,56 @@ Parameter n: A number of weeks
  * Object representing a timer. You should not instantiate these yourself, but rather, use the methods in hs.timer to create them for you.
  */
 declare class HSTimer {
+    /**
+     * Start the timer
+     */
+    static start(): void;
+
+    /**
+     * Stop the timer
+     */
+    static stop(): void;
+
+    /**
+     * Immediately fire the timer's callback
+     */
+    static fire(): void;
+
+    /**
+     * Check if the timer is currently running
+     * @returns true if the timer is running, false otherwise
+     */
+    static running(): boolean;
+
+    /**
+     * Get the number of seconds until the timer next fires
+     * @returns Seconds until next trigger, or a negative value if the timer is not running
+     */
+    static nextTrigger(): number;
+
+    /**
+     * Set when the timer should next fire
+     * @param seconds Number of seconds from now when the timer should fire
+     */
+    static setNextTrigger(seconds: number): void;
+
+    /**
+     * The timer's interval in seconds
+     */
+    interval: number;
+
+    /**
+     * Whether the timer repeats
+     */
+    repeats: boolean;
+
 }
 
 /**
  * # hs.ui
 **Create custom user interfaces, alerts, dialogs, and file pickers**
-The `hs.ui` module provides a comprehensive set of tools for creating custom user interfaces
-in Hammerspoon. It supports everything from simple alerts to complex custom windows with
-SwiftUI-like declarative syntax.
+The `hs.ui` module provides a set of tools for creating custom user interfaces
+in Hammerspoon with SwiftUI-like declarative syntax.
 ## Key Features
 ## Basic Examples
 ### Simple Alert
@@ -379,12 +1311,101 @@ hs.ui.window({x: 100, y: 100, w: 300, h: 200})
 ```
  */
 declare namespace hs.ui {
+    /**
+     * Create a custom UI window
+Creates a borderless window that can contain custom UI elements built using a declarative,
+SwiftUI-like syntax with shapes, text, and layout containers.
+     * @param dict Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)
+     * @returns An `HSUIWindow` object for chaining
+     */
+    function window(dict: Record<string, any>): HSUIWindow;
+
+    /**
+     * Create a temporary on-screen alert
+Displays a temporary notification that automatically dismisses after the specified duration.
+Similar to the old `hs.alert` module but with more features.
+     * @param message The message text to display
+     * @returns An `HSUIAlert` object for chaining
+     */
+    function alert(message: string): HSUIAlert;
+
+    /**
+     * Create a modal dialog with buttons
+Shows a blocking dialog with customizable message, informative text, and buttons.
+Use the callback to handle button presses.
+     * @param message The main message text
+     * @returns An `HSUIDialog` object for chaining
+     */
+    function dialog(message: string): HSUIDialog;
+
+    /**
+     * Create a text input prompt
+Shows a modal dialog with a text input field. The callback receives the button index
+and the entered text.
+     * @param message The prompt message
+     * @returns An `HSUITextPrompt` object for chaining
+     */
+    function textPrompt(message: string): HSUITextPrompt;
+
+    /**
+     * Create a file or directory picker
+Shows a standard macOS file picker dialog. Can be configured to select files,
+directories, or both, with support for file type filtering and multiple selection.
+     * @returns An `HSUIFilePicker` object for chaining
+     */
+    function filePicker(): HSUIFilePicker;
+
 }
 
 /**
  * Module for interacting with windows
  */
 declare namespace hs.window {
+    /**
+     * Get the currently focused window
+     * @returns The focused window, or nil if none
+     */
+    function focusedWindow(): HSWindow | undefined;
+
+    /**
+     * Get all windows from all applications
+     * @returns An array of all windows
+     */
+    function allWindows(): HSWindow[];
+
+    /**
+     * Get all visible (not minimized) windows
+     * @returns An array of visible windows
+     */
+    function visibleWindows(): HSWindow[];
+
+    /**
+     * Get windows for a specific application
+     * @param app An HSApplication object
+     * @returns An array of windows for that application
+     */
+    function windowsForApp(app: HSApplication): HSWindow[];
+
+    /**
+     * Get all windows on a specific screen
+     * @param screenIndex The screen index (0 for main screen)
+     * @returns An array of windows on that screen
+     */
+    function windowsOnScreen(screenIndex: number): HSWindow[];
+
+    /**
+     * Get the window at a specific screen position
+     * @param point An HSPoint containing the coordinates
+     * @returns The topmost window at that position, or nil if none
+     */
+    function windowAtPoint(point: HSPoint): HSWindow | undefined;
+
+    /**
+     * Get ordered windows (front to back)
+     * @returns An array of windows in z-order
+     */
+    function orderedWindows(): HSWindow[];
+
     /**
      * Find windows by title
 Parameter title: The window title to search for. All windows with titles that include this string, will be matched
@@ -434,5 +1455,107 @@ Parameter win: An HSWindow object
  * Object representing a window. You should not instantiate these directly, but rather, use the methods in hs.window to create them for you.
  */
 declare class HSWindow {
+    /**
+     * Focus this window
+     * @returns true if successful
+     */
+    static focus(): boolean;
+
+    /**
+     * Minimize this window
+     * @returns true if successful
+     */
+    static minimize(): boolean;
+
+    /**
+     * Unminimize this window
+     * @returns true if successful
+     */
+    static unminimize(): boolean;
+
+    /**
+     * Raise this window to the front
+     * @returns true if successful
+     */
+    static raise(): boolean;
+
+    /**
+     * Toggle fullscreen mode
+     * @returns true if successful
+     */
+    static toggleFullscreen(): boolean;
+
+    /**
+     * Close this window
+     * @returns true if successful
+     */
+    static close(): boolean;
+
+    /**
+     * Center the window on the screen
+     */
+    static centerOnScreen(): void;
+
+    /**
+     * Get the underlying AXElement
+     * @returns The accessibility element for this window
+     */
+    static axElement(): HSAXElement;
+
+    /**
+     * The window's title
+     */
+    title: string | undefined;
+
+    /**
+     * The application that owns this window
+     */
+    application: HSApplication | undefined;
+
+    /**
+     * The process ID of the application that owns this window
+     */
+    pid: number;
+
+    /**
+     * Whether the window is minimized
+     */
+    isMinimized: boolean;
+
+    /**
+     * Whether the window is visible (not minimized or hidden)
+     */
+    isVisible: boolean;
+
+    /**
+     * Whether the window is focused
+     */
+    isFocused: boolean;
+
+    /**
+     * Whether the window is fullscreen
+     */
+    isFullscreen: boolean;
+
+    /**
+     * Whether the window is standard (has a titlebar)
+     */
+    isStandard: boolean;
+
+    /**
+     * The window's position on screen {x: Int, y: Int}
+     */
+    position: HSPoint | undefined;
+
+    /**
+     * The window's size {w: Int, h: Int}
+     */
+    size: HSSize | undefined;
+
+    /**
+     * The window's frame {x: Int, y: Int, w: Int, h: Int}
+     */
+    frame: HSRect | undefined;
+
 }
 

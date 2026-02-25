@@ -142,7 +142,7 @@ function parseSwiftFile(filePath, repoRoot) {
             }
 
             // Check for @objc with custom selector on its own line (e.g., @objc(doAt::::))
-            if (line.match(/^@objc\([^)]+\)$/) && !line.includes('func') && !line.includes('var')) {
+            if (trimmed.match(/^@objc\([^)]+\)$/) && !trimmed.includes('func') && !trimmed.includes('var')) {
                 pendingObjcSelector = true;
                 continue;
             }
@@ -151,20 +151,20 @@ function parseSwiftFile(filePath, repoRoot) {
             // Match @objc func/var, bare func/var (for protocol declarations), or func after @objc(selector)
             let methodMatch = null;
 
-            if (line.startsWith('@objc')) {
+            if (trimmed.startsWith('@objc')) {
                 // @objc func or @objc var
-                methodMatch = line.match(/@objc(?:\([^)]*\))?\s+(?:(?:static\s+)?func\s+(\w+)|var\s+(\w+))/);
-            } else if (pendingObjcSelector && line.startsWith('func ')) {
+                methodMatch = trimmed.match(/@objc(?:\([^)]*\))?\s+(?:(?:static\s+)?func\s+(\w+)|var\s+(\w+))/);
+            } else if (pendingObjcSelector && trimmed.startsWith('func ')) {
                 // This is a func following @objc(selector) on the previous line
-                methodMatch = line.match(/func\s+(\w+)/);
+                methodMatch = trimmed.match(/func\s+(\w+)/);
                 if (methodMatch) {
                     // Reformat to look like a normal @objc match result
-                    methodMatch = [line, methodMatch[1], undefined];
+                    methodMatch = [trimmed, methodMatch[1], undefined];
                 }
-            } else if (line.match(/^(?:static\s+)?func\s+\w+/) || line.match(/^var\s+\w+/)) {
+            } else if (trimmed.match(/^(?:static\s+)?func\s+\w+/) || trimmed.match(/^var\s+\w+/)) {
                 // Bare function or property declaration in protocol (no @objc needed)
-                methodMatch = line.match(/^(?:static\s+)?func\s+(\w+)|^var\s+(\w+)/);
-            } else if (line.match(/^init\(/)) {
+                methodMatch = trimmed.match(/^(?:static\s+)?func\s+(\w+)|^var\s+(\w+)/);
+            } else if (trimmed.match(/^init\(/)) {
                 // Constructor/initializer
                 methodMatch = ['init', 'init', undefined];
             }
@@ -175,19 +175,19 @@ function parseSwiftFile(filePath, repoRoot) {
                 if (methodMatch[1]) {
                     // It's a method
                     const methodName = methodMatch[1];
-                    let fullSignature = line;
-                    
+                    let fullSignature = trimmed;
+
                     // Handle multi-line method signatures - look for the closing )
                     let j = i;
                     let parenDepth = 0;
                     let foundStart = false;
-                    
+
                     // Count parentheses to find the end of the method signature
-                    for (let k = 0; k < line.length; k++) {
-                        if (line[k] === '(') {
+                    for (let k = 0; k < trimmed.length; k++) {
+                        if (trimmed[k] === '(') {
                             parenDepth++;
                             foundStart = true;
-                        } else if (line[k] === ')') {
+                        } else if (trimmed[k] === ')') {
                             parenDepth--;
                         }
                     }
@@ -273,7 +273,7 @@ function parseSwiftFile(filePath, repoRoot) {
                     if (!shouldSkipDocs(currentDoc)) {
                         protocol.properties.push({
                             name: propName,
-                            signature: line.replace(/@objc\s*/, ''),
+                            signature: trimmed.replace(/@objc\s*/, ''),
                             rawDocumentation: rawDoc,
                             description: formatDocCToJSDoc(rawDoc),
                             source: 'swift',
