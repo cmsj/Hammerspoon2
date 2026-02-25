@@ -14,6 +14,7 @@ import SwiftUI
 @objc protocol HSUIAlertAPI: HSTypeAPI, JSExport {
     @objc func font(_ font: HSFont) -> HSUIAlert
     @objc func duration(_ seconds: Double) -> HSUIAlert
+    @objc func padding(_ points: Double) -> HSUIAlert
     @objc func position(_ dict: [String: Any]) -> HSUIAlert
     @objc func show() -> HSUIAlert
     @objc func close()
@@ -25,7 +26,8 @@ import SwiftUI
 
     var message: String
     var font: Font = .title
-    var duration: Double = 3.0
+    var duration: Double = 5.0  // Match hs.alert default
+    var padding: CGFloat?
     var position: CGPoint?
 
     private var nsWindow: NSWindow?
@@ -52,6 +54,11 @@ import SwiftUI
 
     @objc func duration(_ seconds: Double) -> HSUIAlert {
         self.duration = seconds
+        return self
+    }
+
+    @objc func padding(_ points: Double) -> HSUIAlert {
+        self.padding = CGFloat(points)
         return self
     }
 

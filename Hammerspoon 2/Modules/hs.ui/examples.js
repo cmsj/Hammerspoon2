@@ -144,6 +144,7 @@ function example7_alert() {
     hs.ui.alert("Task completed successfully!")
         .font(HSFont.headline())
         .duration(3)
+        .padding(30)
         .show();
 }
 
