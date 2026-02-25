@@ -849,9 +849,23 @@ function formatDocCToJSDoc(documentation) {
     const lines = documentation.split('\n');
     const result = [];
     let inParamsList = false;
+    let inCodeBlock = false;
 
     for (const line of lines) {
         const trimmed = line.trim();
+
+        // Track code block boundaries
+        if (trimmed.startsWith('```')) {
+            inCodeBlock = !inCodeBlock;
+            result.push(line);  // Preserve code fence
+            continue;
+        }
+
+        // Preserve indentation inside code blocks
+        if (inCodeBlock) {
+            result.push(line);
+            continue;
+        }
 
         // Skip parameter list headers (with or without leading dash)
         if (trimmed === '- Parameters:' || trimmed.startsWith('- Parameters:') ||
@@ -886,7 +900,7 @@ function formatDocCToJSDoc(documentation) {
         }
     }
 
-    return result.join(' ');
+    return result.join('\n');  // Changed from ' ' to '\n' to preserve line breaks
 }
 
 /**

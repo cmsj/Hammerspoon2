@@ -10,13 +10,54 @@ import JavaScriptCore
 import AppKit
 import SwiftUI
 
-/// JavaScript API for HSUIDialog
+/// # HSUIDialog
+///
+/// **A modal dialog with customizable buttons**
+///
+/// Shows a blocking dialog with a message, optional informative text, and custom buttons.
+/// Use the callback to respond to button presses.
+///
+/// ## Example
+///
+/// ```javascript
+/// hs.ui.dialog("Save changes?")
+///     .informativeText("Your document has unsaved changes.")
+///     .buttons(["Save", "Don't Save", "Cancel"])
+///     .onButton((index) => {
+///         if (index === 0) {
+///             print("Saving...");
+///         } else if (index === 1) {
+///             print("Discarding changes...");
+///         }
+///     })
+///     .show();
+/// ```
 @objc protocol HSUIDialogAPI: HSTypeAPI, JSExport {
+    /// Set additional informative text below the main message
+    /// - Parameter text: The informative text
+    /// - Returns: Self for chaining
     @objc func informativeText(_ text: String) -> HSUIDialog
+
+    /// Set custom button labels
+    /// - Parameter labels: Array of button labels (default: ["OK"])
+    /// - Returns: Self for chaining
     @objc func buttons(_ labels: [String]) -> HSUIDialog
+
+    /// Set the dialog style
+    /// - Parameter style: Style name (e.g., "informational", "warning", "critical")
+    /// - Returns: Self for chaining
     @objc func style(_ style: String) -> HSUIDialog
+
+    /// Set the callback for button presses
+    /// - Parameter callback: Function receiving button index (0-based)
+    /// - Returns: Self for chaining
     @objc func onButton(_ callback: JSValue) -> HSUIDialog
+
+    /// Show the dialog
+    /// - Returns: Self for chaining
     @objc func show() -> HSUIDialog
+
+    /// Close the dialog programmatically
     @objc func close()
 }
 

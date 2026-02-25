@@ -246,6 +246,62 @@ function example12_hspacers() {
         .show();
 }
 
+// Example 13: Text input prompt
+function example13_textPrompt() {
+    hs.ui.textPrompt("Enter your name")
+        .informativeText("Please enter your full name below")
+        .defaultText("John Doe")
+        .buttons(["OK", "Cancel"])
+        .onButton((buttonIndex, text) => {
+            if (buttonIndex === 0) {
+                print("User entered: " + text);
+                hs.ui.alert("Hello, " + text + "!").show();
+            } else {
+                print("User cancelled");
+            }
+        })
+        .show();
+}
+
+// Example 14: File picker
+function example14_filePicker() {
+    hs.ui.filePicker()
+        .message("Choose a file to process")
+        .canChooseFiles(true)
+        .canChooseDirectories(false)
+        .allowsMultipleSelection(false)
+        .allowedFileTypes(["txt", "md", "js"])
+        .onSelection((result) => {
+            if (result) {
+                print("Selected file: " + result);
+                hs.ui.alert("Selected: " + result).show();
+            } else {
+                print("User cancelled");
+            }
+        })
+        .show();
+}
+
+// Example 15: Directory picker with multiple selection
+function example15_directoryPicker() {
+    hs.ui.filePicker()
+        .message("Choose directories to backup")
+        .canChooseFiles(false)
+        .canChooseDirectories(true)
+        .allowsMultipleSelection(true)
+        .onSelection((result) => {
+            if (result) {
+                print("Selected " + result.length + " directories:");
+                for (let dir of result) {
+                    print("  - " + dir);
+                }
+            } else {
+                print("User cancelled");
+            }
+        })
+        .show();
+}
+
 // Run all examples (uncomment to test)
 // print("Running hs.ui examples...");
 // example1_simpleRectangle();
@@ -260,4 +316,7 @@ function example12_hspacers() {
 // example10_zstack();
 // example11_spacers();
 // example12_hspacers();
+// example13_textPrompt();
+// example14_filePicker();
+// example15_directoryPicker();
 // print("Examples complete!");

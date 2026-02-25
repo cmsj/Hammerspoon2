@@ -10,42 +10,154 @@ import JavaScriptCore
 import AppKit
 import SwiftUI
 
-/// JavaScript API for HSUIWindow
+/// # HSUIWindow
+///
+/// **A custom window with declarative UI building**
+///
+/// `HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like
+/// declarative syntax. Build interfaces using shapes, text, and layout containers.
+///
+/// ## Building UI Elements
+///
+/// - **Shapes**: `rectangle()`, `circle()`
+/// - **Text**: `text(content)`
+/// - **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`
+///
+/// ## Modifying Elements
+///
+/// - **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`
+/// - **Text modifiers**: `font()`, `foregroundColor()`
+/// - **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`
+///
+/// ## Example
+///
+/// ```javascript
+/// hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+///     .vstack()
+///         .spacing(10)
+///         .padding(20)
+///         .text("Dashboard")
+///             .font(HSFont.largeTitle())
+///             .foregroundColor("#FFFFFF")
+///         .rectangle()
+///             .fill("#4A90E2")
+///             .cornerRadius(10)
+///             .frame({w: "90%", h: 80})
+///     .end()
+///     .backgroundColor("#2C3E50")
+///     .show();
+/// ```
 @objc protocol HSUIWindowAPI: HSTypeAPI, JSExport {
-    // Window management
+    // MARK: Window Management
+
+    /// Show the window
+    /// - Returns: Self for chaining
     @objc func show() -> HSUIWindow
+
+    /// Hide the window (keeps it in memory)
     @objc func hide()
+
+    /// Close and destroy the window
     @objc func close()
 
-    // Background styling
+    // MARK: Window Styling
+
+    /// Set the window's background color
+    /// - Parameter colorValue: Color as hex string (e.g., "#FF0000") or HSColor object
+    /// - Returns: Self for chaining
     @objc func backgroundColor(_ colorValue: JSValue) -> HSUIWindow
 
-    // Shape constructors
+    // MARK: Shape Elements
+
+    /// Add a rectangle shape
+    /// - Returns: Self for chaining (apply modifiers like `fill()`, `frame()`)
     @objc func rectangle() -> HSUIWindow
+
+    /// Add a circle shape
+    /// - Returns: Self for chaining (apply modifiers like `fill()`, `frame()`)
     @objc func circle() -> HSUIWindow
+
+    /// Add a text element
+    /// - Parameter content: The text to display
+    /// - Returns: Self for chaining (apply modifiers like `font()`, `foregroundColor()`)
     @objc func text(_ content: String) -> HSUIWindow
 
-    // Layout containers
+    // MARK: Layout Containers
+
+    /// Begin a vertical stack (elements arranged top to bottom)
+    /// - Returns: Self for chaining (call `end()` when done)
     @objc func vstack() -> HSUIWindow
+
+    /// Begin a horizontal stack (elements arranged left to right)
+    /// - Returns: Self for chaining (call `end()` when done)
     @objc func hstack() -> HSUIWindow
+
+    /// Begin a z-stack (overlapping elements)
+    /// - Returns: Self for chaining (call `end()` when done)
     @objc func zstack() -> HSUIWindow
+
+    /// Add flexible spacing that expands to fill available space
+    /// - Returns: Self for chaining
     @objc func spacer() -> HSUIWindow
+
+    /// End the current layout container
+    /// - Returns: Self for chaining
     @objc func end() -> HSUIWindow
 
-    // Modifiers for shapes
+    // MARK: Shape Modifiers
+
+    /// Fill a shape with a color
+    /// - Parameter colorValue: Color as hex string or HSColor
+    /// - Returns: Self for chaining
     @objc func fill(_ colorValue: JSValue) -> HSUIWindow
+
+    /// Add a stroke (border) to a shape
+    /// - Parameter colorValue: Color as hex string or HSColor
+    /// - Returns: Self for chaining
     @objc func stroke(_ colorValue: JSValue) -> HSUIWindow
+
+    /// Set the stroke width
+    /// - Parameter width: Width in points
+    /// - Returns: Self for chaining
     @objc func strokeWidth(_ width: Double) -> HSUIWindow
+
+    /// Round the corners of a shape
+    /// - Parameter radius: Corner radius in points
+    /// - Returns: Self for chaining
     @objc func cornerRadius(_ radius: Double) -> HSUIWindow
+
+    /// Set the frame (size) of an element
+    /// - Parameter dict: Dictionary with `w` and/or `h` (can be numbers or percentage strings like "50%")
+    /// - Returns: Self for chaining
     @objc func frame(_ dict: [String: Any]) -> HSUIWindow
+
+    /// Set the opacity of an element
+    /// - Parameter value: Opacity from 0.0 (transparent) to 1.0 (opaque)
+    /// - Returns: Self for chaining
     @objc func opacity(_ value: Double) -> HSUIWindow
 
-    // Modifiers for text
+    // MARK: Text Modifiers
+
+    /// Set the font for a text element
+    /// - Parameter font: An HSFont object (e.g., `HSFont.title()`)
+    /// - Returns: Self for chaining
     @objc func font(_ font: HSFont) -> HSUIWindow
+
+    /// Set the text color
+    /// - Parameter colorValue: Color as hex string or HSColor
+    /// - Returns: Self for chaining
     @objc func foregroundColor(_ colorValue: JSValue) -> HSUIWindow
 
-    // Layout modifiers
+    // MARK: Layout Modifiers
+
+    /// Add padding around a layout container
+    /// - Parameter value: Padding in points
+    /// - Returns: Self for chaining
     @objc func padding(_ value: Double) -> HSUIWindow
+
+    /// Set spacing between elements in a stack
+    /// - Parameter value: Spacing in points
+    /// - Returns: Self for chaining
     @objc func spacing(_ value: Double) -> HSUIWindow
 }
 

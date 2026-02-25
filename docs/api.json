@@ -1186,7 +1186,7 @@
           ]
         }
       ],
-      "description": "# Accessibility API Module ## Basic Usage ```js // Get the focused UI element const element = hs.ax.focusedElement(); console.log(element.role, element.title); // Watch for window creation events const app = hs.application.frontmost(); hs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => { console.log(\"New window:\", element.title); }); ``` **Note:** Requires accessibility permissions in System Preferences.",
+      "description": "# Accessibility API Module\n## Basic Usage\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\nconsole.log(\"New window:\", element.title);\n});\n```\n**Note:** Requires accessibility permissions in System Preferences.",
       "rawDocumentation": "# Accessibility API Module\n\nThis module provides access to macOS's powerful **Accessibility API**, allowing you to:\n- Inspect UI elements in any application\n- Monitor window and element changes\n- Programmatically interact with UI elements\n\n## Basic Usage\n\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\nconsole.log(\"New window:\", element.title);\n});\n```\n\n**Note:** Requires accessibility permissions in System Preferences."
     },
     {
@@ -1968,7 +1968,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
-          "lineNumber": 95,
+          "lineNumber": 94,
           "type": "function"
         },
         {
@@ -1989,7 +1989,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
-          "lineNumber": 105,
+          "lineNumber": 104,
           "type": "function"
         },
         {
@@ -2009,7 +2009,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
-          "lineNumber": 131,
+          "lineNumber": 130,
           "type": "function"
         }
       ],
@@ -2128,34 +2128,6 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 41
-            },
-            {
-              "name": "terminationStatus",
-              "signature": "func terminationStatus() -> NSNumber?",
-              "rawDocumentation": "Get the termination status of the task\n- Returns: The exit code, or nil if the task hasn't terminated",
-              "description": "Get the termination status of the task",
-              "params": [],
-              "returns": {
-                "type": "NSNumber?",
-                "description": "The exit code, or nil if the task hasn't terminated"
-              },
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
-              "lineNumber": 61
-            },
-            {
-              "name": "terminationReason",
-              "signature": "func terminationReason() -> String?",
-              "rawDocumentation": "Get the termination reason\n- Returns: A string describing why the task terminated, or nil if still running",
-              "description": "Get the termination reason",
-              "params": [],
-              "returns": {
-                "type": "String?",
-                "description": "A string describing why the task terminated, or nil if still running"
-              },
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
-              "lineNumber": 65
             }
           ],
           "properties": [
@@ -2194,6 +2166,24 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 57
+            },
+            {
+              "name": "terminationStatus",
+              "signature": "var terminationStatus: NSNumber? { get }",
+              "rawDocumentation": "The termination status of the task\n- Note: Returns the exit code, or nil if the task hasn't terminated",
+              "description": "The termination status of the task",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 61
+            },
+            {
+              "name": "terminationReason",
+              "signature": "var terminationReason: String? { get }",
+              "rawDocumentation": "The termination reason\n- Note: Returns a string describing why the task terminated, or nil if still running",
+              "description": "The termination reason",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 65
             }
           ]
         }
@@ -2381,7 +2371,7 @@
         {
           "name": "minutes",
           "rawDocumentation": "Converts minutes to seconds\nParameter n: A number of minutes\nReturns: The equivalent number of seconds",
-          "description": "Converts minutes to seconds Parameter n: A number of minutes",
+          "description": "Converts minutes to seconds\nParameter n: A number of minutes",
           "params": [
             {
               "name": "n",
@@ -2395,13 +2385,13 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 14,
+          "lineNumber": 17,
           "type": "function"
         },
         {
           "name": "hours",
           "rawDocumentation": "Converts hours to seconds\nParameter n: A number of hours\nReturns: The equivalent number of seconds",
-          "description": "Converts hours to seconds Parameter n: A number of hours",
+          "description": "Converts hours to seconds\nParameter n: A number of hours",
           "params": [
             {
               "name": "n",
@@ -2415,13 +2405,13 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 21,
+          "lineNumber": 24,
           "type": "function"
         },
         {
           "name": "days",
           "rawDocumentation": "Converts days to seconds\nParameter n: A number of days\nReturns: The equivalent number of seconds",
-          "description": "Converts days to seconds Parameter n: A number of days",
+          "description": "Converts days to seconds\nParameter n: A number of days",
           "params": [
             {
               "name": "n",
@@ -2435,13 +2425,13 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 28,
+          "lineNumber": 31,
           "type": "function"
         },
         {
           "name": "weeks",
           "rawDocumentation": "Converts weeks to seconds\nParameter n: A number of weeks\nReturns: The equivalent number of seconds",
-          "description": "Converts weeks to seconds Parameter n: A number of weeks",
+          "description": "Converts weeks to seconds\nParameter n: A number of weeks",
           "params": [
             {
               "name": "n",
@@ -2455,7 +2445,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 35,
+          "lineNumber": 38,
           "type": "function"
         },
         {
@@ -2466,7 +2456,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 43,
+          "lineNumber": 46,
           "type": "function"
         },
         {
@@ -2493,7 +2483,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 92,
+          "lineNumber": 95,
           "type": "function"
         },
         {
@@ -2520,7 +2510,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 119,
+          "lineNumber": 122,
           "type": "function"
         },
         {
@@ -2547,7 +2537,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 145,
+          "lineNumber": 148,
           "type": "function"
         },
         {
@@ -2574,7 +2564,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 170,
+          "lineNumber": 173,
           "type": "function"
         },
         {
@@ -2585,7 +2575,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 193,
+          "lineNumber": 196,
           "type": "function"
         }
       ],
@@ -2700,6 +2690,109 @@
       ],
       "description": "Module for creating and managing timers",
       "rawDocumentation": "Module for creating and managing timers"
+    },
+    {
+      "name": "hs.ui",
+      "methods": [
+        {
+          "name": "window",
+          "signature": "func window(_ dict: [String: Any]) -> HSUIWindow",
+          "rawDocumentation": "Create a custom UI window\n\nCreates a borderless window that can contain custom UI elements built using a declarative,\nSwiftUI-like syntax with shapes, text, and layout containers.\n\n- Parameter dict: Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)\n- Returns: An `HSUIWindow` object for chaining\n\n**Example:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n.rectangle()\n.fill(\"#FF0000\")\n.frame({w: \"100%\", h: \"100%\"})\n.show();\n```",
+          "description": "Create a custom UI window\nCreates a borderless window that can contain custom UI elements built using a declarative,\nSwiftUI-like syntax with shapes, text, and layout containers.",
+          "params": [
+            {
+              "name": "dict",
+              "type": "[String: Any]",
+              "description": "Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)"
+            }
+          ],
+          "returns": {
+            "type": "HSUIWindow",
+            "description": "An `HSUIWindow` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/UIModule.swift",
+          "lineNumber": 105
+        },
+        {
+          "name": "alert",
+          "signature": "func alert(_ message: String) -> HSUIAlert",
+          "rawDocumentation": "Create a temporary on-screen alert\n\nDisplays a temporary notification that automatically dismisses after the specified duration.\nSimilar to the old `hs.alert` module but with more features.\n\n- Parameter message: The message text to display\n- Returns: An `HSUIAlert` object for chaining\n\n**Example:**\n```javascript\nhs.ui.alert(\"Task completed successfully!\")\n.font(HSFont.headline())\n.duration(5)\n.padding(30)\n.show();\n```",
+          "description": "Create a temporary on-screen alert\nDisplays a temporary notification that automatically dismisses after the specified duration.\nSimilar to the old `hs.alert` module but with more features.",
+          "params": [
+            {
+              "name": "message",
+              "type": "String",
+              "description": "The message text to display"
+            }
+          ],
+          "returns": {
+            "type": "HSUIAlert",
+            "description": "An `HSUIAlert` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/UIModule.swift",
+          "lineNumber": 123
+        },
+        {
+          "name": "dialog",
+          "signature": "func dialog(_ message: String) -> HSUIDialog",
+          "rawDocumentation": "Create a modal dialog with buttons\n\nShows a blocking dialog with customizable message, informative text, and buttons.\nUse the callback to handle button presses.\n\n- Parameter message: The main message text\n- Returns: An `HSUIDialog` object for chaining\n\n**Example:**\n```javascript\nhs.ui.dialog(\"Delete this file?\")\n.informativeText(\"This action cannot be undone.\")\n.buttons([\"Delete\", \"Cancel\"])\n.onButton((index) => {\nif (index === 0) {\nprint(\"Deleting file...\");\n}\n})\n.show();\n```",
+          "description": "Create a modal dialog with buttons\nShows a blocking dialog with customizable message, informative text, and buttons.\nUse the callback to handle button presses.",
+          "params": [
+            {
+              "name": "message",
+              "type": "String",
+              "description": "The main message text"
+            }
+          ],
+          "returns": {
+            "type": "HSUIDialog",
+            "description": "An `HSUIDialog` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/UIModule.swift",
+          "lineNumber": 145
+        },
+        {
+          "name": "textPrompt",
+          "signature": "func textPrompt(_ message: String) -> HSUITextPrompt",
+          "rawDocumentation": "Create a text input prompt\n\nShows a modal dialog with a text input field. The callback receives the button index\nand the entered text.\n\n- Parameter message: The prompt message\n- Returns: An `HSUITextPrompt` object for chaining\n\n**Example:**\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n.informativeText(\"Please provide your full name\")\n.defaultText(\"John Doe\")\n.buttons([\"OK\", \"Cancel\"])\n.onButton((buttonIndex, text) => {\nif (buttonIndex === 0) {\nprint(\"Name: \" + text);\n}\n})\n.show();\n```",
+          "description": "Create a text input prompt\nShows a modal dialog with a text input field. The callback receives the button index\nand the entered text.",
+          "params": [
+            {
+              "name": "message",
+              "type": "String",
+              "description": "The prompt message"
+            }
+          ],
+          "returns": {
+            "type": "HSUITextPrompt",
+            "description": "An `HSUITextPrompt` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/UIModule.swift",
+          "lineNumber": 168
+        },
+        {
+          "name": "filePicker",
+          "signature": "func filePicker() -> HSUIFilePicker",
+          "rawDocumentation": "Create a file or directory picker\n\nShows a standard macOS file picker dialog. Can be configured to select files,\ndirectories, or both, with support for file type filtering and multiple selection.\n\n- Returns: An `HSUIFilePicker` object for chaining\n\n**Example:**\n```javascript\n// File picker\nhs.ui.filePicker()\n.message(\"Choose a file to open\")\n.allowedFileTypes([\"txt\", \"md\", \"js\"])\n.onSelection((path) => {\nif (path) print(\"Selected: \" + path);\n})\n.show();\n\n// Directory picker with multiple selection\nhs.ui.filePicker()\n.canChooseFiles(false)\n.canChooseDirectories(true)\n.allowsMultipleSelection(true)\n.onSelection((paths) => {\nif (paths) {\npaths.forEach(p => print(\"Dir: \" + p));\n}\n})\n.show();\n```",
+          "description": "Create a file or directory picker\nShows a standard macOS file picker dialog. Can be configured to select files,\ndirectories, or both, with support for file type filtering and multiple selection.",
+          "params": [],
+          "returns": {
+            "type": "HSUIFilePicker",
+            "description": "An `HSUIFilePicker` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/UIModule.swift",
+          "lineNumber": 200
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "# hs.ui\n**Create custom user interfaces, alerts, dialogs, and file pickers**\nThe `hs.ui` module provides a comprehensive set of tools for creating custom user interfaces\nin Hammerspoon. It supports everything from simple alerts to complex custom windows with\nSwiftUI-like declarative syntax.\n## Key Features\n## Basic Examples\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n.duration(3)\n.show();\n```\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n.informativeText(\"Your document has unsaved changes.\")\n.buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n.onButton((index) => {\nif (index === 0) print(\"Saving...\");\n})\n.show();\n```\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n.defaultText(\"John Doe\")\n.onButton((buttonIndex, text) => {\nprint(\"User entered: \" + text);\n})\n.show();\n```\n### File Picker\n```javascript\nhs.ui.filePicker()\n.message(\"Choose a file\")\n.allowedFileTypes([\"txt\", \"md\"])\n.onSelection((path) => {\nif (path) print(\"Selected: \" + path);\n})\n.show();\n```\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n.vstack()\n.spacing(10)\n.padding(20)\n.text(\"Hello, World!\")\n.font(HSFont.title())\n.foregroundColor(\"#FFFFFF\")\n.rectangle()\n.fill(\"#4A90E2\")\n.cornerRadius(10)\n.frame({w: \"100%\", h: 60})\n.end()\n.backgroundColor(\"#2C3E50\")\n.show();\n```",
+      "rawDocumentation": "# hs.ui\n\n**Create custom user interfaces, alerts, dialogs, and file pickers**\n\nThe `hs.ui` module provides a comprehensive set of tools for creating custom user interfaces\nin Hammerspoon. It supports everything from simple alerts to complex custom windows with\nSwiftUI-like declarative syntax.\n\n## Key Features\n\n- **Custom Windows**: Build custom UI windows with shapes, text, and layouts\n- **Alerts**: Display temporary on-screen notifications\n- **Dialogs**: Show modal dialogs with custom buttons and callbacks\n- **Text Input**: Prompt users for text input\n- **File Pickers**: Let users select files or directories\n\n## Basic Examples\n\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n.duration(3)\n.show();\n```\n\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n.informativeText(\"Your document has unsaved changes.\")\n.buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n.onButton((index) => {\nif (index === 0) print(\"Saving...\");\n})\n.show();\n```\n\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n.defaultText(\"John Doe\")\n.onButton((buttonIndex, text) => {\nprint(\"User entered: \" + text);\n})\n.show();\n```\n\n### File Picker\n```javascript\nhs.ui.filePicker()\n.message(\"Choose a file\")\n.allowedFileTypes([\"txt\", \"md\"])\n.onSelection((path) => {\nif (path) print(\"Selected: \" + path);\n})\n.show();\n```\n\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n.vstack()\n.spacing(10)\n.padding(20)\n.text(\"Hello, World!\")\n.font(HSFont.title())\n.foregroundColor(\"#FFFFFF\")\n.rectangle()\n.fill(\"#4A90E2\")\n.cornerRadius(10)\n.frame({w: \"100%\", h: 60})\n.end()\n.backgroundColor(\"#2C3E50\")\n.show();\n```"
     },
     {
       "name": "hs.window",
@@ -2823,7 +2916,7 @@
         {
           "name": "findByTitle",
           "rawDocumentation": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched\nReturns: An array of HSWindow objects with matching titles",
-          "description": "Find windows by title Parameter title: The window title to search for. All windows with titles that include this string, will be matched",
+          "description": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched",
           "params": [
             {
               "name": "title",
@@ -2857,7 +2950,7 @@
         {
           "name": "moveToLeftHalf",
           "rawDocumentation": "Move a window to left half of screen\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise False",
-          "description": "Move a window to left half of screen Parameter win: An HSWindow object",
+          "description": "Move a window to left half of screen\nParameter win: An HSWindow object",
           "params": [
             {
               "name": "win",
@@ -2877,7 +2970,7 @@
         {
           "name": "moveToRightHalf",
           "rawDocumentation": "Move a window to right half of screen\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise False",
-          "description": "Move a window to right half of screen Parameter win: An HSWindow object",
+          "description": "Move a window to right half of screen\nParameter win: An HSWindow object",
           "params": [
             {
               "name": "win",
@@ -2897,7 +2990,7 @@
         {
           "name": "maximize",
           "rawDocumentation": "Maximize a window\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise false",
-          "description": "Maximize a window Parameter win: An HSWindow object",
+          "description": "Maximize a window\nParameter win: An HSWindow object",
           "params": [
             {
               "name": "win",
@@ -3586,5 +3679,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-02-10T12:58:06.346Z"
+  "generatedAt": "2026-02-25T23:24:14.894Z"
 }
