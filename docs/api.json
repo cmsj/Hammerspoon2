@@ -2683,7 +2683,983 @@
         }
       ],
       "properties": [],
-      "types": [],
+      "types": [
+        {
+          "name": "HSColorAPI",
+          "type": "typedef",
+          "rawDocumentation": "Bridge type for working with colors in JavaScript",
+          "description": "Bridge type for working with colors in JavaScript",
+          "methods": [
+            {
+              "name": "rgb",
+              "signature": "static func rgb(_ r: Double, _ g: Double, _ b: Double, _ a: Double) -> HSColor",
+              "rawDocumentation": "Create a color from RGB values\n- Parameters:\n  - r: Red component (0.0-1.0)\n  - g: Green component (0.0-1.0)\n  - b: Blue component (0.0-1.0)\n  - a: Alpha component (0.0-1.0)\n- Returns: An HSColor object",
+              "description": "Create a color from RGB values",
+              "params": [
+                {
+                  "name": "r",
+                  "type": "Double",
+                  "description": "Red component (0.0-1.0)"
+                },
+                {
+                  "name": "g",
+                  "type": "Double",
+                  "description": "Green component (0.0-1.0)"
+                },
+                {
+                  "name": "b",
+                  "type": "Double",
+                  "description": "Blue component (0.0-1.0)"
+                },
+                {
+                  "name": "a",
+                  "type": "Double",
+                  "description": "Alpha component (0.0-1.0)"
+                }
+              ],
+              "returns": {
+                "type": "HSColor",
+                "description": "An HSColor object"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSColor.swift",
+              "lineNumber": 21
+            },
+            {
+              "name": "hex",
+              "signature": "static func hex(_ hex: String) -> HSColor",
+              "rawDocumentation": "Create a color from a hex string\n- Parameter hex: Hex string (e.g. \"#FF0000\" or \"FF0000\")\n- Returns: An HSColor object",
+              "description": "Create a color from a hex string",
+              "params": [
+                {
+                  "name": "hex",
+                  "type": "String",
+                  "description": "Hex string (e.g. \"#FF0000\" or \"FF0000\")"
+                }
+              ],
+              "returns": {
+                "type": "HSColor",
+                "description": "An HSColor object"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSColor.swift",
+              "lineNumber": 26
+            },
+            {
+              "name": "named",
+              "signature": "static func named(_ name: String) -> HSColor",
+              "rawDocumentation": "Create a color from a named system color\n- Parameter name: Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")\n- Returns: An HSColor object",
+              "description": "Create a color from a named system color",
+              "params": [
+                {
+                  "name": "name",
+                  "type": "String",
+                  "description": "Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")"
+                }
+              ],
+              "returns": {
+                "type": "HSColor",
+                "description": "An HSColor object"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSColor.swift",
+              "lineNumber": 31
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUIWindowAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Example\n\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```",
+          "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, and layout containers.\n## Building UI Elements\n## Modifying Elements\n## Example\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```",
+          "methods": [
+            {
+              "name": "show",
+              "signature": "func show() -> HSUIWindow",
+              "rawDocumentation": "Show the window\n- Returns: Self for chaining",
+              "description": "Show the window",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 55
+            },
+            {
+              "name": "hide",
+              "signature": "func hide()",
+              "rawDocumentation": "Hide the window (keeps it in memory)",
+              "description": "Hide the window (keeps it in memory)",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 58
+            },
+            {
+              "name": "close",
+              "signature": "func close()",
+              "rawDocumentation": "Close and destroy the window",
+              "description": "Close and destroy the window",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 61
+            },
+            {
+              "name": "backgroundColor",
+              "signature": "func backgroundColor(_ colorValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Set the window's background color\n- Parameter colorValue: Color as hex string (e.g., \"#FF0000\") or HSColor object\n- Returns: Self for chaining",
+              "description": "Set the window's background color",
+              "params": [
+                {
+                  "name": "colorValue",
+                  "type": "JSValue",
+                  "description": "Color as hex string (e.g., \"#FF0000\") or HSColor object"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 68
+            },
+            {
+              "name": "rectangle",
+              "signature": "func rectangle() -> HSUIWindow",
+              "rawDocumentation": "Add a rectangle shape\n- Returns: Self for chaining (apply modifiers like `fill()`, `frame()`)",
+              "description": "Add a rectangle shape",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `fill()`, `frame()`)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 74
+            },
+            {
+              "name": "circle",
+              "signature": "func circle() -> HSUIWindow",
+              "rawDocumentation": "Add a circle shape\n- Returns: Self for chaining (apply modifiers like `fill()`, `frame()`)",
+              "description": "Add a circle shape",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `fill()`, `frame()`)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 78
+            },
+            {
+              "name": "text",
+              "signature": "func text(_ content: String) -> HSUIWindow",
+              "rawDocumentation": "Add a text element\n- Parameter content: The text to display\n- Returns: Self for chaining (apply modifiers like `font()`, `foregroundColor()`)",
+              "description": "Add a text element",
+              "params": [
+                {
+                  "name": "content",
+                  "type": "String",
+                  "description": "The text to display"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `font()`, `foregroundColor()`)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 83
+            },
+            {
+              "name": "vstack",
+              "signature": "func vstack() -> HSUIWindow",
+              "rawDocumentation": "Begin a vertical stack (elements arranged top to bottom)\n- Returns: Self for chaining (call `end()` when done)",
+              "description": "Begin a vertical stack (elements arranged top to bottom)",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (call `end()` when done)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 89
+            },
+            {
+              "name": "hstack",
+              "signature": "func hstack() -> HSUIWindow",
+              "rawDocumentation": "Begin a horizontal stack (elements arranged left to right)\n- Returns: Self for chaining (call `end()` when done)",
+              "description": "Begin a horizontal stack (elements arranged left to right)",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (call `end()` when done)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 93
+            },
+            {
+              "name": "zstack",
+              "signature": "func zstack() -> HSUIWindow",
+              "rawDocumentation": "Begin a z-stack (overlapping elements)\n- Returns: Self for chaining (call `end()` when done)",
+              "description": "Begin a z-stack (overlapping elements)",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (call `end()` when done)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 97
+            },
+            {
+              "name": "spacer",
+              "signature": "func spacer() -> HSUIWindow",
+              "rawDocumentation": "Add flexible spacing that expands to fill available space\n- Returns: Self for chaining",
+              "description": "Add flexible spacing that expands to fill available space",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 101
+            },
+            {
+              "name": "end",
+              "signature": "func end() -> HSUIWindow",
+              "rawDocumentation": "End the current layout container\n- Returns: Self for chaining",
+              "description": "End the current layout container",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 105
+            },
+            {
+              "name": "fill",
+              "signature": "func fill(_ colorValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Fill a shape with a color\n- Parameter colorValue: Color as hex string or HSColor\n- Returns: Self for chaining",
+              "description": "Fill a shape with a color",
+              "params": [
+                {
+                  "name": "colorValue",
+                  "type": "JSValue",
+                  "description": "Color as hex string or HSColor"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 112
+            },
+            {
+              "name": "stroke",
+              "signature": "func stroke(_ colorValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Add a stroke (border) to a shape\n- Parameter colorValue: Color as hex string or HSColor\n- Returns: Self for chaining",
+              "description": "Add a stroke (border) to a shape",
+              "params": [
+                {
+                  "name": "colorValue",
+                  "type": "JSValue",
+                  "description": "Color as hex string or HSColor"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 117
+            },
+            {
+              "name": "strokeWidth",
+              "signature": "func strokeWidth(_ width: Double) -> HSUIWindow",
+              "rawDocumentation": "Set the stroke width\n- Parameter width: Width in points\n- Returns: Self for chaining",
+              "description": "Set the stroke width",
+              "params": [
+                {
+                  "name": "width",
+                  "type": "Double",
+                  "description": "Width in points"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 122
+            },
+            {
+              "name": "cornerRadius",
+              "signature": "func cornerRadius(_ radius: Double) -> HSUIWindow",
+              "rawDocumentation": "Round the corners of a shape\n- Parameter radius: Corner radius in points\n- Returns: Self for chaining",
+              "description": "Round the corners of a shape",
+              "params": [
+                {
+                  "name": "radius",
+                  "type": "Double",
+                  "description": "Corner radius in points"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 127
+            },
+            {
+              "name": "frame",
+              "signature": "func frame(_ dict: [String: Any]) -> HSUIWindow",
+              "rawDocumentation": "Set the frame (size) of an element\n- Parameter dict: Dictionary with `w` and/or `h` (can be numbers or percentage strings like \"50%\")\n- Returns: Self for chaining",
+              "description": "Set the frame (size) of an element",
+              "params": [
+                {
+                  "name": "dict",
+                  "type": "[String: Any]",
+                  "description": "Dictionary with `w` and/or `h` (can be numbers or percentage strings like \"50%\")"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 132
+            },
+            {
+              "name": "opacity",
+              "signature": "func opacity(_ value: Double) -> HSUIWindow",
+              "rawDocumentation": "Set the opacity of an element\n- Parameter value: Opacity from 0.0 (transparent) to 1.0 (opaque)\n- Returns: Self for chaining",
+              "description": "Set the opacity of an element",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Double",
+                  "description": "Opacity from 0.0 (transparent) to 1.0 (opaque)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 137
+            },
+            {
+              "name": "font",
+              "signature": "func font(_ font: HSFont) -> HSUIWindow",
+              "rawDocumentation": "Set the font for a text element\n- Parameter font: An HSFont object (e.g., `HSFont.title()`)\n- Returns: Self for chaining",
+              "description": "Set the font for a text element",
+              "params": [
+                {
+                  "name": "font",
+                  "type": "HSFont",
+                  "description": "An HSFont object (e.g., `HSFont.title()`)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 144
+            },
+            {
+              "name": "foregroundColor",
+              "signature": "func foregroundColor(_ colorValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Set the text color\n- Parameter colorValue: Color as hex string or HSColor\n- Returns: Self for chaining",
+              "description": "Set the text color",
+              "params": [
+                {
+                  "name": "colorValue",
+                  "type": "JSValue",
+                  "description": "Color as hex string or HSColor"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 149
+            },
+            {
+              "name": "padding",
+              "signature": "func padding(_ value: Double) -> HSUIWindow",
+              "rawDocumentation": "Add padding around a layout container\n- Parameter value: Padding in points\n- Returns: Self for chaining",
+              "description": "Add padding around a layout container",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Double",
+                  "description": "Padding in points"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 156
+            },
+            {
+              "name": "spacing",
+              "signature": "func spacing(_ value: Double) -> HSUIWindow",
+              "rawDocumentation": "Set spacing between elements in a stack\n- Parameter value: Spacing in points\n- Returns: Self for chaining",
+              "description": "Set spacing between elements in a stack",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Double",
+                  "description": "Spacing in points"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 161
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUIAlertAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUIAlert\n\n**A temporary on-screen notification**\n\nDisplays a message that automatically fades out after a specified duration.\nPositioned in the center of the screen with a semi-transparent background.\n\n## Example\n\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .show();\n```",
+          "description": "# HSUIAlert\n**A temporary on-screen notification**\nDisplays a message that automatically fades out after a specified duration.\nPositioned in the center of the screen with a semi-transparent background.\n## Example\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .show();\n```",
+          "methods": [
+            {
+              "name": "font",
+              "signature": "func font(_ font: HSFont) -> HSUIAlert",
+              "rawDocumentation": "Set the font for the alert text\n- Parameter font: An HSFont object (e.g., `HSFont.headline()`)\n- Returns: Self for chaining",
+              "description": "Set the font for the alert text",
+              "params": [
+                {
+                  "name": "font",
+                  "type": "HSFont",
+                  "description": "An HSFont object (e.g., `HSFont.headline()`)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 33
+            },
+            {
+              "name": "duration",
+              "signature": "func duration(_ seconds: Double) -> HSUIAlert",
+              "rawDocumentation": "Set how long the alert is displayed\n- Parameter seconds: Duration in seconds (default: 5.0)\n- Returns: Self for chaining",
+              "description": "Set how long the alert is displayed",
+              "params": [
+                {
+                  "name": "seconds",
+                  "type": "Double",
+                  "description": "Duration in seconds (default: 5.0)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 38
+            },
+            {
+              "name": "padding",
+              "signature": "func padding(_ points: Double) -> HSUIAlert",
+              "rawDocumentation": "Set the padding around the alert text\n- Parameter points: Padding in points (default: 20)\n- Returns: Self for chaining",
+              "description": "Set the padding around the alert text",
+              "params": [
+                {
+                  "name": "points",
+                  "type": "Double",
+                  "description": "Padding in points (default: 20)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 43
+            },
+            {
+              "name": "position",
+              "signature": "func position(_ dict: [String: Any]) -> HSUIAlert",
+              "rawDocumentation": "Set a custom position for the alert\n- Parameter dict: Dictionary with `x` and `y` coordinates\n- Returns: Self for chaining",
+              "description": "Set a custom position for the alert",
+              "params": [
+                {
+                  "name": "dict",
+                  "type": "[String: Any]",
+                  "description": "Dictionary with `x` and `y` coordinates"
+                }
+              ],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 48
+            },
+            {
+              "name": "show",
+              "signature": "func show() -> HSUIAlert",
+              "rawDocumentation": "Show the alert\n- Returns: Self for chaining (can store reference to close manually)",
+              "description": "Show the alert",
+              "params": [],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining (can store reference to close manually)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 52
+            },
+            {
+              "name": "close",
+              "signature": "func close()",
+              "rawDocumentation": "Close the alert immediately",
+              "description": "Close the alert immediately",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 55
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUIDialogAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUIDialog\n\n**A modal dialog with customizable buttons**\n\nShows a blocking dialog with a message, optional informative text, and custom buttons.\nUse the callback to respond to button presses.\n\n## Example\n\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            print(\"Saving...\");\n        } else if (index === 1) {\n            print(\"Discarding changes...\");\n        }\n    })\n    .show();\n```",
+          "description": "# HSUIDialog\n**A modal dialog with customizable buttons**\nShows a blocking dialog with a message, optional informative text, and custom buttons.\nUse the callback to respond to button presses.\n## Example\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            print(\"Saving...\");\n        } else if (index === 1) {\n            print(\"Discarding changes...\");\n        }\n    })\n    .show();\n```",
+          "methods": [
+            {
+              "name": "informativeText",
+              "signature": "func informativeText(_ text: String) -> HSUIDialog",
+              "rawDocumentation": "Set additional informative text below the main message\n- Parameter text: The informative text\n- Returns: Self for chaining",
+              "description": "Set additional informative text below the main message",
+              "params": [
+                {
+                  "name": "text",
+                  "type": "String",
+                  "description": "The informative text"
+                }
+              ],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 39
+            },
+            {
+              "name": "buttons",
+              "signature": "func buttons(_ labels: [String]) -> HSUIDialog",
+              "rawDocumentation": "Set custom button labels\n- Parameter labels: Array of button labels (default: [\"OK\"])\n- Returns: Self for chaining",
+              "description": "Set custom button labels",
+              "params": [
+                {
+                  "name": "labels",
+                  "type": "[String]",
+                  "description": "Array of button labels (default: [\"OK\"])"
+                }
+              ],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 44
+            },
+            {
+              "name": "style",
+              "signature": "func style(_ style: String) -> HSUIDialog",
+              "rawDocumentation": "Set the dialog style\n- Parameter style: Style name (e.g., \"informational\", \"warning\", \"critical\")\n- Returns: Self for chaining",
+              "description": "Set the dialog style",
+              "params": [
+                {
+                  "name": "style",
+                  "type": "String",
+                  "description": "Style name (e.g., \"informational\", \"warning\", \"critical\")"
+                }
+              ],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 49
+            },
+            {
+              "name": "onButton",
+              "signature": "func onButton(_ callback: JSValue) -> HSUIDialog",
+              "rawDocumentation": "Set the callback for button presses\n- Parameter callback: Function receiving button index (0-based)\n- Returns: Self for chaining",
+              "description": "Set the callback for button presses",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "Function receiving button index (0-based)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 54
+            },
+            {
+              "name": "show",
+              "signature": "func show() -> HSUIDialog",
+              "rawDocumentation": "Show the dialog\n- Returns: Self for chaining",
+              "description": "Show the dialog",
+              "params": [],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 58
+            },
+            {
+              "name": "close",
+              "signature": "func close()",
+              "rawDocumentation": "Close the dialog programmatically",
+              "description": "Close the dialog programmatically",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 61
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUIFilePickerAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUIFilePicker\n\n**A file or directory selection dialog**\n\nShows a standard macOS open panel for selecting files or directories. Supports\nmultiple selection, file type filtering, and more.\n\n## Examples\n\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file to open\")\n    .allowedFileTypes([\"txt\", \"md\", \"js\"])\n    .onSelection((path) => {\n        if (path) {\n            print(\"Selected: \" + path);\n        } else {\n            print(\"User cancelled\");\n        }\n    })\n    .show();\n```\n\n### Directory Picker with Multiple Selection\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose directories to backup\")\n    .canChooseFiles(false)\n    .canChooseDirectories(true)\n    .allowsMultipleSelection(true)\n    .onSelection((paths) => {\n        if (paths) {\n            paths.forEach(p => print(\"Dir: \" + p));\n        }\n    })\n    .show();\n```",
+          "description": "# HSUIFilePicker\n**A file or directory selection dialog**\nShows a standard macOS open panel for selecting files or directories. Supports\nmultiple selection, file type filtering, and more.\n## Examples\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file to open\")\n    .allowedFileTypes([\"txt\", \"md\", \"js\"])\n    .onSelection((path) => {\n        if (path) {\n            print(\"Selected: \" + path);\n        } else {\n            print(\"User cancelled\");\n        }\n    })\n    .show();\n```\n### Directory Picker with Multiple Selection\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose directories to backup\")\n    .canChooseFiles(false)\n    .canChooseDirectories(true)\n    .allowsMultipleSelection(true)\n    .onSelection((paths) => {\n        if (paths) {\n            paths.forEach(p => print(\"Dir: \" + p));\n        }\n    })\n    .show();\n```",
+          "methods": [
+            {
+              "name": "message",
+              "signature": "func message(_ text: String) -> HSUIFilePicker",
+              "rawDocumentation": "Set the message displayed in the picker\n- Parameter text: The message text\n- Returns: Self for chaining",
+              "description": "Set the message displayed in the picker",
+              "params": [
+                {
+                  "name": "text",
+                  "type": "String",
+                  "description": "The message text"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 55
+            },
+            {
+              "name": "defaultPath",
+              "signature": "func defaultPath(_ path: String) -> HSUIFilePicker",
+              "rawDocumentation": "Set the starting directory\n- Parameter path: Path to directory (supports `~` for home)\n- Returns: Self for chaining",
+              "description": "Set the starting directory",
+              "params": [
+                {
+                  "name": "path",
+                  "type": "String",
+                  "description": "Path to directory (supports `~` for home)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 60
+            },
+            {
+              "name": "canChooseFiles",
+              "signature": "func canChooseFiles(_ value: Bool) -> HSUIFilePicker",
+              "rawDocumentation": "Set whether files can be selected\n- Parameter value: true to allow file selection (default: true)\n- Returns: Self for chaining",
+              "description": "Set whether files can be selected",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Bool",
+                  "description": "true to allow file selection (default: true)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 65
+            },
+            {
+              "name": "canChooseDirectories",
+              "signature": "func canChooseDirectories(_ value: Bool) -> HSUIFilePicker",
+              "rawDocumentation": "Set whether directories can be selected\n- Parameter value: true to allow directory selection (default: false)\n- Returns: Self for chaining",
+              "description": "Set whether directories can be selected",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Bool",
+                  "description": "true to allow directory selection (default: false)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 70
+            },
+            {
+              "name": "allowsMultipleSelection",
+              "signature": "func allowsMultipleSelection(_ value: Bool) -> HSUIFilePicker",
+              "rawDocumentation": "Set whether multiple items can be selected\n- Parameter value: true to allow multiple selection (default: false)\n- Returns: Self for chaining",
+              "description": "Set whether multiple items can be selected",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Bool",
+                  "description": "true to allow multiple selection (default: false)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 75
+            },
+            {
+              "name": "allowedFileTypes",
+              "signature": "func allowedFileTypes(_ types: [String]) -> HSUIFilePicker",
+              "rawDocumentation": "Restrict to specific file types\n- Parameter types: Array of file extensions (e.g., [\"txt\", \"md\"])\n- Returns: Self for chaining",
+              "description": "Restrict to specific file types",
+              "params": [
+                {
+                  "name": "types",
+                  "type": "[String]",
+                  "description": "Array of file extensions (e.g., [\"txt\", \"md\"])"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 80
+            },
+            {
+              "name": "resolvesAliases",
+              "signature": "func resolvesAliases(_ value: Bool) -> HSUIFilePicker",
+              "rawDocumentation": "Set whether to resolve symbolic links\n- Parameter value: true to resolve aliases (default: true)\n- Returns: Self for chaining",
+              "description": "Set whether to resolve symbolic links",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Bool",
+                  "description": "true to resolve aliases (default: true)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 85
+            },
+            {
+              "name": "onSelection",
+              "signature": "func onSelection(_ callback: JSValue) -> HSUIFilePicker",
+              "rawDocumentation": "Set the callback for file selection\n- Parameter callback: Function receiving selected path(s) or null if cancelled\n  - Single selection: receives a string path or null\n  - Multiple selection: receives an array of paths or null\n- Returns: Self for chaining",
+              "description": "Set the callback for file selection",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "Function receiving selected path(s) or null if cancelled"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 92
+            },
+            {
+              "name": "show",
+              "signature": "func show()",
+              "rawDocumentation": "Show the file picker dialog",
+              "description": "Show the file picker dialog",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 95
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUITextPromptAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUITextPrompt\n\n**A modal dialog with text input**\n\nShows a blocking dialog with a text input field. The callback receives both the\nbutton index and the entered text.\n\n## Example\n\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .informativeText(\"Please provide your full name\")\n    .defaultText(\"John Doe\")\n    .buttons([\"OK\", \"Cancel\"])\n    .onButton((buttonIndex, text) => {\n        if (buttonIndex === 0) {\n            print(\"User entered: \" + text);\n        }\n    })\n    .show();\n```",
+          "description": "# HSUITextPrompt\n**A modal dialog with text input**\nShows a blocking dialog with a text input field. The callback receives both the\nbutton index and the entered text.\n## Example\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .informativeText(\"Please provide your full name\")\n    .defaultText(\"John Doe\")\n    .buttons([\"OK\", \"Cancel\"])\n    .onButton((buttonIndex, text) => {\n        if (buttonIndex === 0) {\n            print(\"User entered: \" + text);\n        }\n    })\n    .show();\n```",
+          "methods": [
+            {
+              "name": "informativeText",
+              "signature": "func informativeText(_ text: String) -> HSUITextPrompt",
+              "rawDocumentation": "Set additional informative text below the main message\n- Parameter text: The informative text\n- Returns: Self for chaining",
+              "description": "Set additional informative text below the main message",
+              "params": [
+                {
+                  "name": "text",
+                  "type": "String",
+                  "description": "The informative text"
+                }
+              ],
+              "returns": {
+                "type": "HSUITextPrompt",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 37
+            },
+            {
+              "name": "defaultText",
+              "signature": "func defaultText(_ text: String) -> HSUITextPrompt",
+              "rawDocumentation": "Set the default text in the input field\n- Parameter text: Default text value\n- Returns: Self for chaining",
+              "description": "Set the default text in the input field",
+              "params": [
+                {
+                  "name": "text",
+                  "type": "String",
+                  "description": "Default text value"
+                }
+              ],
+              "returns": {
+                "type": "HSUITextPrompt",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 42
+            },
+            {
+              "name": "buttons",
+              "signature": "func buttons(_ labels: [String]) -> HSUITextPrompt",
+              "rawDocumentation": "Set custom button labels\n- Parameter labels: Array of button labels (default: [\"OK\", \"Cancel\"])\n- Returns: Self for chaining",
+              "description": "Set custom button labels",
+              "params": [
+                {
+                  "name": "labels",
+                  "type": "[String]",
+                  "description": "Array of button labels (default: [\"OK\", \"Cancel\"])"
+                }
+              ],
+              "returns": {
+                "type": "HSUITextPrompt",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 47
+            },
+            {
+              "name": "onButton",
+              "signature": "func onButton(_ callback: JSValue) -> HSUITextPrompt",
+              "rawDocumentation": "Set the callback for button presses\n- Parameter callback: Function receiving (buttonIndex, inputText)\n- Returns: Self for chaining",
+              "description": "Set the callback for button presses",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "Function receiving (buttonIndex, inputText)"
+                }
+              ],
+              "returns": {
+                "type": "HSUITextPrompt",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 52
+            },
+            {
+              "name": "show",
+              "signature": "func show()",
+              "rawDocumentation": "Show the prompt dialog",
+              "description": "Show the prompt dialog",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 55
+            }
+          ],
+          "properties": []
+        }
+      ],
       "description": "# hs.ui\n**Create custom user interfaces, alerts, dialogs, and file pickers**\nThe `hs.ui` module provides a set of tools for creating custom user interfaces\nin Hammerspoon with SwiftUI-like declarative syntax.\n## Key Features\n## Basic Examples\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .duration(3)\n    .show();\n```\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) print(\"Saving...\");\n    })\n    .show();\n```\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .defaultText(\"John Doe\")\n    .onButton((buttonIndex, text) => {\n        print(\"User entered: \" + text);\n    })\n    .show();\n```\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file\")\n    .allowedFileTypes([\"txt\", \"md\"])\n    .onSelection((path) => {\n        if (path) print(\"Selected: \" + path);\n    })\n    .show();\n```\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Hello, World!\")\n            .font(HSFont.title())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```",
       "rawDocumentation": "# hs.ui\n\n**Create custom user interfaces, alerts, dialogs, and file pickers**\n\nThe `hs.ui` module provides a set of tools for creating custom user interfaces\nin Hammerspoon with SwiftUI-like declarative syntax.\n\n## Key Features\n\n- **Custom Windows**: Build custom UI windows with shapes, text, and layouts\n- **Alerts**: Display temporary on-screen notifications\n- **Dialogs**: Show modal dialogs with custom buttons and callbacks\n- **Text Input**: Prompt users for text input\n- **File Pickers**: Let users select files or directories\n\n## Basic Examples\n\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .duration(3)\n    .show();\n```\n\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) print(\"Saving...\");\n    })\n    .show();\n```\n\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .defaultText(\"John Doe\")\n    .onButton((buttonIndex, text) => {\n        print(\"User entered: \" + text);\n    })\n    .show();\n```\n\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file\")\n    .allowedFileTypes([\"txt\", \"md\"])\n    .onSelection((path) => {\n        if (path) print(\"Selected: \" + path);\n    })\n    .show();\n```\n\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Hello, World!\")\n            .font(HSFont.title())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```"
     },
@@ -3572,5 +4548,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-02-25T23:43:09.122Z"
+  "generatedAt": "2026-02-25T23:55:34.399Z"
 }

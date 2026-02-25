@@ -1358,6 +1358,478 @@ directories, or both, with support for file type filtering and multiple selectio
 }
 
 /**
+ * Bridge type for working with colors in JavaScript
+ */
+declare class HSColor {
+    /**
+     * Create a color from RGB values
+     * @param r Red component (0.0-1.0)
+     * @param g Green component (0.0-1.0)
+     * @param b Blue component (0.0-1.0)
+     * @param a Alpha component (0.0-1.0)
+     * @returns An HSColor object
+     */
+    static rgb(r: number, g: number, b: number, a: number): HSColor;
+
+    /**
+     * Create a color from a hex string
+     * @param hex Hex string (e.g. "#FF0000" or "FF0000")
+     * @returns An HSColor object
+     */
+    static hex(hex: string): HSColor;
+
+    /**
+     * Create a color from a named system color
+     * @param name Name of the system color (e.g. "red", "blue", "systemBlue")
+     * @returns An HSColor object
+     */
+    static named(name: string): HSColor;
+
+}
+
+/**
+ * # HSUIWindow
+**A custom window with declarative UI building**
+`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like
+declarative syntax. Build interfaces using shapes, text, and layout containers.
+## Building UI Elements
+## Modifying Elements
+## Example
+```javascript
+hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+    .vstack()
+        .spacing(10)
+        .padding(20)
+        .text("Dashboard")
+            .font(HSFont.largeTitle())
+            .foregroundColor("#FFFFFF")
+        .rectangle()
+            .fill("#4A90E2")
+            .cornerRadius(10)
+            .frame({w: "90%", h: 80})
+    .end()
+    .backgroundColor("#2C3E50")
+    .show();
+```
+ */
+declare class HSUIWindow {
+    /**
+     * Show the window
+     * @returns Self for chaining
+     */
+    static show(): HSUIWindow;
+
+    /**
+     * Hide the window (keeps it in memory)
+     */
+    static hide(): void;
+
+    /**
+     * Close and destroy the window
+     */
+    static close(): void;
+
+    /**
+     * Set the window's background color
+     * @param colorValue Color as hex string (e.g., "#FF0000") or HSColor object
+     * @returns Self for chaining
+     */
+    static backgroundColor(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Add a rectangle shape
+     * @returns Self for chaining (apply modifiers like `fill()`, `frame()`)
+     */
+    static rectangle(): HSUIWindow;
+
+    /**
+     * Add a circle shape
+     * @returns Self for chaining (apply modifiers like `fill()`, `frame()`)
+     */
+    static circle(): HSUIWindow;
+
+    /**
+     * Add a text element
+     * @param content The text to display
+     * @returns Self for chaining (apply modifiers like `font()`, `foregroundColor()`)
+     */
+    static text(content: string): HSUIWindow;
+
+    /**
+     * Begin a vertical stack (elements arranged top to bottom)
+     * @returns Self for chaining (call `end()` when done)
+     */
+    static vstack(): HSUIWindow;
+
+    /**
+     * Begin a horizontal stack (elements arranged left to right)
+     * @returns Self for chaining (call `end()` when done)
+     */
+    static hstack(): HSUIWindow;
+
+    /**
+     * Begin a z-stack (overlapping elements)
+     * @returns Self for chaining (call `end()` when done)
+     */
+    static zstack(): HSUIWindow;
+
+    /**
+     * Add flexible spacing that expands to fill available space
+     * @returns Self for chaining
+     */
+    static spacer(): HSUIWindow;
+
+    /**
+     * End the current layout container
+     * @returns Self for chaining
+     */
+    static end(): HSUIWindow;
+
+    /**
+     * Fill a shape with a color
+     * @param colorValue Color as hex string or HSColor
+     * @returns Self for chaining
+     */
+    static fill(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Add a stroke (border) to a shape
+     * @param colorValue Color as hex string or HSColor
+     * @returns Self for chaining
+     */
+    static stroke(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Set the stroke width
+     * @param width Width in points
+     * @returns Self for chaining
+     */
+    static strokeWidth(width: number): HSUIWindow;
+
+    /**
+     * Round the corners of a shape
+     * @param radius Corner radius in points
+     * @returns Self for chaining
+     */
+    static cornerRadius(radius: number): HSUIWindow;
+
+    /**
+     * Set the frame (size) of an element
+     * @param dict Dictionary with `w` and/or `h` (can be numbers or percentage strings like "50%")
+     * @returns Self for chaining
+     */
+    static frame(dict: Record<string, any>): HSUIWindow;
+
+    /**
+     * Set the opacity of an element
+     * @param value Opacity from 0.0 (transparent) to 1.0 (opaque)
+     * @returns Self for chaining
+     */
+    static opacity(value: number): HSUIWindow;
+
+    /**
+     * Set the font for a text element
+     * @param font An HSFont object (e.g., `HSFont.title()`)
+     * @returns Self for chaining
+     */
+    static font(font: HSFont): HSUIWindow;
+
+    /**
+     * Set the text color
+     * @param colorValue Color as hex string or HSColor
+     * @returns Self for chaining
+     */
+    static foregroundColor(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Add padding around a layout container
+     * @param value Padding in points
+     * @returns Self for chaining
+     */
+    static padding(value: number): HSUIWindow;
+
+    /**
+     * Set spacing between elements in a stack
+     * @param value Spacing in points
+     * @returns Self for chaining
+     */
+    static spacing(value: number): HSUIWindow;
+
+}
+
+/**
+ * # HSUIAlert
+**A temporary on-screen notification**
+Displays a message that automatically fades out after a specified duration.
+Positioned in the center of the screen with a semi-transparent background.
+## Example
+```javascript
+hs.ui.alert("Task completed!")
+    .font(HSFont.headline())
+    .duration(5)
+    .padding(30)
+    .show();
+```
+ */
+declare class HSUIAlert {
+    /**
+     * Set the font for the alert text
+     * @param font An HSFont object (e.g., `HSFont.headline()`)
+     * @returns Self for chaining
+     */
+    static font(font: HSFont): HSUIAlert;
+
+    /**
+     * Set how long the alert is displayed
+     * @param seconds Duration in seconds (default: 5.0)
+     * @returns Self for chaining
+     */
+    static duration(seconds: number): HSUIAlert;
+
+    /**
+     * Set the padding around the alert text
+     * @param points Padding in points (default: 20)
+     * @returns Self for chaining
+     */
+    static padding(points: number): HSUIAlert;
+
+    /**
+     * Set a custom position for the alert
+     * @param dict Dictionary with `x` and `y` coordinates
+     * @returns Self for chaining
+     */
+    static position(dict: Record<string, any>): HSUIAlert;
+
+    /**
+     * Show the alert
+     * @returns Self for chaining (can store reference to close manually)
+     */
+    static show(): HSUIAlert;
+
+    /**
+     * Close the alert immediately
+     */
+    static close(): void;
+
+}
+
+/**
+ * # HSUIDialog
+**A modal dialog with customizable buttons**
+Shows a blocking dialog with a message, optional informative text, and custom buttons.
+Use the callback to respond to button presses.
+## Example
+```javascript
+hs.ui.dialog("Save changes?")
+    .informativeText("Your document has unsaved changes.")
+    .buttons(["Save", "Don't Save", "Cancel"])
+    .onButton((index) => {
+        if (index === 0) {
+            print("Saving...");
+        } else if (index === 1) {
+            print("Discarding changes...");
+        }
+    })
+    .show();
+```
+ */
+declare class HSUIDialog {
+    /**
+     * Set additional informative text below the main message
+     * @param text The informative text
+     * @returns Self for chaining
+     */
+    static informativeText(text: string): HSUIDialog;
+
+    /**
+     * Set custom button labels
+     * @param labels Array of button labels (default: ["OK"])
+     * @returns Self for chaining
+     */
+    static buttons(labels: string[]): HSUIDialog;
+
+    /**
+     * Set the dialog style
+     * @param style Style name (e.g., "informational", "warning", "critical")
+     * @returns Self for chaining
+     */
+    static style(style: string): HSUIDialog;
+
+    /**
+     * Set the callback for button presses
+     * @param callback Function receiving button index (0-based)
+     * @returns Self for chaining
+     */
+    static onButton(callback: JSValue): HSUIDialog;
+
+    /**
+     * Show the dialog
+     * @returns Self for chaining
+     */
+    static show(): HSUIDialog;
+
+    /**
+     * Close the dialog programmatically
+     */
+    static close(): void;
+
+}
+
+/**
+ * # HSUIFilePicker
+**A file or directory selection dialog**
+Shows a standard macOS open panel for selecting files or directories. Supports
+multiple selection, file type filtering, and more.
+## Examples
+### File Picker
+```javascript
+hs.ui.filePicker()
+    .message("Choose a file to open")
+    .allowedFileTypes(["txt", "md", "js"])
+    .onSelection((path) => {
+        if (path) {
+            print("Selected: " + path);
+        } else {
+            print("User cancelled");
+        }
+    })
+    .show();
+```
+### Directory Picker with Multiple Selection
+```javascript
+hs.ui.filePicker()
+    .message("Choose directories to backup")
+    .canChooseFiles(false)
+    .canChooseDirectories(true)
+    .allowsMultipleSelection(true)
+    .onSelection((paths) => {
+        if (paths) {
+            paths.forEach(p => print("Dir: " + p));
+        }
+    })
+    .show();
+```
+ */
+declare class HSUIFilePicker {
+    /**
+     * Set the message displayed in the picker
+     * @param text The message text
+     * @returns Self for chaining
+     */
+    static message(text: string): HSUIFilePicker;
+
+    /**
+     * Set the starting directory
+     * @param path Path to directory (supports `~` for home)
+     * @returns Self for chaining
+     */
+    static defaultPath(path: string): HSUIFilePicker;
+
+    /**
+     * Set whether files can be selected
+     * @param value true to allow file selection (default: true)
+     * @returns Self for chaining
+     */
+    static canChooseFiles(value: boolean): HSUIFilePicker;
+
+    /**
+     * Set whether directories can be selected
+     * @param value true to allow directory selection (default: false)
+     * @returns Self for chaining
+     */
+    static canChooseDirectories(value: boolean): HSUIFilePicker;
+
+    /**
+     * Set whether multiple items can be selected
+     * @param value true to allow multiple selection (default: false)
+     * @returns Self for chaining
+     */
+    static allowsMultipleSelection(value: boolean): HSUIFilePicker;
+
+    /**
+     * Restrict to specific file types
+     * @param types Array of file extensions (e.g., ["txt", "md"])
+     * @returns Self for chaining
+     */
+    static allowedFileTypes(types: string[]): HSUIFilePicker;
+
+    /**
+     * Set whether to resolve symbolic links
+     * @param value true to resolve aliases (default: true)
+     * @returns Self for chaining
+     */
+    static resolvesAliases(value: boolean): HSUIFilePicker;
+
+    /**
+     * Set the callback for file selection
+     * @param callback Function receiving selected path(s) or null if cancelled
+     * @returns Self for chaining
+     */
+    static onSelection(callback: JSValue): HSUIFilePicker;
+
+    /**
+     * Show the file picker dialog
+     */
+    static show(): void;
+
+}
+
+/**
+ * # HSUITextPrompt
+**A modal dialog with text input**
+Shows a blocking dialog with a text input field. The callback receives both the
+button index and the entered text.
+## Example
+```javascript
+hs.ui.textPrompt("Enter your name")
+    .informativeText("Please provide your full name")
+    .defaultText("John Doe")
+    .buttons(["OK", "Cancel"])
+    .onButton((buttonIndex, text) => {
+        if (buttonIndex === 0) {
+            print("User entered: " + text);
+        }
+    })
+    .show();
+```
+ */
+declare class HSUITextPrompt {
+    /**
+     * Set additional informative text below the main message
+     * @param text The informative text
+     * @returns Self for chaining
+     */
+    static informativeText(text: string): HSUITextPrompt;
+
+    /**
+     * Set the default text in the input field
+     * @param text Default text value
+     * @returns Self for chaining
+     */
+    static defaultText(text: string): HSUITextPrompt;
+
+    /**
+     * Set custom button labels
+     * @param labels Array of button labels (default: ["OK", "Cancel"])
+     * @returns Self for chaining
+     */
+    static buttons(labels: string[]): HSUITextPrompt;
+
+    /**
+     * Set the callback for button presses
+     * @param callback Function receiving (buttonIndex, inputText)
+     * @returns Self for chaining
+     */
+    static onButton(callback: JSValue): HSUITextPrompt;
+
+    /**
+     * Show the prompt dialog
+     */
+    static show(): void;
+
+}
+
+/**
  * Module for interacting with windows
  */
 declare namespace hs.window {

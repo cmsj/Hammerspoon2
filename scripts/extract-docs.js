@@ -772,12 +772,31 @@ function processModule(moduleName, modulePath) {
         types: []        // Type definitions (protocols with type: 'typedef')
     };
 
-    // Find all Swift and JavaScript files in the module directory
-    const files = fs.readdirSync(modulePath);
+    // Helper to recursively find all Swift and JS files
+    function findFilesRecursive(dir) {
+        const results = [];
+        const items = fs.readdirSync(dir);
+
+        for (const item of items) {
+            const fullPath = path.join(dir, item);
+            const stat = fs.statSync(fullPath);
+
+            if (stat.isDirectory()) {
+                results.push(...findFilesRecursive(fullPath));
+            } else if (item.endsWith('.swift') || item.endsWith('.js')) {
+                results.push(fullPath);
+            }
+        }
+
+        return results;
+    }
+
+    // Find all Swift and JavaScript files in the module directory (recursively)
+    const files = findFilesRecursive(modulePath);
     let collectedModuleDoc = null;
 
-    for (const file of files) {
-        const filePath = path.join(modulePath, file);
+    for (const filePath of files) {
+        const file = path.basename(filePath);
 
         if (file.endsWith('.swift')) {
             const { protocols, moduleDocumentation } = parseSwiftFile(filePath, REPO_ROOT);
