@@ -73,10 +73,12 @@ function parseSwiftFile(filePath, repoRoot) {
 
         // Walk backwards from the protocol definition to collect /// comments
         for (let i = beforeLines.length - 1; i >= 0; i--) {
-            const line = beforeLines[i].trim();
-            if (line.startsWith('///')) {
-                protocolDoc.unshift(line.replace(/^\/\/\/\s*/, ''));
-            } else if (line && !line.startsWith('//')) {
+            const line = beforeLines[i];
+            const trimmed = line.trim();
+            if (trimmed.startsWith('///')) {
+                // Remove /// and exactly one space (if present), but preserve any additional indentation
+                protocolDoc.unshift(line.replace(/^[^\S\r\n]*\/\/\/\s?/, ''));
+            } else if (trimmed && !trimmed.startsWith('//')) {
                 // Stop if we hit a non-comment, non-empty line
                 break;
             }
@@ -122,18 +124,20 @@ function parseSwiftFile(filePath, repoRoot) {
         let charOffset = bodyStart;  // Track character position in original content
 
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
+            const line = lines[i];
+            const trimmed = line.trim();
             const lineStartPos = charOffset;
             charOffset += lines[i].length + 1; // +1 for newline
 
             // Collect documentation comments
-            if (line.startsWith('///')) {
-                currentDoc.push(line.replace(/^\/\/\/\s*/, ''));
+            if (trimmed.startsWith('///')) {
+                // Remove /// and exactly one space (if present), but preserve any additional indentation
+                currentDoc.push(line.replace(/^[^\S\r\n]*\/\/\/\s?/, ''));
                 continue;
             }
 
             // Skip empty lines and single-line comments
-            if (!line || line.startsWith('//')) {
+            if (!trimmed || trimmed.startsWith('//')) {
                 continue;
             }
 
@@ -294,10 +298,12 @@ function parseSwiftFile(filePath, repoRoot) {
         // Walk backwards from the first protocol to collect /// comments
         // Stop when we hit imports or other non-doc content
         for (let i = lines.length - 1; i >= 0; i--) {
-            const line = lines[i].trim();
-            if (line.startsWith('///')) {
-                moduleDoc.unshift(line.replace(/^\/\/\/\s*/, ''));
-            } else if (line && !line.startsWith('//')) {
+            const line = lines[i];
+            const trimmed = line.trim();
+            if (trimmed.startsWith('///')) {
+                // Remove /// and exactly one space (if present), but preserve any additional indentation
+                moduleDoc.unshift(line.replace(/^[^\S\r\n]*\/\/\/\s?/, ''));
+            } else if (trimmed && !trimmed.startsWith('//')) {
                 // Stop if we hit a non-comment, non-empty line
                 break;
             }

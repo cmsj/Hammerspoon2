@@ -15,9 +15,8 @@ import AppKit
 ///
 /// **Create custom user interfaces, alerts, dialogs, and file pickers**
 ///
-/// The `hs.ui` module provides a comprehensive set of tools for creating custom user interfaces
-/// in Hammerspoon. It supports everything from simple alerts to complex custom windows with
-/// SwiftUI-like declarative syntax.
+/// The `hs.ui` module provides a set of tools for creating custom user interfaces
+/// in Hammerspoon with SwiftUI-like declarative syntax.
 ///
 /// ## Key Features
 ///
