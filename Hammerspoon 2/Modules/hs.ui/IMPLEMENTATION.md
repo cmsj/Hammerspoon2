@@ -94,11 +94,10 @@ Successfully implemented the hs.ui module for Hammerspoon v2, providing a unifie
 15. `Views/UIAlertView.swift`
 16. `Views/UIDialogView.swift`
 
-### Documentation (4 files)
-17. `hs.ui.js` - JavaScript module companion
+### Documentation (3 files)
+17. `hs.ui.js` - JavaScript module companion with integrated examples (hs.ui.examples)
 18. `README.md` - User documentation
-19. `examples.js` - Example code
-20. `IMPLEMENTATION.md` - This file
+19. `IMPLEMENTATION.md` - This file
 
 ## Files Modified
 
