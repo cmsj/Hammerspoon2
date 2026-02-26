@@ -9,6 +9,10 @@ import Foundation
 import JavaScriptCore
 import SwiftUI
 
+// ---------------------------------------------------------------
+// MARK: - Bridge Class (JavaScript Interface)
+// ---------------------------------------------------------------
+
 /// Bridge type for working with colors in JavaScript
 @objc protocol HSColorAPI: HSTypeAPI, JSExport {
     /// Create a color from RGB values
@@ -33,9 +37,9 @@ import SwiftUI
 
 @objc class HSColor: NSObject, HSColorAPI {
     @objc var typeName = "HSColor"
-    var color: Color
+    private(set) var color: Color
 
-    private init(color: Color) {
+    init(color: Color) {
         self.color = color
         super.init()
     }
@@ -43,7 +47,7 @@ import SwiftUI
     // MARK: - Factory Methods
 
     @objc static func rgb(_ r: Double, _ g: Double, _ b: Double, _ a: Double = 1.0) -> HSColor {
-        HSColor(color: Color(.sRGB, red: r, green: g, blue: b, opacity: a))
+        Color(.sRGB, red: r, green: g, blue: b, opacity: a).toBridge()
     }
 
     @objc static func hex(_ hex: String) -> HSColor {
@@ -54,7 +58,7 @@ import SwiftUI
 
         guard unsafe Scanner(string: hexSanitized).scanHexInt64(&rgb) else {
             AKError("hs.ui: Invalid hex color: \(hex), using black")
-            return HSColor(color: .black)
+            return Color.black.toBridge()
         }
 
         let length = hexSanitized.count
@@ -72,10 +76,10 @@ import SwiftUI
             a = Double(rgb & 0x000000FF) / 255.0
         } else {
             AKError("hs.ui: Invalid hex color length: \(hex), using black")
-            return HSColor(color: .black)
+            return Color.black.toBridge()
         }
 
-        return HSColor(color: Color(.sRGB, red: r, green: g, blue: b, opacity: a))
+        return Color(.sRGB, red: r, green: g, blue: b, opacity: a).toBridge()
     }
 
     @objc static func named(_ name: String) -> HSColor {
@@ -98,7 +102,7 @@ import SwiftUI
             color = .black
         }
 
-        return HSColor(color: color)
+        return color.toBridge()
     }
 
     // MARK: - Helper Methods
@@ -109,6 +113,39 @@ import SwiftUI
             return HSColor.hex(hexString)
         } else if let color = value.toObjectOf(HSColor.self) as? HSColor {
             return color
+        }
+        return nil
+    }
+}
+
+// ---------------------------------------------------------------
+// MARK: - JSConvertible Extension (Bridge Layer)
+// ---------------------------------------------------------------
+
+extension Color: JSConvertible {
+    typealias BridgeType = HSColor
+
+    init(from bridge: HSColor) {
+        self = bridge.color
+    }
+
+    func toBridge() -> HSColor {
+        HSColor(color: self)
+    }
+}
+
+// ---------------------------------------------------------------
+// MARK: - JSValue Convenience Extension
+// ---------------------------------------------------------------
+
+extension JSValue {
+    /// Convert a JSValue to a SwiftUI Color
+    /// Supports:
+    /// - HSColor objects
+    /// - Hex strings (e.g. "#FF0000" or "FF0000")
+    func toColor() -> Color? {
+        if let bridge = HSColor.fromJSValue(self) {
+            return Color(from: bridge)
         }
         return nil
     }

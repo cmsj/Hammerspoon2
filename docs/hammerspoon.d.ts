@@ -7,6 +7,36 @@
 // ========================================
 
 /**
+ * Bridge type for working with colors in JavaScript
+ */
+declare class HSColor {
+    /**
+     * Create a color from RGB values
+     * @param r Red component (0.0-1.0)
+     * @param g Green component (0.0-1.0)
+     * @param b Blue component (0.0-1.0)
+     * @param a Alpha component (0.0-1.0)
+     * @returns An HSColor object
+     */
+    static rgb(r: number, g: number, b: number, a: number): HSColor;
+
+    /**
+     * Create a color from a hex string
+     * @param hex Hex string (e.g. "#FF0000" or "FF0000")
+     * @returns An HSColor object
+     */
+    static hex(hex: string): HSColor;
+
+    /**
+     * Create a color from a named system color
+     * @param name Name of the system color (e.g. "red", "blue", "systemBlue")
+     * @returns An HSColor object
+     */
+    static named(name: string): HSColor;
+
+}
+
+/**
  * This is a JavaScript object used to represent macOS fonts. It includes a variety of static methods that can instantiate the various font sizes commonly used with UI elements, and also includes static methods for instantiating the system font at various sizes/weights, or any custom font available on the system.
  */
 declare class HSFont {
@@ -1354,36 +1384,6 @@ directories, or both, with support for file type filtering and multiple selectio
      * @returns An `HSUIFilePicker` object for chaining
      */
     function filePicker(): HSUIFilePicker;
-
-}
-
-/**
- * Bridge type for working with colors in JavaScript
- */
-declare class HSColor {
-    /**
-     * Create a color from RGB values
-     * @param r Red component (0.0-1.0)
-     * @param g Green component (0.0-1.0)
-     * @param b Blue component (0.0-1.0)
-     * @param a Alpha component (0.0-1.0)
-     * @returns An HSColor object
-     */
-    static rgb(r: number, g: number, b: number, a: number): HSColor;
-
-    /**
-     * Create a color from a hex string
-     * @param hex Hex string (e.g. "#FF0000" or "FF0000")
-     * @returns An HSColor object
-     */
-    static hex(hex: string): HSColor;
-
-    /**
-     * Create a color from a named system color
-     * @param name Name of the system color (e.g. "red", "blue", "systemBlue")
-     * @returns An HSColor object
-     */
-    static named(name: string): HSColor;
 
 }
 

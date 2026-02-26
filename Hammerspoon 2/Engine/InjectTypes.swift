@@ -24,6 +24,7 @@ struct TypeBridgesInstaller: JSContextInstallable {
             "HSRect":  HSRect.self,
 
             "HSFont":  HSFont.self,
+            "HSColor": HSColor.self,
         ]
 
         typeBridges.forEach { key, value in

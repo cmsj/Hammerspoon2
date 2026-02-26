@@ -263,8 +263,8 @@ import SwiftUI
     // MARK: - Background Styling
 
     @objc func backgroundColor(_ colorValue: JSValue) -> HSUIWindow {
-        if let color = HSColor.fromJSValue(colorValue) {
-            windowBackgroundColor = color.color
+        if let color = colorValue.toColor() {
+            windowBackgroundColor = color
         }
         return self
     }
@@ -355,16 +355,16 @@ import SwiftUI
 
     @objc func fill(_ colorValue: JSValue) -> HSUIWindow {
         if let shapeable = currentElement as? any ShapeModifiable,
-           let color = HSColor.fromJSValue(colorValue) {
-            shapeable.fillColor = color.color
+           let color = colorValue.toColor() {
+            shapeable.fillColor = color
         }
         return self
     }
 
     @objc func stroke(_ colorValue: JSValue) -> HSUIWindow {
         if let shapeable = currentElement as? any ShapeModifiable,
-           let color = HSColor.fromJSValue(colorValue) {
-            shapeable.strokeColor = color.color
+           let color = colorValue.toColor() {
+            shapeable.strokeColor = color
         }
         return self
     }
@@ -409,8 +409,8 @@ import SwiftUI
 
     @objc func foregroundColor(_ colorValue: JSValue) -> HSUIWindow {
         if let textElement = currentElement as? UIText,
-           let color = HSColor.fromJSValue(colorValue) {
-            textElement.foregroundColor = color.color
+           let color = colorValue.toColor() {
+            textElement.foregroundColor = color
         }
         return self
     }

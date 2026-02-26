@@ -2685,90 +2685,6 @@
       "properties": [],
       "types": [
         {
-          "name": "HSColorAPI",
-          "type": "typedef",
-          "rawDocumentation": "Bridge type for working with colors in JavaScript",
-          "description": "Bridge type for working with colors in JavaScript",
-          "methods": [
-            {
-              "name": "rgb",
-              "signature": "static func rgb(_ r: Double, _ g: Double, _ b: Double, _ a: Double) -> HSColor",
-              "rawDocumentation": "Create a color from RGB values\n- Parameters:\n  - r: Red component (0.0-1.0)\n  - g: Green component (0.0-1.0)\n  - b: Blue component (0.0-1.0)\n  - a: Alpha component (0.0-1.0)\n- Returns: An HSColor object",
-              "description": "Create a color from RGB values",
-              "params": [
-                {
-                  "name": "r",
-                  "type": "Double",
-                  "description": "Red component (0.0-1.0)"
-                },
-                {
-                  "name": "g",
-                  "type": "Double",
-                  "description": "Green component (0.0-1.0)"
-                },
-                {
-                  "name": "b",
-                  "type": "Double",
-                  "description": "Blue component (0.0-1.0)"
-                },
-                {
-                  "name": "a",
-                  "type": "Double",
-                  "description": "Alpha component (0.0-1.0)"
-                }
-              ],
-              "returns": {
-                "type": "HSColor",
-                "description": "An HSColor object"
-              },
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSColor.swift",
-              "lineNumber": 21
-            },
-            {
-              "name": "hex",
-              "signature": "static func hex(_ hex: String) -> HSColor",
-              "rawDocumentation": "Create a color from a hex string\n- Parameter hex: Hex string (e.g. \"#FF0000\" or \"FF0000\")\n- Returns: An HSColor object",
-              "description": "Create a color from a hex string",
-              "params": [
-                {
-                  "name": "hex",
-                  "type": "String",
-                  "description": "Hex string (e.g. \"#FF0000\" or \"FF0000\")"
-                }
-              ],
-              "returns": {
-                "type": "HSColor",
-                "description": "An HSColor object"
-              },
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSColor.swift",
-              "lineNumber": 26
-            },
-            {
-              "name": "named",
-              "signature": "static func named(_ name: String) -> HSColor",
-              "rawDocumentation": "Create a color from a named system color\n- Parameter name: Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")\n- Returns: An HSColor object",
-              "description": "Create a color from a named system color",
-              "params": [
-                {
-                  "name": "name",
-                  "type": "String",
-                  "description": "Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")"
-                }
-              ],
-              "returns": {
-                "type": "HSColor",
-                "description": "An HSColor object"
-              },
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSColor.swift",
-              "lineNumber": 31
-            }
-          ],
-          "properties": []
-        },
-        {
           "name": "HSUIWindowAPI",
           "type": "typedef",
           "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Example\n\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```",
@@ -4115,6 +4031,91 @@
   ],
   "types": [
     {
+      "name": "HSColorAPI",
+      "type": "typedef",
+      "rawDocumentation": "Bridge type for working with colors in JavaScript",
+      "description": "Bridge type for working with colors in JavaScript",
+      "methods": [
+        {
+          "name": "rgb",
+          "signature": "static func rgb(_ r: Double, _ g: Double, _ b: Double, _ a: Double) -> HSColor",
+          "rawDocumentation": "Create a color from RGB values\n- Parameters:\n  - r: Red component (0.0-1.0)\n  - g: Green component (0.0-1.0)\n  - b: Blue component (0.0-1.0)\n  - a: Alpha component (0.0-1.0)\n- Returns: An HSColor object",
+          "description": "Create a color from RGB values",
+          "params": [
+            {
+              "name": "r",
+              "type": "Double",
+              "description": "Red component (0.0-1.0)"
+            },
+            {
+              "name": "g",
+              "type": "Double",
+              "description": "Green component (0.0-1.0)"
+            },
+            {
+              "name": "b",
+              "type": "Double",
+              "description": "Blue component (0.0-1.0)"
+            },
+            {
+              "name": "a",
+              "type": "Double",
+              "description": "Alpha component (0.0-1.0)"
+            }
+          ],
+          "returns": {
+            "type": "HSColor",
+            "description": "An HSColor object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
+          "lineNumber": 25
+        },
+        {
+          "name": "hex",
+          "signature": "static func hex(_ hex: String) -> HSColor",
+          "rawDocumentation": "Create a color from a hex string\n- Parameter hex: Hex string (e.g. \"#FF0000\" or \"FF0000\")\n- Returns: An HSColor object",
+          "description": "Create a color from a hex string",
+          "params": [
+            {
+              "name": "hex",
+              "type": "String",
+              "description": "Hex string (e.g. \"#FF0000\" or \"FF0000\")"
+            }
+          ],
+          "returns": {
+            "type": "HSColor",
+            "description": "An HSColor object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
+          "lineNumber": 30
+        },
+        {
+          "name": "named",
+          "signature": "static func named(_ name: String) -> HSColor",
+          "rawDocumentation": "Create a color from a named system color\n- Parameter name: Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")\n- Returns: An HSColor object",
+          "description": "Create a color from a named system color",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")"
+            }
+          ],
+          "returns": {
+            "type": "HSColor",
+            "description": "An HSColor object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
+          "lineNumber": 35
+        }
+      ],
+      "properties": [],
+      "category": "type"
+    },
+    {
       "name": "HSFontAPI",
       "type": "typedef",
       "rawDocumentation": "This is a JavaScript object used to represent macOS fonts. It includes a variety of static methods that can instantiate the various font sizes commonly used with UI elements, and also includes static methods for instantiating the system font at various sizes/weights, or any custom font available on the system.",
@@ -4548,5 +4549,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-02-25T23:55:34.399Z"
+  "generatedAt": "2026-02-26T12:33:46.231Z"
 }
