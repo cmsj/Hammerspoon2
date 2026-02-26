@@ -13,17 +13,17 @@
  *   hs.ui.examples.simpleRectangle()
  *   hs.ui.examples.list()  // List all available examples
  */
-hs.ui.examples = {
+const examples = {
     /**
      * List all available examples
      */
     list: function() {
-        print("Available hs.ui examples:");
+        console.log("Available hs.ui examples:");
         const examples = Object.keys(hs.ui.examples).filter(k => k !== 'list');
         examples.forEach((name, i) => {
-            print(`  ${i + 1}. ${name}`);
+            console.log(`  ${i + 1}. ${name}`);
         });
-        print("\nRun with: hs.ui.examples.<name>()");
+        console.log("\nRun with: hs.ui.examples.<name>()");
     },
 
     /**
@@ -196,10 +196,10 @@ hs.ui.examples = {
             .buttons(["Continue", "Cancel"])
             .onButton((index) => {
                 if (index === 0) {
-                    print("User chose to continue");
+                    console.log("User chose to continue");
                     hs.ui.alert("Continuing...").show();
                 } else {
-                    print("User cancelled");
+                    console.log("User cancelled");
                     hs.ui.alert("Cancelled").show();
                 }
             })
@@ -215,12 +215,12 @@ hs.ui.examples = {
             .buttons(["Save", "Don't Save", "Cancel"])
             .onButton((index) => {
                 if (index === 0) {
-                    print("Saving document...");
+                    console.log("Saving document...");
                     hs.ui.alert("Document saved").duration(2).show();
                 } else if (index === 1) {
-                    print("Discarding changes...");
+                    console.log("Discarding changes...");
                 } else {
-                    print("Cancelled");
+                    console.log("Cancelled");
                 }
             })
             .show();
@@ -305,10 +305,10 @@ hs.ui.examples = {
             .buttons(["OK", "Cancel"])
             .onButton((buttonIndex, text) => {
                 if (buttonIndex === 0) {
-                    print("User entered: " + text);
+                    console.log("User entered: " + text);
                     hs.ui.alert("Hello, " + text + "!").show();
                 } else {
-                    print("User cancelled");
+                    console.log("User cancelled");
                 }
             })
             .show();
@@ -326,10 +326,10 @@ hs.ui.examples = {
             .allowedFileTypes(["txt", "md", "js"])
             .onSelection((result) => {
                 if (result) {
-                    print("Selected file: " + result);
+                    console.log("Selected file: " + result);
                     hs.ui.alert("Selected: " + result).show();
                 } else {
-                    print("User cancelled");
+                    console.log("User cancelled");
                 }
             })
             .show();
@@ -346,12 +346,12 @@ hs.ui.examples = {
             .allowsMultipleSelection(true)
             .onSelection((result) => {
                 if (result) {
-                    print("Selected " + result.length + " directories:");
+                    console.log("Selected " + result.length + " directories:");
                     for (let dir of result) {
-                        print("  - " + dir);
+                        console.log("  - " + dir);
                     }
                 } else {
-                    print("User cancelled");
+                    console.log("User cancelled");
                 }
             })
             .show();
@@ -377,7 +377,7 @@ hs.ui.examples = {
                 .backgroundColor("#2C3E50")
                 .show();
         } else {
-            print("Failed to load image. Make sure ~/Pictures/sample.jpg exists.");
+            console.log("Failed to load image. Make sure ~/Pictures/sample.jpg exists.");
         }
     },
 
@@ -483,7 +483,7 @@ hs.ui.examples = {
             })
             .catch(err => {
                 placeholderWin.close();
-                print("Failed to load image from URL:", err);
+                console.log("Failed to load image from URL:", err);
             });
     },
 
@@ -493,13 +493,13 @@ hs.ui.examples = {
     imageManipulation: function() {
         const original = HSImage.fromName("NSComputer");
         if (!original) {
-            print("Failed to load image");
+            console.log("Failed to load image");
             return;
         }
 
         // Get size
         const size = original.size();
-        print("Original size: " + size.w + "x" + size.h);
+        console.log("Original size: " + size.w + "x" + size.h);
 
         // Resize
         const resized = original.setSize({w: 128, h: 128}, false);
@@ -536,7 +536,7 @@ hs.ui.examples = {
     imageOpacity: function() {
         const img = HSImage.fromName("NSFolder");
         if (!img) {
-            print("Failed to load image");
+            console.log("Failed to load image");
             return;
         }
 
@@ -586,6 +586,14 @@ hs.ui.examples = {
             .show();
     }
 };
+
+// Use Object.defineProperty to ensure the property is properly set on the Swift-bridged object
+Object.defineProperty(hs.ui, 'examples', {
+    value: examples,
+    writable: false,
+    enumerable: true,
+    configurable: false
+});
 
 // Module is ready
 console.log("hs.ui module loaded with " + (Object.keys(hs.ui.examples).length - 1) + " examples");
