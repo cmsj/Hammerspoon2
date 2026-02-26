@@ -2687,8 +2687,8 @@
         {
           "name": "HSUIWindowAPI",
           "type": "typedef",
-          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Example\n\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```",
-          "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, and layout containers.\n## Building UI Elements\n## Modifying Elements\n## Example\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```",
+          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Images**: `image(imageValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n## Building UI Elements\n## Modifying Elements\n## Examples\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
           "methods": [
             {
               "name": "show",
@@ -2702,7 +2702,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 55
+              "lineNumber": 72
             },
             {
               "name": "hide",
@@ -2713,7 +2713,7 @@
               "returns": null,
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 58
+              "lineNumber": 75
             },
             {
               "name": "close",
@@ -2724,7 +2724,7 @@
               "returns": null,
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 61
+              "lineNumber": 78
             },
             {
               "name": "backgroundColor",
@@ -2744,7 +2744,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 68
+              "lineNumber": 85
             },
             {
               "name": "rectangle",
@@ -2758,7 +2758,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 74
+              "lineNumber": 91
             },
             {
               "name": "circle",
@@ -2772,7 +2772,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 78
+              "lineNumber": 95
             },
             {
               "name": "text",
@@ -2792,7 +2792,27 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 83
+              "lineNumber": 100
+            },
+            {
+              "name": "image",
+              "signature": "func image(_ imageValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Add an image element\n- Parameter imageValue: Image as HSImage object or file path string\n- Returns: Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)",
+              "description": "Add an image element",
+              "params": [
+                {
+                  "name": "imageValue",
+                  "type": "JSValue",
+                  "description": "Image as HSImage object or file path string"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 105
             },
             {
               "name": "vstack",
@@ -2806,7 +2826,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 89
+              "lineNumber": 111
             },
             {
               "name": "hstack",
@@ -2820,7 +2840,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 93
+              "lineNumber": 115
             },
             {
               "name": "zstack",
@@ -2834,7 +2854,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 97
+              "lineNumber": 119
             },
             {
               "name": "spacer",
@@ -2848,7 +2868,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 101
+              "lineNumber": 123
             },
             {
               "name": "end",
@@ -2862,7 +2882,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 105
+              "lineNumber": 127
             },
             {
               "name": "fill",
@@ -2882,7 +2902,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 112
+              "lineNumber": 134
             },
             {
               "name": "stroke",
@@ -2902,7 +2922,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 117
+              "lineNumber": 139
             },
             {
               "name": "strokeWidth",
@@ -2922,7 +2942,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 122
+              "lineNumber": 144
             },
             {
               "name": "cornerRadius",
@@ -2942,7 +2962,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 127
+              "lineNumber": 149
             },
             {
               "name": "frame",
@@ -2962,7 +2982,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 132
+              "lineNumber": 154
             },
             {
               "name": "opacity",
@@ -2982,7 +3002,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 137
+              "lineNumber": 159
             },
             {
               "name": "font",
@@ -3002,7 +3022,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 144
+              "lineNumber": 166
             },
             {
               "name": "foregroundColor",
@@ -3022,7 +3042,41 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 149
+              "lineNumber": 171
+            },
+            {
+              "name": "resizable",
+              "signature": "func resizable() -> HSUIWindow",
+              "rawDocumentation": "Make an image resizable (allows it to scale with frame size)\n- Returns: Self for chaining",
+              "description": "Make an image resizable (allows it to scale with frame size)",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 177
+            },
+            {
+              "name": "aspectRatio",
+              "signature": "func aspectRatio(_ mode: String) -> HSUIWindow",
+              "rawDocumentation": "Set the aspect ratio mode for an image\n- Parameter mode: \"fit\" (scales to fit within frame) or \"fill\" (scales to fill frame)\n- Returns: Self for chaining",
+              "description": "Set the aspect ratio mode for an image",
+              "params": [
+                {
+                  "name": "mode",
+                  "type": "String",
+                  "description": "\"fit\" (scales to fit within frame) or \"fill\" (scales to fill frame)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 182
             },
             {
               "name": "padding",
@@ -3042,7 +3096,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 156
+              "lineNumber": 189
             },
             {
               "name": "spacing",
@@ -3062,7 +3116,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 161
+              "lineNumber": 194
             }
           ],
           "properties": []
@@ -4350,6 +4404,276 @@
       "category": "type"
     },
     {
+      "name": "HSImageAPI",
+      "type": "typedef",
+      "rawDocumentation": "Bridge type for working with images in JavaScript\n\nHSImage provides a comprehensive API for loading, manipulating, and saving images.\nIt supports various image sources including files, system icons, app bundles, and URLs.\n\n## Loading Images\n\n```javascript\n// Load from file\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Load system image\nconst icon = HSImage.fromName(\"NSComputer\")\n\n// Load app icon\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n\n// Load from URL (asynchronous with Promise)\nHSImage.fromURL(\"https://example.com/image.png\")\n    .then(image => console.log(\"Image loaded:\", image.size()))\n    .catch(err => console.error(\"Failed to load image:\", err))\n\n// Or with async/await\nconst image = await HSImage.fromURL(\"https://example.com/image.png\")\n```\n\n## Image Manipulation\n\n```javascript\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Get size\nconst size = img.size()  // Returns HSSize\n\n// Resize image\nconst resized = img.setSize({w: 100, h: 100}, false)  // Proportional\n\n// Crop image\nconst cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})\n\n// Save to file\nimg.saveToFile(\"/path/to/output.png\")\n```",
+      "description": "Bridge type for working with images in JavaScript\nHSImage provides a comprehensive API for loading, manipulating, and saving images.\nIt supports various image sources including files, system icons, app bundles, and URLs.\n## Loading Images\n```javascript\n// Load from file\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Load system image\nconst icon = HSImage.fromName(\"NSComputer\")\n\n// Load app icon\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n\n// Load from URL (asynchronous with Promise)\nHSImage.fromURL(\"https://example.com/image.png\")\n    .then(image => console.log(\"Image loaded:\", image.size()))\n    .catch(err => console.error(\"Failed to load image:\", err))\n\n// Or with async/await\nconst image = await HSImage.fromURL(\"https://example.com/image.png\")\n```\n## Image Manipulation\n```javascript\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Get size\nconst size = img.size()  // Returns HSSize\n\n// Resize image\nconst resized = img.setSize({w: 100, h: 100}, false)  // Proportional\n\n// Crop image\nconst cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})\n\n// Save to file\nimg.saveToFile(\"/path/to/output.png\")\n```",
+      "methods": [
+        {
+          "name": "fromPath",
+          "signature": "static func fromPath(_ path: String) -> HSImage?",
+          "rawDocumentation": "Load an image from a file path\n- Parameter path: Path to the image file\n- Returns: An HSImage object, or null if the file couldn't be loaded",
+          "description": "Load an image from a file path",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Path to the image file"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object, or null if the file couldn't be loaded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 64
+        },
+        {
+          "name": "fromName",
+          "signature": "static func fromName(_ name: String) -> HSImage?",
+          "rawDocumentation": "Load a system image by name\n- Parameter name: Name of the system image (e.g., \"NSComputer\", \"NSFolder\")\n- Returns: An HSImage object, or null if the image couldn't be found",
+          "description": "Load a system image by name",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "Name of the system image (e.g., \"NSComputer\", \"NSFolder\")"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object, or null if the image couldn't be found"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 69
+        },
+        {
+          "name": "fromAppBundle",
+          "signature": "static func fromAppBundle(_ bundleID: String) -> HSImage?",
+          "rawDocumentation": "Load an app's icon by bundle identifier\n- Parameter bundleID: Bundle identifier of the application\n- Returns: An HSImage object, or null if the app couldn't be found",
+          "description": "Load an app's icon by bundle identifier",
+          "params": [
+            {
+              "name": "bundleID",
+              "type": "String",
+              "description": "Bundle identifier of the application"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object, or null if the app couldn't be found"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 74
+        },
+        {
+          "name": "iconForFile",
+          "signature": "static func iconForFile(_ path: String) -> HSImage?",
+          "rawDocumentation": "Get the icon for a file\n- Parameter path: Path to the file\n- Returns: An HSImage object representing the file's icon",
+          "description": "Get the icon for a file",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Path to the file"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object representing the file's icon"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 79
+        },
+        {
+          "name": "iconForFileType",
+          "signature": "static func iconForFileType(_ fileType: String) -> HSImage?",
+          "rawDocumentation": "Get the icon for a file type\n- Parameter fileType: File extension or UTI (e.g., \"png\", \"public.png\")\n- Returns: An HSImage object representing the file type's icon",
+          "description": "Get the icon for a file type",
+          "params": [
+            {
+              "name": "fileType",
+              "type": "String",
+              "description": "File extension or UTI (e.g., \"png\", \"public.png\")"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object representing the file type's icon"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 84
+        },
+        {
+          "name": "fromURL",
+          "signature": "static func fromURL(_ url: String) -> JSPromise?",
+          "rawDocumentation": "Load an image from a URL (asynchronous)\n- Parameter url: URL string of the image\n- Returns: {Promise<HSImage>} A Promise that resolves to the loaded image, or rejects on error",
+          "description": "Load an image from a URL (asynchronous)",
+          "params": [
+            {
+              "name": "url",
+              "type": "String",
+              "description": "URL string of the image"
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A Promise that resolves to the loaded image, or rejects on error",
+            "promiseType": "HSImage"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 89
+        },
+        {
+          "name": "size",
+          "signature": "func size(_ size: JSValue) -> JSValue",
+          "rawDocumentation": "Get or set the image size\n- Parameter size: Optional HSSize to set (if provided, returns a resized copy)\n- Returns: The current size as HSSize, or a resized copy if size was provided",
+          "description": "Get or set the image size",
+          "params": [
+            {
+              "name": "size",
+              "type": "JSValue",
+              "description": "Optional HSSize to set (if provided, returns a resized copy)"
+            }
+          ],
+          "returns": {
+            "type": "JSValue",
+            "description": "The current size as HSSize, or a resized copy if size was provided"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 94
+        },
+        {
+          "name": "name",
+          "signature": "func name(_ name: JSValue) -> String?",
+          "rawDocumentation": "Get or set the image name\n- Parameter name: Optional name to set\n- Returns: The current or new name",
+          "description": "Get or set the image name",
+          "params": [
+            {
+              "name": "name",
+              "type": "JSValue",
+              "description": "Optional name to set"
+            }
+          ],
+          "returns": {
+            "type": "String?",
+            "description": "The current or new name"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 99
+        },
+        {
+          "name": "setSize",
+          "signature": "func setSize(_ size: JSValue, _ absolute: Bool) -> HSImage?",
+          "rawDocumentation": "Create a resized copy of the image\n- Parameters:\n  - size: Target size as HSSize\n  - absolute: If true, resize exactly to specified dimensions. If false, maintain aspect ratio\n- Returns: A new resized HSImage",
+          "description": "Create a resized copy of the image",
+          "params": [
+            {
+              "name": "size",
+              "type": "JSValue",
+              "description": "Target size as HSSize"
+            },
+            {
+              "name": "absolute",
+              "type": "Bool",
+              "description": "If true, resize exactly to specified dimensions. If false, maintain aspect ratio"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "A new resized HSImage"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 106
+        },
+        {
+          "name": "copyImage",
+          "signature": "func copyImage() -> HSImage?",
+          "rawDocumentation": "Create a copy of the image\n- Returns: A new HSImage copy",
+          "description": "Create a copy of the image",
+          "params": [],
+          "returns": {
+            "type": "HSImage?",
+            "description": "A new HSImage copy"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 110
+        },
+        {
+          "name": "croppedCopy",
+          "signature": "func croppedCopy(_ rect: JSValue) -> HSImage?",
+          "rawDocumentation": "Create a cropped copy of the image\n- Parameter rect: HSRect defining the crop area\n- Returns: A new cropped HSImage, or null if cropping failed",
+          "description": "Create a cropped copy of the image",
+          "params": [
+            {
+              "name": "rect",
+              "type": "JSValue",
+              "description": "HSRect defining the crop area"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "A new cropped HSImage, or null if cropping failed"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 115
+        },
+        {
+          "name": "saveToFile",
+          "signature": "func saveToFile(_ path: String) -> Bool",
+          "rawDocumentation": "Save the image to a file\n- Parameter path: Destination file path (extension determines format: png, jpg, tiff, bmp, gif)\n- Returns: true if saved successfully, false otherwise",
+          "description": "Save the image to a file",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Destination file path (extension determines format: png, jpg, tiff, bmp, gif)"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if saved successfully, false otherwise"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 120
+        },
+        {
+          "name": "template",
+          "signature": "func template(_ state: JSValue) -> Bool",
+          "rawDocumentation": "Get or set the template image flag\n- Parameter state: Optional boolean to set template state\n- Returns: Current template state",
+          "description": "Get or set the template image flag",
+          "params": [
+            {
+              "name": "state",
+              "type": "JSValue",
+              "description": "Optional boolean to set template state"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "Current template state"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 125
+        }
+      ],
+      "properties": [],
+      "category": "type"
+    },
+    {
       "name": "HSPointAPI",
       "type": "typedef",
       "rawDocumentation": "This is a JavaScript object used to represent coordinates, or \"points\", as used in various places throughout Hammerspoon's API, particularly where dealing with positions on a screen. Behind the scenes it is a wrapper for the CGPoint type in Swift/ObjectiveC.",
@@ -4549,5 +4873,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-02-26T12:33:46.231Z"
+  "generatedAt": "2026-02-26T14:28:54.640Z"
 }

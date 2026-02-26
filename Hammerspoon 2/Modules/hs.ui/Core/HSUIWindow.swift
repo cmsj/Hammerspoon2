@@ -15,22 +15,25 @@ import SwiftUI
 /// **A custom window with declarative UI building**
 ///
 /// `HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like
-/// declarative syntax. Build interfaces using shapes, text, and layout containers.
+/// declarative syntax. Build interfaces using shapes, text, images, and layout containers.
 ///
 /// ## Building UI Elements
 ///
 /// - **Shapes**: `rectangle()`, `circle()`
 /// - **Text**: `text(content)`
+/// - **Images**: `image(imageValue)`
 /// - **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`
 ///
 /// ## Modifying Elements
 ///
 /// - **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`
 /// - **Text modifiers**: `font()`, `foregroundColor()`
+/// - **Image modifiers**: `resizable()`, `aspectRatio(mode)`
 /// - **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`
 ///
-/// ## Example
+/// ## Examples
 ///
+/// **Simple window with text and shapes:**
 /// ```javascript
 /// hs.ui.window({x: 100, y: 100, w: 300, h: 200})
 ///     .vstack()
@@ -45,6 +48,20 @@ import SwiftUI
 ///             .frame({w: "90%", h: 80})
 ///     .end()
 ///     .backgroundColor("#2C3E50")
+///     .show();
+/// ```
+///
+/// **Window with image:**
+/// ```javascript
+/// const img = HSImage.fromPath("~/Pictures/photo.jpg")
+/// hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+///     .vstack()
+///         .padding(20)
+///         .image(img)
+///             .resizable()
+///             .aspectRatio("fit")
+///             .frame({w: 360, h: 240})
+///     .end()
 ///     .show();
 /// ```
 @objc protocol HSUIWindowAPI: HSTypeAPI, JSExport {
@@ -81,6 +98,11 @@ import SwiftUI
     /// - Parameter content: The text to display
     /// - Returns: Self for chaining (apply modifiers like `font()`, `foregroundColor()`)
     @objc func text(_ content: String) -> HSUIWindow
+
+    /// Add an image element
+    /// - Parameter imageValue: Image as HSImage object or file path string
+    /// - Returns: Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)
+    @objc func image(_ imageValue: JSValue) -> HSUIWindow
 
     // MARK: Layout Containers
 
@@ -147,6 +169,17 @@ import SwiftUI
     /// - Parameter colorValue: Color as hex string or HSColor
     /// - Returns: Self for chaining
     @objc func foregroundColor(_ colorValue: JSValue) -> HSUIWindow
+
+    // MARK: Image Modifiers
+
+    /// Make an image resizable (allows it to scale with frame size)
+    /// - Returns: Self for chaining
+    @objc func resizable() -> HSUIWindow
+
+    /// Set the aspect ratio mode for an image
+    /// - Parameter mode: "fit" (scales to fit within frame) or "fill" (scales to fill frame)
+    /// - Returns: Self for chaining
+    @objc func aspectRatio(_ mode: String) -> HSUIWindow
 
     // MARK: Layout Modifiers
 
@@ -292,6 +325,14 @@ import SwiftUI
         return self
     }
 
+    @objc func image(_ imageValue: JSValue) -> HSUIWindow {
+        let nsImage = imageValue.toNSImage()
+        let imageElement = UIImage(image: nsImage)
+        currentElement = imageElement
+        addToCurrentContainer(imageElement)
+        return self
+    }
+
     // MARK: - Layout Containers
 
     @objc func vstack() -> HSUIWindow {
@@ -411,6 +452,29 @@ import SwiftUI
         if let textElement = currentElement as? UIText,
            let color = colorValue.toColor() {
             textElement.foregroundColor = color
+        }
+        return self
+    }
+
+    // MARK: - Image Modifiers
+
+    @objc func resizable() -> HSUIWindow {
+        if let imageElement = currentElement as? UIImage {
+            imageElement.resizable = true
+        }
+        return self
+    }
+
+    @objc func aspectRatio(_ mode: String) -> HSUIWindow {
+        if let imageElement = currentElement as? UIImage {
+            switch mode.lowercased() {
+            case "fit":
+                imageElement.aspectRatio = .fit
+            case "fill":
+                imageElement.aspectRatio = .fill
+            default:
+                AKError("hs.ui: Invalid aspect ratio mode: \(mode), use 'fit' or 'fill'")
+            }
         }
         return self
     }

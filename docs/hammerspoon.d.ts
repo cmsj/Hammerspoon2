@@ -132,6 +132,140 @@ declare class HSFont {
 }
 
 /**
+ * Bridge type for working with images in JavaScript
+HSImage provides a comprehensive API for loading, manipulating, and saving images.
+It supports various image sources including files, system icons, app bundles, and URLs.
+## Loading Images
+```javascript
+// Load from file
+const img = HSImage.fromPath("/path/to/image.png")
+
+// Load system image
+const icon = HSImage.fromName("NSComputer")
+
+// Load app icon
+const appIcon = HSImage.fromAppBundle("com.apple.Safari")
+
+// Load from URL (asynchronous with Promise)
+HSImage.fromURL("https://example.com/image.png")
+    .then(image => console.log("Image loaded:", image.size()))
+    .catch(err => console.error("Failed to load image:", err))
+
+// Or with async/await
+const image = await HSImage.fromURL("https://example.com/image.png")
+```
+## Image Manipulation
+```javascript
+const img = HSImage.fromPath("/path/to/image.png")
+
+// Get size
+const size = img.size()  // Returns HSSize
+
+// Resize image
+const resized = img.setSize({w: 100, h: 100}, false)  // Proportional
+
+// Crop image
+const cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})
+
+// Save to file
+img.saveToFile("/path/to/output.png")
+```
+ */
+declare class HSImage {
+    /**
+     * Load an image from a file path
+     * @param path Path to the image file
+     * @returns An HSImage object, or null if the file couldn't be loaded
+     */
+    static fromPath(path: string): HSImage | undefined;
+
+    /**
+     * Load a system image by name
+     * @param name Name of the system image (e.g., "NSComputer", "NSFolder")
+     * @returns An HSImage object, or null if the image couldn't be found
+     */
+    static fromName(name: string): HSImage | undefined;
+
+    /**
+     * Load an app's icon by bundle identifier
+     * @param bundleID Bundle identifier of the application
+     * @returns An HSImage object, or null if the app couldn't be found
+     */
+    static fromAppBundle(bundleID: string): HSImage | undefined;
+
+    /**
+     * Get the icon for a file
+     * @param path Path to the file
+     * @returns An HSImage object representing the file's icon
+     */
+    static iconForFile(path: string): HSImage | undefined;
+
+    /**
+     * Get the icon for a file type
+     * @param fileType File extension or UTI (e.g., "png", "public.png")
+     * @returns An HSImage object representing the file type's icon
+     */
+    static iconForFileType(fileType: string): HSImage | undefined;
+
+    /**
+     * Load an image from a URL (asynchronous)
+     * @param url URL string of the image
+     * @returns A Promise that resolves to the loaded image, or rejects on error
+     */
+    static fromURL(url: string): Promise<HSImage>;
+
+    /**
+     * Get or set the image size
+     * @param size Optional HSSize to set (if provided, returns a resized copy)
+     * @returns The current size as HSSize, or a resized copy if size was provided
+     */
+    static size(size: JSValue): JSValue;
+
+    /**
+     * Get or set the image name
+     * @param name Optional name to set
+     * @returns The current or new name
+     */
+    static name(name: JSValue): string | undefined;
+
+    /**
+     * Create a resized copy of the image
+     * @param size Target size as HSSize
+     * @param absolute If true, resize exactly to specified dimensions. If false, maintain aspect ratio
+     * @returns A new resized HSImage
+     */
+    static setSize(size: JSValue, absolute: boolean): HSImage | undefined;
+
+    /**
+     * Create a copy of the image
+     * @returns A new HSImage copy
+     */
+    static copyImage(): HSImage | undefined;
+
+    /**
+     * Create a cropped copy of the image
+     * @param rect HSRect defining the crop area
+     * @returns A new cropped HSImage, or null if cropping failed
+     */
+    static croppedCopy(rect: JSValue): HSImage | undefined;
+
+    /**
+     * Save the image to a file
+     * @param path Destination file path (extension determines format: png, jpg, tiff, bmp, gif)
+     * @returns true if saved successfully, false otherwise
+     */
+    static saveToFile(path: string): boolean;
+
+    /**
+     * Get or set the template image flag
+     * @param state Optional boolean to set template state
+     * @returns Current template state
+     */
+    static template(state: JSValue): boolean;
+
+}
+
+/**
  * This is a JavaScript object used to represent coordinates, or "points", as used in various places throughout Hammerspoon's API, particularly where dealing with positions on a screen. Behind the scenes it is a wrapper for the CGPoint type in Swift/ObjectiveC.
  */
 declare class HSPoint {
@@ -1391,10 +1525,11 @@ directories, or both, with support for file type filtering and multiple selectio
  * # HSUIWindow
 **A custom window with declarative UI building**
 `HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like
-declarative syntax. Build interfaces using shapes, text, and layout containers.
+declarative syntax. Build interfaces using shapes, text, images, and layout containers.
 ## Building UI Elements
 ## Modifying Elements
-## Example
+## Examples
+**Simple window with text and shapes:**
 ```javascript
 hs.ui.window({x: 100, y: 100, w: 300, h: 200})
     .vstack()
@@ -1409,6 +1544,19 @@ hs.ui.window({x: 100, y: 100, w: 300, h: 200})
             .frame({w: "90%", h: 80})
     .end()
     .backgroundColor("#2C3E50")
+    .show();
+```
+**Window with image:**
+```javascript
+const img = HSImage.fromPath("~/Pictures/photo.jpg")
+hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+    .vstack()
+        .padding(20)
+        .image(img)
+            .resizable()
+            .aspectRatio("fit")
+            .frame({w: 360, h: 240})
+    .end()
     .show();
 ```
  */
@@ -1454,6 +1602,13 @@ declare class HSUIWindow {
      * @returns Self for chaining (apply modifiers like `font()`, `foregroundColor()`)
      */
     static text(content: string): HSUIWindow;
+
+    /**
+     * Add an image element
+     * @param imageValue Image as HSImage object or file path string
+     * @returns Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)
+     */
+    static image(imageValue: JSValue): HSUIWindow;
 
     /**
      * Begin a vertical stack (elements arranged top to bottom)
@@ -1540,6 +1695,19 @@ declare class HSUIWindow {
      * @returns Self for chaining
      */
     static foregroundColor(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Make an image resizable (allows it to scale with frame size)
+     * @returns Self for chaining
+     */
+    static resizable(): HSUIWindow;
+
+    /**
+     * Set the aspect ratio mode for an image
+     * @param mode "fit" (scales to fit within frame) or "fill" (scales to fill frame)
+     * @returns Self for chaining
+     */
+    static aspectRatio(mode: string): HSUIWindow;
 
     /**
      * Add padding around a layout container

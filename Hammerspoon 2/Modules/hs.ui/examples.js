@@ -302,6 +302,223 @@ function example15_directoryPicker() {
         .show();
 }
 
+// Example 16: Display an image from a file
+function example16_imageFromFile() {
+    const img = HSImage.fromPath("~/Pictures/sample.jpg");
+    if (img) {
+        hs.ui.window({x: 100, y: 100, w: 600, h: 500})
+            .vstack()
+                .padding(20)
+                .text("Image Viewer")
+                    .font(HSFont.title())
+                    .foregroundColor("#FFFFFF")
+                .image(img)
+                    .resizable()
+                    .aspectRatio("fit")
+                    .frame({w: 560, h: 400})
+            .end()
+            .backgroundColor("#2C3E50")
+            .show();
+    } else {
+        print("Failed to load image. Make sure ~/Pictures/sample.jpg exists.");
+    }
+}
+
+// Example 17: Display system icons
+function example17_systemIcons() {
+    const icons = [
+        HSImage.fromName("NSComputer"),
+        HSImage.fromName("NSFolder"),
+        HSImage.fromName("NSNetwork"),
+        HSImage.fromName("NSTrashFull")
+    ];
+
+    const win = hs.ui.window({x: 100, y: 100, w: 400, h: 120})
+        .hstack()
+            .spacing(20)
+            .padding(20);
+
+    for (let icon of icons) {
+        if (icon) {
+            win.image(icon)
+                .resizable()
+                .frame({w: 64, h: 64});
+        }
+    }
+
+    win.end()
+        .backgroundColor("#F0F0F0")
+        .show();
+}
+
+// Example 18: Display app icons
+function example18_appIcons() {
+    const apps = [
+        "com.apple.Safari",
+        "com.apple.finder",
+        "com.apple.Terminal",
+        "com.apple.iTunes"
+    ];
+
+    const win = hs.ui.window({x: 100, y: 100, w: 300, h: 300})
+        .vstack()
+            .spacing(15)
+            .padding(20)
+            .text("Application Icons")
+                .font(HSFont.headline())
+                .foregroundColor("#333333");
+
+    for (let bundleID of apps) {
+        const icon = HSImage.fromAppBundle(bundleID);
+        if (icon) {
+            win.hstack()
+                    .spacing(10)
+                    .image(icon)
+                        .resizable()
+                        .frame({w: 48, h: 48})
+                    .text(bundleID)
+                        .font(HSFont.body())
+                        .foregroundColor("#666666")
+                .end();
+        }
+    }
+
+    win.end()
+        .backgroundColor("#FFFFFF")
+        .show();
+}
+
+// Example 19: Load image from URL (using Promises)
+function example19_imageFromURL() {
+    const placeholderWin = hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+        .vstack()
+            .padding(20)
+            .text("Loading image from URL...")
+                .font(HSFont.title())
+                .foregroundColor("#FFFFFF")
+        .end()
+        .backgroundColor("#2C3E50")
+        .show();
+
+    HSImage.fromURL("https://picsum.photos/400/300")
+        .then(image => {
+            placeholderWin.close();
+
+            hs.ui.window({x: 100, y: 100, w: 440, h: 360})
+                .vstack()
+                    .padding(20)
+                    .text("Image from URL")
+                        .font(HSFont.title())
+                        .foregroundColor("#FFFFFF")
+                    .image(image)
+                        .resizable()
+                        .aspectRatio("fit")
+                        .frame({w: 400, h: 300})
+                .end()
+                .backgroundColor("#2C3E50")
+                .show();
+        })
+        .catch(err => {
+            placeholderWin.close();
+            print("Failed to load image from URL:", err);
+        });
+}
+
+// Example 20: Image manipulation
+function example20_imageManipulation() {
+    const original = HSImage.fromName("NSComputer");
+    if (!original) {
+        print("Failed to load image");
+        return;
+    }
+
+    // Get size
+    const size = original.size();
+    print("Original size: " + size.w + "x" + size.h);
+
+    // Resize
+    const resized = original.setSize({w: 128, h: 128}, false);
+
+    // Display both
+    hs.ui.window({x: 100, y: 100, w: 350, h: 200})
+        .hstack()
+            .spacing(20)
+            .padding(20)
+            .vstack()
+                .spacing(5)
+                .text("Original")
+                    .font(HSFont.caption())
+                .image(original)
+                    .resizable()
+                    .frame({w: 128, h: 128})
+            .end()
+            .vstack()
+                .spacing(5)
+                .text("Resized")
+                    .font(HSFont.caption())
+                .image(resized)
+                    .resizable()
+                    .frame({w: 128, h: 128})
+            .end()
+        .end()
+        .backgroundColor("#F5F5F5")
+        .show();
+}
+
+// Example 21: Image with opacity
+function example21_imageOpacity() {
+    const img = HSImage.fromName("NSFolder");
+    if (!img) {
+        print("Failed to load image");
+        return;
+    }
+
+    // Display same image at different opacities
+    hs.ui.window({x: 100, y: 100, w: 450, h: 180})
+        .hstack()
+            .spacing(15)
+            .padding(20)
+            .vstack()
+                .spacing(5)
+                .text("100%")
+                    .font(HSFont.caption())
+                .image(img)
+                    .resizable()
+                    .frame({w: 96, h: 96})
+                    .opacity(1.0)
+            .end()
+            .vstack()
+                .spacing(5)
+                .text("75%")
+                    .font(HSFont.caption())
+                .image(img)
+                    .resizable()
+                    .frame({w: 96, h: 96})
+                    .opacity(0.75)
+            .end()
+            .vstack()
+                .spacing(5)
+                .text("50%")
+                    .font(HSFont.caption())
+                .image(img)
+                    .resizable()
+                    .frame({w: 96, h: 96})
+                    .opacity(0.5)
+            .end()
+            .vstack()
+                .spacing(5)
+                .text("25%")
+                    .font(HSFont.caption())
+                .image(img)
+                    .resizable()
+                    .frame({w: 96, h: 96})
+                    .opacity(0.25)
+            .end()
+        .end()
+        .backgroundColor("#F5F5F5")
+        .show();
+}
+
 // Run all examples (uncomment to test)
 // print("Running hs.ui examples...");
 // example1_simpleRectangle();
