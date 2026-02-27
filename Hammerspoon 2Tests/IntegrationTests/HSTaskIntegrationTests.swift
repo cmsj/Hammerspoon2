@@ -513,15 +513,15 @@ import JavaScriptCore
 
     // MARK: - JavaScript Enhancement Tests - async/await API
 
-    @Test("hs.task.run() exists as async function")
+    @Test("hs.task.runAsync() exists as async function")
     func testRunExists() {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
-        harness.expectTrue("typeof hs.task.run === 'function'")
+        harness.expectTrue("typeof hs.task.runAsync === 'function'")
     }
 
-    @Test("hs.task.run() returns Promise with stdout/stderr/exitCode")
+    @Test("hs.task.runAsync() returns Promise with stdout/stderr/exitCode")
     func testRunReturnsPromise() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
@@ -538,7 +538,7 @@ import JavaScriptCore
         }
 
         harness.eval("""
-        hs.task.run('/bin/echo', ['Hello async']).then(function(result) {
+        hs.task.runAsync('/bin/echo', ['Hello async']).then(function(result) {
             onResolve(result.stdout);
             onExitCode(result.exitCode);
         });
@@ -550,7 +550,7 @@ import JavaScriptCore
         #expect(capturedExitCode == 0, "Exit code should be 0")
     }
 
-    @Test("hs.task.run() rejects on non-zero exit code")
+    @Test("hs.task.runAsync() rejects on non-zero exit code")
     func testRunRejectsOnFailure() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
@@ -563,7 +563,7 @@ import JavaScriptCore
         }
 
         harness.eval("""
-        hs.task.run('/bin/sh', ['-c', 'exit 5']).catch(function(error) {
+        hs.task.runAsync('/bin/sh', ['-c', 'exit 5']).catch(function(error) {
             onReject(error.exitCode);
         });
         """)
@@ -573,7 +573,7 @@ import JavaScriptCore
         #expect(capturedExitCode == 5, "Should capture non-zero exit code")
     }
 
-    @Test("hs.task.run() supports onOutput streaming callback")
+    @Test("hs.task.runAsync() supports onOutput streaming callback")
     func testRunOnOutput() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
@@ -586,7 +586,7 @@ import JavaScriptCore
         }
 
         harness.eval("""
-        hs.task.run('/bin/echo', ['Streaming test'], {
+        hs.task.runAsync('/bin/echo', ['Streaming test'], {
             onOutput: function(stream, data) {
                 onStream(data);
             }
@@ -598,7 +598,7 @@ import JavaScriptCore
         #expect(streamedData.contains("Streaming test"), "Should stream output")
     }
 
-    @Test("hs.task.run() supports workingDirectory option")
+    @Test("hs.task.runAsync() supports workingDirectory option")
     func testRunWorkingDirectory() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
@@ -611,7 +611,7 @@ import JavaScriptCore
         }
 
         harness.eval("""
-        hs.task.run('/bin/pwd', [], {
+        hs.task.runAsync('/bin/pwd', [], {
             workingDirectory: '/private/tmp'
         }).then(function(result) {
             onResolve(result.stdout);
@@ -623,7 +623,7 @@ import JavaScriptCore
         #expect(capturedPath.trimmingCharacters(in: .whitespacesAndNewlines) == "/private/tmp", "Should use custom working directory")
     }
 
-    @Test("hs.task.run() supports environment option")
+    @Test("hs.task.runAsync() supports environment option")
     func testRunEnvironment() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
@@ -636,7 +636,7 @@ import JavaScriptCore
         }
 
         harness.eval("""
-        hs.task.run('/usr/bin/env', ['bash', '-c', 'echo $CUSTOM_VAR'], {
+        hs.task.runAsync('/usr/bin/env', ['bash', '-c', 'echo $CUSTOM_VAR'], {
             environment: { CUSTOM_VAR: 'test123' }
         }).then(function(result) {
             onResolve(result.stdout);
@@ -649,14 +649,6 @@ import JavaScriptCore
     }
 
     // MARK: - JavaScript Enhancement Tests - Helper Functions
-
-    @Test("hs.task.async() is alias for run()")
-    func testAsyncAlias() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTaskModule.self, as: "task")
-
-        harness.expectTrue("hs.task.async === hs.task.run")
-    }
 
     @Test("hs.task.shell() executes shell commands")
     func testShell() async {
@@ -999,7 +991,7 @@ import JavaScriptCore
 
         function runWithRetry() {
             attempts++;
-            return hs.task.run('/bin/sh', ['-c', 'exit 1'])
+            return hs.task.runAsync('/bin/sh', ['-c', 'exit 1'])
                 .catch(function(error) {
                     if (attempts < maxRetries) {
                         return runWithRetry();

@@ -7,39 +7,8 @@
 
 "use strict";
 
-// Alias for compatibility with enhancements (they use .new(), but the Swift API is .create())
-hs.timer.new = hs.timer.create;
-
-// Time conversion utilities
-/// Converts minutes to seconds
-/// Parameter n: A number of minutes
-/// Returns: The equivalent number of seconds
-hs.timer.minutes = function(n) {
-    return n * 60;
-};
-
-/// Converts hours to seconds
-/// Parameter n: A number of hours
-/// Returns: The equivalent number of seconds
-hs.timer.hours = function(n) {
-    return n * 3600;
-};
-
-/// Converts days to seconds
-/// Parameter n: A number of days
-/// Returns: The equivalent number of seconds
-hs.timer.days = function(n) {
-    return n * 86400;
-};
-
-/// Converts weeks to seconds
-/// Parameter n: A number of weeks
-/// Returns: The equivalent number of seconds
-hs.timer.weeks = function(n) {
-    return n * 604800;
-};
-
 // Predicate-based timers
+// These are stored as Swift-retained JSValue properties on HSTimerModule to prevent garbage collection.
 
 /// Repeat a function/lambda until a given predicate function/lambda returns true
 /// Parameters:

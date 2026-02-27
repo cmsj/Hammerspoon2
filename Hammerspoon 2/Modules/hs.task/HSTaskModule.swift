@@ -23,6 +23,24 @@ import JavaScriptCoreExtras
     /// - Returns: A task object. Call start() to begin execution.
     @objc(new:::::)
     func new(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask
+
+    /// Run a task, returning a Promise. Swift-retained storage for the JS implementation.
+    @objc var runAsync: JSValue? { get set }
+
+    /// Run a shell command. Swift-retained storage for the JS implementation.
+    @objc var shell: JSValue? { get set }
+
+    /// Run multiple tasks in parallel. Swift-retained storage for the JS implementation.
+    @objc var parallel: JSValue? { get set }
+
+    /// Run multiple tasks in sequence. Swift-retained storage for the JS implementation.
+    @objc var sequence: JSValue? { get set }
+
+    /// Create a task builder. Swift-retained storage for the JS implementation.
+    @objc var builder: JSValue? { get set }
+
+    /// TaskBuilder class. Swift-retained storage for the JS implementation.
+    @objc var TaskBuilder: JSValue? { get set }
 }
 
 // MARK: - Implementation
@@ -56,6 +74,14 @@ private actor TaskTracker {
     // Uses weak references to allow JavaScript garbage collection
     // Running tasks stay alive via their Process termination handler closure
     private var tasks = NSHashTable<HSTask>.weakObjects()
+
+    // Swift-retained storage for JS-defined functions
+    @objc var runAsync: JSValue? = nil
+    @objc var shell: JSValue? = nil
+    @objc var parallel: JSValue? = nil
+    @objc var sequence: JSValue? = nil
+    @objc var builder: JSValue? = nil
+    @objc var TaskBuilder: JSValue? = nil
 
     // Track active tasks for testing purposes (thread-safe via actor)
     private let taskTracker = TaskTracker()

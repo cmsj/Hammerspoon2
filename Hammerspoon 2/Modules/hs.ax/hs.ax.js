@@ -66,48 +66,8 @@ class AXModuleWatcherEmitter {
     }
 }
 
-// Place an instance of the Watcher/Emitter class into the hs.ax namespace
+// Store an instance of the Watcher/Emitter in a Swift-retained property so it is not garbage collected.
 hs.ax._watcherEmitter = new AXModuleWatcherEmitter();
-
-// User-facing API for adding watchers
-/// Add a watcher for application AX events
-/// Parameters:
-///  - application: An HSApplication object
-///  - notification: An event name
-///  - listener: A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to
-hs.ax.addWatcher = function(application, notification, listener) {
-    if (!application || !application.pid) {
-        throw new Error("hs.ax.addWatcher(): First argument must be an HSApplication object");
-    }
-    if (typeof notification !== 'string') {
-        throw new Error("hs.ax.addWatcher(): Second argument must be a notification string");
-    }
-    if (typeof listener !== 'function') {
-        throw new Error("hs.ax.addWatcher(): Third argument must be a callback function");
-    }
-
-    hs.ax._watcherEmitter.on(application, notification, listener);
-}
-
-// User-facing API for removing watchers
-/// Remove a watcher for application AX events
-/// Parameters:
-///  - application: An HSApplication object
-///  - notification: The event name to stop watching
-///  - listener: The function/lambda provided when adding the watcher
-hs.ax.removeWatcher = function(application, notification, listener) {
-    if (!application || !application.pid) {
-        throw new Error("hs.ax.removeWatcher(): First argument must be an HSApplication object");
-    }
-    if (typeof notification !== 'string') {
-        throw new Error("hs.ax.removeWatcher(): Second argument must be a notification string");
-    }
-    if (typeof listener !== 'function') {
-        throw new Error("hs.ax.removeWatcher(): Third argument must be a callback function");
-    }
-
-    hs.ax._watcherEmitter.removeListener(application, notification, listener);
-}
 
 // Convenience function to get the focused element
 /// Fetch the focused UI element
@@ -222,16 +182,3 @@ hs.ax.printHierarchy = function(element, depth = 0) {
         }
     }
 };
-
-// Example usage in user's init.js:
-//
-// const safari = hs.application.matchingBundleID("com.apple.Safari");
-//
-// function windowCreatedHandler(notification, element) {
-//     console.log("Safari window created:", element.title);
-// }
-//
-// hs.ax.addWatcher(safari, "AXWindowCreated", windowCreatedHandler);
-//
-// // Later, to remove:
-// hs.ax.removeWatcher(safari, "AXWindowCreated", windowCreatedHandler);
