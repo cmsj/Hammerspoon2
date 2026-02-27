@@ -66,7 +66,7 @@ Successfully implemented the hs.ui module for Hammerspoon v2, providing a unifie
 - Error handling in callbacks with exception capture
 - Proper @MainActor isolation
 
-## Files Created (Total: 20)
+## Files Created (Total: 19)
 
 ### Core (4 files)
 1. `Core/HSColor.swift`
@@ -94,10 +94,9 @@ Successfully implemented the hs.ui module for Hammerspoon v2, providing a unifie
 15. `Views/UIAlertView.swift`
 16. `Views/UIDialogView.swift`
 
-### Documentation (3 files)
-17. `hs.ui.js` - JavaScript module companion with integrated examples (hs.ui.examples)
-18. `README.md` - User documentation
-19. `IMPLEMENTATION.md` - This file
+### Documentation (2 files)
+17. `README.md` - User documentation
+18. `IMPLEMENTATION.md` - This file
 
 ## Files Modified
 
