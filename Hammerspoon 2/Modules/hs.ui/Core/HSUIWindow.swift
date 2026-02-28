@@ -192,6 +192,18 @@ import SwiftUI
     /// - Parameter value: Spacing in points
     /// - Returns: Self for chaining
     @objc func spacing(_ value: Double) -> HSUIWindow
+
+    // MARK: Interaction Callbacks
+
+    /// Set a callback to fire when the element is clicked
+    /// - Parameter callback: A JavaScript function to call on click
+    /// - Returns: Self for chaining
+    @objc func onClick(_ callback: JSValue) -> HSUIWindow
+
+    /// Set a callback to fire when the cursor enters or leaves the element
+    /// - Parameter callback: A JavaScript function called with a boolean: true when entering, false when leaving
+    /// - Returns: Self for chaining
+    @objc func onHover(_ callback: JSValue) -> HSUIWindow
 }
 
 @MainActor
@@ -491,6 +503,26 @@ import SwiftUI
     @objc func spacing(_ value: Double) -> HSUIWindow {
         if let container = currentElement as? SpacingModifiable {
             container.elementSpacing = CGFloat(value)
+        }
+        return self
+    }
+
+    // MARK: - Interaction Callbacks
+
+    @objc func onClick(_ callback: JSValue) -> HSUIWindow {
+        if let interactive = currentElement as? any InteractiveModifiable {
+            interactive.clickCallback = { callback.call(withArguments: []) }
+        } else {
+            AKWarning("hs.ui: onClick() called on an element that does not support interactions")
+        }
+        return self
+    }
+
+    @objc func onHover(_ callback: JSValue) -> HSUIWindow {
+        if let interactive = currentElement as? any InteractiveModifiable {
+            interactive.hoverCallback = { isHovered in callback.call(withArguments: [isHovered]) }
+        } else {
+            AKWarning("hs.ui: onHover() called on an element that does not support interactions")
         }
         return self
     }

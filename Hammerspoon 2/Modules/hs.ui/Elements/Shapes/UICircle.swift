@@ -8,61 +8,36 @@
 import Foundation
 import SwiftUI
 
-class UICircle: ShapeModifiable, FrameModifiable, OpacityModifiable {
+class UICircle: ShapeModifiable, FrameModifiable, OpacityModifiable, InteractiveModifiable {
     var fillColor: Color? = nil
     var strokeColor: Color? = nil
     var strokeWidth: CGFloat = 1.0
     var cornerRadius: CGFloat = 0.0  // Not used for circles but required by protocol
     var elementFrame: UIFrame? = nil
     var elementOpacity: Double = 1.0
+    var clickCallback: (() -> Void)? = nil
+    var hoverCallback: ((Bool) -> Void)? = nil
 
     func toSwiftUI(containerSize: CGSize) -> AnyView {
-        // Apply frame if specified
+        // Build the base shape with color
+        var view: AnyView
+        if let fill = fillColor {
+            view = AnyView(Circle().fill(fill))
+        } else if let stroke = strokeColor {
+            view = AnyView(Circle().stroke(stroke, lineWidth: strokeWidth))
+        } else {
+            view = AnyView(Circle())
+        }
+
+        // Apply frame if specified, using the smaller dimension to keep it circular
         if let frame = elementFrame {
             let resolved = frame.resolve(containerSize: containerSize)
-            // Use the smaller dimension for circle to keep it circular
             let size = min(resolved.width, resolved.height)
-
-            if let fill = fillColor {
-                return AnyView(
-                    Circle()
-                        .fill(fill)
-                        .frame(width: size, height: size)
-                        .opacity(elementOpacity)
-                )
-            } else if let stroke = strokeColor {
-                return AnyView(
-                    Circle()
-                        .stroke(stroke, lineWidth: strokeWidth)
-                        .frame(width: size, height: size)
-                        .opacity(elementOpacity)
-                )
-            } else {
-                return AnyView(
-                    Circle()
-                        .frame(width: size, height: size)
-                        .opacity(elementOpacity)
-                )
-            }
-        } else {
-            if let fill = fillColor {
-                return AnyView(
-                    Circle()
-                        .fill(fill)
-                        .opacity(elementOpacity)
-                )
-            } else if let stroke = strokeColor {
-                return AnyView(
-                    Circle()
-                        .stroke(stroke, lineWidth: strokeWidth)
-                        .opacity(elementOpacity)
-                )
-            } else {
-                return AnyView(
-                    Circle()
-                        .opacity(elementOpacity)
-                )
-            }
+            view = AnyView(view.frame(width: size, height: size))
         }
+
+        view = AnyView(view.opacity(elementOpacity))
+
+        return applyInteractions(view)
     }
 }

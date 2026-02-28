@@ -47,3 +47,23 @@ protocol UIContainer: HSUIElement, AnyObject {
     var children: [any HSUIElement] { get set }
     func addChild(_ child: any HSUIElement)
 }
+
+/// Protocol for elements that support click and hover callbacks
+protocol InteractiveModifiable: HSUIElement, AnyObject {
+    var clickCallback: (() -> Void)? { get set }
+    var hoverCallback: ((Bool) -> Void)? { get set }
+}
+
+extension InteractiveModifiable {
+    /// Wraps a view with tap and hover gesture modifiers if callbacks are set
+    func applyInteractions(_ view: AnyView) -> AnyView {
+        var result = view
+        if let onClick = clickCallback {
+            result = AnyView(result.contentShape(Rectangle()).onTapGesture { onClick() })
+        }
+        if let onHover = hoverCallback {
+            result = AnyView(result.onHover { isHovered in onHover(isHovered) })
+        }
+        return result
+    }
+}

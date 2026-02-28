@@ -9,12 +9,14 @@ import Foundation
 import SwiftUI
 
 /// A UI element that displays an image
-class UIImage: HSUIElement, FrameModifiable, OpacityModifiable {
+class UIImage: HSUIElement, FrameModifiable, OpacityModifiable, InteractiveModifiable {
     var image: NSImage?
     var elementFrame: UIFrame? = nil
     var elementOpacity: Double = 1.0
     var resizable: Bool = false
     var aspectRatio: ContentMode = .fit
+    var clickCallback: (() -> Void)? = nil
+    var hoverCallback: ((Bool) -> Void)? = nil
 
     init(image: NSImage?) {
         self.image = image
@@ -50,6 +52,6 @@ class UIImage: HSUIElement, FrameModifiable, OpacityModifiable {
             imageView = AnyView(imageView.opacity(elementOpacity))
         }
 
-        return imageView
+        return applyInteractions(imageView)
     }
 }
