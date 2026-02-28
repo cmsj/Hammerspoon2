@@ -7,6 +7,26 @@
 
 import Foundation
 import SwiftUI
+import Combine
+
+/// SwiftUI view that directly observes an HSString so only the text element
+/// re-renders when the value changes — not the entire canvas.
+private struct ReactiveText: View {
+    @ObservedObject var content: HSString
+    let font: Font
+    let foreground: Color
+    let opacity: Double
+    let width: CGFloat?
+    let height: CGFloat?
+
+    var body: some View {
+        Text(content.value)
+            .font(font)
+            .foregroundColor(foreground)
+            .opacity(opacity)
+            .frame(width: width, height: height)
+    }
+}
 
 class UIText: FrameModifiable, OpacityModifiable, InteractiveModifiable, TextModifiable {
     var content: HSString
@@ -23,18 +43,18 @@ class UIText: FrameModifiable, OpacityModifiable, InteractiveModifiable, TextMod
 
     func toSwiftUI(containerSize: CGSize) -> AnyView {
         let fg = foregroundColor?.color ?? Color.primary
+        let resolved = elementFrame?.resolve(containerSize: containerSize)
 
-        var view: AnyView = AnyView(
-            Text(content.value)
-                .font(font)
-                .foregroundColor(fg)
-                .opacity(elementOpacity)
+        let view = AnyView(
+            ReactiveText(
+                content: content,
+                font: font,
+                foreground: fg,
+                opacity: elementOpacity,
+                width: resolved?.width,
+                height: resolved?.height
+            )
         )
-
-        if let frame = elementFrame {
-            let resolved = frame.resolve(containerSize: containerSize)
-            view = AnyView(view.frame(width: resolved.width, height: resolved.height))
-        }
 
         return applyInteractions(view)
     }

@@ -8,6 +8,44 @@
 import Foundation
 import SwiftUI
 
+/// SwiftUI view that directly observes an HSString label so only the button
+/// re-renders when the label changes.
+private struct ReactiveButton: View {
+    @ObservedObject var label: HSString
+    let font: Font
+    let foreground: Color
+    let fill: Color
+    let strokeColor: Color?
+    let strokeWidth: CGFloat
+    let cornerRadius: CGFloat
+    let opacity: Double
+    let width: CGFloat?
+    let height: CGFloat?
+    let action: (() -> Void)?
+
+    var body: some View {
+        Button(action: { action?() }) {
+            Text(label.value)
+                .font(font)
+                .foregroundColor(foreground)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: cornerRadius).fill(fill))
+        .overlay(
+            Group {
+                if let stroke = strokeColor {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(stroke, lineWidth: strokeWidth)
+                }
+            }
+        )
+        .opacity(opacity)
+        .frame(width: width, height: height)
+    }
+}
+
 class UIButton: ShapeModifiable, FrameModifiable, OpacityModifiable, InteractiveModifiable, TextModifiable {
     var label: HSString
     var font: Font = .body
@@ -28,37 +66,24 @@ class UIButton: ShapeModifiable, FrameModifiable, OpacityModifiable, Interactive
     func toSwiftUI(containerSize: CGSize) -> AnyView {
         let fg = foregroundColor?.color ?? Color.primary
         let fill = fillColor?.color ?? Color.clear
-        let radius = cornerRadius
+        let stroke = strokeColor?.color
+        let resolved = elementFrame?.resolve(containerSize: containerSize)
 
-        // Use SwiftUI's Button for native press-state feedback.
-        // clickCallback is wired directly to the button action rather than via
-        // onTapGesture, avoiding a double-fire.
-        var view: AnyView = AnyView(
-            Button(action: { self.clickCallback?() }) {
-                Text(label.value)
-                    .font(font)
-                    .foregroundColor(fg)
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(RoundedRectangle(cornerRadius: radius).fill(fill))
-            .overlay(
-                Group {
-                    if let stroke = strokeColor?.color {
-                        RoundedRectangle(cornerRadius: radius)
-                            .stroke(stroke, lineWidth: strokeWidth)
-                    }
-                }
+        var view = AnyView(
+            ReactiveButton(
+                label: label,
+                font: font,
+                foreground: fg,
+                fill: fill,
+                strokeColor: stroke,
+                strokeWidth: strokeWidth,
+                cornerRadius: cornerRadius,
+                opacity: elementOpacity,
+                width: resolved?.width,
+                height: resolved?.height,
+                action: clickCallback
             )
         )
-
-        if let frame = elementFrame {
-            let resolved = frame.resolve(containerSize: containerSize)
-            view = AnyView(view.frame(width: resolved.width, height: resolved.height))
-        }
-
-        view = AnyView(view.opacity(elementOpacity))
 
         if let onHover = hoverCallback {
             view = AnyView(view.onHover { onHover($0) })

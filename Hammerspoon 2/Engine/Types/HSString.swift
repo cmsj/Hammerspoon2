@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import Combine
 
 // ---------------------------------------------------------------
 // MARK: - Bridge Class (JavaScript Interface)
@@ -23,12 +24,11 @@ import JavaScriptCore
     @objc func set(_ newValue: String)
 }
 
-@objc class HSString: NSObject, HSStringAPI {
+@objc class HSString: NSObject, HSStringAPI, ObservableObject {
     @objc var typeName = "HSString"
-    weak var delegate: (any HSUIElementDelegate)?
 
     @objc private(set) var value: String {
-        didSet { delegate?.valueDidChange() }
+        willSet { objectWillChange.send() }
     }
 
     init(value: String) {

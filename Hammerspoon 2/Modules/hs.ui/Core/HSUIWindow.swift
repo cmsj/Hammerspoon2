@@ -216,7 +216,7 @@ import SwiftUI
 }
 
 @MainActor
-@objc class HSUIWindow: NSObject, HSUIWindowAPI, NSWindowDelegate, HSUIElementDelegate {
+@objc class HSUIWindow: NSObject, HSUIWindowAPI, NSWindowDelegate {
     @objc var typeName = "HSUIWindow"
 
     // Window properties
@@ -225,10 +225,6 @@ import SwiftUI
     private var windowBackgroundColor: Color = .clear
     private let windowID: UUID = UUID()
     private weak var module: HSUIModule?
-
-    // Render state — owned here, observed by UICanvasView.
-    // Incrementing version causes a full canvas re-render, picking up new signal values.
-    private let renderState = CanvasRenderState()
 
     // Element tree
     private var rootElement: (any HSUIElement)?
@@ -274,8 +270,7 @@ import SwiftUI
         let contentView = UICanvasView(
             element: root,
             backgroundColor: windowBackgroundColor,
-            containerSize: windowFrame.size,
-            renderState: renderState
+            containerSize: windowFrame.size
         )
         window.contentView = NSHostingView(rootView: contentView)
         window.isOpaque = false
@@ -347,7 +342,6 @@ import SwiftUI
     @objc func text(_ content: JSValue) -> HSUIWindow {
         guard let hsString = HSString.fromJSValue(content) else { return self }
         let textElement = UIText(content: hsString)
-        hsString.delegate = self
         currentElement = textElement
         addToCurrentContainer(textElement)
         return self
@@ -356,7 +350,6 @@ import SwiftUI
     @objc func image(_ imageValue: JSValue) -> HSUIWindow {
         let hsImage = HSImage.fromJSValue(imageValue)
         let imageElement = UIImage(hsImage: hsImage)
-        hsImage?.delegate = self
         currentElement = imageElement
         addToCurrentContainer(imageElement)
         return self
@@ -365,7 +358,6 @@ import SwiftUI
     @objc func button(_ label: JSValue) -> HSUIWindow {
         guard let hsString = HSString.fromJSValue(label) else { return self }
         let buttonElement = UIButton(label: hsString)
-        hsString.delegate = self
         currentElement = buttonElement
         addToCurrentContainer(buttonElement)
         return self
@@ -430,19 +422,12 @@ import SwiftUI
         return self
     }
 
-    // MARK: - HSUIElementDelegate
-
-    nonisolated func valueDidChange() {
-        MainActor.assumeIsolated { renderState.version += 1 }
-    }
-
     // MARK: - Shape Modifiers
 
     @objc func fill(_ colorValue: JSValue) -> HSUIWindow {
         if let shapeable = currentElement as? any ShapeModifiable,
            let hsColor = HSColor.fromJSValue(colorValue) {
             shapeable.fillColor = hsColor
-            hsColor.delegate = self
         }
         return self
     }
@@ -451,7 +436,6 @@ import SwiftUI
         if let shapeable = currentElement as? any ShapeModifiable,
            let hsColor = HSColor.fromJSValue(colorValue) {
             shapeable.strokeColor = hsColor
-            hsColor.delegate = self
         }
         return self
     }
@@ -498,7 +482,6 @@ import SwiftUI
         if let textable = currentElement as? any TextModifiable,
            let hsColor = HSColor.fromJSValue(colorValue) {
             textable.foregroundColor = hsColor
-            hsColor.delegate = self
         }
         return self
     }

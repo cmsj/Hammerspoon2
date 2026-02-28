@@ -9,6 +9,7 @@ import Foundation
 import JavaScriptCore
 import AppKit
 import UniformTypeIdentifiers
+import Combine
 
 // ---------------------------------------------------------------
 // MARK: - Bridge Class (JavaScript Interface)
@@ -129,12 +130,11 @@ import UniformTypeIdentifiers
     @objc func set(_ value: JSValue)
 }
 
-@objc class HSImage: NSObject, HSImageAPI {
+@objc class HSImage: NSObject, HSImageAPI, ObservableObject {
     @objc var typeName = "HSImage"
-    weak var delegate: (any HSUIElementDelegate)?
 
     var image: NSImage {
-        didSet { delegate?.valueDidChange() }
+        willSet { objectWillChange.send() }
     }
 
     init(image: NSImage) {

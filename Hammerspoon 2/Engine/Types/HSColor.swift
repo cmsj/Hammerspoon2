@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import SwiftUI
+import Combine
 
 // ---------------------------------------------------------------
 // MARK: - Bridge Class (JavaScript Interface)
@@ -39,12 +40,11 @@ import SwiftUI
     @objc func set(_ value: JSValue)
 }
 
-@objc class HSColor: NSObject, HSColorAPI {
+@objc class HSColor: NSObject, HSColorAPI, ObservableObject {
     @objc var typeName = "HSColor"
-    weak var delegate: (any HSUIElementDelegate)?
 
     var color: Color {
-        didSet { delegate?.valueDidChange() }
+        willSet { objectWillChange.send() }
     }
 
     init(color: Color) {

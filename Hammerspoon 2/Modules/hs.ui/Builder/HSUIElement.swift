@@ -8,12 +8,6 @@
 import Foundation
 import SwiftUI
 
-/// Delegate notified when a reactive UI value (color, string, image) changes,
-/// so the canvas can be re-rendered.
-protocol HSUIElementDelegate: AnyObject {
-    func valueDidChange()
-}
-
 /// Protocol that all UI elements must conform to
 protocol HSUIElement {
     /// Convert this element to a SwiftUI view

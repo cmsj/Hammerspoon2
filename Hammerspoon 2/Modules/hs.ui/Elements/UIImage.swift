@@ -7,6 +7,32 @@
 
 import Foundation
 import SwiftUI
+import Combine
+
+/// SwiftUI view that directly observes an HSImage so only the image element
+/// re-renders when the image changes.
+private struct ReactiveImageView: View {
+    @ObservedObject var hsImage: HSImage
+    let isResizable: Bool
+    let aspectRatio: ContentMode
+    let opacity: Double
+    let width: CGFloat?
+    let height: CGFloat?
+
+    var body: some View {
+        Group {
+            if isResizable {
+                Image(nsImage: hsImage.image)
+                    .resizable()
+                    .aspectRatio(contentMode: aspectRatio)
+            } else {
+                Image(nsImage: hsImage.image)
+            }
+        }
+        .frame(width: width, height: height)
+        .opacity(opacity)
+    }
+}
 
 /// A UI element that displays an image
 class UIImage: HSUIElement, FrameModifiable, OpacityModifiable, InteractiveModifiable {
@@ -23,33 +49,23 @@ class UIImage: HSUIElement, FrameModifiable, OpacityModifiable, InteractiveModif
     }
 
     func toSwiftUI(containerSize: CGSize) -> AnyView {
-        guard let nsImage = hsImage?.image else {
+        guard let img = hsImage else {
             return AnyView(Color.clear)
         }
 
-        var imageView: AnyView
+        let resolved = elementFrame?.resolve(containerSize: containerSize)
 
-        if resizable {
-            imageView = AnyView(
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: aspectRatio)
+        let view = AnyView(
+            ReactiveImageView(
+                hsImage: img,
+                isResizable: resizable,
+                aspectRatio: aspectRatio,
+                opacity: elementOpacity,
+                width: resolved?.width,
+                height: resolved?.height
             )
-        } else {
-            imageView = AnyView(Image(nsImage: nsImage))
-        }
+        )
 
-        if let frame = elementFrame {
-            let resolved = frame.resolve(containerSize: containerSize)
-            imageView = AnyView(
-                imageView.frame(width: resolved.width, height: resolved.height)
-            )
-        }
-
-        if elementOpacity != 1.0 {
-            imageView = AnyView(imageView.opacity(elementOpacity))
-        }
-
-        return applyInteractions(imageView)
+        return applyInteractions(view)
     }
 }
