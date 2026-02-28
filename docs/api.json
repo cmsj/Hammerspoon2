@@ -95,113 +95,6 @@
       "rawDocumentation": "These functions are provided to maintain convenience with the console.log() function present in many JavaScript instances."
     },
     {
-      "name": "hs.alert",
-      "methods": [
-        {
-          "name": "showAlert",
-          "signature": "func showAlert(_ alert: HSAlert)",
-          "rawDocumentation": "Show an HSAlert object\n- Parameter alert: The HSAlert object to show",
-          "description": "Show an HSAlert object",
-          "params": [
-            {
-              "name": "alert",
-              "type": "HSAlert",
-              "description": "The HSAlert object to show"
-            }
-          ],
-          "returns": null,
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.alert/AlertModule.swift",
-          "lineNumber": 20
-        },
-        {
-          "name": "show",
-          "signature": "func show(_ message: String)",
-          "rawDocumentation": "Show an alert to the user\n- Parameter message: The text to include in the alert",
-          "description": "Show an alert to the user",
-          "params": [
-            {
-              "name": "message",
-              "type": "String",
-              "description": "The text to include in the alert"
-            }
-          ],
-          "returns": null,
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.alert/AlertModule.swift",
-          "lineNumber": 23
-        }
-      ],
-      "properties": [],
-      "types": [
-        {
-          "name": "HSAlertAPI",
-          "type": "typedef",
-          "rawDocumentation": "An object for use with hs.alert API",
-          "description": "An object for use with hs.alert API",
-          "methods": [
-            {
-              "name": "init",
-              "signature": "init(message: String)",
-              "rawDocumentation": "Create a new HSAlert object\n- Parameter message: The mssage to show in the alert",
-              "description": "Create a new HSAlert object",
-              "params": [
-                {
-                  "name": "message",
-                  "type": "String",
-                  "description": "The mssage to show in the alert"
-                }
-              ],
-              "returns": null,
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.alert/HSAlert.swift",
-              "lineNumber": 25
-            }
-          ],
-          "properties": [
-            {
-              "name": "message",
-              "signature": "var message: String { get set }",
-              "rawDocumentation": "The message to display in an alert",
-              "description": "The message to display in an alert",
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.alert/HSAlert.swift",
-              "lineNumber": 15
-            },
-            {
-              "name": "expire",
-              "signature": "var expire: Int { get set }",
-              "rawDocumentation": "How many seconds the alert should be shown for",
-              "description": "How many seconds the alert should be shown for",
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.alert/HSAlert.swift",
-              "lineNumber": 17
-            },
-            {
-              "name": "font",
-              "signature": "var font: HSFont { get set }",
-              "rawDocumentation": "An HSFont describing the font to use in the alert",
-              "description": "An HSFont describing the font to use in the alert",
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.alert/HSAlert.swift",
-              "lineNumber": 19
-            },
-            {
-              "name": "padding",
-              "signature": "var padding: Int { get set }",
-              "rawDocumentation": "How many points of padding to use in the alert",
-              "description": "How many points of padding to use in the alert",
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.alert/HSAlert.swift",
-              "lineNumber": 21
-            }
-          ]
-        }
-      ],
-      "description": "Module for accessing information about the Hammerspoon application itself",
-      "rawDocumentation": "Module for accessing information about the Hammerspoon application itself"
-    },
-    {
       "name": "hs.appinfo",
       "methods": [],
       "properties": [
@@ -211,7 +104,7 @@
           "rawDocumentation": "The application's internal name (e.g., \"Hammerspoon 2\")",
           "description": "The application's internal name (e.g., \"Hammerspoon 2\")",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 16
         },
         {
@@ -220,7 +113,7 @@
           "rawDocumentation": "The application's display name shown to users",
           "description": "The application's display name shown to users",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 19
         },
         {
@@ -229,7 +122,7 @@
           "rawDocumentation": "The application's version string (e.g., \"2.0.0\")",
           "description": "The application's version string (e.g., \"2.0.0\")",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 22
         },
         {
@@ -238,7 +131,7 @@
           "rawDocumentation": "The application's build number",
           "description": "The application's build number",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 25
         },
         {
@@ -247,7 +140,7 @@
           "rawDocumentation": "The minimum macOS version required to run this application",
           "description": "The minimum macOS version required to run this application",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 28
         },
         {
@@ -256,7 +149,7 @@
           "rawDocumentation": "The copyright notice for this application",
           "description": "The copyright notice for this application",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 31
         },
         {
@@ -265,7 +158,7 @@
           "rawDocumentation": "The application's bundle identifier (e.g., \"com.hammerspoon.Hammerspoon-2\")",
           "description": "The application's bundle identifier (e.g., \"com.hammerspoon.Hammerspoon-2\")",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 34
         },
         {
@@ -274,7 +167,7 @@
           "rawDocumentation": "The filesystem path to the application bundle",
           "description": "The filesystem path to the application bundle",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 37
         },
         {
@@ -283,7 +176,7 @@
           "rawDocumentation": "The filesystem path to the application's resource directory",
           "description": "The filesystem path to the application's resource directory",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.appinfo/AppInfoModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 40
         }
       ],
@@ -305,7 +198,7 @@
             "description": "An array of all currently running applications"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 20
         },
         {
@@ -325,7 +218,7 @@
             "description": "The first matching application, or nil if none matched"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 25
         },
         {
@@ -345,7 +238,7 @@
             "description": "The first matching application, or nil if none matched"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 30
         },
         {
@@ -365,7 +258,7 @@
             "description": "The matching application, or nil if none matched"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 35
         },
         {
@@ -379,7 +272,7 @@
             "description": "The matching application, or nil if none matched"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 39
         },
         {
@@ -393,7 +286,7 @@
             "description": "The matching application, or nil if none matched"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 43
         },
         {
@@ -413,7 +306,7 @@
             "description": "The application's filesystem path, or nil if it was not found"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 48
         },
         {
@@ -433,7 +326,7 @@
             "description": "An array of strings containing any filesystem paths that were found"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 53
         },
         {
@@ -453,7 +346,7 @@
             "description": "The path to an application for the given filetype, or il if none were found"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 64
         },
         {
@@ -473,7 +366,7 @@
             "description": "An array of strings containing the filesystem paths for any applications that were found"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 69
         },
         {
@@ -494,52 +387,52 @@
             "promiseType": "boolean"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.application/ApplicationModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 74
         },
         {
           "name": "addWatcher",
-          "rawDocumentation": "Create a watcher for application events\n- Parameters:\n- event: The event type to listen for\n- listener: A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object",
+          "signature": "func addWatcher(_ event: String, _ listener: JSValue)",
+          "rawDocumentation": "Create a watcher for application events\n- Parameters:\n   - event: The event type to listen for\n   - listener: A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object",
           "description": "Create a watcher for application events",
           "params": [
             {
               "name": "event",
-              "type": "any",
+              "type": "String",
               "description": "The event type to listen for"
             },
             {
               "name": "listener",
-              "type": "any",
+              "type": "JSValue",
               "description": "A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object"
             }
           ],
           "returns": null,
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.application/hs.application.js",
-          "lineNumber": 71,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
+          "lineNumber": 80
         },
         {
           "name": "removeWatcher",
-          "rawDocumentation": "Remove a watcher for application events\n- Parameters:\n- event: The event type to stop listening for\n- listener: The javascript function/lambda that was previously being used to handle the event",
+          "signature": "func removeWatcher(_ event: String, _ listener: JSValue)",
+          "rawDocumentation": "Remove a watcher for application events\n- Parameters:\n  - event: The event type to stop listening for\n  - listener: The javascript function/lambda that was previously being used to handle the event",
           "description": "Remove a watcher for application events",
           "params": [
             {
               "name": "event",
-              "type": "any",
+              "type": "String",
               "description": "The event type to stop listening for"
             },
             {
               "name": "listener",
-              "type": "any",
+              "type": "JSValue",
               "description": "The javascript function/lambda that was previously being used to handle the event"
             }
           ],
           "returns": null,
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.application/hs.application.js",
-          "lineNumber": 79,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
+          "lineNumber": 86
         }
       ],
       "properties": [],
@@ -704,13 +597,13 @@
             "description": "The system-wide AXElement, or nil if accessibility is not available"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/AXModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 40
         },
         {
           "name": "applicationElement",
           "signature": "func applicationElement(_ element: HSApplication) -> HSAXElement?",
-          "rawDocumentation": "Get the accessibility element for an application\n- Parameters:\n- element: An HSApplication object\n- Returns: The AXElement for the application, or nil if accessibility is not available",
+          "rawDocumentation": "Get the accessibility element for an application\n- Parameters:\n  - element: An HSApplication object\n- Returns: The AXElement for the application, or nil if accessibility is not available",
           "description": "Get the accessibility element for an application",
           "params": [
             {
@@ -724,13 +617,13 @@
             "description": "The AXElement for the application, or nil if accessibility is not available"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/AXModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 46
         },
         {
           "name": "windowElement",
           "signature": "func windowElement(_ window: HSWindow) -> HSAXElement?",
-          "rawDocumentation": "Get the accessibility element for a window\n- Parameters:\n- window: An HSWindow  object\n- Returns: The AXElement for the window, or nil if accessibility is not available",
+          "rawDocumentation": "Get the accessibility element for a window\n- Parameters:\n  - window: An HSWindow  object\n- Returns: The AXElement for the window, or nil if accessibility is not available",
           "description": "Get the accessibility element for a window",
           "params": [
             {
@@ -744,7 +637,7 @@
             "description": "The AXElement for the window, or nil if accessibility is not available"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/AXModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 52
         },
         {
@@ -764,62 +657,62 @@
             "description": "The AXElement at that position, or nil if none found"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/AXModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 57
         },
         {
           "name": "addWatcher",
-          "rawDocumentation": "Add a watcher for application AX events\nParameters:\n- application: An HSApplication object\n- notification: An event name\n- listener: A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to",
+          "signature": "func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSValue)",
+          "rawDocumentation": "Add a watcher for application AX events\n- Parameters:\n  - application: An HSApplication object\n  - notification: An event name\n  - listener: A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to",
           "description": "Add a watcher for application AX events",
           "params": [
             {
               "name": "application",
-              "type": "any",
+              "type": "HSApplication",
               "description": "An HSApplication object"
             },
             {
               "name": "notification",
-              "type": "any",
+              "type": "String",
               "description": "An event name"
             },
             {
               "name": "listener",
-              "type": "any",
+              "type": "JSValue",
               "description": "A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to"
             }
           ],
           "returns": null,
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 78,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 67
         },
         {
           "name": "removeWatcher",
-          "rawDocumentation": "Remove a watcher for application AX events\nParameters:\n- application: An HSApplication object\n- notification: The event name to stop watching\n- listener: The function/lambda provided when adding the watcher",
+          "signature": "func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSValue)",
+          "rawDocumentation": "Remove a watcher for application AX events\n- Parameters:\n  - application: An HSApplication object\n  - notification: The event name to stop watching\n  - listener: The function/lambda provided when adding the watcher",
           "description": "Remove a watcher for application AX events",
           "params": [
             {
               "name": "application",
-              "type": "any",
+              "type": "HSApplication",
               "description": "An HSApplication object"
             },
             {
               "name": "notification",
-              "type": "any",
+              "type": "String",
               "description": "The event name to stop watching"
             },
             {
               "name": "listener",
-              "type": "any",
+              "type": "JSValue",
               "description": "The function/lambda provided when adding the watcher"
             }
           ],
           "returns": null,
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 98,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 74
         },
         {
           "name": "focusedElement",
@@ -832,7 +725,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 115,
+          "lineNumber": 75,
           "type": "function"
         },
         {
@@ -857,7 +750,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 143,
+          "lineNumber": 103,
           "type": "function"
         },
         {
@@ -882,7 +775,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 174,
+          "lineNumber": 134,
           "type": "function"
         },
         {
@@ -904,7 +797,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 204,
+          "lineNumber": 164,
           "type": "function"
         }
       ],
@@ -915,8 +808,44 @@
           "rawDocumentation": "A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()",
           "description": "A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()",
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/AXModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 60
+        },
+        {
+          "name": "focusedElement",
+          "signature": "var focusedElement: JSValue? { get set }",
+          "rawDocumentation": "Fetch the focused UI element. Swift-retained storage for the JS implementation.",
+          "description": "Fetch the focused UI element. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 87
+        },
+        {
+          "name": "findByRole",
+          "signature": "var findByRole: JSValue? { get set }",
+          "rawDocumentation": "Find AX elements by role. Swift-retained storage for the JS implementation.",
+          "description": "Find AX elements by role. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 90
+        },
+        {
+          "name": "findByTitle",
+          "signature": "var findByTitle: JSValue? { get set }",
+          "rawDocumentation": "Find AX elements by title. Swift-retained storage for the JS implementation.",
+          "description": "Find AX elements by title. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 93
+        },
+        {
+          "name": "printHierarchy",
+          "signature": "var printHierarchy: JSValue? { get set }",
+          "rawDocumentation": "Print the element hierarchy. Swift-retained storage for the JS implementation.",
+          "description": "Print the element hierarchy. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 96
         }
       ],
       "types": [
@@ -997,7 +926,7 @@
             {
               "name": "setAttributeValue",
               "signature": "func setAttributeValue(_ attribute: String, value: Any) -> Bool",
-              "rawDocumentation": "Set the value of a specific attribute\n- Parameters:\n- attribute: The attribute name to set\n- value: The value to set\n- Returns: True if the operation succeeded, otherwise False",
+              "rawDocumentation": "Set the value of a specific attribute\n- Parameters:\n  - attribute: The attribute name to set\n  - value: The value to set\n- Returns: True if the operation succeeded, otherwise False",
               "description": "Set the value of a specific attribute",
               "params": [
                 {
@@ -1186,8 +1115,8 @@
           ]
         }
       ],
-      "description": "# Accessibility API Module ## Basic Usage ```js // Get the focused UI element const element = hs.ax.focusedElement(); console.log(element.role, element.title); // Watch for window creation events const app = hs.application.frontmost(); hs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => { console.log(\"New window:\", element.title); }); ``` **Note:** Requires accessibility permissions in System Preferences.",
-      "rawDocumentation": "# Accessibility API Module\n\nThis module provides access to macOS's powerful **Accessibility API**, allowing you to:\n- Inspect UI elements in any application\n- Monitor window and element changes\n- Programmatically interact with UI elements\n\n## Basic Usage\n\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\nconsole.log(\"New window:\", element.title);\n});\n```\n\n**Note:** Requires accessibility permissions in System Preferences."
+      "description": "# Accessibility API Module\n## Basic Usage\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n```\n**Note:** Requires accessibility permissions in System Preferences.",
+      "rawDocumentation": "# Accessibility API Module\n\nThis module provides access to macOS's powerful **Accessibility API**, allowing you to:\n- Inspect UI elements in any application\n- Monitor window and element changes\n- Programmatically interact with UI elements\n\n## Basic Usage\n\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n```\n\n**Note:** Requires accessibility permissions in System Preferences."
     },
     {
       "name": "hs.console",
@@ -1336,7 +1265,7 @@
             "description": "Base64 encoded string"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 20
         },
         {
@@ -1356,7 +1285,7 @@
             "description": "Decoded string, or nil if the input is invalid"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 25
         },
         {
@@ -1376,7 +1305,7 @@
             "description": "Hexadecimal MD5 hash"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 31
         },
         {
@@ -1396,7 +1325,7 @@
             "description": "Hexadecimal SHA1 hash"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 36
         },
         {
@@ -1416,7 +1345,7 @@
             "description": "Hexadecimal SHA256 hash"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 41
         },
         {
@@ -1436,13 +1365,13 @@
             "description": "Hexadecimal SHA512 hash"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 46
         },
         {
           "name": "hmacMD5",
           "signature": "func hmacMD5(_ key: String, _ data: String) -> String",
-          "rawDocumentation": "Generate HMAC-MD5 of a string with a key\n- Parameters:\n- key: The secret key\n- data: The data to authenticate\n- Returns: Hexadecimal HMAC-MD5",
+          "rawDocumentation": "Generate HMAC-MD5 of a string with a key\n- Parameters:\n  - key: The secret key\n  - data: The data to authenticate\n- Returns: Hexadecimal HMAC-MD5",
           "description": "Generate HMAC-MD5 of a string with a key",
           "params": [
             {
@@ -1461,13 +1390,13 @@
             "description": "Hexadecimal HMAC-MD5"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 54
         },
         {
           "name": "hmacSHA1",
           "signature": "func hmacSHA1(_ key: String, _ data: String) -> String",
-          "rawDocumentation": "Generate HMAC-SHA1 of a string with a key\n- Parameters:\n- key: The secret key\n- data: The data to authenticate\n- Returns: Hexadecimal HMAC-SHA1",
+          "rawDocumentation": "Generate HMAC-SHA1 of a string with a key\n- Parameters:\n  - key: The secret key\n  - data: The data to authenticate\n- Returns: Hexadecimal HMAC-SHA1",
           "description": "Generate HMAC-SHA1 of a string with a key",
           "params": [
             {
@@ -1486,13 +1415,13 @@
             "description": "Hexadecimal HMAC-SHA1"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 61
         },
         {
           "name": "hmacSHA256",
           "signature": "func hmacSHA256(_ key: String, _ data: String) -> String",
-          "rawDocumentation": "Generate HMAC-SHA256 of a string with a key\n- Parameters:\n- key: The secret key\n- data: The data to authenticate\n- Returns: Hexadecimal HMAC-SHA256",
+          "rawDocumentation": "Generate HMAC-SHA256 of a string with a key\n- Parameters:\n  - key: The secret key\n  - data: The data to authenticate\n- Returns: Hexadecimal HMAC-SHA256",
           "description": "Generate HMAC-SHA256 of a string with a key",
           "params": [
             {
@@ -1511,13 +1440,13 @@
             "description": "Hexadecimal HMAC-SHA256"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 68
         },
         {
           "name": "hmacSHA512",
           "signature": "func hmacSHA512(_ key: String, _ data: String) -> String",
-          "rawDocumentation": "Generate HMAC-SHA512 of a string with a key\n- Parameters:\n- key: The secret key\n- data: The data to authenticate\n- Returns: Hexadecimal HMAC-SHA512",
+          "rawDocumentation": "Generate HMAC-SHA512 of a string with a key\n- Parameters:\n  - key: The secret key\n  - data: The data to authenticate\n- Returns: Hexadecimal HMAC-SHA512",
           "description": "Generate HMAC-SHA512 of a string with a key",
           "params": [
             {
@@ -1536,7 +1465,7 @@
             "description": "Hexadecimal HMAC-SHA512"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hash/HashModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 75
         }
       ],
@@ -1551,7 +1480,7 @@
         {
           "name": "bind",
           "signature": "func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkey?",
-          "rawDocumentation": "Bind a hotkey\n- Parameters:\n- mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"])\n- key: The key name or character (e.g., \"a\", \"space\", \"return\")\n- callbackPressed: A JavaScript function to call when the hotkey is pressed\n- callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed",
+          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"])\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\")\n  - callbackPressed: A JavaScript function to call when the hotkey is pressed\n  - callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed",
           "description": "Bind a hotkey",
           "params": [
             {
@@ -1580,13 +1509,13 @@
             "description": "A hotkey object, or nil if binding failed"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HotkeyModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 23
         },
         {
           "name": "bindSpec",
           "signature": "func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkey?",
-          "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n- mods: An array of modifier key strings\n- key: The key name or character\n- message: A description of what this hotkey does (currently unused, for future features)\n- callbackPressed: A JavaScript function to call when the hotkey is pressed\n- callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed",
+          "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n  - message: A description of what this hotkey does (currently unused, for future features)\n  - callbackPressed: A JavaScript function to call when the hotkey is pressed\n  - callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed",
           "description": "Bind a hotkey with a message description",
           "params": [
             {
@@ -1620,7 +1549,7 @@
             "description": "A hotkey object, or nil if binding failed"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HotkeyModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 34
         },
         {
@@ -1634,7 +1563,7 @@
             "description": "A dictionary mapping key names to numeric key codes"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HotkeyModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 38
         },
         {
@@ -1648,7 +1577,7 @@
             "description": "A dictionary mapping modifier names to their numeric values"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HotkeyModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 42
         }
       ],
@@ -1750,7 +1679,7 @@
             "description": "true if permission is granted, false otherwise"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 18
         },
         {
@@ -1761,7 +1690,7 @@
           "params": [],
           "returns": null,
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 21
         },
         {
@@ -1775,7 +1704,7 @@
             "description": "true if permission is granted, false otherwise"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 25
         },
         {
@@ -1786,7 +1715,7 @@
           "params": [],
           "returns": null,
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 29
         },
         {
@@ -1800,7 +1729,7 @@
             "description": "true if permission is granted, false otherwise"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 33
         },
         {
@@ -1815,7 +1744,7 @@
             "promiseType": "boolean"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 37
         },
         {
@@ -1829,7 +1758,7 @@
             "description": "true if permission is granted, false otherwise"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 41
         },
         {
@@ -1844,7 +1773,7 @@
             "promiseType": "boolean"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.permissions/PermissionsModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 45
         }
       ],
@@ -1859,7 +1788,7 @@
         {
           "name": "new",
           "signature": "func new(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask",
-          "rawDocumentation": "Create a new task\n- Parameters:\n- launchPath: The full path to the executable to run\n- arguments: An array of arguments to pass to the executable\n- completionCallback: Optional callback function called when the task terminates\n- environment: Optional dictionary of environment variables for the task\n- streamingCallback: Optional callback function called when the task produces output\n- Returns: A task object. Call start() to begin execution.",
+          "rawDocumentation": "Create a new task\n- Parameters:\n  - launchPath: The full path to the executable to run\n  - arguments: An array of arguments to pass to the executable\n  - completionCallback: Optional callback function called when the task terminates\n  - environment: Optional dictionary of environment variables for the task\n  - streamingCallback: Optional callback function called when the task produces output\n- Returns: A task object. Call start() to begin execution.",
           "description": "Create a new task",
           "params": [
             {
@@ -1893,11 +1822,11 @@
             "description": "A task object. Call start() to begin execution."
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.task/TaskModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
           "lineNumber": 25
         },
         {
-          "name": "run",
+          "name": "runAsync",
           "rawDocumentation": "* Create and run a task asynchronously\n     * @param {string} launchPath - Full path to the executable\n     * @param {string[]} args - Array of arguments\n     * @param {Object|Function} options - Options object or legacy callback\n     * @param {Object} options.environment - Environment variables (optional)\n     * @param {string} options.workingDirectory - Working directory (optional)\n     * @param {Function} options.onOutput - Callback for streaming output: (stream, data) => {} (optional)\n     * @param {Function} legacyStreamCallback - Legacy streaming callback (optional)\n     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}",
           "description": "Create and run a task asynchronously",
           "params": [
@@ -1968,7 +1897,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
-          "lineNumber": 95,
+          "lineNumber": 89,
           "type": "function"
         },
         {
@@ -1989,7 +1918,7 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
-          "lineNumber": 105,
+          "lineNumber": 99,
           "type": "function"
         },
         {
@@ -2009,11 +1938,66 @@
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
-          "lineNumber": 131,
+          "lineNumber": 125,
           "type": "function"
         }
       ],
-      "properties": [],
+      "properties": [
+        {
+          "name": "runAsync",
+          "signature": "var runAsync: JSValue? { get set }",
+          "rawDocumentation": "Run a task, returning a Promise. Swift-retained storage for the JS implementation.",
+          "description": "Run a task, returning a Promise. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
+          "lineNumber": 28
+        },
+        {
+          "name": "shell",
+          "signature": "var shell: JSValue? { get set }",
+          "rawDocumentation": "Run a shell command. Swift-retained storage for the JS implementation.",
+          "description": "Run a shell command. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
+          "lineNumber": 31
+        },
+        {
+          "name": "parallel",
+          "signature": "var parallel: JSValue? { get set }",
+          "rawDocumentation": "Run multiple tasks in parallel. Swift-retained storage for the JS implementation.",
+          "description": "Run multiple tasks in parallel. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
+          "lineNumber": 34
+        },
+        {
+          "name": "sequence",
+          "signature": "var sequence: JSValue? { get set }",
+          "rawDocumentation": "Run multiple tasks in sequence. Swift-retained storage for the JS implementation.",
+          "description": "Run multiple tasks in sequence. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
+          "lineNumber": 37
+        },
+        {
+          "name": "builder",
+          "signature": "var builder: JSValue? { get set }",
+          "rawDocumentation": "Create a task builder. Swift-retained storage for the JS implementation.",
+          "description": "Create a task builder. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
+          "lineNumber": 40
+        },
+        {
+          "name": "TaskBuilder",
+          "signature": "var TaskBuilder: JSValue? { get set }",
+          "rawDocumentation": "TaskBuilder class. Swift-retained storage for the JS implementation.",
+          "description": "TaskBuilder class. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
+          "lineNumber": 43
+        }
+      ],
       "types": [
         {
           "name": "HSTaskAPI",
@@ -2128,34 +2112,6 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 41
-            },
-            {
-              "name": "terminationStatus",
-              "signature": "func terminationStatus() -> NSNumber?",
-              "rawDocumentation": "Get the termination status of the task\n- Returns: The exit code, or nil if the task hasn't terminated",
-              "description": "Get the termination status of the task",
-              "params": [],
-              "returns": {
-                "type": "NSNumber?",
-                "description": "The exit code, or nil if the task hasn't terminated"
-              },
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
-              "lineNumber": 61
-            },
-            {
-              "name": "terminationReason",
-              "signature": "func terminationReason() -> String?",
-              "rawDocumentation": "Get the termination reason\n- Returns: A string describing why the task terminated, or nil if still running",
-              "description": "Get the termination reason",
-              "params": [],
-              "returns": {
-                "type": "String?",
-                "description": "A string describing why the task terminated, or nil if still running"
-              },
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
-              "lineNumber": 65
             }
           ],
           "properties": [
@@ -2194,6 +2150,24 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 57
+            },
+            {
+              "name": "terminationStatus",
+              "signature": "var terminationStatus: NSNumber? { get }",
+              "rawDocumentation": "The termination status of the task\n- Note: Returns the exit code, or nil if the task hasn't terminated",
+              "description": "The termination status of the task",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 61
+            },
+            {
+              "name": "terminationReason",
+              "signature": "var terminationReason: String? { get }",
+              "rawDocumentation": "The termination reason\n- Note: Returns a string describing why the task terminated, or nil if still running",
+              "description": "The termination reason",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
+              "lineNumber": 65
             }
           ]
         }
@@ -2207,7 +2181,7 @@
         {
           "name": "create",
           "signature": "func create(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer",
-          "rawDocumentation": "Create a new timer\n- Parameters:\n- interval: The interval in seconds at which the timer should fire\n- callback: A JavaScript function to call when the timer fires\n- continueOnError: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object. Call start() to begin the timer.",
+          "rawDocumentation": "Create a new timer\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: A JavaScript function to call when the timer fires\n  - continueOnError: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object. Call start() to begin the timer.",
           "description": "Create a new timer",
           "params": [
             {
@@ -2231,13 +2205,43 @@
             "description": "A timer object. Call start() to begin the timer."
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/TimerModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 21
+        },
+        {
+          "name": "new",
+          "signature": "func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer",
+          "rawDocumentation": "Create a new timer (alias for create())\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: A JavaScript function to call when the timer fires\n  - continueOnError: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object. Call start() to begin the timer.",
+          "description": "Create a new timer (alias for create())",
+          "params": [
+            {
+              "name": "interval",
+              "type": "TimeInterval",
+              "description": "The interval in seconds at which the timer should fire"
+            },
+            {
+              "name": "callback",
+              "type": "JSValue",
+              "description": "A JavaScript function to call when the timer fires"
+            },
+            {
+              "name": "continueOnError",
+              "type": "Bool",
+              "description": "If true, the timer will continue running even if the callback throws an error"
+            }
+          ],
+          "returns": {
+            "type": "HSTimer",
+            "description": "A timer object. Call start() to begin the timer."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 30
         },
         {
           "name": "doAfter",
           "signature": "func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer",
-          "rawDocumentation": "Create and start a one-shot timer\n- Parameters:\n- seconds: Number of seconds to wait before firing\n- callback: A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)",
+          "rawDocumentation": "Create and start a one-shot timer\n- Parameters:\n  - seconds: Number of seconds to wait before firing\n  - callback: A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)",
           "description": "Create and start a one-shot timer",
           "params": [
             {
@@ -2256,13 +2260,13 @@
             "description": "A timer object (already started)"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/TimerModule.swift",
-          "lineNumber": 28
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 37
         },
         {
           "name": "doEvery",
           "signature": "func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimer",
-          "rawDocumentation": "Create and start a repeating timer\n- Parameters:\n- interval: The interval in seconds at which the timer should fire\n- callback: A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)",
+          "rawDocumentation": "Create and start a repeating timer\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)",
           "description": "Create and start a repeating timer",
           "params": [
             {
@@ -2281,13 +2285,13 @@
             "description": "A timer object (already started)"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/TimerModule.swift",
-          "lineNumber": 35
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 44
         },
         {
           "name": "doAt",
           "signature": "func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer",
-          "rawDocumentation": "Create and start a timer that fires at a specific time\n- Parameters:\n- time: Seconds since midnight (local time) when the timer should first fire\n- repeatInterval: If provided, the timer will repeat at this interval. Pass 0 for one-shot.\n- callback: A JavaScript function to call when the timer fires\n- continueOnError: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object (already started)",
+          "rawDocumentation": "Create and start a timer that fires at a specific time\n- Parameters:\n  - time: Seconds since midnight (local time) when the timer should first fire\n  - repeatInterval: If provided, the timer will repeat at this interval. Pass 0 for one-shot.\n  - callback: A JavaScript function to call when the timer fires\n  - continueOnError: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object (already started)",
           "description": "Create and start a timer that fires at a specific time",
           "params": [
             {
@@ -2316,8 +2320,8 @@
             "description": "A timer object (already started)"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/TimerModule.swift",
-          "lineNumber": 45
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 54
         },
         {
           "name": "usleep",
@@ -2333,8 +2337,8 @@
           ],
           "returns": null,
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/TimerModule.swift",
-          "lineNumber": 50
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 59
         },
         {
           "name": "secondsSinceEpoch",
@@ -2347,8 +2351,8 @@
             "description": "Fractional seconds since midnight, January 1, 1970 UTC"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/TimerModule.swift",
-          "lineNumber": 54
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 63
         },
         {
           "name": "absoluteTime",
@@ -2361,8 +2365,8 @@
             "description": "Nanoseconds since boot"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/TimerModule.swift",
-          "lineNumber": 58
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 67
         },
         {
           "name": "localTime",
@@ -2375,99 +2379,88 @@
             "description": "Seconds since midnight in the local timezone"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/TimerModule.swift",
-          "lineNumber": 62
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 71
         },
         {
           "name": "minutes",
-          "rawDocumentation": "Converts minutes to seconds\nParameter n: A number of minutes\nReturns: The equivalent number of seconds",
-          "description": "Converts minutes to seconds Parameter n: A number of minutes",
+          "signature": "func minutes(_ n: Double) -> Double",
+          "rawDocumentation": "Converts minutes to seconds\n- Parameter n: A number of minutes\n- Returns: The equivalent number of seconds",
+          "description": "Converts minutes to seconds",
           "params": [
             {
               "name": "n",
-              "type": "any",
+              "type": "Double",
               "description": "A number of minutes"
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "Double",
             "description": "The equivalent number of seconds"
           },
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 14,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 76
         },
         {
           "name": "hours",
-          "rawDocumentation": "Converts hours to seconds\nParameter n: A number of hours\nReturns: The equivalent number of seconds",
-          "description": "Converts hours to seconds Parameter n: A number of hours",
+          "signature": "func hours(_ n: Double) -> Double",
+          "rawDocumentation": "Converts hours to seconds\n- Parameter n: A number of hours\n- Returns: The equivalent number of seconds",
+          "description": "Converts hours to seconds",
           "params": [
             {
               "name": "n",
-              "type": "any",
+              "type": "Double",
               "description": "A number of hours"
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "Double",
             "description": "The equivalent number of seconds"
           },
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 21,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 81
         },
         {
           "name": "days",
-          "rawDocumentation": "Converts days to seconds\nParameter n: A number of days\nReturns: The equivalent number of seconds",
-          "description": "Converts days to seconds Parameter n: A number of days",
+          "signature": "func days(_ n: Double) -> Double",
+          "rawDocumentation": "Converts days to seconds\n- Parameter n: A number of days\n- Returns: The equivalent number of seconds",
+          "description": "Converts days to seconds",
           "params": [
             {
               "name": "n",
-              "type": "any",
+              "type": "Double",
               "description": "A number of days"
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "Double",
             "description": "The equivalent number of seconds"
           },
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 28,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 86
         },
         {
           "name": "weeks",
-          "rawDocumentation": "Converts weeks to seconds\nParameter n: A number of weeks\nReturns: The equivalent number of seconds",
-          "description": "Converts weeks to seconds Parameter n: A number of weeks",
+          "signature": "func weeks(_ n: Double) -> Double",
+          "rawDocumentation": "Converts weeks to seconds\n- Parameter n: A number of weeks\n- Returns: The equivalent number of seconds",
+          "description": "Converts weeks to seconds",
           "params": [
             {
               "name": "n",
-              "type": "any",
+              "type": "Double",
               "description": "A number of weeks"
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "Double",
             "description": "The equivalent number of seconds"
           },
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 35,
-          "type": "function"
-        },
-        {
-          "name": "seconds",
-          "rawDocumentation": "SKIP_DOCS",
-          "description": "SKIP_DOCS",
-          "params": [],
-          "returns": null,
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 43,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 91
         },
         {
           "name": "doUntil",
@@ -2493,7 +2486,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 92,
+          "lineNumber": 18,
           "type": "function"
         },
         {
@@ -2520,7 +2513,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 119,
+          "lineNumber": 45,
           "type": "function"
         },
         {
@@ -2547,7 +2540,7 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 145,
+          "lineNumber": 71,
           "type": "function"
         },
         {
@@ -2574,22 +2567,48 @@
           "returns": null,
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 170,
-          "type": "function"
-        },
-        {
-          "name": "delayed",
-          "rawDocumentation": "SKIP_DOCS",
-          "description": "SKIP_DOCS",
-          "params": [],
-          "returns": null,
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 193,
+          "lineNumber": 96,
           "type": "function"
         }
       ],
-      "properties": [],
+      "properties": [
+        {
+          "name": "doUntil",
+          "signature": "var doUntil: JSValue? { get set }",
+          "rawDocumentation": "Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.",
+          "description": "Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 94
+        },
+        {
+          "name": "doWhile",
+          "signature": "var doWhile: JSValue? { get set }",
+          "rawDocumentation": "Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.",
+          "description": "Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 97
+        },
+        {
+          "name": "waitUntil",
+          "signature": "var waitUntil: JSValue? { get set }",
+          "rawDocumentation": "Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.",
+          "description": "Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 100
+        },
+        {
+          "name": "waitWhile",
+          "signature": "var waitWhile: JSValue? { get set }",
+          "rawDocumentation": "Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.",
+          "description": "Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
+          "lineNumber": 103
+        }
+      ],
       "types": [
         {
           "name": "HSTimerAPI",
@@ -2702,6 +2721,1115 @@
       "rawDocumentation": "Module for creating and managing timers"
     },
     {
+      "name": "hs.ui",
+      "methods": [
+        {
+          "name": "window",
+          "signature": "func window(_ dict: [String: Any]) -> HSUIWindow",
+          "rawDocumentation": "Create a custom UI window\n\nCreates a borderless window that can contain custom UI elements built using a declarative,\nSwiftUI-like syntax with shapes, text, and layout containers.\n\n- Parameter dict: Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)\n- Returns: An `HSUIWindow` object for chaining\n\n**Basic Example:**\n```javascript\n// Simple colored window\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .rectangle()\n        .fill(\"#FF0000\")\n        .frame({w: \"100%\", h: \"100%\"})\n    .show();\n```\n\n**Advanced Example:**\n```javascript\n// Notification card with image and text\nhs.ui.window({x: 50, y: 50, w: 350, h: 120})\n    .hstack()\n        .spacing(15)\n        .padding(15)\n        // Icon\n        .image(HSImage.fromName(\"NSInfo\"))\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 48, h: 48})\n        // Content\n        .vstack()\n            .spacing(5)\n            .text(\"New Message\")\n                .font(HSFont.headline())\n                .foregroundColor(\"#FFFFFF\")\n            .text(\"You have 3 unread messages\")\n                .font(HSFont.subheadline())\n                .foregroundColor(\"#CCCCCC\")\n        .end()\n    .end()\n    .backgroundColor(\"#1E1E1E\")\n    .show();\n```",
+          "description": "Create a custom UI window\nCreates a borderless window that can contain custom UI elements built using a declarative,\nSwiftUI-like syntax with shapes, text, and layout containers.",
+          "params": [
+            {
+              "name": "dict",
+              "type": "[String: Any]",
+              "description": "Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)"
+            }
+          ],
+          "returns": {
+            "type": "HSUIWindow",
+            "description": "An `HSUIWindow` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
+          "lineNumber": 308
+        },
+        {
+          "name": "alert",
+          "signature": "func alert(_ message: String) -> HSUIAlert",
+          "rawDocumentation": "Create a temporary on-screen alert\n\nDisplays a temporary notification that automatically dismisses after the specified duration.\nSimilar to the old `hs.alert` module but with more features.\n\n- Parameter message: The message text to display\n- Returns: An `HSUIAlert` object for chaining\n\n**Basic Example:**\n```javascript\nhs.ui.alert(\"Task completed successfully!\")\n    .duration(3)\n    .show();\n```\n\n**Styled Example:**\n```javascript\n// Success notification with custom styling\nhs.ui.alert(\"✓ File saved successfully\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .backgroundColor(\"#4CAF50\")\n    .foregroundColor(\"#FFFFFF\")\n    .show();\n\n// Warning alert\nhs.ui.alert(\"⚠ Low battery\")\n    .font(HSFont.body())\n    .duration(10)\n    .backgroundColor(\"#FFC107\")\n    .foregroundColor(\"#000000\")\n    .show();\n```",
+          "description": "Create a temporary on-screen alert\nDisplays a temporary notification that automatically dismisses after the specified duration.\nSimilar to the old `hs.alert` module but with more features.",
+          "params": [
+            {
+              "name": "message",
+              "type": "String",
+              "description": "The message text to display"
+            }
+          ],
+          "returns": {
+            "type": "HSUIAlert",
+            "description": "An `HSUIAlert` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
+          "lineNumber": 344
+        },
+        {
+          "name": "dialog",
+          "signature": "func dialog(_ message: String) -> HSUIDialog",
+          "rawDocumentation": "Create a modal dialog with buttons\n\nShows a blocking dialog with customizable message, informative text, and buttons.\nUse the callback to handle button presses.\n\n- Parameter message: The main message text\n- Returns: An `HSUIDialog` object for chaining\n\n**Simple Example:**\n```javascript\nhs.ui.dialog(\"Continue with this action?\")\n    .buttons([\"Continue\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            console.log(\"User chose to continue\");\n        }\n    })\n    .show();\n```\n\n**Detailed Example:**\n```javascript\n// Confirmation dialog with multiple options\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes. What would you like to do?\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            console.log(\"Saving document...\");\n            // Save logic here\n        } else if (index === 1) {\n            console.log(\"Discarding changes...\");\n            // Close without saving\n        }\n        // index === 2 is Cancel - do nothing\n    })\n    .show();\n```",
+          "description": "Create a modal dialog with buttons\nShows a blocking dialog with customizable message, informative text, and buttons.\nUse the callback to handle button presses.",
+          "params": [
+            {
+              "name": "message",
+              "type": "String",
+              "description": "The main message text"
+            }
+          ],
+          "returns": {
+            "type": "HSUIDialog",
+            "description": "An `HSUIDialog` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
+          "lineNumber": 384
+        },
+        {
+          "name": "textPrompt",
+          "signature": "func textPrompt(_ message: String) -> HSUITextPrompt",
+          "rawDocumentation": "Create a text input prompt\n\nShows a modal dialog with a text input field. The callback receives the button index\nand the entered text.\n\n- Parameter message: The prompt message\n- Returns: An `HSUITextPrompt` object for chaining\n\n**Simple Example:**\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .onButton((buttonIndex, text) => {\n        if (buttonIndex === 0) {\n            console.log(\"Hello, \" + text + \"!\");\n        }\n    })\n    .show();\n```\n\n**Detailed Example:**\n```javascript\n// Git commit message prompt\nhs.ui.textPrompt(\"Git Commit\")\n    .informativeText(\"Enter your commit message:\")\n    .defaultText(\"Update documentation\")\n    .buttons([\"Commit\", \"Cancel\"])\n    .onButton((buttonIndex, text) => {\n        if (buttonIndex === 0 && text.length > 0) {\n            // Execute git commit\n            hs.task.new(\"/usr/bin/git\", [\"commit\", \"-m\", text])\n                .start();\n            hs.ui.alert(\"✓ Committed: \" + text)\n                .duration(3)\n                .show();\n        }\n    })\n    .show();\n```",
+          "description": "Create a text input prompt\nShows a modal dialog with a text input field. The callback receives the button index\nand the entered text.",
+          "params": [
+            {
+              "name": "message",
+              "type": "String",
+              "description": "The prompt message"
+            }
+          ],
+          "returns": {
+            "type": "HSUITextPrompt",
+            "description": "An `HSUITextPrompt` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
+          "lineNumber": 424
+        },
+        {
+          "name": "string",
+          "signature": "func string(_ initialValue: String) -> HSString",
+          "rawDocumentation": "Create a reactive string for binding text element content to a dynamic value\n\nAn `HSString` is a reactive value container. When passed to `.text()`,\nthe canvas automatically re-renders whenever `.set()` is called from JavaScript.\n\n- Parameter initialValue: The starting string value\n- Returns: An `HSString` object whose value can be updated with `.set()`\n\n**Example:**\n```javascript\nconst label = hs.ui.string(\"Not hovered\");\n\nhs.ui.window({x: 100, y: 100, w: 200, h: 100})\n    .text(label)\n        .onHover((isHovered) => {\n            label.set(isHovered ? \"Hovered!\" : \"Not hovered\");\n        })\n    .show();\n```",
+          "description": "Create a reactive string for binding text element content to a dynamic value\nAn `HSString` is a reactive value container. When passed to `.text()`,\nthe canvas automatically re-renders whenever `.set()` is called from JavaScript.",
+          "params": [
+            {
+              "name": "initialValue",
+              "type": "String",
+              "description": "The starting string value"
+            }
+          ],
+          "returns": {
+            "type": "HSString",
+            "description": "An `HSString` object whose value can be updated with `.set()`"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
+          "lineNumber": 445
+        },
+        {
+          "name": "filePicker",
+          "signature": "func filePicker() -> HSUIFilePicker",
+          "rawDocumentation": "Create a file or directory picker\n\nShows a standard macOS file picker dialog. Can be configured to select files,\ndirectories, or both, with support for file type filtering and multiple selection.\n\n- Returns: An `HSUIFilePicker` object for chaining\n\n**Simple File Picker:**\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file to open\")\n    .allowedFileTypes([\"txt\", \"md\", \"js\"])\n    .onSelection((path) => {\n        if (path) {\n            console.log(\"Selected: \" + path);\n        }\n    })\n    .show();\n```\n\n**Directory Picker:**\n```javascript\nhs.ui.filePicker()\n    .message(\"Select backup directory\")\n    .canChooseFiles(false)\n    .canChooseDirectories(true)\n    .allowsMultipleSelection(false)\n    .onSelection((path) => {\n        if (path) {\n            console.log(\"Backing up to: \" + path);\n            // Perform backup to selected directory\n        }\n    })\n    .show();\n```\n\n**Multiple File Selection:**\n```javascript\n// Select multiple images for processing\nhs.ui.filePicker()\n    .message(\"Choose images to convert\")\n    .allowedFileTypes([\"jpg\", \"png\", \"gif\"])\n    .allowsMultipleSelection(true)\n    .onSelection((paths) => {\n        if (paths && paths.length > 0) {\n            console.log(\"Converting \" + paths.length + \" images...\");\n            paths.forEach((path, index) => {\n                console.log(\"  \" + (index + 1) + \": \" + path);\n                // Convert each image\n            });\n        }\n    })\n    .show();\n```",
+          "description": "Create a file or directory picker\nShows a standard macOS file picker dialog. Can be configured to select files,\ndirectories, or both, with support for file type filtering and multiple selection.",
+          "params": [],
+          "returns": {
+            "type": "HSUIFilePicker",
+            "description": "An `HSUIFilePicker` object for chaining"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
+          "lineNumber": 501
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSUIWindowAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Images**: `image(imageValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n## Building UI Elements\n## Modifying Elements\n## Examples\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "methods": [
+            {
+              "name": "show",
+              "signature": "func show() -> HSUIWindow",
+              "rawDocumentation": "Show the window\n- Returns: Self for chaining",
+              "description": "Show the window",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 72
+            },
+            {
+              "name": "hide",
+              "signature": "func hide()",
+              "rawDocumentation": "Hide the window (keeps it in memory)",
+              "description": "Hide the window (keeps it in memory)",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 75
+            },
+            {
+              "name": "close",
+              "signature": "func close()",
+              "rawDocumentation": "Close and destroy the window",
+              "description": "Close and destroy the window",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 78
+            },
+            {
+              "name": "backgroundColor",
+              "signature": "func backgroundColor(_ colorValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Set the window's background color\n- Parameter colorValue: Color as hex string (e.g., \"#FF0000\") or HSColor object\n- Returns: Self for chaining",
+              "description": "Set the window's background color",
+              "params": [
+                {
+                  "name": "colorValue",
+                  "type": "JSValue",
+                  "description": "Color as hex string (e.g., \"#FF0000\") or HSColor object"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 85
+            },
+            {
+              "name": "rectangle",
+              "signature": "func rectangle() -> HSUIWindow",
+              "rawDocumentation": "Add a rectangle shape\n- Returns: Self for chaining (apply modifiers like `fill()`, `frame()`)",
+              "description": "Add a rectangle shape",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `fill()`, `frame()`)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 91
+            },
+            {
+              "name": "circle",
+              "signature": "func circle() -> HSUIWindow",
+              "rawDocumentation": "Add a circle shape\n- Returns: Self for chaining (apply modifiers like `fill()`, `frame()`)",
+              "description": "Add a circle shape",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `fill()`, `frame()`)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 95
+            },
+            {
+              "name": "text",
+              "signature": "func text(_ content: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Add a text element\n- Parameter content: The text to display — a plain JS string for static text,\n  or an `HSString` object (from `hs.ui.string()`) for reactive text\n- Returns: Self for chaining (apply modifiers like `font()`, `foregroundColor()`)",
+              "description": "Add a text element\nor an `HSString` object (from `hs.ui.string()`) for reactive text",
+              "params": [
+                {
+                  "name": "content",
+                  "type": "JSValue",
+                  "description": "The text to display — a plain JS string for static text,"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `font()`, `foregroundColor()`)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 101
+            },
+            {
+              "name": "image",
+              "signature": "func image(_ imageValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Add an image element\n- Parameter imageValue: Image as HSImage object or file path string\n- Returns: Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)",
+              "description": "Add an image element",
+              "params": [
+                {
+                  "name": "imageValue",
+                  "type": "JSValue",
+                  "description": "Image as HSImage object or file path string"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 106
+            },
+            {
+              "name": "vstack",
+              "signature": "func vstack() -> HSUIWindow",
+              "rawDocumentation": "Begin a vertical stack (elements arranged top to bottom)\n- Returns: Self for chaining (call `end()` when done)",
+              "description": "Begin a vertical stack (elements arranged top to bottom)",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (call `end()` when done)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 112
+            },
+            {
+              "name": "hstack",
+              "signature": "func hstack() -> HSUIWindow",
+              "rawDocumentation": "Begin a horizontal stack (elements arranged left to right)\n- Returns: Self for chaining (call `end()` when done)",
+              "description": "Begin a horizontal stack (elements arranged left to right)",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (call `end()` when done)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 116
+            },
+            {
+              "name": "zstack",
+              "signature": "func zstack() -> HSUIWindow",
+              "rawDocumentation": "Begin a z-stack (overlapping elements)\n- Returns: Self for chaining (call `end()` when done)",
+              "description": "Begin a z-stack (overlapping elements)",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (call `end()` when done)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 120
+            },
+            {
+              "name": "spacer",
+              "signature": "func spacer() -> HSUIWindow",
+              "rawDocumentation": "Add flexible spacing that expands to fill available space\n- Returns: Self for chaining",
+              "description": "Add flexible spacing that expands to fill available space",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 124
+            },
+            {
+              "name": "end",
+              "signature": "func end() -> HSUIWindow",
+              "rawDocumentation": "End the current layout container\n- Returns: Self for chaining",
+              "description": "End the current layout container",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 128
+            },
+            {
+              "name": "fill",
+              "signature": "func fill(_ colorValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Fill a shape with a color\n- Parameter colorValue: Color as hex string or HSColor\n- Returns: Self for chaining",
+              "description": "Fill a shape with a color",
+              "params": [
+                {
+                  "name": "colorValue",
+                  "type": "JSValue",
+                  "description": "Color as hex string or HSColor"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 135
+            },
+            {
+              "name": "stroke",
+              "signature": "func stroke(_ colorValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Add a stroke (border) to a shape\n- Parameter colorValue: Color as hex string or HSColor\n- Returns: Self for chaining",
+              "description": "Add a stroke (border) to a shape",
+              "params": [
+                {
+                  "name": "colorValue",
+                  "type": "JSValue",
+                  "description": "Color as hex string or HSColor"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 140
+            },
+            {
+              "name": "strokeWidth",
+              "signature": "func strokeWidth(_ width: Double) -> HSUIWindow",
+              "rawDocumentation": "Set the stroke width\n- Parameter width: Width in points\n- Returns: Self for chaining",
+              "description": "Set the stroke width",
+              "params": [
+                {
+                  "name": "width",
+                  "type": "Double",
+                  "description": "Width in points"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 145
+            },
+            {
+              "name": "cornerRadius",
+              "signature": "func cornerRadius(_ radius: Double) -> HSUIWindow",
+              "rawDocumentation": "Round the corners of a shape\n- Parameter radius: Corner radius in points\n- Returns: Self for chaining",
+              "description": "Round the corners of a shape",
+              "params": [
+                {
+                  "name": "radius",
+                  "type": "Double",
+                  "description": "Corner radius in points"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 150
+            },
+            {
+              "name": "frame",
+              "signature": "func frame(_ dict: [String: Any]) -> HSUIWindow",
+              "rawDocumentation": "Set the frame (size) of an element\n- Parameter dict: Dictionary with `w` and/or `h` (can be numbers or percentage strings like \"50%\")\n- Returns: Self for chaining",
+              "description": "Set the frame (size) of an element",
+              "params": [
+                {
+                  "name": "dict",
+                  "type": "[String: Any]",
+                  "description": "Dictionary with `w` and/or `h` (can be numbers or percentage strings like \"50%\")"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 155
+            },
+            {
+              "name": "opacity",
+              "signature": "func opacity(_ value: Double) -> HSUIWindow",
+              "rawDocumentation": "Set the opacity of an element\n- Parameter value: Opacity from 0.0 (transparent) to 1.0 (opaque)\n- Returns: Self for chaining",
+              "description": "Set the opacity of an element",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Double",
+                  "description": "Opacity from 0.0 (transparent) to 1.0 (opaque)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 160
+            },
+            {
+              "name": "font",
+              "signature": "func font(_ font: HSFont) -> HSUIWindow",
+              "rawDocumentation": "Set the font for a text element\n- Parameter font: An HSFont object (e.g., `HSFont.title()`)\n- Returns: Self for chaining",
+              "description": "Set the font for a text element",
+              "params": [
+                {
+                  "name": "font",
+                  "type": "HSFont",
+                  "description": "An HSFont object (e.g., `HSFont.title()`)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 167
+            },
+            {
+              "name": "foregroundColor",
+              "signature": "func foregroundColor(_ colorValue: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Set the text color\n- Parameter colorValue: Color as hex string or HSColor\n- Returns: Self for chaining",
+              "description": "Set the text color",
+              "params": [
+                {
+                  "name": "colorValue",
+                  "type": "JSValue",
+                  "description": "Color as hex string or HSColor"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 172
+            },
+            {
+              "name": "resizable",
+              "signature": "func resizable() -> HSUIWindow",
+              "rawDocumentation": "Make an image resizable (allows it to scale with frame size)\n- Returns: Self for chaining",
+              "description": "Make an image resizable (allows it to scale with frame size)",
+              "params": [],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 178
+            },
+            {
+              "name": "aspectRatio",
+              "signature": "func aspectRatio(_ mode: String) -> HSUIWindow",
+              "rawDocumentation": "Set the aspect ratio mode for an image\n- Parameter mode: \"fit\" (scales to fit within frame) or \"fill\" (scales to fill frame)\n- Returns: Self for chaining",
+              "description": "Set the aspect ratio mode for an image",
+              "params": [
+                {
+                  "name": "mode",
+                  "type": "String",
+                  "description": "\"fit\" (scales to fit within frame) or \"fill\" (scales to fill frame)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 183
+            },
+            {
+              "name": "padding",
+              "signature": "func padding(_ value: Double) -> HSUIWindow",
+              "rawDocumentation": "Add padding around a layout container\n- Parameter value: Padding in points\n- Returns: Self for chaining",
+              "description": "Add padding around a layout container",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Double",
+                  "description": "Padding in points"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 190
+            },
+            {
+              "name": "spacing",
+              "signature": "func spacing(_ value: Double) -> HSUIWindow",
+              "rawDocumentation": "Set spacing between elements in a stack\n- Parameter value: Spacing in points\n- Returns: Self for chaining",
+              "description": "Set spacing between elements in a stack",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Double",
+                  "description": "Spacing in points"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 195
+            },
+            {
+              "name": "onClick",
+              "signature": "func onClick(_ callback: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Set a callback to fire when the element is clicked\n- Parameter callback: A JavaScript function to call on click\n- Returns: Self for chaining",
+              "description": "Set a callback to fire when the element is clicked",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "A JavaScript function to call on click"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 202
+            },
+            {
+              "name": "onHover",
+              "signature": "func onHover(_ callback: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Set a callback to fire when the cursor enters or leaves the element\n- Parameter callback: A JavaScript function called with a boolean: true when entering, false when leaving\n- Returns: Self for chaining",
+              "description": "Set a callback to fire when the cursor enters or leaves the element",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "A JavaScript function called with a boolean: true when entering, false when leaving"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 207
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUIAlertAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUIAlert\n\n**A temporary on-screen notification**\n\nDisplays a message that automatically fades out after a specified duration.\nPositioned in the center of the screen with a semi-transparent background.\n\n## Example\n\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .show();\n```",
+          "description": "# HSUIAlert\n**A temporary on-screen notification**\nDisplays a message that automatically fades out after a specified duration.\nPositioned in the center of the screen with a semi-transparent background.\n## Example\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .show();\n```",
+          "methods": [
+            {
+              "name": "font",
+              "signature": "func font(_ font: HSFont) -> HSUIAlert",
+              "rawDocumentation": "Set the font for the alert text\n- Parameter font: An HSFont object (e.g., `HSFont.headline()`)\n- Returns: Self for chaining",
+              "description": "Set the font for the alert text",
+              "params": [
+                {
+                  "name": "font",
+                  "type": "HSFont",
+                  "description": "An HSFont object (e.g., `HSFont.headline()`)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 33
+            },
+            {
+              "name": "duration",
+              "signature": "func duration(_ seconds: Double) -> HSUIAlert",
+              "rawDocumentation": "Set how long the alert is displayed\n- Parameter seconds: Duration in seconds (default: 5.0)\n- Returns: Self for chaining",
+              "description": "Set how long the alert is displayed",
+              "params": [
+                {
+                  "name": "seconds",
+                  "type": "Double",
+                  "description": "Duration in seconds (default: 5.0)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 38
+            },
+            {
+              "name": "padding",
+              "signature": "func padding(_ points: Double) -> HSUIAlert",
+              "rawDocumentation": "Set the padding around the alert text\n- Parameter points: Padding in points (default: 20)\n- Returns: Self for chaining",
+              "description": "Set the padding around the alert text",
+              "params": [
+                {
+                  "name": "points",
+                  "type": "Double",
+                  "description": "Padding in points (default: 20)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 43
+            },
+            {
+              "name": "position",
+              "signature": "func position(_ dict: [String: Any]) -> HSUIAlert",
+              "rawDocumentation": "Set a custom position for the alert\n- Parameter dict: Dictionary with `x` and `y` coordinates\n- Returns: Self for chaining",
+              "description": "Set a custom position for the alert",
+              "params": [
+                {
+                  "name": "dict",
+                  "type": "[String: Any]",
+                  "description": "Dictionary with `x` and `y` coordinates"
+                }
+              ],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 48
+            },
+            {
+              "name": "show",
+              "signature": "func show() -> HSUIAlert",
+              "rawDocumentation": "Show the alert\n- Returns: Self for chaining (can store reference to close manually)",
+              "description": "Show the alert",
+              "params": [],
+              "returns": {
+                "type": "HSUIAlert",
+                "description": "Self for chaining (can store reference to close manually)"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 52
+            },
+            {
+              "name": "close",
+              "signature": "func close()",
+              "rawDocumentation": "Close the alert immediately",
+              "description": "Close the alert immediately",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
+              "lineNumber": 55
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUIDialogAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUIDialog\n\n**A modal dialog with customizable buttons**\n\nShows a blocking dialog with a message, optional informative text, and custom buttons.\nUse the callback to respond to button presses.\n\n## Example\n\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            print(\"Saving...\");\n        } else if (index === 1) {\n            print(\"Discarding changes...\");\n        }\n    })\n    .show();\n```",
+          "description": "# HSUIDialog\n**A modal dialog with customizable buttons**\nShows a blocking dialog with a message, optional informative text, and custom buttons.\nUse the callback to respond to button presses.\n## Example\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            print(\"Saving...\");\n        } else if (index === 1) {\n            print(\"Discarding changes...\");\n        }\n    })\n    .show();\n```",
+          "methods": [
+            {
+              "name": "informativeText",
+              "signature": "func informativeText(_ text: String) -> HSUIDialog",
+              "rawDocumentation": "Set additional informative text below the main message\n- Parameter text: The informative text\n- Returns: Self for chaining",
+              "description": "Set additional informative text below the main message",
+              "params": [
+                {
+                  "name": "text",
+                  "type": "String",
+                  "description": "The informative text"
+                }
+              ],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 39
+            },
+            {
+              "name": "buttons",
+              "signature": "func buttons(_ labels: [String]) -> HSUIDialog",
+              "rawDocumentation": "Set custom button labels\n- Parameter labels: Array of button labels (default: [\"OK\"])\n- Returns: Self for chaining",
+              "description": "Set custom button labels",
+              "params": [
+                {
+                  "name": "labels",
+                  "type": "[String]",
+                  "description": "Array of button labels (default: [\"OK\"])"
+                }
+              ],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 44
+            },
+            {
+              "name": "style",
+              "signature": "func style(_ style: String) -> HSUIDialog",
+              "rawDocumentation": "Set the dialog style\n- Parameter style: Style name (e.g., \"informational\", \"warning\", \"critical\")\n- Returns: Self for chaining",
+              "description": "Set the dialog style",
+              "params": [
+                {
+                  "name": "style",
+                  "type": "String",
+                  "description": "Style name (e.g., \"informational\", \"warning\", \"critical\")"
+                }
+              ],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 49
+            },
+            {
+              "name": "onButton",
+              "signature": "func onButton(_ callback: JSValue) -> HSUIDialog",
+              "rawDocumentation": "Set the callback for button presses\n- Parameter callback: Function receiving button index (0-based)\n- Returns: Self for chaining",
+              "description": "Set the callback for button presses",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "Function receiving button index (0-based)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 54
+            },
+            {
+              "name": "show",
+              "signature": "func show() -> HSUIDialog",
+              "rawDocumentation": "Show the dialog\n- Returns: Self for chaining",
+              "description": "Show the dialog",
+              "params": [],
+              "returns": {
+                "type": "HSUIDialog",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 58
+            },
+            {
+              "name": "close",
+              "signature": "func close()",
+              "rawDocumentation": "Close the dialog programmatically",
+              "description": "Close the dialog programmatically",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
+              "lineNumber": 61
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUIFilePickerAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUIFilePicker\n\n**A file or directory selection dialog**\n\nShows a standard macOS open panel for selecting files or directories. Supports\nmultiple selection, file type filtering, and more.\n\n## Examples\n\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file to open\")\n    .allowedFileTypes([\"txt\", \"md\", \"js\"])\n    .onSelection((path) => {\n        if (path) {\n            print(\"Selected: \" + path);\n        } else {\n            print(\"User cancelled\");\n        }\n    })\n    .show();\n```\n\n### Directory Picker with Multiple Selection\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose directories to backup\")\n    .canChooseFiles(false)\n    .canChooseDirectories(true)\n    .allowsMultipleSelection(true)\n    .onSelection((paths) => {\n        if (paths) {\n            paths.forEach(p => print(\"Dir: \" + p));\n        }\n    })\n    .show();\n```",
+          "description": "# HSUIFilePicker\n**A file or directory selection dialog**\nShows a standard macOS open panel for selecting files or directories. Supports\nmultiple selection, file type filtering, and more.\n## Examples\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file to open\")\n    .allowedFileTypes([\"txt\", \"md\", \"js\"])\n    .onSelection((path) => {\n        if (path) {\n            print(\"Selected: \" + path);\n        } else {\n            print(\"User cancelled\");\n        }\n    })\n    .show();\n```\n### Directory Picker with Multiple Selection\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose directories to backup\")\n    .canChooseFiles(false)\n    .canChooseDirectories(true)\n    .allowsMultipleSelection(true)\n    .onSelection((paths) => {\n        if (paths) {\n            paths.forEach(p => print(\"Dir: \" + p));\n        }\n    })\n    .show();\n```",
+          "methods": [
+            {
+              "name": "message",
+              "signature": "func message(_ text: String) -> HSUIFilePicker",
+              "rawDocumentation": "Set the message displayed in the picker\n- Parameter text: The message text\n- Returns: Self for chaining",
+              "description": "Set the message displayed in the picker",
+              "params": [
+                {
+                  "name": "text",
+                  "type": "String",
+                  "description": "The message text"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 55
+            },
+            {
+              "name": "defaultPath",
+              "signature": "func defaultPath(_ path: String) -> HSUIFilePicker",
+              "rawDocumentation": "Set the starting directory\n- Parameter path: Path to directory (supports `~` for home)\n- Returns: Self for chaining",
+              "description": "Set the starting directory",
+              "params": [
+                {
+                  "name": "path",
+                  "type": "String",
+                  "description": "Path to directory (supports `~` for home)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 60
+            },
+            {
+              "name": "canChooseFiles",
+              "signature": "func canChooseFiles(_ value: Bool) -> HSUIFilePicker",
+              "rawDocumentation": "Set whether files can be selected\n- Parameter value: true to allow file selection (default: true)\n- Returns: Self for chaining",
+              "description": "Set whether files can be selected",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Bool",
+                  "description": "true to allow file selection (default: true)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 65
+            },
+            {
+              "name": "canChooseDirectories",
+              "signature": "func canChooseDirectories(_ value: Bool) -> HSUIFilePicker",
+              "rawDocumentation": "Set whether directories can be selected\n- Parameter value: true to allow directory selection (default: false)\n- Returns: Self for chaining",
+              "description": "Set whether directories can be selected",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Bool",
+                  "description": "true to allow directory selection (default: false)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 70
+            },
+            {
+              "name": "allowsMultipleSelection",
+              "signature": "func allowsMultipleSelection(_ value: Bool) -> HSUIFilePicker",
+              "rawDocumentation": "Set whether multiple items can be selected\n- Parameter value: true to allow multiple selection (default: false)\n- Returns: Self for chaining",
+              "description": "Set whether multiple items can be selected",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Bool",
+                  "description": "true to allow multiple selection (default: false)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 75
+            },
+            {
+              "name": "allowedFileTypes",
+              "signature": "func allowedFileTypes(_ types: [String]) -> HSUIFilePicker",
+              "rawDocumentation": "Restrict to specific file types\n- Parameter types: Array of file extensions (e.g., [\"txt\", \"md\"])\n- Returns: Self for chaining",
+              "description": "Restrict to specific file types",
+              "params": [
+                {
+                  "name": "types",
+                  "type": "[String]",
+                  "description": "Array of file extensions (e.g., [\"txt\", \"md\"])"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 80
+            },
+            {
+              "name": "resolvesAliases",
+              "signature": "func resolvesAliases(_ value: Bool) -> HSUIFilePicker",
+              "rawDocumentation": "Set whether to resolve symbolic links\n- Parameter value: true to resolve aliases (default: true)\n- Returns: Self for chaining",
+              "description": "Set whether to resolve symbolic links",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "Bool",
+                  "description": "true to resolve aliases (default: true)"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 85
+            },
+            {
+              "name": "onSelection",
+              "signature": "func onSelection(_ callback: JSValue) -> HSUIFilePicker",
+              "rawDocumentation": "Set the callback for file selection\n- Parameter callback: Function receiving selected path(s) or null if cancelled\n  - Single selection: receives a string path or null\n  - Multiple selection: receives an array of paths or null\n- Returns: Self for chaining",
+              "description": "Set the callback for file selection",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "Function receiving selected path(s) or null if cancelled"
+                }
+              ],
+              "returns": {
+                "type": "HSUIFilePicker",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 92
+            },
+            {
+              "name": "show",
+              "signature": "func show()",
+              "rawDocumentation": "Show the file picker dialog",
+              "description": "Show the file picker dialog",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
+              "lineNumber": 95
+            }
+          ],
+          "properties": []
+        },
+        {
+          "name": "HSUITextPromptAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSUITextPrompt\n\n**A modal dialog with text input**\n\nShows a blocking dialog with a text input field. The callback receives both the\nbutton index and the entered text.\n\n## Example\n\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .informativeText(\"Please provide your full name\")\n    .defaultText(\"John Doe\")\n    .buttons([\"OK\", \"Cancel\"])\n    .onButton((buttonIndex, text) => {\n        if (buttonIndex === 0) {\n            print(\"User entered: \" + text);\n        }\n    })\n    .show();\n```",
+          "description": "# HSUITextPrompt\n**A modal dialog with text input**\nShows a blocking dialog with a text input field. The callback receives both the\nbutton index and the entered text.\n## Example\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .informativeText(\"Please provide your full name\")\n    .defaultText(\"John Doe\")\n    .buttons([\"OK\", \"Cancel\"])\n    .onButton((buttonIndex, text) => {\n        if (buttonIndex === 0) {\n            print(\"User entered: \" + text);\n        }\n    })\n    .show();\n```",
+          "methods": [
+            {
+              "name": "informativeText",
+              "signature": "func informativeText(_ text: String) -> HSUITextPrompt",
+              "rawDocumentation": "Set additional informative text below the main message\n- Parameter text: The informative text\n- Returns: Self for chaining",
+              "description": "Set additional informative text below the main message",
+              "params": [
+                {
+                  "name": "text",
+                  "type": "String",
+                  "description": "The informative text"
+                }
+              ],
+              "returns": {
+                "type": "HSUITextPrompt",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 37
+            },
+            {
+              "name": "defaultText",
+              "signature": "func defaultText(_ text: String) -> HSUITextPrompt",
+              "rawDocumentation": "Set the default text in the input field\n- Parameter text: Default text value\n- Returns: Self for chaining",
+              "description": "Set the default text in the input field",
+              "params": [
+                {
+                  "name": "text",
+                  "type": "String",
+                  "description": "Default text value"
+                }
+              ],
+              "returns": {
+                "type": "HSUITextPrompt",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 42
+            },
+            {
+              "name": "buttons",
+              "signature": "func buttons(_ labels: [String]) -> HSUITextPrompt",
+              "rawDocumentation": "Set custom button labels\n- Parameter labels: Array of button labels (default: [\"OK\", \"Cancel\"])\n- Returns: Self for chaining",
+              "description": "Set custom button labels",
+              "params": [
+                {
+                  "name": "labels",
+                  "type": "[String]",
+                  "description": "Array of button labels (default: [\"OK\", \"Cancel\"])"
+                }
+              ],
+              "returns": {
+                "type": "HSUITextPrompt",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 47
+            },
+            {
+              "name": "onButton",
+              "signature": "func onButton(_ callback: JSValue) -> HSUITextPrompt",
+              "rawDocumentation": "Set the callback for button presses\n- Parameter callback: Function receiving (buttonIndex, inputText)\n- Returns: Self for chaining",
+              "description": "Set the callback for button presses",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "Function receiving (buttonIndex, inputText)"
+                }
+              ],
+              "returns": {
+                "type": "HSUITextPrompt",
+                "description": "Self for chaining"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 52
+            },
+            {
+              "name": "show",
+              "signature": "func show()",
+              "rawDocumentation": "Show the prompt dialog",
+              "description": "Show the prompt dialog",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
+              "lineNumber": 55
+            }
+          ],
+          "properties": []
+        }
+      ],
+      "description": "# hs.ui\n**Create custom user interfaces, alerts, dialogs, and file pickers**\nThe `hs.ui` module provides a set of tools for creating custom user interfaces\nin Hammerspoon with SwiftUI-like declarative syntax.\n## Key Features\nthen call `.set()` on it from any callback to re-render the canvas automatically\nthen call `.set()` on it to update the displayed content live\nto swap the image without rebuilding the window\n## Basic Examples\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .duration(3)\n    .show();\n```\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) print(\"Saving...\");\n    })\n    .show();\n```\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .defaultText(\"John Doe\")\n    .onButton((buttonIndex, text) => {\n        print(\"User entered: \" + text);\n    })\n    .show();\n```\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file\")\n    .allowedFileTypes([\"txt\", \"md\"])\n    .onSelection((path) => {\n        if (path) print(\"Selected: \" + path);\n    })\n    .show();\n```\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Hello, World!\")\n            .font(HSFont.title())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n### Reactive Color on Hover\n```javascript\n// Create a mutable color, then mutate it inside the hover callback\nconst btnColor = HSColor.hex(\"#4A90E2\");\n\nhs.ui.window({x: 100, y: 100, w: 160, h: 60})\n    .rectangle()\n        .fill(btnColor)\n        .cornerRadius(8)\n        .frame({w: \"100%\", h: \"100%\"})\n        .onHover((isHovered) => {\n            btnColor.set(isHovered ? \"#E24A4A\" : \"#4A90E2\");\n        })\n    .show();\n```\n### Reactive Text on Hover\n```javascript\n// Create a mutable string, then mutate it inside the hover callback\nconst label = hs.ui.string(\"Move your mouse here\");\n\nhs.ui.window({x: 100, y: 200, w: 220, h: 50})\n    .text(label)\n        .font(HSFont.body())\n        .foregroundColor(\"#FFFFFF\")\n        .onHover((isHovered) => {\n            label.set(isHovered ? \"You're hovering!\" : \"Move your mouse here\");\n        })\n    .show();\n```\n### Reactive Image on Click\n```javascript\n// Toggle between two system icons on each click\nconst icon = HSImage.fromName(\"NSStatusAvailable\");\n\nhs.ui.window({x: 100, y: 300, w: 80, h: 80})\n    .image(icon)\n        .resizable()\n        .aspectRatio(\"fit\")\n        .frame({w: 64, h: 64})\n        .onClick(() => {\n            const next = (icon.name() === \"NSStatusAvailable\")\n                ? HSImage.fromName(\"NSStatusUnavailable\")\n                : HSImage.fromName(\"NSStatusAvailable\");\n            icon.set(next);\n        })\n    .show();\n```\n## Complete Example: Status Dashboard\nHere's a more complex example showing how to build an interactive status dashboard\n```javascript\n// Create a status dashboard window\nconst statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})\n    .vstack()\n        .spacing(15)\n        .padding(20)\n\n        // Header\n        .text(\"System Status Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n\n        // Status cards\n        .hstack()\n            .spacing(10)\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#4CAF50\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"CPU: 45%\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#2196F3\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"Memory: 8.2GB\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n        .end()\n\n        // Activity indicator with image\n        .hstack()\n            .spacing(10)\n            .image(HSImage.fromName(\"NSComputer\"))\n                .resizable()\n                .aspectRatio(\"fit\")\n                .frame({w: 64, h: 64})\n            .vstack()\n                .text(\"System Running\")\n                    .font(HSFont.title())\n                .text(\"All services operational\")\n                    .font(HSFont.caption())\n                    .foregroundColor(\"#A0A0A0\")\n            .end()\n        .end()\n\n        // Circle status indicators\n        .hstack()\n            .spacing(20)\n            .circle()\n                .fill(\"#4CAF50\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#FFC107\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#F44336\")\n                .frame({w: 30, h: 30})\n        .end()\n    .end()\n    .backgroundColor(\"#2C3E50\");\n\n// Show the dashboard\nstatusWindow.show();\n\n// Later, interact with dialogs\nhs.ui.dialog(\"Shutdown system?\")\n    .informativeText(\"This will close all applications.\")\n    .buttons([\"Shutdown\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            hs.ui.alert(\"Shutting down...\")\n                .duration(3)\n                .show();\n        }\n    })\n    .show();\n```\n## Complete Example: Reactive Hover Card\nDemonstrates reactive colors and reactive text together — a single `.onHover()`\n```javascript\nconst cardColor = HSColor.hex(\"#3498DB\");\nconst cardLabel = hs.ui.string(\"Hover the card\");\n\nhs.ui.window({x: 100, y: 100, w: 220, h: 120})\n    .vstack()\n        .spacing(12)\n        .padding(16)\n        .rectangle()\n            .fill(cardColor)\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n            .onHover((isHovered) => {\n                cardColor.set(isHovered ? \"#E74C3C\" : \"#3498DB\");\n                cardLabel.set(isHovered ? \"You found it!\" : \"Hover the card\");\n            })\n        .text(cardLabel)\n            .font(HSFont.headline())\n            .foregroundColor(\"#FFFFFF\")\n    .end()\n    .backgroundColor(\"#1A252F\")\n    .show();\n```",
+      "rawDocumentation": "# hs.ui\n\n**Create custom user interfaces, alerts, dialogs, and file pickers**\n\nThe `hs.ui` module provides a set of tools for creating custom user interfaces\nin Hammerspoon with SwiftUI-like declarative syntax.\n\n## Key Features\n\n- **Custom Windows**: Build custom UI windows with shapes, text, and layouts\n- **Alerts**: Display temporary on-screen notifications\n- **Dialogs**: Show modal dialogs with custom buttons and callbacks\n- **Text Input**: Prompt users for text input\n- **File Pickers**: Let users select files or directories\n- **Reactive Colors**: Pass an `HSColor` object to `.fill()`, `.stroke()`, or `.foregroundColor()`,\n  then call `.set()` on it from any callback to re-render the canvas automatically\n- **Reactive Text**: Create a string with `hs.ui.string()`, pass it to `.text()`,\n  then call `.set()` on it to update the displayed content live\n- **Reactive Images**: Pass an `HSImage` object to `.image()`, then call `.set()` on it\n  to swap the image without rebuilding the window\n\n## Basic Examples\n\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .duration(3)\n    .show();\n```\n\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) print(\"Saving...\");\n    })\n    .show();\n```\n\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .defaultText(\"John Doe\")\n    .onButton((buttonIndex, text) => {\n        print(\"User entered: \" + text);\n    })\n    .show();\n```\n\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file\")\n    .allowedFileTypes([\"txt\", \"md\"])\n    .onSelection((path) => {\n        if (path) print(\"Selected: \" + path);\n    })\n    .show();\n```\n\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Hello, World!\")\n            .font(HSFont.title())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n### Reactive Color on Hover\n```javascript\n// Create a mutable color, then mutate it inside the hover callback\nconst btnColor = HSColor.hex(\"#4A90E2\");\n\nhs.ui.window({x: 100, y: 100, w: 160, h: 60})\n    .rectangle()\n        .fill(btnColor)\n        .cornerRadius(8)\n        .frame({w: \"100%\", h: \"100%\"})\n        .onHover((isHovered) => {\n            btnColor.set(isHovered ? \"#E24A4A\" : \"#4A90E2\");\n        })\n    .show();\n```\n\n### Reactive Text on Hover\n```javascript\n// Create a mutable string, then mutate it inside the hover callback\nconst label = hs.ui.string(\"Move your mouse here\");\n\nhs.ui.window({x: 100, y: 200, w: 220, h: 50})\n    .text(label)\n        .font(HSFont.body())\n        .foregroundColor(\"#FFFFFF\")\n        .onHover((isHovered) => {\n            label.set(isHovered ? \"You're hovering!\" : \"Move your mouse here\");\n        })\n    .show();\n```\n\n### Reactive Image on Click\n```javascript\n// Toggle between two system icons on each click\nconst icon = HSImage.fromName(\"NSStatusAvailable\");\n\nhs.ui.window({x: 100, y: 300, w: 80, h: 80})\n    .image(icon)\n        .resizable()\n        .aspectRatio(\"fit\")\n        .frame({w: 64, h: 64})\n        .onClick(() => {\n            const next = (icon.name() === \"NSStatusAvailable\")\n                ? HSImage.fromName(\"NSStatusUnavailable\")\n                : HSImage.fromName(\"NSStatusAvailable\");\n            icon.set(next);\n        })\n    .show();\n```\n\n## Complete Example: Status Dashboard\n\nHere's a more complex example showing how to build an interactive status dashboard\nthat combines multiple UI elements:\n\n```javascript\n// Create a status dashboard window\nconst statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})\n    .vstack()\n        .spacing(15)\n        .padding(20)\n\n        // Header\n        .text(\"System Status Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n\n        // Status cards\n        .hstack()\n            .spacing(10)\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#4CAF50\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"CPU: 45%\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#2196F3\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"Memory: 8.2GB\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n        .end()\n\n        // Activity indicator with image\n        .hstack()\n            .spacing(10)\n            .image(HSImage.fromName(\"NSComputer\"))\n                .resizable()\n                .aspectRatio(\"fit\")\n                .frame({w: 64, h: 64})\n            .vstack()\n                .text(\"System Running\")\n                    .font(HSFont.title())\n                .text(\"All services operational\")\n                    .font(HSFont.caption())\n                    .foregroundColor(\"#A0A0A0\")\n            .end()\n        .end()\n\n        // Circle status indicators\n        .hstack()\n            .spacing(20)\n            .circle()\n                .fill(\"#4CAF50\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#FFC107\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#F44336\")\n                .frame({w: 30, h: 30})\n        .end()\n    .end()\n    .backgroundColor(\"#2C3E50\");\n\n// Show the dashboard\nstatusWindow.show();\n\n// Later, interact with dialogs\nhs.ui.dialog(\"Shutdown system?\")\n    .informativeText(\"This will close all applications.\")\n    .buttons([\"Shutdown\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            hs.ui.alert(\"Shutting down...\")\n                .duration(3)\n                .show();\n        }\n    })\n    .show();\n```\n\n## Complete Example: Reactive Hover Card\n\nDemonstrates reactive colors and reactive text together — a single `.onHover()`\ncallback updates both the fill color of a shape and the content of a text label:\n\n```javascript\nconst cardColor = HSColor.hex(\"#3498DB\");\nconst cardLabel = hs.ui.string(\"Hover the card\");\n\nhs.ui.window({x: 100, y: 100, w: 220, h: 120})\n    .vstack()\n        .spacing(12)\n        .padding(16)\n        .rectangle()\n            .fill(cardColor)\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n            .onHover((isHovered) => {\n                cardColor.set(isHovered ? \"#E74C3C\" : \"#3498DB\");\n                cardLabel.set(isHovered ? \"You found it!\" : \"Hover the card\");\n            })\n        .text(cardLabel)\n            .font(HSFont.headline())\n            .foregroundColor(\"#FFFFFF\")\n    .end()\n    .backgroundColor(\"#1A252F\")\n    .show();\n```"
+    },
+    {
       "name": "hs.window",
       "methods": [
         {
@@ -2715,7 +3843,7 @@
             "description": "The focused window, or nil if none"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.window/WindowModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 19
         },
         {
@@ -2729,7 +3857,7 @@
             "description": "An array of all windows"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.window/WindowModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 23
         },
         {
@@ -2743,7 +3871,7 @@
             "description": "An array of visible windows"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.window/WindowModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 27
         },
         {
@@ -2763,7 +3891,7 @@
             "description": "An array of windows for that application"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.window/WindowModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 32
         },
         {
@@ -2783,13 +3911,13 @@
             "description": "An array of windows on that screen"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.window/WindowModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 37
         },
         {
           "name": "windowAtPoint",
           "signature": "func windowAtPoint(_ point: HSPoint) -> HSWindow?",
-          "rawDocumentation": "Get the window at a specific screen position\n- Parameters:\n- point: An HSPoint containing the coordinates\n- Returns: The topmost window at that position, or nil if none",
+          "rawDocumentation": "Get the window at a specific screen position\n- Parameters:\n  - point: An HSPoint containing the coordinates\n- Returns: The topmost window at that position, or nil if none",
           "description": "Get the window at a specific screen position",
           "params": [
             {
@@ -2803,7 +3931,7 @@
             "description": "The topmost window at that position, or nil if none"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.window/WindowModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 43
         },
         {
@@ -2817,13 +3945,13 @@
             "description": "An array of windows in z-order"
           },
           "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.window/WindowModule.swift",
+          "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 47
         },
         {
           "name": "findByTitle",
           "rawDocumentation": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched\nReturns: An array of HSWindow objects with matching titles",
-          "description": "Find windows by title Parameter title: The window title to search for. All windows with titles that include this string, will be matched",
+          "description": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched",
           "params": [
             {
               "name": "title",
@@ -2857,7 +3985,7 @@
         {
           "name": "moveToLeftHalf",
           "rawDocumentation": "Move a window to left half of screen\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise False",
-          "description": "Move a window to left half of screen Parameter win: An HSWindow object",
+          "description": "Move a window to left half of screen\nParameter win: An HSWindow object",
           "params": [
             {
               "name": "win",
@@ -2877,7 +4005,7 @@
         {
           "name": "moveToRightHalf",
           "rawDocumentation": "Move a window to right half of screen\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise False",
-          "description": "Move a window to right half of screen Parameter win: An HSWindow object",
+          "description": "Move a window to right half of screen\nParameter win: An HSWindow object",
           "params": [
             {
               "name": "win",
@@ -2897,7 +4025,7 @@
         {
           "name": "maximize",
           "rawDocumentation": "Maximize a window\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise false",
-          "description": "Maximize a window Parameter win: An HSWindow object",
+          "description": "Maximize a window\nParameter win: An HSWindow object",
           "params": [
             {
               "name": "win",
@@ -3153,6 +4281,108 @@
   ],
   "types": [
     {
+      "name": "HSColorAPI",
+      "type": "typedef",
+      "rawDocumentation": "Bridge type for working with colors in JavaScript",
+      "description": "Bridge type for working with colors in JavaScript",
+      "methods": [
+        {
+          "name": "rgb",
+          "signature": "static func rgb(_ r: Double, _ g: Double, _ b: Double, _ a: Double) -> HSColor",
+          "rawDocumentation": "Create a color from RGB values\n- Parameters:\n  - r: Red component (0.0-1.0)\n  - g: Green component (0.0-1.0)\n  - b: Blue component (0.0-1.0)\n  - a: Alpha component (0.0-1.0)\n- Returns: An HSColor object",
+          "description": "Create a color from RGB values",
+          "params": [
+            {
+              "name": "r",
+              "type": "Double",
+              "description": "Red component (0.0-1.0)"
+            },
+            {
+              "name": "g",
+              "type": "Double",
+              "description": "Green component (0.0-1.0)"
+            },
+            {
+              "name": "b",
+              "type": "Double",
+              "description": "Blue component (0.0-1.0)"
+            },
+            {
+              "name": "a",
+              "type": "Double",
+              "description": "Alpha component (0.0-1.0)"
+            }
+          ],
+          "returns": {
+            "type": "HSColor",
+            "description": "An HSColor object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
+          "lineNumber": 34
+        },
+        {
+          "name": "hex",
+          "signature": "static func hex(_ hex: String) -> HSColor",
+          "rawDocumentation": "Create a color from a hex string\n- Parameter hex: Hex string (e.g. \"#FF0000\" or \"FF0000\")\n- Returns: An HSColor object",
+          "description": "Create a color from a hex string",
+          "params": [
+            {
+              "name": "hex",
+              "type": "String",
+              "description": "Hex string (e.g. \"#FF0000\" or \"FF0000\")"
+            }
+          ],
+          "returns": {
+            "type": "HSColor",
+            "description": "An HSColor object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
+          "lineNumber": 39
+        },
+        {
+          "name": "named",
+          "signature": "static func named(_ name: String) -> HSColor",
+          "rawDocumentation": "Create a color from a named system color\n- Parameter name: Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")\n- Returns: An HSColor object",
+          "description": "Create a color from a named system color",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")"
+            }
+          ],
+          "returns": {
+            "type": "HSColor",
+            "description": "An HSColor object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
+          "lineNumber": 44
+        },
+        {
+          "name": "set",
+          "signature": "func set(_ value: JSValue)",
+          "rawDocumentation": "Update this color's value\n- Parameter value: New color as a hex string (e.g. \"#FF0000\") or another HSColor object",
+          "description": "Update this color's value",
+          "params": [
+            {
+              "name": "value",
+              "type": "JSValue",
+              "description": "New color as a hex string (e.g. \"#FF0000\") or another HSColor object"
+            }
+          ],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
+          "lineNumber": 48
+        }
+      ],
+      "properties": [],
+      "category": "type"
+    },
+    {
       "name": "HSFontAPI",
       "type": "typedef",
       "rawDocumentation": "This is a JavaScript object used to represent macOS fonts. It includes a variety of static methods that can instantiate the various font sizes commonly used with UI elements, and also includes static methods for instantiating the system font at various sizes/weights, or any custom font available on the system.",
@@ -3335,7 +4565,7 @@
         {
           "name": "system",
           "signature": "static func system(_ size: Double, weight: String) -> HSFont",
-          "rawDocumentation": "The system font in a custom size with a choice of weights\n- Parameters:\n- size: The font size in points\n- weight: The font weight as a string (e.g. \"ultralight\", \"thin\", \"light\", \"regular\", \"medium\", \"semibold\", \"bold\", \"heavy\", \"black\")\n- Returns: An HSFont object",
+          "rawDocumentation": "The system font in a custom size with a choice of weights\n- Parameters:\n  - size: The font size in points\n  - weight: The font weight as a string (e.g. \"ultralight\", \"thin\", \"light\", \"regular\", \"medium\", \"semibold\", \"bold\", \"heavy\", \"black\")\n- Returns: An HSFont object",
           "description": "The system font in a custom size with a choice of weights",
           "params": [
             {
@@ -3360,7 +4590,7 @@
         {
           "name": "custom",
           "signature": "static func custom(_ name: String, size: Double) -> HSFont",
-          "rawDocumentation": "A font present on the system at a given size\n- Parameters:\n- name: A string containing the name of the font to instantiate\n- size: The font size in points\n- Returns: An HSFont object",
+          "rawDocumentation": "A font present on the system at a given size\n- Parameters:\n  - name: A string containing the name of the font to instantiate\n  - size: The font size in points\n- Returns: An HSFont object",
           "description": "A font present on the system at a given size",
           "params": [
             {
@@ -3387,6 +4617,293 @@
       "category": "type"
     },
     {
+      "name": "HSImageAPI",
+      "type": "typedef",
+      "rawDocumentation": "Bridge type for working with images in JavaScript\n\nHSImage provides a comprehensive API for loading, manipulating, and saving images.\nIt supports various image sources including files, system icons, app bundles, and URLs.\n\n## Loading Images\n\n```javascript\n// Load from file\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Load system image\nconst icon = HSImage.fromName(\"NSComputer\")\n\n// Load app icon\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n\n// Load from URL (asynchronous with Promise)\nHSImage.fromURL(\"https://example.com/image.png\")\n    .then(image => console.log(\"Image loaded:\", image.size()))\n    .catch(err => console.error(\"Failed to load image:\", err))\n\n// Or with async/await\nconst image = await HSImage.fromURL(\"https://example.com/image.png\")\n```\n\n## Image Manipulation\n\n```javascript\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Get size\nconst size = img.size()  // Returns HSSize\n\n// Resize image\nconst resized = img.setSize({w: 100, h: 100}, false)  // Proportional\n\n// Crop image\nconst cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})\n\n// Save to file\nimg.saveToFile(\"/path/to/output.png\")\n```",
+      "description": "Bridge type for working with images in JavaScript\nHSImage provides a comprehensive API for loading, manipulating, and saving images.\nIt supports various image sources including files, system icons, app bundles, and URLs.\n## Loading Images\n```javascript\n// Load from file\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Load system image\nconst icon = HSImage.fromName(\"NSComputer\")\n\n// Load app icon\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n\n// Load from URL (asynchronous with Promise)\nHSImage.fromURL(\"https://example.com/image.png\")\n    .then(image => console.log(\"Image loaded:\", image.size()))\n    .catch(err => console.error(\"Failed to load image:\", err))\n\n// Or with async/await\nconst image = await HSImage.fromURL(\"https://example.com/image.png\")\n```\n## Image Manipulation\n```javascript\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Get size\nconst size = img.size()  // Returns HSSize\n\n// Resize image\nconst resized = img.setSize({w: 100, h: 100}, false)  // Proportional\n\n// Crop image\nconst cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})\n\n// Save to file\nimg.saveToFile(\"/path/to/output.png\")\n```",
+      "methods": [
+        {
+          "name": "fromPath",
+          "signature": "static func fromPath(_ path: String) -> HSImage?",
+          "rawDocumentation": "Load an image from a file path\n- Parameter path: Path to the image file\n- Returns: An HSImage object, or null if the file couldn't be loaded",
+          "description": "Load an image from a file path",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Path to the image file"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object, or null if the file couldn't be loaded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 73
+        },
+        {
+          "name": "fromName",
+          "signature": "static func fromName(_ name: String) -> HSImage?",
+          "rawDocumentation": "Load a system image by name\n- Parameter name: Name of the system image (e.g., \"NSComputer\", \"NSFolder\")\n- Returns: An HSImage object, or null if the image couldn't be found",
+          "description": "Load a system image by name",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "Name of the system image (e.g., \"NSComputer\", \"NSFolder\")"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object, or null if the image couldn't be found"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 78
+        },
+        {
+          "name": "fromAppBundle",
+          "signature": "static func fromAppBundle(_ bundleID: String) -> HSImage?",
+          "rawDocumentation": "Load an app's icon by bundle identifier\n- Parameter bundleID: Bundle identifier of the application\n- Returns: An HSImage object, or null if the app couldn't be found",
+          "description": "Load an app's icon by bundle identifier",
+          "params": [
+            {
+              "name": "bundleID",
+              "type": "String",
+              "description": "Bundle identifier of the application"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object, or null if the app couldn't be found"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 83
+        },
+        {
+          "name": "iconForFile",
+          "signature": "static func iconForFile(_ path: String) -> HSImage?",
+          "rawDocumentation": "Get the icon for a file\n- Parameter path: Path to the file\n- Returns: An HSImage object representing the file's icon",
+          "description": "Get the icon for a file",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Path to the file"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object representing the file's icon"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 88
+        },
+        {
+          "name": "iconForFileType",
+          "signature": "static func iconForFileType(_ fileType: String) -> HSImage?",
+          "rawDocumentation": "Get the icon for a file type\n- Parameter fileType: File extension or UTI (e.g., \"png\", \"public.png\")\n- Returns: An HSImage object representing the file type's icon",
+          "description": "Get the icon for a file type",
+          "params": [
+            {
+              "name": "fileType",
+              "type": "String",
+              "description": "File extension or UTI (e.g., \"png\", \"public.png\")"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object representing the file type's icon"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 93
+        },
+        {
+          "name": "fromURL",
+          "signature": "static func fromURL(_ url: String) -> JSPromise?",
+          "rawDocumentation": "Load an image from a URL (asynchronous)\n- Parameter url: URL string of the image\n- Returns: {Promise<HSImage>} A Promise that resolves to the loaded image, or rejects on error",
+          "description": "Load an image from a URL (asynchronous)",
+          "params": [
+            {
+              "name": "url",
+              "type": "String",
+              "description": "URL string of the image"
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A Promise that resolves to the loaded image, or rejects on error",
+            "promiseType": "HSImage"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 98
+        },
+        {
+          "name": "size",
+          "signature": "func size(_ size: JSValue) -> JSValue",
+          "rawDocumentation": "Get or set the image size\n- Parameter size: Optional HSSize to set (if provided, returns a resized copy)\n- Returns: The current size as HSSize, or a resized copy if size was provided",
+          "description": "Get or set the image size",
+          "params": [
+            {
+              "name": "size",
+              "type": "JSValue",
+              "description": "Optional HSSize to set (if provided, returns a resized copy)"
+            }
+          ],
+          "returns": {
+            "type": "JSValue",
+            "description": "The current size as HSSize, or a resized copy if size was provided"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 103
+        },
+        {
+          "name": "name",
+          "signature": "func name(_ name: JSValue) -> String?",
+          "rawDocumentation": "Get or set the image name\n- Parameter name: Optional name to set\n- Returns: The current or new name",
+          "description": "Get or set the image name",
+          "params": [
+            {
+              "name": "name",
+              "type": "JSValue",
+              "description": "Optional name to set"
+            }
+          ],
+          "returns": {
+            "type": "String?",
+            "description": "The current or new name"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 108
+        },
+        {
+          "name": "setSize",
+          "signature": "func setSize(_ size: JSValue, _ absolute: Bool) -> HSImage?",
+          "rawDocumentation": "Create a resized copy of the image\n- Parameters:\n  - size: Target size as HSSize\n  - absolute: If true, resize exactly to specified dimensions. If false, maintain aspect ratio\n- Returns: A new resized HSImage",
+          "description": "Create a resized copy of the image",
+          "params": [
+            {
+              "name": "size",
+              "type": "JSValue",
+              "description": "Target size as HSSize"
+            },
+            {
+              "name": "absolute",
+              "type": "Bool",
+              "description": "If true, resize exactly to specified dimensions. If false, maintain aspect ratio"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "A new resized HSImage"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 115
+        },
+        {
+          "name": "copyImage",
+          "signature": "func copyImage() -> HSImage?",
+          "rawDocumentation": "Create a copy of the image\n- Returns: A new HSImage copy",
+          "description": "Create a copy of the image",
+          "params": [],
+          "returns": {
+            "type": "HSImage?",
+            "description": "A new HSImage copy"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 119
+        },
+        {
+          "name": "croppedCopy",
+          "signature": "func croppedCopy(_ rect: JSValue) -> HSImage?",
+          "rawDocumentation": "Create a cropped copy of the image\n- Parameter rect: HSRect defining the crop area\n- Returns: A new cropped HSImage, or null if cropping failed",
+          "description": "Create a cropped copy of the image",
+          "params": [
+            {
+              "name": "rect",
+              "type": "JSValue",
+              "description": "HSRect defining the crop area"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "A new cropped HSImage, or null if cropping failed"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 124
+        },
+        {
+          "name": "saveToFile",
+          "signature": "func saveToFile(_ path: String) -> Bool",
+          "rawDocumentation": "Save the image to a file\n- Parameter path: Destination file path (extension determines format: png, jpg, tiff, bmp, gif)\n- Returns: true if saved successfully, false otherwise",
+          "description": "Save the image to a file",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Destination file path (extension determines format: png, jpg, tiff, bmp, gif)"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if saved successfully, false otherwise"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 129
+        },
+        {
+          "name": "template",
+          "signature": "func template(_ state: JSValue) -> Bool",
+          "rawDocumentation": "Get or set the template image flag\n- Parameter state: Optional boolean to set template state\n- Returns: Current template state",
+          "description": "Get or set the template image flag",
+          "params": [
+            {
+              "name": "state",
+              "type": "JSValue",
+              "description": "Optional boolean to set template state"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "Current template state"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 134
+        },
+        {
+          "name": "set",
+          "signature": "func set(_ value: JSValue)",
+          "rawDocumentation": "Replace the image with a new one, triggering a re-render if bound to a UI element\n- Parameter value: New image as an HSImage object or a file path string",
+          "description": "Replace the image with a new one, triggering a re-render if bound to a UI element",
+          "params": [
+            {
+              "name": "value",
+              "type": "JSValue",
+              "description": "New image as an HSImage object or a file path string"
+            }
+          ],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 138
+        }
+      ],
+      "properties": [],
+      "category": "type"
+    },
+    {
       "name": "HSPointAPI",
       "type": "typedef",
       "rawDocumentation": "This is a JavaScript object used to represent coordinates, or \"points\", as used in various places throughout Hammerspoon's API, particularly where dealing with positions on a screen. Behind the scenes it is a wrapper for the CGPoint type in Swift/ObjectiveC.",
@@ -3395,7 +4912,7 @@
         {
           "name": "init",
           "signature": "init(x: Double, y: Double)",
-          "rawDocumentation": "Create a new HSPoint object\n- Parameters:\n- x: A coordinate for this point on the x-axis\n- y: A coordinate for this point on the y-axis",
+          "rawDocumentation": "Create a new HSPoint object\n- Parameters:\n  - x: A coordinate for this point on the x-axis\n  - y: A coordinate for this point on the y-axis",
           "description": "Create a new HSPoint object",
           "params": [
             {
@@ -3446,7 +4963,7 @@
         {
           "name": "init",
           "signature": "init(x: Double, y: Double, w: Double, h: Double)",
-          "rawDocumentation": "Create a new HSRect object\n- Parameters:\n- x: The x-axis coordinate of the top-left corner\n- y: The y-axis coordinate of the top-left corner\n- w: The width of the rectangle\n- h: The height of the rectangle",
+          "rawDocumentation": "Create a new HSRect object\n- Parameters:\n  - x: The x-axis coordinate of the top-left corner\n  - y: The y-axis coordinate of the top-left corner\n  - w: The width of the rectangle\n  - h: The height of the rectangle",
           "description": "Create a new HSRect object",
           "params": [
             {
@@ -3543,7 +5060,7 @@
         {
           "name": "init",
           "signature": "init(w: Double, h: Double)",
-          "rawDocumentation": "Create a new HSSize object\n- Parameters:\n- w: The width of the rectangle\n- h: The height of the rectangle",
+          "rawDocumentation": "Create a new HSSize object\n- Parameters:\n  - w: The width of the rectangle\n  - h: The height of the rectangle",
           "description": "Create a new HSSize object",
           "params": [
             {
@@ -3584,7 +5101,44 @@
         }
       ],
       "category": "type"
+    },
+    {
+      "name": "HSStringAPI",
+      "type": "typedef",
+      "rawDocumentation": "A reactive string container. Pass to `.text()` to get automatic\nre-renders when `.set()` is called from JavaScript.",
+      "description": "A reactive string container. Pass to `.text()` to get automatic\nre-renders when `.set()` is called from JavaScript.",
+      "methods": [
+        {
+          "name": "set",
+          "signature": "func set(_ newValue: String)",
+          "rawDocumentation": "Update the string value, triggering a re-render if bound to a UI element\n- Parameter newValue: The new string",
+          "description": "Update the string value, triggering a re-render if bound to a UI element",
+          "params": [
+            {
+              "name": "newValue",
+              "type": "String",
+              "description": "The new string"
+            }
+          ],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSString.swift",
+          "lineNumber": 32
+        }
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "signature": "var value: String { get }",
+          "rawDocumentation": "The current string value",
+          "description": "The current string value",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSString.swift",
+          "lineNumber": 28
+        }
+      ],
+      "category": "type"
     }
   ],
-  "generatedAt": "2026-02-10T12:58:06.346Z"
+  "generatedAt": "2026-02-28T11:29:57.125Z"
 }

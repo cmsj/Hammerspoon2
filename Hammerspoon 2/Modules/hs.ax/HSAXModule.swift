@@ -59,11 +59,41 @@ import AXSwift
     /// A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()
     @objc var notificationTypes: [String: String] { get }
 
+    /// Add a watcher for application AX events
+    /// - Parameters:
+    ///   - application: An HSApplication object
+    ///   - notification: An event name
+    ///   - listener: A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to
+    @objc func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSValue)
+
+    /// Remove a watcher for application AX events
+    /// - Parameters:
+    ///   - application: An HSApplication object
+    ///   - notification: The event name to stop watching
+    ///   - listener: The function/lambda provided when adding the watcher
+    @objc func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSValue)
+
     // NOTE: These are private API for JavaScript code to use
     /// SKIP_DOCS
     @objc(_addWatcher:::) func _addWatcher(_ application: HSApplication, notification: String, callback: JSValue)
     /// SKIP_DOCS
     @objc(_removeWatcher::) func _removeWatcher(_ application: HSApplication, notification: String)
+
+    /// Swift-retained storage for the JS AXModuleWatcherEmitter instance
+    /// SKIP_DOCS
+    @objc var _watcherEmitter: JSValue? { get set }
+
+    /// Fetch the focused UI element. Swift-retained storage for the JS implementation.
+    @objc var focusedElement: JSValue? { get set }
+
+    /// Find AX elements by role. Swift-retained storage for the JS implementation.
+    @objc var findByRole: JSValue? { get set }
+
+    /// Find AX elements by title. Swift-retained storage for the JS implementation.
+    @objc var findByTitle: JSValue? { get set }
+
+    /// Print the element hierarchy. Swift-retained storage for the JS implementation.
+    @objc var printHierarchy: JSValue? { get set }
 }
 
 // MARK: - Implementation
@@ -81,6 +111,13 @@ import AXSwift
 
     // Notification types exposed to JavaScript
     @objc var _notificationTypes: [String: String] = [:]
+
+    // Swift-retained storage for JS-defined functions
+    @objc var _watcherEmitter: JSValue? = nil
+    @objc var focusedElement: JSValue? = nil
+    @objc var findByRole: JSValue? = nil
+    @objc var findByTitle: JSValue? = nil
+    @objc var printHierarchy: JSValue? = nil
 
     // MARK: - Module lifecycle
 
@@ -182,6 +219,14 @@ import AXSwift
 
     private func makeWatcherKey(pid: pid_t, notification: String) -> String {
         return "\(pid):\(notification)"
+    }
+
+    @objc func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSValue) {
+        _watcherEmitter?.invokeMethod("on", withArguments: [application, notification, listener])
+    }
+
+    @objc func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSValue) {
+        _watcherEmitter?.invokeMethod("removeListener", withArguments: [application, notification, listener])
     }
 
     @objc(_addWatcher:::) func _addWatcher(_ application: HSApplication, notification: String, callback: JSValue) {

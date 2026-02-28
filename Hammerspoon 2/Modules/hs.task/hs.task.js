@@ -17,7 +17,7 @@
      * @param {Function} legacyStreamCallback - Legacy streaming callback (optional)
      * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
      */
-    hs.task.run = function(launchPath, args, options, legacyStreamCallback) {
+    hs.task.runAsync = function(launchPath, args, options, legacyStreamCallback) {
         return new Promise((resolve, reject) => {
             let stdout = '';
             let stderr = '';
@@ -26,7 +26,7 @@
             let onOutput = null;
             let streamCallback = null;
 
-            // Handle legacy API: hs.task.run(path, args, callback, streamCallback)
+            // Handle legacy API: hs.task.runAsync(path, args, callback, streamCallback)
             if (typeof options === 'function') {
                 const terminationCallback = options;
                 streamCallback = legacyStreamCallback;
@@ -87,18 +87,13 @@
     };
 
     /**
-     * Create and run a task asynchronously (alias for run)
-     */
-    hs.task.async = hs.task.run;
-
-    /**
      * Run a shell command asynchronously
      * @param {string} command - Shell command to execute
      * @param {Object} options - Options (same as run)
      * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
      */
     hs.task.shell = function(command, options) {
-        return hs.task.run('/bin/sh', ['-c', command], options);
+        return hs.task.runAsync('/bin/sh', ['-c', command], options);
     };
 
     /**
@@ -108,7 +103,7 @@
      */
     hs.task.parallel = function(tasks) {
         const promises = tasks.map(task =>
-            hs.task.run(task.path || task.launchPath, task.args || [], task.options || {})
+            hs.task.runAsync(task.path || task.launchPath, task.args || [], task.options || {})
         );
         return Promise.all(promises);
     };
@@ -121,7 +116,7 @@
     hs.task.sequence = async function(tasks) {
         const results = [];
         for (const task of tasks) {
-            const result = await hs.task.run(task.path || task.launchPath, task.args || [], task.options || {});
+            const result = await hs.task.runAsync(task.path || task.launchPath, task.args || [], task.options || {});
             results.push(result);
         }
         return results;
@@ -198,7 +193,7 @@
                 workingDirectory: this.cwd,
                 onOutput: this.outputCallback
             };
-            return hs.task.run(this.launchPath, this.args, options);
+            return hs.task.runAsync(this.launchPath, this.args, options);
         }
 
         /**

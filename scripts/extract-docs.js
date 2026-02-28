@@ -73,10 +73,12 @@ function parseSwiftFile(filePath, repoRoot) {
 
         // Walk backwards from the protocol definition to collect /// comments
         for (let i = beforeLines.length - 1; i >= 0; i--) {
-            const line = beforeLines[i].trim();
-            if (line.startsWith('///')) {
-                protocolDoc.unshift(line.replace(/^\/\/\/\s*/, ''));
-            } else if (line && !line.startsWith('//')) {
+            const line = beforeLines[i];
+            const trimmed = line.trim();
+            if (trimmed.startsWith('///')) {
+                // Remove /// and exactly one space (if present), but preserve any additional indentation
+                protocolDoc.unshift(line.replace(/^[^\S\r\n]*\/\/\/\s?/, ''));
+            } else if (trimmed && !trimmed.startsWith('//')) {
                 // Stop if we hit a non-comment, non-empty line
                 break;
             }
@@ -122,23 +124,25 @@ function parseSwiftFile(filePath, repoRoot) {
         let charOffset = bodyStart;  // Track character position in original content
 
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
+            const line = lines[i];
+            const trimmed = line.trim();
             const lineStartPos = charOffset;
             charOffset += lines[i].length + 1; // +1 for newline
 
             // Collect documentation comments
-            if (line.startsWith('///')) {
-                currentDoc.push(line.replace(/^\/\/\/\s*/, ''));
+            if (trimmed.startsWith('///')) {
+                // Remove /// and exactly one space (if present), but preserve any additional indentation
+                currentDoc.push(line.replace(/^[^\S\r\n]*\/\/\/\s?/, ''));
                 continue;
             }
 
             // Skip empty lines and single-line comments
-            if (!line || line.startsWith('//')) {
+            if (!trimmed || trimmed.startsWith('//')) {
                 continue;
             }
 
             // Check for @objc with custom selector on its own line (e.g., @objc(doAt::::))
-            if (line.match(/^@objc\([^)]+\)$/) && !line.includes('func') && !line.includes('var')) {
+            if (trimmed.match(/^@objc\([^)]+\)$/) && !trimmed.includes('func') && !trimmed.includes('var')) {
                 pendingObjcSelector = true;
                 continue;
             }
@@ -147,20 +151,20 @@ function parseSwiftFile(filePath, repoRoot) {
             // Match @objc func/var, bare func/var (for protocol declarations), or func after @objc(selector)
             let methodMatch = null;
 
-            if (line.startsWith('@objc')) {
+            if (trimmed.startsWith('@objc')) {
                 // @objc func or @objc var
-                methodMatch = line.match(/@objc(?:\([^)]*\))?\s+(?:(?:static\s+)?func\s+(\w+)|var\s+(\w+))/);
-            } else if (pendingObjcSelector && line.startsWith('func ')) {
+                methodMatch = trimmed.match(/@objc(?:\([^)]*\))?\s+(?:(?:static\s+)?func\s+(\w+)|var\s+(\w+))/);
+            } else if (pendingObjcSelector && trimmed.startsWith('func ')) {
                 // This is a func following @objc(selector) on the previous line
-                methodMatch = line.match(/func\s+(\w+)/);
+                methodMatch = trimmed.match(/func\s+(\w+)/);
                 if (methodMatch) {
                     // Reformat to look like a normal @objc match result
-                    methodMatch = [line, methodMatch[1], undefined];
+                    methodMatch = [trimmed, methodMatch[1], undefined];
                 }
-            } else if (line.match(/^(?:static\s+)?func\s+\w+/) || line.match(/^var\s+\w+/)) {
+            } else if (trimmed.match(/^(?:static\s+)?func\s+\w+/) || trimmed.match(/^var\s+\w+/)) {
                 // Bare function or property declaration in protocol (no @objc needed)
-                methodMatch = line.match(/^(?:static\s+)?func\s+(\w+)|^var\s+(\w+)/);
-            } else if (line.match(/^init\(/)) {
+                methodMatch = trimmed.match(/^(?:static\s+)?func\s+(\w+)|^var\s+(\w+)/);
+            } else if (trimmed.match(/^init\(/)) {
                 // Constructor/initializer
                 methodMatch = ['init', 'init', undefined];
             }
@@ -171,19 +175,19 @@ function parseSwiftFile(filePath, repoRoot) {
                 if (methodMatch[1]) {
                     // It's a method
                     const methodName = methodMatch[1];
-                    let fullSignature = line;
-                    
+                    let fullSignature = trimmed;
+
                     // Handle multi-line method signatures - look for the closing )
                     let j = i;
                     let parenDepth = 0;
                     let foundStart = false;
-                    
+
                     // Count parentheses to find the end of the method signature
-                    for (let k = 0; k < line.length; k++) {
-                        if (line[k] === '(') {
+                    for (let k = 0; k < trimmed.length; k++) {
+                        if (trimmed[k] === '(') {
                             parenDepth++;
                             foundStart = true;
-                        } else if (line[k] === ')') {
+                        } else if (trimmed[k] === ')') {
                             parenDepth--;
                         }
                     }
@@ -269,7 +273,7 @@ function parseSwiftFile(filePath, repoRoot) {
                     if (!shouldSkipDocs(currentDoc)) {
                         protocol.properties.push({
                             name: propName,
-                            signature: line.replace(/@objc\s*/, ''),
+                            signature: trimmed.replace(/@objc\s*/, ''),
                             rawDocumentation: rawDoc,
                             description: formatDocCToJSDoc(rawDoc),
                             source: 'swift',
@@ -294,10 +298,12 @@ function parseSwiftFile(filePath, repoRoot) {
         // Walk backwards from the first protocol to collect /// comments
         // Stop when we hit imports or other non-doc content
         for (let i = lines.length - 1; i >= 0; i--) {
-            const line = lines[i].trim();
-            if (line.startsWith('///')) {
-                moduleDoc.unshift(line.replace(/^\/\/\/\s*/, ''));
-            } else if (line && !line.startsWith('//')) {
+            const line = lines[i];
+            const trimmed = line.trim();
+            if (trimmed.startsWith('///')) {
+                // Remove /// and exactly one space (if present), but preserve any additional indentation
+                moduleDoc.unshift(line.replace(/^[^\S\r\n]*\/\/\/\s?/, ''));
+            } else if (trimmed && !trimmed.startsWith('//')) {
                 // Stop if we hit a non-comment, non-empty line
                 break;
             }
@@ -766,12 +772,31 @@ function processModule(moduleName, modulePath) {
         types: []        // Type definitions (protocols with type: 'typedef')
     };
 
-    // Find all Swift and JavaScript files in the module directory
-    const files = fs.readdirSync(modulePath);
+    // Helper to recursively find all Swift and JS files
+    function findFilesRecursive(dir) {
+        const results = [];
+        const items = fs.readdirSync(dir);
+
+        for (const item of items) {
+            const fullPath = path.join(dir, item);
+            const stat = fs.statSync(fullPath);
+
+            if (stat.isDirectory()) {
+                results.push(...findFilesRecursive(fullPath));
+            } else if (item.endsWith('.swift') || item.endsWith('.js')) {
+                results.push(fullPath);
+            }
+        }
+
+        return results;
+    }
+
+    // Find all Swift and JavaScript files in the module directory (recursively)
+    const files = findFilesRecursive(modulePath);
     let collectedModuleDoc = null;
 
-    for (const file of files) {
-        const filePath = path.join(modulePath, file);
+    for (const filePath of files) {
+        const file = path.basename(filePath);
 
         if (file.endsWith('.swift')) {
             const { protocols, moduleDocumentation } = parseSwiftFile(filePath, REPO_ROOT);
@@ -849,9 +874,23 @@ function formatDocCToJSDoc(documentation) {
     const lines = documentation.split('\n');
     const result = [];
     let inParamsList = false;
+    let inCodeBlock = false;
 
     for (const line of lines) {
         const trimmed = line.trim();
+
+        // Track code block boundaries
+        if (trimmed.startsWith('```')) {
+            inCodeBlock = !inCodeBlock;
+            result.push(line);  // Preserve code fence
+            continue;
+        }
+
+        // Preserve indentation inside code blocks
+        if (inCodeBlock) {
+            result.push(line);
+            continue;
+        }
 
         // Skip parameter list headers (with or without leading dash)
         if (trimmed === '- Parameters:' || trimmed.startsWith('- Parameters:') ||
@@ -886,7 +925,7 @@ function formatDocCToJSDoc(documentation) {
         }
     }
 
-    return result.join(' ');
+    return result.join('\n');  // Changed from ' ' to '\n' to preserve line breaks
 }
 
 /**

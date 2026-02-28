@@ -73,11 +73,27 @@ import UniformTypeIdentifiers
     /// - Returns: {Promise<boolean>} A Promise that resolves to true if successful, false otherwise
     @objc func launchOrFocus(_ bundleID: String) -> JSPromise?
 
+    /// Create a watcher for application events
+    /// - Parameters:
+    ///    - event: The event type to listen for
+    ///    - listener: A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
+    @objc func addWatcher(_ event: String, _ listener: JSValue)
+
+    /// Remove a watcher for application events
+    /// - Parameters:
+    ///   - event: The event type to stop listening for
+    ///   - listener: The javascript function/lambda that was previously being used to handle the event
+    @objc func removeWatcher(_ event: String, _ listener: JSValue)
+
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
     @objc(_addWatcher::) func _addWatcher(eventName: String, callback: JSValue)
     /// SKIP_DOCS
     @objc(_removeWatcher:) func _removeWatcher(eventName: String)
+
+    /// Swift-retained storage for the JS ApplicationModuleWatcherEmitter instance
+    /// SKIP_DOCS
+    @objc var _watcherEmitter: JSValue? { get set }
 }
 
 // MARK: - Implementations
@@ -102,6 +118,9 @@ class HSApplicationWatcherObject {
 @objc class HSApplicationModule: NSObject, HSModuleAPI, HSApplicationModuleAPI {
     var name = "hs.application"
     private var watchers: [NSNotification.Name:HSApplicationWatcherObject] = [:]
+
+    // Swift-retained storage for the JS-defined ApplicationModuleWatcherEmitter instance
+    @objc var _watcherEmitter: JSValue? = nil
 
     // MARK: - Module lifecycle
     override required init() { super.init() }
@@ -168,6 +187,14 @@ class HSApplicationWatcherObject {
         }
 
         return event
+    }
+
+    @objc func addWatcher(_ event: String, _ listener: JSValue) {
+        _watcherEmitter?.invokeMethod("on", withArguments: [event, listener])
+    }
+
+    @objc func removeWatcher(_ event: String, _ listener: JSValue) {
+        _watcherEmitter?.invokeMethod("removeListener", withArguments: [event, listener])
     }
 
     @objc(_addWatcher::) func _addWatcher(eventName: String, callback: JSValue) {

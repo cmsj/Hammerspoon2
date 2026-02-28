@@ -20,6 +20,15 @@ import JavaScriptCore
     /// - Returns: A timer object. Call start() to begin the timer.
     @objc func create(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer
 
+    /// Create a new timer (alias for create())
+    /// - Parameters:
+    ///   - interval: The interval in seconds at which the timer should fire
+    ///   - callback: A JavaScript function to call when the timer fires
+    ///   - continueOnError: If true, the timer will continue running even if the callback throws an error
+    /// - Returns: A timer object. Call start() to begin the timer.
+    @objc(new:::)
+    func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer
+
     /// Create and start a one-shot timer
     /// - Parameters:
     ///   - seconds: Number of seconds to wait before firing
@@ -60,6 +69,38 @@ import JavaScriptCore
     /// Get the number of seconds since local midnight
     /// - Returns: Seconds since midnight in the local timezone
     @objc func localTime() -> TimeInterval
+
+    /// Converts minutes to seconds
+    /// - Parameter n: A number of minutes
+    /// - Returns: The equivalent number of seconds
+    @objc func minutes(_ n: Double) -> Double
+
+    /// Converts hours to seconds
+    /// - Parameter n: A number of hours
+    /// - Returns: The equivalent number of seconds
+    @objc func hours(_ n: Double) -> Double
+
+    /// Converts days to seconds
+    /// - Parameter n: A number of days
+    /// - Returns: The equivalent number of seconds
+    @objc func days(_ n: Double) -> Double
+
+    /// Converts weeks to seconds
+    /// - Parameter n: A number of weeks
+    /// - Returns: The equivalent number of seconds
+    @objc func weeks(_ n: Double) -> Double
+
+    /// Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.
+    @objc var doUntil: JSValue? { get set }
+
+    /// Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.
+    @objc var doWhile: JSValue? { get set }
+
+    /// Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.
+    @objc var waitUntil: JSValue? { get set }
+
+    /// Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.
+    @objc var waitWhile: JSValue? { get set }
 }
 
 // MARK: - Implementation
@@ -79,10 +120,21 @@ import JavaScriptCore
         print("Deinit of \(name)")
     }
 
+    // MARK: - Swift-retained storage for JS-defined functions
+    @objc var doUntil: JSValue? = nil
+    @objc var doWhile: JSValue? = nil
+    @objc var waitUntil: JSValue? = nil
+    @objc var waitWhile: JSValue? = nil
+
     // MARK: - Timer constructors
 
     @objc func create(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimer {
         return HSTimer(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError)
+    }
+
+    @objc(new:::)
+    func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimer {
+        return create(interval, callback, continueOnError)
     }
 
     @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer {
@@ -115,6 +167,13 @@ import JavaScriptCore
         timer.start()
         return timer
     }
+
+    // MARK: - Time conversion utilities
+
+    @objc func minutes(_ n: Double) -> Double { return n * 60 }
+    @objc func hours(_ n: Double) -> Double { return n * 3600 }
+    @objc func days(_ n: Double) -> Double { return n * 86400 }
+    @objc func weeks(_ n: Double) -> Double { return n * 604800 }
 
     // MARK: - Utility functions
 

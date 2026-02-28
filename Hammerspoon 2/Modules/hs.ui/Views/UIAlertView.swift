@@ -1,14 +1,15 @@
 //
-//  AlertView.swift
+//  UIAlertView.swift
 //  Hammerspoon 2
 //
-//  Created by Chris Jones on 10/11/2025.
+//  Created by Claude Code on 12/02/2026.
 //
 
 import SwiftUI
 
-struct AlertView: View {
-    let message: HSAlert
+/// SwiftUI view for displaying alerts
+struct UIAlertView: View {
+    let alert: HSUIAlert
 
     @State private var viewOpacity = 0.0
 
@@ -17,10 +18,10 @@ struct AlertView: View {
             Spacer()
             HStack {
                 Spacer()
-                Text(message.message)
-                    .font(message.swiftUIFont)
+                Text(alert.message)
+                    .font(alert.font)
                     .multilineTextAlignment(.center)
-                    .padding(.all, message.swiftUIPadding)
+                    .padding(alert.padding ?? 20)
                     .optionalGlassEffect()
                 Spacer()
             }
@@ -33,15 +34,10 @@ struct AlertView: View {
             }
         }
         .task {
-            try? await Task.sleep(for: .seconds(Double(message.expire) - 0.2))
+            try? await Task.sleep(for: .seconds(alert.duration - 0.2))
             withAnimation(.linear(duration: 0.2)) {
                 viewOpacity = 0.0
             }
         }
     }
-}
-
-#Preview("Alert") {
-    let alertObject = HSAlert(message: "TESTING")
-    AlertView(message: alertObject)
 }

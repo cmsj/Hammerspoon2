@@ -230,11 +230,6 @@ body {
     text-decoration: underline;
 }
 
-.source-link a::before {
-    content: "📄";
-    margin-right: 0.25rem;
-}
-
 .params {
     list-style: none;
     margin: 0.5rem 0;

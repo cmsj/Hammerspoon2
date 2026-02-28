@@ -23,7 +23,7 @@
             {% if prop | githubSourceUrl %}
             <p class="source-link">
                 <a href="{{ prop | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">
-                    View source on GitHub
+                    {{ prop.filePath }}:{{ prop.lineNumber }}
                 </a>
             </p>
             {% endif %}
@@ -48,7 +48,7 @@
             {% if method | githubSourceUrl %}
             <p class="source-link">
                 <a href="{{ method | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">
-                    View source on GitHub
+                    {{ method.filePath }}:{{ method.lineNumber }}
                 </a>
             </p>
             {% endif %}

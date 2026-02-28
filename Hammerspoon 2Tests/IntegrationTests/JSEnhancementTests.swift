@@ -27,7 +27,6 @@ struct JSEnhancementTests {
         harness.expectTrue("typeof hs.timer.hours === 'function'")
         harness.expectTrue("typeof hs.timer.days === 'function'")
         harness.expectTrue("typeof hs.timer.weeks === 'function'")
-        harness.expectTrue("typeof hs.timer.seconds === 'function'")
     }
 
     @Test("Timer conversion functions work correctly")
@@ -42,22 +41,6 @@ struct JSEnhancementTests {
         harness.expectEqual("hs.timer.weeks(1)", 604800.0)
     }
 
-    @Test("Timer.seconds() parses various formats")
-    func testTimerSecondsParser() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        // Duration formats
-        harness.expectEqual("hs.timer.seconds('30s')", 30.0)
-        harness.expectEqual("hs.timer.seconds('5m')", 300.0)
-        harness.expectEqual("hs.timer.seconds('2h')", 7200.0)
-        harness.expectEqual("hs.timer.seconds('500ms')", 0.5)
-
-        // Time of day formats
-        harness.expectEqual("hs.timer.seconds('01:30:00')", 5400.0)
-        harness.expectEqual("hs.timer.seconds('12:00')", 43200.0)
-    }
-
     @Test("Timer predicate functions exist")
     func testTimerPredicateFunctions() {
         let harness = JSTestHarness()
@@ -67,37 +50,6 @@ struct JSEnhancementTests {
         harness.expectTrue("typeof hs.timer.doWhile === 'function'")
         harness.expectTrue("typeof hs.timer.waitUntil === 'function'")
         harness.expectTrue("typeof hs.timer.waitWhile === 'function'")
-    }
-
-    @Test("Timer.delayed() exists and returns correct object")
-    func testTimerDelayedFunction() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        harness.expectTrue("typeof hs.timer.delayed === 'function'")
-
-        harness.eval("var delayed = hs.timer.delayed(1, function() {})")
-
-        harness.expectTrue("typeof delayed === 'object'")
-        harness.expectTrue("typeof delayed.start === 'function'")
-        harness.expectTrue("typeof delayed.stop === 'function'")
-        harness.expectTrue("typeof delayed.running === 'function'")
-        harness.expectTrue("typeof delayed.setDelay === 'function'")
-    }
-
-    @Test("Timer.delayed() setDelay changes delay")
-    func testTimerDelayedSetDelay() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        harness.eval("""
-        var delayed = hs.timer.delayed(1, function() {});
-        delayed.setDelay(5);
-        """)
-
-        // The delay should have changed (we can't easily test the internal state,
-        // but we can verify the method exists and doesn't throw)
-        harness.expectTrue("typeof delayed.setDelay === 'function'")
     }
 
     @Test("Timer predicate functions validate input types")
@@ -131,7 +83,6 @@ struct JSEnhancementTests {
 
         // Enhanced functions should be available
         harness.expectTrue("typeof hs.timer.minutes === 'function'")
-        harness.expectTrue("typeof hs.timer.delayed === 'function'")
     }
 
     @Test("Enhancements don't break core functionality")
@@ -150,29 +101,6 @@ struct JSEnhancementTests {
 
         // Cleanup
         harness.eval("t.stop()")
-    }
-
-    @Test("Enhanced functions can use core functions")
-    func testEnhancementsUseCore() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        var callbackFired = false
-        harness.registerCallback("enhancementTest") {
-            callbackFired = true
-        }
-
-        // timer.delayed uses timer.doAfter internally
-        harness.eval("""
-        var delayed = hs.timer.delayed(0.05, () => { __test_callback('enhancementTest') });
-        delayed.start();
-        """)
-
-        let success = harness.waitFor(timeout: 0.2) { callbackFired }
-        #expect(success, "Enhanced function should successfully use core function")
-
-        // Cleanup
-        harness.eval("delayed.stop()")
     }
 
     // MARK: - Complex Enhancement Patterns
@@ -253,9 +181,9 @@ struct JSEnhancementTests {
         // Use multiple enhancement features together
         harness.eval("""
         var config = {
-            checkInterval: hs.timer.seconds('2s'),
+            checkInterval: 2,
             maxWait: hs.timer.minutes(1),
-            delay: hs.timer.seconds('500ms')
+            delay: 0.5
         };
         """)
 
@@ -264,92 +192,7 @@ struct JSEnhancementTests {
         harness.expectEqual("config.delay", 0.5)
     }
 
-    // MARK: - Error Handling in Enhancements
-
-    @Test("Enhanced timer functions handle errors gracefully")
-    func testEnhancementErrorHandling() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        // Invalid time string should throw
-        harness.eval("hs.timer.seconds('invalid')")
-        #expect(harness.hasException, "Invalid time string should throw")
-
-        // Try creating delayed with non-function
-        harness.eval("hs.timer.delayed(1, 'not a function')")
-        #expect(harness.hasException, "Non-function callback should throw")
-    }
-
-    @Test("Timer.seconds() validates time ranges")
-    func testTimerSecondsValidation() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        // Invalid hour (>= 24)
-        harness.eval("hs.timer.seconds('25:00:00')")
-        harness.expectException()
-    }
-
     // MARK: - Real-World Enhancement Use Cases
-
-    @Test("Debouncing user input with delayed timer")
-    func testDebouncingUseCase() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        var searchCount = 0
-        harness.registerCallback("performSearch") {
-            searchCount += 1
-        }
-
-        harness.eval("""
-        var searchDebounce = hs.timer.delayed(hs.timer.seconds('200ms'), () => { __test_callback('performSearch') });
-
-        function onSearchTextChanged() {
-            searchDebounce.start();
-        }
-        """)
-
-        // Simulate rapid typing
-        for _ in 0..<5 {
-            harness.eval("onSearchTextChanged()")
-            Thread.sleep(forTimeInterval: 0.05)
-        }
-
-        // Should only search once after typing stops
-        let success = harness.waitFor(timeout: 0.5) { searchCount >= 1 }
-        #expect(success, "Debounced search should fire")
-
-        Thread.sleep(forTimeInterval: 0.1)
-        #expect(searchCount == 1, "Should only search once despite multiple inputs")
-
-        // Cleanup
-        harness.eval("searchDebounce.stop()")
-    }
-
-    @Test("Scheduling daily task with time parsing")
-    func testDailySchedulingUseCase() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        harness.eval("""
-        function scheduleDailyTask(timeString, task) {
-            var targetTime = hs.timer.seconds(timeString);
-            return {
-                time: targetTime,
-                task: task
-            };
-        }
-
-        var morningTask = scheduleDailyTask('09:00', function() {
-            console.log('Good morning!');
-        });
-        """)
-
-        // Should parse to 9 AM (9 * 3600 seconds)
-        harness.expectEqual("morningTask.time", 32400.0)
-        harness.expectTrue("typeof morningTask.task === 'function'")
-    }
 
     @Test("Polling with timeout pattern")
     func testPollingWithTimeoutPattern() {
@@ -372,10 +215,10 @@ struct JSEnhancementTests {
                 return attempts >= maxAttempts;
             },
             () => { __test_callback('onComplete') },
-            hs.timer.seconds('20ms')
+            0.02
         );
 
-        var timeoutTimer = hs.timer.doAfter(hs.timer.seconds('500ms'), () => { __test_callback('onTimeout') });
+        var timeoutTimer = hs.timer.doAfter(0.5, () => { __test_callback('onTimeout') });
         """)
 
         // Should complete before timeout

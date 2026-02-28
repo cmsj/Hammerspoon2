@@ -7,6 +7,42 @@
 // ========================================
 
 /**
+ * Bridge type for working with colors in JavaScript
+ */
+declare class HSColor {
+    /**
+     * Create a color from RGB values
+     * @param r Red component (0.0-1.0)
+     * @param g Green component (0.0-1.0)
+     * @param b Blue component (0.0-1.0)
+     * @param a Alpha component (0.0-1.0)
+     * @returns An HSColor object
+     */
+    static rgb(r: number, g: number, b: number, a: number): HSColor;
+
+    /**
+     * Create a color from a hex string
+     * @param hex Hex string (e.g. "#FF0000" or "FF0000")
+     * @returns An HSColor object
+     */
+    static hex(hex: string): HSColor;
+
+    /**
+     * Create a color from a named system color
+     * @param name Name of the system color (e.g. "red", "blue", "systemBlue")
+     * @returns An HSColor object
+     */
+    static named(name: string): HSColor;
+
+    /**
+     * Update this color's value
+     * @param value New color as a hex string (e.g. "#FF0000") or another HSColor object
+     */
+    static set(value: JSValue): void;
+
+}
+
+/**
  * This is a JavaScript object used to represent macOS fonts. It includes a variety of static methods that can instantiate the various font sizes commonly used with UI elements, and also includes static methods for instantiating the system font at various sizes/weights, or any custom font available on the system.
  */
 declare class HSFont {
@@ -102,6 +138,146 @@ declare class HSFont {
 }
 
 /**
+ * Bridge type for working with images in JavaScript
+HSImage provides a comprehensive API for loading, manipulating, and saving images.
+It supports various image sources including files, system icons, app bundles, and URLs.
+## Loading Images
+```javascript
+// Load from file
+const img = HSImage.fromPath("/path/to/image.png")
+
+// Load system image
+const icon = HSImage.fromName("NSComputer")
+
+// Load app icon
+const appIcon = HSImage.fromAppBundle("com.apple.Safari")
+
+// Load from URL (asynchronous with Promise)
+HSImage.fromURL("https://example.com/image.png")
+    .then(image => console.log("Image loaded:", image.size()))
+    .catch(err => console.error("Failed to load image:", err))
+
+// Or with async/await
+const image = await HSImage.fromURL("https://example.com/image.png")
+```
+## Image Manipulation
+```javascript
+const img = HSImage.fromPath("/path/to/image.png")
+
+// Get size
+const size = img.size()  // Returns HSSize
+
+// Resize image
+const resized = img.setSize({w: 100, h: 100}, false)  // Proportional
+
+// Crop image
+const cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})
+
+// Save to file
+img.saveToFile("/path/to/output.png")
+```
+ */
+declare class HSImage {
+    /**
+     * Load an image from a file path
+     * @param path Path to the image file
+     * @returns An HSImage object, or null if the file couldn't be loaded
+     */
+    static fromPath(path: string): HSImage | undefined;
+
+    /**
+     * Load a system image by name
+     * @param name Name of the system image (e.g., "NSComputer", "NSFolder")
+     * @returns An HSImage object, or null if the image couldn't be found
+     */
+    static fromName(name: string): HSImage | undefined;
+
+    /**
+     * Load an app's icon by bundle identifier
+     * @param bundleID Bundle identifier of the application
+     * @returns An HSImage object, or null if the app couldn't be found
+     */
+    static fromAppBundle(bundleID: string): HSImage | undefined;
+
+    /**
+     * Get the icon for a file
+     * @param path Path to the file
+     * @returns An HSImage object representing the file's icon
+     */
+    static iconForFile(path: string): HSImage | undefined;
+
+    /**
+     * Get the icon for a file type
+     * @param fileType File extension or UTI (e.g., "png", "public.png")
+     * @returns An HSImage object representing the file type's icon
+     */
+    static iconForFileType(fileType: string): HSImage | undefined;
+
+    /**
+     * Load an image from a URL (asynchronous)
+     * @param url URL string of the image
+     * @returns A Promise that resolves to the loaded image, or rejects on error
+     */
+    static fromURL(url: string): Promise<HSImage>;
+
+    /**
+     * Get or set the image size
+     * @param size Optional HSSize to set (if provided, returns a resized copy)
+     * @returns The current size as HSSize, or a resized copy if size was provided
+     */
+    static size(size: JSValue): JSValue;
+
+    /**
+     * Get or set the image name
+     * @param name Optional name to set
+     * @returns The current or new name
+     */
+    static name(name: JSValue): string | undefined;
+
+    /**
+     * Create a resized copy of the image
+     * @param size Target size as HSSize
+     * @param absolute If true, resize exactly to specified dimensions. If false, maintain aspect ratio
+     * @returns A new resized HSImage
+     */
+    static setSize(size: JSValue, absolute: boolean): HSImage | undefined;
+
+    /**
+     * Create a copy of the image
+     * @returns A new HSImage copy
+     */
+    static copyImage(): HSImage | undefined;
+
+    /**
+     * Create a cropped copy of the image
+     * @param rect HSRect defining the crop area
+     * @returns A new cropped HSImage, or null if cropping failed
+     */
+    static croppedCopy(rect: JSValue): HSImage | undefined;
+
+    /**
+     * Save the image to a file
+     * @param path Destination file path (extension determines format: png, jpg, tiff, bmp, gif)
+     * @returns true if saved successfully, false otherwise
+     */
+    static saveToFile(path: string): boolean;
+
+    /**
+     * Get or set the template image flag
+     * @param state Optional boolean to set template state
+     * @returns Current template state
+     */
+    static template(state: JSValue): boolean;
+
+    /**
+     * Replace the image with a new one, triggering a re-render if bound to a UI element
+     * @param value New image as an HSImage object or a file path string
+     */
+    static set(value: JSValue): void;
+
+}
+
+/**
  * This is a JavaScript object used to represent coordinates, or "points", as used in various places throughout Hammerspoon's API, particularly where dealing with positions on a screen. Behind the scenes it is a wrapper for the CGPoint type in Swift/ObjectiveC.
  */
 declare class HSPoint {
@@ -192,6 +368,24 @@ declare class HSSize {
 
 }
 
+/**
+ * A reactive string container. Pass to `.text()` to get automatic
+re-renders when `.set()` is called from JavaScript.
+ */
+declare class HSString {
+    /**
+     * Update the string value, triggering a re-render if bound to a UI element
+     * @param newValue The new string
+     */
+    static set(newValue: string): void;
+
+    /**
+     * The current string value
+     */
+    value: string;
+
+}
+
 // ========================================
 // Modules
 // ========================================
@@ -229,56 +423,6 @@ declare namespace console {
      * @param message A debug message
      */
     function debug(message: string): void;
-
-}
-
-/**
- * Module for accessing information about the Hammerspoon application itself
- */
-declare namespace hs.alert {
-    /**
-     * Show an HSAlert object
-     * @param alert The HSAlert object to show
-     */
-    function showAlert(alert: HSAlert): void;
-
-    /**
-     * Show an alert to the user
-     * @param message The text to include in the alert
-     */
-    function show(message: string): void;
-
-}
-
-/**
- * An object for use with hs.alert API
- */
-declare class HSAlert {
-    /**
-     * Create a new HSAlert object
-     * @param message The mssage to show in the alert
-     */
-    constructor(message: string);
-
-    /**
-     * The message to display in an alert
-     */
-    message: string;
-
-    /**
-     * How many seconds the alert should be shown for
-     */
-    expire: number;
-
-    /**
-     * An HSFont describing the font to use in the alert
-     */
-    font: HSFont;
-
-    /**
-     * How many points of padding to use in the alert
-     */
-    padding: number;
 
 }
 
@@ -416,14 +560,14 @@ declare namespace hs.application {
      * @param event The event type to listen for
      * @param listener A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
      */
-    function addWatcher(event: any, listener: any): void;
+    function addWatcher(event: string, listener: JSValue): void;
 
     /**
      * Remove a watcher for application events
      * @param event The event type to stop listening for
      * @param listener The javascript function/lambda that was previously being used to handle the event
      */
-    function removeWatcher(event: any, listener: any): void;
+    function removeWatcher(event: string, listener: JSValue): void;
 
 }
 
@@ -502,7 +646,20 @@ declare class HSApplication {
 }
 
 /**
- * # Accessibility API Module ## Basic Usage ```js // Get the focused UI element const element = hs.ax.focusedElement(); console.log(element.role, element.title); // Watch for window creation events const app = hs.application.frontmost(); hs.ax.addWatcher(app, "AXWindowCreated", (notification, element) => { console.log("New window:", element.title); }); ``` **Note:** Requires accessibility permissions in System Preferences.
+ * # Accessibility API Module
+## Basic Usage
+```js
+// Get the focused UI element
+const element = hs.ax.focusedElement();
+console.log(element.role, element.title);
+
+// Watch for window creation events
+const app = hs.application.frontmost();
+hs.ax.addWatcher(app, "AXWindowCreated", (notification, element) => {
+    console.log("New window:", element.title);
+});
+```
+**Note:** Requires accessibility permissions in System Preferences.
  */
 declare namespace hs.ax {
     /**
@@ -538,7 +695,7 @@ declare namespace hs.ax {
      * @param notification An event name
      * @param listener A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to
      */
-    function addWatcher(application: any, notification: any, listener: any): void;
+    function addWatcher(application: HSApplication, notification: string, listener: JSValue): void;
 
     /**
      * Remove a watcher for application AX events
@@ -546,7 +703,7 @@ declare namespace hs.ax {
      * @param notification The event name to stop watching
      * @param listener The function/lambda provided when adding the watcher
      */
-    function removeWatcher(application: any, notification: any, listener: any): void;
+    function removeWatcher(application: HSApplication, notification: string, listener: JSValue): void;
 
     /**
      * Fetch the focused UI element
@@ -581,6 +738,26 @@ declare namespace hs.ax {
      * A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()
      */
     const notificationTypes: Record<string, string>;
+
+    /**
+     * Fetch the focused UI element. Swift-retained storage for the JS implementation.
+     */
+    const focusedElement: JSValue | undefined;
+
+    /**
+     * Find AX elements by role. Swift-retained storage for the JS implementation.
+     */
+    const findByRole: JSValue | undefined;
+
+    /**
+     * Find AX elements by title. Swift-retained storage for the JS implementation.
+     */
+    const findByTitle: JSValue | undefined;
+
+    /**
+     * Print the element hierarchy. Swift-retained storage for the JS implementation.
+     */
+    const printHierarchy: JSValue | undefined;
 
 }
 
@@ -900,6 +1077,16 @@ declare class HSHotkey {
      */
     static delete(): void;
 
+    /**
+     * The callback function to be called when the hotkey is pressed
+     */
+    callbackPressed: JSValue | undefined;
+
+    /**
+     * The callback function to be called when the hotkey is released
+     */
+    callbackReleased: JSValue | undefined;
+
 }
 
 /**
@@ -955,6 +1142,171 @@ declare namespace hs.permissions {
 }
 
 /**
+ * Module for running external processes
+ */
+declare namespace hs.task {
+    /**
+     * Create a new task
+     * @param launchPath The full path to the executable to run
+     * @param arguments An array of arguments to pass to the executable
+     * @param completionCallback Optional callback function called when the task terminates
+     * @param environment Optional dictionary of environment variables for the task
+     * @param streamingCallback Optional callback function called when the task produces output
+     * @returns A task object. Call start() to begin execution.
+     */
+    function new(launchPath: string, arguments: string[], completionCallback: JSValue | undefined, environment: JSValue | undefined, streamingCallback: JSValue | undefined): HSTask;
+
+    /**
+     * Create and run a task asynchronously
+     * @param launchPath - Full path to the executable
+     * @param args - Array of arguments
+     * @param options - Options object or legacy callback
+     * @param options .environment - Environment variables (optional)
+     * @param options .workingDirectory - Working directory (optional)
+     * @param options .onOutput - Callback for streaming output: (stream, data) => {} (optional)
+     * @param legacyStreamCallback - Legacy streaming callback (optional)
+     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
+     */
+    function runAsync(launchPath: string, args: string[], options: Object|Function, options: Object, options: string, options: Function, legacyStreamCallback: Function): any;
+
+    /**
+     * Run a shell command asynchronously
+     * @param command - Shell command to execute
+     * @param options - Options (same as run)
+     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
+     */
+    function shell(command: string, options: Object): any;
+
+    /**
+     * Run multiple tasks in parallel
+     * @param tasks - Array of task specifications: [{path, args, options}, ...]
+     * @returns Array of results
+     */
+    function parallel(tasks: Array): Promise<Array>;
+
+    /**
+     * Create a task builder for fluent API
+     * @param launchPath - Full path to the executable
+     * @returns {TaskBuilder}
+     */
+    function builder(launchPath: string): any;
+
+    /**
+     * Run a task, returning a Promise. Swift-retained storage for the JS implementation.
+     */
+    const runAsync: JSValue | undefined;
+
+    /**
+     * Run a shell command. Swift-retained storage for the JS implementation.
+     */
+    const shell: JSValue | undefined;
+
+    /**
+     * Run multiple tasks in parallel. Swift-retained storage for the JS implementation.
+     */
+    const parallel: JSValue | undefined;
+
+    /**
+     * Run multiple tasks in sequence. Swift-retained storage for the JS implementation.
+     */
+    const sequence: JSValue | undefined;
+
+    /**
+     * Create a task builder. Swift-retained storage for the JS implementation.
+     */
+    const builder: JSValue | undefined;
+
+    /**
+     * TaskBuilder class. Swift-retained storage for the JS implementation.
+     */
+    const TaskBuilder: JSValue | undefined;
+
+}
+
+/**
+ * Object representing an external process task
+ */
+declare class HSTask {
+    /**
+     * Start the task
+     * @returns The task object for chaining
+     */
+    static start(): HSTask;
+
+    /**
+     * Terminate the task (send SIGTERM)
+     */
+    static terminate(): void;
+
+    /**
+     * Terminate the task with extreme prejudice (send SIGKILL)
+     */
+    static kill9(): void;
+
+    /**
+     * Interrupt the task (send SIGINT)
+     */
+    static interrupt(): void;
+
+    /**
+     * Pause the task (send SIGSTOP)
+     */
+    static pause(): void;
+
+    /**
+     * Resume the task (send SIGCONT)
+     */
+    static resume(): void;
+
+    /**
+     * Wait for the task to complete (blocking)
+     */
+    static waitUntilExit(): void;
+
+    /**
+     * Write data to the task's stdin
+     * @param data The string data to write
+     */
+    static sendInput(data: string): void;
+
+    /**
+     * Close the task's stdin
+     */
+    static closeInput(): void;
+
+    /**
+     * Check if the task is currently running
+     */
+    isRunning: boolean;
+
+    /**
+     * The process ID of the running task
+     */
+    pid: Int32;
+
+    /**
+     * The environment variables for the task
+     */
+    environment: Record<string, string>;
+
+    /**
+     * The working directory for the task
+     */
+    workingDirectory: string | undefined;
+
+    /**
+     * The termination status of the task
+     */
+    terminationStatus: NSNumber | undefined;
+
+    /**
+     * The termination reason
+     */
+    terminationReason: string | undefined;
+
+}
+
+/**
  * Module for creating and managing timers
  */
 declare namespace hs.timer {
@@ -966,6 +1318,15 @@ declare namespace hs.timer {
      * @returns A timer object. Call start() to begin the timer.
      */
     function create(interval: number, callback: JSValue, continueOnError: boolean): HSTimer;
+
+    /**
+     * Create a new timer (alias for create())
+     * @param interval The interval in seconds at which the timer should fire
+     * @param callback A JavaScript function to call when the timer fires
+     * @param continueOnError If true, the timer will continue running even if the callback throws an error
+     * @returns A timer object. Call start() to begin the timer.
+     */
+    function new(interval: number, callback: JSValue, continueOnError: boolean): HSTimer;
 
     /**
      * Create and start a one-shot timer
@@ -1018,37 +1379,32 @@ declare namespace hs.timer {
     function localTime(): number;
 
     /**
-     * Converts minutes to seconds Parameter n: A number of minutes
+     * Converts minutes to seconds
      * @param n A number of minutes
      * @returns The equivalent number of seconds
      */
-    function minutes(n: any): any;
+    function minutes(n: number): number;
 
     /**
-     * Converts hours to seconds Parameter n: A number of hours
+     * Converts hours to seconds
      * @param n A number of hours
      * @returns The equivalent number of seconds
      */
-    function hours(n: any): any;
+    function hours(n: number): number;
 
     /**
-     * Converts days to seconds Parameter n: A number of days
+     * Converts days to seconds
      * @param n A number of days
      * @returns The equivalent number of seconds
      */
-    function days(n: any): any;
+    function days(n: number): number;
 
     /**
-     * Converts weeks to seconds Parameter n: A number of weeks
+     * Converts weeks to seconds
      * @param n A number of weeks
      * @returns The equivalent number of seconds
      */
-    function weeks(n: any): any;
-
-    /**
-     * SKIP_DOCS
-     */
-    function seconds(): void;
+    function weeks(n: number): number;
 
     /**
      * Repeat a function/lambda until a given predicate function/lambda returns true
@@ -1083,9 +1439,24 @@ declare namespace hs.timer {
     function waitWhile(predicateFn: any, actionFn: any, checkInterval: any): void;
 
     /**
-     * SKIP_DOCS
+     * Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.
      */
-    function delayed(): void;
+    const doUntil: JSValue | undefined;
+
+    /**
+     * Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.
+     */
+    const doWhile: JSValue | undefined;
+
+    /**
+     * Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.
+     */
+    const waitUntil: JSValue | undefined;
+
+    /**
+     * Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.
+     */
+    const waitWhile: JSValue | undefined;
 
 }
 
@@ -1139,6 +1510,775 @@ declare class HSTimer {
 }
 
 /**
+ * # hs.ui
+**Create custom user interfaces, alerts, dialogs, and file pickers**
+The `hs.ui` module provides a set of tools for creating custom user interfaces
+in Hammerspoon with SwiftUI-like declarative syntax.
+## Key Features
+then call `.set()` on it from any callback to re-render the canvas automatically
+then call `.set()` on it to update the displayed content live
+to swap the image without rebuilding the window
+## Basic Examples
+### Simple Alert
+```javascript
+hs.ui.alert("Task completed!")
+    .duration(3)
+    .show();
+```
+### Dialog with Buttons
+```javascript
+hs.ui.dialog("Save changes?")
+    .informativeText("Your document has unsaved changes.")
+    .buttons(["Save", "Don't Save", "Cancel"])
+    .onButton((index) => {
+        if (index === 0) print("Saving...");
+    })
+    .show();
+```
+### Text Input Prompt
+```javascript
+hs.ui.textPrompt("Enter your name")
+    .defaultText("John Doe")
+    .onButton((buttonIndex, text) => {
+        print("User entered: " + text);
+    })
+    .show();
+```
+### File Picker
+```javascript
+hs.ui.filePicker()
+    .message("Choose a file")
+    .allowedFileTypes(["txt", "md"])
+    .onSelection((path) => {
+        if (path) print("Selected: " + path);
+    })
+    .show();
+```
+### Custom Window
+```javascript
+hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+    .vstack()
+        .spacing(10)
+        .padding(20)
+        .text("Hello, World!")
+            .font(HSFont.title())
+            .foregroundColor("#FFFFFF")
+        .rectangle()
+            .fill("#4A90E2")
+            .cornerRadius(10)
+            .frame({w: "100%", h: 60})
+    .end()
+    .backgroundColor("#2C3E50")
+    .show();
+```
+### Reactive Color on Hover
+```javascript
+// Create a mutable color, then mutate it inside the hover callback
+const btnColor = HSColor.hex("#4A90E2");
+
+hs.ui.window({x: 100, y: 100, w: 160, h: 60})
+    .rectangle()
+        .fill(btnColor)
+        .cornerRadius(8)
+        .frame({w: "100%", h: "100%"})
+        .onHover((isHovered) => {
+            btnColor.set(isHovered ? "#E24A4A" : "#4A90E2");
+        })
+    .show();
+```
+### Reactive Text on Hover
+```javascript
+// Create a mutable string, then mutate it inside the hover callback
+const label = hs.ui.string("Move your mouse here");
+
+hs.ui.window({x: 100, y: 200, w: 220, h: 50})
+    .text(label)
+        .font(HSFont.body())
+        .foregroundColor("#FFFFFF")
+        .onHover((isHovered) => {
+            label.set(isHovered ? "You're hovering!" : "Move your mouse here");
+        })
+    .show();
+```
+### Reactive Image on Click
+```javascript
+// Toggle between two system icons on each click
+const icon = HSImage.fromName("NSStatusAvailable");
+
+hs.ui.window({x: 100, y: 300, w: 80, h: 80})
+    .image(icon)
+        .resizable()
+        .aspectRatio("fit")
+        .frame({w: 64, h: 64})
+        .onClick(() => {
+            const next = (icon.name() === "NSStatusAvailable")
+                ? HSImage.fromName("NSStatusUnavailable")
+                : HSImage.fromName("NSStatusAvailable");
+            icon.set(next);
+        })
+    .show();
+```
+## Complete Example: Status Dashboard
+Here's a more complex example showing how to build an interactive status dashboard
+```javascript
+// Create a status dashboard window
+const statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})
+    .vstack()
+        .spacing(15)
+        .padding(20)
+
+        // Header
+        .text("System Status Dashboard")
+            .font(HSFont.largeTitle())
+            .foregroundColor("#FFFFFF")
+
+        // Status cards
+        .hstack()
+            .spacing(10)
+            .vstack()
+                .spacing(5)
+                .rectangle()
+                    .fill("#4CAF50")
+                    .cornerRadius(8)
+                    .frame({w: 180, h: 100})
+                .text("CPU: 45%")
+                    .font(HSFont.headline())
+                    .foregroundColor("#FFFFFF")
+            .end()
+            .vstack()
+                .spacing(5)
+                .rectangle()
+                    .fill("#2196F3")
+                    .cornerRadius(8)
+                    .frame({w: 180, h: 100})
+                .text("Memory: 8.2GB")
+                    .font(HSFont.headline())
+                    .foregroundColor("#FFFFFF")
+            .end()
+        .end()
+
+        // Activity indicator with image
+        .hstack()
+            .spacing(10)
+            .image(HSImage.fromName("NSComputer"))
+                .resizable()
+                .aspectRatio("fit")
+                .frame({w: 64, h: 64})
+            .vstack()
+                .text("System Running")
+                    .font(HSFont.title())
+                .text("All services operational")
+                    .font(HSFont.caption())
+                    .foregroundColor("#A0A0A0")
+            .end()
+        .end()
+
+        // Circle status indicators
+        .hstack()
+            .spacing(20)
+            .circle()
+                .fill("#4CAF50")
+                .frame({w: 30, h: 30})
+            .circle()
+                .fill("#FFC107")
+                .frame({w: 30, h: 30})
+            .circle()
+                .fill("#F44336")
+                .frame({w: 30, h: 30})
+        .end()
+    .end()
+    .backgroundColor("#2C3E50");
+
+// Show the dashboard
+statusWindow.show();
+
+// Later, interact with dialogs
+hs.ui.dialog("Shutdown system?")
+    .informativeText("This will close all applications.")
+    .buttons(["Shutdown", "Cancel"])
+    .onButton((index) => {
+        if (index === 0) {
+            hs.ui.alert("Shutting down...")
+                .duration(3)
+                .show();
+        }
+    })
+    .show();
+```
+## Complete Example: Reactive Hover Card
+Demonstrates reactive colors and reactive text together — a single `.onHover()`
+```javascript
+const cardColor = HSColor.hex("#3498DB");
+const cardLabel = hs.ui.string("Hover the card");
+
+hs.ui.window({x: 100, y: 100, w: 220, h: 120})
+    .vstack()
+        .spacing(12)
+        .padding(16)
+        .rectangle()
+            .fill(cardColor)
+            .cornerRadius(10)
+            .frame({w: "100%", h: 60})
+            .onHover((isHovered) => {
+                cardColor.set(isHovered ? "#E74C3C" : "#3498DB");
+                cardLabel.set(isHovered ? "You found it!" : "Hover the card");
+            })
+        .text(cardLabel)
+            .font(HSFont.headline())
+            .foregroundColor("#FFFFFF")
+    .end()
+    .backgroundColor("#1A252F")
+    .show();
+```
+ */
+declare namespace hs.ui {
+    /**
+     * Create a custom UI window
+Creates a borderless window that can contain custom UI elements built using a declarative,
+SwiftUI-like syntax with shapes, text, and layout containers.
+     * @param dict Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)
+     * @returns An `HSUIWindow` object for chaining
+     */
+    function window(dict: Record<string, any>): HSUIWindow;
+
+    /**
+     * Create a temporary on-screen alert
+Displays a temporary notification that automatically dismisses after the specified duration.
+Similar to the old `hs.alert` module but with more features.
+     * @param message The message text to display
+     * @returns An `HSUIAlert` object for chaining
+     */
+    function alert(message: string): HSUIAlert;
+
+    /**
+     * Create a modal dialog with buttons
+Shows a blocking dialog with customizable message, informative text, and buttons.
+Use the callback to handle button presses.
+     * @param message The main message text
+     * @returns An `HSUIDialog` object for chaining
+     */
+    function dialog(message: string): HSUIDialog;
+
+    /**
+     * Create a text input prompt
+Shows a modal dialog with a text input field. The callback receives the button index
+and the entered text.
+     * @param message The prompt message
+     * @returns An `HSUITextPrompt` object for chaining
+     */
+    function textPrompt(message: string): HSUITextPrompt;
+
+    /**
+     * Create a reactive string for binding text element content to a dynamic value
+An `HSString` is a reactive value container. When passed to `.text()`,
+the canvas automatically re-renders whenever `.set()` is called from JavaScript.
+     * @param initialValue The starting string value
+     * @returns An `HSString` object whose value can be updated with `.set()`
+     */
+    function string(initialValue: string): HSString;
+
+    /**
+     * Create a file or directory picker
+Shows a standard macOS file picker dialog. Can be configured to select files,
+directories, or both, with support for file type filtering and multiple selection.
+     * @returns An `HSUIFilePicker` object for chaining
+     */
+    function filePicker(): HSUIFilePicker;
+
+}
+
+/**
+ * # HSUIWindow
+**A custom window with declarative UI building**
+`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like
+declarative syntax. Build interfaces using shapes, text, images, and layout containers.
+## Building UI Elements
+## Modifying Elements
+## Examples
+**Simple window with text and shapes:**
+```javascript
+hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+    .vstack()
+        .spacing(10)
+        .padding(20)
+        .text("Dashboard")
+            .font(HSFont.largeTitle())
+            .foregroundColor("#FFFFFF")
+        .rectangle()
+            .fill("#4A90E2")
+            .cornerRadius(10)
+            .frame({w: "90%", h: 80})
+    .end()
+    .backgroundColor("#2C3E50")
+    .show();
+```
+**Window with image:**
+```javascript
+const img = HSImage.fromPath("~/Pictures/photo.jpg")
+hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+    .vstack()
+        .padding(20)
+        .image(img)
+            .resizable()
+            .aspectRatio("fit")
+            .frame({w: 360, h: 240})
+    .end()
+    .show();
+```
+ */
+declare class HSUIWindow {
+    /**
+     * Show the window
+     * @returns Self for chaining
+     */
+    static show(): HSUIWindow;
+
+    /**
+     * Hide the window (keeps it in memory)
+     */
+    static hide(): void;
+
+    /**
+     * Close and destroy the window
+     */
+    static close(): void;
+
+    /**
+     * Set the window's background color
+     * @param colorValue Color as hex string (e.g., "#FF0000") or HSColor object
+     * @returns Self for chaining
+     */
+    static backgroundColor(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Add a rectangle shape
+     * @returns Self for chaining (apply modifiers like `fill()`, `frame()`)
+     */
+    static rectangle(): HSUIWindow;
+
+    /**
+     * Add a circle shape
+     * @returns Self for chaining (apply modifiers like `fill()`, `frame()`)
+     */
+    static circle(): HSUIWindow;
+
+    /**
+     * Add a text element
+or an `HSString` object (from `hs.ui.string()`) for reactive text
+     * @param content The text to display — a plain JS string for static text,
+     * @returns Self for chaining (apply modifiers like `font()`, `foregroundColor()`)
+     */
+    static text(content: JSValue): HSUIWindow;
+
+    /**
+     * Add an image element
+     * @param imageValue Image as HSImage object or file path string
+     * @returns Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)
+     */
+    static image(imageValue: JSValue): HSUIWindow;
+
+    /**
+     * Begin a vertical stack (elements arranged top to bottom)
+     * @returns Self for chaining (call `end()` when done)
+     */
+    static vstack(): HSUIWindow;
+
+    /**
+     * Begin a horizontal stack (elements arranged left to right)
+     * @returns Self for chaining (call `end()` when done)
+     */
+    static hstack(): HSUIWindow;
+
+    /**
+     * Begin a z-stack (overlapping elements)
+     * @returns Self for chaining (call `end()` when done)
+     */
+    static zstack(): HSUIWindow;
+
+    /**
+     * Add flexible spacing that expands to fill available space
+     * @returns Self for chaining
+     */
+    static spacer(): HSUIWindow;
+
+    /**
+     * End the current layout container
+     * @returns Self for chaining
+     */
+    static end(): HSUIWindow;
+
+    /**
+     * Fill a shape with a color
+     * @param colorValue Color as hex string or HSColor
+     * @returns Self for chaining
+     */
+    static fill(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Add a stroke (border) to a shape
+     * @param colorValue Color as hex string or HSColor
+     * @returns Self for chaining
+     */
+    static stroke(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Set the stroke width
+     * @param width Width in points
+     * @returns Self for chaining
+     */
+    static strokeWidth(width: number): HSUIWindow;
+
+    /**
+     * Round the corners of a shape
+     * @param radius Corner radius in points
+     * @returns Self for chaining
+     */
+    static cornerRadius(radius: number): HSUIWindow;
+
+    /**
+     * Set the frame (size) of an element
+     * @param dict Dictionary with `w` and/or `h` (can be numbers or percentage strings like "50%")
+     * @returns Self for chaining
+     */
+    static frame(dict: Record<string, any>): HSUIWindow;
+
+    /**
+     * Set the opacity of an element
+     * @param value Opacity from 0.0 (transparent) to 1.0 (opaque)
+     * @returns Self for chaining
+     */
+    static opacity(value: number): HSUIWindow;
+
+    /**
+     * Set the font for a text element
+     * @param font An HSFont object (e.g., `HSFont.title()`)
+     * @returns Self for chaining
+     */
+    static font(font: HSFont): HSUIWindow;
+
+    /**
+     * Set the text color
+     * @param colorValue Color as hex string or HSColor
+     * @returns Self for chaining
+     */
+    static foregroundColor(colorValue: JSValue): HSUIWindow;
+
+    /**
+     * Make an image resizable (allows it to scale with frame size)
+     * @returns Self for chaining
+     */
+    static resizable(): HSUIWindow;
+
+    /**
+     * Set the aspect ratio mode for an image
+     * @param mode "fit" (scales to fit within frame) or "fill" (scales to fill frame)
+     * @returns Self for chaining
+     */
+    static aspectRatio(mode: string): HSUIWindow;
+
+    /**
+     * Add padding around a layout container
+     * @param value Padding in points
+     * @returns Self for chaining
+     */
+    static padding(value: number): HSUIWindow;
+
+    /**
+     * Set spacing between elements in a stack
+     * @param value Spacing in points
+     * @returns Self for chaining
+     */
+    static spacing(value: number): HSUIWindow;
+
+    /**
+     * Set a callback to fire when the element is clicked
+     * @param callback A JavaScript function to call on click
+     * @returns Self for chaining
+     */
+    static onClick(callback: JSValue): HSUIWindow;
+
+    /**
+     * Set a callback to fire when the cursor enters or leaves the element
+     * @param callback A JavaScript function called with a boolean: true when entering, false when leaving
+     * @returns Self for chaining
+     */
+    static onHover(callback: JSValue): HSUIWindow;
+
+}
+
+/**
+ * # HSUIAlert
+**A temporary on-screen notification**
+Displays a message that automatically fades out after a specified duration.
+Positioned in the center of the screen with a semi-transparent background.
+## Example
+```javascript
+hs.ui.alert("Task completed!")
+    .font(HSFont.headline())
+    .duration(5)
+    .padding(30)
+    .show();
+```
+ */
+declare class HSUIAlert {
+    /**
+     * Set the font for the alert text
+     * @param font An HSFont object (e.g., `HSFont.headline()`)
+     * @returns Self for chaining
+     */
+    static font(font: HSFont): HSUIAlert;
+
+    /**
+     * Set how long the alert is displayed
+     * @param seconds Duration in seconds (default: 5.0)
+     * @returns Self for chaining
+     */
+    static duration(seconds: number): HSUIAlert;
+
+    /**
+     * Set the padding around the alert text
+     * @param points Padding in points (default: 20)
+     * @returns Self for chaining
+     */
+    static padding(points: number): HSUIAlert;
+
+    /**
+     * Set a custom position for the alert
+     * @param dict Dictionary with `x` and `y` coordinates
+     * @returns Self for chaining
+     */
+    static position(dict: Record<string, any>): HSUIAlert;
+
+    /**
+     * Show the alert
+     * @returns Self for chaining (can store reference to close manually)
+     */
+    static show(): HSUIAlert;
+
+    /**
+     * Close the alert immediately
+     */
+    static close(): void;
+
+}
+
+/**
+ * # HSUIDialog
+**A modal dialog with customizable buttons**
+Shows a blocking dialog with a message, optional informative text, and custom buttons.
+Use the callback to respond to button presses.
+## Example
+```javascript
+hs.ui.dialog("Save changes?")
+    .informativeText("Your document has unsaved changes.")
+    .buttons(["Save", "Don't Save", "Cancel"])
+    .onButton((index) => {
+        if (index === 0) {
+            print("Saving...");
+        } else if (index === 1) {
+            print("Discarding changes...");
+        }
+    })
+    .show();
+```
+ */
+declare class HSUIDialog {
+    /**
+     * Set additional informative text below the main message
+     * @param text The informative text
+     * @returns Self for chaining
+     */
+    static informativeText(text: string): HSUIDialog;
+
+    /**
+     * Set custom button labels
+     * @param labels Array of button labels (default: ["OK"])
+     * @returns Self for chaining
+     */
+    static buttons(labels: string[]): HSUIDialog;
+
+    /**
+     * Set the dialog style
+     * @param style Style name (e.g., "informational", "warning", "critical")
+     * @returns Self for chaining
+     */
+    static style(style: string): HSUIDialog;
+
+    /**
+     * Set the callback for button presses
+     * @param callback Function receiving button index (0-based)
+     * @returns Self for chaining
+     */
+    static onButton(callback: JSValue): HSUIDialog;
+
+    /**
+     * Show the dialog
+     * @returns Self for chaining
+     */
+    static show(): HSUIDialog;
+
+    /**
+     * Close the dialog programmatically
+     */
+    static close(): void;
+
+}
+
+/**
+ * # HSUIFilePicker
+**A file or directory selection dialog**
+Shows a standard macOS open panel for selecting files or directories. Supports
+multiple selection, file type filtering, and more.
+## Examples
+### File Picker
+```javascript
+hs.ui.filePicker()
+    .message("Choose a file to open")
+    .allowedFileTypes(["txt", "md", "js"])
+    .onSelection((path) => {
+        if (path) {
+            print("Selected: " + path);
+        } else {
+            print("User cancelled");
+        }
+    })
+    .show();
+```
+### Directory Picker with Multiple Selection
+```javascript
+hs.ui.filePicker()
+    .message("Choose directories to backup")
+    .canChooseFiles(false)
+    .canChooseDirectories(true)
+    .allowsMultipleSelection(true)
+    .onSelection((paths) => {
+        if (paths) {
+            paths.forEach(p => print("Dir: " + p));
+        }
+    })
+    .show();
+```
+ */
+declare class HSUIFilePicker {
+    /**
+     * Set the message displayed in the picker
+     * @param text The message text
+     * @returns Self for chaining
+     */
+    static message(text: string): HSUIFilePicker;
+
+    /**
+     * Set the starting directory
+     * @param path Path to directory (supports `~` for home)
+     * @returns Self for chaining
+     */
+    static defaultPath(path: string): HSUIFilePicker;
+
+    /**
+     * Set whether files can be selected
+     * @param value true to allow file selection (default: true)
+     * @returns Self for chaining
+     */
+    static canChooseFiles(value: boolean): HSUIFilePicker;
+
+    /**
+     * Set whether directories can be selected
+     * @param value true to allow directory selection (default: false)
+     * @returns Self for chaining
+     */
+    static canChooseDirectories(value: boolean): HSUIFilePicker;
+
+    /**
+     * Set whether multiple items can be selected
+     * @param value true to allow multiple selection (default: false)
+     * @returns Self for chaining
+     */
+    static allowsMultipleSelection(value: boolean): HSUIFilePicker;
+
+    /**
+     * Restrict to specific file types
+     * @param types Array of file extensions (e.g., ["txt", "md"])
+     * @returns Self for chaining
+     */
+    static allowedFileTypes(types: string[]): HSUIFilePicker;
+
+    /**
+     * Set whether to resolve symbolic links
+     * @param value true to resolve aliases (default: true)
+     * @returns Self for chaining
+     */
+    static resolvesAliases(value: boolean): HSUIFilePicker;
+
+    /**
+     * Set the callback for file selection
+     * @param callback Function receiving selected path(s) or null if cancelled
+     * @returns Self for chaining
+     */
+    static onSelection(callback: JSValue): HSUIFilePicker;
+
+    /**
+     * Show the file picker dialog
+     */
+    static show(): void;
+
+}
+
+/**
+ * # HSUITextPrompt
+**A modal dialog with text input**
+Shows a blocking dialog with a text input field. The callback receives both the
+button index and the entered text.
+## Example
+```javascript
+hs.ui.textPrompt("Enter your name")
+    .informativeText("Please provide your full name")
+    .defaultText("John Doe")
+    .buttons(["OK", "Cancel"])
+    .onButton((buttonIndex, text) => {
+        if (buttonIndex === 0) {
+            print("User entered: " + text);
+        }
+    })
+    .show();
+```
+ */
+declare class HSUITextPrompt {
+    /**
+     * Set additional informative text below the main message
+     * @param text The informative text
+     * @returns Self for chaining
+     */
+    static informativeText(text: string): HSUITextPrompt;
+
+    /**
+     * Set the default text in the input field
+     * @param text Default text value
+     * @returns Self for chaining
+     */
+    static defaultText(text: string): HSUITextPrompt;
+
+    /**
+     * Set custom button labels
+     * @param labels Array of button labels (default: ["OK", "Cancel"])
+     * @returns Self for chaining
+     */
+    static buttons(labels: string[]): HSUITextPrompt;
+
+    /**
+     * Set the callback for button presses
+     * @param callback Function receiving (buttonIndex, inputText)
+     * @returns Self for chaining
+     */
+    static onButton(callback: JSValue): HSUITextPrompt;
+
+    /**
+     * Show the prompt dialog
+     */
+    static show(): void;
+
+}
+
+/**
  * Module for interacting with windows
  */
 declare namespace hs.window {
@@ -1188,7 +2328,8 @@ declare namespace hs.window {
     function orderedWindows(): HSWindow[];
 
     /**
-     * Find windows by title Parameter title: The window title to search for. All windows with titles that include this string, will be matched
+     * Find windows by title
+Parameter title: The window title to search for. All windows with titles that include this string, will be matched
      * @param title The window title to search for. All windows with titles that include this string, will be matched
      * @returns An array of HSWindow objects with matching titles
      */
@@ -1201,21 +2342,24 @@ declare namespace hs.window {
     function currentWindows(): any;
 
     /**
-     * Move a window to left half of screen Parameter win: An HSWindow object
+     * Move a window to left half of screen
+Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise False
      */
     function moveToLeftHalf(win: any): any;
 
     /**
-     * Move a window to right half of screen Parameter win: An HSWindow object
+     * Move a window to right half of screen
+Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise False
      */
     function moveToRightHalf(win: any): any;
 
     /**
-     * Maximize a window Parameter win: An HSWindow object
+     * Maximize a window
+Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise false
      */

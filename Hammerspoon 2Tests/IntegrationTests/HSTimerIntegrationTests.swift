@@ -223,26 +223,6 @@ struct HSTimerIntegrationTests {
         harness.expectEqual("hs.timer.weeks(2)", 1209600.0)
     }
 
-    @Test("hs.timer.seconds() parses time strings")
-    func testSecondsParser() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        // HH:MM:SS format
-        harness.expectEqual("hs.timer.seconds('01:30:45')", 5445.0)
-        harness.expectEqual("hs.timer.seconds('12:00:00')", 43200.0)
-
-        // HH:MM format
-        harness.expectEqual("hs.timer.seconds('01:30')", 5400.0)
-
-        // Duration format
-        harness.expectEqual("hs.timer.seconds('30s')", 30.0)
-        harness.expectEqual("hs.timer.seconds('5m')", 300.0)
-        harness.expectEqual("hs.timer.seconds('2h')", 7200.0)
-        harness.expectEqual("hs.timer.seconds('1d')", 86400.0)
-        harness.expectEqual("hs.timer.seconds('500ms')", 0.5)
-    }
-
     @Test("hs.timer.seconds() throws on invalid input")
     func testSecondsParserErrors() {
         let harness = JSTestHarness()
@@ -314,83 +294,7 @@ struct HSTimerIntegrationTests {
         harness.eval("if (doUntilTimer && doUntilTimer.running()) doUntilTimer.stop()")
     }
 
-    @Test("hs.timer.delayed() creates debounced timer")
-    func testDelayedTimer() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        var callbackCount = 0
-        harness.registerCallback("delayedCallback") {
-            callbackCount += 1
-        }
-
-        harness.eval("""
-        var delayed = hs.timer.delayed(0.1, () => { __test_callback('delayedCallback') });
-        """)
-
-        // Start and restart multiple times (should only fire once)
-        harness.eval("delayed.start()")
-        Thread.sleep(forTimeInterval: 0.03)
-        harness.eval("delayed.start()") // Reset the timer
-        Thread.sleep(forTimeInterval: 0.03)
-        harness.eval("delayed.start()") // Reset again
-
-        // Now wait for it to fire
-        let success = harness.waitFor(timeout: 0.3) { callbackCount >= 1 }
-        #expect(success, "Delayed timer should eventually fire")
-
-        // Should only have fired once despite multiple start() calls
-        Thread.sleep(forTimeInterval: 0.05)
-        #expect(callbackCount == 1, "Delayed timer should only fire once after final start()")
-    }
-
-    @Test("hs.timer.delayed() object has expected API")
-    func testDelayedTimerAPI() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        harness.eval("var delayed = hs.timer.delayed(1, function() {})")
-
-        harness.expectEqual("typeof delayed.start", "function")
-        harness.expectTrue("typeof delayed.start === 'function'")
-        harness.expectTrue("typeof delayed.stop === 'function'")
-        harness.expectTrue("typeof delayed.running === 'function'")
-        harness.expectTrue("typeof delayed.setDelay === 'function'")
-    }
-
     // MARK: - Real-World Use Cases
-
-    @Test("Debounce pattern works correctly")
-    func testDebouncePattern() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSTimerModule.self, as: "timer")
-
-        var saveCount = 0
-        harness.registerCallback("saveDocument") {
-            saveCount += 1
-        }
-
-        harness.eval("""
-        var saveDebounce = hs.timer.delayed(0.1, () => { __test_callback('saveDocument') });
-
-        function onTextChanged() {
-            saveDebounce.start();
-        }
-        """)
-
-        // Simulate rapid typing
-        for _ in 0..<10 {
-            harness.eval("onTextChanged()")
-            Thread.sleep(forTimeInterval: 0.02)
-        }
-
-        // Should only save once after typing stops
-        let success = harness.waitFor(timeout: 0.3) { saveCount >= 1 }
-        #expect(success, "Debounced save should fire")
-
-        Thread.sleep(forTimeInterval: 0.05)
-        #expect(saveCount == 1, "Should only save once despite multiple changes")
-    }
 
     @Test("Polling pattern with waitUntil works")
     func testPollingPattern() {
