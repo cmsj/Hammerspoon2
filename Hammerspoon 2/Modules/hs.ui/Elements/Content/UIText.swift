@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-class UIText: FrameModifiable, OpacityModifiable, InteractiveModifiable {
+class UIText: FrameModifiable, OpacityModifiable, InteractiveModifiable, TextModifiable {
     var content: HSString
     var font: Font = .body
     var foregroundColor: HSColor? = nil

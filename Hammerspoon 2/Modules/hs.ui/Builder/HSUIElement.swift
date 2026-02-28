@@ -54,6 +54,12 @@ protocol UIContainer: HSUIElement, AnyObject {
     func addChild(_ child: any HSUIElement)
 }
 
+/// Protocol for elements that have a text label with font and color
+protocol TextModifiable: HSUIElement, AnyObject {
+    var font: Font { get set }
+    var foregroundColor: HSColor? { get set }
+}
+
 /// Protocol for elements that support click and hover callbacks
 protocol InteractiveModifiable: HSUIElement, AnyObject {
     var clickCallback: (() -> Void)? { get set }

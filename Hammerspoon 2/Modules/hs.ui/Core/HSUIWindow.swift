@@ -21,6 +21,7 @@ import SwiftUI
 ///
 /// - **Shapes**: `rectangle()`, `circle()`
 /// - **Text**: `text(content)`
+/// - **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback
 /// - **Images**: `image(imageValue)`
 /// - **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`
 ///
@@ -104,6 +105,13 @@ import SwiftUI
     /// - Parameter imageValue: Image as HSImage object or file path string
     /// - Returns: Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)
     @objc func image(_ imageValue: JSValue) -> HSUIWindow
+
+    /// Add a button element
+    /// - Parameter label: The button label — a plain JS string for static text,
+    ///   or an `HSString` object (from `hs.ui.string()`) for reactive text
+    /// - Returns: Self for chaining (apply `.fill()`, `.cornerRadius()`, `.font()`,
+    ///   `.foregroundColor()`, `.frame()`, `.onClick()` etc.)
+    @objc func button(_ label: JSValue) -> HSUIWindow
 
     // MARK: Layout Containers
 
@@ -354,6 +362,15 @@ import SwiftUI
         return self
     }
 
+    @objc func button(_ label: JSValue) -> HSUIWindow {
+        guard let hsString = HSString.fromJSValue(label) else { return self }
+        let buttonElement = UIButton(label: hsString)
+        hsString.delegate = self
+        currentElement = buttonElement
+        addToCurrentContainer(buttonElement)
+        return self
+    }
+
     // MARK: - Layout Containers
 
     @objc func vstack() -> HSUIWindow {
@@ -471,16 +488,16 @@ import SwiftUI
     // MARK: - Text Modifiers
 
     @objc func font(_ font: HSFont) -> HSUIWindow {
-        if let textElement = currentElement as? UIText {
-            textElement.font = font.font
+        if let textable = currentElement as? any TextModifiable {
+            textable.font = font.font
         }
         return self
     }
 
     @objc func foregroundColor(_ colorValue: JSValue) -> HSUIWindow {
-        if let textElement = currentElement as? UIText,
+        if let textable = currentElement as? any TextModifiable,
            let hsColor = HSColor.fromJSValue(colorValue) {
-            textElement.foregroundColor = hsColor
+            textable.foregroundColor = hsColor
             hsColor.delegate = self
         }
         return self

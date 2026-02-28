@@ -55,6 +55,25 @@ hs.ui.window({x: 100, y: 100, w: 400, h: 300})
     .show();
 ```
 
+### Button with onClick
+
+```javascript
+hs.ui.window({x: 100, y: 100, w: 200, h: 80})
+    .vstack()
+        .padding(16)
+        .button("Click me")
+            .fill("#4A90E2")
+            .foregroundColor("#FFFFFF")
+            .cornerRadius(8)
+            .frame({w: "100%", h: 44})
+            .onClick(() => {
+                hs.ui.alert("Button clicked!").duration(2).show();
+            })
+    .end()
+    .backgroundColor("#1A1A1A")
+    .show();
+```
+
 ### Reactive Color on Hover
 
 Create an `HSColor` object and pass it to `.fill()` (or `.stroke()` / `.foregroundColor()`). Calling `.set()` on it from any callback re-renders the canvas automatically.
@@ -179,10 +198,11 @@ Create a new UI window.
 
 **Methods:**
 
-#### Shape Constructors
+#### Element Constructors
 - `.rectangle()` - Add a rectangle element
 - `.circle()` - Add a circle element
 - `.text(content)` - Add a text element; `content` may be a plain JS string or an `HSString` from `hs.ui.string()`
+- `.button(label)` - Add a button with native press-state feedback; `label` may be a plain JS string or an `HSString`
 - `.image(value)` - Add an image element (HSImage or file path string)
 - `.spacer()` - Add flexible space that expands to fill available room
 
