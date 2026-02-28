@@ -95,9 +95,10 @@ import SwiftUI
     @objc func circle() -> HSUIWindow
 
     /// Add a text element
-    /// - Parameter content: The text to display
+    /// - Parameter content: The text to display — a plain JS string for static text,
+    ///   or an `HSString` object (from `hs.ui.string()`) for reactive text
     /// - Returns: Self for chaining (apply modifiers like `font()`, `foregroundColor()`)
-    @objc func text(_ content: String) -> HSUIWindow
+    @objc func text(_ content: JSValue) -> HSUIWindow
 
     /// Add an image element
     /// - Parameter imageValue: Image as HSImage object or file path string
@@ -207,7 +208,7 @@ import SwiftUI
 }
 
 @MainActor
-@objc class HSUIWindow: NSObject, HSUIWindowAPI, NSWindowDelegate {
+@objc class HSUIWindow: NSObject, HSUIWindowAPI, NSWindowDelegate, HSUIElementDelegate {
     @objc var typeName = "HSUIWindow"
 
     // Window properties
@@ -216,6 +217,10 @@ import SwiftUI
     private var windowBackgroundColor: Color = .clear
     private let windowID: UUID = UUID()
     private weak var module: HSUIModule?
+
+    // Render state — owned here, observed by UICanvasView.
+    // Incrementing version causes a full canvas re-render, picking up new signal values.
+    private let renderState = CanvasRenderState()
 
     // Element tree
     private var rootElement: (any HSUIElement)?
@@ -261,7 +266,8 @@ import SwiftUI
         let contentView = UICanvasView(
             element: root,
             backgroundColor: windowBackgroundColor,
-            containerSize: windowFrame.size
+            containerSize: windowFrame.size,
+            renderState: renderState
         )
         window.contentView = NSHostingView(rootView: contentView)
         window.isOpaque = false
@@ -330,16 +336,19 @@ import SwiftUI
         return self
     }
 
-    @objc func text(_ content: String) -> HSUIWindow {
-        let textElement = UIText(content: content)
+    @objc func text(_ content: JSValue) -> HSUIWindow {
+        guard let hsString = HSString.fromJSValue(content) else { return self }
+        let textElement = UIText(content: hsString)
+        hsString.delegate = self
         currentElement = textElement
         addToCurrentContainer(textElement)
         return self
     }
 
     @objc func image(_ imageValue: JSValue) -> HSUIWindow {
-        let nsImage = imageValue.toNSImage()
-        let imageElement = UIImage(image: nsImage)
+        let hsImage = HSImage.fromJSValue(imageValue)
+        let imageElement = UIImage(hsImage: hsImage)
+        hsImage?.delegate = self
         currentElement = imageElement
         addToCurrentContainer(imageElement)
         return self
@@ -404,20 +413,28 @@ import SwiftUI
         return self
     }
 
+    // MARK: - HSUIElementDelegate
+
+    nonisolated func valueDidChange() {
+        MainActor.assumeIsolated { renderState.version += 1 }
+    }
+
     // MARK: - Shape Modifiers
 
     @objc func fill(_ colorValue: JSValue) -> HSUIWindow {
         if let shapeable = currentElement as? any ShapeModifiable,
-           let color = colorValue.toColor() {
-            shapeable.fillColor = color
+           let hsColor = HSColor.fromJSValue(colorValue) {
+            shapeable.fillColor = hsColor
+            hsColor.delegate = self
         }
         return self
     }
 
     @objc func stroke(_ colorValue: JSValue) -> HSUIWindow {
         if let shapeable = currentElement as? any ShapeModifiable,
-           let color = colorValue.toColor() {
-            shapeable.strokeColor = color
+           let hsColor = HSColor.fromJSValue(colorValue) {
+            shapeable.strokeColor = hsColor
+            hsColor.delegate = self
         }
         return self
     }
@@ -462,8 +479,9 @@ import SwiftUI
 
     @objc func foregroundColor(_ colorValue: JSValue) -> HSUIWindow {
         if let textElement = currentElement as? UIText,
-           let color = colorValue.toColor() {
-            textElement.foregroundColor = color
+           let hsColor = HSColor.fromJSValue(colorValue) {
+            textElement.foregroundColor = hsColor
+            hsColor.delegate = self
         }
         return self
     }

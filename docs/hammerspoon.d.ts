@@ -34,6 +34,12 @@ declare class HSColor {
      */
     static named(name: string): HSColor;
 
+    /**
+     * Update this color's value
+     * @param value New color as a hex string (e.g. "#FF0000") or another HSColor object
+     */
+    static set(value: JSValue): void;
+
 }
 
 /**
@@ -263,6 +269,12 @@ declare class HSImage {
      */
     static template(state: JSValue): boolean;
 
+    /**
+     * Replace the image with a new one, triggering a re-render if bound to a UI element
+     * @param value New image as an HSImage object or a file path string
+     */
+    static set(value: JSValue): void;
+
 }
 
 /**
@@ -353,6 +365,24 @@ declare class HSSize {
      * The height of the rectangle
      */
     h: number;
+
+}
+
+/**
+ * A reactive string container. Pass to `.text()` to get automatic
+re-renders when `.set()` is called from JavaScript.
+ */
+declare class HSString {
+    /**
+     * Update the string value, triggering a re-render if bound to a UI element
+     * @param newValue The new string
+     */
+    static set(newValue: string): void;
+
+    /**
+     * The current string value
+     */
+    value: string;
 
 }
 
@@ -530,14 +560,14 @@ declare namespace hs.application {
      * @param event The event type to listen for
      * @param listener A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
      */
-    function addWatcher(event: any, listener: any): void;
+    function addWatcher(event: string, listener: JSValue): void;
 
     /**
      * Remove a watcher for application events
      * @param event The event type to stop listening for
      * @param listener The javascript function/lambda that was previously being used to handle the event
      */
-    function removeWatcher(event: any, listener: any): void;
+    function removeWatcher(event: string, listener: JSValue): void;
 
 }
 
@@ -665,7 +695,7 @@ declare namespace hs.ax {
      * @param notification An event name
      * @param listener A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to
      */
-    function addWatcher(application: any, notification: any, listener: any): void;
+    function addWatcher(application: HSApplication, notification: string, listener: JSValue): void;
 
     /**
      * Remove a watcher for application AX events
@@ -673,7 +703,7 @@ declare namespace hs.ax {
      * @param notification The event name to stop watching
      * @param listener The function/lambda provided when adding the watcher
      */
-    function removeWatcher(application: any, notification: any, listener: any): void;
+    function removeWatcher(application: HSApplication, notification: string, listener: JSValue): void;
 
     /**
      * Fetch the focused UI element
@@ -708,6 +738,26 @@ declare namespace hs.ax {
      * A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()
      */
     const notificationTypes: Record<string, string>;
+
+    /**
+     * Fetch the focused UI element. Swift-retained storage for the JS implementation.
+     */
+    const focusedElement: JSValue | undefined;
+
+    /**
+     * Find AX elements by role. Swift-retained storage for the JS implementation.
+     */
+    const findByRole: JSValue | undefined;
+
+    /**
+     * Find AX elements by title. Swift-retained storage for the JS implementation.
+     */
+    const findByTitle: JSValue | undefined;
+
+    /**
+     * Print the element hierarchy. Swift-retained storage for the JS implementation.
+     */
+    const printHierarchy: JSValue | undefined;
 
 }
 
@@ -1117,7 +1167,7 @@ declare namespace hs.task {
      * @param legacyStreamCallback - Legacy streaming callback (optional)
      * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
      */
-    function run(launchPath: string, args: string[], options: Object|Function, options: Object, options: string, options: Function, legacyStreamCallback: Function): any;
+    function runAsync(launchPath: string, args: string[], options: Object|Function, options: Object, options: string, options: Function, legacyStreamCallback: Function): any;
 
     /**
      * Run a shell command asynchronously
@@ -1140,6 +1190,36 @@ declare namespace hs.task {
      * @returns {TaskBuilder}
      */
     function builder(launchPath: string): any;
+
+    /**
+     * Run a task, returning a Promise. Swift-retained storage for the JS implementation.
+     */
+    const runAsync: JSValue | undefined;
+
+    /**
+     * Run a shell command. Swift-retained storage for the JS implementation.
+     */
+    const shell: JSValue | undefined;
+
+    /**
+     * Run multiple tasks in parallel. Swift-retained storage for the JS implementation.
+     */
+    const parallel: JSValue | undefined;
+
+    /**
+     * Run multiple tasks in sequence. Swift-retained storage for the JS implementation.
+     */
+    const sequence: JSValue | undefined;
+
+    /**
+     * Create a task builder. Swift-retained storage for the JS implementation.
+     */
+    const builder: JSValue | undefined;
+
+    /**
+     * TaskBuilder class. Swift-retained storage for the JS implementation.
+     */
+    const TaskBuilder: JSValue | undefined;
 
 }
 
@@ -1240,6 +1320,15 @@ declare namespace hs.timer {
     function create(interval: number, callback: JSValue, continueOnError: boolean): HSTimer;
 
     /**
+     * Create a new timer (alias for create())
+     * @param interval The interval in seconds at which the timer should fire
+     * @param callback A JavaScript function to call when the timer fires
+     * @param continueOnError If true, the timer will continue running even if the callback throws an error
+     * @returns A timer object. Call start() to begin the timer.
+     */
+    function new(interval: number, callback: JSValue, continueOnError: boolean): HSTimer;
+
+    /**
      * Create and start a one-shot timer
      * @param seconds Number of seconds to wait before firing
      * @param callback A JavaScript function to call when the timer fires
@@ -1291,40 +1380,31 @@ declare namespace hs.timer {
 
     /**
      * Converts minutes to seconds
-Parameter n: A number of minutes
      * @param n A number of minutes
      * @returns The equivalent number of seconds
      */
-    function minutes(n: any): any;
+    function minutes(n: number): number;
 
     /**
      * Converts hours to seconds
-Parameter n: A number of hours
      * @param n A number of hours
      * @returns The equivalent number of seconds
      */
-    function hours(n: any): any;
+    function hours(n: number): number;
 
     /**
      * Converts days to seconds
-Parameter n: A number of days
      * @param n A number of days
      * @returns The equivalent number of seconds
      */
-    function days(n: any): any;
+    function days(n: number): number;
 
     /**
      * Converts weeks to seconds
-Parameter n: A number of weeks
      * @param n A number of weeks
      * @returns The equivalent number of seconds
      */
-    function weeks(n: any): any;
-
-    /**
-     * SKIP_DOCS
-     */
-    function seconds(): void;
+    function weeks(n: number): number;
 
     /**
      * Repeat a function/lambda until a given predicate function/lambda returns true
@@ -1359,9 +1439,24 @@ Parameter n: A number of weeks
     function waitWhile(predicateFn: any, actionFn: any, checkInterval: any): void;
 
     /**
-     * SKIP_DOCS
+     * Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.
      */
-    function delayed(): void;
+    const doUntil: JSValue | undefined;
+
+    /**
+     * Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.
+     */
+    const doWhile: JSValue | undefined;
+
+    /**
+     * Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.
+     */
+    const waitUntil: JSValue | undefined;
+
+    /**
+     * Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.
+     */
+    const waitWhile: JSValue | undefined;
 
 }
 
@@ -1420,6 +1515,9 @@ declare class HSTimer {
 The `hs.ui` module provides a set of tools for creating custom user interfaces
 in Hammerspoon with SwiftUI-like declarative syntax.
 ## Key Features
+then call `.set()` on it from any callback to re-render the canvas automatically
+then call `.set()` on it to update the displayed content live
+to swap the image without rebuilding the window
 ## Basic Examples
 ### Simple Alert
 ```javascript
@@ -1473,6 +1571,165 @@ hs.ui.window({x: 100, y: 100, w: 300, h: 200})
     .backgroundColor("#2C3E50")
     .show();
 ```
+### Reactive Color on Hover
+```javascript
+// Create a mutable color, then mutate it inside the hover callback
+const btnColor = HSColor.hex("#4A90E2");
+
+hs.ui.window({x: 100, y: 100, w: 160, h: 60})
+    .rectangle()
+        .fill(btnColor)
+        .cornerRadius(8)
+        .frame({w: "100%", h: "100%"})
+        .onHover((isHovered) => {
+            btnColor.set(isHovered ? "#E24A4A" : "#4A90E2");
+        })
+    .show();
+```
+### Reactive Text on Hover
+```javascript
+// Create a mutable string, then mutate it inside the hover callback
+const label = hs.ui.string("Move your mouse here");
+
+hs.ui.window({x: 100, y: 200, w: 220, h: 50})
+    .text(label)
+        .font(HSFont.body())
+        .foregroundColor("#FFFFFF")
+        .onHover((isHovered) => {
+            label.set(isHovered ? "You're hovering!" : "Move your mouse here");
+        })
+    .show();
+```
+### Reactive Image on Click
+```javascript
+// Toggle between two system icons on each click
+const icon = HSImage.fromName("NSStatusAvailable");
+
+hs.ui.window({x: 100, y: 300, w: 80, h: 80})
+    .image(icon)
+        .resizable()
+        .aspectRatio("fit")
+        .frame({w: 64, h: 64})
+        .onClick(() => {
+            const next = (icon.name() === "NSStatusAvailable")
+                ? HSImage.fromName("NSStatusUnavailable")
+                : HSImage.fromName("NSStatusAvailable");
+            icon.set(next);
+        })
+    .show();
+```
+## Complete Example: Status Dashboard
+Here's a more complex example showing how to build an interactive status dashboard
+```javascript
+// Create a status dashboard window
+const statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})
+    .vstack()
+        .spacing(15)
+        .padding(20)
+
+        // Header
+        .text("System Status Dashboard")
+            .font(HSFont.largeTitle())
+            .foregroundColor("#FFFFFF")
+
+        // Status cards
+        .hstack()
+            .spacing(10)
+            .vstack()
+                .spacing(5)
+                .rectangle()
+                    .fill("#4CAF50")
+                    .cornerRadius(8)
+                    .frame({w: 180, h: 100})
+                .text("CPU: 45%")
+                    .font(HSFont.headline())
+                    .foregroundColor("#FFFFFF")
+            .end()
+            .vstack()
+                .spacing(5)
+                .rectangle()
+                    .fill("#2196F3")
+                    .cornerRadius(8)
+                    .frame({w: 180, h: 100})
+                .text("Memory: 8.2GB")
+                    .font(HSFont.headline())
+                    .foregroundColor("#FFFFFF")
+            .end()
+        .end()
+
+        // Activity indicator with image
+        .hstack()
+            .spacing(10)
+            .image(HSImage.fromName("NSComputer"))
+                .resizable()
+                .aspectRatio("fit")
+                .frame({w: 64, h: 64})
+            .vstack()
+                .text("System Running")
+                    .font(HSFont.title())
+                .text("All services operational")
+                    .font(HSFont.caption())
+                    .foregroundColor("#A0A0A0")
+            .end()
+        .end()
+
+        // Circle status indicators
+        .hstack()
+            .spacing(20)
+            .circle()
+                .fill("#4CAF50")
+                .frame({w: 30, h: 30})
+            .circle()
+                .fill("#FFC107")
+                .frame({w: 30, h: 30})
+            .circle()
+                .fill("#F44336")
+                .frame({w: 30, h: 30})
+        .end()
+    .end()
+    .backgroundColor("#2C3E50");
+
+// Show the dashboard
+statusWindow.show();
+
+// Later, interact with dialogs
+hs.ui.dialog("Shutdown system?")
+    .informativeText("This will close all applications.")
+    .buttons(["Shutdown", "Cancel"])
+    .onButton((index) => {
+        if (index === 0) {
+            hs.ui.alert("Shutting down...")
+                .duration(3)
+                .show();
+        }
+    })
+    .show();
+```
+## Complete Example: Reactive Hover Card
+Demonstrates reactive colors and reactive text together — a single `.onHover()`
+```javascript
+const cardColor = HSColor.hex("#3498DB");
+const cardLabel = hs.ui.string("Hover the card");
+
+hs.ui.window({x: 100, y: 100, w: 220, h: 120})
+    .vstack()
+        .spacing(12)
+        .padding(16)
+        .rectangle()
+            .fill(cardColor)
+            .cornerRadius(10)
+            .frame({w: "100%", h: 60})
+            .onHover((isHovered) => {
+                cardColor.set(isHovered ? "#E74C3C" : "#3498DB");
+                cardLabel.set(isHovered ? "You found it!" : "Hover the card");
+            })
+        .text(cardLabel)
+            .font(HSFont.headline())
+            .foregroundColor("#FFFFFF")
+    .end()
+    .backgroundColor("#1A252F")
+    .show();
+```
  */
 declare namespace hs.ui {
     /**
@@ -1510,6 +1767,15 @@ and the entered text.
      * @returns An `HSUITextPrompt` object for chaining
      */
     function textPrompt(message: string): HSUITextPrompt;
+
+    /**
+     * Create a reactive string for binding text element content to a dynamic value
+An `HSString` is a reactive value container. When passed to `.text()`,
+the canvas automatically re-renders whenever `.set()` is called from JavaScript.
+     * @param initialValue The starting string value
+     * @returns An `HSString` object whose value can be updated with `.set()`
+     */
+    function string(initialValue: string): HSString;
 
     /**
      * Create a file or directory picker
@@ -1598,10 +1864,11 @@ declare class HSUIWindow {
 
     /**
      * Add a text element
-     * @param content The text to display
+or an `HSString` object (from `hs.ui.string()`) for reactive text
+     * @param content The text to display — a plain JS string for static text,
      * @returns Self for chaining (apply modifiers like `font()`, `foregroundColor()`)
      */
-    static text(content: string): HSUIWindow;
+    static text(content: JSValue): HSUIWindow;
 
     /**
      * Add an image element
@@ -1722,6 +1989,20 @@ declare class HSUIWindow {
      * @returns Self for chaining
      */
     static spacing(value: number): HSUIWindow;
+
+    /**
+     * Set a callback to fire when the element is clicked
+     * @param callback A JavaScript function to call on click
+     * @returns Self for chaining
+     */
+    static onClick(callback: JSValue): HSUIWindow;
+
+    /**
+     * Set a callback to fire when the cursor enters or leaves the element
+     * @param callback A JavaScript function called with a boolean: true when entering, false when leaving
+     * @returns Self for chaining
+     */
+    static onHover(callback: JSValue): HSUIWindow;
 
 }
 

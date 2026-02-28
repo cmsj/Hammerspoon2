@@ -25,6 +25,12 @@ import AppKit
 /// - **Dialogs**: Show modal dialogs with custom buttons and callbacks
 /// - **Text Input**: Prompt users for text input
 /// - **File Pickers**: Let users select files or directories
+/// - **Reactive Colors**: Pass an `HSColor` object to `.fill()`, `.stroke()`, or `.foregroundColor()`,
+///   then call `.set()` on it from any callback to re-render the canvas automatically
+/// - **Reactive Text**: Create a string with `hs.ui.string()`, pass it to `.text()`,
+///   then call `.set()` on it to update the displayed content live
+/// - **Reactive Images**: Pass an `HSImage` object to `.image()`, then call `.set()` on it
+///   to swap the image without rebuilding the window
 ///
 /// ## Basic Examples
 ///
@@ -82,6 +88,56 @@ import AppKit
 ///             .frame({w: "100%", h: 60})
 ///     .end()
 ///     .backgroundColor("#2C3E50")
+///     .show();
+/// ```
+///
+/// ### Reactive Color on Hover
+/// ```javascript
+/// // Create a mutable color, then mutate it inside the hover callback
+/// const btnColor = HSColor.hex("#4A90E2");
+///
+/// hs.ui.window({x: 100, y: 100, w: 160, h: 60})
+///     .rectangle()
+///         .fill(btnColor)
+///         .cornerRadius(8)
+///         .frame({w: "100%", h: "100%"})
+///         .onHover((isHovered) => {
+///             btnColor.set(isHovered ? "#E24A4A" : "#4A90E2");
+///         })
+///     .show();
+/// ```
+///
+/// ### Reactive Text on Hover
+/// ```javascript
+/// // Create a mutable string, then mutate it inside the hover callback
+/// const label = hs.ui.string("Move your mouse here");
+///
+/// hs.ui.window({x: 100, y: 200, w: 220, h: 50})
+///     .text(label)
+///         .font(HSFont.body())
+///         .foregroundColor("#FFFFFF")
+///         .onHover((isHovered) => {
+///             label.set(isHovered ? "You're hovering!" : "Move your mouse here");
+///         })
+///     .show();
+/// ```
+///
+/// ### Reactive Image on Click
+/// ```javascript
+/// // Toggle between two system icons on each click
+/// const icon = HSImage.fromName("NSStatusAvailable");
+///
+/// hs.ui.window({x: 100, y: 300, w: 80, h: 80})
+///     .image(icon)
+///         .resizable()
+///         .aspectRatio("fit")
+///         .frame({w: 64, h: 64})
+///         .onClick(() => {
+///             const next = (icon.name() === "NSStatusAvailable")
+///                 ? HSImage.fromName("NSStatusUnavailable")
+///                 : HSImage.fromName("NSStatusAvailable");
+///             icon.set(next);
+///         })
 ///     .show();
 /// ```
 ///
@@ -173,6 +229,35 @@ import AppKit
 ///                 .show();
 ///         }
 ///     })
+///     .show();
+/// ```
+///
+/// ## Complete Example: Reactive Hover Card
+///
+/// Demonstrates reactive colors and reactive text together — a single `.onHover()`
+/// callback updates both the fill color of a shape and the content of a text label:
+///
+/// ```javascript
+/// const cardColor = HSColor.hex("#3498DB");
+/// const cardLabel = hs.ui.string("Hover the card");
+///
+/// hs.ui.window({x: 100, y: 100, w: 220, h: 120})
+///     .vstack()
+///         .spacing(12)
+///         .padding(16)
+///         .rectangle()
+///             .fill(cardColor)
+///             .cornerRadius(10)
+///             .frame({w: "100%", h: 60})
+///             .onHover((isHovered) => {
+///                 cardColor.set(isHovered ? "#E74C3C" : "#3498DB");
+///                 cardLabel.set(isHovered ? "You found it!" : "Hover the card");
+///             })
+///         .text(cardLabel)
+///             .font(HSFont.headline())
+///             .foregroundColor("#FFFFFF")
+///     .end()
+///     .backgroundColor("#1A252F")
 ///     .show();
 /// ```
 @objc protocol HSUIModuleAPI: JSExport {
@@ -338,6 +423,27 @@ import AppKit
     /// ```
     @objc func textPrompt(_ message: String) -> HSUITextPrompt
 
+    /// Create a reactive string for binding text element content to a dynamic value
+    ///
+    /// An `HSString` is a reactive value container. When passed to `.text()`,
+    /// the canvas automatically re-renders whenever `.set()` is called from JavaScript.
+    ///
+    /// - Parameter initialValue: The starting string value
+    /// - Returns: An `HSString` object whose value can be updated with `.set()`
+    ///
+    /// **Example:**
+    /// ```javascript
+    /// const label = hs.ui.string("Not hovered");
+    ///
+    /// hs.ui.window({x: 100, y: 100, w: 200, h: 100})
+    ///     .text(label)
+    ///         .onHover((isHovered) => {
+    ///             label.set(isHovered ? "Hovered!" : "Not hovered");
+    ///         })
+    ///     .show();
+    /// ```
+    @objc func string(_ initialValue: String) -> HSString
+
     /// Create a file or directory picker
     ///
     /// Shows a standard macOS file picker dialog. Can be configured to select files,
@@ -493,6 +599,10 @@ import AppKit
             let prompt = HSUITextPrompt(message: message, module: self)
             return prompt
         }
+    }
+
+    @objc func string(_ initialValue: String) -> HSString {
+        return HSString(value: initialValue)
     }
 
     @objc func filePicker() -> HSUIFilePicker {

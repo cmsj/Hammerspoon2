@@ -9,8 +9,8 @@ import Foundation
 import SwiftUI
 
 class UICircle: ShapeModifiable, FrameModifiable, OpacityModifiable, InteractiveModifiable {
-    var fillColor: Color? = nil
-    var strokeColor: Color? = nil
+    var fillColor: HSColor? = nil
+    var strokeColor: HSColor? = nil
     var strokeWidth: CGFloat = 1.0
     var cornerRadius: CGFloat = 0.0  // Not used for circles but required by protocol
     var elementFrame: UIFrame? = nil
@@ -19,17 +19,15 @@ class UICircle: ShapeModifiable, FrameModifiable, OpacityModifiable, Interactive
     var hoverCallback: ((Bool) -> Void)? = nil
 
     func toSwiftUI(containerSize: CGSize) -> AnyView {
-        // Build the base shape with color
         var view: AnyView
-        if let fill = fillColor {
+        if let fill = fillColor?.color {
             view = AnyView(Circle().fill(fill))
-        } else if let stroke = strokeColor {
+        } else if let stroke = strokeColor?.color {
             view = AnyView(Circle().stroke(stroke, lineWidth: strokeWidth))
         } else {
             view = AnyView(Circle())
         }
 
-        // Apply frame if specified, using the smaller dimension to keep it circular
         if let frame = elementFrame {
             let resolved = frame.resolve(containerSize: containerSize)
             let size = min(resolved.width, resolved.height)

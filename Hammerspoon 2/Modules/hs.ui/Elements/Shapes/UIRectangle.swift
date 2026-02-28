@@ -9,8 +9,8 @@ import Foundation
 import SwiftUI
 
 class UIRectangle: ShapeModifiable, FrameModifiable, OpacityModifiable, InteractiveModifiable {
-    var fillColor: Color? = nil
-    var strokeColor: Color? = nil
+    var fillColor: HSColor? = nil
+    var strokeColor: HSColor? = nil
     var strokeWidth: CGFloat = 1.0
     var cornerRadius: CGFloat = 0.0
     var elementFrame: UIFrame? = nil
@@ -19,17 +19,15 @@ class UIRectangle: ShapeModifiable, FrameModifiable, OpacityModifiable, Interact
     var hoverCallback: ((Bool) -> Void)? = nil
 
     func toSwiftUI(containerSize: CGSize) -> AnyView {
-        // Build the base shape with color
         var view: AnyView
-        if let fill = fillColor {
+        if let fill = fillColor?.color {
             view = AnyView(Rectangle().fill(fill))
-        } else if let stroke = strokeColor {
+        } else if let stroke = strokeColor?.color {
             view = AnyView(Rectangle().stroke(stroke, lineWidth: strokeWidth))
         } else {
             view = AnyView(Rectangle())
         }
 
-        // Apply frame if specified
         if let frame = elementFrame {
             let resolved = frame.resolve(containerSize: containerSize)
             view = AnyView(view.frame(width: resolved.width, height: resolved.height))

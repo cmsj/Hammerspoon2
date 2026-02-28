@@ -199,10 +199,10 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
-        var taskStarted = false
-        harness.registerCallback("onStart") {
-            taskStarted = true
-        }
+//        var taskStarted = false
+//        harness.registerCallback("onStart") {
+//            taskStarted = true
+//        }
 
         harness.eval("""
         var task = hs.task.new('/bin/sleep', ['0.1']);

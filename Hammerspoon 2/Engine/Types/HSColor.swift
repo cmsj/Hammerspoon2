@@ -33,11 +33,19 @@ import SwiftUI
     /// - Parameter name: Name of the system color (e.g. "red", "blue", "systemBlue")
     /// - Returns: An HSColor object
     @objc static func named(_ name: String) -> HSColor
+
+    /// Update this color's value
+    /// - Parameter value: New color as a hex string (e.g. "#FF0000") or another HSColor object
+    @objc func set(_ value: JSValue)
 }
 
 @objc class HSColor: NSObject, HSColorAPI {
     @objc var typeName = "HSColor"
-    private(set) var color: Color
+    weak var delegate: (any HSUIElementDelegate)?
+
+    var color: Color {
+        didSet { delegate?.valueDidChange() }
+    }
 
     init(color: Color) {
         self.color = color
@@ -103,6 +111,14 @@ import SwiftUI
         }
 
         return color.toBridge()
+    }
+
+    // MARK: - Mutation
+
+    @objc func set(_ value: JSValue) {
+        if let newColor = HSColor.fromJSValue(value) {
+            color = newColor.color
+        }
     }
 
     // MARK: - Helper Methods

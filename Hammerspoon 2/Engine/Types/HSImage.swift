@@ -123,11 +123,19 @@ import UniformTypeIdentifiers
     /// - Parameter state: Optional boolean to set template state
     /// - Returns: Current template state
     @objc func template(_ state: JSValue) -> Bool
+
+    /// Replace the image with a new one, triggering a re-render if bound to a UI element
+    /// - Parameter value: New image as an HSImage object or a file path string
+    @objc func set(_ value: JSValue)
 }
 
 @objc class HSImage: NSObject, HSImageAPI {
     @objc var typeName = "HSImage"
-    private(set) var image: NSImage
+    weak var delegate: (any HSUIElementDelegate)?
+
+    var image: NSImage {
+        didSet { delegate?.valueDidChange() }
+    }
 
     init(image: NSImage) {
         self.image = image
@@ -334,7 +342,25 @@ import UniformTypeIdentifiers
         }
     }
 
+    // MARK: - Mutation
+
+    @objc func set(_ value: JSValue) {
+        if let newImage = HSImage.fromJSValue(value) {
+            image = newImage.image
+        }
+    }
+
     // MARK: - Helper Methods
+
+    /// Create an HSImage from a JSValue (supports HSImage objects or file path strings)
+    static func fromJSValue(_ value: JSValue) -> HSImage? {
+        if let hsImage = value.toObjectOf(HSImage.self) as? HSImage {
+            return hsImage
+        } else if value.isString, let path = value.toString() {
+            return HSImage.fromPath(path)
+        }
+        return nil
+    }
 
     private func resizeImage(_ image: NSImage, to targetSize: CGSize, absolute: Bool) -> NSImage {
         let originalSize = image.size
