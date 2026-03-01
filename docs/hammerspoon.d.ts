@@ -1878,6 +1878,14 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text
     static image(imageValue: JSValue): HSUIWindow;
 
     /**
+     * Add a button element
+or an `HSString` object (from `hs.ui.string()`) for reactive text
+     * @param label The button label — a plain JS string for static text,
+     * @returns Self for chaining (apply `.fill()`, `.cornerRadius()`, `.font()`,
+     */
+    static button(label: JSValue): HSUIWindow;
+
+    /**
      * Begin a vertical stack (elements arranged top to bottom)
      * @returns Self for chaining (call `end()` when done)
      */

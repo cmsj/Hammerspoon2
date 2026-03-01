@@ -2843,7 +2843,7 @@
         {
           "name": "HSUIWindowAPI",
           "type": "typedef",
-          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Images**: `image(imageValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback\n- **Images**: `image(imageValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
           "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n## Building UI Elements\n## Modifying Elements\n## Examples\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
           "methods": [
             {
@@ -2858,7 +2858,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 72
+              "lineNumber": 73
             },
             {
               "name": "hide",
@@ -2869,7 +2869,7 @@
               "returns": null,
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 75
+              "lineNumber": 76
             },
             {
               "name": "close",
@@ -2880,7 +2880,7 @@
               "returns": null,
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 78
+              "lineNumber": 79
             },
             {
               "name": "backgroundColor",
@@ -2900,7 +2900,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 85
+              "lineNumber": 86
             },
             {
               "name": "rectangle",
@@ -2914,7 +2914,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 91
+              "lineNumber": 92
             },
             {
               "name": "circle",
@@ -2928,7 +2928,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 95
+              "lineNumber": 96
             },
             {
               "name": "text",
@@ -2948,7 +2948,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 101
+              "lineNumber": 102
             },
             {
               "name": "image",
@@ -2968,7 +2968,27 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 106
+              "lineNumber": 107
+            },
+            {
+              "name": "button",
+              "signature": "func button(_ label: JSValue) -> HSUIWindow",
+              "rawDocumentation": "Add a button element\n- Parameter label: The button label — a plain JS string for static text,\n  or an `HSString` object (from `hs.ui.string()`) for reactive text\n- Returns: Self for chaining (apply `.fill()`, `.cornerRadius()`, `.font()`,\n  `.foregroundColor()`, `.frame()`, `.onClick()` etc.)",
+              "description": "Add a button element\nor an `HSString` object (from `hs.ui.string()`) for reactive text",
+              "params": [
+                {
+                  "name": "label",
+                  "type": "JSValue",
+                  "description": "The button label — a plain JS string for static text,"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply `.fill()`, `.cornerRadius()`, `.font()`,"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 114
             },
             {
               "name": "vstack",
@@ -2982,7 +3002,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 112
+              "lineNumber": 120
             },
             {
               "name": "hstack",
@@ -2996,7 +3016,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 116
+              "lineNumber": 124
             },
             {
               "name": "zstack",
@@ -3010,7 +3030,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 120
+              "lineNumber": 128
             },
             {
               "name": "spacer",
@@ -3024,7 +3044,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 124
+              "lineNumber": 132
             },
             {
               "name": "end",
@@ -3038,7 +3058,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 128
+              "lineNumber": 136
             },
             {
               "name": "fill",
@@ -3058,7 +3078,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 135
+              "lineNumber": 143
             },
             {
               "name": "stroke",
@@ -3078,7 +3098,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 140
+              "lineNumber": 148
             },
             {
               "name": "strokeWidth",
@@ -3098,7 +3118,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 145
+              "lineNumber": 153
             },
             {
               "name": "cornerRadius",
@@ -3118,7 +3138,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 150
+              "lineNumber": 158
             },
             {
               "name": "frame",
@@ -3138,7 +3158,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 155
+              "lineNumber": 163
             },
             {
               "name": "opacity",
@@ -3158,7 +3178,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 160
+              "lineNumber": 168
             },
             {
               "name": "font",
@@ -3178,7 +3198,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 167
+              "lineNumber": 175
             },
             {
               "name": "foregroundColor",
@@ -3198,7 +3218,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 172
+              "lineNumber": 180
             },
             {
               "name": "resizable",
@@ -3212,7 +3232,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 178
+              "lineNumber": 186
             },
             {
               "name": "aspectRatio",
@@ -3232,7 +3252,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 183
+              "lineNumber": 191
             },
             {
               "name": "padding",
@@ -3252,7 +3272,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 190
+              "lineNumber": 198
             },
             {
               "name": "spacing",
@@ -3272,7 +3292,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 195
+              "lineNumber": 203
             },
             {
               "name": "onClick",
@@ -3292,7 +3312,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 202
+              "lineNumber": 210
             },
             {
               "name": "onHover",
@@ -3312,7 +3332,7 @@
               },
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 207
+              "lineNumber": 215
             }
           ],
           "properties": []
@@ -4319,7 +4339,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
-          "lineNumber": 34
+          "lineNumber": 26
         },
         {
           "name": "hex",
@@ -4339,7 +4359,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
-          "lineNumber": 39
+          "lineNumber": 31
         },
         {
           "name": "named",
@@ -4359,7 +4379,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
-          "lineNumber": 44
+          "lineNumber": 36
         },
         {
           "name": "set",
@@ -4376,7 +4396,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
-          "lineNumber": 48
+          "lineNumber": 40
         }
       ],
       "properties": [],
@@ -4640,7 +4660,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 73
+          "lineNumber": 65
         },
         {
           "name": "fromName",
@@ -4660,7 +4680,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 78
+          "lineNumber": 70
         },
         {
           "name": "fromAppBundle",
@@ -4680,7 +4700,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 83
+          "lineNumber": 75
         },
         {
           "name": "iconForFile",
@@ -4700,7 +4720,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 88
+          "lineNumber": 80
         },
         {
           "name": "iconForFileType",
@@ -4720,7 +4740,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 93
+          "lineNumber": 85
         },
         {
           "name": "fromURL",
@@ -4741,7 +4761,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 98
+          "lineNumber": 90
         },
         {
           "name": "size",
@@ -4761,7 +4781,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 103
+          "lineNumber": 95
         },
         {
           "name": "name",
@@ -4781,7 +4801,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 108
+          "lineNumber": 100
         },
         {
           "name": "setSize",
@@ -4806,7 +4826,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 115
+          "lineNumber": 107
         },
         {
           "name": "copyImage",
@@ -4820,7 +4840,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 119
+          "lineNumber": 111
         },
         {
           "name": "croppedCopy",
@@ -4840,7 +4860,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 124
+          "lineNumber": 116
         },
         {
           "name": "saveToFile",
@@ -4860,7 +4880,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 129
+          "lineNumber": 121
         },
         {
           "name": "template",
@@ -4880,7 +4900,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 134
+          "lineNumber": 126
         },
         {
           "name": "set",
@@ -4897,7 +4917,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 138
+          "lineNumber": 130
         }
       ],
       "properties": [],
@@ -5123,7 +5143,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSString.swift",
-          "lineNumber": 32
+          "lineNumber": 24
         }
       ],
       "properties": [
@@ -5134,11 +5154,11 @@
           "description": "The current string value",
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSString.swift",
-          "lineNumber": 28
+          "lineNumber": 20
         }
       ],
       "category": "type"
     }
   ],
-  "generatedAt": "2026-02-28T11:29:57.125Z"
+  "generatedAt": "2026-03-01T12:02:13.582Z"
 }
