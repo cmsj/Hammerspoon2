@@ -7,12 +7,11 @@
 
 import Foundation
 import SwiftUI
-import Combine
 
 /// SwiftUI view that directly observes an HSColor fill so only the circle
 /// re-renders when the color changes.
 private struct ReactiveCircleFill: View {
-    @ObservedObject var fillColor: HSColor
+    var fillColor: HSColor
     let opacity: Double
     let size: CGFloat?
 

@@ -11,7 +11,7 @@ import SwiftUI
 /// SwiftUI view that directly observes an HSColor fill so only the rectangle
 /// re-renders when the color changes — hover state and other modifiers are preserved.
 private struct ReactiveRectangleFill: View {
-    @ObservedObject var fillColor: HSColor
+    var fillColor: HSColor
     let cornerRadius: CGFloat
     let opacity: Double
     let width: CGFloat?

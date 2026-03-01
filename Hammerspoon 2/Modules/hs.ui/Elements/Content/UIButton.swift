@@ -11,7 +11,7 @@ import SwiftUI
 /// SwiftUI view that directly observes an HSString label so only the button
 /// re-renders when the label changes.
 private struct ReactiveButton: View {
-    @ObservedObject var label: HSString
+    var label: HSString
     let font: Font
     let foreground: Color
     let fill: Color

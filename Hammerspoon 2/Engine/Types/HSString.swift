@@ -7,7 +7,7 @@
 
 import Foundation
 import JavaScriptCore
-import Combine
+import Observation
 
 // ---------------------------------------------------------------
 // MARK: - Bridge Class (JavaScript Interface)
@@ -24,20 +24,24 @@ import Combine
     @objc func set(_ newValue: String)
 }
 
-@objc class HSString: NSObject, HSStringAPI, ObservableObject {
+@Observable
+@objc class HSString: NSObject, HSStringAPI {
     @objc var typeName = "HSString"
 
-    @objc private(set) var value: String {
-        willSet { objectWillChange.send() }
-    }
+    // @Observable can't track @objc stored properties, so _value is the
+    // Observable-tracked backing store and the @objc computed property
+    // forwards to it. SwiftUI sees the dependency chain: value → _value.
+    private var _value: String
+
+    @objc var value: String { _value }
 
     init(value: String) {
-        self.value = value
+        self._value = value
         super.init()
     }
 
     @objc func set(_ newValue: String) {
-        value = newValue
+        _value = newValue
     }
 
     // MARK: - Helper

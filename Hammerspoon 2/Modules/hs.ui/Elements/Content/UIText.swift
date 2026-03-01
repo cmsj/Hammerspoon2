@@ -7,12 +7,11 @@
 
 import Foundation
 import SwiftUI
-import Combine
 
 /// SwiftUI view that directly observes an HSString so only the text element
 /// re-renders when the value changes — not the entire canvas.
 private struct ReactiveText: View {
-    @ObservedObject var content: HSString
+    var content: HSString
     let font: Font
     let foreground: Color
     let opacity: Double

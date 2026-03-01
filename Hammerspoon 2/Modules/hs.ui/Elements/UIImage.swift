@@ -7,12 +7,11 @@
 
 import Foundation
 import SwiftUI
-import Combine
 
 /// SwiftUI view that directly observes an HSImage so only the image element
 /// re-renders when the image changes.
 private struct ReactiveImageView: View {
-    @ObservedObject var hsImage: HSImage
+    var hsImage: HSImage
     let isResizable: Bool
     let aspectRatio: ContentMode
     let opacity: Double
