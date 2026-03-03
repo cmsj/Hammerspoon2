@@ -31,8 +31,9 @@ class HSOSAScriptRunner {
     func run(source: String, language: String) async throws -> (Bool, String?, String) {
         let session = try XPCSession(xpcService: serviceName, options: .inactive)
 #if DEBUG
-        #warning("DEBUG build, XPC running without peer requirements")
+        AKWarning("OSASCRIPT XPC SERVICE RUNNING WITHOUT PEER REQUIREMENTS. This is a serious security risk, do not use this build for production.")
 #else
+        AKTrace("Enforcing peer requirement for XPC connections.")
         session.setPeerRequirement(.isFromSameTeam())
 #endif
         try session.activate()

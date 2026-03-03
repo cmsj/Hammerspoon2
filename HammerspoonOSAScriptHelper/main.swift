@@ -18,6 +18,7 @@ nonisolated func errorMessage(from dict: NSDictionary?, fallback: String) -> Str
 }
 
 let serviceName = "net.tenshu.Hammerspoon-2.HammerspoonOSAScriptHelper"
+let xpcListener: XPCListener
 
 let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest) -> XPCListener.IncomingSessionRequest.Decision in
     request.accept { message in
@@ -75,12 +76,12 @@ let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest
         }
     }
 }
-let xpcListener: XPCListener
 
 #if DEBUG
-    #warning("DEBUG build, XPC running without peer requirements")
+    print("WARNING: Running without XPC peer checking. This is unsafe and should only be done in development.")
     xpcListener = try XPCListener(service: serviceName, incomingSessionHandler: xpcSessionHandler)
 #else
+    print("Enforcing XPC peer requirements.")
     xpcListener = try XPCListener(service: serviceName, requirement: .isFromSameTeam(), incomingSessionHandler: xpcSessionHandler)
 #endif
 
