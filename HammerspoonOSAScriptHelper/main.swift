@@ -19,7 +19,7 @@ nonisolated func errorMessage(from dict: NSDictionary?, fallback: String) -> Str
 
 let serviceName = "net.tenshu.Hammerspoon-2.HammerspoonOSAScriptHelper"
 
-let listener = try XPCListener(service: serviceName, requirement: .isFromSameTeam()) { request in
+let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest) -> XPCListener.IncomingSessionRequest.Decision in
     request.accept { message in
         // First, check that we can decode the incoming message to the expected HSOSARequest type
         guard let request = try? message.decode(as: HSOSARequest.self) else {
@@ -75,5 +75,13 @@ let listener = try XPCListener(service: serviceName, requirement: .isFromSameTea
         }
     }
 }
+let xpcListener: XPCListener
+
+#if DEBUG
+    #warning("DEBUG build, XPC running without peer requirements")
+    xpcListener = try XPCListener(service: serviceName, incomingSessionHandler: xpcSessionHandler)
+#else
+    xpcListener = try XPCListener(service: serviceName, requirement: .isFromSameTeam(), incomingSessionHandler: xpcSessionHandler)
+#endif
 
 dispatchMain()

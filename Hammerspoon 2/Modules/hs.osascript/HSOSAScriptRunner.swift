@@ -30,7 +30,11 @@ class HSOSAScriptRunner {
     ///   before reply, etc.).  Script-level errors are returned as `(false, nil, message)`.
     func run(source: String, language: String) async throws -> (Bool, String?, String) {
         let session = try XPCSession(xpcService: serviceName, options: .inactive)
+#if DEBUG
+        #warning("DEBUG build, XPC running without peer requirements")
+#else
         session.setPeerRequirement(.isFromSameTeam())
+#endif
         try session.activate()
 
         return try await withCheckedThrowingContinuation { continuation in
