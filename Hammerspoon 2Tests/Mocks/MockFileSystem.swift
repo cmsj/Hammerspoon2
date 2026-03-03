@@ -30,6 +30,17 @@ class MockFileSystem: FileSystemProtocol {
         return exists
     }
 
+    func fileExists(atPath path: String, isDirectory: UnsafeMutablePointer<ObjCBool>?) -> Bool {
+        // For mock purposes, just check if file exists
+        // In real implementation, this would check if it's a directory
+        let exists = existingFiles.contains(path)
+        if let isDir = isDirectory {
+            // Assume it's not a directory for simple mock
+            isDir.pointee = false
+        }
+        return exists
+    }
+
     func contentsOf(url: URL) throws -> String {
         if shouldThrowOnContentsOf {
             throw contentsOfError ?? NSError(domain: "MockFileSystem", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error reading file"])

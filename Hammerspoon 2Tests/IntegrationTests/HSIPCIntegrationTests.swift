@@ -12,12 +12,12 @@ import XCTest
 class HSIPCIntegrationTests: XCTestCase {
     var harness: JSTestHarness!
 
-    override func setUp() {
+    nonisolated override func setUp() {
         super.setUp()
         harness = JSTestHarness()
     }
 
-    override func tearDown() {
+    nonisolated override func tearDown() {
         harness = nil
         super.tearDown()
     }

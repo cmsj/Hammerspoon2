@@ -20,6 +20,7 @@ import XCTest
 /// - Hammerspoon 2.app must be built and available
 /// - hs2 binary must be built and available
 /// - Tests run sequentially to avoid port conflicts
+@MainActor
 class HS2CommandTests: XCTestCase {
 
     // MARK: - Properties
@@ -50,15 +51,18 @@ class HS2CommandTests: XCTestCase {
 
     // MARK: - Setup & Teardown
 
-    override func setUp() {
+    nonisolated override func setUp() {
         super.setUp()
 
         // Verify binaries exist
         let fm = FileManager.default
-        XCTAssertTrue(fm.fileExists(atPath: hammerspoonAppPath),
-                     "Hammerspoon 2.app not found at \(hammerspoonAppPath)")
-        XCTAssertTrue(fm.fileExists(atPath: hs2BinaryPath),
-                     "hs2 binary not found at \(hs2BinaryPath)")
+        let hammerspoonPath = hammerspoonAppPath
+        let hs2Path = hs2BinaryPath
+
+        XCTAssertTrue(fm.fileExists(atPath: hammerspoonPath),
+                     "Hammerspoon 2.app not found at \(hammerspoonPath)")
+        XCTAssertTrue(fm.fileExists(atPath: hs2Path),
+                     "hs2 binary not found at \(hs2Path)")
 
         // Kill any existing Hammerspoon processes
         killExistingHammerspoon()
@@ -70,7 +74,7 @@ class HS2CommandTests: XCTestCase {
         waitForHammerspoonReady()
     }
 
-    override func tearDown() {
+    nonisolated override func tearDown() {
         // Stop Hammerspoon
         stopHammerspoon()
         super.tearDown()
@@ -150,8 +154,8 @@ class HS2CommandTests: XCTestCase {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
-        var stdoutData = Data()
-        var stderrData = Data()
+        let stdoutData = NSMutableData()
+        let stderrData = NSMutableData()
 
         stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
             stdoutData.append(handle.availableData)
@@ -186,8 +190,8 @@ class HS2CommandTests: XCTestCase {
         stdoutPipe.fileHandleForReading.readabilityHandler = nil
         stderrPipe.fileHandleForReading.readabilityHandler = nil
 
-        let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
-        let stderr = String(data: stderrData, encoding: .utf8) ?? ""
+        let stdout = String(data: stdoutData as Data, encoding: .utf8) ?? ""
+        let stderr = String(data: stderrData as Data, encoding: .utf8) ?? ""
 
         return (stdout, stderr, process.terminationStatus)
     }
