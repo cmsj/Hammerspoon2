@@ -1666,6 +1666,120 @@
       "rawDocumentation": "Module for creating and managing system-wide hotkeys"
     },
     {
+      "name": "hs.osascript",
+      "methods": [
+        {
+          "name": "applescript",
+          "signature": "func applescript(_ source: String) -> JSPromise?",
+          "rawDocumentation": "Run an AppleScript source string.\n\n- Parameter source: The AppleScript source code to compile and execute.\n- Returns: A `Promise` resolving to `{ success, result, raw }`.",
+          "description": "Run an AppleScript source string.",
+          "params": [
+            {
+              "name": "source",
+              "type": "String",
+              "description": "The AppleScript source code to compile and execute."
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A `Promise` resolving to `{ success, result, raw }`."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 78
+        },
+        {
+          "name": "javascript",
+          "signature": "func javascript(_ source: String) -> JSPromise?",
+          "rawDocumentation": "Run an OSA JavaScript source string.\n\nOSA JavaScript is Apple's Open Scripting Architecture dialect of\nJavaScript, distinct from the JavaScriptCore engine that runs\nHammerspoon scripts themselves.\n\n- Parameter source: The OSA JavaScript source code to compile and execute.\n- Returns: A `Promise` resolving to `{ success, result, raw }`.",
+          "description": "Run an OSA JavaScript source string.\nOSA JavaScript is Apple's Open Scripting Architecture dialect of\nJavaScript, distinct from the JavaScriptCore engine that runs\nHammerspoon scripts themselves.",
+          "params": [
+            {
+              "name": "source",
+              "type": "String",
+              "description": "The OSA JavaScript source code to compile and execute."
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A `Promise` resolving to `{ success, result, raw }`."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 88
+        },
+        {
+          "name": "applescriptFromFile",
+          "signature": "func applescriptFromFile(_ path: String) -> JSPromise?",
+          "rawDocumentation": "Read a file from disk and execute its contents as AppleScript.\n\nThe file is read in the main process before being sent to the XPC\nhelper. If the file cannot be read the promise resolves immediately\nwith `{ success: false, result: null, raw: \"Failed to read file: <path>\" }`.\n\n- Parameter path: Absolute path to the AppleScript source file.\n- Returns: A `Promise` resolving to `{ success, result, raw }`.",
+          "description": "Read a file from disk and execute its contents as AppleScript.\nThe file is read in the main process before being sent to the XPC\nhelper. If the file cannot be read the promise resolves immediately\nwith `{ success: false, result: null, raw: \"Failed to read file: <path>\" }`.",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Absolute path to the AppleScript source file."
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A `Promise` resolving to `{ success, result, raw }`."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 98
+        },
+        {
+          "name": "javascriptFromFile",
+          "signature": "func javascriptFromFile(_ path: String) -> JSPromise?",
+          "rawDocumentation": "Read a file from disk and execute its contents as OSA JavaScript.\n\nThe file is read in the main process before being sent to the XPC\nhelper. If the file cannot be read the promise resolves immediately\nwith `{ success: false, result: null, raw: \"Failed to read file: <path>\" }`.\n\n- Parameter path: Absolute path to the OSA JavaScript source file.\n- Returns: A `Promise` resolving to `{ success, result, raw }`.",
+          "description": "Read a file from disk and execute its contents as OSA JavaScript.\nThe file is read in the main process before being sent to the XPC\nhelper. If the file cannot be read the promise resolves immediately\nwith `{ success: false, result: null, raw: \"Failed to read file: <path>\" }`.",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Absolute path to the OSA JavaScript source file."
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A `Promise` resolving to `{ success, result, raw }`."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 108
+        },
+        {
+          "name": "_execute",
+          "signature": "func _execute(_ source: String, _ language: String) -> JSPromise?",
+          "rawDocumentation": "Low-level execution entry point used by the higher-level helpers.\n\nPrefer `applescript()` or `javascript()` over calling this directly.\n\n- Parameters:\n  - source: The script source code.\n  - language: The OSA language name — must be `\"AppleScript\"` or `\"JavaScript\"`.\n- Returns: A `Promise` resolving to `{ success, result, raw }`.",
+          "description": "Low-level execution entry point used by the higher-level helpers.\nPrefer `applescript()` or `javascript()` over calling this directly.",
+          "params": [
+            {
+              "name": "source",
+              "type": "String",
+              "description": "The script source code."
+            },
+            {
+              "name": "language",
+              "type": "String",
+              "description": "The OSA language name — must be `\"AppleScript\"` or `\"JavaScript\"`."
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A `Promise` resolving to `{ success, result, raw }`."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 118
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Run AppleScript and OSA JavaScript from Hammerspoon scripts.\nScript execution is isolated in a separate XPC helper process\n(`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the\nhelper is affected — the main app remains stable and the next call\nreconnects automatically.\n## Return value\nEvery function returns a `Promise` that **always resolves** (never rejects)\n| Field | Type | Description |\n|-------|------|-------------|\n| `success` | `Boolean` | `true` if the script ran without error |\n| `result` | `any` | Parsed return value of the script, or `null` on failure |\n| `raw` | `String` | Raw string representation of the result, or the error message on failure |\nThe `result` field is typed based on what the script returned: strings,\nnumbers, booleans, lists, and records are all mapped to their JavaScript\nequivalents. `null` is used for AppleScript's `missing value` and for any\nfailure case.\n## Examples\n**Return a string:**\n```javascript\nhs.osascript.applescript('return \"hello\"')\n  .then(r => console.log(r.result));  // \"hello\"\n```\n**Return a number:**\n```javascript\nhs.osascript.applescript('return 42')\n  .then(r => console.log(r.result));  // 42\n```\n**Interact with an application:**\n```javascript\nhs.osascript.applescript('tell application \"Finder\" to get name of home')\n  .then(r => console.log(r.result));  // e.g. \"cmsj\"\n```\n**Handle errors (the Promise never rejects — check `success`):**\n```javascript\nhs.osascript.applescript('this is not valid')\n  .then(r => {\n    if (!r.success) console.log(\"Error:\", r.raw);\n  });\n```\n**OSA JavaScript:**\n```javascript\nhs.osascript.javascript('Application(\"Finder\").name()')\n  .then(r => console.log(r.result));  // \"Finder\"\n```\n**Run a script from a file:**\n```javascript\nhs.osascript.applescriptFromFile('/Users/me/scripts/notify.applescript')\n  .then(r => console.log(r.success));\n```",
+      "rawDocumentation": "Run AppleScript and OSA JavaScript from Hammerspoon scripts.\n\nScript execution is isolated in a separate XPC helper process\n(`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the\nhelper is affected — the main app remains stable and the next call\nreconnects automatically.\n\n## Return value\n\nEvery function returns a `Promise` that **always resolves** (never rejects)\nwith an object containing three fields:\n\n| Field | Type | Description |\n|-------|------|-------------|\n| `success` | `Boolean` | `true` if the script ran without error |\n| `result` | `any` | Parsed return value of the script, or `null` on failure |\n| `raw` | `String` | Raw string representation of the result, or the error message on failure |\n\nThe `result` field is typed based on what the script returned: strings,\nnumbers, booleans, lists, and records are all mapped to their JavaScript\nequivalents. `null` is used for AppleScript's `missing value` and for any\nfailure case.\n\n## Examples\n\n**Return a string:**\n```javascript\nhs.osascript.applescript('return \"hello\"')\n  .then(r => console.log(r.result));  // \"hello\"\n```\n\n**Return a number:**\n```javascript\nhs.osascript.applescript('return 42')\n  .then(r => console.log(r.result));  // 42\n```\n\n**Interact with an application:**\n```javascript\nhs.osascript.applescript('tell application \"Finder\" to get name of home')\n  .then(r => console.log(r.result));  // e.g. \"cmsj\"\n```\n\n**Handle errors (the Promise never rejects — check `success`):**\n```javascript\nhs.osascript.applescript('this is not valid')\n  .then(r => {\n    if (!r.success) console.log(\"Error:\", r.raw);\n  });\n```\n\n**OSA JavaScript:**\n```javascript\nhs.osascript.javascript('Application(\"Finder\").name()')\n  .then(r => console.log(r.result));  // \"Finder\"\n```\n\n**Run a script from a file:**\n```javascript\nhs.osascript.applescriptFromFile('/Users/me/scripts/notify.applescript')\n  .then(r => console.log(r.success));\n```"
+    },
+    {
       "name": "hs.permissions",
       "methods": [
         {
@@ -5160,5 +5274,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-03-01T12:02:13.582Z"
+  "generatedAt": "2026-03-02T22:47:03.686Z"
 }

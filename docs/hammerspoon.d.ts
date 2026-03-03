@@ -1090,6 +1090,106 @@ declare class HSHotkey {
 }
 
 /**
+ * Run AppleScript and OSA JavaScript from Hammerspoon scripts.
+Script execution is isolated in a separate XPC helper process
+(`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the
+helper is affected — the main app remains stable and the next call
+reconnects automatically.
+## Return value
+Every function returns a `Promise` that **always resolves** (never rejects)
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | `Boolean` | `true` if the script ran without error |
+| `result` | `any` | Parsed return value of the script, or `null` on failure |
+| `raw` | `String` | Raw string representation of the result, or the error message on failure |
+The `result` field is typed based on what the script returned: strings,
+numbers, booleans, lists, and records are all mapped to their JavaScript
+equivalents. `null` is used for AppleScript's `missing value` and for any
+failure case.
+## Examples
+**Return a string:**
+```javascript
+hs.osascript.applescript('return "hello"')
+  .then(r => console.log(r.result));  // "hello"
+```
+**Return a number:**
+```javascript
+hs.osascript.applescript('return 42')
+  .then(r => console.log(r.result));  // 42
+```
+**Interact with an application:**
+```javascript
+hs.osascript.applescript('tell application "Finder" to get name of home')
+  .then(r => console.log(r.result));  // e.g. "cmsj"
+```
+**Handle errors (the Promise never rejects — check `success`):**
+```javascript
+hs.osascript.applescript('this is not valid')
+  .then(r => {
+    if (!r.success) console.log("Error:", r.raw);
+  });
+```
+**OSA JavaScript:**
+```javascript
+hs.osascript.javascript('Application("Finder").name()')
+  .then(r => console.log(r.result));  // "Finder"
+```
+**Run a script from a file:**
+```javascript
+hs.osascript.applescriptFromFile('/Users/me/scripts/notify.applescript')
+  .then(r => console.log(r.success));
+```
+ */
+declare namespace hs.osascript {
+    /**
+     * Run an AppleScript source string.
+     * @param source The AppleScript source code to compile and execute.
+     * @returns A `Promise` resolving to `{ success, result, raw }`.
+     */
+    function applescript(source: string): Promise<any>;
+
+    /**
+     * Run an OSA JavaScript source string.
+OSA JavaScript is Apple's Open Scripting Architecture dialect of
+JavaScript, distinct from the JavaScriptCore engine that runs
+Hammerspoon scripts themselves.
+     * @param source The OSA JavaScript source code to compile and execute.
+     * @returns A `Promise` resolving to `{ success, result, raw }`.
+     */
+    function javascript(source: string): Promise<any>;
+
+    /**
+     * Read a file from disk and execute its contents as AppleScript.
+The file is read in the main process before being sent to the XPC
+helper. If the file cannot be read the promise resolves immediately
+with `{ success: false, result: null, raw: "Failed to read file: <path>" }`.
+     * @param path Absolute path to the AppleScript source file.
+     * @returns A `Promise` resolving to `{ success, result, raw }`.
+     */
+    function applescriptFromFile(path: string): Promise<any>;
+
+    /**
+     * Read a file from disk and execute its contents as OSA JavaScript.
+The file is read in the main process before being sent to the XPC
+helper. If the file cannot be read the promise resolves immediately
+with `{ success: false, result: null, raw: "Failed to read file: <path>" }`.
+     * @param path Absolute path to the OSA JavaScript source file.
+     * @returns A `Promise` resolving to `{ success, result, raw }`.
+     */
+    function javascriptFromFile(path: string): Promise<any>;
+
+    /**
+     * Low-level execution entry point used by the higher-level helpers.
+Prefer `applescript()` or `javascript()` over calling this directly.
+     * @param source The script source code.
+     * @param language The OSA language name — must be `"AppleScript"` or `"JavaScript"`.
+     * @returns A `Promise` resolving to `{ success, result, raw }`.
+     */
+    function _execute(source: string, language: string): Promise<any>;
+
+}
+
+/**
  * Module for checking and requesting system permissions
  */
 declare namespace hs.permissions {
