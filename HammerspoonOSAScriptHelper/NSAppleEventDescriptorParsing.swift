@@ -13,27 +13,27 @@ import Foundation
 // Four-char-code constants used below (avoiding a Carbon import).
 // Each constant is the big-endian byte sequence of its four-character tag.
 // ---------------------------------------------------------------------------
-private let kTypeUnicodeText:             DescType = 0x75747874  // 'utxt'
-private let kTypeUTF8Text:                DescType = 0x75746638  // 'utf8'
-private let kTypeTrue:                    DescType = 0x74727565  // 'true'
-private let kTypeFalse:                   DescType = 0x66616C73  // 'fals'
-private let kTypeBoolean:                 DescType = 0x626F6F6C  // 'bool'
-private let kTypeSInt16:                  DescType = 0x73686F72  // 'shor'
-private let kTypeSInt32:                  DescType = 0x6C6F6E67  // 'long'
-private let kTypeSInt64:                  DescType = 0x636F6D70  // 'comp'
-private let kTypeIEEE64BitFloatingPoint:  DescType = 0x646F7562  // 'doub'
-private let kTypeAEList:                  DescType = 0x6C697374  // 'list'
-private let kTypeAERecord:                DescType = 0x7265636F  // 'reco'
-private let kTypeNull:                    DescType = 0x6E756C6C  // 'null'
-private let kTypeType:                    DescType = 0x74797065  // 'type'
-private let kKeywordUsrf:                 AEKeyword = 0x75737266 // 'usrf'
+nonisolated private let kTypeUnicodeText:             DescType = 0x75747874  // 'utxt'
+nonisolated private let kTypeUTF8Text:                DescType = 0x75746638  // 'utf8'
+nonisolated private let kTypeTrue:                    DescType = 0x74727565  // 'true'
+nonisolated private let kTypeFalse:                   DescType = 0x66616C73  // 'fals'
+nonisolated private let kTypeBoolean:                 DescType = 0x626F6F6C  // 'bool'
+nonisolated private let kTypeSInt16:                  DescType = 0x73686F72  // 'shor'
+nonisolated private let kTypeSInt32:                  DescType = 0x6C6F6E67  // 'long'
+nonisolated private let kTypeSInt64:                  DescType = 0x636F6D70  // 'comp'
+nonisolated private let kTypeIEEE64BitFloatingPoint:  DescType = 0x646F7562  // 'doub'
+nonisolated private let kTypeAEList:                  DescType = 0x6C697374  // 'list'
+nonisolated private let kTypeAERecord:                DescType = 0x7265636F  // 'reco'
+nonisolated private let kTypeNull:                    DescType = 0x6E756C6C  // 'null'
+nonisolated private let kTypeType:                    DescType = 0x74797065  // 'type'
+nonisolated private let kKeywordUsrf:                 AEKeyword = 0x75737266 // 'usrf'
 
 extension NSAppleEventDescriptor {
 
     /// Recursively converts an `NSAppleEventDescriptor` into a value that
     /// `JSONSerialization` can handle: `String`, `Bool`, `NSNumber`, `[Any]`,
     /// `[String: Any]`, or `NSNull`.
-    func toJSONCompatibleObject() -> Any {
+    nonisolated func toJSONCompatibleObject() -> Any {
         switch descriptorType {
 
         // ── Strings ──────────────────────────────────────────────────────────

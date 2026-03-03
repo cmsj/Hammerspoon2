@@ -6,34 +6,74 @@
 //
 
 import Foundation
+import OSAKit
 
-class ServiceDelegate: NSObject, NSXPCListenerDelegate {
-    
-    /// This method is where the NSXPCListener configures, accepts, and resumes a new incoming NSXPCConnection.
-    func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
-        
-        // Configure the connection.
-        // First, set the interface that the exported object implements.
-        newConnection.exportedInterface = NSXPCInterface(with: HSOSAScriptServiceProtocol.self)
+nonisolated func errorMessage(from dict: NSDictionary?, fallback: String) -> String {
+    guard let dict else { return fallback }
+    // OSA/AppleScript error dicts use various keys depending on the engine.
+    return (dict[NSLocalizedDescriptionKey] as? String)
+    ?? (dict["NSAppleScriptErrorMessage"] as? String)
+    ?? (dict["OSAScriptErrorMessage"] as? String)
+    ?? (dict.description)
+}
 
-        // Next, set the object that the connection exports. All messages sent on the connection to this service will be sent to the exported object to handle. The connection retains the exported object.
-        let exportedObject = HSOSAScriptXPCService()
-        newConnection.exportedObject = exportedObject
-        
-        // Resuming the connection allows the system to deliver more incoming messages.
-        newConnection.resume()
-        
-        // Returning true from this method tells the system that you have accepted this connection. If you want to reject the connection for some reason, call invalidate() on the connection and return false.
-        return true
+let serviceName = "net.tenshu.Hammerspoon-2.HammerspoonOSAScriptHelper"
+
+let listener = try XPCListener(service: serviceName, requirement: .isFromSameTeam()) { request in
+    request.accept { message in
+        // First, check that we can decode the incoming message to the expected HSOSARequest type
+        guard let request = try? message.decode(as: HSOSARequest.self) else {
+            return HSOSAResponse(success: false,
+                                 rawMessage: "Unable to decode request",
+                                 jsonMessage: nil)
+        }
+
+        // Second, figure out which language the user asked us to run
+        guard let osaLanguage = OSALanguage(forName: request.language) else {
+            return HSOSAResponse(success: false,
+                                 rawMessage: "Unknown language: \(request.language)",
+                                 jsonMessage: nil)
+        }
+
+        // Third, compile the supplied script
+        let script = OSAScript(source: request.source, language: osaLanguage)
+        var compileError: NSDictionary? = nil
+        guard script.compileAndReturnError(&compileError) else {
+            return HSOSAResponse(success: false,
+                                 rawMessage: errorMessage(from: compileError, fallback: "Compilation failed"),
+                                 jsonMessage: nil)
+        }
+
+        // Fourth, execute the supplied script
+        var execError: NSDictionary? = nil
+        guard let result = script.executeAndReturnError(&execError) else {
+            return HSOSAResponse(success: false,
+                                 rawMessage: errorMessage(from: execError, fallback: "Execution failed"),
+                                 jsonMessage: nil)
+        }
+
+        // Finally, attempt to convert the response into a dictionary of foundation objects
+        // and encode that to JSON
+        let rawString  = result.stringValue ?? ""
+        let jsonObject = result.toJSONCompatibleObject()
+
+        do {
+            let jsonData   = try JSONSerialization.data(
+                withJSONObject: jsonObject, options: [.fragmentsAllowed])
+            let jsonString = String(data: jsonData, encoding: .utf8)
+            return HSOSAResponse(success: true, rawMessage: rawString, jsonMessage: jsonString)
+        } catch {
+            // Serialisation failed (unexpected); fall back to JSON-encoded raw string.
+            if let fallbackData = try? JSONSerialization.data(
+                withJSONObject: rawString, options: [.fragmentsAllowed]),
+               let fallbackString = String(data: fallbackData, encoding: .utf8) {
+                return HSOSAResponse(success: true, rawMessage: rawString, jsonMessage: fallbackString)
+            } else {
+                // Extremely unlikely: as a last resort, return an empty JSON string.
+                return HSOSAResponse(success: true, rawMessage: rawString, jsonMessage: "\"\"")
+            }
+        }
     }
 }
 
-// Create the delegate for the service.
-let delegate = ServiceDelegate()
-
-// Set up the one NSXPCListener for this service. It will handle all incoming connections.
-let listener = NSXPCListener.service()
-listener.delegate = delegate
-
-// Resuming the serviceListener starts this service. This method does not return.
-listener.resume()
+dispatchMain()

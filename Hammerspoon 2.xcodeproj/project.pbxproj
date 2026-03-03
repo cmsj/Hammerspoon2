@@ -82,6 +82,13 @@
 			);
 			target = 4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */;
 		};
+		4F947DAD2F5703D300DD814E /* Exceptions for "HammerspoonOSAScriptHelper" folder in "Hammerspoon 2" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				HSOSAScriptTypes.swift,
+			);
+			target = 4F5641822E8333830099EB4C /* Hammerspoon 2 */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -101,6 +108,7 @@
 		4F947D882F563FCF00DD814E /* HammerspoonOSAScriptHelper */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				4F947DAD2F5703D300DD814E /* Exceptions for "HammerspoonOSAScriptHelper" folder in "Hammerspoon 2" target */,
 				4F947DA72F5640D100DD814E /* Exceptions for "HammerspoonOSAScriptHelper" folder in "HammerspoonOSAScriptHelper" target */,
 			);
 			path = HammerspoonOSAScriptHelper;
@@ -545,7 +553,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.2;
 				OTHER_DOCC_FLAGS = "--source-service github --source-service-base-url https://github.com/hammerspoon/Hammerspoon2/blob/main --checkout-path \"$PROJECT_DIR\"";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2";
@@ -594,7 +602,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.2;
 				OTHER_DOCC_FLAGS = "--source-service github --source-service-base-url https://github.com/hammerspoon/Hammerspoon2/blob/main --checkout-path \"$PROJECT_DIR\"";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2";
