@@ -10,7 +10,6 @@ import JavaScriptCore
 
 /// Run AppleScript and OSA JavaScript from Hammerspoon scripts.
 ///
-/// **WARNING**: hs.osascript is UNSAFE to use on
 /// Script execution is isolated in a separate XPC helper process
 /// (`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the
 /// helper is affected — the main app remains stable and the next call
