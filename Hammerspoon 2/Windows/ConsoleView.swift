@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 @_documentation(visibility: private)
 struct ConsoleView: View {
@@ -15,15 +17,27 @@ struct ConsoleView: View {
     @State var evalHistory: [String] = []
     @State var evalIndex: Int = -1
 
-    @State var selectedRows = Set<HammerspoonLogEntry.ID>()
     @State var searchString: String = ""
     @State var searchPresented: Bool = false
+
+    @State var saveError: String?
+    @State var showSaveError: Bool = false
 
     @Environment(\.dismissWindow) var dismissWindow
 
     @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Trace
 
-    func styleForLogType(_ logType: HammerspoonLogType) -> any ShapeStyle {
+    private func formatEntry(_ entry: HammerspoonLogEntry) -> String {
+        let date = entry.date.formatted(
+            .verbatim(
+                "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
+                locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
+            )
+        )
+        return "\(date) - \(entry.logType.asString): \(entry.msg)"
+    }
+
+    private func colorForLogType(_ logType: HammerspoonLogType) -> Color {
         switch logType {
         case .Error: return .red
         case .Warning: return .orange
@@ -35,34 +49,41 @@ struct ConsoleView: View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading) {
-                        ForEach(logs.entries.filter {
-                            if $0.logType.rawValue < minimumLogLevel.rawValue { return false }
-                            if searchString == "" {
-                                return true
-                            } else {
-                                return $0.msg.contains(searchString)
-                            }
-                        }) { entry in
-                            let date = entry.date.formatted(
-                                .verbatim(
-                                    "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
-                                    locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
-                                )
-                            )
-                            Text("\(date) - \(entry.logType.asString): \(entry.msg)")
-                                .id(entry.id)
-                                .multilineTextAlignment(.leading)
-                                .fontDesign(.monospaced)
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    let filteredEntries = logs.entries.filter {
+                        if $0.logType.rawValue < minimumLogLevel.rawValue { return false }
+                        if searchString == "" {
+                            return true
+                        } else {
+                            return $0.msg.contains(searchString)
                         }
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity)
+
+                    let logText: AttributedString = {
+                        var result = AttributedString()
+                        for (index, entry) in filteredEntries.enumerated() {
+                            var part = AttributedString(formatEntry(entry))
+                            part.foregroundColor = colorForLogType(entry.logType)
+                            result.append(part)
+                            if index < filteredEntries.count - 1 {
+                                result.append(AttributedString("\n"))
+                            }
+                        }
+                        return result
+                    }()
+
+                    Text(logText)
+                        .multilineTextAlignment(.leading)
+                        .fontDesign(.monospaced)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+
+                    Color.clear
+                        .frame(height: 0)
+                        .id("logBottom")
                 }
                 .onChange(of: logs.entries) {
-                    proxy.scrollTo(logs.entries.last?.id)
+                    proxy.scrollTo("logBottom", anchor: .bottom)
                 }
             }
 
@@ -99,6 +120,9 @@ struct ConsoleView: View {
                     return .handled
                 })
                 .onSubmit {
+                    // Echo the command
+                    AKInfo("> \(evalString)")
+
                     evalHistory.append(evalString)
                     evalIndex = -1
                     if let result = JSEngine.shared.eval(evalString) {
@@ -122,11 +146,38 @@ struct ConsoleView: View {
                     }
                 }
             }
+            ToolbarItem(id: "saveLogs") {
+                Button("Save to File") {
+                    let savePanel = NSSavePanel()
+                    savePanel.allowedContentTypes = [.plainText]
+                    savePanel.nameFieldStringValue = "hammerspoon-console-\(Date().timeIntervalSince1970).txt"
+                    savePanel.begin { response in
+                        if response == .OK, let url = savePanel.url {
+                            let logText = logs.entries
+                                .filter { $0.logType.rawValue >= minimumLogLevel.rawValue }
+                                .map { formatEntry($0) }
+                                .joined(separator: "\n")
+
+                            do {
+                                try logText.write(to: url, atomically: true, encoding: .utf8)
+                            } catch {
+                                saveError = error.localizedDescription
+                                showSaveError = true
+                            }
+                        }
+                    }
+                }
+            }
             ToolbarItem(id: "clearLogs") {
                 Button("Clear Logs") {
                     HammerspoonLog.shared.clearLog()
                 }
             }
+        }
+        .alert("Save Failed", isPresented: $showSaveError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(saveError ?? "Unknown error")
         }
         .searchable(text: $searchString, isPresented: $searchPresented)
         .handlesExternalEvents(preferring: ["closeConsole"], allowing: [])
