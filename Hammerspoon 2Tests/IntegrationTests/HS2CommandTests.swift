@@ -153,17 +153,6 @@ nonisolated class HS2CommandTests: XCTestCase {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
-        nonisolated(unsafe) let stdoutData = NSMutableData()
-        nonisolated(unsafe) let stderrData = NSMutableData()
-
-        stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
-            stdoutData.append(handle.availableData)
-        }
-
-        stderrPipe.fileHandleForReading.readabilityHandler = { handle in
-            stderrData.append(handle.availableData)
-        }
-
         do {
             try process.run()
 
@@ -186,11 +175,12 @@ nonisolated class HS2CommandTests: XCTestCase {
             XCTFail("Failed to run hs2 command: \(error)")
         }
 
-        stdoutPipe.fileHandleForReading.readabilityHandler = nil
-        stderrPipe.fileHandleForReading.readabilityHandler = nil
+        // Read pipe data synchronously after process exits to avoid data races
+        let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
 
-        let stdout = String(data: stdoutData as Data, encoding: .utf8) ?? ""
-        let stderr = String(data: stderrData as Data, encoding: .utf8) ?? ""
+        let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
+        let stderr = String(data: stderrData, encoding: .utf8) ?? ""
 
         return (stdout, stderr, process.terminationStatus)
     }
@@ -469,7 +459,7 @@ nonisolated class HS2CommandTests: XCTestCase {
         for i in 1...5 {
             queue.async {
                 let output = self.evalCode("print('Concurrent \(i)')")
-                XCTAssertTrue(output.contains("Concurrent"), "Concurrent command \(i) should succeed")
+                XCTAssertTrue(output.contains("Concurrent \(i)"), "Concurrent command \(i) should succeed")
                 expectation.fulfill()
             }
         }
@@ -515,28 +505,36 @@ nonisolated class HS2CommandTests: XCTestCase {
     // MARK: - Interactive Mode Tests (Limited)
 
     func testInteractiveModeDetection() {
-        // Note: Full interactive testing is difficult in automated tests
-        // This just verifies the flag is recognized
-        // We can't easily test the REPL loop without manual interaction
-
-        // Test that -i flag is accepted (will timeout but that's expected)
+        // Verify -i flag is accepted and the process starts (it will block on readline)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: hs2BinaryPath)
-        process.arguments = ["-i", "-c", "print('test')"]
+        process.arguments = ["-i"]
 
+        let stdinPipe = Pipe()
         let stdoutPipe = Pipe()
+        process.standardInput = stdinPipe
         process.standardOutput = stdoutPipe
-        process.standardInput = Pipe() // Provide stdin to prevent hanging
+        process.standardError = Pipe()
 
         try? process.run()
+        // Give it a moment to start, then close stdin to make it exit
         Thread.sleep(forTimeInterval: 0.5)
+        try? stdinPipe.fileHandleForWriting.close()
 
+        let deadline = Date().addingTimeInterval(3.0)
+        while process.isRunning && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.1)
+        }
         if process.isRunning {
             process.terminate()
         }
+        process.waitUntilExit()
 
-        // Just verify it attempted to start
-        XCTAssertTrue(true, "Interactive mode flag is recognized")
+        let outputData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: outputData, encoding: .utf8) ?? ""
+
+        // The REPL banner should be printed
+        XCTAssertTrue(output.contains("REPL"), "Interactive mode should print REPL banner")
     }
 
     // MARK: - Performance Tests

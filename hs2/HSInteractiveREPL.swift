@@ -101,7 +101,9 @@ class HSInteractiveREPL {
 
         // Query Hammerspoon for completions
         if let client = HSInteractiveREPL.completionClient {
-            let query = "JSON.stringify(hs.completionsForInputString('\(inputText)'))"
+            let escaped = inputText.replacingOccurrences(of: "\\", with: "\\\\")
+                                   .replacingOccurrences(of: "'", with: "\\'")
+            let query = "JSON.stringify(hs.completionsForInputString('\(escaped)'))"
             let message = "\(client.localName)\0\(query)"
 
             if let responseData = client.sendToRemote(message, msgID: MSGID_QUERY, wantResponse: true),
