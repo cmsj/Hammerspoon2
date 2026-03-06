@@ -1,6 +1,12 @@
 # OS X artifacts
 .DS_Store
 
+# Claude Code local settings
+.claude/settings.local.json
+
+# Profiling artifacts
+*.profraw
+
 # Editor cruft
 *.swp
 
