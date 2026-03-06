@@ -68,6 +68,7 @@ final class HammerspoonLog: Sendable {
     static let shared = HammerspoonLog()
 
     var entries: [HammerspoonLogEntry] = []
+    var evalHistory: [String] = []
 
     func log(_ level: HammerspoonLogType, _ msg: String) {
         entries.append(HammerspoonLogEntry(logType: level, msg: msg))
