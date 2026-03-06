@@ -20,8 +20,7 @@ import XCTest
 /// - Hammerspoon 2.app must be built and available
 /// - hs2 binary must be built and available
 /// - Tests run sequentially to avoid port conflicts
-@MainActor
-class HS2CommandTests: XCTestCase {
+nonisolated class HS2CommandTests: XCTestCase {
 
     // MARK: - Properties
 
@@ -51,7 +50,7 @@ class HS2CommandTests: XCTestCase {
 
     // MARK: - Setup & Teardown
 
-    nonisolated override func setUp() {
+    override func setUp() {
         super.setUp()
 
         // Verify binaries exist
@@ -74,7 +73,7 @@ class HS2CommandTests: XCTestCase {
         waitForHammerspoonReady()
     }
 
-    nonisolated override func tearDown() {
+    override func tearDown() {
         // Stop Hammerspoon
         stopHammerspoon()
         super.tearDown()
@@ -154,8 +153,8 @@ class HS2CommandTests: XCTestCase {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
-        let stdoutData = NSMutableData()
-        let stderrData = NSMutableData()
+        nonisolated(unsafe) let stdoutData = NSMutableData()
+        nonisolated(unsafe) let stderrData = NSMutableData()
 
         stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
             stdoutData.append(handle.availableData)
