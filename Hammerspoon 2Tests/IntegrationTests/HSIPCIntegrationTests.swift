@@ -184,4 +184,53 @@ class HSIPCIntegrationTests: XCTestCase {
             XCTFail("completionsForInputString should return an array")
         }
     }
+
+    // MARK: - Port Deletion Tests
+
+    func testPortDeletion() {
+        let portName = "TestPort_\(UUID().uuidString)"
+        let code = """
+        var testPort = hs.ipc.localPort("\(portName)", function(port, msgID, data) {
+            return "response";
+        });
+        testPort.delete();
+        testPort.isValid;
+        """
+
+        let result = harness.eval(code)
+        XCTAssertEqual(result as? Bool, false, "Port should be invalid after delete()")
+    }
+
+    // MARK: - CLI Symlink Target Tests
+
+    func testCLIInstallSymlinkTargets() {
+        let tempDir = NSTemporaryDirectory() + "hs2test_\(UUID().uuidString)"
+
+        // Install
+        let installResult = harness.eval("hs.ipc.cliInstall('\(tempDir)', true)")
+        XCTAssertEqual(installResult as? Bool, true, "CLI installation should succeed")
+
+        let fm = FileManager.default
+        let binPath = (tempDir as NSString).appendingPathComponent("bin/hs2")
+        let manPath = (tempDir as NSString).appendingPathComponent("share/man/man1/hs2.1")
+
+        // Verify symlinks point to locations inside the app bundle
+        if let binTarget = try? fm.destinationOfSymbolicLink(atPath: binPath) {
+            XCTAssertTrue(binTarget.contains("Hammerspoon"), "Binary symlink should point into app bundle")
+            XCTAssertTrue(binTarget.hasSuffix("hs2"), "Binary symlink should point to hs2 binary")
+        } else {
+            XCTFail("Binary symlink should be readable")
+        }
+
+        if let manTarget = try? fm.destinationOfSymbolicLink(atPath: manPath) {
+            XCTAssertTrue(manTarget.contains("Hammerspoon"), "Man page symlink should point into app bundle")
+            XCTAssertTrue(manTarget.hasSuffix("hs2.1"), "Man page symlink should point to hs2.1")
+        } else {
+            XCTFail("Man page symlink should be readable")
+        }
+
+        // Cleanup
+        _ = harness.eval("hs.ipc.cliUninstall('\(tempDir)', true)")
+        try? fm.removeItem(atPath: tempDir)
+    }
 }

@@ -34,6 +34,9 @@ import JavaScriptCore
 
     var name = "hs.ipc"
 
+    /// Weak references to all created ports for cleanup on shutdown
+    private let activePorts = NSHashTable<HSMessagePort>.weakObjects()
+
     required override init() {
         super.init()
         AKTrace("IPC Module initialized")
@@ -41,16 +44,16 @@ import JavaScriptCore
 
     func shutdown() {
         AKTrace("IPC Module shutting down")
-        // Note: Individual ports handle their own cleanup via delete()
-        // The default port is managed by JavaScript layer
+        for port in activePorts.allObjects {
+            port.delete()
+        }
+        activePorts.removeAllObjects()
     }
 
     // MARK: - Message Port API
 
     /// Create a local (server) message port
     @objc func localPort(_ name: String, _ callback: JSValue) -> HSMessagePort? {
-        AKInfo("localPort called: name=\(name), callback.isObject=\(callback.isObject)")
-
         guard callback.isObject else {
             AKError("localPort: callback must be a function")
             return nil
@@ -58,16 +61,18 @@ import JavaScriptCore
 
         let port = HSMessagePort(localPortName: name, callback: callback)
         if let port = port {
-            AKInfo("localPort returning port: name=\(port.name), isValid=\(port.isValid)")
-        } else {
-            AKError("localPort: HSMessagePort init returned nil")
+            activePorts.add(port)
         }
         return port
     }
 
     /// Create a remote (client) message port
     @objc func remotePort(_ name: String) -> HSMessagePort? {
-        return HSMessagePort(remotePortName: name)
+        let port = HSMessagePort(remotePortName: name)
+        if let port = port {
+            activePorts.add(port)
+        }
+        return port
     }
 
     // MARK: - CLI Installation API

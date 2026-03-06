@@ -20,7 +20,11 @@ let MSGID_RETURN: Int32 = 2
 let MSGID_CONSOLE: Int32 = 3
 
 /// IPC client managing communication with Hammerspoon 2
-class HSClient: Thread {
+///
+/// Uses a dedicated thread for the CFRunLoop required by CFMessagePort.
+/// Synchronization between the main thread and the run loop thread uses
+/// DispatchSemaphore for proper signaling instead of polling.
+class HSClient {
     // MARK: - Properties
 
     let remoteName: String
@@ -32,18 +36,39 @@ class HSClient: Thread {
     let consoleMirroring: Bool
     let customArgs: [String]
 
-    var exitCode: Int32 = 0
-    var isDone: Bool = false
+    // Thread-safe state via lock
+    private let lock = NSLock()
+    private var _exitCode: Int32 = 0
+
+    var exitCode: Int32 {
+        lock.lock()
+        defer { lock.unlock() }
+        return _exitCode
+    }
+
+    private func setExitCode(_ code: Int32) {
+        lock.lock()
+        _exitCode = code
+        lock.unlock()
+    }
 
     private var localPort: CFMessagePort?
     private var remotePort: CFMessagePort?
     private var runLoop: CFRunLoop?
+    private var runLoopThread: Thread?
+
+    /// Signaled when the run loop thread has initialized (or failed)
+    private let readySemaphore = DispatchSemaphore(value: 0)
+    /// Signaled when the run loop thread has exited
+    private let doneSemaphore = DispatchSemaphore(value: 0)
+    /// Set to true if initialization succeeded
+    private var initSucceeded = false
 
     // ANSI color codes
     private let colorReset = "\u{001B}[0m"
     private let colorBanner = "\u{001B}[1;34m"  // Bright blue
     private let colorInput = "\u{001B}[32m"     // Green
-    private let colorOutput = "\u{001B}[0m"     // Default
+    private let colorOutput = "\u{001B}[37m"    // White
     private let colorError = "\u{001B}[31m"     // Red
 
     // MARK: - Initialization
@@ -57,19 +82,41 @@ class HSClient: Thread {
         self.quietMode = quietMode
         self.consoleMirroring = consoleMirroring
         self.customArgs = customArgs
-
-        super.init()
     }
 
-    // MARK: - Thread Main
+    // MARK: - Lifecycle
 
-    override func main() {
+    /// Start the client and wait for initialization to complete.
+    /// Returns true if initialization succeeded.
+    @discardableResult
+    func start() -> Bool {
+        let thread = Thread { [weak self] in
+            self?.runLoopMain()
+        }
+        thread.name = "hs2-ipc-client"
+        runLoopThread = thread
+        thread.start()
+
+        // Wait for initialization (with timeout)
+        _ = readySemaphore.wait(timeout: .now() + sendTimeout)
+        return initSucceeded
+    }
+
+    /// Wait for the run loop thread to finish.
+    func waitForCompletion(timeout: TimeInterval) {
+        _ = doneSemaphore.wait(timeout: .now() + timeout)
+    }
+
+    // MARK: - Run Loop Thread
+
+    private func runLoopMain() {
         autoreleasepool {
             // Create remote port
             guard let remote = CFMessagePortCreateRemote(nil, remoteName as CFString) else {
                 fputs("Error: Could not connect to Hammerspoon 2 (port '\(remoteName)' not found)\n", stderr)
-                exitCode = EX_UNAVAILABLE
-                isDone = true
+                setExitCode(EX_UNAVAILABLE)
+                readySemaphore.signal()
+                doneSemaphore.signal()
                 return
             }
             self.remotePort = remote
@@ -94,8 +141,9 @@ class HSClient: Thread {
                 &shouldFreeInfo
             ) else {
                 fputs("Error: Could not create local message port\n", stderr)
-                exitCode = EX_UNAVAILABLE
-                isDone = true
+                setExitCode(EX_UNAVAILABLE)
+                readySemaphore.signal()
+                doneSemaphore.signal()
                 return
             }
             self.localPort = local
@@ -108,12 +156,17 @@ class HSClient: Thread {
 
             // Register with remote
             if !registerWithRemote() {
-                exitCode = EX_UNAVAILABLE
-                isDone = true
+                setExitCode(EX_UNAVAILABLE)
+                readySemaphore.signal()
+                doneSemaphore.signal()
                 return
             }
 
-            // Run event loop
+            // Signal that initialization succeeded
+            initSucceeded = true
+            readySemaphore.signal()
+
+            // Run event loop (blocks until stopped)
             CFRunLoopRun()
 
             // Cleanup
@@ -124,7 +177,7 @@ class HSClient: Thread {
                 CFMessagePortInvalidate(remote)
             }
 
-            isDone = true
+            doneSemaphore.signal()
         }
     }
 
@@ -167,40 +220,29 @@ class HSClient: Thread {
     // MARK: - Command Execution
 
     func executeCommand(_ command: String) -> Bool {
-        fputs("DEBUG: executeCommand called with: '\(command)'\n", stderr)
-        fflush(stderr)
-
         let message = "\(localName)\0\(command)"
-        fputs("DEBUG: Sending COMMAND message, msgID=\(MSGID_COMMAND)\n", stderr)
-        fflush(stderr)
 
         guard let responseData = sendToRemote(message, msgID: MSGID_COMMAND, wantResponse: true) else {
-            fputs("DEBUG: sendToRemote returned nil\n", stderr)
-            fflush(stderr)
-            exitCode = EX_UNAVAILABLE
+            setExitCode(EX_UNAVAILABLE)
             return false
         }
-
-        fputs("DEBUG: Got response data, length=\(CFDataGetLength(responseData))\n", stderr)
-        fflush(stderr)
 
         guard let response = String(data: responseData as Data, encoding: .utf8),
               response.trimmingCharacters(in: .whitespacesAndNewlines) == "ok" else {
-            fputs("DEBUG: Response was not 'ok'\n", stderr)
-            fflush(stderr)
-            exitCode = EX_DATAERR
+            setExitCode(EX_DATAERR)
             return false
         }
 
-        fputs("DEBUG: executeCommand succeeded\n", stderr)
-        fflush(stderr)
         return true
     }
 
     // MARK: - Message Sending
 
     func sendToRemote(_ message: String, msgID: Int32, wantResponse: Bool) -> CFData? {
-        guard let remote = remotePort else { return nil }
+        guard let remote = remotePort else {
+            fputs("Error: No remote port connection\n", stderr)
+            return nil
+        }
 
         guard let messageData = message.data(using: .utf8) else { return nil }
         let cfData = messageData as CFData
@@ -233,6 +275,7 @@ class HSClient: Thread {
         }
 
         if result != kCFMessagePortSuccess {
+            fputs("Error: CFMessagePortSendRequest failed with code \(result)\n", stderr)
             return nil
         }
 
@@ -247,42 +290,23 @@ class HSClient: Thread {
         _ data: CFData?,
         _ info: UnsafeMutableRawPointer?
     ) -> Unmanaged<CFData>? {
-        guard let info = info else {
-            fputs("DEBUG: callback - no info\n", stderr)
-            return nil
-        }
+        guard let info = info else { return nil }
         let client = Unmanaged<HSClient>.fromOpaque(info).takeUnretainedValue()
 
-        guard let data = data else {
-            fputs("DEBUG: callback - no data\n", stderr)
-            return nil
-        }
+        guard let data = data else { return nil }
         let nsData = data as Data
 
-        guard let message = String(data: nsData, encoding: .utf8) else {
-            fputs("DEBUG: callback - invalid UTF8\n", stderr)
-            return nil
-        }
-
-        fputs("DEBUG: callback - msgID=\(msgID), message='\(message)'\n", stderr)
-        fflush(stderr)
+        guard let message = String(data: nsData, encoding: .utf8) else { return nil }
 
         // Route based on message ID
         switch msgID {
         case MSGID_OUTPUT, MSGID_RETURN, MSGID_CONSOLE:
-            fputs("DEBUG: Processing OUTPUT/RETURN/CONSOLE message\n", stderr)
-            fflush(stderr)
             // Output to stdout
             if !client.quietMode {
-                fputs("DEBUG: Not quiet mode, outputting to stdout\n", stderr)
-                fflush(stderr)
                 let color = client.useColors ? client.colorOutput : ""
                 let reset = client.useColors ? client.colorReset : ""
                 print("\(color)\(message)\(reset)", terminator: "")
                 fflush(stdout)
-            } else {
-                fputs("DEBUG: Quiet mode enabled\n", stderr)
-                fflush(stderr)
             }
 
         case MSGID_ERROR:
@@ -327,7 +351,6 @@ class HSClient: Thread {
 
     func stopRunLoopAfterDelay(_ delay: TimeInterval) {
         if let runLoop = runLoop {
-            // Schedule a timer on the client thread's run loop to stop it after delay
             let timer = CFRunLoopTimerCreateWithHandler(nil, CFAbsoluteTimeGetCurrent() + delay, 0, 0, 0) { _ in
                 CFRunLoopStop(runLoop)
             }

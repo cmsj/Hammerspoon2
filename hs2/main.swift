@@ -28,7 +28,7 @@ var remoteName = "Hammerspoon2"
 var customArgs: [String] = []
 var useColors: Bool? = nil
 var quietMode = false
-var consoleMirroring = true
+var consoleMirroring = false
 var timeout: TimeInterval = 4.0
 
 // Parse arguments
@@ -114,7 +114,7 @@ while i < CommandLine.arguments.count {
               -i              Interactive REPL mode
               -s              Read commands from stdin
               -c <code>       Execute code string
-              -m <name>       Remote port name (default: hammerspoon)
+              -m <name>       Remote port name (default: Hammerspoon2)
               -n              Disable colored output
               -N              Force colored output
               -C              Enable console mirroring
@@ -176,43 +176,10 @@ func isHammerspoonRunning() -> Bool {
     return runningApps.contains { $0.bundleIdentifier == bundleID }
 }
 
-func launchHammerspoon() -> Bool {
-    let alert = NSAlert()
-    alert.messageText = "Hammerspoon 2 Not Running"
-    alert.informativeText = "hs2 requires Hammerspoon 2 to be running. Launch it now?"
-    alert.addButton(withTitle: "Launch")
-    alert.addButton(withTitle: "Cancel")
-    alert.alertStyle = .informational
-
-    let response = alert.runModal()
-
-    if response == .alertFirstButtonReturn {
-        // Launch Hammerspoon 2
-        let launched = NSWorkspace.shared.launchApplication(
-            withBundleIdentifier: bundleID,
-            options: .withoutActivation,
-            additionalEventParamDescriptor: nil,
-            launchIdentifier: nil
-        )
-
-        if launched {
-            // Wait a moment for it to initialize
-            Thread.sleep(forTimeInterval: 1.0)
-            return true
-        } else {
-            fputs("Error: Failed to launch Hammerspoon 2\n", stderr)
-            return false
-        }
-    }
-
-    return false
-}
-
 if !isHammerspoonRunning() {
     if autoLaunch {
-        if !launchHammerspoon() {
-            exit(EX_UNAVAILABLE)
-        }
+        fputs("Error: Hammerspoon 2 is not running. Please launch it and try again.\n", stderr)
+        exit(EX_UNAVAILABLE)
     } else {
         fputs("Error: Hammerspoon 2 is not running (use without -A to auto-launch)\n", stderr)
         exit(EX_UNAVAILABLE)
@@ -230,33 +197,18 @@ let client = HSClient(
     customArgs: customArgs
 )
 
-// Start client thread
-fputs("DEBUG: Starting client thread\n", stderr)
-fflush(stderr)
-client.start()
-
-// Give thread time to initialize
-fputs("DEBUG: Waiting for thread to initialize\n", stderr)
-fflush(stderr)
-Thread.sleep(forTimeInterval: 0.1)
-fputs("DEBUG: Thread initialization complete\n", stderr)
-fflush(stderr)
+// Start client and wait for initialization
+if !client.start() {
+    exit(client.exitCode)
+}
 
 // MARK: - Execute Commands
 
-fputs("DEBUG: Command execution phase\n", stderr)
-fputs("DEBUG: interactive=\(interactive), readStdin=\(readStdin), commandsToExecute.count=\(commandsToExecute.count), fileName=\(fileName ?? "nil")\n", stderr)
-fflush(stderr)
-
 if interactive {
-    fputs("DEBUG: Entering interactive REPL mode\n", stderr)
-    fflush(stderr)
     // Interactive REPL mode
     let repl = HSInteractiveREPL(client: client)
     repl.run()
 } else if readStdin {
-    fputs("DEBUG: Reading from stdin\n", stderr)
-    fflush(stderr)
     // Read from stdin
     var input = ""
     while let line = readLine() {
@@ -267,23 +219,13 @@ if interactive {
         _ = client.executeCommand(input)
     }
 } else if !commandsToExecute.isEmpty {
-    fputs("DEBUG: Executing \(commandsToExecute.count) commands from -c\n", stderr)
-    fflush(stderr)
     // Execute commands from -c
     for command in commandsToExecute {
-        fputs("DEBUG: About to execute command: '\(command)'\n", stderr)
-        fflush(stderr)
         if !client.executeCommand(command) {
-            fputs("DEBUG: Command execution failed, breaking\n", stderr)
-            fflush(stderr)
             break
         }
-        fputs("DEBUG: Command executed successfully\n", stderr)
-        fflush(stderr)
     }
 } else if let file = fileName {
-    fputs("DEBUG: Executing file: \(file)\n", stderr)
-    fflush(stderr)
     // Execute file
     let fileURL = URL(fileURLWithPath: file)
 
@@ -301,20 +243,12 @@ if interactive {
     }
 }
 
-// Unregister and stop run loop after allowing time for cleanup
+// Unregister and stop run loop
 client.unregister()
-Thread.sleep(forTimeInterval: 0.05)  // Small delay to allow server to process UNREGISTER
 client.stopRunLoopAfterDelay(0.5)
 
-// Wait for client thread to finish (with timeout)
-let maxWait: TimeInterval = 5.0
-let startTime = Date()
-while !client.isDone && Date().timeIntervalSince(startTime) < maxWait {
-    Thread.sleep(forTimeInterval: 0.1)
-}
-
-// Additional delay to allow kernel to reclaim ports
-Thread.sleep(forTimeInterval: 0.05)
+// Wait for client thread to finish
+client.waitForCompletion(timeout: 5.0)
 
 // Exit with client's exit code
 exit(client.exitCode)

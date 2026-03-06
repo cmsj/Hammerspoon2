@@ -8,10 +8,9 @@
 
 import Foundation
 
-/// IPC Protocol Version
-let IPCProtocolVersion = "2.0"
-
 /// IPC Message IDs for communication protocol
+/// These are defined here for reference; the JS side uses its own MSG_ID constants
+/// and the CLI uses MSGID_* constants in HSClient.swift.
 enum IPCMessageID: Int32 {
     /// Register a new CLI instance
     case register = 100
@@ -36,46 +35,4 @@ enum IPCMessageID: Int32 {
 
     /// Console mirror message
     case console = 3
-}
-
-/// Message encoding and decoding utilities
-struct IPCMessage {
-    /// Encodes a message with optional instance ID
-    /// Format: "instanceID\0payload" for messages with instance ID, plain payload otherwise
-    static func encode(instanceID: String?, payload: String) -> Data {
-        if let instanceID = instanceID {
-            let combined = "\(instanceID)\0\(payload)"
-            return combined.data(using: .utf8) ?? Data()
-        } else {
-            return payload.data(using: .utf8) ?? Data()
-        }
-    }
-
-    /// Decodes a message into instance ID and payload
-    /// Returns (instanceID, payload) or (nil, fullMessage) if no null delimiter found
-    static func decode(data: Data) -> (instanceID: String?, payload: String) {
-        guard let string = String(data: data, encoding: .utf8) else {
-            return (nil, "")
-        }
-
-        // Look for null delimiter
-        if let nullIndex = string.firstIndex(of: "\0") {
-            let instanceID = String(string[..<nullIndex])
-            let payloadStart = string.index(after: nullIndex)
-            let payload = String(string[payloadStart...])
-            return (instanceID, payload)
-        } else {
-            // No delimiter, entire string is payload
-            return (nil, string)
-        }
-    }
-
-    /// Validates an instance ID format (should be a valid UUID or identifier)
-    static func isValidInstanceID(_ instanceID: String) -> Bool {
-        // Check for UUID format or non-empty alphanumeric string
-        if UUID(uuidString: instanceID) != nil {
-            return true
-        }
-        return !instanceID.isEmpty && !instanceID.contains("\0")
-    }
 }

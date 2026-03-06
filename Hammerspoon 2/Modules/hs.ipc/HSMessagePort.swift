@@ -9,25 +9,6 @@
 @preconcurrency @unsafe import Foundation
 @preconcurrency @unsafe import JavaScriptCore
 
-#if compiler(>=6.0)
-#warning("This file intentionally uses unsafe C APIs (CFMessagePort, Unmanaged). Warnings suppressed.")
-#endif
-
-// Debug logging helper
-extension String {
-    func appendLineToURL(fileURL: URL) throws {
-        let data = self.data(using: .utf8)!
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            let handle = try FileHandle(forWritingTo: fileURL)
-            handle.seekToEndOfFile()
-            handle.write(data)
-            try? handle.close()
-        } else {
-            try data.write(to: fileURL, options: .atomic)
-        }
-    }
-}
-
 /// Protocol for JavaScript export
 @objc protocol HSMessagePortAPI: JSExport {
     /// Port name
@@ -116,10 +97,6 @@ extension String {
             &shouldFreeInfo
         ) else {
             AKError("Failed to create local message port '\(localPortName)' - port may be in use or OS resource limit reached")
-            // If shouldFreeInfo is true, we need to release the context info
-            if shouldFreeInfo.boolValue, let info = context.info {
-                // Balance the passUnretained - but since we used passUnretained, nothing to release
-            }
             return nil
         }
 
@@ -153,8 +130,15 @@ extension String {
         AKTrace("Created remote message port '\(remotePortName)'")
     }
 
-    // Note: deinit removed - cleanup must be done explicitly via delete()
-    // CFMessagePort requires cleanup on the same thread it was created on
+    deinit {
+        // Inline cleanup since deinit is nonisolated and cleanup() is MainActor-isolated
+        if let source = runLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .defaultMode)
+        }
+        if let port = messagePort {
+            CFMessagePortInvalidate(port)
+        }
+    }
 
     // MARK: - CFMessagePort Callback
 
@@ -165,8 +149,6 @@ extension String {
         _ data: CFData?,
         _ info: UnsafeMutableRawPointer?
     ) -> Unmanaged<CFData>? {
-        AKInfo("[CALLBACK] messagePortCallback called: msgID=\(msgID)")
-
         // Check recursion depth
         guard callDepth < maxCallDepth else {
             AKError("Message port callback recursion depth exceeded (max: \(maxCallDepth))")
@@ -184,15 +166,12 @@ extension String {
         }
 
         let messagePort = Unmanaged<HSMessagePort>.fromOpaque(info).takeUnretainedValue()
-        AKInfo("[CALLBACK] Got messagePort: \(messagePort.name)")
 
         // Get callback function
         guard let callback = messagePort.callbackRef, callback.isObject else {
             AKError("Message port callback: invalid callback function")
             return nil
         }
-
-        AKInfo("[CALLBACK] Got callback, isObject=\(callback.isObject)")
 
         // Convert data to JSValue
         let context = callback.context
@@ -216,19 +195,14 @@ extension String {
         // Create msgID JSValue
         let msgIDValue = JSValue(int32: msgID, in: context)
 
-        AKInfo("[CALLBACK] About to call JavaScript callback with msgID=\(msgID)")
-
         // Invoke callback: callback(port, msgID, data)
         guard let result = callback.call(withArguments: [portValue as Any, msgIDValue as Any, dataValue as Any]) else {
             AKError("Message port callback invocation failed")
             return nil
         }
 
-        AKInfo("[CALLBACK] JavaScript callback returned: \(result.toString() ?? "nil")")
-
         // Convert result to CFData
         if result.isUndefined || result.isNull {
-            AKInfo("[CALLBACK] Result is undefined/null, returning nil")
             return nil
         }
 
@@ -251,21 +225,15 @@ extension String {
 
     /// Send a message to the port
     @objc func sendMessage(_ data: JSValue, _ msgID: NSNumber, _ timeout: NSNumber?, _ oneWay: Bool) -> JSValue {
-        let logMsg = "[SEND] sendMessage called: port=\(name), msgID=\(msgID), oneWay=\(oneWay)\n"
-        try? logMsg.appendLineToURL(fileURL: URL(fileURLWithPath: "/tmp/hs-ipc-debug.log"))
-        AKInfo(logMsg)
-
         guard let port = messagePort, isValid else {
-            let errMsg = "[SEND] Port is invalid or nil\n"
-            try? errMsg.appendLineToURL(fileURL: URL(fileURLWithPath: "/tmp/hs-ipc-debug.log"))
-            AKError(errMsg)
+            AKError("Port '\(name)' is invalid or nil")
             return JSValue(bool: false, in: data.context)
         }
 
         // Convert data to CFData
-        let dataString = data.isString ? data.toString() : data.toString()
+        let dataString = data.toString()
         guard let messageData = dataString?.data(using: .utf8) else {
-            AKError("[SEND] Failed to convert data to UTF8")
+            AKError("Failed to convert data to UTF8")
             return JSValue(bool: false, in: data.context)
         }
 
@@ -275,10 +243,6 @@ extension String {
         // Determine timeout
         let sendTimeout: CFTimeInterval = timeout?.doubleValue ?? 4.0
         let recvTimeout: CFTimeInterval = oneWay ? 0 : sendTimeout
-
-        let aboutMsg = "[SEND] About to send: msgID=\(messageID), dataLen=\(messageData.count), sendTimeout=\(sendTimeout), recvTimeout=\(recvTimeout)\n"
-        try? aboutMsg.appendLineToURL(fileURL: URL(fileURLWithPath: "/tmp/hs-ipc-debug.log"))
-        AKInfo(aboutMsg)
 
         // Send message
         let result: Int32
@@ -308,19 +272,9 @@ extension String {
             }
         }
 
-        let resultMsg = "[SEND] CFMessagePortSendRequest returned: \(result) (success=\(kCFMessagePortSuccess))\n"
-        try? resultMsg.appendLineToURL(fileURL: URL(fileURLWithPath: "/tmp/hs-ipc-debug.log"))
-        AKInfo(resultMsg)
-
         if result != kCFMessagePortSuccess {
-            let errMsg = "Failed to send message to port '\(name)': error code \(result)\n"
-            try? errMsg.appendLineToURL(fileURL: URL(fileURLWithPath: "/tmp/hs-ipc-debug.log"))
-            AKError(errMsg)
+            AKError("Failed to send message to port '\(name)': error code \(result)")
             return JSValue(bool: false, in: data.context)
-        } else {
-            let successMsg = "[SEND] Message sent successfully to port '\(name)'\n"
-            try? successMsg.appendLineToURL(fileURL: URL(fileURLWithPath: "/tmp/hs-ipc-debug.log"))
-            AKInfo(successMsg)
         }
 
         // Return response if not one-way
