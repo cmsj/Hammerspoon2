@@ -12,7 +12,10 @@ struct ConsoleView: View {
     @State var logs = HammerspoonLog.shared
 
     @State var evalString: String = ""
-    @State var evalHistory: [String] = []
+    var evalHistory: [String] {
+        get { logs.evalHistory }
+        nonmutating set { logs.evalHistory = newValue }
+    }
     @State var evalIndex: Int = -1
 
     @State var selectedRows = Set<HammerspoonLogEntry.ID>()
