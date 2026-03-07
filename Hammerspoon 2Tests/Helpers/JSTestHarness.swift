@@ -51,7 +51,6 @@ class JSTestHarness {
         do {
             try context.install([
                 TypeBridgesInstaller(),
-                HSConsoleReadInstaller(),
             ])
         } catch {
             print("⚠️ Failed to install type bridges: \(error)")
@@ -123,7 +122,6 @@ class JSTestHarness {
         hs.setObject(module, forKeyedSubscript: name as NSString)
 
         // Try to load the JavaScript enhancement file if it exists
-        // Look in the Hammerspoon_2 bundle, not the test bundle
         let bundles = [
             Bundle.main,
             Bundle(identifier: "net.tenshu.Hammerspoon-2")
@@ -139,23 +137,6 @@ class JSTestHarness {
                     print("⚠️ Could not load JavaScript enhancement for \(name): \(error)")
                 }
             }
-        }
-
-        // Inject thread-safe block closures for console read methods.
-        // Use JS eval to assign, as JSExport objects create new wrappers
-        // on each Swift-side access, so setObject doesn't persist.
-        if name == "console" {
-            // Create a plain JS wrapper that inherits from the JSExport proxy
-            // but adds getConsole/getHistory. Store it back on hs.console so
-            // the wrapper (and its properties) survive GC of the JSExport proxy.
-            context.evaluateScript("""
-                (function() {
-                    var wrapper = Object.create(hs.console);
-                    wrapper.getConsole = __hsConsoleGetConsole;
-                    wrapper.getHistory = __hsConsoleGetHistory;
-                    hs.console = wrapper;
-                })();
-            """)
         }
     }
 
