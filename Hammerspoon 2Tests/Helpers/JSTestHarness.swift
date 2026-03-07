@@ -192,25 +192,6 @@ class JSTestHarness {
     ///   - callback: Swift closure to call
     func registerCallback(_ name: String, callback: @escaping () -> Void) {
         callbacks[name] = callback
-
-//        // Create a JavaScript function that calls our Swift callback
-//        let jsFunction = context.evaluateScript("""
-//            (function() {
-//                return function \(name)() {
-//                    __swift_callback_\(name)();
-//                };
-//            })()
-//            """)
-
-        // Register the Swift side handler
-//        let swiftHandler: @convention(block) (String) -> Void = { [weak self] callbackName in
-//            self?.callbacks[callbackName]?()
-//        }
-//        context.setObject(swiftHandler, forKeyedSubscript: "__test_callback" as NSString)
-//        context.setObject(unsafeBitCast(swiftHandler, to: AnyObject.self), forKeyedSubscript: "__swift_callback_\(name)" as NSString)
-
-        // Set the JavaScript function in global scope
-//        context.setObject(jsFunction, forKeyedSubscript: name as NSString)
     }
 
     /// Register a callback that expects arguments

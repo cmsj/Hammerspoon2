@@ -58,6 +58,7 @@ struct HSConsoleIntegrationTests {
     }
 
     @Test("getConsole is accessible as a function from JavaScript")
+    @MainActor
     func testGetConsoleIsFunction() {
         let harness = JSTestHarness()
         harness.loadModule(HSConsoleModule.self, as: "console")
@@ -90,6 +91,7 @@ struct HSConsoleIntegrationTests {
     }
 
     @Test("getHistory is accessible as a function from JavaScript")
+    @MainActor
     func testGetHistoryIsFunction() {
         let harness = JSTestHarness()
         harness.loadModule(HSConsoleModule.self, as: "console")
@@ -110,6 +112,7 @@ struct HSConsoleIntegrationTests {
     // MARK: - Module access
 
     @Test("console module exposes all expected functions")
+    @MainActor
     func testModuleAccess() {
         let harness = JSTestHarness()
         harness.loadModule(HSConsoleModule.self, as: "console")
