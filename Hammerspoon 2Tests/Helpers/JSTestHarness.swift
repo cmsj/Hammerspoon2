@@ -407,6 +407,8 @@ extension JSTestHarness {
                 loadModule(HSConsoleModule.self, as: name)
             case "appinfo":
                 loadModule(HSAppInfoModule.self, as: name)
+            case "ipc":
+                loadModule(HSIPCModule.self, as: name)
             case "permissions":
                 loadModule(HSPermissionsModule.self, as: name)
             case "ax":
