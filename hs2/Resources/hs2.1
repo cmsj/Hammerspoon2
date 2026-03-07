@@ -5,7 +5,8 @@
 hs2 \- Hammerspoon 2 command line interface
 .SH SYNOPSIS
 .B hs2
-[\fB\-AaisCqnN\fR]
+[\fB\-isCqnN\fR]
+[\fB\-a\fR \fIarg\fR]
 [\fB\-c\fR \fIcode\fR]
 [\fB\-m\fR \fIname\fR]
 [\fB\-t\fR \fIseconds\fR]
@@ -30,11 +31,10 @@ Use an interactive REPL for development and testing
 Integrate Hammerspoon 2 automation into shell scripts
 .SH OPTIONS
 .TP
-.B \-A
-Auto-launch Hammerspoon 2 if it is not currently running. Without this option, if Hammerspoon 2 is not running, the user will be prompted via a dialog box.
-.TP
-.B \-a
-Exit with an error if Hammerspoon 2 is not running, rather than prompting to launch it.
+.BI \-a " arg"
+Pass argument to script. The argument is appended to
+.BR _cli.args .
+Can be specified multiple times.
 .TP
 .B \-i
 Force interactive mode (REPL). By default, interactive mode is activated when no code, file, or stdin input is provided and stdout is a TTY.
@@ -129,12 +129,6 @@ chmod +x automation.js
 .RE
 .fi
 .PP
-.SS Auto-launch Hammerspoon 2 if needed
-.nf
-.RS
-hs2 \-A \-c "hs.alert.show('Launched!')"
-.RE
-.fi
 .SH INTERACTIVE MODE
 When run in interactive mode (REPL),
 .B hs2
@@ -143,10 +137,6 @@ provides a JavaScript prompt where you can execute code line by line. Features i
 Command history (in-session via up/down arrows)
 .IP \(bu 2
 Tab completion for hs.* module names
-.IP \(bu 2
-Syntax highlighting via terminal colors
-.IP \(bu 2
-Multi-line editing
 .PP
 To exit the REPL, press
 .B Ctrl\-D
@@ -176,9 +166,6 @@ Enhanced print function that outputs to the terminal (via IPC) rather than Hamme
 .TP
 .I ~/.config/Hammerspoon2/init.js
 Default Hammerspoon 2 configuration file.
-.TP
-.I ~/.config/Hammerspoon2/.cli.history
-Command history file for interactive REPL sessions (v2.0+).
 .SH EXIT STATUS
 .TP
 .B 0
@@ -188,7 +175,7 @@ Success.
 Invalid command-line arguments.
 .TP
 .B 65
-JavaScript execution error (non-interactive mode only).
+IPC protocol/communication error.
 .TP
 .B 66
 Error reading input file or stdin.

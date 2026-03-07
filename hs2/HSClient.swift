@@ -98,7 +98,12 @@ class HSClient {
         thread.start()
 
         // Wait for initialization (with timeout)
-        _ = readySemaphore.wait(timeout: .now() + sendTimeout)
+        let result = readySemaphore.wait(timeout: .now() + sendTimeout)
+        if result == .timedOut {
+            fputs("Error: Timed out waiting for IPC initialization\n", stderr)
+            setExitCode(EX_TEMPFAIL)
+            return false
+        }
         return initSucceeded
     }
 
@@ -125,8 +130,15 @@ class HSClient {
             var context = CFMessagePortContext(
                 version: 0,
                 info: Unmanaged.passUnretained(self).toOpaque(),
-                retain: nil,
-                release: nil,
+                retain: { (info: UnsafeRawPointer?) -> UnsafeRawPointer? in
+                    guard let info = info else { return nil }
+                    _ = Unmanaged<HSClient>.fromOpaque(info).retain()
+                    return info
+                },
+                release: { (info: UnsafeRawPointer?) in
+                    guard let info = info else { return }
+                    Unmanaged<HSClient>.fromOpaque(info).release()
+                },
                 copyDescription: nil
             )
 
@@ -156,6 +168,8 @@ class HSClient {
 
             // Register with remote
             if !registerWithRemote() {
+                CFMessagePortInvalidate(local)
+                CFMessagePortInvalidate(remote)
                 setExitCode(EX_UNAVAILABLE)
                 readySemaphore.signal()
                 doneSemaphore.signal()

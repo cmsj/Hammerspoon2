@@ -256,8 +256,7 @@ hs2 [options] [file] [-- arguments]
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `-A` | Auto-launch Hammerspoon 2 if not running | Prompt user |
-| `-a` | Exit with error if Hammerspoon 2 not running | Prompt user |
+| `-a arg` | Pass argument to script (appended to `_cli.args`) | - |
 | `-i` | Force interactive mode (REPL) | Auto-detect |
 | `-s` | Read from stdin | Auto-detect |
 | `-c code` | Execute code (repeatable) | - |
@@ -288,7 +287,7 @@ Features:
 - In-session command history (up/down arrows)
 - Tab completion for `hs.*` module names
 - Color-coded output
-- Multi-line statement support
+- Single-line execution
 - Exit with Ctrl-D
 
 ## API Reference
@@ -502,7 +501,6 @@ CFMessagePort has practical limits (~1MB). For large data:
 **Solutions**:
 - Verify Hammerspoon 2 is running: `ps aux | grep Hammerspoon`
 - Check port name (default: "Hammerspoon2")
-- Try `-A` flag to auto-launch
 - Check Console.app for IPC errors
 
 ### Invalid Port
@@ -643,7 +641,7 @@ if (myPort) {
 #!/bin/bash
 # Example: Window management script
 
-hs2 -A -c "
+hs2 -c "
 var win = hs.window.focusedWindow();
 if (win) {
     var screen = win.screen().frame();
