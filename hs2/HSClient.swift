@@ -230,7 +230,18 @@ class HSClient {
         guard let response = String(data: responseData as Data, encoding: .utf8),
               response.trimmingCharacters(in: .whitespacesAndNewlines) == "ok" else {
             let responseStr = String(data: responseData as Data, encoding: .utf8) ?? "<invalid UTF-8>"
-            fputs("Error: unexpected response from Hammerspoon 2: \(responseStr)\n", stderr)
+
+            // Auto-reconnect if registration was lost (e.g., JSExport proxy GC'd)
+            if responseStr.contains("instance not registered") {
+                if registerWithRemote() {
+                    // Retry the command after re-registering
+                    return executeCommand(command)
+                }
+                fputs("Error: lost connection and failed to reconnect\n", stderr)
+            } else {
+                fputs("Error: unexpected response from Hammerspoon 2: \(responseStr)\n", stderr)
+            }
+
             setExitCode(EX_DATAERR)
             return false
         }

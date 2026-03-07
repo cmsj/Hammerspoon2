@@ -18,27 +18,17 @@ const MSG_ID = {
     CONSOLE: 3
 };
 
-// Storage for registered CLI instances
-// Always clear instances on module load - forces re-registration after reload
-// This is safe because hs.reload() destroys the entire JS context
-hs.ipc.__registeredCLIInstances = {};
-
-// Store original print function
-hs.ipc.__originalPrint = (typeof print !== 'undefined') ? print : console.log;
+// IPC state is stored in closure-scoped variables rather than on the
+// hs.ipc JSExport proxy, because JSExport proxy objects lose dynamically
+// assigned properties when the garbage collector reclaims their wrappers.
+var __ipcRegisteredInstances = {};
+var __ipcRemotePorts = {};
+var __ipcOriginalPrint = (typeof print !== 'undefined') ? print : console.log;
 
 // Default message handler for IPC protocol
 // DEFENSIVE: Wrapped in try-catch to ensure Hammerspoon never crashes from IPC errors
-hs.ipc.__defaultHandler = function(port, msgID, data) {
+var __ipcDefaultHandler = function(port, msgID, data) {
     try {
-        // DEFENSIVE: Ensure storage objects exist before processing any message
-        // This prevents TypeError if objects become undefined during runtime
-        if (!hs.ipc.__registeredCLIInstances) {
-            hs.ipc.__registeredCLIInstances = {};
-        }
-        if (!hs.ipc.__remotePorts) {
-            hs.ipc.__remotePorts = {};
-        }
-
         // Parse message based on type
         if (msgID === MSG_ID.REGISTER) {
             // REGISTER: instanceID\0{...json...}
@@ -73,13 +63,10 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
             // Store remote port to prevent garbage collection
             // This is CRITICAL - without this, the remote port object gets deallocated
             // and causes crashes when callbacks try to access it
-            if (!hs.ipc.__remotePorts) {
-                hs.ipc.__remotePorts = {};
-            }
-            hs.ipc.__remotePorts[instanceID] = remote;
+            __ipcRemotePorts[instanceID] = remote;
 
             // Create instance object with isolated _cli and print
-            hs.ipc.__registeredCLIInstances[instanceID] = {
+            __ipcRegisteredInstances[instanceID] = {
                 _cli: {
                     remote: remote,
                     quietMode: quiet,
@@ -87,12 +74,7 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
                     args: customArgs
                 },
                 print: function(...args) {
-                    // DEFENSIVE: Check if storage still exists (can be cleared on reload)
-                    if (!hs.ipc.__registeredCLIInstances) {
-                        return;
-                    }
-
-                    const instance = hs.ipc.__registeredCLIInstances[instanceID];
+                    const instance = __ipcRegisteredInstances[instanceID];
                     if (!instance) {
                         return;
                     }
@@ -113,8 +95,8 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
 
             // Defensive: Safe cleanup even if instance doesn't exist
             try {
-                if (hs.ipc.__registeredCLIInstances && hs.ipc.__registeredCLIInstances[instanceID]) {
-                    const instance = hs.ipc.__registeredCLIInstances[instanceID];
+                if (__ipcRegisteredInstances[instanceID]) {
+                    const instance = __ipcRegisteredInstances[instanceID];
                     if (instance && instance._cli && instance._cli.remote) {
                         try {
                             instance._cli.remote.delete();
@@ -122,12 +104,12 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
                             console.error("IPC: Error deleting remote port:", e);
                         }
                     }
-                    delete hs.ipc.__registeredCLIInstances[instanceID];
+                    delete __ipcRegisteredInstances[instanceID];
                 }
 
                 // Clean up remote port storage to prevent resource leak
-                if (hs.ipc.__remotePorts && hs.ipc.__remotePorts[instanceID]) {
-                    delete hs.ipc.__remotePorts[instanceID];
+                if (__ipcRemotePorts[instanceID]) {
+                    delete __ipcRemotePorts[instanceID];
                 }
             } catch (e) {
                 console.error("IPC: Error during UNREGISTER cleanup:", e);
@@ -146,12 +128,7 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
             const instanceID = data.substring(0, nullIndex);
             const code = data.substring(nullIndex + 1);
 
-            // DEFENSIVE: Verify storage object exists before accessing
-            if (!hs.ipc.__registeredCLIInstances) {
-                hs.ipc.__registeredCLIInstances = {};
-            }
-
-            const instance = hs.ipc.__registeredCLIInstances[instanceID];
+            const instance = __ipcRegisteredInstances[instanceID];
             if (!instance) {
                 return "error: instance not registered - client must reconnect";
             }
@@ -225,21 +202,15 @@ hs.ipc.__defaultHandler = function(port, msgID, data) {
 };
 
 // Enhanced print() function that mirrors to all CLI instances with console mirroring enabled
-hs.ipc.print = function(...args) {
+var __ipcPrint = function(...args) {
     // Call original print
-    hs.ipc.__originalPrint(...args);
-
-    // DEFENSIVE: Ensure storage object exists before iterating
-    if (!hs.ipc.__registeredCLIInstances) {
-        hs.ipc.__registeredCLIInstances = {};
-        return;
-    }
+    __ipcOriginalPrint(...args);
 
     // Mirror to all CLI instances with console mirroring enabled
     const output = args.map(a => String(a)).join('\t') + '\n';
 
-    for (const instanceID in hs.ipc.__registeredCLIInstances) {
-        const instance = hs.ipc.__registeredCLIInstances[instanceID];
+    for (const instanceID in __ipcRegisteredInstances) {
+        const instance = __ipcRegisteredInstances[instanceID];
         if (instance._cli.console && instance._cli.remote) {
             try {
                 instance._cli.remote.sendMessage(output, MSG_ID.CONSOLE, 4.0, true);
@@ -252,7 +223,7 @@ hs.ipc.print = function(...args) {
 
 // Create default port for CLI communication
 try {
-    hs.ipc.__default = hs.ipc.localPort("Hammerspoon2", hs.ipc.__defaultHandler);
+    hs.ipc.__default = hs.ipc.localPort("Hammerspoon2", __ipcDefaultHandler);
     if (!hs.ipc.__default) {
         console.error("Failed to create default IPC port 'Hammerspoon2'");
     }
@@ -262,7 +233,7 @@ try {
 
 // Replace global print with IPC-aware version
 if (typeof print !== 'undefined') {
-    print = hs.ipc.print;
+    print = __ipcPrint;
 }
 
 // Tab completion function for REPL (minimal v1.0 implementation)
