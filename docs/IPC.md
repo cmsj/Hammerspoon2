@@ -677,9 +677,13 @@ hs.ipc.__remotePorts = {};              // lost when proxy wrapper is recreated
 
 This caused IPC registration loss after idle periods: the GC would reclaim the `hs.ipc` proxy, and all registered CLI instances would silently disappear. The next `hs2` command would get "instance not registered".
 
-### Two Solutions
+### What Survives GC Automatically
 
-There are two valid approaches to making state survive JSExport proxy GC. Hammerspoon 2 uses both, in different modules.
+Methods and properties declared in the `JSExport` protocol are **not affected** by proxy GC. When JSC recreates a proxy wrapper, it re-exports all protocol members from the underlying Swift object. This is how most modules work — `hs.console.getConsole()`, `hs.hash.md5()`, etc. need no special handling.
+
+The workarounds below are only needed for **dynamic state** — properties assigned at runtime from JavaScript that aren't part of the `@objc` protocol (e.g., registered CLI instances, callback closures stored on the proxy object).
+
+### Two Workarounds for Dynamic State
 
 #### Approach 1: Closure-scoped JS variables (used by hs.ipc)
 
