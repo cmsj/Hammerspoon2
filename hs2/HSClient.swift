@@ -364,7 +364,10 @@ class HSClient {
 
     func getPrompt() -> String {
         if useColors {
-            return "\(colorInput)> \(colorReset)"
+            // \x01 and \x02 bracket non-printing sequences so libedit
+            // calculates the visible prompt width correctly. Without them,
+            // history navigation (up-arrow) garbles the display.
+            return "\u{01}\(colorInput)\u{02}> \u{01}\(colorReset)\u{02}"
         } else {
             return "> "
         }
