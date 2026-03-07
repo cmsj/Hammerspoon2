@@ -112,7 +112,7 @@ while i < CommandLine.arguments.count {
               -m <name>       Remote port name (default: Hammerspoon2)
               -n              Disable colored output
               -N              Force colored output
-              -C              Enable console mirroring
+              -C              Enable console mirroring (not yet functional)
               -q              Quiet mode (suppress output)
               -t <seconds>    IPC timeout (default: 4.0)
               -h, --help      Show this help

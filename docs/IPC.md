@@ -263,7 +263,7 @@ hs2 [options] [file] [-- arguments]
 | `-m name` | Connect to custom port | "Hammerspoon2" |
 | `-n` | Disable colors | Auto-detect |
 | `-N` | Force colors | Auto-detect |
-| `-C` | Enable console mirroring | Disabled |
+| `-C` | Enable console mirroring (not yet functional, see below) | Disabled |
 | `-q` | Quiet mode | Disabled |
 | `-t seconds` | Set timeout | 4.0 |
 | `-h` | Display help | - |
@@ -533,6 +533,18 @@ CFMessagePort has practical limits (~1MB). For large data:
 - Use try/catch for error handling
 
 ## Known Issues and Limitations
+
+### Console Mirroring (`-C`) Not Yet Functional
+
+The `-C` flag is accepted and plumbed through registration (stored in `_cli.console`), but no output is actually mirrored to the CLI.
+
+**Root cause**: The mirroring mechanism in `hs.ipc.js` replaces the global JS `print` function with `__ipcPrint`, which forwards output to `-C` instances. However, the JS engine has no global `print` — it was never defined — so the replacement on line 248 (`if (typeof print !== 'undefined') print = __ipcPrint`) never executes. Additionally, `hs.console.print()` calls Swift's `AKConsole()` directly, bypassing JavaScript entirely.
+
+In old Hammerspoon, Lua's global `print` was the single entry point for all console output, so replacing it was sufficient to capture everything. In Hammerspoon 2, console output flows through Swift (`HammerspoonLog`), not through a JS function.
+
+**To fix this**, either:
+1. Create a global JS `print` that routes through `AKConsole`, allowing `hs.ipc.js` to replace it (matches old architecture)
+2. Add a Swift-side observer on `HammerspoonLog` that pushes new entries to registered `-C` clients via their remote ports
 
 ### Resource Leak Fix (2025-12-28)
 
