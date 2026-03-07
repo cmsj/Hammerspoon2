@@ -9,6 +9,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import AppKit
 
 // MARK: - Declare our JavaScript API
@@ -43,12 +44,6 @@ import AppKit
     /// Print an error message to the console
     /// - Parameter message: The message to print
     @objc func error(_ message: String)
-
-    /// Get the console log contents as a string
-    @objc func getConsole() -> String
-
-    /// Get the command history
-    @objc func getHistory() -> [String]
 }
 
 // MARK: - Implementation
@@ -107,28 +102,73 @@ import AppKit
     @objc func error(_ message: String) {
         AKError(message)
     }
+}
 
-    // MARK: - Console read/write
+// MARK: - Thread-safe accessors for IPC
+// These are free functions because @objc thunks on a @MainActor class
+// enforce actor isolation at runtime, even for nonisolated methods.
+// The CFMessagePort callback may fire on any thread, so we need truly
+// nonisolated entry points that dispatch to main internally.
+// They are exposed to JavaScript via @convention(block) closures.
 
-    @objc func getConsole() -> String {
-        MainActor.assumeIsolated {
-            let log = HammerspoonLog.shared
-            return log.entries.map { entry in
-                let date = entry.date.formatted(
-                    .verbatim(
-                        "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
-                        locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
-                    )
-                )
-                return "\(date) - \(entry.logType.asString): \(entry.msg)"
-            }.joined(separator: "\n")
+/// Phase 1: Register __hsConsoleGetConsole / __hsConsoleGetHistory globals.
+/// Must run BEFORE ModuleRootInstaller (needs the globals to exist).
+struct HSConsoleReadInstaller: JSContextInstallable {
+    func install(in context: JSContext) throws {
+        let getConsole: @convention(block) () -> String = {
+            hsConsoleGetConsole()
         }
-    }
-
-    @objc func getHistory() -> [String] {
-        MainActor.assumeIsolated {
-            HammerspoonLog.shared.evalHistory
+        let getHistory: @convention(block) () -> [String] = {
+            hsConsoleGetHistory()
         }
+        context.setObject(getConsole, forKeyedSubscript: "__hsConsoleGetConsole" as NSString)
+        context.setObject(getHistory, forKeyedSubscript: "__hsConsoleGetHistory" as NSString)
     }
+}
 
+/// Phase 2: Override the hs.console getter so the FIRST access already
+/// returns a wrapper that includes getConsole/getHistory.
+/// Must run AFTER ModuleRootInstaller (needs `hs` to exist).
+struct HSConsoleGetterInstaller: JSContextInstallable {
+    func install(in context: JSContext) throws {
+        context.evaluateScript("""
+            (function() {
+                var proto = Object.getPrototypeOf(hs);
+                var origGetter = Object.getOwnPropertyDescriptor(proto, 'console').get;
+                var cached = null;
+
+                Object.defineProperty(proto, 'console', {
+                    get: function() {
+                        if (!cached) {
+                            var orig = origGetter.call(this);
+                            cached = Object.create(orig);
+                            cached.getConsole = __hsConsoleGetConsole;
+                            cached.getHistory = __hsConsoleGetHistory;
+                        }
+                        return cached;
+                    },
+                    configurable: true
+                });
+            })();
+        """)
+    }
+}
+
+@_documentation(visibility: private)
+nonisolated func hsConsoleGetConsole() -> String {
+    let log = HammerspoonLog.shared
+    return log.entries.map { entry in
+        let date = entry.date.formatted(
+            .verbatim(
+                "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
+                locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
+            )
+        )
+        return "\(date) - \(entry.logType.asString): \(entry.msg)"
+    }.joined(separator: "\n")
+}
+
+@_documentation(visibility: private)
+nonisolated func hsConsoleGetHistory() -> [String] {
+    HammerspoonLog.shared.evalHistory
 }

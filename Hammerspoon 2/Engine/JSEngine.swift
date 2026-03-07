@@ -51,8 +51,10 @@ class JSEngine {
                 ConsoleModuleInstaller(),      // console namespace
                 RequireInstaller(),            // require() function
                 TypeBridgesInstaller(),        // HSPoint, HSSize, HSRect, HSFont, HSAlert
+                HSConsoleReadInstaller(),      // thread-safe getConsole/getHistory blocks
                 .bundled(path: "engine.js", in: .main),  // EventEmitter class
                 ModuleRootInstaller(),         // hs namespace
+                HSConsoleGetterInstaller(),    // override hs.console getter with wrapper
             ])
         } catch {
             throw HammerspoonError(.vmCreation, msg: "Failed to install context components: \(error.localizedDescription)")

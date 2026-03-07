@@ -19,7 +19,7 @@ enum HammerspoonLogType: Int, CaseIterable, Identifiable {
     case Console
 
     var id: Self { self }
-    var asString: String {
+    nonisolated var asString: String {
         switch (self) {
         case .Trace:
             return "Debug"
@@ -62,10 +62,16 @@ extension Logger {
 @Observable
 @MainActor
 final class HammerspoonLog: Sendable {
-    static let shared = HammerspoonLog()
+    nonisolated(unsafe) static let shared = HammerspoonLog()
 
-    var entries: [HammerspoonLogEntry] = []
-    var evalHistory: [String] = []
+    /// These properties use nonisolated(unsafe) because they need to be readable
+    /// from CFRunLoop callbacks (e.g., IPC message port) which run on the main thread
+    /// but NOT through GCD's main queue. The @objc thunk and MainActor.assumeIsolated
+    /// both use dispatch_assert_queue which fails in that context.
+    /// SAFETY: All mutations happen on MainActor (main thread). Reads from CFRunLoop
+    /// callbacks are also on the main thread, so there are no data races.
+    nonisolated(unsafe) var entries: [HammerspoonLogEntry] = []
+    nonisolated(unsafe) var evalHistory: [String] = []
 
     func log(_ level: HammerspoonLogType, _ msg: String) {
         entries.append(HammerspoonLogEntry(logType: level, msg: msg))
