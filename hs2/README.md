@@ -157,10 +157,13 @@ hs2 test-window.js
 
 ## Debugging
 
-Enable debug output:
+Diagnostics and troubleshooting:
 ```bash
-# Client-side debug messages go to stderr
-hs2 -c "print('test')" 2>&1 | grep DEBUG
+# IPC errors and JS exceptions are reported on stderr
+hs2 -c "print('test')" 2>/tmp/hs2-errors.log
+
+# Use -C to mirror Hammerspoon 2 console output to terminal
+hs2 -C -c "console.log('debug info')"
 
 # Server-side logging
 # Open Hammerspoon 2 Console to see [IPC] messages

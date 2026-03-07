@@ -19,7 +19,6 @@ let EX_TEMPFAIL: Int32 = 75
 
 // MARK: - Argument Parsing
 
-var autoLaunch = true
 var interactive = false
 var readStdin = false
 var fileName: String?
@@ -47,9 +46,6 @@ while i < CommandLine.arguments.count {
     }
 
     switch arg {
-    case "-A":
-        autoLaunch = false
-
     case "-a":
         i += 1
         guard i < CommandLine.arguments.count else {
@@ -109,7 +105,6 @@ while i < CommandLine.arguments.count {
             Usage: hs2 [options] [file] [args]
 
             Options:
-              -A              Don't auto-launch Hammerspoon if not running
               -a <arg>        Pass argument to script (requires -c or file)
               -i              Interactive REPL mode
               -s              Read commands from stdin
@@ -177,13 +172,8 @@ func isHammerspoonRunning() -> Bool {
 }
 
 if !isHammerspoonRunning() {
-    if autoLaunch {
-        fputs("Error: Hammerspoon 2 is not running. Please launch it and try again.\n", stderr)
-        exit(EX_UNAVAILABLE)
-    } else {
-        fputs("Error: Hammerspoon 2 is not running (use without -A to auto-launch)\n", stderr)
-        exit(EX_UNAVAILABLE)
-    }
+    fputs("Error: Hammerspoon 2 is not running. Please launch it and try again.\n", stderr)
+    exit(EX_UNAVAILABLE)
 }
 
 // MARK: - Create IPC Client
