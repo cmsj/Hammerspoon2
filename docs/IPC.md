@@ -665,6 +665,128 @@ Planned features not in v1.0:
 - **Network IPC**: Optional network-based communication
 - **Multi-Instance**: Support for multiple Hammerspoon 2 instances
 
+## JSExport GC and State Persistence
+
+### The Problem
+
+JavaScriptCore's garbage collector periodically reclaims and recreates JSExport proxy wrapper objects. When this happens, any JavaScript properties dynamically assigned to the proxy are lost. For example:
+
+```javascript
+// This DOES NOT survive GC:
+hs.ipc.__registeredCLIInstances = {};   // lost when proxy wrapper is recreated
+hs.ipc.__remotePorts = {};              // lost when proxy wrapper is recreated
+```
+
+This caused IPC registration loss after idle periods: the GC would reclaim the `hs.ipc` proxy, and all registered CLI instances would silently disappear. The next `hs2` command would get "instance not registered".
+
+### Two Solutions
+
+There are two valid approaches to making state survive JSExport proxy GC. Hammerspoon 2 uses both, in different modules.
+
+#### Approach 1: Closure-scoped JS variables (used by hs.ipc)
+
+Move state out of the JSExport proxy entirely, into module-level JavaScript variables:
+
+```javascript
+// hs.ipc.js — state lives in JS closure scope, NOT on the proxy
+var __ipcRegisteredInstances = {};
+var __ipcRemotePorts = {};
+var __ipcDefaultHandler = function(port, msgID, data) {
+    // accesses __ipcRegisteredInstances directly
+};
+```
+
+The GC can reclaim and recreate the `hs.ipc` proxy freely — the closure-scoped variables are unaffected.
+
+**When to use**: Complex state (nested objects, closures, port references) that would be awkward to model as `@objc` protocol properties.
+
+#### Approach 2: JSExport protocol properties backed by Swift storage (used by hs.task)
+
+Declare the properties in the `JSExport` protocol with `get set`, backed by Swift stored properties:
+
+```swift
+@objc protocol HSTaskModuleAPI: JSExport {
+    @objc var runAsync: JSValue? { get set }   // declared in protocol
+    @objc var shell: JSValue? { get set }
+}
+
+@objc class HSTaskModule: NSObject, HSTaskModuleAPI {
+    @objc var runAsync: JSValue? = nil   // Swift-backed storage
+    @objc var shell: JSValue? = nil
+}
+```
+
+When JavaScript assigns `hs.task.runAsync = function() {...}`, JSC routes through the `@objc` setter, storing the `JSValue` in **Swift memory**. The GC can reclaim the JS wrapper — the Swift instance and its properties remain intact.
+
+**When to use**: Storing JS functions or values that map naturally to `JSValue?` properties on the module.
+
+#### Approach 3: Object.defineProperty getter override (used by hs.console)
+
+For modules where read methods (`getConsole`, `getHistory`) are implemented as Swift `@convention(block)` closures but can't be added to the `JSExport` protocol (because they need `nonisolated` access for thread safety), override the parent object's getter to return a cached plain JS wrapper:
+
+```swift
+// Phase 1: Register block closures as globals (before ModuleRoot)
+struct HSConsoleReadInstaller: JSContextInstallable {
+    func install(in context: JSContext) throws {
+        let getConsole: @convention(block) () -> String = { hsConsoleGetConsole() }
+        context.setObject(getConsole, forKeyedSubscript: "__hsConsoleGetConsole" as NSString)
+    }
+}
+
+// Phase 2: Override getter (after ModuleRoot)
+struct HSConsoleGetterInstaller: JSContextInstallable {
+    func install(in context: JSContext) throws {
+        context.evaluateScript("""
+            (function() {
+                var proto = Object.getPrototypeOf(hs);
+                var origGetter = Object.getOwnPropertyDescriptor(proto, 'console').get;
+                var cached = null;
+                Object.defineProperty(proto, 'console', {
+                    get: function() {
+                        if (!cached) {
+                            var orig = origGetter.call(this);
+                            cached = Object.create(orig);
+                            cached.getConsole = __hsConsoleGetConsole;
+                            cached.getHistory = __hsConsoleGetHistory;
+                        }
+                        return cached;
+                    },
+                    configurable: true
+                });
+            })();
+        """)
+    }
+}
+```
+
+`Object.create(orig)` creates a plain JS object inheriting from the JSExport proxy. The plain object's own properties (`getConsole`, `getHistory`) survive GC. The two-phase installer pattern ensures the override is in place before any user code runs.
+
+**When to use**: Adding methods that can't go in the `@objc` protocol (e.g., `nonisolated` free functions for thread safety) to a module that's accessed via a lazy getter.
+
+### Comparison
+
+| | Closure-scoped JS vars | JSExport protocol properties | Object.defineProperty override |
+|---|---|---|---|
+| **Where state lives** | JS global scope | Swift stored properties | Plain JS object (cached) |
+| **GC resilience** | Not on proxy at all | Swift memory, invisible to GC | Own properties on plain object |
+| **Protocol changes** | None | Properties added to JSExport protocol | None |
+| **Thread safety** | N/A (JS is single-threaded) | Must handle actor isolation | Free functions can be `nonisolated` |
+| **Best for** | Complex mutable state, dictionaries | JS functions, simple values | Adding methods from outside the module |
+| **Used by** | `hs.ipc` | `hs.task` | `hs.console` |
+
+### Auto-Reconnect
+
+As a defense-in-depth measure, the `hs2` CLI also implements auto-reconnect. If a command gets "instance not registered" (e.g., due to an edge case or future regression), it transparently re-registers and retries:
+
+```swift
+// HSClient.swift
+if responseStr.contains("instance not registered") {
+    if registerWithRemote() {
+        return executeCommand(command)  // retry after re-registering
+    }
+}
+```
+
 ## References
 
 - [CFMessagePort Documentation](https://developer.apple.com/documentation/corefoundation/cfmessageport)
