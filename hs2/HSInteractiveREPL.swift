@@ -43,7 +43,7 @@ class HSInteractiveREPL {
         print(client.getBanner())
 
         // Main loop
-        while client.exitCode == EX_OK {
+        while true {
             // Display prompt
             let prompt = client.getPrompt()
 
@@ -68,8 +68,8 @@ class HSInteractiveREPL {
 
             // Execute command
             if !client.executeCommand(input) {
-                // Error occurred, but continue in interactive mode
-                // Exit code is set but we don't exit
+                // IPC error — report it but stay in the REPL
+                fputs("Error: command failed (IPC error)\n", stderr)
             }
         }
 
