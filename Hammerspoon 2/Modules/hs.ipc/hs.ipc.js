@@ -201,7 +201,9 @@ var __ipcDefaultHandler = function(port, msgID, data) {
     }
 };
 
-// Enhanced print() function that mirrors to all CLI instances with console mirroring enabled
+// NOTE: __ipcPrint and the global print replacement below are not yet functional.
+// The JS engine has no global 'print' function, so the replacement on line 248
+// never executes. See docs/IPC.md "Console Mirroring" for details.
 var __ipcPrint = function(...args) {
     // Call original print
     __ipcOriginalPrint(...args);
@@ -238,18 +240,12 @@ if (typeof print !== 'undefined') {
 
 // Tab completion function for REPL (minimal v1.0 implementation)
 hs.completionsForInputString = function(inputString) {
-    const completions = [];
-
     // Complete hs.* module names
     if (inputString.startsWith("hs.")) {
-        const prefix = "hs.";
         const modules = Object.keys(hs).filter(k => k !== "__proto__" && !k.startsWith("__"));
-        const fullNames = modules.map(m => prefix + m);
-        return fullNames.filter(c => c.startsWith(inputString));
+        return modules.map(m => "hs." + m).filter(c => c.startsWith(inputString));
     }
 
     // Future enhancement: complete other globals, properties, methods
-    // For v1.0, only complete hs.* modules
-
-    return completions;
+    return [];
 };

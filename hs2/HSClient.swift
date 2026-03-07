@@ -241,10 +241,9 @@ class HSClient {
             return false
         }
 
-        guard let response = String(data: responseData as Data, encoding: .utf8),
-              response.trimmingCharacters(in: .whitespacesAndNewlines) == "ok" else {
-            let responseStr = String(data: responseData as Data, encoding: .utf8) ?? "<invalid UTF-8>"
+        let responseStr = String(data: responseData as Data, encoding: .utf8) ?? "<invalid UTF-8>"
 
+        guard responseStr.trimmingCharacters(in: .whitespacesAndNewlines) == "ok" else {
             // Auto-reconnect if registration was lost (e.g., JSExport proxy GC'd)
             if responseStr.contains("instance not registered") {
                 if registerWithRemote() {
