@@ -233,7 +233,7 @@ class HSClient {
 
     // MARK: - Command Execution
 
-    func executeCommand(_ command: String) -> Bool {
+    func executeCommand(_ command: String, isRetry: Bool = false) -> Bool {
         let message = "\(localName)\0\(command)"
 
         guard let responseData = sendToRemote(message, msgID: MSGID_COMMAND, wantResponse: true) else {
@@ -246,9 +246,9 @@ class HSClient {
         guard responseStr.trimmingCharacters(in: .whitespacesAndNewlines) == "ok" else {
             // Auto-reconnect if registration was lost (e.g., JSExport proxy GC'd)
             if responseStr.contains("instance not registered") {
-                if registerWithRemote() {
+                if !isRetry, registerWithRemote() {
                     // Retry the command after re-registering
-                    return executeCommand(command)
+                    return executeCommand(command, isRetry: true)
                 }
                 fputs("Error: lost connection and failed to reconnect\n", stderr)
             } else {
