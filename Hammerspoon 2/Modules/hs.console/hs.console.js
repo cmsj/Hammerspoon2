@@ -1,5 +1,7 @@
 // hs.console.js — companion JS for hs.console module
 //
-// The getConsole/getHistory functions are injected by HSConsoleGetterInstaller
-// at engine init time (before any module is accessed). This companion file
-// is kept as a no-op placeholder for consistency with other modules.
+// getConsole/getHistory are declared in the HSConsoleModuleAPI JSExport
+// protocol and implemented directly on HSConsoleModule. They survive GC
+// automatically because JSC re-exports protocol methods when recreating
+// the proxy wrapper. This companion file is a no-op placeholder for
+// consistency with other modules.

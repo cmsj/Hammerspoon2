@@ -718,59 +718,16 @@ When JavaScript assigns `hs.task.runAsync = function() {...}`, JSC routes throug
 
 **When to use**: Storing JS functions or values that map naturally to `JSValue?` properties on the module.
 
-#### Approach 3: Object.defineProperty getter override (used by hs.console)
-
-For modules where read methods (`getConsole`, `getHistory`) are implemented as Swift `@convention(block)` closures but can't be added to the `JSExport` protocol (because they need `nonisolated` access for thread safety), override the parent object's getter to return a cached plain JS wrapper:
-
-```swift
-// Phase 1: Register block closures as globals (before ModuleRoot)
-struct HSConsoleReadInstaller: JSContextInstallable {
-    func install(in context: JSContext) throws {
-        let getConsole: @convention(block) () -> String = { hsConsoleGetConsole() }
-        context.setObject(getConsole, forKeyedSubscript: "__hsConsoleGetConsole" as NSString)
-    }
-}
-
-// Phase 2: Override getter (after ModuleRoot)
-struct HSConsoleGetterInstaller: JSContextInstallable {
-    func install(in context: JSContext) throws {
-        context.evaluateScript("""
-            (function() {
-                var proto = Object.getPrototypeOf(hs);
-                var origGetter = Object.getOwnPropertyDescriptor(proto, 'console').get;
-                var cached = null;
-                Object.defineProperty(proto, 'console', {
-                    get: function() {
-                        if (!cached) {
-                            var orig = origGetter.call(this);
-                            cached = Object.create(orig);
-                            cached.getConsole = __hsConsoleGetConsole;
-                            cached.getHistory = __hsConsoleGetHistory;
-                        }
-                        return cached;
-                    },
-                    configurable: true
-                });
-            })();
-        """)
-    }
-}
-```
-
-`Object.create(orig)` creates a plain JS object inheriting from the JSExport proxy. The plain object's own properties (`getConsole`, `getHistory`) survive GC. The two-phase installer pattern ensures the override is in place before any user code runs.
-
-**When to use**: Adding methods that can't go in the `@objc` protocol (e.g., `nonisolated` free functions for thread safety) to a module that's accessed via a lazy getter.
-
 ### Comparison
 
-| | Closure-scoped JS vars | JSExport protocol properties | Object.defineProperty override |
-|---|---|---|---|
-| **Where state lives** | JS global scope | Swift stored properties | Plain JS object (cached) |
-| **GC resilience** | Not on proxy at all | Swift memory, invisible to GC | Own properties on plain object |
-| **Protocol changes** | None | Properties added to JSExport protocol | None |
-| **Thread safety** | N/A (JS is single-threaded) | Must handle actor isolation | Free functions can be `nonisolated` |
-| **Best for** | Complex mutable state, dictionaries | JS functions, simple values | Adding methods from outside the module |
-| **Used by** | `hs.ipc` | `hs.task` | `hs.console` |
+| | Closure-scoped JS vars | JSExport protocol properties |
+|---|---|---|
+| **Where state lives** | JS global scope | Swift stored properties |
+| **GC resilience** | Not on proxy at all | Swift memory, invisible to GC |
+| **Protocol changes** | None | Properties added to JSExport protocol |
+| **Thread safety** | N/A (JS is single-threaded) | Must handle actor isolation |
+| **Best for** | Complex mutable state, dictionaries | JS functions, simple values |
+| **Used by** | `hs.ipc` | `hs.task` |
 
 ### Auto-Reconnect
 
