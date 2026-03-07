@@ -10,6 +10,7 @@ import JavaScriptCore
 @testable import Hammerspoon_2
 
 /// Integration tests for hs.console module
+@Suite(.serialized)
 struct HSConsoleIntegrationTests {
 
     // MARK: - getConsole Tests
@@ -120,5 +121,37 @@ struct HSConsoleIntegrationTests {
         harness.expectTrue("typeof hs.console.clear === 'function'")
         harness.expectTrue("typeof hs.console.getConsole === 'function'")
         harness.expectTrue("typeof hs.console.getHistory === 'function'")
+    }
+
+    // MARK: - Background thread safety
+    //
+    // These tests verify that the free functions (used by hs.console.js via
+    // @convention(block) closures) don't crash when called from a non-main
+    // thread, which happens via IPC (CFMessagePort callback).
+
+    @Test("hsConsoleGetConsole works when called from a background thread")
+    func testGetConsoleFromBackgroundThread() async {
+        // Verify calling from a non-main thread doesn't crash
+        // (the original bug was dispatch_assert_queue failure from IPC threads)
+        let result: String = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                let value = hsConsoleGetConsole()
+                continuation.resume(returning: value)
+            }
+        }
+
+        #expect(result is String)
+    }
+
+    @Test("hsConsoleGetHistory works when called from a background thread")
+    func testGetHistoryFromBackgroundThread() async {
+        let result: [String] = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                let value = hsConsoleGetHistory()
+                continuation.resume(returning: value)
+            }
+        }
+
+        #expect(result is [String])
     }
 }
