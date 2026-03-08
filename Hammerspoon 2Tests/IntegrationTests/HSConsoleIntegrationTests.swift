@@ -10,6 +10,11 @@ import JavaScriptCore
 @testable import Hammerspoon_2
 
 /// Integration tests for hs.console module
+///
+/// These tests modify HammerspoonLog.shared (entries and evalHistory).
+/// The suite is serialized and @MainActor, which prevents interference from
+/// other @MainActor test suites. Background-thread logging (via AKLog's Task path)
+/// is deferred until the main actor yields, so it won't interfere mid-test.
 @Suite(.serialized)
 struct HSConsoleIntegrationTests {
 
@@ -74,6 +79,9 @@ struct HSConsoleIntegrationTests {
         let harness = JSTestHarness()
         harness.loadModule(HSConsoleModule.self, as: "console")
 
+        let savedHistory = HammerspoonLog.shared.evalHistory
+        defer { HammerspoonLog.shared.evalHistory = savedHistory }
+
         HammerspoonLog.shared.evalHistory = []
         let result = harness.eval("hs.console.getHistory()") as? [String]
         #expect(result == [])
@@ -84,6 +92,9 @@ struct HSConsoleIntegrationTests {
     func testGetHistoryWithEntries() {
         let harness = JSTestHarness()
         harness.loadModule(HSConsoleModule.self, as: "console")
+
+        let savedHistory = HammerspoonLog.shared.evalHistory
+        defer { HammerspoonLog.shared.evalHistory = savedHistory }
 
         HammerspoonLog.shared.evalHistory = ["print('hi')", "2 + 2", "hs.reload()"]
         let result = harness.eval("hs.console.getHistory()") as? [String]
@@ -104,6 +115,9 @@ struct HSConsoleIntegrationTests {
     func testGetHistoryReturnsArray() {
         let harness = JSTestHarness()
         harness.loadModule(HSConsoleModule.self, as: "console")
+
+        let savedHistory = HammerspoonLog.shared.evalHistory
+        defer { HammerspoonLog.shared.evalHistory = savedHistory }
 
         HammerspoonLog.shared.evalHistory = ["test"]
         harness.expectTrue("Array.isArray(hs.console.getHistory())")

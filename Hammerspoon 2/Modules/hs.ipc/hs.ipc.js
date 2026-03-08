@@ -23,6 +23,7 @@ const MSG_ID = {
 // assigned properties when the garbage collector reclaims their wrappers.
 var __ipcRegisteredInstances = {};
 var __ipcRemotePorts = {};
+var __ipcDefaultPort = null;
 var __ipcOriginalPrint = (typeof print !== 'undefined') ? print : console.log;
 
 // Default message handler for IPC protocol
@@ -201,9 +202,10 @@ var __ipcDefaultHandler = function(port, msgID, data) {
     }
 };
 
-// NOTE: __ipcPrint and the global print replacement below are not yet functional.
-// The JS engine has no global 'print' function, so the replacement on line 248
-// never executes. See docs/IPC.md "Console Mirroring" for details.
+// NOTE: __ipcPrint is not yet functional.
+// The JS engine has no global 'print' function, so it cannot be replaced.
+// This function is retained for future use when console mirroring is implemented.
+// See docs/IPC.md "Console Mirroring" for details.
 var __ipcPrint = function(...args) {
     // Call original print
     __ipcOriginalPrint(...args);
@@ -224,22 +226,19 @@ var __ipcPrint = function(...args) {
 };
 
 // Create default port for CLI communication
+// Stored in closure-scoped variable to survive JSExport proxy GC.
 try {
-    hs.ipc.__default = hs.ipc.localPort("Hammerspoon2", __ipcDefaultHandler);
-    if (!hs.ipc.__default) {
+    __ipcDefaultPort = hs.ipc.localPort("Hammerspoon2", __ipcDefaultHandler);
+    if (!__ipcDefaultPort) {
         console.error("Failed to create default IPC port 'Hammerspoon2'");
     }
 } catch (e) {
     console.error("Error creating default IPC port:", e);
 }
 
-// Replace global print with IPC-aware version
-if (typeof print !== 'undefined') {
-    print = __ipcPrint;
-}
-
 // Tab completion function for REPL (minimal v1.0 implementation)
-hs.completionsForInputString = function(inputString) {
+// Stored in closure-scoped variable to survive JSExport proxy GC.
+var __ipcCompletionsForInputString = function(inputString) {
     // Complete hs.* module names
     if (inputString.startsWith("hs.")) {
         const modules = Object.keys(hs).filter(k => k !== "__proto__" && !k.startsWith("__"));
@@ -249,3 +248,4 @@ hs.completionsForInputString = function(inputString) {
     // Future enhancement: complete other globals, properties, methods
     return [];
 };
+hs.completionsForInputString = __ipcCompletionsForInputString;

@@ -39,9 +39,6 @@ nonisolated class HS2CommandTests: XCTestCase {
         return (path as NSString).standardizingPath
     }
 
-    /// Process handle for Hammerspoon 2 app
-    private var hammerspoonProcess: Process?
-
     /// Timeout for waiting for Hammerspoon to start
     private let startupTimeout: TimeInterval = 5.0
 
@@ -93,12 +90,13 @@ nonisolated class HS2CommandTests: XCTestCase {
 
     /// Start Hammerspoon 2.app
     private func startHammerspoon() {
-        hammerspoonProcess = Process()
-        hammerspoonProcess?.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        hammerspoonProcess?.arguments = [hammerspoonAppPath]
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = [hammerspoonAppPath]
 
         do {
-            try hammerspoonProcess?.run()
+            try process.run()
+            process.waitUntilExit()
         } catch {
             XCTFail("Failed to launch Hammerspoon 2: \(error)")
         }
@@ -122,10 +120,6 @@ nonisolated class HS2CommandTests: XCTestCase {
 
     /// Stop Hammerspoon 2.app
     private func stopHammerspoon() {
-        if let process = hammerspoonProcess, process.isRunning {
-            process.terminate()
-            process.waitUntilExit()
-        }
         killExistingHammerspoon()
     }
 
@@ -153,6 +147,24 @@ nonisolated class HS2CommandTests: XCTestCase {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
+        // Read pipe data concurrently to prevent deadlock if the subprocess
+        // fills the pipe buffer (~64KB) before exiting.
+        var stdoutData = Data()
+        var stderrData = Data()
+        let readGroup = DispatchGroup()
+
+        readGroup.enter()
+        DispatchQueue.global().async {
+            stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+            readGroup.leave()
+        }
+
+        readGroup.enter()
+        DispatchQueue.global().async {
+            stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+            readGroup.leave()
+        }
+
         do {
             try process.run()
 
@@ -175,9 +187,8 @@ nonisolated class HS2CommandTests: XCTestCase {
             XCTFail("Failed to run hs2 command: \(error)")
         }
 
-        // Read pipe data synchronously after process exits to avoid data races
-        let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+        // Wait for pipe reads to complete
+        readGroup.wait()
 
         let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
         let stderr = String(data: stderrData, encoding: .utf8) ?? ""

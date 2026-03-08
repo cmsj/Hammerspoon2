@@ -8,6 +8,7 @@
 
 @preconcurrency @unsafe import Foundation
 @preconcurrency @unsafe import JavaScriptCore
+import Synchronization
 
 /// Protocol for JavaScript export
 @objc protocol HSMessagePortAPI: JSExport {
@@ -48,7 +49,7 @@
     private var runLoopSource: CFRunLoopSource?
 
     /// Recursive call depth tracking
-    nonisolated(unsafe) private static var callDepth: Int = 0
+    private static let callDepth = Atomic<Int>(0)
     private static let maxCallDepth: Int = 5
 
     // MARK: - HSTypeAPI
@@ -150,14 +151,14 @@
         _ info: UnsafeMutableRawPointer?
     ) -> Unmanaged<CFData>? {
         // Check recursion depth
-        guard callDepth < maxCallDepth else {
+        guard callDepth.load(ordering: .acquiring) < maxCallDepth else {
             AKError("Message port callback recursion depth exceeded (max: \(maxCallDepth))")
             let errorData = "Error: Recursion depth exceeded".data(using: .utf8)!
             return Unmanaged.passRetained(errorData as CFData)
         }
 
-        callDepth += 1
-        defer { callDepth -= 1 }
+        callDepth.wrappingAdd(1, ordering: .acquiringAndReleasing)
+        defer { callDepth.wrappingSubtract(1, ordering: .releasing) }
 
         // Get self reference
         guard let info = info else {

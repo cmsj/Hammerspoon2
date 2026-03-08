@@ -205,13 +205,13 @@ class JSTestHarness {
             })()
             """)
 
-        // Register the Swift side handler (using Any to avoid @convention(block) limitation)
+        // Register the Swift side handler
         let swiftHandler: @convention(block) (Any) -> Void = { arg in
             if let typedArg = arg as? T {
                 callback(typedArg)
             }
         }
-        context.setObject(unsafeBitCast(swiftHandler, to: AnyObject.self), forKeyedSubscript: "__swift_callback_\(name)" as NSString)
+        context.setObject(swiftHandler, forKeyedSubscript: "__swift_callback_\(name)" as NSString)
 
         // Set the JavaScript function in global scope
         context.setObject(jsFunction, forKeyedSubscript: name as NSString)

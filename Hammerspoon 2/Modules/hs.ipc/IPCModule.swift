@@ -84,8 +84,8 @@ import JavaScriptCore
         let manPath = (installPath as NSString).appendingPathComponent("share/man/man1")
 
         // Get bundle paths
-        guard let bundlePath = Bundle.main.bundlePath as String?,
-              let binarySource = findHS2Binary(in: bundlePath),
+        let bundlePath = Bundle.main.bundlePath
+        guard let binarySource = findHS2Binary(in: bundlePath),
               let manSource = findManPage(in: bundlePath) else {
             if !silent {
                 AKError("cliInstall: Could not locate hs2 binary or man page in bundle")
@@ -110,6 +110,7 @@ import JavaScriptCore
         }
 
         // Check if binary symlink exists
+        var createdBinarySymlink = false
         if fm.fileExists(atPath: binaryDest) {
             // Check if it's our symlink
             if let existing = try? fm.destinationOfSymbolicLink(atPath: binaryDest),
@@ -127,6 +128,7 @@ import JavaScriptCore
             // Create binary symlink
             do {
                 try fm.createSymbolicLink(atPath: binaryDest, withDestinationPath: binarySource)
+                createdBinarySymlink = true
                 if !silent {
                     AKInfo("Installed hs2 binary symlink: \(binaryDest) -> \(binarySource)")
                 }
@@ -150,6 +152,10 @@ import JavaScriptCore
                 if !silent {
                     AKError("cliInstall: File already exists at \(manDest)")
                 }
+                // Roll back binary symlink if we created it
+                if createdBinarySymlink {
+                    try? fm.removeItem(atPath: binaryDest)
+                }
                 return false
             }
         } else {
@@ -162,6 +168,10 @@ import JavaScriptCore
             } catch {
                 if !silent {
                     AKError("cliInstall: Failed to create man page symlink: \(error.localizedDescription)")
+                }
+                // Roll back binary symlink if we created it
+                if createdBinarySymlink {
+                    try? fm.removeItem(atPath: binaryDest)
                 }
                 return false
             }
@@ -183,8 +193,8 @@ import JavaScriptCore
         var success = true
 
         // Get our bundle path for validation
-        guard let bundlePath = Bundle.main.bundlePath as String?,
-              let binarySource = findHS2Binary(in: bundlePath),
+        let bundlePath = Bundle.main.bundlePath
+        guard let binarySource = findHS2Binary(in: bundlePath),
               let manSource = findManPage(in: bundlePath) else {
             if !silent {
                 AKError("cliUninstall: Could not locate hs2 binary or man page in bundle")
@@ -263,8 +273,8 @@ import JavaScriptCore
         let fm = FileManager.default
 
         // Get our bundle path for validation
-        guard let bundlePath = Bundle.main.bundlePath as String?,
-              let binarySource = findHS2Binary(in: bundlePath),
+        let bundlePath = Bundle.main.bundlePath
+        guard let binarySource = findHS2Binary(in: bundlePath),
               let manSource = findManPage(in: bundlePath) else {
             if !silent {
                 AKError("cliStatus: Could not locate hs2 binary or man page in bundle")

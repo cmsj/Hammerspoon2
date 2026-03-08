@@ -60,9 +60,18 @@ struct HSIPCHandlerTests {
     @Test("Default IPC port creation is attempted")
     func testDefaultPortCreated() {
         let harness = makeHarness()
-        // The default port may or may not exist (conflicts if app is running),
-        // but the variable should be defined
-        harness.expectTrue("typeof hs.ipc.__default !== 'undefined'")
+        // __ipcDefaultPort is always defined (var declaration at top of hs.ipc.js).
+        // It will be non-null if port creation succeeded, or null if the port name
+        // "Hammerspoon2" is already in use (e.g., Hammerspoon app is running).
+        harness.expectTrue("typeof __ipcDefaultPort !== 'undefined'")
+
+        // If no Hammerspoon app is running, the port should have been created
+        let portValue = harness.eval("__ipcDefaultPort")
+        if portValue == nil || portValue is NSNull {
+            // Port is null — likely because the app is running and owns the port name.
+            // This is expected in that environment, not a test failure.
+            print("Note: Default IPC port is null (Hammerspoon may be running)")
+        }
     }
 
     // MARK: - Registration Error Cases

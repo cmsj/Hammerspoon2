@@ -115,15 +115,7 @@ import AppKit
 
     @objc func getConsole() -> String {
         let log = HammerspoonLog.shared
-        return log.entries.map { entry in
-            let date = entry.date.formatted(
-                .verbatim(
-                    "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
-                    locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
-                )
-            )
-            return "\(date) - \(entry.logType.asString): \(entry.msg)"
-        }.joined(separator: "\n")
+        return log.entries.map { $0.formattedLine }.joined(separator: "\n")
     }
 
     @objc func getHistory() -> [String] {
