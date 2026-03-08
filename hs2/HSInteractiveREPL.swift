@@ -103,6 +103,10 @@ class HSInteractiveREPL {
         if let client = HSInteractiveREPL.completionClient {
             let escaped = inputText.replacingOccurrences(of: "\\", with: "\\\\")
                                    .replacingOccurrences(of: "'", with: "\\'")
+                                   .replacingOccurrences(of: "\n", with: "\\n")
+                                   .replacingOccurrences(of: "\r", with: "\\r")
+                                   .replacingOccurrences(of: "\0", with: "")
+                                   .replacingOccurrences(of: "\t", with: "\\t")
             let query = "JSON.stringify(hs.completionsForInputString('\(escaped)'))"
             let message = "\(client.localName)\0\(query)"
 

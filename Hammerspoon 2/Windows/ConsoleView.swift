@@ -47,13 +47,7 @@ struct ConsoleView: View {
                                 return $0.msg.contains(searchString)
                             }
                         }) { entry in
-                            let date = entry.date.formatted(
-                                .verbatim(
-                                    "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
-                                    locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
-                                )
-                            )
-                            Text("\(date) - \(entry.logType.asString): \(entry.msg)")
+                            Text(entry.formattedLine)
                                 .id(entry.id)
                                 .multilineTextAlignment(.leading)
                                 .fontDesign(.monospaced)
