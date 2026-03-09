@@ -145,6 +145,24 @@ while i < CommandLine.arguments.count {
     i += 1
 }
 
+// Validate: -a requires -c or file
+if !customArgs.isEmpty && commandsToExecute.isEmpty && fileName == nil && !readStdin {
+    fputs("Error: -a requires -c <code> or a file argument\n", stderr)
+    exit(EX_USAGE)
+}
+
+// Validate: conflicting input modes
+do {
+    var modeCount = 0
+    if readStdin { modeCount += 1 }
+    if !commandsToExecute.isEmpty { modeCount += 1 }
+    if fileName != nil { modeCount += 1 }
+    if modeCount > 1 {
+        fputs("Error: conflicting options — specify only one of -s, -c, or a file\n", stderr)
+        exit(EX_USAGE)
+    }
+}
+
 // Detect stdin pipe (only if no explicit commands or file specified)
 if isatty(STDIN_FILENO) == 0 && commandsToExecute.isEmpty && fileName == nil && !interactive {
     readStdin = true

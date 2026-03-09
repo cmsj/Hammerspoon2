@@ -63,9 +63,11 @@ check_prerequisites() {
 start_hammerspoon() {
     log_info "Starting Hammerspoon 2..."
 
-    # Kill any existing instances
-    killall -9 "Hammerspoon 2" 2>/dev/null || true
+    # Kill any existing instances (graceful first, then force)
+    killall "Hammerspoon 2" 2>/dev/null || true
     sleep 1
+    killall -9 "Hammerspoon 2" 2>/dev/null || true
+    sleep 0.5
 
     # Start Hammerspoon 2
     open "$HAMMERSPOON_APP"
@@ -96,8 +98,8 @@ stop_hammerspoon() {
 
 run_test() {
     local test_name="$1"
-    local test_command="$2"
-    local expected_exit_code="${3:-0}"
+    local expected_exit_code="$2"
+    shift 2
 
     TESTS_RUN=$((TESTS_RUN + 1))
     echo -n "  Test $TESTS_RUN: $test_name ... "
@@ -106,7 +108,7 @@ run_test() {
     local exit_code
 
     set +e
-    output=$(eval "$test_command" 2>&1)
+    output=$("$@" 2>&1)
     exit_code=$?
     set -e
 
@@ -169,43 +171,40 @@ run_basic_tests() {
     echo ""
     log_info "Running basic functionality tests..."
 
-    run_test "Simple print" \
-        "$HS2_BINARY -q -c 'print(\"test\")'"
+    run_test "Simple print" 0 \
+        "$HS2_BINARY" -q -c 'print("test")'
 
-    run_test "Math operations" \
-        "$HS2_BINARY -q -c 'print(2 + 2)'"
+    run_test "Math operations" 0 \
+        "$HS2_BINARY" -q -c 'print(2 + 2)'
 
-    run_test "Multiple statements" \
-        "$HS2_BINARY -q -c 'print(1); print(2); print(3)'"
+    run_test "Multiple statements" 0 \
+        "$HS2_BINARY" -q -c 'print(1); print(2); print(3)'
 
-    run_test "Function definition" \
-        "$HS2_BINARY -q -c 'function f() { return 42; } print(f());'"
+    run_test "Function definition" 0 \
+        "$HS2_BINARY" -q -c 'function f() { return 42; } print(f());'
 
-    run_test "hs namespace access" \
-        "$HS2_BINARY -q -c 'print(typeof hs)'"
+    run_test "hs namespace access" 0 \
+        "$HS2_BINARY" -q -c 'print(typeof hs)'
 
-    run_test "hs.timer access" \
-        "$HS2_BINARY -q -c 'print(typeof hs.timer)'"
+    run_test "hs.timer access" 0 \
+        "$HS2_BINARY" -q -c 'print(typeof hs.timer)'
 
-    run_test "hs.timer helper" \
-        "$HS2_BINARY -q -c 'print(hs.timer.minutes(5))'"
+    run_test "hs.timer helper" 0 \
+        "$HS2_BINARY" -q -c 'print(hs.timer.minutes(5))'
 }
 
 run_error_tests() {
     echo ""
     log_info "Running error handling tests..."
 
-    run_test "Syntax error detection" \
-        "$HS2_BINARY -q -c 'invalid syntax;;'" \
-        0
+    run_test "Syntax error detection" 0 \
+        "$HS2_BINARY" -q -c 'invalid syntax;;'
 
-    run_test "Runtime error detection" \
-        "$HS2_BINARY -q -c 'throw new Error(\"test\");'" \
-        0
+    run_test "Runtime error detection" 0 \
+        "$HS2_BINARY" -q -c 'throw new Error("test");'
 
-    run_test "Undefined variable" \
-        "$HS2_BINARY -q -c 'print(undefinedVar);'" \
-        0
+    run_test "Undefined variable" 0 \
+        "$HS2_BINARY" -q -c 'print(undefinedVar);'
 }
 
 run_fixture_tests() {

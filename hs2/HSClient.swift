@@ -380,10 +380,15 @@ class HSClient {
 
     func stopRunLoopAfterDelay(_ delay: TimeInterval) {
         if let runLoop = runLoop {
-            let timer = CFRunLoopTimerCreateWithHandler(nil, CFAbsoluteTimeGetCurrent() + delay, 0, 0, 0) { _ in
-                CFRunLoopStop(runLoop)
+            // Schedule the timer on the run loop's own thread — CFRunLoop APIs
+            // must be called from the thread that owns the run loop.
+            CFRunLoopPerformBlock(runLoop, CFRunLoopMode.defaultMode.rawValue) {
+                let timer = CFRunLoopTimerCreateWithHandler(nil, CFAbsoluteTimeGetCurrent() + delay, 0, 0, 0) { _ in
+                    CFRunLoopStop(runLoop)
+                }
+                CFRunLoopAddTimer(runLoop, timer, .defaultMode)
             }
-            CFRunLoopAddTimer(runLoop, timer, .defaultMode)
+            CFRunLoopWakeUp(runLoop)
         }
     }
 }
