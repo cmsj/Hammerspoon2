@@ -7,6 +7,7 @@ import Foundation
 import AppKit
 import CoreGraphics
 import JavaScriptCore
+import ScreenCaptureKit
 
 // MARK: - JavaScript API
 
@@ -90,9 +91,11 @@ import JavaScriptCore
 
     /// Capture the current contents of this screen as an image.
     ///
-    /// Requires **Screen Recording** permission. Returns `null` if the capture
-    /// fails (e.g. permission denied).
-    @objc func snapshot() -> HSImage?
+    /// Requires **Screen Recording** permission.
+    ///
+    /// - Returns: {Promise<HSImage>} Resolves with the captured image, or rejects if the
+    ///   capture fails (e.g. permission denied).
+    @objc func snapshot() -> JSPromise?
 
     // MARK: - Navigation
 
@@ -192,7 +195,7 @@ import JavaScriptCore
     @objc var name: String { screen.localizedName }
 
     @objc var uuid: String {
-        guard let cfUUID = CGDisplayCreateUUIDFromDisplayID(displayID)?.takeRetainedValue() else {
+        guard let cfUUID = unsafe CGDisplayCreateUUIDFromDisplayID(displayID)?.takeRetainedValue() else {
             return ""
         }
         return CFUUIDCreateString(nil, cfUUID) as String? ?? ""
@@ -250,9 +253,10 @@ import JavaScriptCore
             return false
         }
         var config: CGDisplayConfigRef?
-        guard CGBeginDisplayConfiguration(&config) == .success else { return false }
-        CGConfigureDisplayWithDisplayMode(config, displayID, mode, nil)
-        return CGCompleteDisplayConfiguration(config, .forSession) == .success
+        guard unsafe CGBeginDisplayConfiguration(&config) == .success else { return false }
+        unsafe CGConfigureDisplayWithDisplayMode(config, displayID, mode, nil)
+
+        return unsafe CGCompleteDisplayConfiguration(config, .forSession) == .success
     }
 
     // MARK: - Rotation
@@ -261,13 +265,36 @@ import JavaScriptCore
 
     // MARK: - Screenshot
 
-    @objc func snapshot() -> HSImage? {
-        guard let cgImage = CGDisplayCreateImage(displayID) else {
-            AKWarning("hs.screen.snapshot: CGDisplayCreateImage returned nil — Screen Recording permission may be required")
-            return nil
+    @objc func snapshot() -> JSPromise? {
+        let capturedDisplayID = displayID
+        let frameSize = screen.frame.size
+
+        return JSEngine.shared.createPromise { holder in
+            Task.detached {
+                do {
+                    let content = try await SCShareableContent.current
+                    guard let scDisplay = content.displays.first(where: { $0.displayID == capturedDisplayID }) else {
+                        await holder.rejectWithMessage("hs.screen.snapshot: could not locate display \(capturedDisplayID)")
+                        return
+                    }
+
+                    let filter = SCContentFilter(display: scDisplay, excludingWindows: [])
+
+                    let config = SCStreamConfiguration()
+                    config.width = Int(CGDisplayPixelsWide(capturedDisplayID))
+                    config.height = Int(CGDisplayPixelsHigh(capturedDisplayID))
+                    config.showsCursor = false
+
+                    let cgImage = try await SCScreenshotManager.captureImage(
+                        contentFilter: filter,
+                        configuration: config
+                    )
+                    await holder.resolveWith(HSImage(image: NSImage(cgImage: cgImage, size: frameSize)))
+                } catch {
+                    await holder.rejectWithMessage("hs.screen.snapshot: \(error.localizedDescription)")
+                }
+            }
         }
-        let nsImage = NSImage(cgImage: cgImage, size: screen.frame.size)
-        return HSImage(image: nsImage)
     }
 
     // MARK: - Navigation
@@ -327,9 +354,10 @@ import JavaScriptCore
 
     @objc func setOrigin(_ x: Double, _ y: Double) -> Bool {
         var config: CGDisplayConfigRef?
-        guard CGBeginDisplayConfiguration(&config) == .success else { return false }
-        CGConfigureDisplayOrigin(config, displayID, Int32(x), Int32(y))
-        return CGCompleteDisplayConfiguration(config, .forSession) == .success
+        guard unsafe CGBeginDisplayConfiguration(&config) == .success else { return false }
+        unsafe CGConfigureDisplayOrigin(config, displayID, Int32(x), Int32(y))
+
+        return unsafe CGCompleteDisplayConfiguration(config, .forSession) == .success
     }
 
     @objc func setPrimary() -> Bool {
@@ -338,27 +366,27 @@ import JavaScriptCore
         let dx = Int32(selfOrigin.x)
         let dy = Int32(selfOrigin.y)
         var config: CGDisplayConfigRef?
-        guard CGBeginDisplayConfiguration(&config) == .success else { return false }
+        guard unsafe CGBeginDisplayConfiguration(&config) == .success else { return false }
         for s in NSScreen.screens {
             guard let sid = s.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID else { continue }
             let o = s.frame.origin
-            CGConfigureDisplayOrigin(config, sid, Int32(o.x) - dx, Int32(o.y) - dy)
+            unsafe CGConfigureDisplayOrigin(config, sid, Int32(o.x) - dx, Int32(o.y) - dy)
         }
-        return CGCompleteDisplayConfiguration(config, .forSession) == .success
+        return unsafe CGCompleteDisplayConfiguration(config, .forSession) == .success
     }
 
     @objc func mirrorOf(_ screen: HSScreen) -> Bool {
         var config: CGDisplayConfigRef?
-        guard CGBeginDisplayConfiguration(&config) == .success else { return false }
-        CGConfigureDisplayMirrorOfDisplay(config, displayID, screen.displayID)
-        return CGCompleteDisplayConfiguration(config, .forSession) == .success
+        guard unsafe CGBeginDisplayConfiguration(&config) == .success else { return false }
+        unsafe CGConfigureDisplayMirrorOfDisplay(config, displayID, screen.displayID)
+        return unsafe CGCompleteDisplayConfiguration(config, .forSession) == .success
     }
 
     @objc func mirrorStop() -> Bool {
         var config: CGDisplayConfigRef?
-        guard CGBeginDisplayConfiguration(&config) == .success else { return false }
-        CGConfigureDisplayMirrorOfDisplay(config, displayID, kCGNullDirectDisplay)
-        return CGCompleteDisplayConfiguration(config, .forSession) == .success
+        guard unsafe CGBeginDisplayConfiguration(&config) == .success else { return false }
+        unsafe CGConfigureDisplayMirrorOfDisplay(config, displayID, kCGNullDirectDisplay)
+        return unsafe CGCompleteDisplayConfiguration(config, .forSession) == .success
     }
 
     // MARK: - Coordinate Conversion

@@ -39,8 +39,8 @@ import JavaScriptCore
 /// ## Screenshots
 ///
 /// ```javascript
-/// const img = hs.screen.mainScreen().snapshot();
-/// if (img) img.saveToFile("/tmp/screen.png");
+/// const img = await hs.screen.mainScreen().snapshot();
+/// img.saveToFile("/tmp/screen.png");
 /// ```
 @objc protocol HSScreenModuleAPI: JSExport {
     /// All connected screens.
