@@ -59,7 +59,7 @@ import Observation
 
     @objc static func hex(_ hex: String) -> HSColor {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+        hexSanitized = hexSanitized.replacing("#", with: "")
 
         var rgb: UInt64 = 0
 

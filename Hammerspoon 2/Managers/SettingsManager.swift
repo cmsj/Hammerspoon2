@@ -10,6 +10,7 @@ import SwiftUI
 
 @_documentation(visibility: private)
 @Observable
+@MainActor
 final class SettingsManager {
     static let shared = SettingsManager()
 
@@ -43,7 +44,8 @@ extension SettingsManager: SettingsManagerProtocol {
     var configLocation: URL {
         get {
             access(keyPath: \.configLocation)
-            return UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)!
+            return UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
+                ?? (Keys.configLocation.defaultValue as! URL)
         }
         set {
             withMutation(keyPath: \.configLocation) {

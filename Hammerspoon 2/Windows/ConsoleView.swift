@@ -23,6 +23,13 @@ struct ConsoleView: View {
 
     @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Trace
 
+    private var filteredEntries: [HammerspoonLogEntry] {
+        logs.entries.filter {
+            $0.logType.rawValue >= minimumLogLevel.rawValue &&
+            (searchString.isEmpty || $0.msg.localizedStandardContains(searchString))
+        }
+    }
+
     func styleForLogType(_ logType: HammerspoonLogType) -> any ShapeStyle {
         switch logType {
         case .Error: return .red
@@ -31,19 +38,60 @@ struct ConsoleView: View {
         }
     }
 
+    fileprivate func handleUpArrow() -> KeyPress.Result {
+        switch (evalIndex) {
+        case -1:
+            // Start walking up the history
+            evalIndex = evalHistory.count - 1
+        case 0:
+            // We can go no further, evalIndex has taken us to the start of history
+            return .ignored
+        default:
+            evalIndex = evalIndex - 1
+        }
+        evalString = evalHistory[evalIndex]
+        return .handled
+    }
+    
+    fileprivate func handleDownArrow() -> KeyPress.Result {
+        switch (evalIndex) {
+        case -1:
+            // We're not in history yet, pressing down here has no effect
+            return .ignored
+        case evalHistory.count - 1:
+            // We've reached the end of history, return to emptiness
+            evalString = ""
+            evalIndex = -1
+            return .handled
+        default:
+            evalIndex = evalIndex + 1
+        }
+        evalString = evalHistory[evalIndex]
+        return .handled
+    }
+    
+    fileprivate func handleSubmit() {
+        evalHistory.append(evalString)
+        evalIndex = -1
+        if let result = JSEngine.shared.eval(evalString) {
+            // FIXME: This is a disgusting hack, there must be a better way to detect if result is a Bool type of NSNumber?
+            let typeString = "\(type(of: result))"
+            if typeString == "__NSCFBoolean" {
+                let boolResult = result as! NSNumber
+                AKConsole("\(boolResult.boolValue)")
+            } else {
+                AKConsole(String(describing: result))
+            }
+        }
+        evalString = ""
+    }
+    
     var body: some View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading) {
-                        ForEach(logs.entries.filter {
-                            if $0.logType.rawValue < minimumLogLevel.rawValue { return false }
-                            if searchString == "" {
-                                return true
-                            } else {
-                                return $0.msg.contains(searchString)
-                            }
-                        }) { entry in
+                        ForEach(filteredEntries) { entry in
                             let date = entry.date.formatted(
                                 .verbatim(
                                     "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
@@ -69,49 +117,13 @@ struct ConsoleView: View {
             TextField(">", text: $evalString, prompt: Text("Javascript: >"))
                 .padding()
                 .onKeyPress(keys: [.upArrow], phases: .up, action: { _ in
-                    switch (evalIndex) {
-                    case -1:
-                        // Start walking up the history
-                        evalIndex = evalHistory.count - 1
-                    case 0:
-                        // We can go no further, evalIndex has taken us to the start of history
-                        return .ignored
-                    default:
-                        evalIndex = evalIndex - 1
-                    }
-                    evalString = evalHistory[evalIndex]
-                    return .handled
+                    return handleUpArrow()
                 })
                 .onKeyPress(keys: [.downArrow], phases: .up, action: { _ in
-                    switch (evalIndex) {
-                    case -1:
-                        // We're not in history yet, pressing down here has no effect
-                        return .ignored
-                    case evalHistory.count - 1:
-                        // We've reached the end of history, return to emptiness
-                        evalString = ""
-                        evalIndex = -1
-                        return .handled
-                    default:
-                        evalIndex = evalIndex + 1
-                    }
-                    evalString = evalHistory[evalIndex]
-                    return .handled
+                    return handleDownArrow()
                 })
                 .onSubmit {
-                    evalHistory.append(evalString)
-                    evalIndex = -1
-                    if let result = JSEngine.shared.eval(evalString) {
-                        // FIXME: This is a disgusting hack, there must be a better way to detect if result is a Bool type of NSNumber?
-                        let typeString = "\(type(of: result))"
-                        if typeString == "__NSCFBoolean" {
-                            let boolResult = result as! NSNumber
-                            AKConsole("\(boolResult.boolValue)")
-                        } else {
-                            AKConsole(String(describing: result))
-                        }
-                    }
-                    evalString = ""
+                    handleSubmit()
                 }
         }
         .toolbar(id: "console-toolbar") {

@@ -81,10 +81,8 @@ struct Hammerspoon_2App: App {
         .commands {
             // About
             CommandGroup(replacing: CommandGroupPlacement.appInfo) {
-                Button(action: {
+                Button("About Hammerspoon 2") {
                     openWindow(id: "about")
-                }) {
-                    Text("About Hammerspoon 2")
                 }
             }
         }

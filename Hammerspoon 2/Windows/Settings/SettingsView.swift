@@ -14,14 +14,12 @@ struct SettingsView: View {
 
     var body: some View {
         TabView {
-            SettingsConfigView()
-                .tabItem {
-                    Label("Configuration", systemImage: "gearshape")
-                }
-            SettingsAdvancedView()
-                .tabItem {
-                    Label("Advanced", systemImage: "hammer")
-                }
+            Tab("Configuration", systemImage: "gearshape") {
+                SettingsConfigView()
+            }
+            Tab("Advanced", systemImage: "hammer") {
+                SettingsAdvancedView()
+            }
         }
         .frame(width: 750, height: 400)
         .onKeyPress { action in

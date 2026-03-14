@@ -21,7 +21,7 @@ private struct ReactiveText: View {
     var body: some View {
         Text(content.value)
             .font(font)
-            .foregroundColor(foreground)
+            .foregroundStyle(foreground)
             .opacity(opacity)
             .frame(width: width, height: height)
     }

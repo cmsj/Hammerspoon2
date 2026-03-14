@@ -11,24 +11,14 @@ import Sparkle
 @_documentation(visibility: private)
 struct SettingsAdvancedView: View {
     @State private var settingsManager = SettingsManager.shared
-    @State private var hiddenTrigger: Bool = false // FIXME: This is an ugly hack to make the Sparkle binding below update the UI correctly.
-
+    @State private var automaticallyChecksForUpdates: Bool = false
     @ScaledMetric(relativeTo: .body) var iconSize: CGFloat = 12
 
     private let updaterController: SPUStandardUpdaterController
-    private var automaticallyChecksForUpdates: Binding<Bool> {
-        Binding (
-            get: { self.updaterController.updater.automaticallyChecksForUpdates },
-            set: {
-                self.updaterController.updater.automaticallyChecksForUpdates = $0
-                hiddenTrigger = $0
-            }
-        )
-    }
 
     init() {
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
-        hiddenTrigger = updaterController.updater.automaticallyChecksForUpdates
+        self._automaticallyChecksForUpdates = State(initialValue: updaterController.updater.automaticallyChecksForUpdates)
     }
 
     var body: some View {
@@ -37,12 +27,13 @@ struct SettingsAdvancedView: View {
             VStack {
                 Grid {
                     GridRow {
-                        Text("Automatically check for updates: \(hiddenTrigger ? "" : "")")
+                        Text("Automatically check for updates:")
                             .gridColumnAlignment(.trailing)
-                        Toggle(isOn: automaticallyChecksForUpdates) {
-                            Text("")
-                        }
-                        .labelsHidden()
+                        Toggle("Automatically check for updates", isOn: $automaticallyChecksForUpdates)
+                            .labelsHidden()
+                            .onChange(of: automaticallyChecksForUpdates) { _, newValue in
+                                updaterController.updater.automaticallyChecksForUpdates = newValue
+                            }
                     }
                 }
                 Spacer()

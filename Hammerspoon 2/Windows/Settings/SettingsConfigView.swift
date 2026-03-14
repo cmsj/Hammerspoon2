@@ -28,6 +28,27 @@ struct SettingsConfigView: View {
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     }
 
+    fileprivate func handleConfigFilePickerChange() {
+        if configFilePicker == .select {
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = true
+            panel.canChooseDirectories = false
+            panel.canCreateDirectories = true
+            panel.allowsMultipleSelection = false
+            panel.showsHiddenFiles = true
+            panel.directoryURL = settingsManager.configLocation.deletingLastPathComponent()
+            
+            if panel.runModal() == .OK {
+                if let url = panel.url {
+                    settingsManager.configLocation = url
+                }
+            }
+        }
+        configFilePicker = .url
+        icon = NSWorkspace.shared.icon(forFile: settingsManager.configLocation.path)
+        icon.size = .init(width: iconSize, height: iconSize)
+    }
+    
     var body: some View {
         HStack {
             Spacer()
@@ -51,24 +72,7 @@ struct SettingsConfigView: View {
                         }
                         .labelsHidden()
                         .onChange(of: configFilePicker, initial: true) {
-                            if configFilePicker == .select {
-                                let panel = NSOpenPanel()
-                                panel.canChooseFiles = true
-                                panel.canChooseDirectories = false
-                                panel.canCreateDirectories = true
-                                panel.allowsMultipleSelection = false
-                                panel.showsHiddenFiles = true
-                                panel.directoryURL = settingsManager.configLocation.deletingLastPathComponent()
-
-                                if panel.runModal() == .OK {
-                                    if let url = panel.url {
-                                        settingsManager.configLocation = url
-                                    }
-                                }
-                            }
-                            configFilePicker = .url
-                            icon = NSWorkspace.shared.icon(forFile: settingsManager.configLocation.path)
-                            icon.size = .init(width: iconSize, height: iconSize)
+                            handleConfigFilePickerChange()
                         }
                     }
                 }

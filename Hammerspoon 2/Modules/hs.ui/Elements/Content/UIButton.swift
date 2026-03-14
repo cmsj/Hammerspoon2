@@ -27,7 +27,7 @@ private struct ReactiveButton: View {
         Button(action: { action?() }) {
             Text(label.value)
                 .font(font)
-                .foregroundColor(foreground)
+                .foregroundStyle(foreground)
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 12)

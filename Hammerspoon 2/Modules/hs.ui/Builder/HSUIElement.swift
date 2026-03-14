@@ -65,7 +65,10 @@ extension InteractiveModifiable {
     func applyInteractions(_ view: AnyView) -> AnyView {
         var result = view
         if let onClick = clickCallback {
-            result = AnyView(result.contentShape(Rectangle()).onTapGesture { onClick() })
+            result = AnyView(
+                result.contentShape(Rectangle()).onTapGesture { onClick() }
+                .accessibilityAddTraits(.isButton)
+            )
         }
         if let onHover = hoverCallback {
             result = AnyView(result.onHover { isHovered in onHover(isHovered) })
