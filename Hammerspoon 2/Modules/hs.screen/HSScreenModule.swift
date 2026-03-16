@@ -14,22 +14,22 @@ import JavaScriptCore
 /// ## Obtaining screens
 ///
 /// ```javascript
-/// const all    = hs.screen.allScreens();   // [HSScreen, ...]
-/// const main   = hs.screen.mainScreen();   // screen containing the focused window
-/// const primary = hs.screen.primaryScreen(); // screen with the global menu bar
+/// const all    = hs.screen.all();   // [HSScreen, ...]
+/// const main   = hs.screen.main();   // screen containing the focused window
+/// const primary = hs.screen.primary(); // screen with the global menu bar
 /// ```
 ///
 /// ## Navigation
 ///
 /// ```javascript
-/// const right = hs.screen.mainScreen().toEast();
+/// const right = hs.screen.main().toEast();
 /// if (right) console.log("Screen to the right:", right.name);
 /// ```
 ///
 /// ## Display modes
 ///
 /// ```javascript
-/// const s = hs.screen.primaryScreen();
+/// const s = hs.screen.primary();
 /// console.log(s.currentMode());
 /// // → { width: 1440, height: 900, scale: 2, frequency: 60 }
 ///
@@ -39,21 +39,21 @@ import JavaScriptCore
 /// ## Screenshots
 ///
 /// ```javascript
-/// const img = await hs.screen.mainScreen().snapshot();
+/// const img = await hs.screen.main().snapshot();
 /// img.saveToFile("/tmp/screen.png");
 /// ```
 @objc protocol HSScreenModuleAPI: JSExport {
     /// All connected screens.
-    @objc func allScreens() -> [HSScreen]
+    @objc func all() -> [HSScreen]
 
     /// The screen that currently contains the focused window, or the screen
     /// with the keyboard focus if no window is focused.
     ///
     /// Returns `null` if no main screen can be determined.
-    @objc func mainScreen() -> HSScreen?
+    @objc func main() -> HSScreen?
 
     /// The primary display — the one that contains the global menu bar.
-    @objc func primaryScreen() -> HSScreen
+    @objc func primary() -> HSScreen
 }
 
 // MARK: - Implementation
@@ -67,16 +67,16 @@ import JavaScriptCore
 
     func shutdown() {}
 
-    @objc func allScreens() -> [HSScreen] {
+    @objc func all() -> [HSScreen] {
         NSScreen.screens.map { HSScreen(screen: $0) }
     }
 
-    @objc func mainScreen() -> HSScreen? {
+    @objc func main() -> HSScreen? {
         guard let main = NSScreen.main else { return nil }
         return HSScreen(screen: main)
     }
 
-    @objc func primaryScreen() -> HSScreen {
+    @objc func primary() -> HSScreen {
         // NSScreen.screens[0] is always the primary display on macOS.
         HSScreen(screen: NSScreen.screens[0])
     }

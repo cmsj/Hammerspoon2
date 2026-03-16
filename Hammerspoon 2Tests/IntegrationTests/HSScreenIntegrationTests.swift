@@ -34,39 +34,39 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.expectTrue("typeof hs.screen.allScreens === 'function'")
-        harness.expectTrue("typeof hs.screen.mainScreen === 'function'")
-        harness.expectTrue("typeof hs.screen.primaryScreen === 'function'")
+        harness.expectTrue("typeof hs.screen.all === 'function'")
+        harness.expectTrue("typeof hs.screen.main === 'function'")
+        harness.expectTrue("typeof hs.screen.primary === 'function'")
     }
 
-    // MARK: - allScreens / mainScreen / primaryScreen
+    // MARK: - all / main / primary
 
-    @Test("allScreens() returns a non-empty array")
+    @Test("all() returns a non-empty array")
     func testAllScreensIsNonEmpty() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var screens = hs.screen.allScreens();")
+        harness.eval("var screens = hs.screen.all();")
         harness.expectTrue("Array.isArray(screens)")
         harness.expectTrue("screens.length >= 1")
     }
 
-    @Test("mainScreen() returns an HSScreen object")
+    @Test("main() returns an HSScreen object")
     func testMainScreenReturnsObject() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var s = hs.screen.mainScreen();")
+        harness.eval("var s = hs.screen.main();")
         harness.expectTrue("s !== null && s !== undefined")
         harness.expectTrue("typeof s === 'object'")
     }
 
-    @Test("primaryScreen() returns an HSScreen object")
+    @Test("primary() returns an HSScreen object")
     func testPrimaryScreenReturnsObject() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var s = hs.screen.primaryScreen();")
+        harness.eval("var s = hs.screen.primary();")
         harness.expectTrue("s !== null && s !== undefined")
         harness.expectTrue("typeof s === 'object'")
     }
@@ -78,7 +78,7 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var s = hs.screen.primaryScreen();")
+        harness.eval("var s = hs.screen.primary();")
         harness.expectTrue("typeof s.id === 'number' && s.id > 0")
     }
 
@@ -87,7 +87,7 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var s = hs.screen.primaryScreen();")
+        harness.eval("var s = hs.screen.primary();")
         harness.expectTrue("typeof s.name === 'string' && s.name.length > 0")
     }
 
@@ -96,57 +96,57 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var s = hs.screen.primaryScreen();")
+        harness.eval("var s = hs.screen.primary();")
         harness.expectTrue("typeof s.uuid === 'string' && s.uuid.length > 0")
     }
 
     // MARK: - Geometry
 
-    @Test("frame() returns an object with x, y, w, h")
+    @Test("frame returns an object with x, y, w, h")
     func testFrameStructure() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var f = hs.screen.primaryScreen().frame();")
+        harness.eval("var f = hs.screen.primary().frame;")
         harness.expectTrue("f !== null && f !== undefined")
         harness.expectTrue("'x' in f && 'y' in f && 'w' in f && 'h' in f")
         harness.expectTrue("typeof f.w === 'number' && f.w > 0")
         harness.expectTrue("typeof f.h === 'number' && f.h > 0")
     }
 
-    @Test("fullFrame() returns an object with x, y, w, h")
+    @Test("fullFrame returns an object with x, y, w, h")
     func testFullFrameStructure() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var f = hs.screen.primaryScreen().fullFrame();")
+        harness.eval("var f = hs.screen.primary().fullFrame;")
         harness.expectTrue("f !== null && f !== undefined")
         harness.expectTrue("'x' in f && 'y' in f && 'w' in f && 'h' in f")
         harness.expectTrue("typeof f.w === 'number' && f.w > 0")
         harness.expectTrue("typeof f.h === 'number' && f.h > 0")
     }
 
-    @Test("fullFrame() area is >= frame() area (frame excludes menu bar/dock)")
+    @Test("fullFrame area is >= frame area (frame excludes menu bar/dock)")
     func testFullFrameLargerThanFrame() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
-        var s = hs.screen.primaryScreen();
-        var ff = s.fullFrame();
-        var f  = s.frame();
+        var s = hs.screen.primary();
+        var ff = s.fullFrame;
+        var f  = s.frame;
         var ffArea = ff.w * ff.h;
         var fArea  = f.w  * f.h;
         """)
         harness.expectTrue("ffArea >= fArea")
     }
 
-    @Test("position() returns an object with x and y")
+    @Test("position returns an object with x and y")
     func testPositionStructure() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var p = hs.screen.primaryScreen().position();")
+        harness.eval("var p = hs.screen.primary().position;")
         harness.expectTrue("p !== null && p !== undefined")
         harness.expectTrue("'x' in p && 'y' in p")
         harness.expectTrue("typeof p.x === 'number' && typeof p.y === 'number'")
@@ -154,12 +154,12 @@ import JavaScriptCore
 
     // MARK: - Display Modes
 
-    @Test("currentMode() returns an object with required keys")
+    @Test("mode returns an object with required keys")
     func testCurrentModeStructure() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var m = hs.screen.primaryScreen().currentMode();")
+        harness.eval("var m = hs.screen.primary().mode;")
         harness.expectTrue("m !== null && m !== undefined")
         harness.expectTrue("'width' in m && 'height' in m && 'scale' in m && 'frequency' in m")
         harness.expectTrue("m.width > 0 && m.height > 0")
@@ -167,25 +167,25 @@ import JavaScriptCore
         harness.expectTrue("m.frequency > 0")
     }
 
-    @Test("availableModes() returns a non-empty array")
+    @Test("availableModes returns a non-empty array")
     func testAvailableModes() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var modes = hs.screen.primaryScreen().availableModes();")
+        harness.eval("var modes = hs.screen.primary().availableModes;")
         harness.expectTrue("Array.isArray(modes) && modes.length >= 1")
         harness.expectTrue("'width' in modes[0] && 'height' in modes[0]")
     }
 
-    @Test("currentMode() is contained in availableModes()")
+    @Test("mode is contained in availableModes")
     func testCurrentModeInAvailableModes() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
-        var s = hs.screen.primaryScreen();
-        var cur = s.currentMode();
-        var modes = s.availableModes();
+        var s = hs.screen.primary();
+        var cur = s.mode;
+        var modes = s.availableModes;
         var found = modes.some(function(m) {
             return m.width === cur.width && m.height === cur.height && m.scale === cur.scale;
         });
@@ -195,14 +195,36 @@ import JavaScriptCore
 
     // MARK: - Rotation
 
-    @Test("rotation() returns a number (0, 90, 180, or 270)")
+    @Test("rotation returns a number (0, 90, 180, or 270)")
     func testRotation() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var r = hs.screen.primaryScreen().rotation();")
+        harness.eval("var r = hs.screen.primary().rotation;")
         harness.expectTrue("typeof r === 'number'")
         harness.expectTrue("r === 0 || r === 90 || r === 180 || r === 270")
+    }
+
+    @Test("setting rotation to the current value does not throw")
+    func testSetRotationNoOp() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        // Re-applying the current rotation is a safe no-op and must not throw.
+        harness.eval("""
+        var s = hs.screen.primary();
+        s.rotation = s.rotation;
+        """)
+        #expect(!harness.hasException, "Setting rotation to its current value should not throw a JS exception")
+    }
+
+    @Test("setting rotation to an invalid value does not throw")
+    func testSetRotationInvalidValue() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("hs.screen.primary().rotation = 45;")
+        #expect(!harness.hasException, "Setting an invalid rotation angle should not throw a JS exception")
     }
 
     // MARK: - Navigation
@@ -212,7 +234,7 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var n = hs.screen.primaryScreen().next();")
+        harness.eval("var n = hs.screen.primary().next();")
         harness.expectTrue("n !== null && n !== undefined")
         harness.expectTrue("typeof n === 'object'")
         harness.expectTrue("typeof n.id === 'number'")
@@ -223,7 +245,7 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var p = hs.screen.primaryScreen().previous();")
+        harness.eval("var p = hs.screen.primary().previous();")
         harness.expectTrue("p !== null && p !== undefined")
         harness.expectTrue("typeof p.id === 'number'")
     }
@@ -234,7 +256,7 @@ import JavaScriptCore
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
-        var s = hs.screen.primaryScreen();
+        var s = hs.screen.primary();
         var roundTripped = s.next().previous().id === s.id;
         """)
         harness.expectTrue("roundTripped")
@@ -244,12 +266,12 @@ import JavaScriptCore
     func testSingleScreenNavigation() {
         // This test is only meaningful when exactly one screen is attached.
         // We check the invariant regardless: on any count of screens,
-        // iterating next() N times (N = allScreens().length) returns to origin.
+        // iterating next() N times (N = all().length) returns to origin.
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
-        var screens = hs.screen.allScreens();
+        var screens = hs.screen.all();
         var s = screens[0];
         var cur = s;
         for (var i = 0; i < screens.length; i++) {
@@ -265,7 +287,7 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var s = hs.screen.primaryScreen();")
+        harness.eval("var s = hs.screen.primary();")
         harness.expectTrue("typeof s.toEast === 'function'")
         harness.expectTrue("typeof s.toWest === 'function'")
         harness.expectTrue("typeof s.toNorth === 'function'")
@@ -278,7 +300,7 @@ import JavaScriptCore
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
-        var s = hs.screen.primaryScreen();
+        var s = hs.screen.primary();
         var east  = s.toEast();
         var west  = s.toWest();
         var north = s.toNorth();
@@ -300,8 +322,8 @@ import JavaScriptCore
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
-        var s = hs.screen.primaryScreen();
-        var origin = s.position();
+        var s = hs.screen.primary();
+        var origin = s.position;
         var absRect = new HSRect(origin.x + 10, origin.y + 20, 100, 50);
         var local = s.absoluteToLocal(absRect);
         """)
@@ -318,7 +340,7 @@ import JavaScriptCore
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
-        var s = hs.screen.primaryScreen();
+        var s = hs.screen.primary();
         var orig = new HSRect(100, 200, 300, 400);
         var local = s.absoluteToLocal(orig);
         var back  = s.localToAbsolute(local);
@@ -335,27 +357,27 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var result = hs.screen.primaryScreen().absoluteToLocal('not a rect');")
+        harness.eval("var result = hs.screen.primary().absoluteToLocal('not a rect');")
         harness.expectTrue("result === null || result === undefined")
     }
 
     // MARK: - Desktop Image
 
-    @Test("desktopImage() returns a string or null")
+    @Test("desktopImage returns a string or null")
     func testDesktopImage() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var img = hs.screen.primaryScreen().desktopImage();")
+        harness.eval("var img = hs.screen.primary().desktopImage;")
         harness.expectTrue("img === null || typeof img === 'string'")
     }
 
-    @Test("setDesktopImage() returns false for a nonexistent path")
+    @Test("setting desktopImage to a nonexistent path does not throw")
     func testSetDesktopImageMissingFile() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("var ok = hs.screen.primaryScreen().setDesktopImage('/nonexistent/wallpaper.jpg');")
-        harness.expectTrue("ok === false")
+        harness.eval("hs.screen.primary().desktopImage = '/nonexistent/wallpaper.jpg';")
+        #expect(!harness.hasException, "Setting invalid desktopImage path should not throw a JS exception")
     }
 }

@@ -9,30 +9,27 @@ import CoreGraphics
 import JavaScriptCore
 import ScreenCaptureKit
 
+
 // MARK: - JavaScript API
 
 /// An object representing a single display attached to the system.
 ///
-/// Obtain instances from `hs.screen.allScreens()`, `hs.screen.mainScreen()`, or
-/// `hs.screen.primaryScreen()` — do not construct these directly.
-///
 /// ## Coordinate system
 ///
-/// All geometry is returned in **macOS screen coordinates**: the origin `(0, 0)`
-/// is at the bottom-left of the primary display, and `y` increases upward.
-/// This is the same coordinate system used by `NSScreen` and `CGDisplay` APIs.
+/// All geometry is returned in **Hammerspoon screen coordinates**: the origin `(0, 0)`
+/// is at the top-left of the primary display, and `y` increases downward.
+/// This matches Hammerspoon v1 and is the inverse of the raw macOS/CoreGraphics convention.
 ///
 /// ## Examples
 ///
 /// ```javascript
-/// const s = hs.screen.mainScreen();
+/// const s = hs.screen.main();
 /// console.log(s.name);               // e.g. "Built-in Retina Display"
-/// console.log(s.frame().w);          // usable width in points
+/// console.log(s.frame.w);            // usable width in points
 ///
-/// const mode = s.currentMode();
-/// console.log(mode.width, mode.scale); // e.g. 1440, 2
+/// console.log(s.mode.width, s.mode.scale); // e.g. 1440, 2
 ///
-/// s.setDesktopImage("/Users/me/wallpaper.jpg");
+/// s.desktopImage = "/Users/me/wallpaper.jpg";
 /// ```
 @objc protocol HSScreenAPI: JSExport {
 
@@ -49,26 +46,26 @@ import ScreenCaptureKit
 
     // MARK: - Geometry
 
-    /// The usable screen area in screen coordinates, excluding the menu bar and Dock.
-    @objc func frame() -> HSRect
+    /// The usable screen area in Hammerspoon coordinates, excluding the menu bar and Dock.
+    @objc var frame: HSRect { get }
 
-    /// The full screen area in screen coordinates, including menu bar and Dock regions.
-    @objc func fullFrame() -> HSRect
+    /// The full screen area in Hammerspoon coordinates, including menu bar and Dock regions.
+    @objc var fullFrame: HSRect { get }
 
-    /// The screen's origin point relative to the primary display's bottom-left corner.
-    @objc func position() -> HSPoint
+    /// The screen's top-left corner in global Hammerspoon coordinates.
+    @objc var position: HSPoint { get }
 
     // MARK: - Display Modes
 
     /// The currently active display mode.
     ///
-    /// Returns an object with keys: `width`, `height`, `scale`, `frequency`.
-    @objc func currentMode() -> NSDictionary
+    /// An object with keys: `width`, `height`, `scale`, `frequency`.
+    @objc var mode: NSDictionary { get }
 
     /// All display modes supported by this screen.
     ///
     /// Each element has keys: `width`, `height`, `scale`, `frequency`.
-    @objc func availableModes() -> [NSDictionary]
+    @objc var availableModes: [NSDictionary] { get }
 
     /// Switch to the given display mode.
     ///
@@ -85,7 +82,9 @@ import ScreenCaptureKit
     // MARK: - Rotation
 
     /// The current screen rotation in degrees (0, 90, 180, or 270).
-    @objc func rotation() -> Double
+    ///
+    /// Assign one of `0`, `90`, `180`, or `270` to rotate the display.
+    @objc var rotation: Double { get set }
 
     // MARK: - Screenshot
 
@@ -99,10 +98,10 @@ import ScreenCaptureKit
 
     // MARK: - Navigation
 
-    /// The next screen in `hs.screen.allScreens()` order, wrapping around.
+    /// The next screen in `hs.screen.all()` order, wrapping around.
     @objc func next() -> HSScreen
 
-    /// The previous screen in `hs.screen.allScreens()` order, wrapping around.
+    /// The previous screen in `hs.screen.all()` order, wrapping around.
     @objc func previous() -> HSScreen
 
     /// The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.
@@ -111,17 +110,15 @@ import ScreenCaptureKit
     /// The nearest screen whose right edge is at or before this screen's left edge, or `null`.
     @objc func toWest() -> HSScreen?
 
-    /// The nearest screen whose bottom edge is at or above this screen's top edge, or `null`.
-    ///
-    /// *Note:* "north" means higher `y` values in macOS screen coordinates.
+    /// The nearest screen that is physically above this screen, or `null`.
     @objc func toNorth() -> HSScreen?
 
-    /// The nearest screen whose top edge is at or below this screen's bottom edge, or `null`.
+    /// The nearest screen that is physically below this screen, or `null`.
     @objc func toSouth() -> HSScreen?
 
     // MARK: - Configuration
 
-    /// Move this screen so its bottom-left corner is at the given global position.
+    /// Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.
     ///
     /// - Returns: `true` on success.
     @objc func setOrigin(_ x: Double, _ y: Double) -> Bool
@@ -144,30 +141,26 @@ import ScreenCaptureKit
 
     // MARK: - Coordinate Conversion
 
-    /// Convert a rect in global screen coordinates to coordinates local to this screen.
+    /// Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.
     ///
-    /// The result origin is relative to this screen's bottom-left corner.
+    /// The result origin is relative to this screen's top-left corner.
     ///
-    /// - Parameter rect: An `HSRect` in global screen coordinates.
-    /// - Returns: The rect offset to be relative to this screen, or `null` if the input is invalid.
+    /// - Parameter rect: An `HSRect` in global Hammerspoon coordinates.
+    /// - Returns: The rect offset to be relative to this screen's top-left, or `null` if the input is invalid.
     @objc func absoluteToLocal(_ rect: JSValue) -> HSRect?
 
-    /// Convert a rect in local screen coordinates to global screen coordinates.
+    /// Convert a rect in local screen coordinates to global Hammerspoon coordinates.
     ///
-    /// - Parameter rect: An `HSRect` relative to this screen's bottom-left corner.
-    /// - Returns: The rect in global screen coordinates, or `null` if the input is invalid.
+    /// - Parameter rect: An `HSRect` relative to this screen's top-left corner.
+    /// - Returns: The rect in global Hammerspoon coordinates, or `null` if the input is invalid.
     @objc func localToAbsolute(_ rect: JSValue) -> HSRect?
 
     // MARK: - Desktop
 
     /// The URL string of the current desktop background image for this screen, or `null`.
-    @objc func desktopImage() -> String?
-
-    /// Set the desktop background image for this screen.
     ///
-    /// - Parameter path: Absolute file path or `file://` URL string.
-    /// - Returns: `true` on success.
-    @objc func setDesktopImage(_ path: String) -> Bool
+    /// Assign a new absolute file path or `file://` URL string to change the wallpaper.
+    @objc var desktopImage: String? { get set }
 }
 
 // MARK: - Implementation
@@ -188,6 +181,18 @@ import ScreenCaptureKit
         screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID ?? 0
     }
 
+    /// Height of the primary display in macOS points, used as the flip baseline.
+    private var primaryScreenHeight: CGFloat { NSScreen.screens[0].frame.height }
+
+    /// Converts a rect from macOS coordinates (origin bottom-left, y-up) to
+    /// Hammerspoon coordinates (origin top-left of primary screen, y-down).
+    private func flip(_ rect: NSRect) -> NSRect {
+        NSRect(x: rect.origin.x,
+               y: primaryScreenHeight - rect.origin.y - rect.height,
+               width: rect.width,
+               height: rect.height)
+    }
+
     // MARK: - Identity
 
     @objc var id: Int { Int(displayID) }
@@ -203,38 +208,39 @@ import ScreenCaptureKit
 
     // MARK: - Geometry
 
-    @objc func frame() -> HSRect { screen.visibleFrame.toBridge() }
+    @objc var frame: HSRect { flip(screen.visibleFrame).toBridge() }
 
-    @objc func fullFrame() -> HSRect { screen.frame.toBridge() }
+    @objc var fullFrame: HSRect { flip(screen.frame).toBridge() }
 
-    @objc func position() -> HSPoint {
-        HSPoint(x: Double(screen.frame.origin.x), y: Double(screen.frame.origin.y))
+    @objc var position: HSPoint {
+        let origin = flip(screen.frame).origin
+        return HSPoint(x: Double(origin.x), y: Double(origin.y))
     }
 
     // MARK: - Display Modes
 
-    @objc func currentMode() -> NSDictionary {
-        guard let mode = CGDisplayCopyDisplayMode(displayID) else { return [:] }
-        let scale = mode.width > 0 ? Double(mode.pixelWidth) / Double(mode.width) : 1.0
+    @objc var mode: NSDictionary {
+        guard let cgMode = CGDisplayCopyDisplayMode(displayID) else { return [:] }
+        let scale = cgMode.width > 0 ? Double(cgMode.pixelWidth) / Double(cgMode.width) : 1.0
         return [
-            "width": mode.width,
-            "height": mode.height,
+            "width": cgMode.width,
+            "height": cgMode.height,
             "scale": scale,
-            "frequency": mode.refreshRate,
+            "frequency": cgMode.refreshRate,
         ]
     }
 
-    @objc func availableModes() -> [NSDictionary] {
-        guard let modes = CGDisplayCopyAllDisplayModes(displayID, nil) as? [CGDisplayMode] else {
+    @objc var availableModes: [NSDictionary] {
+        guard let cgModes = CGDisplayCopyAllDisplayModes(displayID, nil) as? [CGDisplayMode] else {
             return []
         }
-        return modes.map { mode in
-            let scale = mode.width > 0 ? Double(mode.pixelWidth) / Double(mode.width) : 1.0
+        return cgModes.map { cgMode in
+            let scale = cgMode.width > 0 ? Double(cgMode.pixelWidth) / Double(cgMode.width) : 1.0
             return [
-                "width": mode.width,
-                "height": mode.height,
+                "width": cgMode.width,
+                "height": cgMode.height,
                 "scale": scale,
-                "frequency": mode.refreshRate,
+                "frequency": cgMode.refreshRate,
             ]
         }
     }
@@ -261,7 +267,18 @@ import ScreenCaptureKit
 
     // MARK: - Rotation
 
-    @objc func rotation() -> Double { CGDisplayRotation(displayID) }
+    @objc var rotation: Double {
+        get { CGDisplayRotation(displayID) }
+        set {
+            guard newValue == 0 || newValue == 90 || newValue == 180 || newValue == 270 else {
+                AKError("hs.screen.rotation: invalid value \(newValue); must be 0, 90, 180, or 270")
+                return
+            }
+            if !HSScreenSetRotation(displayID, Int32(newValue)) {
+                AKError("hs.screen.rotation: failed to set rotation to \(newValue) degrees")
+            }
+        }
+    }
 
     // MARK: - Screenshot
 
@@ -313,11 +330,8 @@ import ScreenCaptureKit
 
     /// Returns the closest screen in the given direction, or nil if none exists.
     ///
-    /// Directions use raw NSScreen coordinates (y increases upward):
-    /// - east  = larger x (right)
-    /// - west  = smaller x (left)
-    /// - north = larger y (up on physical display)
-    /// - south = smaller y (down on physical display)
+    /// Comparisons are performed in raw macOS coordinates (y-up) to determine
+    /// physical adjacency; the direction names map to physical screen positions.
     private enum Direction { case east, west, north, south }
 
     private func nearestScreen(in direction: Direction) -> HSScreen? {
@@ -353,9 +367,12 @@ import ScreenCaptureKit
     // MARK: - Configuration
 
     @objc func setOrigin(_ x: Double, _ y: Double) -> Bool {
+        // x, y are in Hammerspoon coordinates (top-left origin, y-down).
+        // CGConfigureDisplayOrigin expects macOS coordinates (bottom-left origin, y-up).
+        let macY = Double(primaryScreenHeight) - y - Double(screen.frame.height)
         var config: CGDisplayConfigRef?
         guard unsafe CGBeginDisplayConfiguration(&config) == .success else { return false }
-        unsafe CGConfigureDisplayOrigin(config, displayID, Int32(x), Int32(y))
+        unsafe CGConfigureDisplayOrigin(config, displayID, Int32(x), Int32(macY))
 
         return unsafe CGCompleteDisplayConfiguration(config, .forSession) == .success
     }
@@ -393,34 +410,34 @@ import ScreenCaptureKit
 
     @objc func absoluteToLocal(_ rect: JSValue) -> HSRect? {
         guard let hsRect = rect.toObjectOf(HSRect.self) as? HSRect else { return nil }
-        let origin = screen.frame.origin
-        return HSRect(x: hsRect.x - Double(origin.x),
-                      y: hsRect.y - Double(origin.y),
+        let screenOrigin = flip(screen.frame).origin
+        return HSRect(x: hsRect.x - Double(screenOrigin.x),
+                      y: hsRect.y - Double(screenOrigin.y),
                       w: hsRect.w, h: hsRect.h)
     }
 
     @objc func localToAbsolute(_ rect: JSValue) -> HSRect? {
         guard let hsRect = rect.toObjectOf(HSRect.self) as? HSRect else { return nil }
-        let origin = screen.frame.origin
-        return HSRect(x: hsRect.x + Double(origin.x),
-                      y: hsRect.y + Double(origin.y),
+        let screenOrigin = flip(screen.frame).origin
+        return HSRect(x: hsRect.x + Double(screenOrigin.x),
+                      y: hsRect.y + Double(screenOrigin.y),
                       w: hsRect.w, h: hsRect.h)
     }
 
     // MARK: - Desktop
 
-    @objc func desktopImage() -> String? {
-        NSWorkspace.shared.desktopImageURL(for: screen)?.absoluteString
-    }
-
-    @objc func setDesktopImage(_ path: String) -> Bool {
-        let url = path.hasPrefix("file://") ? URL(string: path)! : URL(fileURLWithPath: path)
-        do {
-            try NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: [:])
-            return true
-        } catch {
-            AKError("hs.screen.setDesktopImage: \(error.localizedDescription)")
-            return false
+    @objc var desktopImage: String? {
+        get {
+            NSWorkspace.shared.desktopImageURL(for: screen)?.absoluteString
+        }
+        set {
+            guard let path = newValue else { return }
+            let url = path.hasPrefix("file://") ? URL(string: path)! : URL(fileURLWithPath: path)
+            do {
+                try NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: [:])
+            } catch {
+                AKError("hs.screen.desktopImage: \(error.localizedDescription)")
+            }
         }
     }
 }
