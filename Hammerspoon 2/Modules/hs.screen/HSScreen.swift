@@ -163,6 +163,20 @@ import ScreenCaptureKit
     @objc var desktopImage: String? { get set }
 }
 
+// MARK: - CGDisplayMode helpers
+
+private extension CGDisplayMode {
+    /// Pixel-to-point scale factor (e.g. 2.0 for HiDPI/Retina, 1.0 otherwise).
+    var modeScale: Double {
+        width > 0 ? Double(pixelWidth) / Double(width) : 1.0
+    }
+
+    /// Serialised representation passed to JavaScript.
+    var asDictionary: NSDictionary {
+        ["width": width, "height": height, "scale": modeScale, "frequency": refreshRate]
+    }
+}
+
 // MARK: - Implementation
 
 @_documentation(visibility: private)
@@ -219,40 +233,36 @@ import ScreenCaptureKit
 
     // MARK: - Display Modes
 
+    // Memory note: CGDisplayCopyDisplayMode / CGDisplayCopyAllDisplayModes follow the CF "Copy"
+    // rule (caller owns +1).  Swift bridges CGDisplayMode as an ARC-managed class, so the
+    // compiler inserts releases automatically — no manual CFRelease needed.
+
     @objc var mode: NSDictionary {
         guard let cgMode = CGDisplayCopyDisplayMode(displayID) else { return [:] }
-        let scale = cgMode.width > 0 ? Double(cgMode.pixelWidth) / Double(cgMode.width) : 1.0
-        return [
-            "width": cgMode.width,
-            "height": cgMode.height,
-            "scale": scale,
-            "frequency": cgMode.refreshRate,
-        ]
+        return cgMode.asDictionary
     }
 
     @objc var availableModes: [NSDictionary] {
-        guard let cgModes = CGDisplayCopyAllDisplayModes(displayID, nil) as? [CGDisplayMode] else {
+        // kCGDisplayShowDuplicateLowResolutionModes is required to surface HiDPI (Retina) modes
+        // that CGDisplayCopyAllDisplayModes would otherwise omit when called with nil options.
+        let options = [kCGDisplayShowDuplicateLowResolutionModes: true] as CFDictionary
+        guard let cfArray = CGDisplayCopyAllDisplayModes(displayID, options),
+              let cgModes = cfArray as? [CGDisplayMode] else {
             return []
         }
-        return cgModes.map { cgMode in
-            let scale = cgMode.width > 0 ? Double(cgMode.pixelWidth) / Double(cgMode.width) : 1.0
-            return [
-                "width": cgMode.width,
-                "height": cgMode.height,
-                "scale": scale,
-                "frequency": cgMode.refreshRate,
-            ]
-        }
+        return cgModes.map(\.asDictionary)
     }
 
     @objc func setMode(_ width: Int, _ height: Int, _ scale: Double, _ frequency: Double) -> Bool {
-        guard let modes = CGDisplayCopyAllDisplayModes(displayID, nil) as? [CGDisplayMode] else {
+        let options = [kCGDisplayShowDuplicateLowResolutionModes: true] as CFDictionary
+        guard let cfArray = CGDisplayCopyAllDisplayModes(displayID, options),
+              let modes = cfArray as? [CGDisplayMode] else {
             return false
         }
-        guard let mode = modes.first(where: {
+        guard let match = modes.first(where: {
             $0.width == width &&
             $0.height == height &&
-            (scale == 0 || Double($0.pixelWidth) / Double(max($0.width, 1)) == scale) &&
+            (scale == 0     || Int($0.modeScale) == Int(scale)) &&
             (frequency == 0 || $0.refreshRate == frequency)
         }) else {
             AKError("hs.screen: no mode found matching \(width)×\(height) scale:\(scale) freq:\(frequency)")
@@ -260,8 +270,7 @@ import ScreenCaptureKit
         }
         var config: CGDisplayConfigRef?
         guard unsafe CGBeginDisplayConfiguration(&config) == .success else { return false }
-        unsafe CGConfigureDisplayWithDisplayMode(config, displayID, mode, nil)
-
+        unsafe CGConfigureDisplayWithDisplayMode(config, displayID, match, nil)
         return unsafe CGCompleteDisplayConfiguration(config, .forSession) == .success
     }
 

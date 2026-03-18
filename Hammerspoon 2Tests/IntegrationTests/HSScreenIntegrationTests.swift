@@ -306,7 +306,7 @@ import JavaScriptCore
         var north = s.toNorth();
         var south = s.toSouth();
         function isScreenOrNull(v) {
-            return v === null || (typeof v === 'object' && typeof v.id === 'number');
+            return v == null || (typeof v == 'object' && typeof v.id == 'number');
         }
         var allValid = isScreenOrNull(east) && isScreenOrNull(west) &&
                        isScreenOrNull(north) && isScreenOrNull(south);
