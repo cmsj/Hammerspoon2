@@ -23,6 +23,7 @@ import JavaScriptCoreExtras
     @objc var hotkey: HSHotkeyModule { get }
     @objc var permissions: HSPermissionsModule { get }
     @objc var osascript: HSOSAScriptModule { get }
+    @objc var screen: HSScreenModule { get }
     @objc var task: HSTaskModule { get }
     @objc var timer: HSTimerModule { get }
     @objc var ui: HSUIModule { get }
@@ -78,6 +79,7 @@ import JavaScriptCoreExtras
     @objc var hotkey: HSHotkeyModule { get { getOrCreate(name: "hotkey", type: HSHotkeyModule.self)}}
     @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
     @objc var osascript: HSOSAScriptModule { get { getOrCreate(name: "osascript", type: HSOSAScriptModule.self)}}
+    @objc var screen: HSScreenModule { get { getOrCreate(name: "screen", type: HSScreenModule.self)}}
     @objc var task: HSTaskModule { get { getOrCreate(name: "task", type: HSTaskModule.self)}}
     @objc var timer: HSTimerModule { get { getOrCreate(name: "timer", type: HSTimerModule.self)}}
     @objc var ui: HSUIModule { get { getOrCreate(name: "ui", type: HSUIModule.self)}}

@@ -1686,7 +1686,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
-          "lineNumber": 78
+          "lineNumber": 84
         },
         {
           "name": "javascript",
@@ -1706,7 +1706,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
-          "lineNumber": 88
+          "lineNumber": 94
         },
         {
           "name": "applescriptFromFile",
@@ -1726,7 +1726,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
-          "lineNumber": 98
+          "lineNumber": 104
         },
         {
           "name": "javascriptFromFile",
@@ -1746,7 +1746,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
-          "lineNumber": 108
+          "lineNumber": 114
         },
         {
           "name": "_execute",
@@ -1771,13 +1771,118 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
-          "lineNumber": 118
+          "lineNumber": 124
+        },
+        {
+          "name": "applescriptSync",
+          "signature": "func applescriptSync(_ source: String) -> [String: Any]?",
+          "rawDocumentation": "Run an AppleScript source string synchronously.\n\nBlocks the JS thread until the script completes.\n\n- Parameter source: The AppleScript source code to compile and execute.\n- Returns: An object `{ success, result, raw }`, or `null` on XPC failure.",
+          "description": "Run an AppleScript source string synchronously.\nBlocks the JS thread until the script completes.",
+          "params": [
+            {
+              "name": "source",
+              "type": "String",
+              "description": "The AppleScript source code to compile and execute."
+            }
+          ],
+          "returns": {
+            "type": "[String: Any]?",
+            "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 134
+        },
+        {
+          "name": "javascriptSync",
+          "signature": "func javascriptSync(_ source: String) -> [String: Any]?",
+          "rawDocumentation": "Run an OSA JavaScript source string synchronously.\n\nBlocks the JS thread until the script completes.\n\n- Parameter source: The OSA JavaScript source code to compile and execute.\n- Returns: An object `{ success, result, raw }`, or `null` on XPC failure.",
+          "description": "Run an OSA JavaScript source string synchronously.\nBlocks the JS thread until the script completes.",
+          "params": [
+            {
+              "name": "source",
+              "type": "String",
+              "description": "The OSA JavaScript source code to compile and execute."
+            }
+          ],
+          "returns": {
+            "type": "[String: Any]?",
+            "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 142
+        },
+        {
+          "name": "applescriptSyncFromFile",
+          "signature": "func applescriptSyncFromFile(_ path: String) -> [String: Any]?",
+          "rawDocumentation": "Read a file from disk and execute its contents as AppleScript synchronously.\n\n- Parameter path: Absolute path to the AppleScript source file.\n- Returns: An object `{ success, result, raw }`, or `null` on XPC failure.",
+          "description": "Read a file from disk and execute its contents as AppleScript synchronously.",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Absolute path to the AppleScript source file."
+            }
+          ],
+          "returns": {
+            "type": "[String: Any]?",
+            "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 148
+        },
+        {
+          "name": "javascriptSyncFromFile",
+          "signature": "func javascriptSyncFromFile(_ path: String) -> [String: Any]?",
+          "rawDocumentation": "Read a file from disk and execute its contents as OSA JavaScript synchronously.\n\n- Parameter path: Absolute path to the OSA JavaScript source file.\n- Returns: An object `{ success, result, raw }`, or `null` on XPC failure.",
+          "description": "Read a file from disk and execute its contents as OSA JavaScript synchronously.",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Absolute path to the OSA JavaScript source file."
+            }
+          ],
+          "returns": {
+            "type": "[String: Any]?",
+            "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 154
+        },
+        {
+          "name": "_executeSync",
+          "signature": "func _executeSync(_ source: String, _ language: String) -> [String: Any]?",
+          "rawDocumentation": "Low-level synchronous execution entry point.\n\nPrefer `applescriptSync()` or `javascriptSync()` over calling this directly.\n\n- Parameters:\n  - source: The script source code.\n  - language: The OSA language name — must be `\"AppleScript\"` or `\"JavaScript\"`.\n- Returns: An object `{ success, result, raw }`, or `null` on XPC failure.",
+          "description": "Low-level synchronous execution entry point.\nPrefer `applescriptSync()` or `javascriptSync()` over calling this directly.",
+          "params": [
+            {
+              "name": "source",
+              "type": "String",
+              "description": "The script source code."
+            },
+            {
+              "name": "language",
+              "type": "String",
+              "description": "The OSA language name — must be `\"AppleScript\"` or `\"JavaScript\"`."
+            }
+          ],
+          "returns": {
+            "type": "[String: Any]?",
+            "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
+          "lineNumber": 164
         }
       ],
       "properties": [],
       "types": [],
-      "description": "Run AppleScript and OSA JavaScript from Hammerspoon scripts.\nScript execution is isolated in a separate XPC helper process\n(`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the\nhelper is affected — the main app remains stable and the next call\nreconnects automatically.\n## Return value\nEvery function returns a `Promise` that **always resolves** (never rejects)\n| Field | Type | Description |\n|-------|------|-------------|\n| `success` | `Boolean` | `true` if the script ran without error |\n| `result` | `any` | Parsed return value of the script, or `null` on failure |\n| `raw` | `String` | Raw string representation of the result, or the error message on failure |\nThe `result` field is typed based on what the script returned: strings,\nnumbers, booleans, lists, and records are all mapped to their JavaScript\nequivalents. `null` is used for AppleScript's `missing value` and for any\nfailure case.\n## Examples\n**Return a string:**\n```javascript\nhs.osascript.applescript('return \"hello\"')\n  .then(r => console.log(r.result));  // \"hello\"\n```\n**Return a number:**\n```javascript\nhs.osascript.applescript('return 42')\n  .then(r => console.log(r.result));  // 42\n```\n**Interact with an application:**\n```javascript\nhs.osascript.applescript('tell application \"Finder\" to get name of home')\n  .then(r => console.log(r.result));  // e.g. \"cmsj\"\n```\n**Handle errors (the Promise never rejects — check `success`):**\n```javascript\nhs.osascript.applescript('this is not valid')\n  .then(r => {\n    if (!r.success) console.log(\"Error:\", r.raw);\n  });\n```\n**OSA JavaScript:**\n```javascript\nhs.osascript.javascript('Application(\"Finder\").name()')\n  .then(r => console.log(r.result));  // \"Finder\"\n```\n**Run a script from a file:**\n```javascript\nhs.osascript.applescriptFromFile('/Users/me/scripts/notify.applescript')\n  .then(r => console.log(r.success));\n```",
-      "rawDocumentation": "Run AppleScript and OSA JavaScript from Hammerspoon scripts.\n\nScript execution is isolated in a separate XPC helper process\n(`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the\nhelper is affected — the main app remains stable and the next call\nreconnects automatically.\n\n## Return value\n\nEvery function returns a `Promise` that **always resolves** (never rejects)\nwith an object containing three fields:\n\n| Field | Type | Description |\n|-------|------|-------------|\n| `success` | `Boolean` | `true` if the script ran without error |\n| `result` | `any` | Parsed return value of the script, or `null` on failure |\n| `raw` | `String` | Raw string representation of the result, or the error message on failure |\n\nThe `result` field is typed based on what the script returned: strings,\nnumbers, booleans, lists, and records are all mapped to their JavaScript\nequivalents. `null` is used for AppleScript's `missing value` and for any\nfailure case.\n\n## Examples\n\n**Return a string:**\n```javascript\nhs.osascript.applescript('return \"hello\"')\n  .then(r => console.log(r.result));  // \"hello\"\n```\n\n**Return a number:**\n```javascript\nhs.osascript.applescript('return 42')\n  .then(r => console.log(r.result));  // 42\n```\n\n**Interact with an application:**\n```javascript\nhs.osascript.applescript('tell application \"Finder\" to get name of home')\n  .then(r => console.log(r.result));  // e.g. \"cmsj\"\n```\n\n**Handle errors (the Promise never rejects — check `success`):**\n```javascript\nhs.osascript.applescript('this is not valid')\n  .then(r => {\n    if (!r.success) console.log(\"Error:\", r.raw);\n  });\n```\n\n**OSA JavaScript:**\n```javascript\nhs.osascript.javascript('Application(\"Finder\").name()')\n  .then(r => console.log(r.result));  // \"Finder\"\n```\n\n**Run a script from a file:**\n```javascript\nhs.osascript.applescriptFromFile('/Users/me/scripts/notify.applescript')\n  .then(r => console.log(r.success));\n```"
+      "description": "Run AppleScript and OSA JavaScript from Hammerspoon scripts.\nScript execution is isolated in a separate XPC helper process\n(`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the\nhelper is affected — the main app remains stable and the next call\nreconnects automatically.\n## Async API (Promise-based)\nEvery async function returns a `Promise` that **always resolves** (never rejects)\n| Field | Type | Description |\n|-------|------|-------------|\n| `success` | `Boolean` | `true` if the script ran without error |\n| `result` | `any` | Parsed return value of the script, or `null` on failure |\n| `raw` | `String` | Raw string representation of the result, or the error message on failure |\n## Sync API\nThe `*Sync` variants block until the script completes and return the same\n`{ success, result, raw }` object directly.  Use these only when a Promise\nchain is impractical; they block the JS thread for the duration of the call.\nThe `result` field is typed based on what the script returned: strings,\nnumbers, booleans, lists, and records are all mapped to their JavaScript\nequivalents. `null` is used for AppleScript's `missing value` and for any\nfailure case.\n## Examples\n**Return a string (async):**\n```javascript\nhs.osascript.applescript('return \"hello\"')\n  .then(r => console.log(r.result));  // \"hello\"\n```\n**Return a string (sync):**\n```javascript\nconst r = hs.osascript.applescriptSync('return \"hello\"');\nconsole.log(r.result);  // \"hello\"\n```\n**Interact with an application:**\n```javascript\nhs.osascript.applescript('tell application \"Finder\" to get name of home')\n  .then(r => console.log(r.result));  // e.g. \"cmsj\"\n```\n**Handle errors (the Promise never rejects — check `success`):**\n```javascript\nhs.osascript.applescript('this is not valid')\n  .then(r => {\n    if (!r.success) console.log(\"Error:\", r.raw);\n  });\n```\n**OSA JavaScript:**\n```javascript\nhs.osascript.javascript('Application(\"Finder\").name()')\n  .then(r => console.log(r.result));  // \"Finder\"\n```\n**Run a script from a file:**\n```javascript\nhs.osascript.applescriptFromFile('/Users/me/scripts/notify.applescript')\n  .then(r => console.log(r.success));\n```",
+      "rawDocumentation": "Run AppleScript and OSA JavaScript from Hammerspoon scripts.\n\nScript execution is isolated in a separate XPC helper process\n(`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the\nhelper is affected — the main app remains stable and the next call\nreconnects automatically.\n\n## Async API (Promise-based)\n\nEvery async function returns a `Promise` that **always resolves** (never rejects)\nwith an object containing three fields:\n\n| Field | Type | Description |\n|-------|------|-------------|\n| `success` | `Boolean` | `true` if the script ran without error |\n| `result` | `any` | Parsed return value of the script, or `null` on failure |\n| `raw` | `String` | Raw string representation of the result, or the error message on failure |\n\n## Sync API\n\nThe `*Sync` variants block until the script completes and return the same\n`{ success, result, raw }` object directly.  Use these only when a Promise\nchain is impractical; they block the JS thread for the duration of the call.\n\nThe `result` field is typed based on what the script returned: strings,\nnumbers, booleans, lists, and records are all mapped to their JavaScript\nequivalents. `null` is used for AppleScript's `missing value` and for any\nfailure case.\n\n## Examples\n\n**Return a string (async):**\n```javascript\nhs.osascript.applescript('return \"hello\"')\n  .then(r => console.log(r.result));  // \"hello\"\n```\n\n**Return a string (sync):**\n```javascript\nconst r = hs.osascript.applescriptSync('return \"hello\"');\nconsole.log(r.result);  // \"hello\"\n```\n\n**Interact with an application:**\n```javascript\nhs.osascript.applescript('tell application \"Finder\" to get name of home')\n  .then(r => console.log(r.result));  // e.g. \"cmsj\"\n```\n\n**Handle errors (the Promise never rejects — check `success`):**\n```javascript\nhs.osascript.applescript('this is not valid')\n  .then(r => {\n    if (!r.success) console.log(\"Error:\", r.raw);\n  });\n```\n\n**OSA JavaScript:**\n```javascript\nhs.osascript.javascript('Application(\"Finder\").name()')\n  .then(r => console.log(r.result));  // \"Finder\"\n```\n\n**Run a script from a file:**\n```javascript\nhs.osascript.applescriptFromFile('/Users/me/scripts/notify.applescript')\n  .then(r => console.log(r.success));\n```"
     },
     {
       "name": "hs.permissions",
@@ -1895,6 +2000,395 @@
       "types": [],
       "description": "Module for checking and requesting system permissions",
       "rawDocumentation": "Module for checking and requesting system permissions"
+    },
+    {
+      "name": "hs.screen",
+      "methods": [
+        {
+          "name": "setMode",
+          "signature": "func setMode(_ width: Int, _ height: Int, _ scale: Double, _ frequency: Double) -> Bool",
+          "rawDocumentation": "Switch to the given display mode.\n\nPass `0` for `scale` or `frequency` to match any value.\n\n- Parameters:\n  - width: Horizontal resolution in pixels.\n  - height: Vertical resolution in pixels.\n  - scale: Backing scale factor (e.g. `2` for HiDPI, `1` for non-HiDPI). Pass `0` to ignore.\n  - frequency: Refresh rate in Hz. Pass `0` to ignore.\n- Returns: `true` on success.",
+          "description": "Switch to the given display mode.\nPass `0` for `scale` or `frequency` to match any value.",
+          "params": [
+            {
+              "name": "width",
+              "type": "Int",
+              "description": "Horizontal resolution in pixels."
+            },
+            {
+              "name": "height",
+              "type": "Int",
+              "description": "Vertical resolution in pixels."
+            },
+            {
+              "name": "scale",
+              "type": "Double",
+              "description": "Backing scale factor (e.g. `2` for HiDPI, `1` for non-HiDPI). Pass `0` to ignore."
+            },
+            {
+              "name": "frequency",
+              "type": "Double",
+              "description": "Refresh rate in Hz. Pass `0` to ignore."
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` on success."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 80
+        },
+        {
+          "name": "snapshot",
+          "signature": "func snapshot() -> JSPromise?",
+          "rawDocumentation": "Capture the current contents of this screen as an image.\n\nRequires **Screen Recording** permission.\n\n- Returns: {Promise<HSImage>} Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).",
+          "description": "Capture the current contents of this screen as an image.\nRequires **Screen Recording** permission.",
+          "params": [],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).",
+            "promiseType": "HSImage"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 96
+        },
+        {
+          "name": "next",
+          "signature": "func next() -> HSScreen",
+          "rawDocumentation": "The next screen in `hs.screen.all()` order, wrapping around.\n- Returns: An HSScreen object",
+          "description": "The next screen in `hs.screen.all()` order, wrapping around.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen",
+            "description": "An HSScreen object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 102
+        },
+        {
+          "name": "previous",
+          "signature": "func previous() -> HSScreen",
+          "rawDocumentation": "The previous screen in `hs.screen.all()` order, wrapping around.\n- Returns: An HSScreen object",
+          "description": "The previous screen in `hs.screen.all()` order, wrapping around.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen",
+            "description": "An HSScreen object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 106
+        },
+        {
+          "name": "toEast",
+          "signature": "func toEast() -> HSScreen?",
+          "rawDocumentation": "The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.\n- Returns: An HSScreen object",
+          "description": "The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen?",
+            "description": "An HSScreen object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 110
+        },
+        {
+          "name": "toWest",
+          "signature": "func toWest() -> HSScreen?",
+          "rawDocumentation": "The nearest screen whose right edge is at or before this screen's left edge, or `null`.\n- Returns: An HSScreen object",
+          "description": "The nearest screen whose right edge is at or before this screen's left edge, or `null`.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen?",
+            "description": "An HSScreen object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 114
+        },
+        {
+          "name": "toNorth",
+          "signature": "func toNorth() -> HSScreen?",
+          "rawDocumentation": "The nearest screen that is physically above this screen, or `null`.\n- Returns: An HSScreen object",
+          "description": "The nearest screen that is physically above this screen, or `null`.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen?",
+            "description": "An HSScreen object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 118
+        },
+        {
+          "name": "toSouth",
+          "signature": "func toSouth() -> HSScreen?",
+          "rawDocumentation": "The nearest screen that is physically below this screen, or `null`.\n- Returns: An HSScreen object",
+          "description": "The nearest screen that is physically below this screen, or `null`.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen?",
+            "description": "An HSScreen object"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 122
+        },
+        {
+          "name": "setOrigin",
+          "signature": "func setOrigin(_ x: Double, _ y: Double) -> Bool",
+          "rawDocumentation": "Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.\n\n- Parameters:\n  - x: The X coordinate to move to\n  - y: The Y coordinate to move to\n- Returns: `true` on success.",
+          "description": "Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.",
+          "params": [
+            {
+              "name": "x",
+              "type": "Double",
+              "description": "The X coordinate to move to"
+            },
+            {
+              "name": "y",
+              "type": "Double",
+              "description": "The Y coordinate to move to"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` on success."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 132
+        },
+        {
+          "name": "setPrimary",
+          "signature": "func setPrimary() -> Bool",
+          "rawDocumentation": "Designate this screen as the primary display (moves the menu bar here).\n\n- Returns: `true` on success.",
+          "description": "Designate this screen as the primary display (moves the menu bar here).",
+          "params": [],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` on success."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 137
+        },
+        {
+          "name": "mirrorOf",
+          "signature": "func mirrorOf(_ screen: HSScreen) -> Bool",
+          "rawDocumentation": "Configure this screen to mirror another screen.\n\n- Parameter screen: The screen to mirror.\n- Returns: `true` on success.",
+          "description": "Configure this screen to mirror another screen.",
+          "params": [
+            {
+              "name": "screen",
+              "type": "HSScreen",
+              "description": "The screen to mirror."
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` on success."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 143
+        },
+        {
+          "name": "mirrorStop",
+          "signature": "func mirrorStop() -> Bool",
+          "rawDocumentation": "Stop mirroring, restoring this screen to an independent display.\n\n- Returns: `true` on success.",
+          "description": "Stop mirroring, restoring this screen to an independent display.",
+          "params": [],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` on success."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 148
+        },
+        {
+          "name": "absoluteToLocal",
+          "signature": "func absoluteToLocal(_ rect: JSValue) -> HSRect?",
+          "rawDocumentation": "Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.\n\nThe result origin is relative to this screen's top-left corner.\n\n- Parameter rect: An `HSRect` in global Hammerspoon coordinates.\n- Returns: The rect offset to be relative to this screen's top-left, or `null` if the input is invalid.",
+          "description": "Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.\nThe result origin is relative to this screen's top-left corner.",
+          "params": [
+            {
+              "name": "rect",
+              "type": "JSValue",
+              "description": "An `HSRect` in global Hammerspoon coordinates."
+            }
+          ],
+          "returns": {
+            "type": "HSRect?",
+            "description": "The rect offset to be relative to this screen's top-left, or `null` if the input is invalid."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 158
+        },
+        {
+          "name": "localToAbsolute",
+          "signature": "func localToAbsolute(_ rect: JSValue) -> HSRect?",
+          "rawDocumentation": "Convert a rect in local screen coordinates to global Hammerspoon coordinates.\n\n- Parameter rect: An `HSRect` relative to this screen's top-left corner.\n- Returns: The rect in global Hammerspoon coordinates, or `null` if the input is invalid.",
+          "description": "Convert a rect in local screen coordinates to global Hammerspoon coordinates.",
+          "params": [
+            {
+              "name": "rect",
+              "type": "JSValue",
+              "description": "An `HSRect` relative to this screen's top-left corner."
+            }
+          ],
+          "returns": {
+            "type": "HSRect?",
+            "description": "The rect in global Hammerspoon coordinates, or `null` if the input is invalid."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 164
+        },
+        {
+          "name": "all",
+          "signature": "func all() -> [HSScreen]",
+          "rawDocumentation": "All connected screens.\n- Returns: An array of HSScreen objects",
+          "description": "All connected screens.",
+          "params": [],
+          "returns": {
+            "type": "[HSScreen]",
+            "description": "An array of HSScreen objects"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift",
+          "lineNumber": 48
+        },
+        {
+          "name": "main",
+          "signature": "func main() -> HSScreen?",
+          "rawDocumentation": "The screen that currently contains the focused window, or the screen\nwith the keyboard focus if no window is focused.\n\n- Returns: An HSScreen object or `null` if no main screen can be determined.",
+          "description": "The screen that currently contains the focused window, or the screen\nwith the keyboard focus if no window is focused.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen?",
+            "description": "An HSScreen object or `null` if no main screen can be determined."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift",
+          "lineNumber": 54
+        },
+        {
+          "name": "primary",
+          "signature": "func primary() -> HSScreen?",
+          "rawDocumentation": "The primary display — the one that contains the global menu bar.\n\n- Returns: An HSScreen object or `null` if no primary screen can be determined.",
+          "description": "The primary display — the one that contains the global menu bar.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen?",
+            "description": "An HSScreen object or `null` if no primary screen can be determined."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift",
+          "lineNumber": 59
+        }
+      ],
+      "properties": [
+        {
+          "name": "id",
+          "signature": "var id: Int { get }",
+          "rawDocumentation": "Unique display identifier (matches `CGDirectDisplayID`).",
+          "description": "Unique display identifier (matches `CGDirectDisplayID`).",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 39
+        },
+        {
+          "name": "name",
+          "signature": "var name: String { get }",
+          "rawDocumentation": "The manufacturer-assigned localized display name.",
+          "description": "The manufacturer-assigned localized display name.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 42
+        },
+        {
+          "name": "uuid",
+          "signature": "var uuid: String { get }",
+          "rawDocumentation": "The display's UUID string.",
+          "description": "The display's UUID string.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 45
+        },
+        {
+          "name": "frame",
+          "signature": "var frame: HSRect { get }",
+          "rawDocumentation": "The usable screen area in Hammerspoon coordinates, excluding the menu bar and Dock.",
+          "description": "The usable screen area in Hammerspoon coordinates, excluding the menu bar and Dock.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 50
+        },
+        {
+          "name": "fullFrame",
+          "signature": "var fullFrame: HSRect { get }",
+          "rawDocumentation": "The full screen area in Hammerspoon coordinates, including menu bar and Dock regions.",
+          "description": "The full screen area in Hammerspoon coordinates, including menu bar and Dock regions.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 53
+        },
+        {
+          "name": "position",
+          "signature": "var position: HSPoint { get }",
+          "rawDocumentation": "The screen's top-left corner in global Hammerspoon coordinates.",
+          "description": "The screen's top-left corner in global Hammerspoon coordinates.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 56
+        },
+        {
+          "name": "mode",
+          "signature": "var mode: NSDictionary { get }",
+          "rawDocumentation": "The currently active display mode.\n\nAn object with keys: `width`, `height`, `scale`, `frequency`.",
+          "description": "The currently active display mode.\nAn object with keys: `width`, `height`, `scale`, `frequency`.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 63
+        },
+        {
+          "name": "availableModes",
+          "signature": "var availableModes: [NSDictionary] { get }",
+          "rawDocumentation": "All display modes supported by this screen.\n\nEach element has keys: `width`, `height`, `scale`, `frequency`.",
+          "description": "All display modes supported by this screen.\nEach element has keys: `width`, `height`, `scale`, `frequency`.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 68
+        },
+        {
+          "name": "rotation",
+          "signature": "var rotation: Double { get set }",
+          "rawDocumentation": "The current screen rotation in degrees (0, 90, 180, or 270).\n\nAssign one of `0`, `90`, `180`, or `270` to rotate the display.",
+          "description": "The current screen rotation in degrees (0, 90, 180, or 270).\nAssign one of `0`, `90`, `180`, or `270` to rotate the display.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 87
+        },
+        {
+          "name": "desktopImage",
+          "signature": "var desktopImage: String? { get set }",
+          "rawDocumentation": "The URL string of the current desktop background image for this screen, or `null`.\n\nAssign a new absolute file path or `file://` URL string to change the wallpaper.",
+          "description": "The URL string of the current desktop background image for this screen, or `null`.\nAssign a new absolute file path or `file://` URL string to change the wallpaper.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+          "lineNumber": 171
+        }
+      ],
+      "types": [],
+      "description": "Inspect and control the displays attached to the system.\n## Obtaining screens\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n## Navigation\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n## Display modes\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.mode);\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n## Screenshots\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```",
+      "rawDocumentation": "Inspect and control the displays attached to the system.\n\n## Obtaining screens\n\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n\n## Navigation\n\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n\n## Display modes\n\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.mode);\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n\n## Screenshots\n\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```"
     },
     {
       "name": "hs.task",
@@ -5274,5 +5768,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-03-02T22:47:03.686Z"
+  "generatedAt": "2026-03-18T13:04:48.778Z"
 }
