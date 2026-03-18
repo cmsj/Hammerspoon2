@@ -44,16 +44,18 @@ import JavaScriptCore
 /// ```
 @objc protocol HSScreenModuleAPI: JSExport {
     /// All connected screens.
+    /// - Returns: An array of HSScreen objects
     @objc func all() -> [HSScreen]
 
     /// The screen that currently contains the focused window, or the screen
     /// with the keyboard focus if no window is focused.
     ///
-    /// Returns `null` if no main screen can be determined.
+    /// - Returns: An HSScreen object or `null` if no main screen can be determined.
     @objc func main() -> HSScreen?
 
     /// The primary display — the one that contains the global menu bar.
-    /// Returns `null` if no primary screen can be determined.
+    ///
+    /// - Returns: An HSScreen object or `null` if no primary screen can be determined.
     @objc func primary() -> HSScreen?
 }
 

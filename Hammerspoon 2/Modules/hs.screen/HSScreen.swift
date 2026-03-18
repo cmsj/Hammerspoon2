@@ -99,27 +99,36 @@ import ScreenCaptureKit
     // MARK: - Navigation
 
     /// The next screen in `hs.screen.all()` order, wrapping around.
+    /// - Returns: An HSScreen object
     @objc func next() -> HSScreen
 
     /// The previous screen in `hs.screen.all()` order, wrapping around.
+    /// - Returns: An HSScreen object
     @objc func previous() -> HSScreen
 
     /// The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.
+    /// - Returns: An HSScreen object
     @objc func toEast() -> HSScreen?
 
     /// The nearest screen whose right edge is at or before this screen's left edge, or `null`.
+    /// - Returns: An HSScreen object
     @objc func toWest() -> HSScreen?
 
     /// The nearest screen that is physically above this screen, or `null`.
+    /// - Returns: An HSScreen object
     @objc func toNorth() -> HSScreen?
 
     /// The nearest screen that is physically below this screen, or `null`.
+    /// - Returns: An HSScreen object
     @objc func toSouth() -> HSScreen?
 
     // MARK: - Configuration
 
     /// Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.
     ///
+    /// - Parameters:
+    ///   - x: The X coordinate to move to
+    ///   - y: The Y coordinate to move to
     /// - Returns: `true` on success.
     @objc func setOrigin(_ x: Double, _ y: Double) -> Bool
 

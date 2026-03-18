@@ -1095,27 +1095,31 @@ Script execution is isolated in a separate XPC helper process
 (`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the
 helper is affected — the main app remains stable and the next call
 reconnects automatically.
-## Return value
-Every function returns a `Promise` that **always resolves** (never rejects)
+## Async API (Promise-based)
+Every async function returns a `Promise` that **always resolves** (never rejects)
 | Field | Type | Description |
 |-------|------|-------------|
 | `success` | `Boolean` | `true` if the script ran without error |
 | `result` | `any` | Parsed return value of the script, or `null` on failure |
 | `raw` | `String` | Raw string representation of the result, or the error message on failure |
+## Sync API
+The `*Sync` variants block until the script completes and return the same
+`{ success, result, raw }` object directly.  Use these only when a Promise
+chain is impractical; they block the JS thread for the duration of the call.
 The `result` field is typed based on what the script returned: strings,
 numbers, booleans, lists, and records are all mapped to their JavaScript
 equivalents. `null` is used for AppleScript's `missing value` and for any
 failure case.
 ## Examples
-**Return a string:**
+**Return a string (async):**
 ```javascript
 hs.osascript.applescript('return "hello"')
   .then(r => console.log(r.result));  // "hello"
 ```
-**Return a number:**
+**Return a string (sync):**
 ```javascript
-hs.osascript.applescript('return 42')
-  .then(r => console.log(r.result));  // 42
+const r = hs.osascript.applescriptSync('return "hello"');
+console.log(r.result);  // "hello"
 ```
 **Interact with an application:**
 ```javascript
@@ -1187,6 +1191,45 @@ Prefer `applescript()` or `javascript()` over calling this directly.
      */
     function _execute(source: string, language: string): Promise<any>;
 
+    /**
+     * Run an AppleScript source string synchronously.
+Blocks the JS thread until the script completes.
+     * @param source The AppleScript source code to compile and execute.
+     * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
+     */
+    function applescriptSync(source: string): Record<string, any> | undefined;
+
+    /**
+     * Run an OSA JavaScript source string synchronously.
+Blocks the JS thread until the script completes.
+     * @param source The OSA JavaScript source code to compile and execute.
+     * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
+     */
+    function javascriptSync(source: string): Record<string, any> | undefined;
+
+    /**
+     * Read a file from disk and execute its contents as AppleScript synchronously.
+     * @param path Absolute path to the AppleScript source file.
+     * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
+     */
+    function applescriptSyncFromFile(path: string): Record<string, any> | undefined;
+
+    /**
+     * Read a file from disk and execute its contents as OSA JavaScript synchronously.
+     * @param path Absolute path to the OSA JavaScript source file.
+     * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
+     */
+    function javascriptSyncFromFile(path: string): Record<string, any> | undefined;
+
+    /**
+     * Low-level synchronous execution entry point.
+Prefer `applescriptSync()` or `javascriptSync()` over calling this directly.
+     * @param source The script source code.
+     * @param language The OSA language name — must be `"AppleScript"` or `"JavaScript"`.
+     * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
+     */
+    function _executeSync(source: string, language: string): Record<string, any> | undefined;
+
 }
 
 /**
@@ -1238,6 +1281,205 @@ declare namespace hs.permissions {
      * @returns A Promise that resolves to true if granted, false if denied
      */
     function requestMicrophone(): Promise<boolean>;
+
+}
+
+/**
+ * Inspect and control the displays attached to the system.
+## Obtaining screens
+```javascript
+const all    = hs.screen.all();   // [HSScreen, ...]
+const main   = hs.screen.main();   // screen containing the focused window
+const primary = hs.screen.primary(); // screen with the global menu bar
+```
+## Navigation
+```javascript
+const right = hs.screen.main().toEast();
+if (right) console.log("Screen to the right:", right.name);
+```
+## Display modes
+```javascript
+const s = hs.screen.primary();
+console.log(s.currentMode());
+// → { width: 1440, height: 900, scale: 2, frequency: 60 }
+
+s.setMode(1920, 1080, 1, 60);
+```
+## Screenshots
+```javascript
+const img = await hs.screen.main().snapshot();
+img.saveToFile("/tmp/screen.png");
+```
+ */
+declare namespace hs.screen {
+    /**
+     * Switch to the given display mode.
+Pass `0` for `scale` or `frequency` to match any value.
+     * @param width Horizontal resolution in pixels.
+     * @param height Vertical resolution in pixels.
+     * @param scale Backing scale factor (e.g. `2` for HiDPI, `1` for non-HiDPI). Pass `0` to ignore.
+     * @param frequency Refresh rate in Hz. Pass `0` to ignore.
+     * @returns `true` on success.
+     */
+    function setMode(width: number, height: number, scale: number, frequency: number): boolean;
+
+    /**
+     * Capture the current contents of this screen as an image.
+Requires **Screen Recording** permission.
+     * @returns Resolves with the captured image, or rejects if the
+     */
+    function snapshot(): Promise<HSImage>;
+
+    /**
+     * The next screen in `hs.screen.all()` order, wrapping around.
+     * @returns An HSScreen object
+     */
+    function next(): HSScreen;
+
+    /**
+     * The previous screen in `hs.screen.all()` order, wrapping around.
+     * @returns An HSScreen object
+     */
+    function previous(): HSScreen;
+
+    /**
+     * The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.
+     * @returns An HSScreen object
+     */
+    function toEast(): HSScreen | undefined;
+
+    /**
+     * The nearest screen whose right edge is at or before this screen's left edge, or `null`.
+     * @returns An HSScreen object
+     */
+    function toWest(): HSScreen | undefined;
+
+    /**
+     * The nearest screen that is physically above this screen, or `null`.
+     * @returns An HSScreen object
+     */
+    function toNorth(): HSScreen | undefined;
+
+    /**
+     * The nearest screen that is physically below this screen, or `null`.
+     * @returns An HSScreen object
+     */
+    function toSouth(): HSScreen | undefined;
+
+    /**
+     * Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.
+     * @param x The X coordinate to move to
+     * @param y The Y coordinate to move to
+     * @returns `true` on success.
+     */
+    function setOrigin(x: number, y: number): boolean;
+
+    /**
+     * Designate this screen as the primary display (moves the menu bar here).
+     * @returns `true` on success.
+     */
+    function setPrimary(): boolean;
+
+    /**
+     * Configure this screen to mirror another screen.
+     * @param screen The screen to mirror.
+     * @returns `true` on success.
+     */
+    function mirrorOf(screen: HSScreen): boolean;
+
+    /**
+     * Stop mirroring, restoring this screen to an independent display.
+     * @returns `true` on success.
+     */
+    function mirrorStop(): boolean;
+
+    /**
+     * Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.
+The result origin is relative to this screen's top-left corner.
+     * @param rect An `HSRect` in global Hammerspoon coordinates.
+     * @returns The rect offset to be relative to this screen's top-left, or `null` if the input is invalid.
+     */
+    function absoluteToLocal(rect: JSValue): HSRect | undefined;
+
+    /**
+     * Convert a rect in local screen coordinates to global Hammerspoon coordinates.
+     * @param rect An `HSRect` relative to this screen's top-left corner.
+     * @returns The rect in global Hammerspoon coordinates, or `null` if the input is invalid.
+     */
+    function localToAbsolute(rect: JSValue): HSRect | undefined;
+
+    /**
+     * All connected screens.
+     * @returns An array of HSScreen objects
+     */
+    function all(): HSScreen[];
+
+    /**
+     * The screen that currently contains the focused window, or the screen
+with the keyboard focus if no window is focused.
+     * @returns An HSScreen object or `null` if no main screen can be determined.
+     */
+    function main(): HSScreen | undefined;
+
+    /**
+     * The primary display — the one that contains the global menu bar.
+     * @returns An HSScreen object or `null` if no primary screen can be determined.
+     */
+    function primary(): HSScreen | undefined;
+
+    /**
+     * Unique display identifier (matches `CGDirectDisplayID`).
+     */
+    const id: number;
+
+    /**
+     * The manufacturer-assigned localized display name.
+     */
+    const name: string;
+
+    /**
+     * The display's UUID string.
+     */
+    const uuid: string;
+
+    /**
+     * The usable screen area in Hammerspoon coordinates, excluding the menu bar and Dock.
+     */
+    const frame: HSRect;
+
+    /**
+     * The full screen area in Hammerspoon coordinates, including menu bar and Dock regions.
+     */
+    const fullFrame: HSRect;
+
+    /**
+     * The screen's top-left corner in global Hammerspoon coordinates.
+     */
+    const position: HSPoint;
+
+    /**
+     * The currently active display mode.
+An object with keys: `width`, `height`, `scale`, `frequency`.
+     */
+    const mode: NSDictionary;
+
+    /**
+     * All display modes supported by this screen.
+Each element has keys: `width`, `height`, `scale`, `frequency`.
+     */
+    const availableModes: NSDictionary[];
+
+    /**
+     * The current screen rotation in degrees (0, 90, 180, or 270).
+Assign one of `0`, `90`, `180`, or `270` to rotate the display.
+     */
+    const rotation: number;
+
+    /**
+     * The URL string of the current desktop background image for this screen, or `null`.
+Assign a new absolute file path or `file://` URL string to change the wallpaper.
+     */
+    const desktopImage: string | undefined;
 
 }
 
