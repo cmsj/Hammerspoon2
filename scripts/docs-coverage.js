@@ -13,51 +13,30 @@ const path = require('path');
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const INDEX_FILE = path.join(JSON_DIR, 'index.json');
 
+function isDocumented(item) {
+    return typeof item.description === 'string' && item.description.trim().length > 0;
+}
+
 function analyzeModule(moduleFile) {
     const data = JSON.parse(fs.readFileSync(moduleFile, 'utf8'));
-    
-    const stats = {
+
+    const methods    = data.methods    ?? [];
+    const properties = data.properties ?? [];
+
+    return {
         name: data.name,
         swift: {
-            totalMethods: 0,
-            documentedMethods: 0,
-            totalProperties: 0,
-            documentedProperties: 0
+            totalMethods:          methods.length,
+            documentedMethods:     methods.filter(isDocumented).length,
+            totalProperties:       properties.length,
+            documentedProperties:  properties.filter(isDocumented).length,
         },
+        // No separate JS-function layer in the current schema; kept for future use.
         javascript: {
-            totalFunctions: 0,
-            documentedFunctions: 0
-        }
+            totalFunctions:      0,
+            documentedFunctions: 0,
+        },
     };
-    
-    // Analyze Swift protocols
-    for (const protocol of data.swift.protocols) {
-        stats.swift.totalMethods += protocol.methods.length;
-        stats.swift.totalProperties += protocol.properties.length;
-        
-        for (const method of protocol.methods) {
-            if (method.description && method.description.trim().length > 0) {
-                stats.swift.documentedMethods++;
-            }
-        }
-
-        for (const prop of protocol.properties) {
-            if (prop.description && prop.description.trim().length > 0) {
-                stats.swift.documentedProperties++;
-            }
-        }
-    }
-    
-    // Analyze JavaScript functions
-    stats.javascript.totalFunctions = data.javascript.functions.length;
-    for (const func of data.javascript.functions) {
-        if (func.documentation && func.documentation.description && 
-            func.documentation.description.trim().length > 0) {
-            stats.javascript.documentedFunctions++;
-        }
-    }
-    
-    return stats;
 }
 
 function calculateCoverage(documented, total) {
