@@ -51,6 +51,9 @@ import AXSwift
     /// The window's frame {x: Int, y: Int, w: Int, h: Int}
     @objc var frame: HSRect? { get set }
 
+    /// The screen that contains the largest portion of this window.
+    @objc var screen: HSScreen? { get }
+
     // MARK: - Actions
 
     /// Focus this window
@@ -227,6 +230,29 @@ import AXSwift
                 AKError("Failed to set frame: \(error.localizedDescription)")
             }
         }
+    }
+
+    @objc var screen: HSScreen? {
+        // AX frames have top-left origin, y-down. NSScreen.frame has bottom-left origin, y-up.
+        // Flip the window frame into macOS coordinates so it can be intersected with screen frames.
+        guard let windowAX: CGRect = try? element.attribute(.frame) else { return nil }
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return nil }
+
+        let primaryH = screens[0].frame.height
+        let windowMac = CGRect(x: windowAX.origin.x,
+                               y: primaryH - windowAX.origin.y - windowAX.height,
+                               width: windowAX.width,
+                               height: windowAX.height)
+
+        let best = screens.max {
+            let aInter = $0.frame.intersection(windowMac)
+            let bInter = $1.frame.intersection(windowMac)
+            let aArea = aInter.isNull ? 0 : aInter.width * aInter.height
+            let bArea = bInter.isNull ? 0 : bInter.width * bInter.height
+            return aArea < bArea
+        }
+        return best.map { HSScreen(screen: $0) }
     }
 
     // MARK: - Actions
