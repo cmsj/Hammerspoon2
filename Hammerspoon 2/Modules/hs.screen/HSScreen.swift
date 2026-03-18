@@ -441,7 +441,18 @@ private extension CGDisplayMode {
         }
         set {
             guard let path = newValue else { return }
-            let url = path.hasPrefix("file://") ? URL(string: path)! : URL(fileURLWithPath: path)
+
+            let url: URL
+            if path.hasPrefix("file://") {
+                guard let fileURL = URL(string: path) else {
+                    AKError("hs.screen.desktopImage: Invalid URL")
+                    return
+                }
+                url = fileURL
+            } else {
+                url = URL(fileURLWithPath: path)
+            }
+
             do {
                 try NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: [:])
             } catch {
