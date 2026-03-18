@@ -92,8 +92,7 @@ import ScreenCaptureKit
     ///
     /// Requires **Screen Recording** permission.
     ///
-    /// - Returns: {Promise<HSImage>} Resolves with the captured image, or rejects if the
-    ///   capture fails (e.g. permission denied).
+    /// - Returns: {Promise<HSImage>} Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).
     @objc func snapshot() -> JSPromise?
 
     // MARK: - Navigation

@@ -1300,7 +1300,7 @@ if (right) console.log("Screen to the right:", right.name);
 ## Display modes
 ```javascript
 const s = hs.screen.primary();
-console.log(s.currentMode());
+console.log(s.mode);
 // → { width: 1440, height: 900, scale: 2, frequency: 60 }
 
 s.setMode(1920, 1080, 1, 60);
@@ -1326,7 +1326,7 @@ Pass `0` for `scale` or `frequency` to match any value.
     /**
      * Capture the current contents of this screen as an image.
 Requires **Screen Recording** permission.
-     * @returns Resolves with the captured image, or rejects if the
+     * @returns Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).
      */
     function snapshot(): Promise<HSImage>;
 

@@ -30,7 +30,7 @@ import JavaScriptCore
 ///
 /// ```javascript
 /// const s = hs.screen.primary();
-/// console.log(s.currentMode());
+/// console.log(s.mode);
 /// // → { width: 1440, height: 900, scale: 2, frequency: 60 }
 ///
 /// s.setMode(1920, 1080, 1, 60);

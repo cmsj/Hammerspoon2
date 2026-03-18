@@ -2042,17 +2042,17 @@
         {
           "name": "snapshot",
           "signature": "func snapshot() -> JSPromise?",
-          "rawDocumentation": "Capture the current contents of this screen as an image.\n\nRequires **Screen Recording** permission.\n\n- Returns: {Promise<HSImage>} Resolves with the captured image, or rejects if the\n  capture fails (e.g. permission denied).",
+          "rawDocumentation": "Capture the current contents of this screen as an image.\n\nRequires **Screen Recording** permission.\n\n- Returns: {Promise<HSImage>} Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).",
           "description": "Capture the current contents of this screen as an image.\nRequires **Screen Recording** permission.",
           "params": [],
           "returns": {
             "type": "JSPromise?",
-            "description": "Resolves with the captured image, or rejects if the",
+            "description": "Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).",
             "promiseType": "HSImage"
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 97
+          "lineNumber": 96
         },
         {
           "name": "next",
@@ -2066,7 +2066,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 103
+          "lineNumber": 102
         },
         {
           "name": "previous",
@@ -2080,7 +2080,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 107
+          "lineNumber": 106
         },
         {
           "name": "toEast",
@@ -2094,7 +2094,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 111
+          "lineNumber": 110
         },
         {
           "name": "toWest",
@@ -2108,7 +2108,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 115
+          "lineNumber": 114
         },
         {
           "name": "toNorth",
@@ -2122,7 +2122,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 119
+          "lineNumber": 118
         },
         {
           "name": "toSouth",
@@ -2136,7 +2136,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 123
+          "lineNumber": 122
         },
         {
           "name": "setOrigin",
@@ -2161,7 +2161,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 133
+          "lineNumber": 132
         },
         {
           "name": "setPrimary",
@@ -2175,7 +2175,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 138
+          "lineNumber": 137
         },
         {
           "name": "mirrorOf",
@@ -2195,7 +2195,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 144
+          "lineNumber": 143
         },
         {
           "name": "mirrorStop",
@@ -2209,7 +2209,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 149
+          "lineNumber": 148
         },
         {
           "name": "absoluteToLocal",
@@ -2229,7 +2229,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 159
+          "lineNumber": 158
         },
         {
           "name": "localToAbsolute",
@@ -2249,7 +2249,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 165
+          "lineNumber": 164
         },
         {
           "name": "all",
@@ -2383,12 +2383,12 @@
           "description": "The URL string of the current desktop background image for this screen, or `null`.\nAssign a new absolute file path or `file://` URL string to change the wallpaper.",
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
-          "lineNumber": 172
+          "lineNumber": 171
         }
       ],
       "types": [],
-      "description": "Inspect and control the displays attached to the system.\n## Obtaining screens\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n## Navigation\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n## Display modes\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.currentMode());\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n## Screenshots\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```",
-      "rawDocumentation": "Inspect and control the displays attached to the system.\n\n## Obtaining screens\n\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n\n## Navigation\n\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n\n## Display modes\n\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.currentMode());\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n\n## Screenshots\n\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```"
+      "description": "Inspect and control the displays attached to the system.\n## Obtaining screens\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n## Navigation\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n## Display modes\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.mode);\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n## Screenshots\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```",
+      "rawDocumentation": "Inspect and control the displays attached to the system.\n\n## Obtaining screens\n\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n\n## Navigation\n\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n\n## Display modes\n\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.mode);\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n\n## Screenshots\n\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```"
     },
     {
       "name": "hs.task",
@@ -5768,5 +5768,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-03-18T12:54:28.986Z"
+  "generatedAt": "2026-03-18T13:04:48.778Z"
 }
