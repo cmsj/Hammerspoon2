@@ -20,6 +20,7 @@ struct ConsoleView: View {
     /// Non-nil while a completion session is active (user keeps pressing Tab).
     @State var activeCompletion: ConsoleCompletionEngine.Result? = nil
     @State var completionCycleIndex: Int = 0
+    @State var textSelection: TextSelection? = nil
 
     @State var searchString: String = ""
     @State var searchPresented: Bool = false
@@ -88,11 +89,28 @@ struct ConsoleView: View {
         return .handled
     }
 
+    /// If `evalString` contains a call with parameters starting at `completionOffset`,
+    /// selects the first parameter so the user can immediately type its value.
+    /// Always writes to `textSelection` — sets nil when there is no parameter to select,
+    /// which causes the cursor to move to the end of the new text.
+    private func selectFirstParam(completionOffset: Int) {
+        let s = evalString
+        guard completionOffset < s.count,
+              let openParen = s[s.index(s.startIndex, offsetBy: completionOffset)...].firstIndex(of: "(")
+        else { textSelection = nil; return }
+        let afterOpen = s.index(after: openParen)
+        // Empty parens — nothing to select, move cursor to end.
+        guard afterOpen < s.endIndex, s[afterOpen] != ")" else { textSelection = nil; return }
+        let end = s[afterOpen...].firstIndex(where: { $0 == "," || $0 == ")" }) ?? s.endIndex
+        textSelection = TextSelection(range: afterOpen..<end)
+    }
+
     fileprivate func handleTab() -> KeyPress.Result {
         if let active = activeCompletion {
             // Subsequent Tab presses cycle through the candidate list.
             completionCycleIndex = (completionCycleIndex + 1) % active.candidates.count
             evalString = active.inputPrefix + active.prefix + active.candidates[completionCycleIndex].completion
+            selectFirstParam(completionOffset: active.inputPrefix.count + active.prefix.count)
             return .handled
         }
 
@@ -102,6 +120,7 @@ struct ConsoleView: View {
 
         if result.isUnique {
             evalString = result.inputPrefix + result.prefix + result.candidates[0].completion
+            selectFirstParam(completionOffset: result.inputPrefix.count + result.prefix.count)
             // No cycling state needed for a unique match.
             return .handled
         }
@@ -109,6 +128,7 @@ struct ConsoleView: View {
         // Multiple candidates: fill to the longest common prefix and print all options.
         let lcp = result.longestCommonPrefix
         evalString = result.inputPrefix + result.prefix + lcp
+        textSelection = nil   // move cursor to end
 
         AKConsole(result.displayString)
 
@@ -179,7 +199,7 @@ struct ConsoleView: View {
                 }
             }
 
-            TextField(">", text: $evalString, prompt: Text("Javascript: >"))
+            TextField(">", text: $evalString, selection: $textSelection, prompt: Text("Javascript: >"))
                 .padding()
                 .onKeyPress(keys: [.upArrow], phases: .up, action: { _ in
                     activeCompletion = nil

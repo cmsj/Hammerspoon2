@@ -125,7 +125,16 @@ enum ConsoleCompletionEngine {
             }
         }
 
-        // JS reflection fallback (handles `hs.` and any unrecognised property chain)
+        // If the expression evaluates to a known HS type, use api.json for proper formatting.
+        if let typeName = reflectedTypeName(of: objectExpr),
+           let items = apiData?.instanceItems[typeName] {
+            let candidates = candidates(from: items, stem: stem)
+            if !candidates.isEmpty {
+                return Result(inputPrefix: inputPrefix, prefix: objectExpr + ".", stem: stem, candidates: candidates)
+            }
+        }
+
+        // Full JS reflection fallback (handles `hs.` root and any unrecognised objects)
         guard let names = reflectedNames(of: objectExpr) else { return nil }
         let candidates = names.compactMap { name -> Result.Candidate? in
             guard stem.isEmpty || name.hasPrefix(stem) else { return nil }
@@ -149,12 +158,27 @@ enum ConsoleCompletionEngine {
         let methodName = String(calleeExpr[calleeExpr.index(after: dotIdx)...])
 
         let lookupKey = "\(moduleName).\(methodName)"
-        guard let returnType = apiData?.returnTypes[lookupKey],
-              let items = apiData?.instanceItems[returnType] else { return nil }
 
-        let candidates = candidates(from: items, stem: stem)
-        guard !candidates.isEmpty else { return nil }
-        return Result(inputPrefix: inputPrefix, prefix: objectExpr + ".", stem: stem, candidates: candidates)
+        // Static api.json path (preferred — no JS evaluation).
+        if let returnType = apiData?.returnTypes[lookupKey],
+           let items = apiData?.instanceItems[returnType] {
+            let candidates = candidates(from: items, stem: stem)
+            if !candidates.isEmpty {
+                return Result(inputPrefix: inputPrefix, prefix: objectExpr + ".", stem: stem, candidates: candidates)
+            }
+        } else {
+            // Fallback: evaluate the call expression to discover the return type at runtime.
+            // This handles cases where api.json is absent or the return-type map is incomplete.
+            if let typeName = reflectedTypeName(of: objectExpr),
+               let items = apiData?.instanceItems[typeName] {
+                let candidates = candidates(from: items, stem: stem)
+                if !candidates.isEmpty {
+                    return Result(inputPrefix: inputPrefix, prefix: objectExpr + ".", stem: stem, candidates: candidates)
+                }
+            }
+        }
+
+        return nil
     }
 
     // MARK: - Helpers
@@ -168,6 +192,25 @@ enum ConsoleCompletionEngine {
     }
 
     // MARK: - JS reflection
+
+    /// Returns the `typeName` property of the evaluated expression, or `nil` if unavailable.
+    /// Used to cross-reference the JS object against api.json instance items for proper formatting.
+    private static func reflectedTypeName(of expression: String) -> String? {
+        let js = """
+        (function() {
+            try {
+                var obj = \(expression);
+                if (obj === null || obj === undefined) return null;
+                var t = obj.typeName;
+                return (typeof t === 'string' && t.length > 0) ? t : null;
+            } catch (e) {
+                return null;
+            }
+        })()
+        """
+        guard let raw = JSEngine.shared.eval(js) else { return nil }
+        return raw as? String
+    }
 
     private static func reflectedNames(of expression: String) -> [String]? {
         // Walks the prototype chain collecting own property names, filtering out
