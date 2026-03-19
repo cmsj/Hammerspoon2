@@ -163,9 +163,11 @@ import Foundation
             inputPrefix = ""
             stem = input
         }
-        guard let names = reflectedGlobalNames() else { return nil }
+        // Always include "hs" — it may not be enumerable on globalThis.
+        var names = (reflectedGlobalNames() ?? []).filter { !$0.hasPrefix("_jsCoreExtras") }
+        if !names.contains("hs") { names.insert("hs", at: 0) }
         let candidates = names.compactMap { name -> Result.Candidate? in
-            guard name.range(of: stem, options: [.caseInsensitive, .anchored]) != nil else { return nil }
+            guard stem.isEmpty || name.range(of: stem, options: [.caseInsensitive, .anchored]) != nil else { return nil }
             return Result.Candidate(name: name, completion: name)
         }
         guard !candidates.isEmpty else { return nil }
