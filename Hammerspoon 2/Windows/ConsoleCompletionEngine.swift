@@ -134,7 +134,7 @@ enum ConsoleCompletionEngine {
             }
         }
 
-        // Full JS reflection fallback (handles `hs.` root and any unrecognised objects)
+        // JS reflection fallback for dynamic objects (e.g. `hs.` root).
         guard let names = reflectedNames(of: objectExpr) else { return nil }
         let candidates = names.compactMap { name -> Result.Candidate? in
             guard stem.isEmpty || name.hasPrefix(stem) else { return nil }
@@ -158,27 +158,12 @@ enum ConsoleCompletionEngine {
         let methodName = String(calleeExpr[calleeExpr.index(after: dotIdx)...])
 
         let lookupKey = "\(moduleName).\(methodName)"
+        guard let returnType = apiData?.returnTypes[lookupKey],
+              let items = apiData?.instanceItems[returnType] else { return nil }
 
-        // Static api.json path (preferred — no JS evaluation).
-        if let returnType = apiData?.returnTypes[lookupKey],
-           let items = apiData?.instanceItems[returnType] {
-            let candidates = candidates(from: items, stem: stem)
-            if !candidates.isEmpty {
-                return Result(inputPrefix: inputPrefix, prefix: objectExpr + ".", stem: stem, candidates: candidates)
-            }
-        } else {
-            // Fallback: evaluate the call expression to discover the return type at runtime.
-            // This handles cases where api.json is absent or the return-type map is incomplete.
-            if let typeName = reflectedTypeName(of: objectExpr),
-               let items = apiData?.instanceItems[typeName] {
-                let candidates = candidates(from: items, stem: stem)
-                if !candidates.isEmpty {
-                    return Result(inputPrefix: inputPrefix, prefix: objectExpr + ".", stem: stem, candidates: candidates)
-                }
-            }
-        }
-
-        return nil
+        let candidates = candidates(from: items, stem: stem)
+        guard !candidates.isEmpty else { return nil }
+        return Result(inputPrefix: inputPrefix, prefix: objectExpr + ".", stem: stem, candidates: candidates)
     }
 
     // MARK: - Helpers
@@ -195,27 +180,28 @@ enum ConsoleCompletionEngine {
 
     /// Returns the `typeName` property of the evaluated expression, or `nil` if unavailable.
     /// Used to cross-reference the JS object against api.json instance items for proper formatting.
+    /// Returns the name wrapped in a single-element array so JSEngine.eval handles it correctly
+    /// (scalar JS return values are not reliably bridged to Swift — arrays always are).
     private static func reflectedTypeName(of expression: String) -> String? {
         let js = """
         (function() {
             try {
                 var obj = \(expression);
-                if (obj === null || obj === undefined) return null;
+                if (obj === null || obj === undefined) return [];
                 var t = obj.typeName;
-                return (typeof t === 'string' && t.length > 0) ? t : null;
+                return (typeof t === 'string' && t.length > 0) ? [t] : [];
             } catch (e) {
-                return null;
+                return [];
             }
         })()
         """
-        guard let raw = JSEngine.shared.eval(js) else { return nil }
-        return raw as? String
+        guard let raw = JSEngine.shared.eval(js),
+              let array = raw as? [Any],
+              let first = array.first else { return nil }
+        return first as? String
     }
 
     private static func reflectedNames(of expression: String) -> [String]? {
-        // Walks the prototype chain collecting own property names, filtering out
-        // internal/framework noise.  Runs in a JS try/catch so a bad expression
-        // never prints an error to the console.
         let js = """
         (function() {
             try {

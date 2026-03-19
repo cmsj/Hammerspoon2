@@ -31,7 +31,7 @@ import ScreenCaptureKit
 ///
 /// s.desktopImage = "/Users/me/wallpaper.jpg";
 /// ```
-@objc protocol HSScreenAPI: JSExport {
+@objc protocol HSScreenAPI: HSTypeAPI, JSExport {
 
     // MARK: - Identity
 

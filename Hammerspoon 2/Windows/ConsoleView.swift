@@ -69,6 +69,9 @@ struct ConsoleView: View {
             evalIndex = evalIndex - 1
         }
         evalString = evalHistory[evalIndex]
+        // The system's default up-arrow action (move cursor to start) fires before this
+        // handler runs. Override it by explicitly placing the cursor at the end.
+        textSelection = TextSelection(range: evalString.endIndex..<evalString.endIndex)
         return .handled
     }
 
@@ -81,11 +84,13 @@ struct ConsoleView: View {
             // We've reached the end of history, return to emptiness
             evalString = ""
             evalIndex = -1
+            textSelection = nil
             return .handled
         default:
             evalIndex = evalIndex + 1
         }
         evalString = evalHistory[evalIndex]
+        textSelection = TextSelection(range: evalString.endIndex..<evalString.endIndex)
         return .handled
     }
 
