@@ -172,7 +172,7 @@ import Foundation
         // JS reflection fallback for dynamic objects (e.g. `hs.` root).
         guard let names = reflectedNames(of: objectExpr) else { return nil }
         let candidates = names.compactMap { name -> Result.Candidate? in
-            guard stem.isEmpty || name.hasPrefix(stem) else { return nil }
+            guard stem.isEmpty || name.range(of: stem, options: [.caseInsensitive, .anchored]) != nil else { return nil }
             // If this name is itself a known module, append "." so the user lands
             // directly in module-completion on the next Tab press.
             let isModule = apiData?.moduleItems[objectExpr + "." + name] != nil
@@ -209,7 +209,7 @@ import Foundation
     private func candidates(from items: [APICompletionItem],
                             stem: String) -> [Result.Candidate] {
         items
-            .filter { stem.isEmpty || $0.name.hasPrefix(stem) }
+            .filter { stem.isEmpty || $0.name.range(of: stem, options: [.caseInsensitive, .anchored]) != nil }
             .sorted { $0.name < $1.name }
             .map { Result.Candidate(name: $0.name, completion: $0.formattedCompletion) }
     }
