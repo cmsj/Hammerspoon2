@@ -218,10 +218,15 @@ struct ConsoleView: View {
                     return handleTab()
                 })
                 .onChange(of: evalString) { _, newValue in
-                    // Any edit that isn't a completion cancels the cycling session.
-                    if let active = activeCompletion,
-                       !active.candidates.contains(where: { active.inputPrefix + active.prefix + $0.completion == newValue }) {
-                        activeCompletion = nil
+                    // Any edit that isn't a completion or the LCP fill cancels the cycling session.
+                    if let active = activeCompletion {
+                        let isCandidate = active.candidates.contains(where: {
+                            active.inputPrefix + active.prefix + $0.completion == newValue
+                        })
+                        let isLCP = newValue == active.inputPrefix + active.prefix + active.longestCommonPrefix
+                        if !isCandidate && !isLCP {
+                            activeCompletion = nil
+                        }
                     }
                 }
                 .onSubmit {
