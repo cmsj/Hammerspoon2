@@ -239,8 +239,31 @@ struct ConsoleView: View {
         .toolbar(id: "console-toolbar") {
             ToolbarItem(id: "minimumLogLevel") {
                 Picker("Minimum log level", selection: $minimumLogLevel) {
-                    ForEach(HammerspoonLogType.allCases.dropLast()) { item in
+                    ForEach(HammerspoonLogType.allCases.filter { $0 != .Autocomplete }){ item in
                         Text(item.asString)
+                    }
+                }
+            }
+            ToolbarItem(id: "saveLogs") {
+                Button("Save to File") {
+                    let savePanel = NSSavePanel()
+                    savePanel.allowedContentTypes = [.plainText]
+                    savePanel.nameFieldStringValue = "hammerspoon-console-\(Date().timeIntervalSince1970).txt"
+                    savePanel.begin { response in
+                        if response == .OK, let url = savePanel.url {
+                            let logText = logs.entries
+                                .filter { $0.logType != .Autocomplete &&
+                                          $0.logType.rawValue >= minimumLogLevel.rawValue }
+                                .map { formatEntry($0) }
+                                .joined(separator: "\n")
+                            do {
+                                // TODO: Check if `url` already exists and prompt the user to overwrite/cancel
+                                try logText.write(to: url, atomically: true, encoding: .utf8)
+                            } catch {
+                                saveError = error.localizedDescription
+                                showSaveError = true
+                            }
+                        }
                     }
                 }
             }
@@ -249,6 +272,11 @@ struct ConsoleView: View {
                     HammerspoonLog.shared.clearLog()
                 }
             }
+        }
+        .alert("Save Failed", isPresented: $showSaveError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(saveError ?? "Unknown error")
         }
         .searchable(text: $searchString, isPresented: $searchPresented)
         .handlesExternalEvents(preferring: ["closeConsole"], allowing: [])
