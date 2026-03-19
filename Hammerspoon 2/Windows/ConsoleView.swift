@@ -17,6 +17,11 @@ struct ConsoleView: View {
     @State var evalHistory: [String] = []
     @State var evalIndex: Int = -1
 
+    /// Non-nil while a completion session is active (user keeps pressing Tab).
+    @State var activeCompletion: ConsoleCompletionEngine.Result? = nil
+    @State var completionCycleIndex: Int = 0
+    @State var textSelection: TextSelection? = nil
+
     @State var searchString: String = ""
     @State var searchPresented: Bool = false
 
@@ -48,6 +53,7 @@ struct ConsoleView: View {
         switch logType {
         case .Error: return .red
         case .Warning: return .orange
+        case .Autocomplete: return .teal
         default: return .primary
         }
     }
@@ -64,6 +70,9 @@ struct ConsoleView: View {
             evalIndex = evalIndex - 1
         }
         evalString = evalHistory[evalIndex]
+        // The system's default up-arrow action (move cursor to start) fires before this
+        // handler runs. Override it by explicitly placing the cursor at the end.
+        textSelection = TextSelection(range: evalString.endIndex..<evalString.endIndex)
         return .handled
     }
 
@@ -76,11 +85,63 @@ struct ConsoleView: View {
             // We've reached the end of history, return to emptiness
             evalString = ""
             evalIndex = -1
+            textSelection = nil
             return .handled
         default:
             evalIndex = evalIndex + 1
         }
         evalString = evalHistory[evalIndex]
+        textSelection = TextSelection(range: evalString.endIndex..<evalString.endIndex)
+        return .handled
+    }
+
+    /// If `evalString` contains a call with parameters starting at `completionOffset`,
+    /// selects the first parameter so the user can immediately type its value.
+    /// Always writes to `textSelection` — sets nil when there is no parameter to select,
+    /// which causes the cursor to move to the end of the new text.
+    private func selectFirstParam(completionOffset: Int) {
+        let s = evalString
+        guard completionOffset < s.count,
+              let openParen = s[s.index(s.startIndex, offsetBy: completionOffset)...].firstIndex(of: "(")
+        else { textSelection = nil; return }
+        let afterOpen = s.index(after: openParen)
+        // Empty parens — nothing to select, move cursor to end.
+        guard afterOpen < s.endIndex, s[afterOpen] != ")" else { textSelection = nil; return }
+        let end = s[afterOpen...].firstIndex(where: { $0 == "," || $0 == ")" }) ?? s.endIndex
+        textSelection = TextSelection(range: afterOpen..<end)
+    }
+
+    fileprivate func handleTab() -> KeyPress.Result {
+        if let active = activeCompletion {
+            // Subsequent Tab presses cycle through the candidate list.
+            completionCycleIndex = (completionCycleIndex + 1) % active.candidates.count
+            evalString = active.inputPrefix + active.prefix + active.candidates[completionCycleIndex].completion
+            selectFirstParam(completionOffset: active.inputPrefix.count + active.prefix.count)
+            return .handled
+        }
+
+        guard let result = ConsoleCompletionEngine.shared.complete(input: evalString) else {
+            NSSound.beep()
+            return .handled
+        }
+
+        if result.isUnique {
+            evalString = result.inputPrefix + result.prefix + result.candidates[0].completion
+            selectFirstParam(completionOffset: result.inputPrefix.count + result.prefix.count)
+            // No cycling state needed for a unique match.
+            return .handled
+        }
+
+        // Multiple candidates: fill to the longest common prefix and print all options.
+        let lcp = result.longestCommonPrefix
+        evalString = result.inputPrefix + result.prefix + lcp
+        textSelection = nil   // move cursor to end
+
+        AKAutocomplete(result.displayString)
+
+        // Enter cycling state so the next Tab cycles through candidates.
+        activeCompletion = result
+        completionCycleIndex = -1
         return .handled
     }
 
@@ -145,23 +206,64 @@ struct ConsoleView: View {
                 }
             }
 
-            TextField(">", text: $evalString, prompt: Text("Javascript: >"))
+            TextField(">", text: $evalString, selection: $textSelection, prompt: Text("Javascript: >"))
                 .padding()
                 .onKeyPress(keys: [.upArrow], phases: .up, action: { _ in
+                    activeCompletion = nil
                     return handleUpArrow()
                 })
                 .onKeyPress(keys: [.downArrow], phases: .up, action: { _ in
+                    activeCompletion = nil
                     return handleDownArrow()
                 })
+                .onKeyPress(keys: [.tab], phases: .down, action: { _ in
+                    return handleTab()
+                })
+                .onChange(of: evalString) { _, newValue in
+                    // Any edit that isn't a completion or the LCP fill cancels the cycling session.
+                    if let active = activeCompletion {
+                        let isCandidate = active.candidates.contains(where: {
+                            active.inputPrefix + active.prefix + $0.completion == newValue
+                        })
+                        let isLCP = newValue == active.inputPrefix + active.prefix + active.longestCommonPrefix
+                        if !isCandidate && !isLCP {
+                            activeCompletion = nil
+                        }
+                    }
+                }
                 .onSubmit {
+                    activeCompletion = nil
                     handleSubmit()
                 }
         }
         .toolbar(id: "console-toolbar") {
             ToolbarItem(id: "minimumLogLevel") {
                 Picker("Minimum log level", selection: $minimumLogLevel) {
-                    ForEach(HammerspoonLogType.allCases) { item in
+                    ForEach(HammerspoonLogType.allCases.filter { $0 != .Autocomplete }){ item in
                         Text(item.asString)
+                    }
+                }
+            }
+            ToolbarItem(id: "saveLogs") {
+                Button("Save to File") {
+                    let savePanel = NSSavePanel()
+                    savePanel.allowedContentTypes = [.plainText]
+                    savePanel.nameFieldStringValue = "hammerspoon-console-\(Date().timeIntervalSince1970).txt"
+                    savePanel.begin { response in
+                        if response == .OK, let url = savePanel.url {
+                            let logText = logs.entries
+                                .filter { $0.logType != .Autocomplete &&
+                                          $0.logType.rawValue >= minimumLogLevel.rawValue }
+                                .map { formatEntry($0) }
+                                .joined(separator: "\n")
+                            do {
+                                // TODO: Check if `url` already exists and prompt the user to overwrite/cancel
+                                try logText.write(to: url, atomically: true, encoding: .utf8)
+                            } catch {
+                                saveError = error.localizedDescription
+                                showSaveError = true
+                            }
+                        }
                     }
                 }
             }
@@ -170,6 +272,11 @@ struct ConsoleView: View {
                     HammerspoonLog.shared.clearLog()
                 }
             }
+        }
+        .alert("Save Failed", isPresented: $showSaveError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(saveError ?? "Unknown error")
         }
         .searchable(text: $searchString, isPresented: $searchPresented)
         .handlesExternalEvents(preferring: ["closeConsole"], allowing: [])

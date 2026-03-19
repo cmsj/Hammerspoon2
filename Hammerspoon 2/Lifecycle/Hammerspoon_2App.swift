@@ -16,6 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AKTrace("applicationDidFinishLaunching: Creating/booting shared manager")
 
         AppDelegate.instance = self
+        ConsoleCompletionEngine.shared.prewarm()
         let managerManager = ManagerManager.shared
         do {
             try managerManager.boot()

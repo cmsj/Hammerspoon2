@@ -17,6 +17,7 @@ enum HammerspoonLogType: Int, CaseIterable, Identifiable {
     case Warning
     case Error
     case Console
+    case Autocomplete
 
     var id: Self { self }
     var asString: String {
@@ -31,6 +32,8 @@ enum HammerspoonLogType: Int, CaseIterable, Identifiable {
             return "Error"
         case .Console:
             return "JavaScript"
+        case .Autocomplete:
+            return "Autocomplete"
         }
     }
 }
@@ -114,4 +117,10 @@ func AKTrace(_ msg: String) {
 func AKConsole(_ msg: String) {
     Logger.Hammerspoon.info("JS Console: \(msg)")
     AKLog(.Console, msg)
+}
+
+@_documentation(visibility: private)
+func AKAutocomplete(_ msg: String) {
+    // NOTE: This does not pass into Logger, there's really no need
+    AKLog(.Autocomplete, msg)
 }
