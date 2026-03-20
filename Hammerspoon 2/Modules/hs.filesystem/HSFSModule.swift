@@ -502,7 +502,7 @@ import Darwin          // POSIX stat/lstat/rmdir
         return true
     }
 
-    @objc func write(_ path: String, _ content: String, _ inPlace: Bool) -> Bool {
+    @objc func write(_ path: String, _ content: String, _ inPlace: Bool = false) -> Bool {
         do {
             try content.write(toFile: expand(path), atomically: !inPlace, encoding: .utf8)
             return true
