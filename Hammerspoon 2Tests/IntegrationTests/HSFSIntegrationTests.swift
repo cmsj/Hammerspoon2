@@ -493,14 +493,14 @@ struct HSFSIntegrationTests {
         let file = tmp.child("url.txt")
         _ = sut.write(file, "")
 
-        let urlString = try #require(sut.urlFromPath(file))
+        let urlString = sut.urlFromPath(file)
         #expect(urlString.hasPrefix("file://"), "URL should start with file://")
         #expect(urlString.contains("url.txt"))
     }
 
     @Test("urlFromPath includes the expanded home directory for ~ paths")
     func urlFromPathExpandsTilde() throws {
-        let urlString = try #require(sut.urlFromPath("~"))
+        let urlString = sut.urlFromPath("~")
         #expect(urlString.hasPrefix("file://"))
         #expect(urlString.contains(sut.homeDirectory().trimmingCharacters(in: CharacterSet(charactersIn: "/"))))
     }
