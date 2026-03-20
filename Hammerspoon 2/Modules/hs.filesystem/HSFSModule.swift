@@ -85,38 +85,43 @@ import Darwin          // POSIX stat/lstat/rmdir
 
     // MARK: - Existence and Type Checks
 
-    /// Returns `true` if any filesystem entry (file, directory, symlink, etc.) exists at the path.
-    ///
+    /// Determine if a filesystem object exists at the given path
     /// Unlike `isFile` and `isDirectory`, this follows symlinks.
-    ///
+    /// 
     /// - Parameter path: Path to check. `~` is expanded.
+    /// - Returns: `true` if any filesystem entry (file, directory, symlink, etc.) exists at the path.
     @objc func exists(_ path: String) -> Bool
 
-    /// Returns `true` if a regular file (not a directory or symlink) exists at the path.
+    /// Determine if a file exists at the given path
+    /// This does **not** follow symlinks; a symlink pointing at a file returns `false`.
     ///
     /// - Parameter path: Path to check. `~` is expanded.
+    /// - Returns: `true` if a regular file (not a directory or symlink) exists at the path.
     @objc func isFile(_ path: String) -> Bool
 
-    /// Returns `true` if a directory exists at the path.
-    ///
+    /// Determine if a directory exists at the given path
     /// This does **not** follow symlinks; a symlink pointing at a directory returns `false`.
-    ///
+    /// 
     /// - Parameter path: Path to check. `~` is expanded.
+    /// - Returns: `true` if a directory exists at the path.
     @objc func isDirectory(_ path: String) -> Bool
 
-    /// Returns `true` if the path is a symbolic link.
+    /// Determine if a symlink exists at the given path
     ///
     /// - Parameter path: Path to check. `~` is expanded.
+    /// - Returns: `true` if the path is a symbolic link.
     @objc func isSymlink(_ path: String) -> Bool
 
-    /// Returns `true` if the current process can read the file or directory at the path.
+    /// Determine if a given filesystem path is readable
     ///
     /// - Parameter path: Path to check. `~` is expanded.
+    /// - Returns: `true` if the current process can read the file or directory at the path.
     @objc func isReadable(_ path: String) -> Bool
 
-    /// Returns `true` if the current process can write to the file or directory at the path.
+    /// Determine if a given filesystem path is writable
     ///
     /// - Parameter path: Path to check. `~` is expanded.
+    /// - Returns: `true` if the current process can write to the file or directory at the path.
     @objc func isWritable(_ path: String) -> Bool
 
     // MARK: - File Operations
@@ -255,6 +260,7 @@ import Darwin          // POSIX stat/lstat/rmdir
     /// - `permissions` — POSIX permission bits as an integer (e.g. `0o644` = `420`).
     /// - `ownerID` — Owner UID.
     /// - `groupID` — Owner GID.
+    /// - `inode` — Inode number. Two paths with the same inode on the same device are hard links to the same file.
     /// - `creationDate` — Creation date as seconds since the Unix epoch.
     /// - `modificationDate` — Last modification date as seconds since the Unix epoch.
     ///

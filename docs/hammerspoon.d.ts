@@ -933,6 +933,334 @@ declare namespace hs.console {
 }
 
 /**
+ * Module for filesystem operations.
+`hs.fs` provides a comprehensive set of filesystem operations covering file
+I/O, directory management, path manipulation, metadata access, symbolic
+links, Finder tags, and macOS-specific features like file bookmarks and
+Uniform Type Identifiers.
+It replaces both Hammerspoon v1's `hs.fs` module and the functionality that
+was previously available through Lua's built-in `io` and `file` modules.
+## Reading and writing files
+```javascript
+const contents = hs.fs.read("/etc/hosts");
+
+hs.fs.write("/tmp/hello.txt", "Hello, world!\n");
+hs.fs.append("/tmp/hello.txt", "More content\n");
+```
+## Directory operations
+```javascript
+hs.fs.mkdir("~/Projects/new-thing");
+
+const files = hs.fs.list("~/Documents");
+const all   = hs.fs.listRecursive("~/Documents");
+```
+## Path utilities
+```javascript
+const abs  = hs.fs.pathToAbsolute("~/Library");
+const tmp  = hs.fs.temporaryDirectory();
+const home = hs.fs.homeDirectory();
+```
+## Metadata
+```javascript
+const info = hs.fs.attributes("/etc/hosts");
+// { size: 1234, type: "file", permissions: 420,
+//   ownerID: 0, groupID: 0,
+//   creationDate: 1700000000.0, modificationDate: 1700001000.0 }
+```
+ */
+declare namespace hs.fs {
+    /**
+     * Read the entire contents of a file as a UTF-8 string.
+     * @param path Path to the file. `~` is expanded.
+     * @returns The file contents, or `null` if the file cannot be read.
+     */
+    function read(path: string): string | undefined;
+
+    /**
+     * Write a UTF-8 string to a file, creating it or overwriting any existing content.
+Intermediate directories are not created automatically; use `mkdir` first if needed.
+     * @param path Path to the file. `~` is expanded.
+     * @param content String to write.
+     * @param atomically Whether to write the file in-place or atomically
+     * @returns `true` on success, `false` on failure.
+     */
+    function write(path: string, content: string, atomically: boolean): boolean;
+
+    /**
+     * Append a UTF-8 string to a file, creating it if it does not exist.
+     * @param path Path to the file. `~` is expanded.
+     * @param content String to append.
+     * @returns `true` on success, `false` on failure.
+     */
+    function append(path: string, content: string): boolean;
+
+    /**
+     * Determine if a filesystem object exists at the given path
+Unlike `isFile` and `isDirectory`, this follows symlinks.
+     * @param path Path to check. `~` is expanded.
+     * @returns `true` if any filesystem entry (file, directory, symlink, etc.) exists at the path.
+     */
+    function exists(path: string): boolean;
+
+    /**
+     * Determine if a file exists at the given path
+This does **not** follow symlinks; a symlink pointing at a file returns `false`.
+     * @param path Path to check. `~` is expanded.
+     * @returns `true` if a regular file (not a directory or symlink) exists at the path.
+     */
+    function isFile(path: string): boolean;
+
+    /**
+     * Determine if a directory exists at the given path
+This does **not** follow symlinks; a symlink pointing at a directory returns `false`.
+     * @param path Path to check. `~` is expanded.
+     * @returns `true` if a directory exists at the path.
+     */
+    function isDirectory(path: string): boolean;
+
+    /**
+     * Determine if a symlink exists at the given path
+     * @param path Path to check. `~` is expanded.
+     * @returns `true` if the path is a symbolic link.
+     */
+    function isSymlink(path: string): boolean;
+
+    /**
+     * Determine if a given filesystem path is readable
+     * @param path Path to check. `~` is expanded.
+     * @returns `true` if the current process can read the file or directory at the path.
+     */
+    function isReadable(path: string): boolean;
+
+    /**
+     * Determine if a given filesystem path is writable
+     * @param path Path to check. `~` is expanded.
+     * @returns `true` if the current process can write to the file or directory at the path.
+     */
+    function isWritable(path: string): boolean;
+
+    /**
+     * Copy a file or directory to a new location.
+The destination must not already exist. If `source` is a directory, its
+entire contents are copied recursively.
+     * @param source Path to the existing file or directory. `~` is expanded.
+     * @param destination Path for the copy. `~` is expanded.
+     * @returns `true` on success, `false` on failure.
+     */
+    function copy(source: string, destination: string): boolean;
+
+    /**
+     * Move (rename) a file or directory.
+The destination must not already exist.
+     * @param source Path to the existing file or directory. `~` is expanded.
+     * @param destination New path. `~` is expanded.
+     * @returns `true` on success, `false` on failure.
+     */
+    function move(source: string, destination: string): boolean;
+
+    /**
+     * Delete a file or directory.
+Directories are removed recursively. To remove only an empty directory,
+use `rmdir` instead.
+     * @param path Path to delete. `~` is expanded.
+     * @returns `true` on success, `false` on failure.
+     */
+    function delete(path: string): boolean;
+
+    /**
+     * List the immediate contents of a directory.
+Returns bare filenames (not full paths), sorted alphabetically.
+The `.` and `..` entries are never included.
+     * @param path Path to the directory. `~` is expanded.
+     * @returns Sorted array of filenames, or `null` if the path cannot be read.
+     */
+    function list(path: string): string[] | undefined;
+
+    /**
+     * Recursively list all entries under a directory.
+Returns paths relative to `path`, sorted alphabetically.
+     * @param path Path to the root directory. `~` is expanded.
+     * @returns Sorted array of relative paths, or `null` if the path cannot be read.
+     */
+    function listRecursive(path: string): string[] | undefined;
+
+    /**
+     * Create a directory, including all necessary intermediate directories.
+Succeeds silently if the directory already exists.
+     * @param path Path of the directory to create. `~` is expanded.
+     * @returns `true` on success, `false` on failure.
+     */
+    function mkdir(path: string): boolean;
+
+    /**
+     * Remove an empty directory.
+Fails if the directory is not empty. Use `delete` to remove a non-empty
+directory recursively.
+     * @param path Path of the directory to remove. `~` is expanded.
+     * @returns `true` on success, `false` on failure.
+     */
+    function rmdir(path: string): boolean;
+
+    /**
+     * Returns the current working directory of the process.
+     * @returns Current directory path, or `null` on error.
+     */
+    function currentDir(): string | undefined;
+
+    /**
+     * Change the current working directory of the process.
+     * @param path New working directory path. `~` is expanded.
+     * @returns `true` on success, `false` on failure.
+     */
+    function chdir(path: string): boolean;
+
+    /**
+     * Resolve a path to its absolute, canonical form.
+Expands `~`, resolves `.` and `..`, and follows all symbolic links.
+Returns `null` if any component of the path does not exist.
+     * @param path Path to resolve.
+     * @returns Absolute canonical path, or `null` if it cannot be resolved.
+     */
+    function pathToAbsolute(path: string): string | undefined;
+
+    /**
+     * Return the localised display name for a file or directory as shown by Finder.
+For example, `/Library` appears as `"Library"` in Finder even though its
+on-disk name is the same.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @returns Display name string, or `null` if the path does not exist.
+     */
+    function displayName(path: string): string | undefined;
+
+    /**
+     * Returns the temporary directory for the current user.
+     * @returns Temporary directory path (always ends with `/`).
+     */
+    function temporaryDirectory(): string;
+
+    /**
+     * Returns the home directory for the current user.
+     * @returns Home directory path string.
+     */
+    function homeDirectory(): string;
+
+    /**
+     * Returns a `file://` URL string for the given path.
+```javascript
+hs.fs.urlFromPath("/tmp/foo.txt")
+// → "file:///tmp/foo.txt"
+```
+     * @param path Filesystem path. `~` is expanded.
+     * @returns URL string, or `null` on failure.
+     */
+    function urlFromPath(path: string): string | undefined;
+
+    /**
+     * Get metadata attributes for a file or directory.
+Follows symbolic links (reports the target's attributes, not the link's).
+Use `isSymlink` to detect links before calling this if needed.
+`"characterSpecial"`, `"blockSpecial"`, or `"unknown"`.
+     * @param path Path to inspect. `~` is expanded.
+     * @returns Attributes object, or `null` if the path cannot be accessed.
+     */
+    function attributes(path: string): NSDictionary | undefined;
+
+    /**
+     * Update the modification timestamp of a file to the current time.
+Creates the file if it does not exist (equivalent to the POSIX `touch` command).
+     * @param path Path to the file. `~` is expanded.
+     * @returns `true` on success, `false` on failure.
+     */
+    function touch(path: string): boolean;
+
+    /**
+     * Create a hard link at `destination` pointing at `source`.
+Both paths must be on the same filesystem volume.
+     * @param source Path of the existing file.
+     * @param destination Path for the new hard link.
+     * @returns `true` on success, `false` on failure.
+     */
+    function link(source: string, destination: string): boolean;
+
+    /**
+     * Create a symbolic link at `destination` pointing at `source`.
+Unlike hard links, symlinks may cross filesystem boundaries and may
+point to paths that do not yet exist.
+     * @param source The path the symlink will point to.
+     * @param destination The path where the symlink will be created.
+     * @returns `true` on success, `false` on failure.
+     */
+    function symlink(source: string, destination: string): boolean;
+
+    /**
+     * Read the target of a symbolic link without resolving it.
+     * @param path Path to the symbolic link.
+     * @returns The raw path the link points to, or `null` if the path is not a symlink.
+     */
+    function readlink(path: string): string | undefined;
+
+    /**
+     * Get the Finder tags assigned to a file or directory.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @returns Array of tag name strings, or `null` if no tags are set.
+     */
+    function tags(path: string): string[] | undefined;
+
+    /**
+     * Replace all Finder tags on a file or directory.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @param newTags Array of tag name strings.
+     * @returns `true` on success, `false` on failure.
+     */
+    function setTags(path: string, newTags: NSArray): boolean;
+
+    /**
+     * Add Finder tags to a file or directory (union with existing tags).
+     * @param path Path to the file or directory. `~` is expanded.
+     * @param newTags Array of tag name strings to add.
+     * @returns `true` on success, `false` on failure.
+     */
+    function addTags(path: string, newTags: NSArray): boolean;
+
+    /**
+     * Remove specific Finder tags from a file or directory.
+Tags not currently present are silently ignored.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @param tagsToRemove Array of tag name strings to remove.
+     * @returns `true` on success, `false` on failure.
+     */
+    function removeTags(path: string, tagsToRemove: NSArray): boolean;
+
+    /**
+     * Return the Uniform Type Identifier for the file at the given path.
+```javascript
+hs.fs.fileUTI("/etc/hosts")   // → "public.plain-text"
+hs.fs.fileUTI("/tmp/foo.png") // → "public.png"
+```
+     * @param path Path to the file.
+     * @returns UTI string, or `null` on failure.
+     */
+    function fileUTI(path: string): string | undefined;
+
+    /**
+     * Encode a file path as a persistent bookmark that survives file moves and renames.
+The returned string is base64-encoded bookmark data that can be stored and
+later resolved with `pathFromBookmark`.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @returns Base64-encoded bookmark string, or `null` on failure.
+     */
+    function pathToBookmark(path: string): string | undefined;
+
+    /**
+     * Resolve a base64-encoded bookmark back to a file path.
+     * @param data Base64-encoded bookmark string produced by `pathToBookmark`.
+     * @returns The current file path, or `null` if the bookmark cannot be resolved.
+     */
+    function pathFromBookmark(data: string): string | undefined;
+
+}
+
+/**
  * Module for hashing and encoding operations
  */
 declare namespace hs.hash {
@@ -1313,102 +1641,6 @@ img.saveToFile("/tmp/screen.png");
  */
 declare namespace hs.screen {
     /**
-     * Switch to the given display mode.
-Pass `0` for `scale` or `frequency` to match any value.
-     * @param width Horizontal resolution in pixels.
-     * @param height Vertical resolution in pixels.
-     * @param scale Backing scale factor (e.g. `2` for HiDPI, `1` for non-HiDPI). Pass `0` to ignore.
-     * @param frequency Refresh rate in Hz. Pass `0` to ignore.
-     * @returns `true` on success.
-     */
-    function setMode(width: number, height: number, scale: number, frequency: number): boolean;
-
-    /**
-     * Capture the current contents of this screen as an image.
-Requires **Screen Recording** permission.
-     * @returns Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).
-     */
-    function snapshot(): Promise<HSImage>;
-
-    /**
-     * The next screen in `hs.screen.all()` order, wrapping around.
-     * @returns An HSScreen object
-     */
-    function next(): HSScreen;
-
-    /**
-     * The previous screen in `hs.screen.all()` order, wrapping around.
-     * @returns An HSScreen object
-     */
-    function previous(): HSScreen;
-
-    /**
-     * The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.
-     * @returns An HSScreen object
-     */
-    function toEast(): HSScreen | undefined;
-
-    /**
-     * The nearest screen whose right edge is at or before this screen's left edge, or `null`.
-     * @returns An HSScreen object
-     */
-    function toWest(): HSScreen | undefined;
-
-    /**
-     * The nearest screen that is physically above this screen, or `null`.
-     * @returns An HSScreen object
-     */
-    function toNorth(): HSScreen | undefined;
-
-    /**
-     * The nearest screen that is physically below this screen, or `null`.
-     * @returns An HSScreen object
-     */
-    function toSouth(): HSScreen | undefined;
-
-    /**
-     * Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.
-     * @param x The X coordinate to move to
-     * @param y The Y coordinate to move to
-     * @returns `true` on success.
-     */
-    function setOrigin(x: number, y: number): boolean;
-
-    /**
-     * Designate this screen as the primary display (moves the menu bar here).
-     * @returns `true` on success.
-     */
-    function setPrimary(): boolean;
-
-    /**
-     * Configure this screen to mirror another screen.
-     * @param screen The screen to mirror.
-     * @returns `true` on success.
-     */
-    function mirrorOf(screen: HSScreen): boolean;
-
-    /**
-     * Stop mirroring, restoring this screen to an independent display.
-     * @returns `true` on success.
-     */
-    function mirrorStop(): boolean;
-
-    /**
-     * Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.
-The result origin is relative to this screen's top-left corner.
-     * @param rect An `HSRect` in global Hammerspoon coordinates.
-     * @returns The rect offset to be relative to this screen's top-left, or `null` if the input is invalid.
-     */
-    function absoluteToLocal(rect: JSValue): HSRect | undefined;
-
-    /**
-     * Convert a rect in local screen coordinates to global Hammerspoon coordinates.
-     * @param rect An `HSRect` relative to this screen's top-left corner.
-     * @returns The rect in global Hammerspoon coordinates, or `null` if the input is invalid.
-     */
-    function localToAbsolute(rect: JSValue): HSRect | undefined;
-
-    /**
      * All connected screens.
      * @returns An array of HSScreen objects
      */
@@ -1427,59 +1659,175 @@ with the keyboard focus if no window is focused.
      */
     function primary(): HSScreen | undefined;
 
+}
+
+/**
+ * An object representing a single display attached to the system.
+## Coordinate system
+All geometry is returned in **Hammerspoon screen coordinates**: the origin `(0, 0)`
+is at the top-left of the primary display, and `y` increases downward.
+This matches Hammerspoon v1 and is the inverse of the raw macOS/CoreGraphics convention.
+## Examples
+```javascript
+const s = hs.screen.main();
+console.log(s.name);               // e.g. "Built-in Retina Display"
+console.log(s.frame.w);            // usable width in points
+
+console.log(s.mode.width, s.mode.scale); // e.g. 1440, 2
+
+s.desktopImage = "/Users/me/wallpaper.jpg";
+```
+ */
+declare class HSScreen {
+    /**
+     * Switch to the given display mode.
+Pass `0` for `scale` or `frequency` to match any value.
+     * @param width Horizontal resolution in pixels.
+     * @param height Vertical resolution in pixels.
+     * @param scale Backing scale factor (e.g. `2` for HiDPI, `1` for non-HiDPI). Pass `0` to ignore.
+     * @param frequency Refresh rate in Hz. Pass `0` to ignore.
+     * @returns `true` on success.
+     */
+    static setMode(width: number, height: number, scale: number, frequency: number): boolean;
+
+    /**
+     * Capture the current contents of this screen as an image.
+Requires **Screen Recording** permission.
+     * @returns Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).
+     */
+    static snapshot(): Promise<HSImage>;
+
+    /**
+     * The next screen in `hs.screen.all()` order, wrapping around.
+     * @returns An HSScreen object
+     */
+    static next(): HSScreen;
+
+    /**
+     * The previous screen in `hs.screen.all()` order, wrapping around.
+     * @returns An HSScreen object
+     */
+    static previous(): HSScreen;
+
+    /**
+     * The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.
+     * @returns An HSScreen object
+     */
+    static toEast(): HSScreen | undefined;
+
+    /**
+     * The nearest screen whose right edge is at or before this screen's left edge, or `null`.
+     * @returns An HSScreen object
+     */
+    static toWest(): HSScreen | undefined;
+
+    /**
+     * The nearest screen that is physically above this screen, or `null`.
+     * @returns An HSScreen object
+     */
+    static toNorth(): HSScreen | undefined;
+
+    /**
+     * The nearest screen that is physically below this screen, or `null`.
+     * @returns An HSScreen object
+     */
+    static toSouth(): HSScreen | undefined;
+
+    /**
+     * Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.
+     * @param x The X coordinate to move to
+     * @param y The Y coordinate to move to
+     * @returns `true` on success.
+     */
+    static setOrigin(x: number, y: number): boolean;
+
+    /**
+     * Designate this screen as the primary display (moves the menu bar here).
+     * @returns `true` on success.
+     */
+    static setPrimary(): boolean;
+
+    /**
+     * Configure this screen to mirror another screen.
+     * @param screen The screen to mirror.
+     * @returns `true` on success.
+     */
+    static mirrorOf(screen: HSScreen): boolean;
+
+    /**
+     * Stop mirroring, restoring this screen to an independent display.
+     * @returns `true` on success.
+     */
+    static mirrorStop(): boolean;
+
+    /**
+     * Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.
+The result origin is relative to this screen's top-left corner.
+     * @param rect An `HSRect` in global Hammerspoon coordinates.
+     * @returns The rect offset to be relative to this screen's top-left, or `null` if the input is invalid.
+     */
+    static absoluteToLocal(rect: JSValue): HSRect | undefined;
+
+    /**
+     * Convert a rect in local screen coordinates to global Hammerspoon coordinates.
+     * @param rect An `HSRect` relative to this screen's top-left corner.
+     * @returns The rect in global Hammerspoon coordinates, or `null` if the input is invalid.
+     */
+    static localToAbsolute(rect: JSValue): HSRect | undefined;
+
     /**
      * Unique display identifier (matches `CGDirectDisplayID`).
      */
-    const id: number;
+    id: number;
 
     /**
      * The manufacturer-assigned localized display name.
      */
-    const name: string;
+    name: string;
 
     /**
      * The display's UUID string.
      */
-    const uuid: string;
+    uuid: string;
 
     /**
      * The usable screen area in Hammerspoon coordinates, excluding the menu bar and Dock.
      */
-    const frame: HSRect;
+    frame: HSRect;
 
     /**
      * The full screen area in Hammerspoon coordinates, including menu bar and Dock regions.
      */
-    const fullFrame: HSRect;
+    fullFrame: HSRect;
 
     /**
      * The screen's top-left corner in global Hammerspoon coordinates.
      */
-    const position: HSPoint;
+    position: HSPoint;
 
     /**
      * The currently active display mode.
 An object with keys: `width`, `height`, `scale`, `frequency`.
      */
-    const mode: NSDictionary;
+    mode: NSDictionary;
 
     /**
      * All display modes supported by this screen.
 Each element has keys: `width`, `height`, `scale`, `frequency`.
      */
-    const availableModes: NSDictionary[];
+    availableModes: NSDictionary[];
 
     /**
      * The current screen rotation in degrees (0, 90, 180, or 270).
 Assign one of `0`, `90`, `180`, or `270` to rotate the display.
      */
-    const rotation: number;
+    rotation: number;
 
     /**
      * The URL string of the current desktop background image for this screen, or `null`.
 Assign a new absolute file path or `file://` URL string to change the wallpaper.
      */
-    const desktopImage: string | undefined;
+    desktopImage: string | undefined;
 
 }
 
@@ -2827,6 +3175,11 @@ declare class HSWindow {
      * The window's frame {x: Int, y: Int, w: Int, h: Int}
      */
     frame: HSRect | undefined;
+
+    /**
+     * The screen that contains the largest portion of this window.
+     */
+    screen: HSScreen | undefined;
 
 }
 

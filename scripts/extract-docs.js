@@ -21,6 +21,15 @@ const TYPES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Engine', 'Types')
 const OUTPUT_JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_COMBINED_DIR = path.join(OUTPUT_JSON_DIR, 'combined');
 
+// Directory names that differ from their public JS module names.
+// Xcode treats directories whose names contain certain characters (e.g. dots
+// followed by known extensions) as bundle packages, so some module folders use
+// a safe alias on disk.  Entries here are rewritten before any doc output is
+// produced, so the generated JSON/HTML always uses the JS-facing name.
+const MODULE_NAME_OVERRIDES = {
+    'hs.filesystem': 'hs.fs',
+};
+
 /**
  * Check if documentation contains SKIP_DOCS marker
  */
@@ -1137,18 +1146,20 @@ function main() {
 
     const allModules = [];
 
-    for (const moduleName of moduleDirs) {
-        const modulePath = path.join(MODULES_DIR, moduleName);
+    for (const dirName of moduleDirs) {
+        const modulePath = path.join(MODULES_DIR, dirName);
+        // Apply any directory-name → public-module-name override.
+        const moduleName = MODULE_NAME_OVERRIDES[dirName] ?? dirName;
         const moduleData = processModule(moduleName, modulePath);
 
         allModules.push(moduleData);
 
-        // Save individual module JSON
+        // Save individual module JSON (named after the public module name).
         const jsonPath = path.join(OUTPUT_JSON_DIR, `${moduleName}.json`);
         fs.writeFileSync(jsonPath, JSON.stringify(moduleData, null, 2));
         console.log(`  ✓ Saved JSON: ${jsonPath}`);
 
-        // Save combined JSDoc file
+        // Save combined JSDoc file.
         const combinedJSDoc = generateCombinedJSDoc(moduleData);
         const combinedPath = path.join(OUTPUT_COMBINED_DIR, `${moduleName}.js`);
         fs.writeFileSync(combinedPath, combinedJSDoc);

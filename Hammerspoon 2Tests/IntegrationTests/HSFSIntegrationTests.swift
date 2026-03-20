@@ -7,6 +7,18 @@ import Testing
 import Foundation
 @testable import Hammerspoon_2
 
+// MARK: - Test-only string helper
+
+private extension String {
+    /// Strip a leading prefix from a string, returning the original if it is absent.
+    /// Used to normalise macOS paths where `/tmp` is a symlink to `/private/tmp`,
+    /// causing `realpath`-based APIs to return `/private/tmp/…` while our test
+    /// paths are constructed from `NSTemporaryDirectory()` which may return either.
+    func deletingPrefix(_ prefix: String) -> String {
+        hasPrefix(prefix) ? String(dropFirst(prefix.count)) : self
+    }
+}
+
 // MARK: - Helpers
 
 /// Creates a unique temporary directory for one test, deletes it when the
