@@ -80,9 +80,7 @@ import Darwin          // POSIX stat/lstat/rmdir
 
     /// Read a file line-by-line, invoking a callback for each line.
     ///
-    /// Lines are delivered with newline characters stripped. Both `\n` and `\r\n`
-    /// line endings are handled. The file is read in chunks so it is never fully
-    /// loaded into memory, making this safe for arbitrarily large files.
+    /// Lines are delivered with newline characters stripped. Both `\n` and `\r\n` line endings are handled.
     ///
     /// ```javascript
     /// hs.fs.readLines("/etc/hosts", function(line) {
@@ -94,10 +92,8 @@ import Darwin          // POSIX stat/lstat/rmdir
     ///
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
-    ///   - callback: Called once per line with the line text. Return `true` to continue
-    ///     reading, or `false` to stop early.
-    /// - Returns: `true` if the file was read successfully (including early stops requested
-    ///   by the callback), or `false` if the file could not be opened.
+    ///   - callback: Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.
+    /// - Returns: `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.
     @objc func readLines(_ path: String, _ callback: JSValue) -> Bool
 
     /// Write a UTF-8 string to a file, creating it or overwriting any existing content.
@@ -279,8 +275,8 @@ import Darwin          // POSIX stat/lstat/rmdir
     /// ```
     ///
     /// - Parameter path: Filesystem path. `~` is expanded.
-    /// - Returns: URL string, or `null` on failure.
-    @objc func urlFromPath(_ path: String) -> String?
+    /// - Returns: URL string
+    @objc func urlFromPath(_ path: String) -> String
 
     // MARK: - File Attributes
 
@@ -480,7 +476,16 @@ import Darwin          // POSIX stat/lstat/rmdir
                 // Strip a preceding \r for Windows-style line endings.
                 let lineEnd = nlIdx > 0 && pending[nlIdx - 1] == 0x0D ? nlIdx - 1 : nlIdx
                 let line = String(data: pending[..<lineEnd], encoding: .utf8) ?? ""
-                let keepGoing = callback.call(withArguments: [line])?.toBool() ?? false
+
+                let result = callback.call(withArguments: [line])
+                var keepGoing = true
+
+                if let result = result {
+                    if !result.isUndefined && !result.isNull {
+                        keepGoing = result.toBool()
+                    }
+                }
+
                 pending = Data(pending[(nlIdx + 1)...])
                 if !keepGoing { return true }
             }
@@ -666,8 +671,8 @@ import Darwin          // POSIX stat/lstat/rmdir
         fm.homeDirectoryForCurrentUser.path
     }
 
-    @objc func urlFromPath(_ path: String) -> String? {
-        URL(fileURLWithPath: expand(path)).absoluteString
+    @objc func urlFromPath(_ path: String) -> String {
+        URL(filePath: path, directoryHint: .checkFileSystem).absoluteString
     }
 
     // MARK: - File Attributes
