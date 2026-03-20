@@ -68,6 +68,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4F2CCED02F6D520300E51115 /* Exceptions for "Hammerspoon 2" folder in "Hammerspoon 2" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Modules/hs.filesystem,
+			);
+			target = 4F5641822E8333830099EB4C /* Hammerspoon 2 */;
+		};
 		4F947DA72F5640D100DD814E /* Exceptions for "HammerspoonOSAScriptHelper" folder in "HammerspoonOSAScriptHelper" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -87,6 +94,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4F5641852E8333830099EB4C /* Hammerspoon 2 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4F2CCED02F6D520300E51115 /* Exceptions for "Hammerspoon 2" folder in "Hammerspoon 2" target */,
+			);
 			path = "Hammerspoon 2";
 			sourceTree = "<group>";
 		};
