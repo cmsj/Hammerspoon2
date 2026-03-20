@@ -1250,23 +1250,58 @@
       "methods": [
         {
           "name": "read",
-          "signature": "func read(_ path: String) -> String?",
-          "rawDocumentation": "Read the entire contents of a file as a UTF-8 string.\n\n- Parameter path: Path to the file. `~` is expanded.\n- Returns: The file contents, or `null` if the file cannot be read.",
-          "description": "Read the entire contents of a file as a UTF-8 string.",
+          "signature": "func read(_ path: String, _ offset: Int, _ length: Int) -> String?",
+          "rawDocumentation": "Read part or all of a file as a UTF-8 string.\n\n```javascript\nconst all   = hs.fs.read(\"/etc/hosts\");          // entire file\nconst chunk = hs.fs.read(\"/etc/hosts\", 100, 50); // 50 bytes starting at byte 100\n```\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - offset: Byte offset to start reading from. Pass `0` (or omit) to read from the beginning.\n  - length: Maximum number of bytes to read. Pass `0` (or omit) to read to the end of the file.\n- Returns: The file contents as a UTF-8 string, or `null` if the file cannot be read.",
+          "description": "Read part or all of a file as a UTF-8 string.\n```javascript\nconst all   = hs.fs.read(\"/etc/hosts\");          // entire file\nconst chunk = hs.fs.read(\"/etc/hosts\", 100, 50); // 50 bytes starting at byte 100\n```",
           "params": [
             {
               "name": "path",
               "type": "String",
               "description": "Path to the file. `~` is expanded."
+            },
+            {
+              "name": "offset",
+              "type": "Int",
+              "description": "Byte offset to start reading from. Pass `0` (or omit) to read from the beginning."
+            },
+            {
+              "name": "length",
+              "type": "Int",
+              "description": "Maximum number of bytes to read. Pass `0` (or omit) to read to the end of the file."
             }
           ],
           "returns": {
             "type": "String?",
-            "description": "The file contents, or `null` if the file cannot be read."
+            "description": "The file contents as a UTF-8 string, or `null` if the file cannot be read."
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 65
+          "lineNumber": 79
+        },
+        {
+          "name": "readLines",
+          "signature": "func readLines(_ path: String, _ callback: JSValue) -> Bool",
+          "rawDocumentation": "Read a file line-by-line, invoking a callback for each line.\n\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n`\nline endings are handled. The file is read in chunks so it is never fully\nloaded into memory, making this safe for arbitrarily large files.\n\n```javascript\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    if (line.startsWith(\"#\")) return true; // skip comment lines, keep going\n    console.log(line);\n    return true; // return false to stop early\n});\n```\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - callback: Called once per line with the line text. Return `true` to continue\n    reading, or `false` to stop early.\n- Returns: `true` if the file was read successfully (including early stops requested\n  by the callback), or `false` if the file could not be opened.",
+          "description": "Read a file line-by-line, invoking a callback for each line.\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n`\nline endings are handled. The file is read in chunks so it is never fully\nloaded into memory, making this safe for arbitrarily large files.\n```javascript\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    if (line.startsWith(\"#\")) return true; // skip comment lines, keep going\n    console.log(line);\n    return true; // return false to stop early\n});\n```\nreading, or `false` to stop early.",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Path to the file. `~` is expanded."
+            },
+            {
+              "name": "callback",
+              "type": "JSValue",
+              "description": "Called once per line with the line text. Return `true` to continue"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` if the file was read successfully (including early stops requested"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 101
         },
         {
           "name": "write",
@@ -1296,7 +1331,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 76
+          "lineNumber": 112
         },
         {
           "name": "append",
@@ -1321,7 +1356,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 84
+          "lineNumber": 120
         },
         {
           "name": "exists",
@@ -1341,7 +1376,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 93
+          "lineNumber": 129
         },
         {
           "name": "isFile",
@@ -1361,7 +1396,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 100
+          "lineNumber": 136
         },
         {
           "name": "isDirectory",
@@ -1381,7 +1416,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 107
+          "lineNumber": 143
         },
         {
           "name": "isSymlink",
@@ -1401,7 +1436,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 113
+          "lineNumber": 149
         },
         {
           "name": "isReadable",
@@ -1421,7 +1456,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 119
+          "lineNumber": 155
         },
         {
           "name": "isWritable",
@@ -1441,7 +1476,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 125
+          "lineNumber": 161
         },
         {
           "name": "copy",
@@ -1466,7 +1501,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 138
+          "lineNumber": 174
         },
         {
           "name": "move",
@@ -1491,7 +1526,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 148
+          "lineNumber": 184
         },
         {
           "name": "delete",
@@ -1511,7 +1546,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 157
+          "lineNumber": 193
         },
         {
           "name": "list",
@@ -1531,7 +1566,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 168
+          "lineNumber": 204
         },
         {
           "name": "listRecursive",
@@ -1551,7 +1586,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 176
+          "lineNumber": 212
         },
         {
           "name": "mkdir",
@@ -1571,7 +1606,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 184
+          "lineNumber": 220
         },
         {
           "name": "rmdir",
@@ -1591,7 +1626,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 193
+          "lineNumber": 229
         },
         {
           "name": "currentDir",
@@ -1605,7 +1640,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 200
+          "lineNumber": 236
         },
         {
           "name": "chdir",
@@ -1625,7 +1660,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 206
+          "lineNumber": 242
         },
         {
           "name": "pathToAbsolute",
@@ -1645,7 +1680,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 217
+          "lineNumber": 253
         },
         {
           "name": "displayName",
@@ -1665,7 +1700,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 226
+          "lineNumber": 262
         },
         {
           "name": "temporaryDirectory",
@@ -1679,7 +1714,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 231
+          "lineNumber": 267
         },
         {
           "name": "homeDirectory",
@@ -1693,7 +1728,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 236
+          "lineNumber": 272
         },
         {
           "name": "urlFromPath",
@@ -1713,7 +1748,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 247
+          "lineNumber": 283
         },
         {
           "name": "attributes",
@@ -1733,7 +1768,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 269
+          "lineNumber": 305
         },
         {
           "name": "touch",
@@ -1753,7 +1788,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 277
+          "lineNumber": 313
         },
         {
           "name": "link",
@@ -1778,7 +1813,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 289
+          "lineNumber": 325
         },
         {
           "name": "symlink",
@@ -1803,7 +1838,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 300
+          "lineNumber": 336
         },
         {
           "name": "readlink",
@@ -1823,7 +1858,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 306
+          "lineNumber": 342
         },
         {
           "name": "tags",
@@ -1843,7 +1878,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 314
+          "lineNumber": 350
         },
         {
           "name": "setTags",
@@ -1868,7 +1903,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 322
+          "lineNumber": 358
         },
         {
           "name": "addTags",
@@ -1893,7 +1928,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 330
+          "lineNumber": 366
         },
         {
           "name": "removeTags",
@@ -1918,7 +1953,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 340
+          "lineNumber": 376
         },
         {
           "name": "fileUTI",
@@ -1938,7 +1973,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 353
+          "lineNumber": 389
         },
         {
           "name": "pathToBookmark",
@@ -1958,7 +1993,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 364
+          "lineNumber": 400
         },
         {
           "name": "pathFromBookmark",
@@ -1978,13 +2013,13 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 370
+          "lineNumber": 406
         }
       ],
       "properties": [],
       "types": [],
-      "description": "Module for filesystem operations.\n`hs.fs` provides a comprehensive set of filesystem operations covering file\nI/O, directory management, path manipulation, metadata access, symbolic\nlinks, Finder tags, and macOS-specific features like file bookmarks and\nUniform Type Identifiers.\nIt replaces both Hammerspoon v1's `hs.fs` module and the functionality that\nwas previously available through Lua's built-in `io` and `file` modules.\n## Reading and writing files\n```javascript\nconst contents = hs.fs.read(\"/etc/hosts\");\n\nhs.fs.write(\"/tmp/hello.txt\", \"Hello, world!\\n\");\nhs.fs.append(\"/tmp/hello.txt\", \"More content\\n\");\n```\n## Directory operations\n```javascript\nhs.fs.mkdir(\"~/Projects/new-thing\");\n\nconst files = hs.fs.list(\"~/Documents\");\nconst all   = hs.fs.listRecursive(\"~/Documents\");\n```\n## Path utilities\n```javascript\nconst abs  = hs.fs.pathToAbsolute(\"~/Library\");\nconst tmp  = hs.fs.temporaryDirectory();\nconst home = hs.fs.homeDirectory();\n```\n## Metadata\n```javascript\nconst info = hs.fs.attributes(\"/etc/hosts\");\n// { size: 1234, type: \"file\", permissions: 420,\n//   ownerID: 0, groupID: 0,\n//   creationDate: 1700000000.0, modificationDate: 1700001000.0 }\n```",
-      "rawDocumentation": "Module for filesystem operations.\n\n`hs.fs` provides a comprehensive set of filesystem operations covering file\nI/O, directory management, path manipulation, metadata access, symbolic\nlinks, Finder tags, and macOS-specific features like file bookmarks and\nUniform Type Identifiers.\n\nIt replaces both Hammerspoon v1's `hs.fs` module and the functionality that\nwas previously available through Lua's built-in `io` and `file` modules.\n\n## Reading and writing files\n\n```javascript\nconst contents = hs.fs.read(\"/etc/hosts\");\n\nhs.fs.write(\"/tmp/hello.txt\", \"Hello, world!\\n\");\nhs.fs.append(\"/tmp/hello.txt\", \"More content\\n\");\n```\n\n## Directory operations\n\n```javascript\nhs.fs.mkdir(\"~/Projects/new-thing\");\n\nconst files = hs.fs.list(\"~/Documents\");\nconst all   = hs.fs.listRecursive(\"~/Documents\");\n```\n\n## Path utilities\n\n```javascript\nconst abs  = hs.fs.pathToAbsolute(\"~/Library\");\nconst tmp  = hs.fs.temporaryDirectory();\nconst home = hs.fs.homeDirectory();\n```\n\n## Metadata\n\n```javascript\nconst info = hs.fs.attributes(\"/etc/hosts\");\n// { size: 1234, type: \"file\", permissions: 420,\n//   ownerID: 0, groupID: 0,\n//   creationDate: 1700000000.0, modificationDate: 1700001000.0 }\n```"
+      "description": "Module for filesystem operations.\n`hs.fs` provides a comprehensive set of filesystem operations covering file\nI/O, directory management, path manipulation, metadata access, symbolic\nlinks, Finder tags, and macOS-specific features like file bookmarks and\nUniform Type Identifiers.\nIt replaces both Hammerspoon v1's `hs.fs` module and the functionality that\nwas previously available through Lua's built-in `io` and `file` modules.\n## Reading and writing files\n```javascript\nconst contents = hs.fs.read(\"/etc/hosts\");           // entire file\nconst chunk    = hs.fs.read(\"/etc/hosts\", 100, 50);  // 50 bytes from offset 100\n\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    console.log(line);\n    return true; // return false to stop early\n});\n\nhs.fs.write(\"/tmp/hello.txt\", \"Hello, world!\\n\");\nhs.fs.append(\"/tmp/hello.txt\", \"More content\\n\");\n```\n## Directory operations\n```javascript\nhs.fs.mkdir(\"~/Projects/new-thing\");\n\nconst files = hs.fs.list(\"~/Documents\");\nconst all   = hs.fs.listRecursive(\"~/Documents\");\n```\n## Path utilities\n```javascript\nconst abs  = hs.fs.pathToAbsolute(\"~/Library\");\nconst tmp  = hs.fs.temporaryDirectory();\nconst home = hs.fs.homeDirectory();\n```\n## Metadata\n```javascript\nconst info = hs.fs.attributes(\"/etc/hosts\");\n// { size: 1234, type: \"file\", permissions: 420,\n//   ownerID: 0, groupID: 0,\n//   creationDate: 1700000000.0, modificationDate: 1700001000.0 }\n```",
+      "rawDocumentation": "Module for filesystem operations.\n\n`hs.fs` provides a comprehensive set of filesystem operations covering file\nI/O, directory management, path manipulation, metadata access, symbolic\nlinks, Finder tags, and macOS-specific features like file bookmarks and\nUniform Type Identifiers.\n\nIt replaces both Hammerspoon v1's `hs.fs` module and the functionality that\nwas previously available through Lua's built-in `io` and `file` modules.\n\n## Reading and writing files\n\n```javascript\nconst contents = hs.fs.read(\"/etc/hosts\");           // entire file\nconst chunk    = hs.fs.read(\"/etc/hosts\", 100, 50);  // 50 bytes from offset 100\n\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    console.log(line);\n    return true; // return false to stop early\n});\n\nhs.fs.write(\"/tmp/hello.txt\", \"Hello, world!\\n\");\nhs.fs.append(\"/tmp/hello.txt\", \"More content\\n\");\n```\n\n## Directory operations\n\n```javascript\nhs.fs.mkdir(\"~/Projects/new-thing\");\n\nconst files = hs.fs.list(\"~/Documents\");\nconst all   = hs.fs.listRecursive(\"~/Documents\");\n```\n\n## Path utilities\n\n```javascript\nconst abs  = hs.fs.pathToAbsolute(\"~/Library\");\nconst tmp  = hs.fs.temporaryDirectory();\nconst home = hs.fs.homeDirectory();\n```\n\n## Metadata\n\n```javascript\nconst info = hs.fs.attributes(\"/etc/hosts\");\n// { size: 1234, type: \"file\", permissions: 420,\n//   ownerID: 0, groupID: 0,\n//   creationDate: 1700000000.0, modificationDate: 1700001000.0 }\n```"
     },
     {
       "name": "hs.hash",
@@ -6528,5 +6563,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-03-20T21:46:41.847Z"
+  "generatedAt": "2026-03-20T22:11:05.362Z"
 }

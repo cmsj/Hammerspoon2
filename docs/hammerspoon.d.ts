@@ -942,7 +942,13 @@ It replaces both Hammerspoon v1's `hs.fs` module and the functionality that
 was previously available through Lua's built-in `io` and `file` modules.
 ## Reading and writing files
 ```javascript
-const contents = hs.fs.read("/etc/hosts");
+const contents = hs.fs.read("/etc/hosts");           // entire file
+const chunk    = hs.fs.read("/etc/hosts", 100, 50);  // 50 bytes from offset 100
+
+hs.fs.readLines("/etc/hosts", function(line) {
+    console.log(line);
+    return true; // return false to stop early
+});
 
 hs.fs.write("/tmp/hello.txt", "Hello, world!\n");
 hs.fs.append("/tmp/hello.txt", "More content\n");
@@ -970,11 +976,36 @@ const info = hs.fs.attributes("/etc/hosts");
  */
 declare namespace hs.fs {
     /**
-     * Read the entire contents of a file as a UTF-8 string.
+     * Read part or all of a file as a UTF-8 string.
+```javascript
+const all   = hs.fs.read("/etc/hosts");          // entire file
+const chunk = hs.fs.read("/etc/hosts", 100, 50); // 50 bytes starting at byte 100
+```
      * @param path Path to the file. `~` is expanded.
-     * @returns The file contents, or `null` if the file cannot be read.
+     * @param offset Byte offset to start reading from. Pass `0` (or omit) to read from the beginning.
+     * @param length Maximum number of bytes to read. Pass `0` (or omit) to read to the end of the file.
+     * @returns The file contents as a UTF-8 string, or `null` if the file cannot be read.
      */
-    function read(path: string): string | undefined;
+    function read(path: string, offset: number, length: number): string | undefined;
+
+    /**
+     * Read a file line-by-line, invoking a callback for each line.
+Lines are delivered with newline characters stripped. Both `\n` and `\r\n`
+line endings are handled. The file is read in chunks so it is never fully
+loaded into memory, making this safe for arbitrarily large files.
+```javascript
+hs.fs.readLines("/etc/hosts", function(line) {
+    if (line.startsWith("#")) return true; // skip comment lines, keep going
+    console.log(line);
+    return true; // return false to stop early
+});
+```
+reading, or `false` to stop early.
+     * @param path Path to the file. `~` is expanded.
+     * @param callback Called once per line with the line text. Return `true` to continue
+     * @returns `true` if the file was read successfully (including early stops requested
+     */
+    function readLines(path: string, callback: JSValue): boolean;
 
     /**
      * Write a UTF-8 string to a file, creating it or overwriting any existing content.
