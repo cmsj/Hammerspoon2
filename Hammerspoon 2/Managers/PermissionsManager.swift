@@ -17,11 +17,33 @@ enum PermissionsState: Int {
 }
 
 @_documentation(visibility: private)
-enum PermissionsType: Int {
+enum PermissionsType: Int, CaseIterable {
     case accessibility = 0
     case camera
     case microphone
     case screencapture
+
+    var displayName: String {
+        switch self {
+        case .accessibility: return "Accessibility"
+        case .camera: return "Camera"
+        case .microphone: return "Microphone"
+        case .screencapture: return "Screen Recording"
+        }
+    }
+
+    var permissionDescription: String {
+        switch self {
+        case .accessibility:
+            return "Allows Hammerspoon to control and monitor other applications via the Accessibility APIs."
+        case .camera:
+            return "Allows Hammerspoon scripts to access the camera."
+        case .microphone:
+            return "Allows Hammerspoon scripts to access the microphone."
+        case .screencapture:
+            return "Allows Hammerspoon to capture screen content for automation and scripting."
+        }
+    }
 }
 
 @_documentation(visibility: private)

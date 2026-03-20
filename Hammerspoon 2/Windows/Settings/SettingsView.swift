@@ -17,6 +17,9 @@ struct SettingsView: View {
             Tab("Configuration", systemImage: "gearshape") {
                 SettingsConfigView()
             }
+            Tab("Permissions", systemImage: "lock.shield") {
+                SettingsPermissionsView()
+            }
             Tab("Advanced", systemImage: "hammer") {
                 SettingsAdvancedView()
             }
