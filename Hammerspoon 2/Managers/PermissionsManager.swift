@@ -8,6 +8,7 @@
 import Foundation
 @unsafe @preconcurrency import ApplicationServices.HIServices.AXUIElement
 import AVFoundation
+import CoreLocation
 
 @_documentation(visibility: private)
 enum PermissionsState: Int {
@@ -22,6 +23,7 @@ enum PermissionsType: Int, CaseIterable {
     case camera
     case microphone
     case screencapture
+    case location
 
     var displayName: String {
         switch self {
@@ -29,6 +31,7 @@ enum PermissionsType: Int, CaseIterable {
         case .camera: return "Camera"
         case .microphone: return "Microphone"
         case .screencapture: return "Screen Recording"
+        case .location: return "Location"
         }
     }
 
@@ -42,6 +45,8 @@ enum PermissionsType: Int, CaseIterable {
             return "Allows Hammerspoon scripts to access the microphone."
         case .screencapture:
             return "Allows Hammerspoon to capture screen content for automation and scripting."
+        case .location:
+            return "Allows Hammerspoon scripts to access the device's location."
         }
     }
 
@@ -52,6 +57,7 @@ enum PermissionsType: Int, CaseIterable {
         case .camera:        path = "Privacy_Camera"
         case .microphone:    path = "Privacy_Microphone"
         case .screencapture: path = "Privacy_ScreenCapture"
+        case .location:      path = "Privacy_LocationServices"
         }
         // swiftlint:disable:next force_unwrapping
         return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(path)")!
@@ -60,8 +66,11 @@ enum PermissionsType: Int, CaseIterable {
 
 @_documentation(visibility: private)
 @MainActor
-class PermissionsManager {
+class PermissionsManager: NSObject {
     static let shared = PermissionsManager()
+
+    private var locationManager: CLLocationManager?
+    private var locationCallback: (@Sendable (Bool) -> Void)?
 
     func state(_ permType: PermissionsType) -> PermissionsState {
         switch permType {
@@ -81,6 +90,12 @@ class PermissionsManager {
             }
         case .screencapture:
             return CGPreflightScreenCaptureAccess() ? .trusted : .notTrusted
+        case .location:
+            switch CLLocationManager().authorizationStatus {
+            case .authorized, .authorizedAlways: return .trusted
+            case .notDetermined:                 return .unknown
+            default:                             return .notTrusted
+            }
         }
     }
 
@@ -96,6 +111,9 @@ class PermissionsManager {
             return status == .authorized
         case .screencapture:
             return CGPreflightScreenCaptureAccess()
+        case .location:
+            let status = CLLocationManager().authorizationStatus
+            return status == .authorized || status == .authorizedAlways
         }
     }
 
@@ -128,6 +146,34 @@ class PermissionsManager {
             }
         case .screencapture:
             CGRequestScreenCaptureAccess()
+        case .location:
+            let manager = CLLocationManager()
+            switch manager.authorizationStatus {
+            case .authorized, .authorizedAlways:
+                callback?(true)
+            case .notDetermined:
+                locationManager = manager
+                locationCallback = callback
+                manager.delegate = self
+                manager.requestAlwaysAuthorization()
+            default:
+                callback?(false)
+            }
         }
+    }
+}
+
+extension PermissionsManager: CLLocationManagerDelegate {
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        guard status != .notDetermined else { return }
+        let granted = status == .authorized || status == .authorizedAlways
+        let callback = MainActor.assumeIsolated { [self] in
+            let cb = locationCallback
+            locationCallback = nil
+            locationManager = nil
+            return cb
+        }
+        callback?(granted)
     }
 }

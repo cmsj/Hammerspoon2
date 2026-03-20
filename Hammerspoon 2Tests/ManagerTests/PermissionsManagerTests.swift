@@ -13,18 +13,10 @@ struct PermissionsTypeMetadataTests {
 
     // MARK: - CaseIterable
 
-    @Test("PermissionsType has all four cases")
-    func testAllCasesCount() {
-        #expect(PermissionsType.allCases.count == 4)
-    }
-
-    @Test("PermissionsType allCases contains all expected types")
+    @Test("PermissionsType has all expected cases")
     func testAllCasesContents() {
-        let cases = PermissionsType.allCases
-        #expect(cases.contains(.accessibility))
-        #expect(cases.contains(.camera))
-        #expect(cases.contains(.microphone))
-        #expect(cases.contains(.screencapture))
+        let expected: [PermissionsType] = [.accessibility, .camera, .microphone, .screencapture, .location]
+        #expect(PermissionsType.allCases == expected)
     }
 
     // MARK: - displayName
@@ -47,6 +39,11 @@ struct PermissionsTypeMetadataTests {
     @Test("screencapture displayName is correct")
     func testScreencaptureDisplayName() {
         #expect(PermissionsType.screencapture.displayName == "Screen Recording")
+    }
+
+    @Test("location displayName is correct")
+    func testLocationDisplayName() {
+        #expect(PermissionsType.location.displayName == "Location")
     }
 
     @Test("All permission types have non-empty displayName")
@@ -86,6 +83,12 @@ struct PermissionsTypeMetadataTests {
     func testScreencaptureDescription() {
         let desc = PermissionsType.screencapture.permissionDescription.lowercased()
         #expect(desc.contains("screen"))
+    }
+
+    @Test("location description mentions location")
+    func testLocationDescription() {
+        let desc = PermissionsType.location.permissionDescription.lowercased()
+        #expect(desc.contains("location"))
     }
 
     @Test("Each permission type has a unique displayName")
