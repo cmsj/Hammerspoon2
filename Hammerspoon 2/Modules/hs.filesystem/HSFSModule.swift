@@ -286,17 +286,15 @@ import Darwin          // POSIX stat/lstat/rmdir
 
     /// Get metadata attributes for a file or directory.
     ///
-    /// Follows symbolic links (reports the target's attributes, not the link's).
-    /// Use `isSymlink` to detect links before calling this if needed.
+    /// Does not follow symbolic links. Use `isSymlink` to detect links before calling this if needed.
     ///
     /// Returns an object with:
     /// - `size` — Size in bytes (`number`).
-    /// - `type` — One of `"file"`, `"directory"`, `"symlink"`, `"socket"`,
-    ///            `"characterSpecial"`, `"blockSpecial"`, or `"unknown"`.
+    /// - `type` — One of `"file"`, `"directory"`, `"symlink"`, `"socket"`, `"characterSpecial"`, `"blockSpecial"`, or `"unknown"`.
     /// - `permissions` — POSIX permission bits as an integer (e.g. `0o644` = `420`).
     /// - `ownerID` — Owner UID.
     /// - `groupID` — Owner GID.
-    /// - `inode` — Inode number. Two paths with the same inode on the same device are hard links to the same file.
+    /// - `inode` — Inode number.
     /// - `creationDate` — Creation date as seconds since the Unix epoch.
     /// - `modificationDate` — Last modification date as seconds since the Unix epoch.
     ///
