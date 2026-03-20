@@ -306,7 +306,7 @@ struct HSFSIntegrationTests {
         let tmp = try TempDir()
         let ok = sut.chdir(tmp.path)
         #expect(ok, "chdir should succeed")
-        #expect(sut.currentDir() == tmp.path)
+        #expect(sut.currentDir()?.deletingPrefix("/private") == tmp.path)
     }
 
     @Test("chdir returns false for a non-existent path")
@@ -336,7 +336,7 @@ struct HSFSIntegrationTests {
         _ = sut.write(target, "")
         _ = sut.symlink(target, link)
 
-        let abs = try #require(sut.pathToAbsolute(link))
+        let abs = try #require(sut.pathToAbsolute(link)).deletingPrefix("/private")
         #expect(abs == target, "resolved path should point to the real file")
     }
 
@@ -456,10 +456,16 @@ struct HSFSIntegrationTests {
         #expect(sut.read(hard) == "shared content")
 
         // Verify it is truly a hard link (same inode).
-        let srcIno  = (sut.attributes(src)?["ownerID"]  as? Int) // use ino via stat directly
-        let hardIno = (sut.attributes(hard)?["ownerID"] as? Int)
+        let srcIno  = (sut.attributes(src)?["inode"]  as? Int) // use ino via stat directly
+        let hardIno = (sut.attributes(hard)?["inode"] as? Int)
+
+        print("Comparing file/link: \(src), \(hard)")
+        print("Found inodes: \(String(describing: srcIno)), \(String(describing: hardIno))")
+        #expect(srcIno != nil && hardIno != nil, "inode numbers should not be nil")
+        #expect(srcIno == hardIno, "hard link should point to the same file")
+
         // A more reliable check: write via one path, read via the other.
-        _ = sut.write(src, "updated")
+        _ = sut.write(src, "updated", false)
         #expect(sut.read(hard) == "updated", "hard link should reflect writes through either path")
     }
 
@@ -587,7 +593,7 @@ struct HSFSIntegrationTests {
         // Verify it is valid base64
         #expect(Data(base64Encoded: bookmark) != nil, "bookmark should be valid base64")
 
-        let resolved = try #require(sut.pathFromBookmark(bookmark),
+        let resolved = try #require(sut.pathFromBookmark(bookmark)?.deletingPrefix("/private"),
                                     "pathFromBookmark should resolve back to a path")
         #expect(resolved == file)
     }
