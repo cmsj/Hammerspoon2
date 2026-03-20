@@ -538,7 +538,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Hammerspoon-2-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Hammerspoon 2 requires camera permissions for various modules to function correctly";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "©2025 by its authors. Released under MIT License.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Hammerspoon 2 requires microphone permissions for various modules to function correctly";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -588,7 +590,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Hammerspoon-2-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Hammerspoon 2 requires camera permissions for various modules to function correctly";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "©2025 by its authors. Released under MIT License.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Hammerspoon 2 requires microphone permissions for various modules to function correctly";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
