@@ -597,7 +597,7 @@ struct HSFSIntegrationTests {
         #expect(srcIno == hardIno, "hard link should point to the same file")
 
         // A more reliable check: write via one path, read via the other.
-        _ = sut.write(src, "updated", false)
+        _ = sut.write(src, "updated", true)
         #expect(sut.read(hard) == "updated", "hard link should reflect writes through either path")
     }
 
