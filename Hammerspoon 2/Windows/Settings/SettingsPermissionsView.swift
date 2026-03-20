@@ -41,7 +41,7 @@ struct PermissionRowView: View {
             }
         case .notTrusted:
             Button("Open Settings") {
-                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy")!)
+                NSWorkspace.shared.open(permType.settingsURL)
             }
         }
     }

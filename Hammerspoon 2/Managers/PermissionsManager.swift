@@ -44,6 +44,18 @@ enum PermissionsType: Int, CaseIterable {
             return "Allows Hammerspoon to capture screen content for automation and scripting."
         }
     }
+
+    var settingsURL: URL {
+        let path: String
+        switch self {
+        case .accessibility: path = "Privacy_Accessibility"
+        case .camera:        path = "Privacy_Camera"
+        case .microphone:    path = "Privacy_Microphone"
+        case .screencapture: path = "Privacy_ScreenCapture"
+        }
+        // swiftlint:disable:next force_unwrapping
+        return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(path)")!
+    }
 }
 
 @_documentation(visibility: private)
