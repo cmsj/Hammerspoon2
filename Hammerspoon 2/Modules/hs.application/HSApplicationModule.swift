@@ -288,14 +288,12 @@ class HSApplicationWatcherObject {
 
         return JSEngine.shared.createPromise { holder in
             NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration()) { app, error in
-                DispatchQueue.main.async {
-                    MainActor.assumeIsolated {
-                        if let error = error {
-                            AKError("hs.application.launchOrFocus: \(error.localizedDescription)")
-                            holder.resolveWith(false)
-                        } else {
-                            holder.resolveWith(app != nil)
-                        }
+                Task { @MainActor in
+                    if let error = error {
+                        AKError("hs.application.launchOrFocus: \(error.localizedDescription)")
+                        holder.resolveWith(false)
+                    } else {
+                        holder.resolveWith(app != nil)
                     }
                 }
             }
