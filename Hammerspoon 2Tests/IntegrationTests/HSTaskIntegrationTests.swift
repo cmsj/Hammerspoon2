@@ -315,7 +315,7 @@ import JavaScriptCore
         var outputCount = 0;
         var task = hs.task.new(
             '/bin/sh',
-            ['-c', 'for i in 1 2 3 4 5; do echo $i; sleep 0.1; done'],
+            ['-c', 'for i in 1 2 3 4 5; do echo $i; sleep 1; done'],
             null,
             null,
             function(stream, data) {
@@ -339,7 +339,7 @@ import JavaScriptCore
 
         // Resume the task
         harness.eval("task.resume()")
-        try? await Task.sleep(for: .seconds(0.3))
+        try? await Task.sleep(for: .seconds(1.3))
 
         // Count should increase after resume
         let countAfterResume = harness.eval("outputCount") as? Int ?? -1
