@@ -671,6 +671,54 @@ import JavaScriptCore
         let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
         #expect(success, "Shell command should complete")
         #expect(capturedOutput.contains("Shell command test"), "Should execute shell command")
+        let tasksCompleted = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(tasksCompleted, "Shell task should be cleaned up")
+        await harness.cleanup()
+    }
+
+    @Test("hs.task.shell() can run repeatedly without leaving active tasks")
+    func testShellRepeatedCleanup() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var promiseResolved = false
+        var count = 0
+        harness.registerCallback("onResolve") { (_: String) in
+            count += 1
+            if count == 3 {
+                promiseResolved = true
+            }
+        }
+
+        harness.eval("""
+        Promise.all([
+            hs.task.shell('printf "one"'),
+            hs.task.shell('printf "two"'),
+            hs.task.shell('printf "three"')
+        ]).then(function(results) {
+            results.forEach(function(result) {
+                onResolve(result.stdout);
+            });
+        });
+        """)
+
+        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
+        #expect(success, "Repeated shell commands should complete")
+        #expect(count == 3, "All shell command results should resolve")
+        let tasksCompleted = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(tasksCompleted, "Repeated shell commands should leave no active tasks")
+
+        promiseResolved = false
+        harness.eval("""
+        hs.task.shell('printf "four"').then(function(result) {
+            onResolve(result.stdout);
+        });
+        """)
+
+        let followupSuccess = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
+        #expect(followupSuccess, "Follow-up shell command should complete after cleanup")
+        #expect(count == 4, "Follow-up shell command should also resolve")
+        await harness.cleanup()
     }
 
     @Test("hs.task.parallel() runs tasks concurrently")
