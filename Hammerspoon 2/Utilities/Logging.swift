@@ -20,7 +20,7 @@ enum HammerspoonLogType: Int, CaseIterable, Identifiable {
     case Autocomplete
 
     var id: Self { self }
-    var asString: String {
+    nonisolated var asString: String {
         switch (self) {
         case .Trace:
             return "Debug"
@@ -50,6 +50,21 @@ struct HammerspoonLogEntry: Identifiable, Equatable, Hashable {
             return self.logType.asString
         }
     }
+
+    /// Formatted timestamp string (e.g., "2025-12-27 14:30:05")
+    var formattedDate: String {
+        date.formatted(
+            .verbatim(
+                "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
+                locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
+            )
+        )
+    }
+
+    /// Formatted log line (e.g., "2025-12-27 14:30:05 - Info: message")
+    var formattedLine: String {
+        "\(formattedDate) - \(logType.asString): \(msg)"
+    }
 }
 
 @_documentation(visibility: private)
@@ -65,9 +80,16 @@ extension Logger {
 @Observable
 @MainActor
 final class HammerspoonLog: Sendable {
-    static let shared = HammerspoonLog()
+    nonisolated(unsafe) static let shared = HammerspoonLog()
 
-    var entries: [HammerspoonLogEntry] = []
+    /// These properties use nonisolated(unsafe) because they need to be readable
+    /// from CFRunLoop callbacks (e.g., IPC message port) which run on the main thread
+    /// but NOT through GCD's main queue. The @objc thunk and MainActor.assumeIsolated
+    /// both use dispatch_assert_queue which fails in that context.
+    /// SAFETY: All mutations happen on MainActor (main thread). Reads from CFRunLoop
+    /// callbacks are also on the main thread, so there are no data races.
+    nonisolated(unsafe) var entries: [HammerspoonLogEntry] = []
+    nonisolated(unsafe) var evalHistory: [String] = []
 
     func log(_ level: HammerspoonLogType, _ msg: String) {
         entries.append(HammerspoonLogEntry(logType: level, msg: msg))
@@ -84,8 +106,22 @@ final class HammerspoonLog: Sendable {
 
 @_documentation(visibility: private)
 func AKLog(_ level: HammerspoonLogType, _ msg: String) {
-    Task { @MainActor in
-        HammerspoonLog.shared.log(level, msg)
+    if Thread.isMainThread {
+        // Log synchronously when already on the main thread so that
+        // sequential JS like `hs.console.print("x"); hs.console.getConsole()`
+        // sees the entry immediately. Direct access to `entries` is safe here
+        // because the property is nonisolated(unsafe) and we've verified we're
+        // on the main thread (MainActor.assumeIsolated can't be used because
+        // CFRunLoop callbacks run on the main thread but outside GCD's main queue).
+        let shared = HammerspoonLog.shared
+        shared.entries.append(HammerspoonLogEntry(logType: level, msg: msg))
+        if shared.entries.count > 100 {
+            shared.entries.removeFirst()
+        }
+    } else {
+        Task { @MainActor in
+            HammerspoonLog.shared.log(level, msg)
+        }
     }
 }
 
