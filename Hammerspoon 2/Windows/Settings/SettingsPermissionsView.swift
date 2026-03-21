@@ -67,6 +67,7 @@ struct SettingsPermissionsView: View {
     @State private var permissionStates: [PermissionsType: PermissionsState] = [:]
     @State private var refreshTimer: Timer?
     @State private var isRefreshing = true
+    @State private var remainingAllowedAutoRefreshes = 100
 
     var body: some View {
         ProgressView()
@@ -93,6 +94,7 @@ struct SettingsPermissionsView: View {
             Spacer()
         }
         .onAppear {
+            remainingAllowedAutoRefreshes = 100
             refreshPermissions()
             startObserving()
         }
@@ -109,10 +111,13 @@ struct SettingsPermissionsView: View {
 
     private func startObserving() {
         guard refreshTimer == nil else { return }
+        guard remainingAllowedAutoRefreshes > 0 else { return }
+
         let timer = Timer(timeInterval: 5.0, repeats: true) { [self] _ in
             Task { @MainActor in
                 refreshPermissions()
                 isRefreshing = false
+                remainingAllowedAutoRefreshes -= 1
             }
         }
         RunLoop.main.add(timer, forMode: .common)
