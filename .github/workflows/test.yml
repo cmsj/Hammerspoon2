@@ -67,7 +67,7 @@ jobs:
 
       - name: Publish test results to PR
         uses: slidoapp/xcresulttool@v3.1.1
-        if: always() && github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         with:
           path: TestResults.xcresult
           show-passed-tests: false
