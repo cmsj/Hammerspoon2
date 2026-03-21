@@ -215,6 +215,9 @@ import JavaScriptCoreExtras
                     }
                 }
 
+                self.stdoutPipe?.fileHandleForReading.readabilityHandler = nil
+                self.stderrPipe?.fileHandleForReading.readabilityHandler = nil
+
                 // Unregister task after all callbacks complete
                 self.module?.unregisterActiveTask(self)
             }
@@ -315,7 +318,10 @@ import JavaScriptCoreExtras
             guard let self = self else { return }
 
             let data = handle.availableData
-            guard !data.isEmpty else { return }
+            guard !data.isEmpty else {
+                handle.readabilityHandler = nil
+                return
+            }
             guard let output = String(data: data, encoding: .utf8) else { return }
 
             Task { @MainActor [weak self] in
@@ -341,7 +347,10 @@ import JavaScriptCoreExtras
             guard let self = self else { return }
 
             let data = handle.availableData
-            guard !data.isEmpty else { return }
+            guard !data.isEmpty else {
+                handle.readabilityHandler = nil
+                return
+            }
             guard let output = String(data: data, encoding: .utf8) else { return }
 
             Task { @MainActor [weak self] in
