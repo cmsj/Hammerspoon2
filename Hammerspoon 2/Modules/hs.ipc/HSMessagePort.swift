@@ -132,12 +132,13 @@ import Synchronization
     }
 
     deinit {
-        // Inline cleanup since deinit is nonisolated and cleanup() is MainActor-isolated
-        if let source = runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .defaultMode)
-        }
-        if let port = messagePort {
-            CFMessagePortInvalidate(port)
+        MainActor.assumeIsolated {
+            if let source = runLoopSource {
+                CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .defaultMode)
+            }
+            if let port = messagePort {
+                CFMessagePortInvalidate(port)
+            }
         }
     }
 
