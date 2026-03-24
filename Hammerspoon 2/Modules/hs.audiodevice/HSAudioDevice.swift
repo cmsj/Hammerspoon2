@@ -73,11 +73,13 @@ private func caGetString(_ objectID: AudioObjectID,
                           _ selector: AudioObjectPropertySelector,
                           _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> String? {
     var a = caAddr(selector, scope)
-    var size = UInt32(MemoryLayout<CFString?>.size)
-    var value: CFString? = nil
-    guard unsafe AudioObjectGetPropertyData(objectID, &a, 0, nil, &size, &value) == noErr,
-          let value else { return nil }
-    return value as String
+    var size = unsafe UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+    var unmanaged: Unmanaged<CFString>? = nil
+
+    guard unsafe AudioObjectGetPropertyData(objectID, &a, 0, nil, &size, &unmanaged) == noErr else { return nil }
+    guard unsafe unmanaged != nil else { return nil }
+
+    return unsafe unmanaged!.takeRetainedValue() as String
 }
 
 @discardableResult
