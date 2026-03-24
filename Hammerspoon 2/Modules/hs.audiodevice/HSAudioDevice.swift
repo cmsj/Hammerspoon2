@@ -136,16 +136,16 @@ private func caChannelCount(_ objectID: AudioObjectID, scope: AudioObjectPropert
                                                 alignment: MemoryLayout<AudioBufferList>.alignment)
     defer { unsafe data.deallocate() }
     guard unsafe AudioObjectGetPropertyData(objectID, &a, 0, nil, &size, data) == noErr else { return 0 }
-    // AudioBuffer elements follow immediately after the mNumberBuffers UInt32 field.
-    let numBuffers = Int(unsafe data.load(as: UInt32.self))
-    let offset = MemoryLayout<UInt32>.stride
-    var total = 0
-    for i in 0..<numBuffers {
-        let bufPtr = unsafe data.advanced(by: offset + i * MemoryLayout<AudioBuffer>.stride)
-                                .assumingMemoryBound(to: AudioBuffer.self)
-        total += Int(unsafe bufPtr.pointee.mNumberChannels)
+    // Use a typed pointer so Swift's struct layout determines the correct offset of mBuffers.
+    // (AudioBuffer contains a pointer so it has 8-byte alignment, meaning there are 4 bytes
+    // of padding after mNumberBuffers — manual offset arithmetic would get this wrong.)
+    let ablPtr = unsafe data.assumingMemoryBound(to: AudioBufferList.self)
+    let numBuffers = Int(unsafe ablPtr.pointee.mNumberBuffers)
+    return unsafe withUnsafePointer(to: &ablPtr.pointee.mBuffers) { firstBuffer in
+        unsafe UnsafeBufferPointer(start: firstBuffer, count: numBuffers).reduce(0) {
+            unsafe $0 + Int($1.mNumberChannels)
+        }
     }
-    return total
 }
 
 /// Get the name for a data source ID using an `AudioValueTranslation`.
