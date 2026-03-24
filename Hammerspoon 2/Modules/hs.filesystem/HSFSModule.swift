@@ -7,6 +7,7 @@ import Foundation
 import JavaScriptCore
 import AppKit          // NSWorkspace (fileUTI)
 import Darwin          // POSIX stat/lstat/rmdir
+import UniformTypeIdentifiers
 
 // MARK: - JavaScript API
 
@@ -798,13 +799,10 @@ import Darwin          // POSIX stat/lstat/rmdir
     // MARK: - Uniform Type Identifiers
 
     @objc func fileUTI(_ path: String) -> String? {
-        // NSWorkspace is @MainActor; JS always runs on the main thread.
-        do {
-            return try NSWorkspace.shared.type(ofFile: expand(path))
-        } catch {
-            AKError("hs.fs.fileUTI: \(error.localizedDescription)")
-            return nil
-        }
+        let url = NSURL(fileURLWithPath: expand(path))
+        let values = try? url.resourceValues(forKeys: [.contentTypeKey])
+        let utType = values?[.contentTypeKey] as? UTType
+        return utType?.identifier
     }
 
     // MARK: - Bookmarks
