@@ -391,6 +391,8 @@ extension JSTestHarness {
                 loadModule(HSPermissionsModule.self, as: name)
             case "ax":
                 loadModule(HSAXModule.self, as: name)
+            case "audiodevice":
+                loadModule(HSAudioDeviceModule.self, as: name)
             case "window":
                 loadModule(HSWindowModule.self, as: name)
             default:
