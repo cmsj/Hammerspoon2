@@ -584,6 +584,529 @@
       "rawDocumentation": "Module for interacting with applications"
     },
     {
+      "name": "hs.audiodevice",
+      "methods": [
+        {
+          "name": "all",
+          "signature": "func all() -> [HSAudioDevice]",
+          "rawDocumentation": "All audio devices attached to the system.\n- Returns: An array of HSAudioDevice objects",
+          "description": "All audio devices attached to the system.",
+          "params": [],
+          "returns": {
+            "type": "[HSAudioDevice]",
+            "description": "An array of HSAudioDevice objects"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 41
+        },
+        {
+          "name": "allOutputDevices",
+          "signature": "func allOutputDevices() -> [HSAudioDevice]",
+          "rawDocumentation": "All audio devices that have at least one output stream.\n- Returns: An array of HSAudioDevice objects",
+          "description": "All audio devices that have at least one output stream.",
+          "params": [],
+          "returns": {
+            "type": "[HSAudioDevice]",
+            "description": "An array of HSAudioDevice objects"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 45
+        },
+        {
+          "name": "allInputDevices",
+          "signature": "func allInputDevices() -> [HSAudioDevice]",
+          "rawDocumentation": "All audio devices that have at least one input stream.\n- Returns: An array of HSAudioDevice objects",
+          "description": "All audio devices that have at least one input stream.",
+          "params": [],
+          "returns": {
+            "type": "[HSAudioDevice]",
+            "description": "An array of HSAudioDevice objects"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 49
+        },
+        {
+          "name": "defaultOutputDevice",
+          "signature": "func defaultOutputDevice() -> HSAudioDevice?",
+          "rawDocumentation": "The current system default output device.\n- Returns: An HSAudioDevice, or null if none is set",
+          "description": "The current system default output device.",
+          "params": [],
+          "returns": {
+            "type": "HSAudioDevice?",
+            "description": "An HSAudioDevice, or null if none is set"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 53
+        },
+        {
+          "name": "defaultInputDevice",
+          "signature": "func defaultInputDevice() -> HSAudioDevice?",
+          "rawDocumentation": "The current system default input device.\n- Returns: An HSAudioDevice, or null if none is set",
+          "description": "The current system default input device.",
+          "params": [],
+          "returns": {
+            "type": "HSAudioDevice?",
+            "description": "An HSAudioDevice, or null if none is set"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 57
+        },
+        {
+          "name": "defaultEffectDevice",
+          "signature": "func defaultEffectDevice() -> HSAudioDevice?",
+          "rawDocumentation": "The current system alert sound device.\n- Returns: An HSAudioDevice, or null if none is set",
+          "description": "The current system alert sound device.",
+          "params": [],
+          "returns": {
+            "type": "HSAudioDevice?",
+            "description": "An HSAudioDevice, or null if none is set"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 61
+        },
+        {
+          "name": "findDeviceByName",
+          "signature": "func findDeviceByName(_ name: String) -> HSAudioDevice?",
+          "rawDocumentation": "Find the first audio device whose name matches the given string.\n- Parameter name: The device name to search for\n- Returns: An HSAudioDevice if found, null otherwise",
+          "description": "Find the first audio device whose name matches the given string.",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "The device name to search for"
+            }
+          ],
+          "returns": {
+            "type": "HSAudioDevice?",
+            "description": "An HSAudioDevice if found, null otherwise"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 66
+        },
+        {
+          "name": "findDeviceByUID",
+          "signature": "func findDeviceByUID(_ uid: String) -> HSAudioDevice?",
+          "rawDocumentation": "Find the audio device with the given unique identifier.\n- Parameter uid: The device UID to search for\n- Returns: An HSAudioDevice if found, null otherwise",
+          "description": "Find the audio device with the given unique identifier.",
+          "params": [
+            {
+              "name": "uid",
+              "type": "String",
+              "description": "The device UID to search for"
+            }
+          ],
+          "returns": {
+            "type": "HSAudioDevice?",
+            "description": "An HSAudioDevice if found, null otherwise"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 71
+        },
+        {
+          "name": "setWatcherCallback",
+          "signature": "func setWatcherCallback(_ callback: JSValue)",
+          "rawDocumentation": "Set the callback invoked when the system audio configuration changes.\n\nThe callback receives one of these event strings:\n- `\"dOut\"` — the default output device changed\n- `\"dIn\"` — the default input device changed\n- `\"dSErr\"` — the default alert sound device changed\n- `\"dev+\"` — an audio device was added\n- `\"dev-\"` — an audio device was removed\n\n- Parameter callback: A JavaScript function that receives an event name string",
+          "description": "Set the callback invoked when the system audio configuration changes.",
+          "params": [
+            {
+              "name": "callback",
+              "type": "JSValue",
+              "description": "A JavaScript function that receives an event name string"
+            }
+          ],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 83
+        },
+        {
+          "name": "startWatcher",
+          "signature": "func startWatcher()",
+          "rawDocumentation": "Start the system-level audio hardware watcher.",
+          "description": "Start the system-level audio hardware watcher.",
+          "params": [],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 86
+        },
+        {
+          "name": "stopWatcher",
+          "signature": "func stopWatcher()",
+          "rawDocumentation": "Stop the system-level audio hardware watcher.",
+          "description": "Stop the system-level audio hardware watcher.",
+          "params": [],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 89
+        },
+        {
+          "name": "watcherIsActive",
+          "signature": "func watcherIsActive() -> Bool",
+          "rawDocumentation": "Whether the system-level watcher is currently running.\n- Returns: `true` if the watcher is active",
+          "description": "Whether the system-level watcher is currently running.",
+          "params": [],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` if the watcher is active"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
+          "lineNumber": 93
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSAudioDeviceAPI",
+          "type": "typedef",
+          "rawDocumentation": "An audio device attached to the system.\n\nObtain instances via ``hs.audiodevice`` module methods — do not instantiate directly.\n\n## Getting and setting volume\n\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    console.log(dev.volume);    // 0.0 – 1.0, or null\n    dev.volume = 0.5;\n}\n```\n\n## Watching for changes\n\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    dev.setWatcherCallback(function(event) {\n        console.log(\"Device event:\", event);\n    });\n    dev.startWatcher();\n}\n```",
+          "description": "An audio device attached to the system.\nObtain instances via ``hs.audiodevice`` module methods — do not instantiate directly.\n## Getting and setting volume\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    console.log(dev.volume);    // 0.0 – 1.0, or null\n    dev.volume = 0.5;\n}\n```\n## Watching for changes\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    dev.setWatcherCallback(function(event) {\n        console.log(\"Device event:\", event);\n    });\n    dev.startWatcher();\n}\n```",
+          "methods": [
+            {
+              "name": "currentOutputDataSource",
+              "signature": "func currentOutputDataSource() -> NSDictionary?",
+              "rawDocumentation": "The current output data source as `{ id, name }`, or `null` if unavailable.\n- Returns: A dictionary containing the id and name of the current output data source",
+              "description": "The current output data source as `{ id, name }`, or `null` if unavailable.",
+              "params": [],
+              "returns": {
+                "type": "NSDictionary?",
+                "description": "A dictionary containing the id and name of the current output data source"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 269
+            },
+            {
+              "name": "currentInputDataSource",
+              "signature": "func currentInputDataSource() -> NSDictionary?",
+              "rawDocumentation": "The current input data source as `{ id, name }`, or `null` if unavailable.\n- Returns: A dictionary containing the id and name of the current input data source",
+              "description": "The current input data source as `{ id, name }`, or `null` if unavailable.",
+              "params": [],
+              "returns": {
+                "type": "NSDictionary?",
+                "description": "A dictionary containing the id and name of the current input data source"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 273
+            },
+            {
+              "name": "outputDataSources",
+              "signature": "func outputDataSources() -> [NSDictionary]",
+              "rawDocumentation": "All available output data sources as an array of `{ id, name }` objects.\n- Returns: A dictionary containing the ids and names of all available output data sources",
+              "description": "All available output data sources as an array of `{ id, name }` objects.",
+              "params": [],
+              "returns": {
+                "type": "[NSDictionary]",
+                "description": "A dictionary containing the ids and names of all available output data sources"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 277
+            },
+            {
+              "name": "inputDataSources",
+              "signature": "func inputDataSources() -> [NSDictionary]",
+              "rawDocumentation": "All available input data sources as an array of `{ id, name }` objects.\n- Returns: A dictionary containing the ids and names of all available input data sources",
+              "description": "All available input data sources as an array of `{ id, name }` objects.",
+              "params": [],
+              "returns": {
+                "type": "[NSDictionary]",
+                "description": "A dictionary containing the ids and names of all available input data sources"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 281
+            },
+            {
+              "name": "setCurrentOutputDataSource",
+              "signature": "func setCurrentOutputDataSource(_ sourceID: Int) -> Bool",
+              "rawDocumentation": "Select an output data source by its numeric ID.\n- Parameter sourceID: The `id` value from ``outputDataSources()``\n- Returns: `true` on success",
+              "description": "Select an output data source by its numeric ID.",
+              "params": [
+                {
+                  "name": "sourceID",
+                  "type": "Int",
+                  "description": "The `id` value from ``outputDataSources()``"
+                }
+              ],
+              "returns": {
+                "type": "Bool",
+                "description": "`true` on success"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 286
+            },
+            {
+              "name": "setCurrentInputDataSource",
+              "signature": "func setCurrentInputDataSource(_ sourceID: Int) -> Bool",
+              "rawDocumentation": "Select an input data source by its numeric ID.\n- Parameter sourceID: The `id` value from ``inputDataSources()``\n- Returns: `true` on success",
+              "description": "Select an input data source by its numeric ID.",
+              "params": [
+                {
+                  "name": "sourceID",
+                  "type": "Int",
+                  "description": "The `id` value from ``inputDataSources()``"
+                }
+              ],
+              "returns": {
+                "type": "Bool",
+                "description": "`true` on success"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 291
+            },
+            {
+              "name": "setDefaultOutputDevice",
+              "signature": "func setDefaultOutputDevice() -> Bool",
+              "rawDocumentation": "Make this device the system default output device.\n- Returns: `true` on success",
+              "description": "Make this device the system default output device.",
+              "params": [],
+              "returns": {
+                "type": "Bool",
+                "description": "`true` on success"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 297
+            },
+            {
+              "name": "setDefaultInputDevice",
+              "signature": "func setDefaultInputDevice() -> Bool",
+              "rawDocumentation": "Make this device the system default input device.\n- Returns: `true` on success",
+              "description": "Make this device the system default input device.",
+              "params": [],
+              "returns": {
+                "type": "Bool",
+                "description": "`true` on success"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 301
+            },
+            {
+              "name": "setDefaultEffectDevice",
+              "signature": "func setDefaultEffectDevice() -> Bool",
+              "rawDocumentation": "Make this device the system alert sound (effect) device.\n- Returns: `true` on success",
+              "description": "Make this device the system alert sound (effect) device.",
+              "params": [],
+              "returns": {
+                "type": "Bool",
+                "description": "`true` on success"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 305
+            },
+            {
+              "name": "setWatcherCallback",
+              "signature": "func setWatcherCallback(_ callback: JSValue)",
+              "rawDocumentation": "Set the callback invoked when a property of this device changes.\n\nThe callback receives one of these event strings:\n- `\"vmout\"` — output volume changed\n- `\"vmin\"` — input volume changed\n- `\"mout\"` — output mute state changed\n- `\"min\"` — input mute state changed\n- `\"rate\"` — sample rate changed\n- `\"dsout\"` — output data source changed\n- `\"dsin\"` — input data source changed\n\n- Parameter callback: A JavaScript function that receives an event name string",
+              "description": "Set the callback invoked when a property of this device changes.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "A JavaScript function that receives an event name string"
+                }
+              ],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 321
+            },
+            {
+              "name": "startWatcher",
+              "signature": "func startWatcher()",
+              "rawDocumentation": "Start watching this device for property changes.",
+              "description": "Start watching this device for property changes.",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 324
+            },
+            {
+              "name": "stopWatcher",
+              "signature": "func stopWatcher()",
+              "rawDocumentation": "Stop watching this device for property changes.",
+              "description": "Stop watching this device for property changes.",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 327
+            },
+            {
+              "name": "watcherIsActive",
+              "signature": "func watcherIsActive() -> Bool",
+              "rawDocumentation": "Whether the per-device watcher is currently active.\n- Returns: `true` if the watcher is running",
+              "description": "Whether the per-device watcher is currently active.",
+              "params": [],
+              "returns": {
+                "type": "Bool",
+                "description": "`true` if the watcher is running"
+              },
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 331
+            }
+          ],
+          "properties": [
+            {
+              "name": "id",
+              "signature": "var id: Int { get }",
+              "rawDocumentation": "The CoreAudio object ID of this device.",
+              "description": "The CoreAudio object ID of this device.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 205
+            },
+            {
+              "name": "name",
+              "signature": "var name: String { get }",
+              "rawDocumentation": "The human-readable name of this device (e.g. `\"Built-in Output\"`).",
+              "description": "The human-readable name of this device (e.g. `\"Built-in Output\"`).",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 208
+            },
+            {
+              "name": "uid",
+              "signature": "var uid: String { get }",
+              "rawDocumentation": "The persistent unique identifier for this device.",
+              "description": "The persistent unique identifier for this device.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 211
+            },
+            {
+              "name": "isOutput",
+              "signature": "var isOutput: Bool { get }",
+              "rawDocumentation": "Whether this device has output streams (can play audio).",
+              "description": "Whether this device has output streams (can play audio).",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 216
+            },
+            {
+              "name": "isInput",
+              "signature": "var isInput: Bool { get }",
+              "rawDocumentation": "Whether this device has input streams (can record audio).",
+              "description": "Whether this device has input streams (can record audio).",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 219
+            },
+            {
+              "name": "transportType",
+              "signature": "var transportType: String { get }",
+              "rawDocumentation": "The transport mechanism: `\"built-in\"`, `\"usb\"`, `\"bluetooth\"`, `\"bluetooth-le\"`,\n`\"hdmi\"`, `\"display-port\"`, `\"firewire\"`, `\"airplay\"`, `\"avb\"`,\n`\"thunderbolt\"`, `\"virtual\"`, `\"aggregate\"`, `\"pci\"`, or `\"unknown\"`.",
+              "description": "The transport mechanism: `\"built-in\"`, `\"usb\"`, `\"bluetooth\"`, `\"bluetooth-le\"`,\n`\"hdmi\"`, `\"display-port\"`, `\"firewire\"`, `\"airplay\"`, `\"avb\"`,\n`\"thunderbolt\"`, `\"virtual\"`, `\"aggregate\"`, `\"pci\"`, or `\"unknown\"`.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 224
+            },
+            {
+              "name": "outputChannels",
+              "signature": "var outputChannels: Int { get }",
+              "rawDocumentation": "Number of output channels, or 0 if the device has no output.",
+              "description": "Number of output channels, or 0 if the device has no output.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 229
+            },
+            {
+              "name": "inputChannels",
+              "signature": "var inputChannels: Int { get }",
+              "rawDocumentation": "Number of input channels, or 0 if the device has no input.",
+              "description": "Number of input channels, or 0 if the device has no input.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 232
+            },
+            {
+              "name": "volume",
+              "signature": "var volume: NSNumber? { get set }",
+              "rawDocumentation": "Output volume scalar in the range `0.0`–`1.0`, or `null` if the device has\nno controllable output volume. Setting `null` is a no-op.",
+              "description": "Output volume scalar in the range `0.0`–`1.0`, or `null` if the device has\nno controllable output volume. Setting `null` is a no-op.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 238
+            },
+            {
+              "name": "muted",
+              "signature": "var muted: Bool { get set }",
+              "rawDocumentation": "Whether output is muted. Always `false` if the device has no mutable output.",
+              "description": "Whether output is muted. Always `false` if the device has no mutable output.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 241
+            },
+            {
+              "name": "balance",
+              "signature": "var balance: NSNumber? { get set }",
+              "rawDocumentation": "Output stereo balance in the range `0.0` (full left)–`1.0` (full right),\nor `null` if balance control is not available.",
+              "description": "Output stereo balance in the range `0.0` (full left)–`1.0` (full right),\nor `null` if balance control is not available.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 245
+            },
+            {
+              "name": "inputVolume",
+              "signature": "var inputVolume: NSNumber? { get set }",
+              "rawDocumentation": "Input (microphone) volume scalar in the range `0.0`–`1.0`, or `null` if\nthe device has no controllable input volume.",
+              "description": "Input (microphone) volume scalar in the range `0.0`–`1.0`, or `null` if\nthe device has no controllable input volume.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 251
+            },
+            {
+              "name": "inputMuted",
+              "signature": "var inputMuted: Bool { get set }",
+              "rawDocumentation": "Whether input is muted. Always `false` if the device has no mutable input.",
+              "description": "Whether input is muted. Always `false` if the device has no mutable input.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 254
+            },
+            {
+              "name": "sampleRate",
+              "signature": "var sampleRate: NSNumber? { get set }",
+              "rawDocumentation": "The current nominal sample rate in Hz (e.g. `44100`), or `null` if unknown.",
+              "description": "The current nominal sample rate in Hz (e.g. `44100`), or `null` if unknown.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 259
+            },
+            {
+              "name": "availableSampleRates",
+              "signature": "var availableSampleRates: [NSNumber] { get }",
+              "rawDocumentation": "All sample rates (in Hz) that this device supports.\nFor devices that support a range, both the minimum and maximum are included.",
+              "description": "All sample rates (in Hz) that this device supports.\nFor devices that support a range, both the minimum and maximum are included.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
+              "lineNumber": 263
+            }
+          ]
+        }
+      ],
+      "description": "Module for discovering and controlling audio devices.\n## Finding devices\n```javascript\nconst all = hs.audiodevice.all();\nconst out = hs.audiodevice.defaultOutputDevice();\nconst mic = hs.audiodevice.defaultInputDevice();\n```\n## Selecting a device\n```javascript\nconst usb = hs.audiodevice.findDeviceByName(\"USB Audio CODEC\");\nif (usb) usb.setDefaultOutputDevice();\n```\n## Watching for system-level changes\n```javascript\nhs.audiodevice.setWatcherCallback(function(event) {\n    if (event === \"dOut\") console.log(\"Default output changed\");\n    if (event === \"dev+\") console.log(\"A device was added\");\n});\nhs.audiodevice.startWatcher();\n```",
+      "rawDocumentation": "Module for discovering and controlling audio devices.\n\n## Finding devices\n\n```javascript\nconst all = hs.audiodevice.all();\nconst out = hs.audiodevice.defaultOutputDevice();\nconst mic = hs.audiodevice.defaultInputDevice();\n```\n\n## Selecting a device\n\n```javascript\nconst usb = hs.audiodevice.findDeviceByName(\"USB Audio CODEC\");\nif (usb) usb.setDefaultOutputDevice();\n```\n\n## Watching for system-level changes\n\n```javascript\nhs.audiodevice.setWatcherCallback(function(event) {\n    if (event === \"dOut\") console.log(\"Default output changed\");\n    if (event === \"dev+\") console.log(\"A device was added\");\n});\nhs.audiodevice.startWatcher();\n```"
+    },
+    {
       "name": "hs.ax",
       "methods": [
         {
@@ -1881,85 +2404,10 @@
           "lineNumber": 344
         },
         {
-          "name": "setTags",
-          "signature": "func setTags(_ path: String, _ newTags: NSArray) -> Bool",
-          "rawDocumentation": "Replace all Finder tags on a file or directory.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - newTags: Array of tag name strings.\n- Returns: `true` on success, `false` on failure.",
-          "description": "Replace all Finder tags on a file or directory.",
-          "params": [
-            {
-              "name": "path",
-              "type": "String",
-              "description": "Path to the file or directory. `~` is expanded."
-            },
-            {
-              "name": "newTags",
-              "type": "NSArray",
-              "description": "Array of tag name strings."
-            }
-          ],
-          "returns": {
-            "type": "Bool",
-            "description": "`true` on success, `false` on failure."
-          },
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 352
-        },
-        {
-          "name": "addTags",
-          "signature": "func addTags(_ path: String, _ newTags: NSArray) -> Bool",
-          "rawDocumentation": "Add Finder tags to a file or directory (union with existing tags).\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - newTags: Array of tag name strings to add.\n- Returns: `true` on success, `false` on failure.",
-          "description": "Add Finder tags to a file or directory (union with existing tags).",
-          "params": [
-            {
-              "name": "path",
-              "type": "String",
-              "description": "Path to the file or directory. `~` is expanded."
-            },
-            {
-              "name": "newTags",
-              "type": "NSArray",
-              "description": "Array of tag name strings to add."
-            }
-          ],
-          "returns": {
-            "type": "Bool",
-            "description": "`true` on success, `false` on failure."
-          },
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 360
-        },
-        {
-          "name": "removeTags",
-          "signature": "func removeTags(_ path: String, _ tagsToRemove: NSArray) -> Bool",
-          "rawDocumentation": "Remove specific Finder tags from a file or directory.\n\nTags not currently present are silently ignored.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - tagsToRemove: Array of tag name strings to remove.\n- Returns: `true` on success, `false` on failure.",
-          "description": "Remove specific Finder tags from a file or directory.\nTags not currently present are silently ignored.",
-          "params": [
-            {
-              "name": "path",
-              "type": "String",
-              "description": "Path to the file or directory. `~` is expanded."
-            },
-            {
-              "name": "tagsToRemove",
-              "type": "NSArray",
-              "description": "Array of tag name strings to remove."
-            }
-          ],
-          "returns": {
-            "type": "Bool",
-            "description": "`true` on success, `false` on failure."
-          },
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 370
-        },
-        {
           "name": "fileUTI",
           "signature": "func fileUTI(_ path: String) -> String?",
-          "rawDocumentation": "Return the Uniform Type Identifier for the file at the given path.\n\n```javascript\nhs.fs.fileUTI(\"/etc/hosts\")   // → \"public.plain-text\"\nhs.fs.fileUTI(\"/tmp/foo.png\") // → \"public.png\"\n```\n\n- Parameter path: Path to the file.\n- Returns: UTI string, or `null` on failure.",
-          "description": "Return the Uniform Type Identifier for the file at the given path.\n```javascript\nhs.fs.fileUTI(\"/etc/hosts\")   // → \"public.plain-text\"\nhs.fs.fileUTI(\"/tmp/foo.png\") // → \"public.png\"\n```",
+          "rawDocumentation": "Replace all Finder tags on a file or directory.\nThis function is only available on macOS Tahoe (26) or later.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - newTags: Array of tag name strings.\n- Returns: `true` on success, `false` on failure.\nAdd Finder tags to a file or directory (union with existing tags).\nThis function is only available on macOS Tahoe (26) or later.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - newTags: Array of tag name strings to add.\n- Returns: `true` on success, `false` on failure.\nRemove specific Finder tags from a file or directory.\nThis function is only available on macOS Tahoe (26) or later.\n\nTags not currently present are silently ignored.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - tagsToRemove: Array of tag name strings to remove.\n- Returns: `true` on success, `false` on failure.\nReturn the Uniform Type Identifier for the file at the given path.\n\n```javascript\nhs.fs.fileUTI(\"/etc/hosts\")   // → \"public.plain-text\"\nhs.fs.fileUTI(\"/tmp/foo.png\") // → \"public.png\"\n```\n\n- Parameter path: Path to the file.\n- Returns: UTI string, or `null` on failure.",
+          "description": "Replace all Finder tags on a file or directory.\nThis function is only available on macOS Tahoe (26) or later.",
           "params": [
             {
               "name": "path",
@@ -1969,11 +2417,11 @@
           ],
           "returns": {
             "type": "String?",
-            "description": "UTI string, or `null` on failure."
+            "description": "`true` on success, `false` on failure."
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 383
+          "lineNumber": 386
         },
         {
           "name": "pathToBookmark",
@@ -1993,7 +2441,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 394
+          "lineNumber": 397
         },
         {
           "name": "pathFromBookmark",
@@ -2013,7 +2461,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 400
+          "lineNumber": 403
         }
       ],
       "properties": [],
@@ -6563,5 +7011,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-03-20T23:06:22.532Z"
+  "generatedAt": "2026-03-24T22:32:32.598Z"
 }

@@ -265,15 +265,19 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     // MARK: Data sources
 
     /// The current output data source as `{ id, name }`, or `null` if unavailable.
+    /// - Returns: A dictionary containing the id and name of the current output data source
     @objc func currentOutputDataSource() -> NSDictionary?
 
     /// The current input data source as `{ id, name }`, or `null` if unavailable.
+    /// - Returns: A dictionary containing the id and name of the current input data source
     @objc func currentInputDataSource() -> NSDictionary?
 
     /// All available output data sources as an array of `{ id, name }` objects.
+    /// - Returns: A dictionary containing the ids and names of all available output data sources
     @objc func outputDataSources() -> [NSDictionary]
 
     /// All available input data sources as an array of `{ id, name }` objects.
+    /// - Returns: A dictionary containing the ids and names of all available input data sources
     @objc func inputDataSources() -> [NSDictionary]
 
     /// Select an output data source by its numeric ID.
