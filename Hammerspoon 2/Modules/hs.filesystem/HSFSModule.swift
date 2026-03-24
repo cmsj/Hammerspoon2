@@ -406,6 +406,7 @@ import Darwin          // POSIX stat/lstat/rmdir
 // MARK: - Implementation
 
 @_documentation(visibility: private)
+@MainActor
 @objc class HSFSModule: NSObject, HSModuleAPI, HSFSModuleAPI {
     var name = "hs.fs"
 
@@ -798,13 +799,11 @@ import Darwin          // POSIX stat/lstat/rmdir
 
     @objc func fileUTI(_ path: String) -> String? {
         // NSWorkspace is @MainActor; JS always runs on the main thread.
-        MainActor.assumeIsolated {
-            do {
-                return try NSWorkspace.shared.type(ofFile: expand(path))
-            } catch {
-                AKError("hs.fs.fileUTI: \(error.localizedDescription)")
-                return nil
-            }
+        do {
+            return try NSWorkspace.shared.type(ofFile: expand(path))
+        } catch {
+            AKError("hs.fs.fileUTI: \(error.localizedDescription)")
+            return nil
         }
     }
 
