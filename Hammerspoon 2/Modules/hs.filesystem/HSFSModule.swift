@@ -657,9 +657,13 @@ import UniformTypeIdentifiers
 
     @objc func pathToAbsolute(_ path: String) -> String? {
         let expandedPath = expand(path)
-        var resolved = [Int8](repeating: 0, count: Int(PATH_MAX))
-        guard unsafe realpath(expandedPath, &resolved) != nil else { return nil }
-        return String(cString: resolved)
+
+        // realpath() allocates memory for us when we pass it a nil second parameter.
+        // We must free() that memory later.
+        guard let resolved = unsafe realpath(expandedPath, nil) else { return nil }
+        defer { unsafe free(resolved) }
+
+        return unsafe String(validatingCString: resolved)
     }
 
     @objc func displayName(_ path: String) -> String? {
