@@ -9,28 +9,38 @@
 import XCTest
 @testable import Hammerspoon_2
 
-class HSIPCIntegrationTests: XCTestCase {
-    var harness: JSTestHarness!
+nonisolated class HSIPCIntegrationTests: XCTestCase {
+    nonisolated(unsafe) var harness: JSTestHarness!
 
-    nonisolated override func setUp() {
-        super.setUp()
-        harness = JSTestHarness()
+    override func setUp() async throws {
+        try await super.setUp()
+        let h = await MainActor.run {
+            let harness = JSTestHarness()
+            harness.loadModuleRoot()
+            // Load hs.ipc.js into the test harness context (loadModuleRoot
+            // evaluates companion JS via JSEngine.shared, a different context)
+            if let ipcJS = Bundle.main.url(forResource: "hs.ipc", withExtension: "js") {
+                _ = try? harness.eval(String(contentsOf: ipcJS, encoding: .utf8))
+            }
+            return harness
+        }
+        harness = h
     }
 
-    nonisolated override func tearDown() {
+    override func tearDown() async throws {
         harness = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Module Loading Tests
 
-    func testModuleLoads() {
+    @MainActor func testModuleLoads() {
         // Verify hs.ipc module loads without errors
         let result = harness.eval("typeof hs.ipc")
         XCTAssertEqual(result as? String, "object", "hs.ipc should be an object")
     }
 
-    func testModuleHasExpectedProperties() {
+    @MainActor func testModuleHasExpectedProperties() {
         // Check for expected functions
         let hasLocalPort = harness.eval("typeof hs.ipc.localPort") as? String
         XCTAssertEqual(hasLocalPort, "function", "hs.ipc.localPort should be a function")
@@ -50,7 +60,7 @@ class HSIPCIntegrationTests: XCTestCase {
 
     // MARK: - Local Port Tests
 
-    func testLocalPortCreation() {
+    @MainActor func testLocalPortCreation() {
         // Create a local port
         let code = """
         var testPort = hs.ipc.localPort("TestPort_\(UUID().uuidString)", function(port, msgID, data) {
@@ -66,7 +76,7 @@ class HSIPCIntegrationTests: XCTestCase {
         _ = harness.eval("testPort.delete()")
     }
 
-    func testLocalPortProperties() {
+    @MainActor func testLocalPortProperties() {
         let portName = "TestPort_\(UUID().uuidString)"
         let code = """
         var testPort = hs.ipc.localPort("\(portName)", function(port, msgID, data) {
@@ -92,7 +102,7 @@ class HSIPCIntegrationTests: XCTestCase {
 
     // MARK: - Message Roundtrip Tests
 
-    func testMessageRoundtrip() {
+    @MainActor func testMessageRoundtrip() {
         let portName = "TestPort_\(UUID().uuidString)"
         let code = """
         var receivedMsg = null;
@@ -118,9 +128,17 @@ class HSIPCIntegrationTests: XCTestCase {
     }
 
     // MARK: - CLI Installation Tests
+    // These tests require the hs2 binary to be present in the app bundle.
+    // The "Development" scheme does not build hs2, so skip when unavailable.
 
-    func testCLIInstallation() {
-        // Use temporary directory for testing
+    @MainActor func testCLIInstallation() throws {
+        let bundlePath = Bundle.main.bundlePath
+        try XCTSkipUnless(
+            FileManager.default.fileExists(atPath: (bundlePath as NSString).appendingPathComponent("Contents/MacOS/hs2")) ||
+            FileManager.default.fileExists(atPath: (bundlePath as NSString).appendingPathComponent("Contents/Frameworks/hs2/hs2")),
+            "hs2 binary not present in app bundle (not built by Development scheme)"
+        )
+
         let tempDir = NSTemporaryDirectory() + "hs2test_\(UUID().uuidString)"
         let code = """
         hs.ipc.cliInstall("\(tempDir)", true);
@@ -146,7 +164,14 @@ class HSIPCIntegrationTests: XCTestCase {
         try? fm.removeItem(atPath: tempDir)
     }
 
-    func testCLIStatus() {
+    @MainActor func testCLIStatus() throws {
+        let bundlePath = Bundle.main.bundlePath
+        try XCTSkipUnless(
+            FileManager.default.fileExists(atPath: (bundlePath as NSString).appendingPathComponent("Contents/MacOS/hs2")) ||
+            FileManager.default.fileExists(atPath: (bundlePath as NSString).appendingPathComponent("Contents/Frameworks/hs2/hs2")),
+            "hs2 binary not present in app bundle (not built by Development scheme)"
+        )
+
         let tempDir = NSTemporaryDirectory() + "hs2test_\(UUID().uuidString)"
 
         // Initially not installed
@@ -167,8 +192,8 @@ class HSIPCIntegrationTests: XCTestCase {
 
     // MARK: - Default Port Tests
 
-    func testDefaultPortExists() {
-        // The default "Hammerspoon2" port is created automatically.
+    @MainActor func testDefaultPortExists() {
+        // The default "Hammerspoon2" port is created automatically by hs.ipc.js.
         // If Hammerspoon is already running, the port name is taken and __ipcDefaultPort will be null.
         let isNull = harness.eval("__ipcDefaultPort === null") as? Bool ?? false
         if isNull {
@@ -180,8 +205,8 @@ class HSIPCIntegrationTests: XCTestCase {
         XCTAssertEqual(result as? Bool, true, "Default IPC port should exist when no port name conflict")
     }
 
-    func testCompletionsFunction() {
-        // Test the completionsForInputString function
+    @MainActor func testCompletionsFunction() {
+        // Test the completionsForInputString function (defined in hs.ipc.js)
         let result = harness.eval("hs.completionsForInputString('hs.')")
 
         if let completions = result as? [String] {
@@ -194,7 +219,7 @@ class HSIPCIntegrationTests: XCTestCase {
 
     // MARK: - Port Deletion Tests
 
-    func testPortDeletion() {
+    @MainActor func testPortDeletion() {
         let portName = "TestPort_\(UUID().uuidString)"
         let code = """
         var testPort = hs.ipc.localPort("\(portName)", function(port, msgID, data) {
@@ -210,7 +235,14 @@ class HSIPCIntegrationTests: XCTestCase {
 
     // MARK: - CLI Symlink Target Tests
 
-    func testCLIInstallSymlinkTargets() {
+    @MainActor func testCLIInstallSymlinkTargets() throws {
+        let bundlePath = Bundle.main.bundlePath
+        try XCTSkipUnless(
+            FileManager.default.fileExists(atPath: (bundlePath as NSString).appendingPathComponent("Contents/MacOS/hs2")) ||
+            FileManager.default.fileExists(atPath: (bundlePath as NSString).appendingPathComponent("Contents/Frameworks/hs2/hs2")),
+            "hs2 binary not present in app bundle (not built by Development scheme)"
+        )
+
         let tempDir = NSTemporaryDirectory() + "hs2test_\(UUID().uuidString)"
 
         // Install
