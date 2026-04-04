@@ -368,10 +368,10 @@ struct HSIPCHandlerTests {
 
     // MARK: - Completions
 
-    @Test("completionsForInputString is installed as a function")
+    @Test("completionsForInputString is installed as a global function")
     func testCompletionsFunctionExists() {
         let harness = makeHarness()
-        harness.expectTrue("typeof hs.completionsForInputString === 'function'")
+        harness.expectTrue("typeof completionsForInputString === 'function'")
     }
 
     // MARK: - Print Mirroring

@@ -12,18 +12,36 @@ import JavaScriptCore
 /// Protocol for JavaScript export
 @objc protocol HSIPCModuleAPI: JSExport {
     /// Create a local (server) message port
+    /// - Parameters:
+    ///   - name: The port name to register
+    ///   - callback: A JavaScript function called when messages arrive
+    /// - Returns: The created message port, or nil on failure
     @objc func localPort(_ name: String, _ callback: JSValue) -> HSMessagePort?
 
     /// Create a remote (client) message port
+    /// - Parameter name: The name of the remote port to connect to
+    /// - Returns: The created message port, or nil if the port doesn't exist
     @objc func remotePort(_ name: String) -> HSMessagePort?
 
     /// Install hs2 CLI tool via symlinks
+    /// - Parameters:
+    ///   - path: The installation prefix path, or nil for /usr/local
+    ///   - silent: If true, suppress log messages
+    /// - Returns: True if installation succeeded
     @objc func cliInstall(_ path: String?, _ silent: Bool) -> Bool
 
     /// Uninstall hs2 CLI tool symlinks
+    /// - Parameters:
+    ///   - path: The installation prefix path, or nil for /usr/local
+    ///   - silent: If true, suppress log messages
+    /// - Returns: True if uninstallation succeeded
     @objc func cliUninstall(_ path: String?, _ silent: Bool) -> Bool
 
     /// Check hs2 CLI tool installation status
+    /// - Parameters:
+    ///   - path: The installation prefix path, or nil for /usr/local
+    ///   - silent: If true, suppress log messages
+    /// - Returns: True if hs2 CLI is installed correctly
     @objc func cliStatus(_ path: String?, _ silent: Bool) -> Bool
 }
 
@@ -53,9 +71,13 @@ import JavaScriptCore
     // MARK: - Message Port API
 
     /// Create a local (server) message port
+    /// - Parameters:
+    ///   - name: The port name to register
+    ///   - callback: A JavaScript function called when messages arrive
+    /// - Returns: The created message port, or nil on failure
     @objc func localPort(_ name: String, _ callback: JSValue) -> HSMessagePort? {
-        guard callback.isObject else {
-            AKError("localPort: callback must be a function")
+        guard callback.isObject, !callback.isNull, !callback.isUndefined else {
+            AKError("localPort: callback must be a callable function")
             return nil
         }
 

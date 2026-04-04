@@ -207,7 +207,9 @@ nonisolated class HSIPCIntegrationTests: XCTestCase {
 
     @MainActor func testCompletionsFunction() {
         // Test the completionsForInputString function (defined in hs.ipc.js)
-        let result = harness.eval("hs.completionsForInputString('hs.')")
+        // Access hs.ipc first to trigger lazy module loading, so for...in can find it
+        _ = harness.eval("hs.ipc")
+        let result = harness.eval("completionsForInputString('hs.')")
 
         if let completions = result as? [String] {
             XCTAssertTrue(completions.count > 0, "Should return some completions for 'hs.'")

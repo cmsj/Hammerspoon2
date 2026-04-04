@@ -14,9 +14,9 @@ class HSInteractiveREPL {
     // MARK: - Properties
 
     let client: HSClient
-    let historyFilePath: URL
 
-    // Global state for completion (needed for C callback)
+    // Global state for completion (needed for C callback).
+    // Single-REPL assumption: only one HSInteractiveREPL instance exists at a time.
     private static var currentCompletions: [String] = []
     private static var completionIndex: Int = 0
     private static var completionClient: HSClient?
@@ -25,10 +25,6 @@ class HSInteractiveREPL {
 
     init(client: HSClient) {
         self.client = client
-
-        // v1.0: Hardcode history location (persistence deferred to v2.0)
-        let configDir = URL(fileURLWithPath: NSString("~/.config/Hammerspoon2").expandingTildeInPath)
-        self.historyFilePath = configDir.appendingPathComponent(".cli.history")
 
         // Set static reference for completion callback
         HSInteractiveREPL.completionClient = client
@@ -107,7 +103,7 @@ class HSInteractiveREPL {
                                    .replacingOccurrences(of: "\r", with: "\\r")
                                    .replacingOccurrences(of: "\0", with: "")
                                    .replacingOccurrences(of: "\t", with: "\\t")
-            let query = "JSON.stringify(hs.completionsForInputString('\(escaped)'))"
+            let query = "JSON.stringify(completionsForInputString('\(escaped)'))"
             let message = "\(client.localName)\0\(query)"
 
             if let responseData = client.sendToRemote(message, msgID: MSGID_QUERY, wantResponse: true),

@@ -22,6 +22,12 @@ import Synchronization
     @objc var isRemote: Bool { get }
 
     /// Send a message to the port
+    /// - Parameters:
+    ///   - data: The message data to send (converted to string)
+    ///   - msgID: The message type identifier (see IPCProtocol.swift constants)
+    ///   - timeout: Send timeout in seconds, or nil for default
+    ///   - oneWay: If true, send without waiting for a reply
+    /// - Returns: The reply data, or a boolean indicating success for one-way messages
     @objc func sendMessage(_ data: JSValue, _ msgID: NSNumber, _ timeout: NSNumber?, _ oneWay: Bool) -> JSValue
 
     /// Delete and invalidate the port
