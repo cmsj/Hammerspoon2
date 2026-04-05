@@ -13,6 +13,7 @@ import JavaScriptCoreExtras
 @objc protocol ModuleRootAPI: JSExport {
     // Core
     @objc func reload()
+    @objc func moduleNames() -> [String]
 
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
@@ -70,6 +71,14 @@ import JavaScriptCoreExtras
         } catch {
             AKError("Unable to reload config: \(error.localizedDescription)")
         }
+    }
+
+    @objc func moduleNames() -> [String] {
+        return [
+            "appinfo", "application", "ax", "console", "fs", "hashing",
+            "hotkey", "ipc", "permissions", "osascript", "screen", "task",
+            "timer", "ui", "window"
+        ]
     }
 
     // Modules

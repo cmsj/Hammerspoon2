@@ -214,20 +214,11 @@ try {
 
 // Tab completion function for REPL (minimal v1.0 implementation)
 // Stored in closure-scoped variable to survive JSExport proxy GC.
-// Known module names for tab completion.
-// IMPORTANT: Keep in sync with ModuleRootAPI in Hammerspoon 2/Engine/ModuleRoot.swift.
-// JSExport proxy properties are not enumerable via Object.keys() or for...in,
-// so we maintain a static list matching ModuleRootAPI.
-var __ipcKnownModules = [
-    "appinfo", "application", "ax", "console", "fs", "hashing",
-    "hotkey", "ipc", "permissions", "osascript", "screen", "task",
-    "timer", "ui", "window"
-];
 
 var __ipcCompletionsForInputString = function(inputString) {
     // Complete hs.* module names
     if (inputString.startsWith("hs.")) {
-        return __ipcKnownModules
+        return hs.moduleNames()
             .map(function(m) { return "hs." + m; })
             .filter(function(c) { return c.startsWith(inputString); });
     }
