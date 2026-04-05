@@ -24,7 +24,6 @@ const MSG_ID = {
 var __ipcRegisteredInstances = {};
 var __ipcRemotePorts = {};
 var __ipcDefaultPort = null;
-var __ipcOriginalPrint = (typeof print !== 'undefined') ? print : console.log;
 
 // Default message handler for IPC protocol
 // DEFENSIVE: Wrapped in try-catch to ensure Hammerspoon never crashes from IPC errors
@@ -199,27 +198,6 @@ var __ipcDefaultHandler = function(port, msgID, data) {
     } catch (e) {
         console.error("IPC handler error:", e);
         return "error: " + String(e);
-    }
-};
-
-// TODO: Wire up __ipcPrint as the global print override once the JS engine supports it.
-// NOTE: __ipcPrint is not yet functional.
-var __ipcPrint = function(...args) {
-    // Call original print
-    __ipcOriginalPrint(...args);
-
-    // Mirror to all CLI instances with console mirroring enabled
-    const output = args.map(a => String(a)).join('\t') + '\n';
-
-    for (const instanceID in __ipcRegisteredInstances) {
-        const instance = __ipcRegisteredInstances[instanceID];
-        if (instance._cli.console && instance._cli.remote) {
-            try {
-                instance._cli.remote.sendMessage(output, MSG_ID.CONSOLE, 4.0, true);
-            } catch (e) {
-                // Silently ignore errors in console mirroring
-            }
-        }
     }
 };
 

@@ -538,7 +538,7 @@ CFMessagePort has practical limits (~1MB). For large data:
 
 The `-C` flag is accepted and plumbed through registration (stored in `_cli.console`), but no output is actually mirrored to the CLI.
 
-**Root cause**: The mirroring mechanism in `hs.ipc.js` replaces the global JS `print` function with `__ipcPrint`, which forwards output to `-C` instances. However, the JS engine has no global `print` — it was never defined — so the replacement on line 248 (`if (typeof print !== 'undefined') print = __ipcPrint`) never executes. Additionally, `hs.console.print()` calls Swift's `AKConsole()` directly, bypassing JavaScript entirely.
+**Root cause**: The JS engine has no global `print` function, so there is no function to intercept for mirroring. Additionally, `hs.console.print()` calls Swift's `AKConsole()` directly, bypassing JavaScript entirely.
 
 In old Hammerspoon, Lua's global `print` was the single entry point for all console output, so replacing it was sufficient to capture everything. In Hammerspoon 2, console output flows through Swift (`HammerspoonLog`), not through a JS function.
 

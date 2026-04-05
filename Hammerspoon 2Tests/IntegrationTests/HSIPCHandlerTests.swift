@@ -51,11 +51,6 @@ struct HSIPCHandlerTests {
         harness.expectTrue("typeof __ipcDefaultHandler === 'function'")
     }
 
-    @Test("__ipcPrint is a function")
-    func testPrintExists() {
-        let harness = makeHarness()
-        harness.expectTrue("typeof __ipcPrint === 'function'")
-    }
 
     @Test("Default IPC port creation is attempted")
     func testDefaultPortCreated() {
@@ -372,21 +367,5 @@ struct HSIPCHandlerTests {
     func testCompletionsFunctionExists() {
         let harness = makeHarness()
         harness.expectTrue("typeof completionsForInputString === 'function'")
-    }
-
-    // MARK: - Print Mirroring
-
-    @Test("__ipcPrint calls original print")
-    func testPrintCallsOriginal() {
-        let harness = makeHarness()
-
-        // Replace __ipcOriginalPrint with a tracker
-        harness.eval("""
-            var __printCalled = false;
-            __ipcOriginalPrint = function() { __printCalled = true; };
-        """)
-
-        harness.eval("__ipcPrint('test')")
-        harness.expectTrue("__printCalled")
     }
 }
