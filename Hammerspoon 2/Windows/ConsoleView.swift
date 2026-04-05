@@ -18,7 +18,6 @@ struct ConsoleView: View {
     }
     @State var evalIndex: Int = -1
 
-    @State var selectedRows = Set<HammerspoonLogEntry.ID>()
     @State var searchString: String = ""
     @State var searchPresented: Bool = false
 
@@ -26,7 +25,7 @@ struct ConsoleView: View {
 
     @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Trace
 
-    func styleForLogType(_ logType: HammerspoonLogType) -> any ShapeStyle {
+    func colorForLogType(_ logType: HammerspoonLogType) -> Color {
         switch logType {
         case .Error: return .red
         case .Warning: return .orange
@@ -49,6 +48,7 @@ struct ConsoleView: View {
                         }) { entry in
                             Text(entry.formattedLine)
                                 .id(entry.id)
+                                .foregroundStyle(colorForLogType(entry.logType))
                                 .multilineTextAlignment(.leading)
                                 .fontDesign(.monospaced)
                                 .textSelection(.enabled)
@@ -66,6 +66,7 @@ struct ConsoleView: View {
             TextField(">", text: $evalString, prompt: Text("Javascript: >"))
                 .padding()
                 .onKeyPress(keys: [.upArrow], phases: .up, action: { _ in
+                    guard !evalHistory.isEmpty else { return .ignored }
                     switch (evalIndex) {
                     case -1:
                         // Start walking up the history
