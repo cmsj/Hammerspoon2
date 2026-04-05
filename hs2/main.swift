@@ -105,7 +105,7 @@ while i < CommandLine.arguments.count {
             Usage: hs2 [options] [file] [args]
 
             Options:
-              -a <arg>        Pass argument to script (requires -c or file)
+              -a <arg>        Pass argument to script (requires -c, -s, or file)
               -i              Interactive REPL mode
               -s              Read commands from stdin
               -c <code>       Execute code string
@@ -147,7 +147,7 @@ while i < CommandLine.arguments.count {
 
 // Validate: -a requires -c or file
 if !customArgs.isEmpty && commandsToExecute.isEmpty && fileName == nil && !readStdin {
-    fputs("Error: -a requires -c <code> or a file argument\n", stderr)
+    fputs("Error: -a requires -c <code>, -s, or a file argument\n", stderr)
     exit(EX_USAGE)
 }
 
@@ -170,7 +170,7 @@ if isatty(STDIN_FILENO) == 0 && commandsToExecute.isEmpty && fileName == nil && 
 
 // Determine interactive mode
 if !readStdin && fileName == nil && commandsToExecute.isEmpty && !interactive {
-    if isatty(STDOUT_FILENO) != 0 {
+    if isatty(STDIN_FILENO) != 0 {
         interactive = true
     }
 }

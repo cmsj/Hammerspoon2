@@ -202,10 +202,8 @@ var __ipcDefaultHandler = function(port, msgID, data) {
     }
 };
 
+// TODO: Wire up __ipcPrint as the global print override once the JS engine supports it.
 // NOTE: __ipcPrint is not yet functional.
-// The JS engine has no global 'print' function, so it cannot be replaced.
-// This function is retained for future use when console mirroring is implemented.
-// See docs/IPC.md "Console Mirroring" for details.
 var __ipcPrint = function(...args) {
     // Call original print
     __ipcOriginalPrint(...args);
@@ -239,6 +237,7 @@ try {
 // Tab completion function for REPL (minimal v1.0 implementation)
 // Stored in closure-scoped variable to survive JSExport proxy GC.
 // Known module names for tab completion.
+// IMPORTANT: Keep in sync with ModuleRootAPI in Hammerspoon 2/Engine/ModuleRoot.swift.
 // JSExport proxy properties are not enumerable via Object.keys() or for...in,
 // so we maintain a static list matching ModuleRootAPI.
 var __ipcKnownModules = [
