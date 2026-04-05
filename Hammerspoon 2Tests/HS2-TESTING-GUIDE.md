@@ -288,7 +288,7 @@ Fixture files are JavaScript files that test specific scenarios. They're similar
 ```javascript
 // Test: [What this tests]
 // Expected: [Expected behavior]
-// Exit Code: [0 for success, 1 for error]
+// Exit Code: [0 for success, 65 for JS error]
 
 // Your test code here
 print("Result");

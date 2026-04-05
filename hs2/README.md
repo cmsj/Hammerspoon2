@@ -69,11 +69,11 @@ hs2 -c "throw new Error('oops')" -c "console.log('still runs')"
 
 ### Exit Code Semantics
 
-- **Exit code 0**: IPC communication succeeded (user code may have had errors)
+- **Exit code 0**: All commands executed successfully
+- **Exit code 65 (EX_DATAERR)**: JavaScript evaluation error (all commands still execute in multi-command mode)
 - **Exit code 69 (EX_UNAVAILABLE)**: Cannot connect to Hammerspoon
-- **Exit code 65 (EX_DATAERR)**: IPC protocol error
 
-To check for JavaScript errors, parse stderr output rather than relying on exit codes.
+JavaScript errors are also reported on stderr.
 
 ## Known Limitations
 

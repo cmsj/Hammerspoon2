@@ -141,14 +141,14 @@ run_fixture_test() {
     set -e
 
     # Special handling for error_test.js
-    # JS errors return exit 0 (IPC succeeded), errors reported via stderr
+    # JS errors return exit 65 (EX_DATAERR), errors reported via stderr
     if [[ "$test_name" == "error_test" ]]; then
-        if [ $exit_code -eq 0 ]; then
-            echo -e "${GREEN}PASS${NC} (JS error reported via stderr, exit 0)"
+        if [ $exit_code -eq 65 ]; then
+            echo -e "${GREEN}PASS${NC} (JS error reported via stderr, exit 65)"
             TESTS_PASSED=$((TESTS_PASSED + 1))
             return 0
         else
-            echo -e "${RED}FAIL${NC} (expected exit 0, got $exit_code)"
+            echo -e "${RED}FAIL${NC} (expected exit 65, got $exit_code)"
             TESTS_FAILED=$((TESTS_FAILED + 1))
             return 1
         fi
@@ -197,13 +197,13 @@ run_error_tests() {
     echo ""
     log_info "Running error handling tests..."
 
-    run_test "Syntax error detection" 0 \
+    run_test "Syntax error detection" 65 \
         "$HS2_BINARY" -q -c 'invalid syntax;;'
 
-    run_test "Runtime error detection" 0 \
+    run_test "Runtime error detection" 65 \
         "$HS2_BINARY" -q -c 'throw new Error("test");'
 
-    run_test "Undefined variable" 0 \
+    run_test "Undefined variable" 65 \
         "$HS2_BINARY" -q -c 'print(undefinedVar);'
 }
 
