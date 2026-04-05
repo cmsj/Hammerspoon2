@@ -59,6 +59,7 @@ struct ConsoleView: View {
     }
 
     fileprivate func handleUpArrow() -> KeyPress.Result {
+        guard !evalHistory.isEmpty else { return .ignored }
         switch (evalIndex) {
         case -1:
             // Start walking up the history
