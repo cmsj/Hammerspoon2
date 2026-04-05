@@ -32,7 +32,4 @@ enum IPCMessageID: Int32 {
 
     /// Return value message
     case returnValue = 2
-
-    /// Console mirror message
-    case console = 3
 }
