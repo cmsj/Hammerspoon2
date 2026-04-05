@@ -275,7 +275,7 @@ nonisolated class HS2CommandTests: XCTestCase {
 
     func testSyntaxError() {
         let (_, stderr, exitCode) = runHS2Command(["-c", "this is invalid syntax;;"], quiet: true)
-        XCTAssertEqual(exitCode, 0, "Should exit 0 - IPC succeeded even though JS errored")
+        XCTAssertEqual(exitCode, 65, "Should exit 65 (EX_DATAERR) on JS error")
         XCTAssertTrue(stderr.contains("Error") || stderr.contains("error"),
                      "Should output error message to stderr")
     }
@@ -283,7 +283,7 @@ nonisolated class HS2CommandTests: XCTestCase {
     func testRuntimeError() {
         let code = "throw new Error('Test error');"
         let (_, stderr, exitCode) = runHS2Command(["-c", code], quiet: true)
-        XCTAssertEqual(exitCode, 0, "Should exit 0 - IPC succeeded even though JS errored")
+        XCTAssertEqual(exitCode, 65, "Should exit 65 (EX_DATAERR) on JS error")
         XCTAssertTrue(stderr.contains("Error") || stderr.contains("Test error"),
                      "Should output error message to stderr")
     }
@@ -291,7 +291,7 @@ nonisolated class HS2CommandTests: XCTestCase {
     func testUndefinedVariable() {
         let code = "print(undefinedVariable);"
         let (_, stderr, exitCode) = runHS2Command(["-c", code], quiet: true)
-        XCTAssertEqual(exitCode, 0, "Should exit 0 - IPC succeeded even though JS errored")
+        XCTAssertEqual(exitCode, 65, "Should exit 65 (EX_DATAERR) on JS error")
         XCTAssertTrue(stderr.contains("ReferenceError") || stderr.contains("undefined"),
                      "Should output error about undefined variable")
     }
@@ -299,9 +299,9 @@ nonisolated class HS2CommandTests: XCTestCase {
     // MARK: - Error Recovery Tests
 
     func testErrorRecovery_SingleError() {
-        // Single error command should print error but exit 0
+        // Single error command should print error and exit non-zero
         let (_, stderr, exitCode) = runHS2Command(["-c", "throw new Error('test error')"], quiet: true)
-        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (IPC succeeded)")
+        XCTAssertEqual(exitCode, 65, "Exit code should be 65 (EX_DATAERR)")
         XCTAssertTrue(stderr.contains("Error"), "Error should be printed to stderr")
     }
 
@@ -312,7 +312,7 @@ nonisolated class HS2CommandTests: XCTestCase {
             "-c", "print('second command')"
         ], quiet: true)
 
-        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (all IPC succeeded)")
+        XCTAssertEqual(exitCode, 65, "Exit code should be 65 (JS error occurred)")
         XCTAssertTrue(stderr.contains("first error"), "First error should be in stderr")
         XCTAssertTrue(stdout.contains("second command"), "Second command should execute")
     }
@@ -325,7 +325,7 @@ nonisolated class HS2CommandTests: XCTestCase {
             "-c", "print('third')"
         ], quiet: true)
 
-        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (all IPC succeeded)")
+        XCTAssertEqual(exitCode, 65, "Exit code should be 65 (JS error occurred)")
         XCTAssertTrue(stdout.contains("first"), "First command should execute")
         XCTAssertTrue(stderr.contains("ReferenceError") || stderr.contains("undefined"),
                      "Error should be in stderr")
@@ -340,7 +340,7 @@ nonisolated class HS2CommandTests: XCTestCase {
             "-c", "throw new Error('last error')"
         ], quiet: true)
 
-        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (all IPC succeeded)")
+        XCTAssertEqual(exitCode, 65, "Exit code should be 65 (JS error occurred)")
         XCTAssertTrue(stdout.contains("first"), "First command should execute")
         XCTAssertTrue(stdout.contains("second"), "Second command should execute")
         XCTAssertTrue(stderr.contains("last error"), "Error should be in stderr")
@@ -353,7 +353,7 @@ nonisolated class HS2CommandTests: XCTestCase {
             "-c", "print('after syntax error')"
         ], quiet: true)
 
-        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (IPC succeeded)")
+        XCTAssertEqual(exitCode, 65, "Exit code should be 65 (JS error occurred)")
         XCTAssertTrue(stderr.contains("Error") || stderr.contains("Syntax"),
                      "Syntax error should be in stderr")
         XCTAssertTrue(stdout.contains("after syntax error"),
@@ -368,7 +368,7 @@ nonisolated class HS2CommandTests: XCTestCase {
             "-c", "throw new Error('error 2')"
         ], quiet: true)
 
-        XCTAssertEqual(exitCode, 0, "Exit code should be 0 (all IPC succeeded)")
+        XCTAssertEqual(exitCode, 65, "Exit code should be 65 (JS errors occurred)")
         XCTAssertTrue(stderr.contains("error 1"), "First error should be in stderr")
         XCTAssertTrue(stderr.contains("error 2"), "Second error should be in stderr")
         XCTAssertTrue(stdout.contains("middle"), "Middle command should execute")
@@ -487,7 +487,7 @@ nonisolated class HS2CommandTests: XCTestCase {
 
     func testErrorExitCode() {
         let (_, stderr, exitCode) = runHS2Command(["-c", "throw new Error('fail')"], quiet: true)
-        XCTAssertEqual(exitCode, 0, "Should exit 0 - IPC succeeded even though JS errored")
+        XCTAssertEqual(exitCode, 65, "Should exit 65 (EX_DATAERR) on JS error")
         XCTAssertTrue(stderr.contains("Error") || stderr.contains("fail"),
                      "Error should be printed to stderr")
     }

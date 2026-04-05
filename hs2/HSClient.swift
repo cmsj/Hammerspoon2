@@ -17,7 +17,6 @@ let MSGID_QUERY: Int32 = 501
 let MSGID_ERROR: Int32 = -1
 let MSGID_OUTPUT: Int32 = 1
 let MSGID_RETURN: Int32 = 2
-let MSGID_CONSOLE: Int32 = 3
 
 /// IPC client managing communication with Hammerspoon 2
 ///
@@ -33,7 +32,6 @@ class HSClient {
     let recvTimeout: CFTimeInterval
     let useColors: Bool
     let quietMode: Bool
-    let consoleMirroring: Bool
     let customArgs: [String]
 
     // Thread-safe state via lock
@@ -73,14 +71,13 @@ class HSClient {
 
     // MARK: - Initialization
 
-    init(remoteName: String, timeout: TimeInterval, useColors: Bool, quietMode: Bool, consoleMirroring: Bool, customArgs: [String]) {
+    init(remoteName: String, timeout: TimeInterval, useColors: Bool, quietMode: Bool, customArgs: [String]) {
         self.remoteName = remoteName
         self.localName = UUID().uuidString
         self.sendTimeout = timeout
         self.recvTimeout = timeout
         self.useColors = useColors
         self.quietMode = quietMode
-        self.consoleMirroring = consoleMirroring
         self.customArgs = customArgs
     }
 
@@ -201,7 +198,6 @@ class HSClient {
         // Construct registration message: instanceID\0{...json...}
         let args: [String: Any] = [
             "quiet": quietMode,
-            "console": consoleMirroring,
             "customArgs": customArgs
         ]
 
@@ -242,8 +238,16 @@ class HSClient {
         }
 
         let responseStr = String(data: responseData as Data, encoding: .utf8) ?? "<invalid UTF-8>"
+        let trimmed = responseStr.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard responseStr.trimmingCharacters(in: .whitespacesAndNewlines) == "ok" else {
+        if trimmed == "error:js" {
+            // JavaScript evaluation failed — set non-zero exit code but
+            // return true so multi-command sequences continue executing.
+            setExitCode(EX_DATAERR)
+            return true
+        }
+
+        guard trimmed == "ok" else {
             // Auto-reconnect if registration was lost (e.g., JSExport proxy GC'd)
             if responseStr.contains("instance not registered") {
                 if !isRetry, registerWithRemote() {
@@ -326,7 +330,7 @@ class HSClient {
 
         // Route based on message ID
         switch msgID {
-        case MSGID_OUTPUT, MSGID_RETURN, MSGID_CONSOLE:
+        case MSGID_OUTPUT, MSGID_RETURN:
             // Output to stdout
             if !client.quietMode {
                 let color = client.useColors ? client.colorOutput : ""
@@ -354,10 +358,11 @@ class HSClient {
     // MARK: - Helpers
 
     func getBanner() -> String {
+        let hint = "Use 'var' for persistent bindings (let/const are scoped per entry)"
         if useColors {
-            return "\(colorBanner)Hammerspoon 2 REPL\(colorReset)\n"
+            return "\(colorBanner)Hammerspoon 2 REPL\(colorReset)\n\(hint)\n"
         } else {
-            return "Hammerspoon 2 REPL\n"
+            return "Hammerspoon 2 REPL\n\(hint)\n"
         }
     }
 

@@ -156,17 +156,6 @@ struct HSIPCHandlerTests {
         harness.eval("__testPort.delete()")
     }
 
-    @Test("Register with console mirroring stores setting")
-    func testRegisterConsoleMirroring() {
-        let (harness, portName) = makeHarnessWithPort()
-        harness.eval("__ipcDefaultHandler(null, 100, '\(portName)\\0{\"console\":true}')")
-
-        let console = harness.eval("__ipcRegisteredInstances['\(portName)']._cli.console")
-        #expect(console as? Bool == true)
-
-        harness.eval("__testPort.delete()")
-    }
-
     @Test("Register with custom args stores them")
     func testRegisterCustomArgs() {
         let (harness, portName) = makeHarnessWithPort()
@@ -287,14 +276,14 @@ struct HSIPCHandlerTests {
         harness.eval("__testPort.delete()")
     }
 
-    @Test("Command returns ok even on eval error")
-    func testCommandErrorStillReturnsOk() {
+    @Test("Command returns error:js on eval error")
+    func testCommandErrorReturnsErrorJs() {
         let (harness, portName) = makeHarnessWithPort()
         harness.eval("__ipcDefaultHandler(null, 100, '\(portName)\\0{}')")
 
-        // Runtime error (not syntax error) should still return "ok" for protocol success
+        // Runtime error (not syntax error) should return "error:js"
         let result = harness.eval("__ipcDefaultHandler(null, 500, '\(portName)\\0nonexistentVariable.property')")
-        #expect(result as? String == "ok")
+        #expect(result as? String == "error:js")
 
         harness.eval("__testPort.delete()")
     }
@@ -306,7 +295,7 @@ struct HSIPCHandlerTests {
         let (harness, portName) = makeHarnessWithPort()
 
         // Register
-        let reg = harness.eval("__ipcDefaultHandler(null, 100, '\(portName)\\0{\"quiet\":true,\"console\":true}')")
+        let reg = harness.eval("__ipcDefaultHandler(null, 100, '\(portName)\\0{\"quiet\":true}')")
         #expect(reg as? String == "ok")
 
         // Execute multiple queries - state should persist

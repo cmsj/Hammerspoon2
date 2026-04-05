@@ -14,9 +14,11 @@ const MSG_ID = {
     QUERY: 501,
     ERROR: -1,
     OUTPUT: 1,
-    RETURN: 2,
-    CONSOLE: 3
+    RETURN: 2
 };
+
+// Default timeout for one-way sendMessage calls (seconds)
+const MSG_TIMEOUT = 4.0;
 
 // IPC state is stored in closure-scoped variables rather than on the
 // hs.ipc JSExport proxy, because JSExport proxy objects lose dynamically
@@ -49,7 +51,6 @@ var __ipcDefaultHandler = function(port, msgID, data) {
             }
 
             const quiet = args.quiet || false;
-            const consoleMirroring = args.console || false;
             const customArgs = args.customArgs || [];
 
             // Create remote port for this instance
@@ -70,7 +71,6 @@ var __ipcDefaultHandler = function(port, msgID, data) {
                 _cli: {
                     remote: remote,
                     quietMode: quiet,
-                    console: consoleMirroring,
                     args: customArgs
                 },
                 print: function(...args) {
@@ -83,7 +83,7 @@ var __ipcDefaultHandler = function(port, msgID, data) {
                     }
 
                     const output = args.map(a => String(a)).join('\t') + '\n';
-                    instance._cli.remote.sendMessage(output, MSG_ID.OUTPUT, 4.0, true);  // oneWay=true to avoid deadlock
+                    instance._cli.remote.sendMessage(output, MSG_ID.OUTPUT, MSG_TIMEOUT, true);  // oneWay=true to avoid deadlock
                 }
             };
 
@@ -161,12 +161,12 @@ var __ipcDefaultHandler = function(port, msgID, data) {
             if (evalError) {
                 try {
                     const errorMsg = String(evalError) + '\n';
-                    instance._cli.remote.sendMessage(errorMsg, MSG_ID.ERROR, 4.0, true);  // oneWay=true
+                    instance._cli.remote.sendMessage(errorMsg, MSG_ID.ERROR, MSG_TIMEOUT, true);  // oneWay=true
                 } catch (e) {
                     console.error("IPC: Failed to send error message to client:", e);
                 }
-                // Return "ok" to indicate IPC protocol succeeded even though JavaScript evaluation failed.
-                return "ok";
+                // Return "error:js" so the client can set a non-zero exit code.
+                return "error:js";
             }
 
             // Format and send result
@@ -175,7 +175,7 @@ var __ipcDefaultHandler = function(port, msgID, data) {
                 try {
                     if (result !== undefined && result !== null) {
                         const resultStr = String(result) + '\n';
-                        instance._cli.remote.sendMessage(resultStr, MSG_ID.RETURN, 4.0, true);  // oneWay=true
+                        instance._cli.remote.sendMessage(resultStr, MSG_ID.RETURN, MSG_TIMEOUT, true);  // oneWay=true
                     }
                 } catch (e) {
                     console.error("IPC: Failed to send result to client:", e);

@@ -27,7 +27,6 @@ var remoteName = "Hammerspoon2"
 var customArgs: [String] = []
 var useColors: Bool? = nil
 var quietMode = false
-var consoleMirroring = false
 var timeout: TimeInterval = 4.0
 
 // Parse arguments
@@ -82,9 +81,6 @@ while i < CommandLine.arguments.count {
     case "-N":
         useColors = true
 
-    case "-C":
-        consoleMirroring = true
-
     case "-q":
         quietMode = true
 
@@ -112,7 +108,6 @@ while i < CommandLine.arguments.count {
               -m <name>       Remote port name (default: Hammerspoon2)
               -n              Disable colored output
               -N              Force colored output
-              -C              Enable console mirroring (not yet functional)
               -q              Quiet mode (suppress output)
               -t <seconds>    IPC timeout (default: 4.0)
               -h, --help      Show this help
@@ -201,7 +196,6 @@ let client = HSClient(
     timeout: timeout,
     useColors: useColors ?? false,
     quietMode: quietMode,
-    consoleMirroring: consoleMirroring,
     customArgs: customArgs
 )
 
