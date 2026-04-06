@@ -14,17 +14,10 @@ NC='\033[0m' # No Color
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-BUILD_DIR="${BUILD_DIR:-$PROJECT_ROOT}"
-HAMMERSPOON_APP="$BUILD_DIR/Debug/Hammerspoon 2.app"
-HS2_BINARY="$BUILD_DIR/Debug/hs2"
+PROJECT_FILE="$PROJECT_ROOT/Hammerspoon 2.xcodeproj"
 TEST_FIXTURES="$PROJECT_ROOT/Hammerspoon 2Tests/Fixtures/hs2"
 
-# Test counters
-TESTS_RUN=0
-TESTS_PASSED=0
-TESTS_FAILED=0
-
-# Functions
+# Build first, then use the known output path
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
 }
@@ -37,23 +30,47 @@ log_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
+build_project() {
+    log_info "Building Hammerspoon 2 and hs2..."
+
+    local build_output
+    build_output=$(xcodebuild build -scheme Development -project "$PROJECT_FILE" \
+        -configuration Debug -destination "platform=macOS,arch=arm64" \
+        -showBuildSettings 2>/dev/null | grep -m1 "BUILT_PRODUCTS_DIR" | awk '{print $3}')
+
+    if [ -z "$build_output" ]; then
+        log_error "Could not determine build output directory"
+        exit 1
+    fi
+
+    BUILD_DIR="$build_output"
+
+    # Now do the actual build
+    if ! xcodebuild build -scheme Development -project "$PROJECT_FILE" \
+        -configuration Debug -destination "platform=macOS,arch=arm64" \
+        CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO 2>&1 | tail -5 | grep -q "BUILD SUCCEEDED"; then
+        log_error "Build failed"
+        exit 1
+    fi
+
+    HAMMERSPOON_APP="$BUILD_DIR/Hammerspoon 2.app"
+    HS2_BINARY="$BUILD_DIR/hs2"
+
+    log_info "Build succeeded"
+    log_info "  App: $HAMMERSPOON_APP"
+    log_info "  hs2: $HS2_BINARY"
+}
+
 check_prerequisites() {
     log_info "Checking prerequisites..."
 
-    if [ ! -d "$HAMMERSPOON_APP" ]; then
-        log_error "Hammerspoon 2.app not found at: $HAMMERSPOON_APP"
-        log_error "Please build the project first"
+    if [ ! -d "$PROJECT_ROOT" ]; then
+        log_error "Project root not found at: $PROJECT_ROOT"
         exit 1
     fi
 
-    if [ ! -f "$HS2_BINARY" ]; then
-        log_error "hs2 binary not found at: $HS2_BINARY"
-        log_error "Please build the project first"
-        exit 1
-    fi
-
-    if [ ! -d "$TEST_FIXTURES" ]; then
-        log_error "Test fixtures not found at: $TEST_FIXTURES"
+    if [ ! -d "$PROJECT_FILE" ]; then
+        log_error "Xcode project not found at: $PROJECT_FILE"
         exit 1
     fi
 
@@ -63,15 +80,13 @@ check_prerequisites() {
 start_hammerspoon() {
     log_info "Starting Hammerspoon 2..."
 
-    # Kill any existing instances (graceful first, then force)
+    # Kill any existing instances
     killall "Hammerspoon 2" 2>/dev/null || true
-    sleep 1
-    killall -9 "Hammerspoon 2" 2>/dev/null || true
-    sleep 0.5
+    sleep 2
 
     # Start Hammerspoon 2
     open "$HAMMERSPOON_APP"
-    sleep 3
+    sleep 5
 
     # Wait for it to be ready
     local retries=0
@@ -288,6 +303,11 @@ print_summary() {
     fi
 }
 
+# Test counters
+TESTS_RUN=0
+TESTS_PASSED=0
+TESTS_FAILED=0
+
 # Main execution
 main() {
     echo "=================================="
@@ -295,6 +315,7 @@ main() {
     echo "=================================="
 
     check_prerequisites
+    build_project
 
     if ! start_hammerspoon; then
         log_error "Failed to start Hammerspoon 2"

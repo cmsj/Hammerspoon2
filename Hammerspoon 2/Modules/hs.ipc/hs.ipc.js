@@ -138,22 +138,33 @@ var __ipcDefaultHandler = function(port, msgID, data) {
             let evalError = null;
 
             const trimmedCode = code.trim();
+            const isMultiline = trimmedCode.includes('\n');
 
-            // Always try implicit return first, fall back to bare code on SyntaxError
-            try {
-                const fn = new Function('_cli', 'print', 'return ' + trimmedCode);
-                result = fn(instance._cli, instance.print);
-            } catch (e1) {
-                if (e1 instanceof SyntaxError) {
-                    // Implicit return failed with SyntaxError - try as statements
-                    try {
-                        const fn = new Function('_cli', 'print', trimmedCode);
-                        result = fn(instance._cli, instance.print);
-                    } catch (e2) {
-                        evalError = e2;
+            // For single-line code, try implicit return first (e.g. "1+2" becomes "return 1+2").
+            // For multiline code, skip implicit return — JavaScript ASI would treat
+            // "return \n ..." as "return undefined;" and silently discard the rest.
+            if (!isMultiline) {
+                try {
+                    const fn = new Function('_cli', 'print', 'return ' + trimmedCode);
+                    result = fn(instance._cli, instance.print);
+                } catch (e1) {
+                    if (e1 instanceof SyntaxError) {
+                        try {
+                            const fn = new Function('_cli', 'print', trimmedCode);
+                            result = fn(instance._cli, instance.print);
+                        } catch (e2) {
+                            evalError = e2;
+                        }
+                    } else {
+                        evalError = e1;
                     }
-                } else {
-                    evalError = e1;
+                }
+            } else {
+                try {
+                    const fn = new Function('_cli', 'print', trimmedCode);
+                    result = fn(instance._cli, instance.print);
+                } catch (e) {
+                    evalError = e;
                 }
             }
 
