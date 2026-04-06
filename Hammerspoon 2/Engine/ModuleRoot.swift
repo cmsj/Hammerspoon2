@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+import ObjectiveC
 
 @_documentation(visibility: private)
 @objc protocol ModuleRootAPI: JSExport {
@@ -74,11 +75,19 @@ import JavaScriptCoreExtras
     }
 
     @objc func moduleNames() -> [String] {
-        return [
-            "appinfo", "application", "ax", "console", "fs", "hashing",
-            "hotkey", "ipc", "permissions", "osascript", "screen", "task",
-            "timer", "ui", "window"
-        ]
+        // Derive module names from the ModuleRootAPI protocol properties
+        // so the list stays in sync automatically when modules are added/removed.
+        var count: UInt32 = 0
+        guard let properties = protocol_copyPropertyList(ModuleRootAPI.self, &count) else {
+            return []
+        }
+        defer { free(properties) }
+
+        var names: [String] = []
+        for i in 0..<Int(count) {
+            names.append(String(cString: property_getName(properties[i])))
+        }
+        return names.sorted()
     }
 
     // Modules
