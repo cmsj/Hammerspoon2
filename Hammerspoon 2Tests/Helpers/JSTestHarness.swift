@@ -49,7 +49,9 @@ class JSTestHarness {
 
         // Inject type bridges (for HSRect, HSPoint, etc.)
         do {
-            try context.install([TypeBridgesInstaller()])
+            try context.install([
+                TypeBridgesInstaller(),
+            ])
         } catch {
             print("⚠️ Failed to install type bridges: \(error)")
         }
@@ -120,7 +122,6 @@ class JSTestHarness {
         hs.setObject(module, forKeyedSubscript: name as NSString)
 
         // Try to load the JavaScript enhancement file if it exists
-        // Look in the Hammerspoon_2 bundle, not the test bundle
         let bundles = [
             Bundle.main,
             Bundle(identifier: "net.tenshu.Hammerspoon-2")
@@ -191,25 +192,6 @@ class JSTestHarness {
     ///   - callback: Swift closure to call
     func registerCallback(_ name: String, callback: @escaping () -> Void) {
         callbacks[name] = callback
-
-//        // Create a JavaScript function that calls our Swift callback
-//        let jsFunction = context.evaluateScript("""
-//            (function() {
-//                return function \(name)() {
-//                    __swift_callback_\(name)();
-//                };
-//            })()
-//            """)
-
-        // Register the Swift side handler
-//        let swiftHandler: @convention(block) (String) -> Void = { [weak self] callbackName in
-//            self?.callbacks[callbackName]?()
-//        }
-//        context.setObject(swiftHandler, forKeyedSubscript: "__test_callback" as NSString)
-//        context.setObject(unsafeBitCast(swiftHandler, to: AnyObject.self), forKeyedSubscript: "__swift_callback_\(name)" as NSString)
-
-        // Set the JavaScript function in global scope
-//        context.setObject(jsFunction, forKeyedSubscript: name as NSString)
     }
 
     /// Register a callback that expects arguments
@@ -223,13 +205,13 @@ class JSTestHarness {
             })()
             """)
 
-        // Register the Swift side handler (using Any to avoid @convention(block) limitation)
+        // Register the Swift side handler
         let swiftHandler: @convention(block) (Any) -> Void = { arg in
             if let typedArg = arg as? T {
                 callback(typedArg)
             }
         }
-        context.setObject(unsafeBitCast(swiftHandler, to: AnyObject.self), forKeyedSubscript: "__swift_callback_\(name)" as NSString)
+        context.setObject(swiftHandler, forKeyedSubscript: "__swift_callback_\(name)" as NSString)
 
         // Set the JavaScript function in global scope
         context.setObject(jsFunction, forKeyedSubscript: name as NSString)
@@ -387,6 +369,8 @@ extension JSTestHarness {
                 loadModule(HSConsoleModule.self, as: name)
             case "appinfo":
                 loadModule(HSAppInfoModule.self, as: name)
+            case "ipc":
+                loadModule(HSIPCModule.self, as: name)
             case "permissions":
                 loadModule(HSPermissionsModule.self, as: name)
             case "ax":

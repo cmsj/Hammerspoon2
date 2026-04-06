@@ -9,6 +9,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import AppKit
 
 // MARK: - Declare our JavaScript API
@@ -43,6 +44,14 @@ import AppKit
     /// Print an error message to the console
     /// - Parameter message: The message to print
     @objc func error(_ message: String)
+
+    /// Get all console output as a single string
+    /// - Returns: All log entries formatted with timestamps
+    @objc func getConsole() -> String
+
+    /// Get the REPL evaluation history
+    /// - Returns: Array of previously evaluated expressions
+    @objc func getHistory() -> [String]
 }
 
 // MARK: - Implementation
@@ -100,5 +109,16 @@ import AppKit
 
     @objc func error(_ message: String) {
         AKError(message)
+    }
+
+    // MARK: - Console read methods
+
+    @objc func getConsole() -> String {
+        let log = HammerspoonLog.shared
+        return log.entries.map { $0.formattedLine }.joined(separator: "\n")
+    }
+
+    @objc func getHistory() -> [String] {
+        HammerspoonLog.shared.evalHistory
     }
 }

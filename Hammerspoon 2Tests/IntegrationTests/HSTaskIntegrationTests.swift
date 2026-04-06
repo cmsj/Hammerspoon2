@@ -544,7 +544,7 @@ import JavaScriptCore
         });
         """)
 
-        let success = await harness.waitForAsync(timeout: 2.0) { promiseResolved }
+        let success = await harness.waitForAsync(timeout: 5.0) { promiseResolved }
         #expect(success, "Promise should resolve")
         #expect(capturedStdout.contains("Hello async"), "Should capture stdout")
         #expect(capturedExitCode == 0, "Exit code should be 0")

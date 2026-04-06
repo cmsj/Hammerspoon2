@@ -14,6 +14,9 @@
 		4F947D922F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F947DA62F56404F00DD814E /* OSAKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F947DA52F56404F00DD814E /* OSAKit.framework */; };
 		4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 4FACE0032F12345678900000 /* JavaScriptCoreExtras */; };
+		9A9BB6C12F00A1420047C29B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A9BB6C02F00A1420047C29B /* CoreFoundation.framework */; };
+		9A9BB6C32F00A14C0047C29B /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A9BB6C22F00A14C0047C29B /* AppKit.framework */; };
+		9A9BB6C72F00A2260047C29B /* hs2 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9A9BAA3F2F009F280047C29B /* hs2 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +34,13 @@
 			remoteGlobalIDString = 4F947D862F563FCF00DD814E;
 			remoteInfo = HammerspoonOSAScriptHelper;
 		};
+		9A9BB6C42F00A18F0047C29B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4F56417B2E8333830099EB4C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9A9BAA3E2F009F280047C29B;
+			remoteInfo = hs2;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -43,6 +53,25 @@
 				4F947D922F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc in Embed XPC Services */,
 			);
 			name = "Embed XPC Services";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9A9BAA3D2F009F280047C29B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		9A9BB6C62F00A1BC0047C29B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = hs2;
+			dstSubfolderSpec = 10;
+			files = (
+				9A9BB6C72F00A2260047C29B /* hs2 in CopyFiles */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -65,6 +94,9 @@
 		4F973B132EF9523A006A6709 /* index.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = index.njk; sourceTree = "<group>"; };
 		4F973B142EF9523A006A6709 /* module.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = module.njk; sourceTree = "<group>"; };
 		4F973B152EF9523A006A6709 /* type.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = type.njk; sourceTree = "<group>"; };
+		9A9BAA3F2F009F280047C29B /* hs2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs2; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A9BB6C02F00A1420047C29B /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		9A9BB6C22F00A14C0047C29B /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -79,6 +111,13 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				HSOSAScriptTypes.swift,
+			);
+			target = 4F5641822E8333830099EB4C /* Hammerspoon 2 */;
+		};
+		9A9BB6C92F00A2570047C29B /* Exceptions for "hs2" folder in "Hammerspoon 2" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/hs2.1,
 			);
 			target = 4F5641822E8333830099EB4C /* Hammerspoon 2 */;
 		};
@@ -102,6 +141,14 @@
 				4F947DA72F5640D100DD814E /* Exceptions for "HammerspoonOSAScriptHelper" folder in "HammerspoonOSAScriptHelper" target */,
 			);
 			path = HammerspoonOSAScriptHelper;
+			sourceTree = "<group>";
+		};
+		9A9BAA402F009F280047C29B /* hs2 */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9A9BB6C92F00A2570047C29B /* Exceptions for "hs2" folder in "Hammerspoon 2" target */,
+			);
+			path = hs2;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -132,6 +179,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9A9BAA3C2F009F280047C29B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A9BB6C32F00A14C0047C29B /* AppKit.framework in Frameworks */,
+				9A9BB6C12F00A1420047C29B /* CoreFoundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -142,6 +198,7 @@
 				4F973B112EF89EE6006A6709 /* scripts */,
 				4F5641852E8333830099EB4C /* Hammerspoon 2 */,
 				4F5641932E8333840099EB4C /* Hammerspoon 2Tests */,
+				9A9BAA402F009F280047C29B /* hs2 */,
 				4F947D882F563FCF00DD814E /* HammerspoonOSAScriptHelper */,
 				4F947DA42F56404F00DD814E /* Frameworks */,
 				4F5641842E8333830099EB4C /* Products */,
@@ -153,6 +210,7 @@
 			children = (
 				4F5641832E8333830099EB4C /* Hammerspoon 2.app */,
 				4F5641902E8333840099EB4C /* Hammerspoon 2Tests.xctest */,
+				9A9BAA3F2F009F280047C29B /* hs2 */,
 				4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */,
 			);
 			name = Products;
@@ -170,6 +228,8 @@
 		4F947DA42F56404F00DD814E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9A9BB6C22F00A14C0047C29B /* AppKit.framework */,
+				9A9BB6C02F00A1420047C29B /* CoreFoundation.framework */,
 				4F947DA52F56404F00DD814E /* OSAKit.framework */,
 			);
 			name = Frameworks;
@@ -212,11 +272,13 @@
 				4F5641802E8333830099EB4C /* Frameworks */,
 				4F5641812E8333830099EB4C /* Resources */,
 				4F947D932F563FCF00DD814E /* Embed XPC Services */,
+				9A9BB6C62F00A1BC0047C29B /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				4F947D912F563FCF00DD814E /* PBXTargetDependency */,
+				9A9BB6C52F00A18F0047C29B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				4F5641852E8333830099EB4C /* Hammerspoon 2 */,
@@ -276,6 +338,28 @@
 			productReference = 4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */;
 			productType = "com.apple.product-type.xpc-service";
 		};
+		9A9BAA3E2F009F280047C29B /* hs2 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9A9BAA432F009F280047C29B /* Build configuration list for PBXNativeTarget "hs2" */;
+			buildPhases = (
+				9A9BAA3B2F009F280047C29B /* Sources */,
+				9A9BAA3C2F009F280047C29B /* Frameworks */,
+				9A9BAA3D2F009F280047C29B /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				9A9BAA402F009F280047C29B /* hs2 */,
+			);
+			name = hs2;
+			packageProductDependencies = (
+			);
+			productName = hs2;
+			productReference = 9A9BAA3F2F009F280047C29B /* hs2 */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -295,6 +379,9 @@
 					};
 					4F947D862F563FCF00DD814E = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					9A9BAA3E2F009F280047C29B = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -319,6 +406,7 @@
 			targets = (
 				4F5641822E8333830099EB4C /* Hammerspoon 2 */,
 				4F56418F2E8333840099EB4C /* Hammerspoon 2Tests */,
+				9A9BAA3E2F009F280047C29B /* hs2 */,
 				4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */,
 			);
 		};
@@ -372,6 +460,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9A9BAA3B2F009F280047C29B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -384,6 +479,11 @@
 			isa = PBXTargetDependency;
 			target = 4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */;
 			targetProxy = 4F947D902F563FCF00DD814E /* PBXContainerItemProxy */;
+		};
+		9A9BB6C52F00A18F0047C29B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9A9BAA3E2F009F280047C29B /* hs2 */;
+			targetProxy = 9A9BB6C42F00A18F0047C29B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -754,6 +854,38 @@
 			};
 			name = Release;
 		};
+		9A9BAA442F009F280047C29B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = VQCYSNZB89;
+				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				OTHER_LDFLAGS = "-ledit";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "hs2/hs2-Bridging-Header.h";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9A9BAA452F009F280047C29B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = VQCYSNZB89;
+				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				OTHER_LDFLAGS = "-ledit";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "hs2/hs2-Bridging-Header.h";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -789,6 +921,15 @@
 			buildConfigurations = (
 				4F947D942F563FCF00DD814E /* Debug */,
 				4F947D952F563FCF00DD814E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9A9BAA432F009F280047C29B /* Build configuration list for PBXNativeTarget "hs2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9A9BAA442F009F280047C29B /* Debug */,
+				9A9BAA452F009F280047C29B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

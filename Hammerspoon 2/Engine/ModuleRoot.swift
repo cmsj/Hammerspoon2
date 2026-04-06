@@ -8,11 +8,13 @@
 import Foundation
 import JavaScriptCore
 import JavaScriptCoreExtras
+import ObjectiveC
 
 @_documentation(visibility: private)
 @objc protocol ModuleRootAPI: JSExport {
     // Core
     @objc func reload()
+    @objc func moduleNames() -> [String]
 
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
@@ -22,6 +24,7 @@ import JavaScriptCoreExtras
     @objc var fs: HSFSModule { get }
     @objc var hashing: HSHashModule { get }
     @objc var hotkey: HSHotkeyModule { get }
+    @objc var ipc: HSIPCModule { get }
     @objc var permissions: HSPermissionsModule { get }
     @objc var osascript: HSOSAScriptModule { get }
     @objc var screen: HSScreenModule { get }
@@ -71,6 +74,22 @@ import JavaScriptCoreExtras
         }
     }
 
+    @objc func moduleNames() -> [String] {
+        // Derive module names from the ModuleRootAPI protocol properties
+        // so the list stays in sync automatically when modules are added/removed.
+        var count: UInt32 = 0
+        guard let properties = protocol_copyPropertyList(ModuleRootAPI.self, &count) else {
+            return []
+        }
+        defer { free(properties) }
+
+        var names: [String] = []
+        for i in 0..<Int(count) {
+            names.append(String(cString: property_getName(properties[i])))
+        }
+        return names.sorted()
+    }
+
     // Modules
     @objc var appinfo: HSAppInfoModule { get { getOrCreate(name: "appinfo", type: HSAppInfoModule.self)}}
     @objc var application: HSApplicationModule { get { getOrCreate(name: "application", type: HSApplicationModule.self)}}
@@ -79,6 +98,7 @@ import JavaScriptCoreExtras
     @objc var fs: HSFSModule { get { getOrCreate(name: "fs", type: HSFSModule.self)}}
     @objc var hashing: HSHashModule { get { getOrCreate(name: "hashing", type: HSHashModule.self)}}
     @objc var hotkey: HSHotkeyModule { get { getOrCreate(name: "hotkey", type: HSHotkeyModule.self)}}
+    @objc var ipc: HSIPCModule { get { getOrCreate(name: "ipc", type: HSIPCModule.self)}}
     @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
     @objc var osascript: HSOSAScriptModule { get { getOrCreate(name: "osascript", type: HSOSAScriptModule.self)}}
     @objc var screen: HSScreenModule { get { getOrCreate(name: "screen", type: HSScreenModule.self)}}

@@ -1130,7 +1130,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 19
+          "lineNumber": 20
         },
         {
           "name": "close",
@@ -1141,7 +1141,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 22
+          "lineNumber": 23
         },
         {
           "name": "clear",
@@ -1152,7 +1152,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 25
+          "lineNumber": 26
         },
         {
           "name": "print",
@@ -1169,7 +1169,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 29
+          "lineNumber": 30
         },
         {
           "name": "debug",
@@ -1186,7 +1186,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 33
+          "lineNumber": 34
         },
         {
           "name": "info",
@@ -1203,7 +1203,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 37
+          "lineNumber": 38
         },
         {
           "name": "warning",
@@ -1220,7 +1220,7 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 41
+          "lineNumber": 42
         },
         {
           "name": "error",
@@ -1237,7 +1237,35 @@
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 45
+          "lineNumber": 46
+        },
+        {
+          "name": "getConsole",
+          "signature": "func getConsole() -> String",
+          "rawDocumentation": "Get all console output as a single string\n- Returns: All log entries formatted with timestamps",
+          "description": "Get all console output as a single string",
+          "params": [],
+          "returns": {
+            "type": "String",
+            "description": "All log entries formatted with timestamps"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
+          "lineNumber": 50
+        },
+        {
+          "name": "getHistory",
+          "signature": "func getHistory() -> [String]",
+          "rawDocumentation": "Get the REPL evaluation history\n- Returns: Array of previously evaluated expressions",
+          "description": "Get the REPL evaluation history",
+          "params": [],
+          "returns": {
+            "type": "[String]",
+            "description": "Array of previously evaluated expressions"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
+          "lineNumber": 54
         }
       ],
       "properties": [],
@@ -2440,6 +2468,209 @@
       ],
       "description": "Module for creating and managing system-wide hotkeys",
       "rawDocumentation": "Module for creating and managing system-wide hotkeys"
+    },
+    {
+      "name": "hs.ipc",
+      "methods": [
+        {
+          "name": "sendMessage",
+          "signature": "func sendMessage(_ data: JSValue, _ msgID: NSNumber, _ timeout: NSNumber?, _ oneWay: Bool) -> JSValue",
+          "rawDocumentation": "Send a message to the port\n- Parameters:\n  - data: The message data to send (converted to string)\n  - msgID: The message type identifier (see IPCProtocol.swift constants)\n  - timeout: Send timeout in seconds, or nil for default\n  - oneWay: If true, send without waiting for a reply\n- Returns: The reply data, or a boolean indicating success for one-way messages",
+          "description": "Send a message to the port",
+          "params": [
+            {
+              "name": "data",
+              "type": "JSValue",
+              "description": "The message data to send (converted to string)"
+            },
+            {
+              "name": "msgID",
+              "type": "NSNumber",
+              "description": "The message type identifier (see IPCProtocol.swift constants)"
+            },
+            {
+              "name": "timeout",
+              "type": "NSNumber?",
+              "description": "Send timeout in seconds, or nil for default"
+            },
+            {
+              "name": "oneWay",
+              "type": "Bool",
+              "description": "If true, send without waiting for a reply"
+            }
+          ],
+          "returns": {
+            "type": "JSValue",
+            "description": "The reply data, or a boolean indicating success for one-way messages"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSMessagePort.swift",
+          "lineNumber": 31
+        },
+        {
+          "name": "delete",
+          "signature": "func delete()",
+          "rawDocumentation": "Delete and invalidate the port",
+          "description": "Delete and invalidate the port",
+          "params": [],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSMessagePort.swift",
+          "lineNumber": 34
+        },
+        {
+          "name": "localPort",
+          "signature": "func localPort(_ name: String, _ callback: JSValue) -> HSMessagePort?",
+          "rawDocumentation": "Create a local (server) message port\n- Parameters:\n  - name: The port name to register\n  - callback: A JavaScript function called when messages arrive\n- Returns: The created message port, or nil on failure",
+          "description": "Create a local (server) message port",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "The port name to register"
+            },
+            {
+              "name": "callback",
+              "type": "JSValue",
+              "description": "A JavaScript function called when messages arrive"
+            }
+          ],
+          "returns": {
+            "type": "HSMessagePort?",
+            "description": "The created message port, or nil on failure"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/IPCModule.swift",
+          "lineNumber": 19
+        },
+        {
+          "name": "remotePort",
+          "signature": "func remotePort(_ name: String) -> HSMessagePort?",
+          "rawDocumentation": "Create a remote (client) message port\n- Parameter name: The name of the remote port to connect to\n- Returns: The created message port, or nil if the port doesn't exist",
+          "description": "Create a remote (client) message port",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "The name of the remote port to connect to"
+            }
+          ],
+          "returns": {
+            "type": "HSMessagePort?",
+            "description": "The created message port, or nil if the port doesn't exist"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/IPCModule.swift",
+          "lineNumber": 24
+        },
+        {
+          "name": "cliInstall",
+          "signature": "func cliInstall(_ path: String?, _ silent: Bool) -> Bool",
+          "rawDocumentation": "Install hs2 CLI tool via symlinks\n- Parameters:\n  - path: The installation prefix path, or nil for /usr/local\n  - silent: If true, suppress log messages\n- Returns: True if installation succeeded",
+          "description": "Install hs2 CLI tool via symlinks",
+          "params": [
+            {
+              "name": "path",
+              "type": "String?",
+              "description": "The installation prefix path, or nil for /usr/local"
+            },
+            {
+              "name": "silent",
+              "type": "Bool",
+              "description": "If true, suppress log messages"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "True if installation succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/IPCModule.swift",
+          "lineNumber": 31
+        },
+        {
+          "name": "cliUninstall",
+          "signature": "func cliUninstall(_ path: String?, _ silent: Bool) -> Bool",
+          "rawDocumentation": "Uninstall hs2 CLI tool symlinks\n- Parameters:\n  - path: The installation prefix path, or nil for /usr/local\n  - silent: If true, suppress log messages\n- Returns: True if uninstallation succeeded",
+          "description": "Uninstall hs2 CLI tool symlinks",
+          "params": [
+            {
+              "name": "path",
+              "type": "String?",
+              "description": "The installation prefix path, or nil for /usr/local"
+            },
+            {
+              "name": "silent",
+              "type": "Bool",
+              "description": "If true, suppress log messages"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "True if uninstallation succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/IPCModule.swift",
+          "lineNumber": 38
+        },
+        {
+          "name": "cliStatus",
+          "signature": "func cliStatus(_ path: String?, _ silent: Bool) -> Bool",
+          "rawDocumentation": "Check hs2 CLI tool installation status\n- Parameters:\n  - path: The installation prefix path, or nil for /usr/local\n  - silent: If true, suppress log messages\n- Returns: True if hs2 CLI is installed correctly",
+          "description": "Check hs2 CLI tool installation status",
+          "params": [
+            {
+              "name": "path",
+              "type": "String?",
+              "description": "The installation prefix path, or nil for /usr/local"
+            },
+            {
+              "name": "silent",
+              "type": "Bool",
+              "description": "If true, suppress log messages"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "True if hs2 CLI is installed correctly"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/IPCModule.swift",
+          "lineNumber": 45
+        }
+      ],
+      "properties": [
+        {
+          "name": "name",
+          "signature": "var name: String { get }",
+          "rawDocumentation": "Port name",
+          "description": "Port name",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSMessagePort.swift",
+          "lineNumber": 16
+        },
+        {
+          "name": "isValid",
+          "signature": "var isValid: Bool { get }",
+          "rawDocumentation": "Check if port is valid",
+          "description": "Check if port is valid",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSMessagePort.swift",
+          "lineNumber": 19
+        },
+        {
+          "name": "isRemote",
+          "signature": "var isRemote: Bool { get }",
+          "rawDocumentation": "Check if port is remote (vs local)",
+          "description": "Check if port is remote (vs local)",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSMessagePort.swift",
+          "lineNumber": 22
+        }
+      ],
+      "types": [],
+      "description": "Protocol for JavaScript export",
+      "rawDocumentation": "Protocol for JavaScript export"
     },
     {
       "name": "hs.osascript",
@@ -6563,5 +6794,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-03-20T23:06:22.532Z"
+  "generatedAt": "2026-04-04T18:18:22.101Z"
 }

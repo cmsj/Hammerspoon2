@@ -30,6 +30,7 @@ class MockFileSystem: FileSystemProtocol {
         return exists
     }
 
+
     func contentsOf(url: URL) throws -> String {
         if shouldThrowOnContentsOf {
             throw contentsOfError ?? NSError(domain: "MockFileSystem", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error reading file"])
