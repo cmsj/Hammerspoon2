@@ -17,6 +17,9 @@ let EX_NOINPUT: Int32 = 66
 let EX_UNAVAILABLE: Int32 = 69
 let EX_TEMPFAIL: Int32 = 75
 
+/// Default IPC timeout in seconds, used for send and receive.
+let DEFAULT_TIMEOUT: TimeInterval = 4.0
+
 // MARK: - Argument Parsing
 
 var interactive = false
@@ -27,7 +30,7 @@ var remoteName = "Hammerspoon2"
 var customArgs: [String] = []
 var useColors: Bool? = nil
 var quietMode = false
-var timeout: TimeInterval = 4.0
+var timeout: TimeInterval = DEFAULT_TIMEOUT
 
 // Parse arguments
 var i = 1
@@ -109,7 +112,7 @@ while i < CommandLine.arguments.count {
               -n              Disable colored output
               -N              Force colored output
               -q              Quiet mode (suppress output)
-              -t <seconds>    IPC timeout (default: 4.0)
+              -t <seconds>    IPC timeout (default: \(DEFAULT_TIMEOUT))
               -h, --help      Show this help
 
             Arguments after -- are passed to the script as custom arguments.

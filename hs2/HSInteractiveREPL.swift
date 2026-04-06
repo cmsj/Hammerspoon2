@@ -15,6 +15,10 @@ class HSInteractiveREPL {
 
     let client: HSClient
 
+    /// Timeout for tab completion IPC queries (seconds).
+    /// Shorter than the default command timeout since completions should feel instant.
+    private static let completionTimeout: CFTimeInterval = 1.0
+
     // Global state for completion (needed for C callback).
     // Single-REPL assumption: only one HSInteractiveREPL instance exists at a time.
     private static var currentCompletions: [String] = []
@@ -116,7 +120,7 @@ class HSInteractiveREPL {
             let query = "JSON.stringify(completionsForInputString(\(jsonStr)))"
             let message = "\(client.localName)\0\(query)"
 
-            if let responseData = client.sendToRemote(message, msgID: MSGID_QUERY, wantResponse: true, timeout: 1.0),
+            if let responseData = client.sendToRemote(message, msgID: MSGID_QUERY, wantResponse: true, timeout: HSInteractiveREPL.completionTimeout),
                let response = String(data: responseData as Data, encoding: .utf8) {
                 // Parse JSON response
                 if let jsonData = response.data(using: .utf8),
