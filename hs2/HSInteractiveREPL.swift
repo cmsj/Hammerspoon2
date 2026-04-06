@@ -116,7 +116,7 @@ class HSInteractiveREPL {
             let query = "JSON.stringify(completionsForInputString(\(jsonStr)))"
             let message = "\(client.localName)\0\(query)"
 
-            if let responseData = client.sendToRemote(message, msgID: MSGID_QUERY, wantResponse: true),
+            if let responseData = client.sendToRemote(message, msgID: MSGID_QUERY, wantResponse: true, timeout: 1.0),
                let response = String(data: responseData as Data, encoding: .utf8) {
                 // Parse JSON response
                 if let jsonData = response.data(using: .utf8),

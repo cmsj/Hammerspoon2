@@ -268,7 +268,7 @@ class HSClient {
 
     // MARK: - Message Sending
 
-    func sendToRemote(_ message: String, msgID: Int32, wantResponse: Bool) -> CFData? {
+    func sendToRemote(_ message: String, msgID: Int32, wantResponse: Bool, timeout: CFTimeInterval? = nil) -> CFData? {
         guard let remote = remotePort else {
             fputs("Error: No remote port connection\n", stderr)
             return nil
@@ -276,6 +276,8 @@ class HSClient {
 
         guard let messageData = message.data(using: .utf8) else { return nil }
         let cfData = messageData as CFData
+        let send = timeout ?? sendTimeout
+        let recv = timeout ?? recvTimeout
 
         let result: Int32
         var returnDataPtr: Unmanaged<CFData>?
@@ -286,8 +288,8 @@ class HSClient {
                     remote,
                     msgID,
                     cfData,
-                    sendTimeout,
-                    recvTimeout,
+                    send,
+                    recv,
                     CFRunLoopMode.defaultMode.rawValue as CFString,
                     ptr
                 )
@@ -297,7 +299,7 @@ class HSClient {
                 remote,
                 msgID,
                 cfData,
-                sendTimeout,
+                send,
                 0,
                 nil,
                 nil
