@@ -139,11 +139,14 @@ var __ipcDefaultHandler = function(port, msgID, data) {
 
             const trimmedCode = code.trim();
             const isMultiline = trimmedCode.includes('\n');
+            const hasStatements = trimmedCode.includes(';');
 
-            // For single-line code, try implicit return first (e.g. "1+2" becomes "return 1+2").
-            // For multiline code, skip implicit return — JavaScript ASI would treat
-            // "return \n ..." as "return undefined;" and silently discard the rest.
-            if (!isMultiline) {
+            // Try implicit return only for single-line, single-expression code
+            // (e.g. "1+2" becomes "return 1+2").
+            // Skip implicit return for:
+            // - Multiline code: JavaScript ASI turns "return \n ..." into "return undefined;"
+            // - Code with semicolons: "return print(1); print(2)" would exit after print(1)
+            if (!isMultiline && !hasStatements) {
                 try {
                     const fn = new Function('_cli', 'print', 'return ' + trimmedCode);
                     result = fn(instance._cli, instance.print);

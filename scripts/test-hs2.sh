@@ -114,27 +114,52 @@ stop_hammerspoon() {
 run_test() {
     local test_name="$1"
     local expected_exit_code="$2"
-    shift 2
+    local expected_output="$3"
+    shift 3
 
     TESTS_RUN=$((TESTS_RUN + 1))
     echo -n "  Test $TESTS_RUN: $test_name ... "
 
-    local output
+    local stdout_output
+    local stderr_output
     local exit_code
 
     set +e
-    output=$("$@" 2>&1)
+    stdout_output=$("$@" 2>/tmp/hs2_test_stderr)
     exit_code=$?
+    stderr_output=$(cat /tmp/hs2_test_stderr)
     set -e
 
-    if [ $exit_code -eq $expected_exit_code ]; then
+    local failed=0
+    local failure_reasons=""
+
+    if [ $exit_code -ne $expected_exit_code ]; then
+        failed=1
+        failure_reasons="    Expected exit code: $expected_exit_code, got: $exit_code\n"
+    fi
+
+    if [ -n "$expected_output" ]; then
+        # Check stdout for success tests, stderr for error tests
+        if [ $expected_exit_code -eq 0 ]; then
+            if [ "$stdout_output" != "$expected_output" ]; then
+                failed=1
+                failure_reasons="${failure_reasons}    Expected output: $expected_output\n    Actual output:   $stdout_output\n"
+            fi
+        else
+            if ! echo "$stderr_output" | grep -q "$expected_output"; then
+                failed=1
+                failure_reasons="${failure_reasons}    Expected stderr to contain: $expected_output\n    Actual stderr: $stderr_output\n"
+            fi
+        fi
+    fi
+
+    if [ $failed -eq 0 ]; then
         echo -e "${GREEN}PASS${NC}"
         TESTS_PASSED=$((TESTS_PASSED + 1))
         return 0
     else
         echo -e "${RED}FAIL${NC}"
-        echo "    Expected exit code: $expected_exit_code, got: $exit_code"
-        echo "    Output: $output"
+        echo -e "$failure_reasons"
         TESTS_FAILED=$((TESTS_FAILED + 1))
         return 1
     fi
@@ -143,83 +168,111 @@ run_test() {
 run_fixture_test() {
     local fixture_file="$1"
     local test_name="$(basename "$fixture_file" .js)"
+    local expected_file="${fixture_file%.js}.expected"
 
     TESTS_RUN=$((TESTS_RUN + 1))
     echo -n "  Fixture: $test_name ... "
 
-    local output
+    local stdout_output
+    local stderr_output
     local exit_code
 
     set +e
-    output=$("$HS2_BINARY" -q "$fixture_file" 2>&1)
+    stdout_output=$("$HS2_BINARY" "$fixture_file" 2>/tmp/hs2_test_stderr)
     exit_code=$?
+    stderr_output=$(cat /tmp/hs2_test_stderr)
     set -e
+
+    local failed=0
+    local failure_reasons=""
 
     # Special handling for error_test.js
     # JS errors return exit 65 (EX_DATAERR), errors reported via stderr
     if [[ "$test_name" == "error_test" ]]; then
-        if [ $exit_code -eq 65 ]; then
+        if [ $exit_code -ne 65 ]; then
+            failed=1
+            failure_reasons="    Expected exit 65, got $exit_code\n"
+        fi
+        if ! echo "$stderr_output" | grep -q "Error"; then
+            failed=1
+            failure_reasons="${failure_reasons}    Expected stderr to contain 'Error'\n    Actual stderr: $stderr_output\n"
+        fi
+        if [ $failed -eq 0 ]; then
             echo -e "${GREEN}PASS${NC} (JS error reported via stderr, exit 65)"
             TESTS_PASSED=$((TESTS_PASSED + 1))
-            return 0
         else
-            echo -e "${RED}FAIL${NC} (expected exit 65, got $exit_code)"
+            echo -e "${RED}FAIL${NC}"
+            echo -e "$failure_reasons"
             TESTS_FAILED=$((TESTS_FAILED + 1))
-            return 1
+        fi
+        return $failed
+    fi
+
+    # Check exit code
+    if [ $exit_code -ne 0 ]; then
+        failed=1
+        failure_reasons="    Exit code: $exit_code\n    Output: $stdout_output\n"
+    fi
+
+    # Check output against .expected file if it exists
+    if [ -f "$expected_file" ]; then
+        local expected_output
+        expected_output=$(cat "$expected_file")
+        if [ "$stdout_output" != "$expected_output" ]; then
+            failed=1
+            failure_reasons="${failure_reasons}    Output mismatch:\n    Expected: $(head -3 "$expected_file")\n    Actual:   $(echo "$stdout_output" | head -3)\n"
         fi
     fi
 
-    if [ $exit_code -eq 0 ]; then
+    if [ $failed -eq 0 ]; then
         echo -e "${GREEN}PASS${NC}"
         TESTS_PASSED=$((TESTS_PASSED + 1))
-        return 0
     else
         echo -e "${RED}FAIL${NC}"
-        echo "    Exit code: $exit_code"
-        echo "    Output: $output"
+        echo -e "$failure_reasons"
         TESTS_FAILED=$((TESTS_FAILED + 1))
-        return 1
     fi
+    return $failed
 }
 
 run_basic_tests() {
     echo ""
     log_info "Running basic functionality tests..."
 
-    run_test "Simple print" 0 \
-        "$HS2_BINARY" -q -c 'print("test")'
+    run_test "Simple print" 0 "test" \
+        "$HS2_BINARY" -c 'print("test")'
 
-    run_test "Math operations" 0 \
-        "$HS2_BINARY" -q -c 'print(2 + 2)'
+    run_test "Math operations" 0 "4" \
+        "$HS2_BINARY" -c 'print(2 + 2)'
 
-    run_test "Multiple statements" 0 \
-        "$HS2_BINARY" -q -c 'print(1); print(2); print(3)'
+    run_test "Multiple statements" 0 "$(printf '1\n2\n3')" \
+        "$HS2_BINARY" -c 'print(1); print(2); print(3)'
 
-    run_test "Function definition" 0 \
-        "$HS2_BINARY" -q -c 'function f() { return 42; } print(f());'
+    run_test "Function definition" 0 "42" \
+        "$HS2_BINARY" -c 'function f() { return 42; } print(f());'
 
-    run_test "hs namespace access" 0 \
-        "$HS2_BINARY" -q -c 'print(typeof hs)'
+    run_test "hs namespace access" 0 "object" \
+        "$HS2_BINARY" -c 'print(typeof hs)'
 
-    run_test "hs.timer access" 0 \
-        "$HS2_BINARY" -q -c 'print(typeof hs.timer)'
+    run_test "hs.timer access" 0 "object" \
+        "$HS2_BINARY" -c 'print(typeof hs.timer)'
 
-    run_test "hs.timer helper" 0 \
-        "$HS2_BINARY" -q -c 'print(hs.timer.minutes(5))'
+    run_test "hs.timer helper" 0 "300" \
+        "$HS2_BINARY" -c 'print(hs.timer.minutes(5))'
 }
 
 run_error_tests() {
     echo ""
     log_info "Running error handling tests..."
 
-    run_test "Syntax error detection" 65 \
-        "$HS2_BINARY" -q -c 'invalid syntax;;'
+    run_test "Syntax error detection" 65 "SyntaxError" \
+        "$HS2_BINARY" -c 'invalid syntax;;'
 
-    run_test "Runtime error detection" 65 \
-        "$HS2_BINARY" -q -c 'throw new Error("test");'
+    run_test "Runtime error detection" 65 "Error: test" \
+        "$HS2_BINARY" -c 'throw new Error("test");'
 
-    run_test "Undefined variable" 65 \
-        "$HS2_BINARY" -q -c 'print(undefinedVar);'
+    run_test "Undefined variable" 65 "ReferenceError" \
+        "$HS2_BINARY" -c 'print(undefinedVar);'
 }
 
 run_fixture_tests() {
