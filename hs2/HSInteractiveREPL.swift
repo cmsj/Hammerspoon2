@@ -95,7 +95,11 @@ class HSInteractiveREPL {
         // Convert to Swift string
         let inputText = String(cString: text)
 
-        // Query Hammerspoon for completions
+        // Query Hammerspoon for completions.
+        // This is a synchronous IPC call from the readline callback, which runs on the
+        // main thread. This is safe because the IPC run loop lives on a separate thread
+        // (hs2-ipc-client) — the sendToRemote call blocks waiting for a response but
+        // does not re-enter the main thread's run loop.
         if let client = HSInteractiveREPL.completionClient {
             // JSON-encode the input to safely embed it in a JS string literal
             guard let jsonData = try? JSONSerialization.data(withJSONObject: [inputText]),
