@@ -358,7 +358,7 @@ class HSClient {
     // MARK: - Helpers
 
     func getBanner() -> String {
-        let hint = "Use 'var' for persistent bindings (let/const are scoped per entry)"
+        let hint = "Assign to globalThis for persistent bindings (e.g. globalThis.x = 42)"
         if useColors {
             return "\(colorBanner)Hammerspoon 2 REPL\(colorReset)\n\(hint)\n"
         } else {

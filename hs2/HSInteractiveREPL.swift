@@ -97,9 +97,13 @@ class HSInteractiveREPL {
 
         // Query Hammerspoon for completions.
         // This is a synchronous IPC call from the readline callback, which runs on the
-        // main thread. This is safe because the IPC run loop lives on a separate thread
-        // (hs2-ipc-client) — the sendToRemote call blocks waiting for a response but
-        // does not re-enter the main thread's run loop.
+        // main thread. CFMessagePortSendRequest internally spins the calling thread's
+        // run loop while waiting for a reply, but this is safe because the main thread
+        // has no CFRunLoop sources registered — readline owns the thread, so there is
+        // nothing to re-enter. The IPC run loop for receiving messages lives on a
+        // separate thread (hs2-ipc-client).
+        // Note: if Hammerspoon is unresponsive, this blocks for up to sendTimeout +
+        // recvTimeout (default 8s total).
         if let client = HSInteractiveREPL.completionClient {
             // JSON-encode the input to safely embed it in a JS string literal
             guard let jsonData = try? JSONSerialization.data(withJSONObject: [inputText]),
