@@ -646,6 +646,287 @@ declare class HSApplication {
 }
 
 /**
+ * Module for discovering and controlling audio devices.
+## Finding devices
+```javascript
+const all = hs.audiodevice.all();
+const out = hs.audiodevice.defaultOutputDevice();
+const mic = hs.audiodevice.defaultInputDevice();
+```
+## Selecting a device
+```javascript
+const usb = hs.audiodevice.findDeviceByName("USB Audio CODEC");
+if (usb) usb.setDefaultOutputDevice();
+```
+## Watching for system-level changes
+```javascript
+hs.audiodevice.setWatcherCallback(function(event) {
+    if (event === "dOut") console.log("Default output changed");
+    if (event === "dev+") console.log("A device was added");
+});
+hs.audiodevice.startWatcher();
+```
+ */
+declare namespace hs.audiodevice {
+    /**
+     * All audio devices attached to the system.
+     * @returns An array of HSAudioDevice objects
+     */
+    function all(): HSAudioDevice[];
+
+    /**
+     * All audio devices that have at least one output stream.
+     * @returns An array of HSAudioDevice objects
+     */
+    function allOutputDevices(): HSAudioDevice[];
+
+    /**
+     * All audio devices that have at least one input stream.
+     * @returns An array of HSAudioDevice objects
+     */
+    function allInputDevices(): HSAudioDevice[];
+
+    /**
+     * The current system default output device.
+     * @returns An HSAudioDevice, or null if none is set
+     */
+    function defaultOutputDevice(): HSAudioDevice | undefined;
+
+    /**
+     * The current system default input device.
+     * @returns An HSAudioDevice, or null if none is set
+     */
+    function defaultInputDevice(): HSAudioDevice | undefined;
+
+    /**
+     * The current system alert sound device.
+     * @returns An HSAudioDevice, or null if none is set
+     */
+    function defaultEffectDevice(): HSAudioDevice | undefined;
+
+    /**
+     * Find the first audio device whose name matches the given string.
+     * @param name The device name to search for
+     * @returns An HSAudioDevice if found, null otherwise
+     */
+    function findDeviceByName(name: string): HSAudioDevice | undefined;
+
+    /**
+     * Find the audio device with the given unique identifier.
+     * @param uid The device UID to search for
+     * @returns An HSAudioDevice if found, null otherwise
+     */
+    function findDeviceByUID(uid: string): HSAudioDevice | undefined;
+
+    /**
+     * Set the callback invoked when the system audio configuration changes.
+     * @param callback A JavaScript function that receives an event name string
+     */
+    function setWatcherCallback(callback: JSValue): void;
+
+    /**
+     * Start the system-level audio hardware watcher.
+     */
+    function startWatcher(): void;
+
+    /**
+     * Stop the system-level audio hardware watcher.
+     */
+    function stopWatcher(): void;
+
+    /**
+     * Whether the system-level watcher is currently running.
+     * @returns `true` if the watcher is active
+     */
+    function watcherIsActive(): boolean;
+
+}
+
+/**
+ * An audio device attached to the system.
+Obtain instances via ``hs.audiodevice`` module methods — do not instantiate directly.
+## Getting and setting volume
+```javascript
+const dev = hs.audiodevice.defaultOutputDevice();
+if (dev) {
+    console.log(dev.volume);    // 0.0 – 1.0, or null
+    dev.volume = 0.5;
+}
+```
+## Watching for changes
+```javascript
+const dev = hs.audiodevice.defaultOutputDevice();
+if (dev) {
+    dev.setWatcherCallback(function(event) {
+        console.log("Device event:", event);
+    });
+    dev.startWatcher();
+}
+```
+ */
+declare class HSAudioDevice {
+    /**
+     * The current output data source as `{ id, name }`, or `null` if unavailable.
+     * @returns A dictionary containing the id and name of the current output data source
+     */
+    static currentOutputDataSource(): NSDictionary | undefined;
+
+    /**
+     * The current input data source as `{ id, name }`, or `null` if unavailable.
+     * @returns A dictionary containing the id and name of the current input data source
+     */
+    static currentInputDataSource(): NSDictionary | undefined;
+
+    /**
+     * All available output data sources as an array of `{ id, name }` objects.
+     * @returns A dictionary containing the ids and names of all available output data sources
+     */
+    static outputDataSources(): NSDictionary[];
+
+    /**
+     * All available input data sources as an array of `{ id, name }` objects.
+     * @returns A dictionary containing the ids and names of all available input data sources
+     */
+    static inputDataSources(): NSDictionary[];
+
+    /**
+     * Select an output data source by its numeric ID.
+     * @param sourceID The `id` value from ``outputDataSources()``
+     * @returns `true` on success
+     */
+    static setCurrentOutputDataSource(sourceID: number): boolean;
+
+    /**
+     * Select an input data source by its numeric ID.
+     * @param sourceID The `id` value from ``inputDataSources()``
+     * @returns `true` on success
+     */
+    static setCurrentInputDataSource(sourceID: number): boolean;
+
+    /**
+     * Make this device the system default output device.
+     * @returns `true` on success
+     */
+    static setDefaultOutputDevice(): boolean;
+
+    /**
+     * Make this device the system default input device.
+     * @returns `true` on success
+     */
+    static setDefaultInputDevice(): boolean;
+
+    /**
+     * Make this device the system alert sound (effect) device.
+     * @returns `true` on success
+     */
+    static setDefaultEffectDevice(): boolean;
+
+    /**
+     * Set the callback invoked when a property of this device changes.
+     * @param callback A JavaScript function that receives an event name string
+     */
+    static setWatcherCallback(callback: JSValue): void;
+
+    /**
+     * Start watching this device for property changes.
+     */
+    static startWatcher(): void;
+
+    /**
+     * Stop watching this device for property changes.
+     */
+    static stopWatcher(): void;
+
+    /**
+     * Whether the per-device watcher is currently active.
+     * @returns `true` if the watcher is running
+     */
+    static watcherIsActive(): boolean;
+
+    /**
+     * The CoreAudio object ID of this device.
+     */
+    id: number;
+
+    /**
+     * The human-readable name of this device (e.g. `"Built-in Output"`).
+     */
+    name: string;
+
+    /**
+     * The persistent unique identifier for this device.
+     */
+    uid: string;
+
+    /**
+     * Whether this device has output streams (can play audio).
+     */
+    isOutput: boolean;
+
+    /**
+     * Whether this device has input streams (can record audio).
+     */
+    isInput: boolean;
+
+    /**
+     * The transport mechanism: `"built-in"`, `"usb"`, `"bluetooth"`, `"bluetooth-le"`,
+`"hdmi"`, `"display-port"`, `"firewire"`, `"airplay"`, `"avb"`,
+`"thunderbolt"`, `"virtual"`, `"aggregate"`, `"pci"`, or `"unknown"`.
+     */
+    transportType: string;
+
+    /**
+     * Number of output channels, or 0 if the device has no output.
+     */
+    outputChannels: number;
+
+    /**
+     * Number of input channels, or 0 if the device has no input.
+     */
+    inputChannels: number;
+
+    /**
+     * Output volume scalar in the range `0.0`–`1.0`, or `null` if the device has
+no controllable output volume. Setting `null` is a no-op.
+     */
+    volume: NSNumber | undefined;
+
+    /**
+     * Whether output is muted. Always `false` if the device has no mutable output.
+     */
+    muted: boolean;
+
+    /**
+     * Output stereo balance in the range `0.0` (full left)–`1.0` (full right),
+or `null` if balance control is not available.
+     */
+    balance: NSNumber | undefined;
+
+    /**
+     * Input (microphone) volume scalar in the range `0.0`–`1.0`, or `null` if
+the device has no controllable input volume.
+     */
+    inputVolume: NSNumber | undefined;
+
+    /**
+     * Whether input is muted. Always `false` if the device has no mutable input.
+     */
+    inputMuted: boolean;
+
+    /**
+     * The current nominal sample rate in Hz (e.g. `44100`), or `null` if unknown.
+     */
+    sampleRate: NSNumber | undefined;
+
+    /**
+     * All sample rates (in Hz) that this device supports.
+For devices that support a range, both the minimum and maximum are included.
+     */
+    availableSampleRates: NSNumber[];
+
+}
+
+/**
  * # Accessibility API Module
 ## Basic Usage
 ```js
@@ -1234,37 +1515,9 @@ point to paths that do not yet exist.
 
     /**
      * Replace all Finder tags on a file or directory.
-     * @param path Path to the file or directory. `~` is expanded.
-     * @param newTags Array of tag name strings.
-     * @returns `true` on success, `false` on failure.
-     */
-    function setTags(path: string, newTags: NSArray): boolean;
-
-    /**
-     * Add Finder tags to a file or directory (union with existing tags).
-     * @param path Path to the file or directory. `~` is expanded.
-     * @param newTags Array of tag name strings to add.
-     * @returns `true` on success, `false` on failure.
-     */
-    function addTags(path: string, newTags: NSArray): boolean;
-
-    /**
-     * Remove specific Finder tags from a file or directory.
-Tags not currently present are silently ignored.
-     * @param path Path to the file or directory. `~` is expanded.
-     * @param tagsToRemove Array of tag name strings to remove.
-     * @returns `true` on success, `false` on failure.
-     */
-    function removeTags(path: string, tagsToRemove: NSArray): boolean;
-
-    /**
-     * Return the Uniform Type Identifier for the file at the given path.
-```javascript
-hs.fs.fileUTI("/etc/hosts")   // → "public.plain-text"
-hs.fs.fileUTI("/tmp/foo.png") // → "public.png"
-```
+This function is only available on macOS Tahoe (26) or later.
      * @param path Path to the file.
-     * @returns UTI string, or `null` on failure.
+     * @returns `true` on success, `false` on failure.
      */
     function fileUTI(path: string): string | undefined;
 
