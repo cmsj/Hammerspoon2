@@ -115,7 +115,8 @@ import JavaScriptCore
     // MARK: - Device enumeration
 
     @objc func all() -> [HSAudioDevice] {
-        allDeviceIDs().map { HSAudioDeviceManager.shared.device(for: $0) }
+        HSAudioDeviceManager.shared.prune()
+        return allDeviceIDs().map { HSAudioDeviceManager.shared.device(for: $0) }
     }
 
     @objc func allOutputDevices() -> [HSAudioDevice] { all().filter { $0.isOutput } }
