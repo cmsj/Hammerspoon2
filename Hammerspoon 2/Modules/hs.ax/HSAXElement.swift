@@ -262,7 +262,6 @@ import AXSwift
             if let uiElement = value as? UIElement {
                 return HSAXElement(element: uiElement)
             }
-            }
             if let elements = value as? [UIElement] {
                 return elements.map { HSAXElement(element: $0) }
             }
