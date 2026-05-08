@@ -259,8 +259,9 @@ import AXSwift
         }
 
         func bridgeValue(_ value: Any) -> Any {
-            if let element = value as? UIElement {
-                return HSAXElement(element: element)
+            if let uiElement = value as? UIElement {
+                return HSAXElement(element: uiElement)
+            }
             }
             if let elements = value as? [UIElement] {
                 return elements.map { HSAXElement(element: $0) }
