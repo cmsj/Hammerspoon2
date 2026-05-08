@@ -316,24 +316,25 @@ class JSTestHarness {
     }
 
     private func setupConsoleLogging() {
-        let console = JSValue(newObjectIn: context)!
+        // Native handlers — @convention(block) with a plain String so JSCore treats
+        // them as callable JS functions, not bare NSObjects.
+        let logHandler: @convention(block) (String) -> Void = { print("📝 [JS Console]: \($0)") }
+        let warnHandler: @convention(block) (String) -> Void = { print("⚠️ [JS Console]: \($0)") }
+        let errorHandler: @convention(block) (String) -> Void = { print("❌ [JS Console]: \($0)") }
 
-        console.setObject({ (args: [Any]) in
-            let message = args.map { "\($0)" }.joined(separator: " ")
-            print("📝 [JS Console]: \(message)")
-        }, forKeyedSubscript: "log" as NSString)
+        context.setObject(logHandler, forKeyedSubscript: "__hs_console_log" as NSString)
+        context.setObject(warnHandler, forKeyedSubscript: "__hs_console_warn" as NSString)
+        context.setObject(errorHandler, forKeyedSubscript: "__hs_console_error" as NSString)
 
-        console.setObject({ (args: [Any]) in
-            let message = args.map { "\($0)" }.joined(separator: " ")
-            print("⚠️ [JS Console]: \(message)")
-        }, forKeyedSubscript: "warn" as NSString)
-
-        console.setObject({ (args: [Any]) in
-            let message = args.map { "\($0)" }.joined(separator: " ")
-            print("❌ [JS Console]: \(message)")
-        }, forKeyedSubscript: "error" as NSString)
-
-        context.setObject(console, forKeyedSubscript: "console" as NSString)
+        // Define `console` as a real JS object so multi-argument calls work and
+        // template literals are handled correctly.
+        context.evaluateScript("""
+        var console = {
+            log:   function() { __hs_console_log(Array.prototype.join.call(arguments, ' ')); },
+            warn:  function() { __hs_console_warn(Array.prototype.join.call(arguments, ' ')); },
+            error: function() { __hs_console_error(Array.prototype.join.call(arguments, ' ')); }
+        };
+        """)
     }
 
     private func setupTestHelpers() {
