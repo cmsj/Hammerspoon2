@@ -83,8 +83,28 @@ import JavaScriptCore
 /// | `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |
 /// | `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |
 /// | `interruptionLevel` | string | `"active"` | `"passive"`, `"active"`, or `"timeSensitive"` — controls Focus/DND behaviour (macOS 12+) |
+/// | `trigger` | object | — | When to deliver the notification (see below). Omit for immediate delivery. |
 /// | `actions` | array | — | Action buttons (see below) |
 /// | `callback` | function | — | Invoked when the user interacts with the notification |
+///
+/// ## Triggers
+///
+/// Pass a `trigger` object in `new()`'s options to schedule the notification instead of delivering it
+/// **Time interval** — deliver after a fixed delay in seconds (minimum 60 s):
+/// ```js
+/// trigger: { type: "timeInterval", interval: 300 }
+/// ```
+///
+/// **Calendar** — deliver at a specific date/time. Provide either a JS `Date` object or individual
+/// date-component keys; any omitted component matches every value:
+/// ```js
+/// // At a specific moment
+/// trigger: { type: "calendar", date: new Date("2026-06-01T09:00:00") }
+///
+/// // At 09:00 on the next day that matches (e.g. next Monday, weekday 2)
+/// trigger: { type: "calendar", weekday: 2, hour: 9, minute: 0 }
+/// ```
+/// Supported component keys: `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`.
 ///
 /// ## Action objects
 ///
@@ -225,6 +245,9 @@ import JavaScriptCore
             }
         }
 
+        // Parse the optional trigger.
+        let trigger = Self.buildTrigger(from: dict["trigger"] as? [AnyHashable: Any])
+
         // Build action buttons into a UNNotificationCategory.
         // The category is NOT registered here — HSNotification.send() registers it atomically
         // with the notification request to eliminate the race between registration and delivery.
@@ -281,8 +304,43 @@ import JavaScriptCore
                 self?.storeCallback(identifier: notifId, callback: cb)
             }
         )
+        notification.trigger = trigger
         notification.pendingCategory = pendingCategory
         return notification
+    }
+
+    // MARK: - Trigger builder
+
+    private static func buildTrigger(from dict: [AnyHashable: Any]?) -> UNNotificationTrigger? {
+        guard let dict, let type = dict["type"] as? String else { return nil }
+        switch type {
+        case "timeInterval":
+            guard let interval = dict["interval"] as? TimeInterval, interval > 0 else {
+                AKError("hs.notify: trigger.type 'timeInterval' requires 'interval' > 0")
+                return nil
+            }
+            return UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+
+        case "calendar":
+            var components = DateComponents()
+            if let date = (dict["date"] as? NSDate).map({ $0 as Date }) {
+                let cal = Calendar.current
+                components = cal.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+            } else {
+                if let v = dict["year"]    as? Int { components.year    = v }
+                if let v = dict["month"]   as? Int { components.month   = v }
+                if let v = dict["day"]     as? Int { components.day     = v }
+                if let v = dict["hour"]    as? Int { components.hour    = v }
+                if let v = dict["minute"]  as? Int { components.minute  = v }
+                if let v = dict["second"]  as? Int { components.second  = v }
+                if let v = dict["weekday"] as? Int { components.weekday = v }
+            }
+            return UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+
+        default:
+            AKError("hs.notify: unknown trigger type '\(type)' — expected 'timeInterval' or 'calendar'")
+            return nil
+        }
     }
 
     @objc func removeAllDelivered() {

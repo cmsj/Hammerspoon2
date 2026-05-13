@@ -55,6 +55,9 @@ import JavaScriptCore
     // and delivery (trigger: nil fires almost immediately).
     var pendingCategory: UNNotificationCategory?
 
+    /// The trigger that controls when the notification is delivered. `nil` means deliver immediately.
+    var trigger: UNNotificationTrigger?
+
     init(identifier: String,
          content: UNMutableNotificationContent,
          callback: JSValue?,
@@ -70,7 +73,7 @@ import JavaScriptCore
             registerCallback?(identifier, cb)
         }
 
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         let center = UNUserNotificationCenter.current()
         let notifId = identifier
 
