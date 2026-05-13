@@ -43,6 +43,21 @@ import AVFoundation
     /// Request Microphone permission (shows system dialog if not granted)
     /// - Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied
     @objc func requestMicrophone() -> JSPromise?
+
+    /// Check if the app has permission to display notifications.
+    ///
+    /// The result is cached from the last request or check; the cache is refreshed asynchronously,
+    /// so the very first call in a session may return `false` before the cached value is populated.
+    /// Use `requestNotifications()` on first launch to ensure the result is accurate.
+    /// - Returns: true if notification permission is granted
+    @objc func checkNotifications() -> Bool
+
+    /// Request notification permission (shows the system dialog if the user has not yet decided).
+    ///
+    /// It is safe to call this on every launch — the dialog only appears once; subsequent calls
+    /// resolve immediately with the previously granted or denied state.
+    /// - Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied
+    @objc func requestNotifications() -> JSPromise?
 }
 
 // MARK: - Implementation
@@ -104,6 +119,22 @@ import AVFoundation
     @objc func requestMicrophone() -> JSPromise? {
         return JSEngine.shared.createPromise { holder in
             PermissionsManager.shared.request(.microphone) { result in
+                Task { @MainActor in
+                    holder.resolveWith(result)
+                }
+            }
+        }
+    }
+
+    // MARK: - Notifications
+
+    @objc func checkNotifications() -> Bool {
+        return PermissionsManager.shared.check(.notifications)
+    }
+
+    @objc func requestNotifications() -> JSPromise? {
+        return JSEngine.shared.createPromise { holder in
+            PermissionsManager.shared.request(.notifications) { result in
                 Task { @MainActor in
                     holder.resolveWith(result)
                 }

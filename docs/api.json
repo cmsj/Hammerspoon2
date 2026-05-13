@@ -392,47 +392,37 @@
         },
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ event: String, _ listener: JSValue)",
-          "rawDocumentation": "Create a watcher for application events\n- Parameters:\n   - event: The event type to listen for\n   - listener: A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object",
+          "signature": "func addWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Create a watcher for application events\n- Parameters:\n   - listener: A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object",
           "description": "Create a watcher for application events",
           "params": [
             {
-              "name": "event",
-              "type": "String",
-              "description": "The event type to listen for"
-            },
-            {
               "name": "listener",
               "type": "JSValue",
-              "description": "A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object"
+              "description": "A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object"
             }
           ],
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
-          "lineNumber": 80
+          "lineNumber": 79
         },
         {
           "name": "removeWatcher",
-          "signature": "func removeWatcher(_ event: String, _ listener: JSValue)",
-          "rawDocumentation": "Remove a watcher for application events\n- Parameters:\n  - event: The event type to stop listening for\n  - listener: The javascript function/lambda that was previously being used to handle the event",
+          "signature": "func removeWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Remove a watcher for application events\n- Parameters:\n  - listener: The javascript function/lambda that was previously being used to handle events",
           "description": "Remove a watcher for application events",
           "params": [
             {
-              "name": "event",
-              "type": "String",
-              "description": "The event type to stop listening for"
-            },
-            {
               "name": "listener",
               "type": "JSValue",
-              "description": "The javascript function/lambda that was previously being used to handle the event"
+              "description": "The javascript function/lambda that was previously being used to handle events"
             }
           ],
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
-          "lineNumber": 86
+          "lineNumber": 84
         }
       ],
       "properties": [],
@@ -2863,6 +2853,115 @@
       "rawDocumentation": "Module for creating and managing system-wide hotkeys"
     },
     {
+      "name": "hs.notify",
+      "methods": [
+        {
+          "name": "show",
+          "signature": "func show(_ title: String, _ body: String, _ callback: JSValue)",
+          "rawDocumentation": "Display a notification immediately.\n\n- Parameters:\n  - title: The notification title\n  - body: The notification body text\n  - callback: Optional function called when the user taps the notification.\n    Receives a response object (see module docs for shape).",
+          "description": "Display a notification immediately.\nReceives a response object (see module docs for shape).",
+          "params": [
+            {
+              "name": "title",
+              "type": "String",
+              "description": "The notification title"
+            },
+            {
+              "name": "body",
+              "type": "String",
+              "description": "The notification body text"
+            },
+            {
+              "name": "callback",
+              "type": "JSValue",
+              "description": "Optional function called when the user taps the notification."
+            }
+          ],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
+          "lineNumber": 113
+        },
+        {
+          "name": "new",
+          "signature": "func new(_ options: JSValue) -> HSNotification?",
+          "rawDocumentation": "Create a richly configured notification without sending it yet.\n\n- Parameter options: A JavaScript object — see module documentation for supported keys.\n- Returns: An `HSNotification` object. Call `.send()` on it to deliver the notification.",
+          "description": "Create a richly configured notification without sending it yet.",
+          "params": [
+            {
+              "name": "options",
+              "type": "JSValue",
+              "description": "A JavaScript object — see module documentation for supported keys."
+            }
+          ],
+          "returns": {
+            "type": "HSNotification?",
+            "description": "An `HSNotification` object. Call `.send()` on it to deliver the notification."
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
+          "lineNumber": 121
+        },
+        {
+          "name": "removeAllDelivered",
+          "signature": "func removeAllDelivered()",
+          "rawDocumentation": "Remove all delivered Hammerspoon notifications from Notification Center.",
+          "description": "Remove all delivered Hammerspoon notifications from Notification Center.",
+          "params": [],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
+          "lineNumber": 126
+        },
+        {
+          "name": "removeAllPending",
+          "signature": "func removeAllPending()",
+          "rawDocumentation": "Cancel all pending (not yet delivered) Hammerspoon notifications.",
+          "description": "Cancel all pending (not yet delivered) Hammerspoon notifications.",
+          "params": [],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
+          "lineNumber": 129
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSNotificationAPI",
+          "type": "typedef",
+          "rawDocumentation": "A notification created by `hs.notify.new()`.\n\nCall `.send()` to deliver it to macOS Notification Center. You can hold a reference\nto the object and call `.withdraw()` later to remove it.\n\nExample:\n```js\nconst n = hs.notify.new({\n    title: \"Build finished\",\n    body: \"Your project compiled successfully.\",\n    actions: [{ identifier: \"OPEN\", title: \"Open\" }],\n    callback: (r) => { if (r.actionIdentifier === \"OPEN\") openProject() }\n})\nn.send()\n```",
+          "description": "A notification created by `hs.notify.new()`.\nCall `.send()` to deliver it to macOS Notification Center. You can hold a reference\nto the object and call `.withdraw()` later to remove it.\n```js\nconst n = hs.notify.new({\n    title: \"Build finished\",\n    body: \"Your project compiled successfully.\",\n    actions: [{ identifier: \"OPEN\", title: \"Open\" }],\n    callback: (r) => { if (r.actionIdentifier === \"OPEN\") openProject() }\n})\nn.send()\n```",
+          "methods": [
+            {
+              "name": "withdraw",
+              "signature": "func withdraw()",
+              "rawDocumentation": "Deliver this notification immediately to Notification Center.\n- Returns: self, for method chaining\nRemove this notification from Notification Center (if delivered) or cancel it (if pending).",
+              "description": "Deliver this notification immediately to Notification Center.",
+              "params": [],
+              "returns": null,
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotification.swift",
+              "lineNumber": 38
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "The unique identifier assigned to this notification.\nUse it to correlate with system notification APIs if needed.",
+              "description": "The unique identifier assigned to this notification.\nUse it to correlate with system notification APIs if needed.",
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotification.swift",
+              "lineNumber": 31
+            }
+          ]
+        }
+      ],
+      "description": "Module for creating and displaying macOS system notifications.\nmacOS notifications require user permission before they will appear. Request it once\n(typically at startup) via `hs.permissions.requestNotifications()` and it will be\n```js\nhs.permissions.requestNotifications().then(granted => {\n    if (granted) hs.notify.show(\"Hammerspoon\", \"Notifications are enabled!\")\n})\n```\n## Quick notification\n```js\n// Fire and forget\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n\n// With a callback invoked when the user interacts\nhs.notify.show(\"Build complete\", \"Click to view the log.\", (response) => {\n    console.log(\"User tapped:\", response.actionIdentifier)\n})\n```\n## Rich notification\n```js\nconst n = hs.notify.new({\n    title:    \"New message\",\n    subtitle: \"From Alice\",\n    body:     \"Are you free tonight?\",\n    sound:    true,\n    threadIdentifier: \"messages-alice\",\n    actions: [\n        { identifier: \"REPLY\", title: \"Reply\", textInput: true,\n          textInputButtonTitle: \"Send\", textInputPlaceholder: \"Type a reply…\" },\n        { identifier: \"DISMISS\", title: \"Dismiss\", destructive: true }\n    ],\n    callback: (response) => {\n        if (response.actionIdentifier === \"REPLY\") {\n            console.log(\"Reply text:\", response.userText)\n        }\n    }\n})\nn.send()\n// Later, if needed:\nn.withdraw()\n```\n## Callback response object\n| Property | Type | Description |\n|----------|------|-------------|\n| `actionIdentifier` | string | `\"DEFAULT\"` when the user tapped the notification body; `\"DISMISS\"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |\n| `userText` | string? | Text entered in a `textInput` action; only present when applicable |\n| `userInfo` | object | The `userInfo` object originally passed to `new()`, if any |\n| `notificationId` | string | The notification's unique identifier |\n## Options for `new()`\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `title` | string | *(required)* | The bold heading line |\n| `subtitle` | string | — | A second line shown beneath the title |\n| `body` | string | — | The main message body |\n| `sound` | boolean \\| string | `true` | `true` = default sound, `false` = no sound, string = named `.aiff` file |\n| `badge` | number | — | Value to show on the app icon badge |\n| `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |\n| `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |\n| `interruptionLevel` | string | `\"active\"` | `\"passive\"`, `\"active\"`, or `\"timeSensitive\"` — controls Focus/DND behaviour (macOS 12+) |\n| `actions` | array | — | Action buttons (see below) |\n| `callback` | function | — | Invoked when the user interacts with the notification |\n## Action objects\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `identifier` | string | *(required)* | Unique identifier passed to the callback |\n| `title` | string | *(required)* | Button label |\n| `destructive` | boolean | `false` | Renders the title in a destructive (red) style |\n| `foreground` | boolean | `false` | Brings Hammerspoon to the foreground when tapped |\n| `textInput` | boolean | `false` | Converts this action to an inline text-reply button |\n| `textInputButtonTitle` | string | `\"Send\"` | Label on the reply send button (requires `textInput: true`) |\n| `textInputPlaceholder` | string | `\"\"` | Placeholder shown in the text field (requires `textInput: true`) |",
+      "rawDocumentation": "Module for creating and displaying macOS system notifications.\n\nmacOS notifications require user permission before they will appear. Request it once\n(typically at startup) via `hs.permissions.requestNotifications()` and it will be\nremembered across sessions:\n\n```js\nhs.permissions.requestNotifications().then(granted => {\n    if (granted) hs.notify.show(\"Hammerspoon\", \"Notifications are enabled!\")\n})\n```\n\n## Quick notification\n\n```js\n// Fire and forget\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n\n// With a callback invoked when the user interacts\nhs.notify.show(\"Build complete\", \"Click to view the log.\", (response) => {\n    console.log(\"User tapped:\", response.actionIdentifier)\n})\n```\n\n## Rich notification\n\n```js\nconst n = hs.notify.new({\n    title:    \"New message\",\n    subtitle: \"From Alice\",\n    body:     \"Are you free tonight?\",\n    sound:    true,\n    threadIdentifier: \"messages-alice\",\n    actions: [\n        { identifier: \"REPLY\", title: \"Reply\", textInput: true,\n          textInputButtonTitle: \"Send\", textInputPlaceholder: \"Type a reply…\" },\n        { identifier: \"DISMISS\", title: \"Dismiss\", destructive: true }\n    ],\n    callback: (response) => {\n        if (response.actionIdentifier === \"REPLY\") {\n            console.log(\"Reply text:\", response.userText)\n        }\n    }\n})\nn.send()\n// Later, if needed:\nn.withdraw()\n```\n\n## Callback response object\n\nThe `callback` function receives a single object with these properties:\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `actionIdentifier` | string | `\"DEFAULT\"` when the user tapped the notification body; `\"DISMISS\"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |\n| `userText` | string? | Text entered in a `textInput` action; only present when applicable |\n| `userInfo` | object | The `userInfo` object originally passed to `new()`, if any |\n| `notificationId` | string | The notification's unique identifier |\n\n## Options for `new()`\n\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `title` | string | *(required)* | The bold heading line |\n| `subtitle` | string | — | A second line shown beneath the title |\n| `body` | string | — | The main message body |\n| `sound` | boolean \\| string | `true` | `true` = default sound, `false` = no sound, string = named `.aiff` file |\n| `badge` | number | — | Value to show on the app icon badge |\n| `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |\n| `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |\n| `interruptionLevel` | string | `\"active\"` | `\"passive\"`, `\"active\"`, or `\"timeSensitive\"` — controls Focus/DND behaviour (macOS 12+) |\n| `actions` | array | — | Action buttons (see below) |\n| `callback` | function | — | Invoked when the user interacts with the notification |\n\n## Action objects\n\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `identifier` | string | *(required)* | Unique identifier passed to the callback |\n| `title` | string | *(required)* | Button label |\n| `destructive` | boolean | `false` | Renders the title in a destructive (red) style |\n| `foreground` | boolean | `false` | Brings Hammerspoon to the foreground when tapped |\n| `textInput` | boolean | `false` | Converts this action to an inline text-reply button |\n| `textInputButtonTitle` | string | `\"Send\"` | Label on the reply send button (requires `textInput: true`) |\n| `textInputPlaceholder` | string | `\"\"` | Placeholder shown in the text field (requires `textInput: true`) |"
+    },
+    {
       "name": "hs.osascript",
       "methods": [
         {
@@ -3082,6 +3181,348 @@
       "rawDocumentation": "Run AppleScript and OSA JavaScript from Hammerspoon scripts.\n\nScript execution is isolated in a separate XPC helper process\n(`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the\nhelper is affected — the main app remains stable and the next call\nreconnects automatically.\n\n## Async API (Promise-based)\n\nEvery async function returns a `Promise` that **always resolves** (never rejects)\nwith an object containing three fields:\n\n| Field | Type | Description |\n|-------|------|-------------|\n| `success` | `Boolean` | `true` if the script ran without error |\n| `result` | `any` | Parsed return value of the script, or `null` on failure |\n| `raw` | `String` | Raw string representation of the result, or the error message on failure |\n\n## Sync API\n\nThe `*Sync` variants block until the script completes and return the same\n`{ success, result, raw }` object directly.  Use these only when a Promise\nchain is impractical; they block the JS thread for the duration of the call.\n\nThe `result` field is typed based on what the script returned: strings,\nnumbers, booleans, lists, and records are all mapped to their JavaScript\nequivalents. `null` is used for AppleScript's `missing value` and for any\nfailure case.\n\n## Examples\n\n**Return a string (async):**\n```javascript\nhs.osascript.applescript('return \"hello\"')\n  .then(r => console.log(r.result));  // \"hello\"\n```\n\n**Return a string (sync):**\n```javascript\nconst r = hs.osascript.applescriptSync('return \"hello\"');\nconsole.log(r.result);  // \"hello\"\n```\n\n**Interact with an application:**\n```javascript\nhs.osascript.applescript('tell application \"Finder\" to get name of home')\n  .then(r => console.log(r.result));  // e.g. \"cmsj\"\n```\n\n**Handle errors (the Promise never rejects — check `success`):**\n```javascript\nhs.osascript.applescript('this is not valid')\n  .then(r => {\n    if (!r.success) console.log(\"Error:\", r.raw);\n  });\n```\n\n**OSA JavaScript:**\n```javascript\nhs.osascript.javascript('Application(\"Finder\").name()')\n  .then(r => console.log(r.result));  // \"Finder\"\n```\n\n**Run a script from a file:**\n```javascript\nhs.osascript.applescriptFromFile('/Users/me/scripts/notify.applescript')\n  .then(r => console.log(r.success));\n```"
     },
     {
+      "name": "hs.pasteboard",
+      "methods": [
+        {
+          "name": "readString",
+          "signature": "func readString() -> String?",
+          "rawDocumentation": "Read plain text from the pasteboard\n- Returns: The plain text string, or null if not available",
+          "description": "Read plain text from the pasteboard",
+          "params": [],
+          "returns": {
+            "type": "String?",
+            "description": "The plain text string, or null if not available"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 126
+        },
+        {
+          "name": "readHTML",
+          "signature": "func readHTML() -> String?",
+          "rawDocumentation": "Read HTML from the pasteboard\n- Returns: The HTML string, or null if not available",
+          "description": "Read HTML from the pasteboard",
+          "params": [],
+          "returns": {
+            "type": "String?",
+            "description": "The HTML string, or null if not available"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 130
+        },
+        {
+          "name": "readRTF",
+          "signature": "func readRTF() -> String?",
+          "rawDocumentation": "Read RTF from the pasteboard\n- Returns: The RTF string, or null if not available",
+          "description": "Read RTF from the pasteboard",
+          "params": [],
+          "returns": {
+            "type": "String?",
+            "description": "The RTF string, or null if not available"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 134
+        },
+        {
+          "name": "readURL",
+          "signature": "func readURL() -> String?",
+          "rawDocumentation": "Read a URL from the pasteboard\n- Returns: The URL as a string, or null if not available",
+          "description": "Read a URL from the pasteboard",
+          "params": [],
+          "returns": {
+            "type": "String?",
+            "description": "The URL as a string, or null if not available"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 138
+        },
+        {
+          "name": "readImage",
+          "signature": "func readImage() -> HSImage?",
+          "rawDocumentation": "Read an image from the pasteboard\n- Returns: An HSImage, or null if not available",
+          "description": "Read an image from the pasteboard",
+          "params": [],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage, or null if not available"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 142
+        },
+        {
+          "name": "readData",
+          "signature": "func readData(_ uti: String) -> String?",
+          "rawDocumentation": "Read raw data for a specific UTI type, returned as a base64-encoded string.\nUse this for types not covered by the convenience read methods.\n- Parameter uti: A UTI type string (e.g. \"com.adobe.pdf\")\n- Returns: A base64-encoded string, or null if the type is not available",
+          "description": "Read raw data for a specific UTI type, returned as a base64-encoded string.\nUse this for types not covered by the convenience read methods.",
+          "params": [
+            {
+              "name": "uti",
+              "type": "String",
+              "description": "A UTI type string (e.g. \"com.adobe.pdf\")"
+            }
+          ],
+          "returns": {
+            "type": "String?",
+            "description": "A base64-encoded string, or null if the type is not available"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 148
+        },
+        {
+          "name": "writeString",
+          "signature": "func writeString(_ str: String) -> Bool",
+          "rawDocumentation": "Write plain text to the pasteboard, replacing all current contents\n- Parameter str: The text string to write\n- Returns: true if the write succeeded",
+          "description": "Write plain text to the pasteboard, replacing all current contents",
+          "params": [
+            {
+              "name": "str",
+              "type": "String",
+              "description": "The text string to write"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if the write succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 155
+        },
+        {
+          "name": "writeHTML",
+          "signature": "func writeHTML(_ html: String) -> Bool",
+          "rawDocumentation": "Write HTML to the pasteboard, replacing all current contents\n- Parameter html: The HTML string to write\n- Returns: true if the write succeeded",
+          "description": "Write HTML to the pasteboard, replacing all current contents",
+          "params": [
+            {
+              "name": "html",
+              "type": "String",
+              "description": "The HTML string to write"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if the write succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 160
+        },
+        {
+          "name": "writeRTF",
+          "signature": "func writeRTF(_ rtf: String) -> Bool",
+          "rawDocumentation": "Write RTF to the pasteboard, replacing all current contents\n- Parameter rtf: The RTF string to write\n- Returns: true if the write succeeded",
+          "description": "Write RTF to the pasteboard, replacing all current contents",
+          "params": [
+            {
+              "name": "rtf",
+              "type": "String",
+              "description": "The RTF string to write"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if the write succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 165
+        },
+        {
+          "name": "writeURL",
+          "signature": "func writeURL(_ url: String) -> Bool",
+          "rawDocumentation": "Write a URL to the pasteboard, replacing all current contents\n- Parameter url: The URL string to write\n- Returns: true if the write succeeded",
+          "description": "Write a URL to the pasteboard, replacing all current contents",
+          "params": [
+            {
+              "name": "url",
+              "type": "String",
+              "description": "The URL string to write"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if the write succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 170
+        },
+        {
+          "name": "writeImage",
+          "signature": "func writeImage(_ image: HSImage) -> Bool",
+          "rawDocumentation": "Write an image to the pasteboard, replacing all current contents\n- Parameter image: An HSImage to write\n- Returns: true if the write succeeded",
+          "description": "Write an image to the pasteboard, replacing all current contents",
+          "params": [
+            {
+              "name": "image",
+              "type": "HSImage",
+              "description": "An HSImage to write"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if the write succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 175
+        },
+        {
+          "name": "writeData",
+          "signature": "func writeData(_ base64: String, _ uti: String) -> Bool",
+          "rawDocumentation": "Write raw base64-encoded data for a specific UTI type, replacing all current contents.\nUse this for types not covered by the convenience write methods.\n- Parameters:\n  - base64: The data encoded as a base64 string\n  - uti: A UTI type string (e.g. \"com.adobe.pdf\")\n- Returns: true if the write succeeded",
+          "description": "Write raw base64-encoded data for a specific UTI type, replacing all current contents.\nUse this for types not covered by the convenience write methods.",
+          "params": [
+            {
+              "name": "base64",
+              "type": "String",
+              "description": "The data encoded as a base64 string"
+            },
+            {
+              "name": "uti",
+              "type": "String",
+              "description": "A UTI type string (e.g. \"com.adobe.pdf\")"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if the write succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 183
+        },
+        {
+          "name": "writeObjects",
+          "signature": "func writeObjects(_ representations: JSValue) -> Bool",
+          "rawDocumentation": "Write multiple type representations to the pasteboard atomically, replacing all current contents.\nKeys must be UTI type strings; values must be strings. This is how you provide both a plain-text\nfallback and a richer representation (such as HTML) in a single clipboard operation.\n\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"Hello\",\n    \"public.html\":            \"<b>Hello</b>\"\n})\n```\n- Parameter representations: A JavaScript object whose keys are UTI strings and values are strings\n- Returns: true if the write succeeded",
+          "description": "Write multiple type representations to the pasteboard atomically, replacing all current contents.\nKeys must be UTI type strings; values must be strings. This is how you provide both a plain-text\nfallback and a richer representation (such as HTML) in a single clipboard operation.\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"Hello\",\n    \"public.html\":            \"<b>Hello</b>\"\n})\n```",
+          "params": [
+            {
+              "name": "representations",
+              "type": "JSValue",
+              "description": "A JavaScript object whose keys are UTI strings and values are strings"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if the write succeeded"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 197
+        },
+        {
+          "name": "types",
+          "signature": "func types() -> [String]",
+          "rawDocumentation": "Get all UTI type strings currently on the pasteboard, across all items\n- Returns: An array of UTI strings (e.g. [\"public.utf8-plain-text\", \"public.html\"])",
+          "description": "Get all UTI type strings currently on the pasteboard, across all items",
+          "params": [],
+          "returns": {
+            "type": "[String]",
+            "description": "An array of UTI strings (e.g. [\"public.utf8-plain-text\", \"public.html\"])"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 203
+        },
+        {
+          "name": "hasType",
+          "signature": "func hasType(_ uti: String) -> Bool",
+          "rawDocumentation": "Check whether a specific UTI type is currently available on the pasteboard\n- Parameter uti: A UTI type string to check for\n- Returns: true if the type is available",
+          "description": "Check whether a specific UTI type is currently available on the pasteboard",
+          "params": [
+            {
+              "name": "uti",
+              "type": "String",
+              "description": "A UTI type string to check for"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "true if the type is available"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 208
+        },
+        {
+          "name": "clear",
+          "signature": "func clear()",
+          "rawDocumentation": "Clear all contents from the pasteboard",
+          "description": "Clear all contents from the pasteboard",
+          "params": [],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 217
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Add a watcher that is called whenever the pasteboard contents change.\nMultiple watchers may be registered; they are each called independently.\nBecause macOS provides no pasteboard change notification API, this is implemented\nby polling `changeCount` at the interval specified by `watcherInterval`.\n- Parameter listener: A function called with one argument: the new `changeCount` integer",
+          "description": "Add a watcher that is called whenever the pasteboard contents change.\nMultiple watchers may be registered; they are each called independently.\nBecause macOS provides no pasteboard change notification API, this is implemented\nby polling `changeCount` at the interval specified by `watcherInterval`.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "A function called with one argument: the new `changeCount` integer"
+            }
+          ],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 230
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Remove a previously registered pasteboard watcher\n- Parameter listener: The function previously passed to `addWatcher`",
+          "description": "Remove a previously registered pasteboard watcher",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "The function previously passed to `addWatcher`"
+            }
+          ],
+          "returns": null,
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 234
+        }
+      ],
+      "properties": [
+        {
+          "name": "changeCount",
+          "signature": "var changeCount: Int { get }",
+          "rawDocumentation": "The pasteboard change count. Increments each time any application writes to the pasteboard.\nComparing a saved value to the current value is the standard way to detect external changes.",
+          "description": "The pasteboard change count. Increments each time any application writes to the pasteboard.\nComparing a saved value to the current value is the standard way to detect external changes.",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 212
+        },
+        {
+          "name": "watcherInterval",
+          "signature": "var watcherInterval: Double { get set }",
+          "rawDocumentation": "The polling interval for the pasteboard watcher, in seconds. Defaults to 0.5.\nChanges take effect the next time a watcher is started (i.e. after removing and re-adding).",
+          "description": "The polling interval for the pasteboard watcher, in seconds. Defaults to 0.5.\nChanges take effect the next time a watcher is started (i.e. after removing and re-adding).",
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
+          "lineNumber": 223
+        }
+      ],
+      "types": [],
+      "description": "Module for interacting with the macOS pasteboard (clipboard)\nThe macOS pasteboard is \"rich\" — a single clipboard operation can carry multiple representations\nof the same content for different applications to consume. For example, text copied from a web\nbrowser may carry plain text, HTML, and RTF representations simultaneously.\n## Basic Usage\n```js\n// Read and write plain text\nconst text = hs.pasteboard.readString()\nhs.pasteboard.writeString(\"Hello from Hammerspoon!\")\n\n// Check what types are currently on the pasteboard\nconst available = hs.pasteboard.types()\n\n// Write multiple representations at once\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"Hello\",\n    \"public.html\": \"<b>Hello</b>\"\n})\n\n// Watch for pasteboard changes\nconst handler = (changeCount) => {\n    console.log(\"Pasteboard changed, count:\", changeCount)\n    console.log(\"New text:\", hs.pasteboard.readString())\n}\nhs.pasteboard.addWatcher(handler)\n// Later: hs.pasteboard.removeWatcher(handler)\n```\n## Pasteboard Conventions (nspasteboard.org)\nmacOS has no built-in notification API for transient or confidential clipboard content, so a\ncommunity convention has emerged (see [nspasteboard.org](https://nspasteboard.org)) around four\n`org.nspasteboard.*` UTI marker types. These markers carry no payload — their mere presence on\nthe pasteboard signals intent to other applications.\n### Standard marker UTIs\n| UTI | Meaning |\n|-----|---------|\n| `org.nspasteboard.TransientType` | Content is temporary; it will be removed or overwritten shortly. Clipboard historians should **not** record this change. |\n| `org.nspasteboard.ConcealedType` | Content is sensitive (e.g. a password). Historians should obfuscate it if displayed and ideally encrypt it if stored. |\n| `org.nspasteboard.AutoGeneratedType` | Content was placed by an application without any user Copy action. Historians should generally skip recording it. |\n| `org.nspasteboard.source` | The bundle identifier of the application that placed the content. Use an empty string when the source is unknown. |\n### Legacy proprietary markers\nSeveral apps defined their own markers before the `org.nspasteboard.*` standard existed.\n| UTI | Application |\n|-----|-------------|\n| `de.petermaurer.TransientPasteboardType` | TextExpander, Butler |\n| `com.typeit4me.clipping` | TypeIt4Me |\n| `Pasteboard generator type` | Typinator |\n| `com.agilebits.onepassword` | 1Password (confidential) |\n| `com.apple.is-remote-clipboard` | macOS (remote content) |\n### For scripts that write to the pasteboard\nIf your script temporarily commandeers the pasteboard (e.g. to trigger a paste), add\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"temporary value\",\n    \"org.nspasteboard.TransientType\": \"\"\n})\n```\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"s3cr3t!\",\n    \"org.nspasteboard.ConcealedType\": \"\"\n})\n```\n### For scripts that monitor the pasteboard\nIf you are building a clipboard history tool with `addWatcher`, skip or obfuscate entries that\n```js\nconst SKIP_TYPES = [\n    \"org.nspasteboard.TransientType\",\n    \"org.nspasteboard.AutoGeneratedType\",\n    \"de.petermaurer.TransientPasteboardType\",\n    \"com.typeit4me.clipping\",\n    \"Pasteboard generator type\",\n]\nconst CONCEAL_TYPES = [\n    \"org.nspasteboard.ConcealedType\",\n    \"com.agilebits.onepassword\",\n]\n\nhs.pasteboard.addWatcher((changeCount) => {\n    const types = hs.pasteboard.types()\n    if (SKIP_TYPES.some(t => types.includes(t))) return        // ignore transient\n    const conceal = CONCEAL_TYPES.some(t => types.includes(t)) // handle sensitively\n    // … record or display the pasteboard contents …\n})\n```",
+      "rawDocumentation": "Module for interacting with the macOS pasteboard (clipboard)\n\nThe macOS pasteboard is \"rich\" — a single clipboard operation can carry multiple representations\nof the same content for different applications to consume. For example, text copied from a web\nbrowser may carry plain text, HTML, and RTF representations simultaneously.\n\n## Basic Usage\n\n```js\n// Read and write plain text\nconst text = hs.pasteboard.readString()\nhs.pasteboard.writeString(\"Hello from Hammerspoon!\")\n\n// Check what types are currently on the pasteboard\nconst available = hs.pasteboard.types()\n\n// Write multiple representations at once\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"Hello\",\n    \"public.html\": \"<b>Hello</b>\"\n})\n\n// Watch for pasteboard changes\nconst handler = (changeCount) => {\n    console.log(\"Pasteboard changed, count:\", changeCount)\n    console.log(\"New text:\", hs.pasteboard.readString())\n}\nhs.pasteboard.addWatcher(handler)\n// Later: hs.pasteboard.removeWatcher(handler)\n```\n\n## Pasteboard Conventions (nspasteboard.org)\n\nmacOS has no built-in notification API for transient or confidential clipboard content, so a\ncommunity convention has emerged (see [nspasteboard.org](https://nspasteboard.org)) around four\n`org.nspasteboard.*` UTI marker types. These markers carry no payload — their mere presence on\nthe pasteboard signals intent to other applications.\n\n### Standard marker UTIs\n\n| UTI | Meaning |\n|-----|---------|\n| `org.nspasteboard.TransientType` | Content is temporary; it will be removed or overwritten shortly. Clipboard historians should **not** record this change. |\n| `org.nspasteboard.ConcealedType` | Content is sensitive (e.g. a password). Historians should obfuscate it if displayed and ideally encrypt it if stored. |\n| `org.nspasteboard.AutoGeneratedType` | Content was placed by an application without any user Copy action. Historians should generally skip recording it. |\n| `org.nspasteboard.source` | The bundle identifier of the application that placed the content. Use an empty string when the source is unknown. |\n\n### Legacy proprietary markers\n\nSeveral apps defined their own markers before the `org.nspasteboard.*` standard existed.\nClipboard historians should also honour these for compatibility:\n\n| UTI | Application |\n|-----|-------------|\n| `de.petermaurer.TransientPasteboardType` | TextExpander, Butler |\n| `com.typeit4me.clipping` | TypeIt4Me |\n| `Pasteboard generator type` | Typinator |\n| `com.agilebits.onepassword` | 1Password (confidential) |\n| `com.apple.is-remote-clipboard` | macOS (remote content) |\n\n### For scripts that write to the pasteboard\n\nIf your script temporarily commandeers the pasteboard (e.g. to trigger a paste), add\n`org.nspasteboard.TransientType` so clipboard historians skip the entry:\n\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"temporary value\",\n    \"org.nspasteboard.TransientType\": \"\"\n})\n```\n\nFor sensitive content such as a generated password, use `org.nspasteboard.ConcealedType`:\n\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"s3cr3t!\",\n    \"org.nspasteboard.ConcealedType\": \"\"\n})\n```\n\n### For scripts that monitor the pasteboard\n\nIf you are building a clipboard history tool with `addWatcher`, skip or obfuscate entries that\ncarry any of the marker UTIs listed above:\n\n```js\nconst SKIP_TYPES = [\n    \"org.nspasteboard.TransientType\",\n    \"org.nspasteboard.AutoGeneratedType\",\n    \"de.petermaurer.TransientPasteboardType\",\n    \"com.typeit4me.clipping\",\n    \"Pasteboard generator type\",\n]\nconst CONCEAL_TYPES = [\n    \"org.nspasteboard.ConcealedType\",\n    \"com.agilebits.onepassword\",\n]\n\nhs.pasteboard.addWatcher((changeCount) => {\n    const types = hs.pasteboard.types()\n    if (SKIP_TYPES.some(t => types.includes(t))) return        // ignore transient\n    const conceal = CONCEAL_TYPES.some(t => types.includes(t)) // handle sensitively\n    // … record or display the pasteboard contents …\n})\n```"
+    },
+    {
       "name": "hs.permissions",
       "methods": [
         {
@@ -3191,6 +3632,35 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 45
+        },
+        {
+          "name": "checkNotifications",
+          "signature": "func checkNotifications() -> Bool",
+          "rawDocumentation": "Check if the app has permission to display notifications.\n\nThe result is cached from the last request or check; the cache is refreshed asynchronously,\nso the very first call in a session may return `false` before the cached value is populated.\nUse `requestNotifications()` on first launch to ensure the result is accurate.\n- Returns: true if notification permission is granted",
+          "description": "Check if the app has permission to display notifications.\nThe result is cached from the last request or check; the cache is refreshed asynchronously,\nso the very first call in a session may return `false` before the cached value is populated.\nUse `requestNotifications()` on first launch to ensure the result is accurate.",
+          "params": [],
+          "returns": {
+            "type": "Bool",
+            "description": "true if notification permission is granted"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
+          "lineNumber": 53
+        },
+        {
+          "name": "requestNotifications",
+          "signature": "func requestNotifications() -> JSPromise?",
+          "rawDocumentation": "Request notification permission (shows the system dialog if the user has not yet decided).\n\nIt is safe to call this on every launch — the dialog only appears once; subsequent calls\nresolve immediately with the previously granted or denied state.\n- Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied",
+          "description": "Request notification permission (shows the system dialog if the user has not yet decided).\nIt is safe to call this on every launch — the dialog only appears once; subsequent calls\nresolve immediately with the previously granted or denied state.",
+          "params": [],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A Promise that resolves to true if granted, false if denied",
+            "promiseType": "boolean"
+          },
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
+          "lineNumber": 60
         }
       ],
       "properties": [],
@@ -6984,5 +7454,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-08T15:14:53.160Z"
+  "generatedAt": "2026-05-13T15:50:53.460Z"
 }

@@ -15,7 +15,7 @@ struct PermissionsTypeMetadataTests {
 
     @Test("PermissionsType has all expected cases")
     func testAllCasesContents() {
-        let expected: [PermissionsType] = [.accessibility, .camera, .microphone, .screencapture, .location]
+        let expected: [PermissionsType] = [.accessibility, .camera, .microphone, .notifications, .screencapture, .location]
         #expect(PermissionsType.allCases == expected)
     }
 
@@ -34,6 +34,11 @@ struct PermissionsTypeMetadataTests {
     @Test("microphone displayName is correct")
     func testMicrophoneDisplayName() {
         #expect(PermissionsType.microphone.displayName == "Microphone")
+    }
+
+    @Test("notifications displayName is correct")
+    func testNotificationsDisplayName() {
+        #expect(PermissionsType.notifications.displayName == "Notifications")
     }
 
     @Test("screencapture displayName is correct")
@@ -77,6 +82,12 @@ struct PermissionsTypeMetadataTests {
     func testMicrophoneDescription() {
         let desc = PermissionsType.microphone.permissionDescription.lowercased()
         #expect(desc.contains("microphone"))
+    }
+
+    @Test("notifications description mentions notifications")
+    func testNotificationsDescription() {
+        let desc = PermissionsType.notifications.permissionDescription.lowercased()
+        #expect(desc.contains("notification"))
     }
 
     @Test("screencapture description mentions screen")

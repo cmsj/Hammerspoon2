@@ -557,17 +557,15 @@ declare namespace hs.application {
 
     /**
      * Create a watcher for application events
-     * @param event The event type to listen for
-     * @param listener A javascript function/lambda to call when the event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
+     * @param listener A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
      */
-    function addWatcher(event: string, listener: JSValue): void;
+    function addWatcher(listener: JSValue): void;
 
     /**
      * Remove a watcher for application events
-     * @param event The event type to stop listening for
-     * @param listener The javascript function/lambda that was previously being used to handle the event
+     * @param listener The javascript function/lambda that was previously being used to handle events
      */
-    function removeWatcher(event: string, listener: JSValue): void;
+    function removeWatcher(listener: JSValue): void;
 
 }
 
@@ -1684,6 +1682,136 @@ declare class HSHotkey {
 }
 
 /**
+ * Module for creating and displaying macOS system notifications.
+macOS notifications require user permission before they will appear. Request it once
+(typically at startup) via `hs.permissions.requestNotifications()` and it will be
+```js
+hs.permissions.requestNotifications().then(granted => {
+    if (granted) hs.notify.show("Hammerspoon", "Notifications are enabled!")
+})
+```
+## Quick notification
+```js
+// Fire and forget
+hs.notify.show("Build complete", "Your project compiled successfully.")
+
+// With a callback invoked when the user interacts
+hs.notify.show("Build complete", "Click to view the log.", (response) => {
+    console.log("User tapped:", response.actionIdentifier)
+})
+```
+## Rich notification
+```js
+const n = hs.notify.new({
+    title:    "New message",
+    subtitle: "From Alice",
+    body:     "Are you free tonight?",
+    sound:    true,
+    threadIdentifier: "messages-alice",
+    actions: [
+        { identifier: "REPLY", title: "Reply", textInput: true,
+          textInputButtonTitle: "Send", textInputPlaceholder: "Type a reply…" },
+        { identifier: "DISMISS", title: "Dismiss", destructive: true }
+    ],
+    callback: (response) => {
+        if (response.actionIdentifier === "REPLY") {
+            console.log("Reply text:", response.userText)
+        }
+    }
+})
+n.send()
+// Later, if needed:
+n.withdraw()
+```
+## Callback response object
+| Property | Type | Description |
+|----------|------|-------------|
+| `actionIdentifier` | string | `"DEFAULT"` when the user tapped the notification body; `"DISMISS"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |
+| `userText` | string? | Text entered in a `textInput` action; only present when applicable |
+| `userInfo` | object | The `userInfo` object originally passed to `new()`, if any |
+| `notificationId` | string | The notification's unique identifier |
+## Options for `new()`
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `title` | string | *(required)* | The bold heading line |
+| `subtitle` | string | — | A second line shown beneath the title |
+| `body` | string | — | The main message body |
+| `sound` | boolean \| string | `true` | `true` = default sound, `false` = no sound, string = named `.aiff` file |
+| `badge` | number | — | Value to show on the app icon badge |
+| `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |
+| `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |
+| `interruptionLevel` | string | `"active"` | `"passive"`, `"active"`, or `"timeSensitive"` — controls Focus/DND behaviour (macOS 12+) |
+| `actions` | array | — | Action buttons (see below) |
+| `callback` | function | — | Invoked when the user interacts with the notification |
+## Action objects
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `identifier` | string | *(required)* | Unique identifier passed to the callback |
+| `title` | string | *(required)* | Button label |
+| `destructive` | boolean | `false` | Renders the title in a destructive (red) style |
+| `foreground` | boolean | `false` | Brings Hammerspoon to the foreground when tapped |
+| `textInput` | boolean | `false` | Converts this action to an inline text-reply button |
+| `textInputButtonTitle` | string | `"Send"` | Label on the reply send button (requires `textInput: true`) |
+| `textInputPlaceholder` | string | `""` | Placeholder shown in the text field (requires `textInput: true`) |
+ */
+declare namespace hs.notify {
+    /**
+     * Display a notification immediately.
+Receives a response object (see module docs for shape).
+     * @param title The notification title
+     * @param body The notification body text
+     * @param callback Optional function called when the user taps the notification.
+     */
+    function show(title: string, body: string, callback: JSValue): void;
+
+    /**
+     * Create a richly configured notification without sending it yet.
+     * @param options A JavaScript object — see module documentation for supported keys.
+     * @returns An `HSNotification` object. Call `.send()` on it to deliver the notification.
+     */
+    function new(options: JSValue): HSNotification | undefined;
+
+    /**
+     * Remove all delivered Hammerspoon notifications from Notification Center.
+     */
+    function removeAllDelivered(): void;
+
+    /**
+     * Cancel all pending (not yet delivered) Hammerspoon notifications.
+     */
+    function removeAllPending(): void;
+
+}
+
+/**
+ * A notification created by `hs.notify.new()`.
+Call `.send()` to deliver it to macOS Notification Center. You can hold a reference
+to the object and call `.withdraw()` later to remove it.
+```js
+const n = hs.notify.new({
+    title: "Build finished",
+    body: "Your project compiled successfully.",
+    actions: [{ identifier: "OPEN", title: "Open" }],
+    callback: (r) => { if (r.actionIdentifier === "OPEN") openProject() }
+})
+n.send()
+```
+ */
+declare class HSNotification {
+    /**
+     * Deliver this notification immediately to Notification Center.
+     */
+    static withdraw(): void;
+
+    /**
+     * The unique identifier assigned to this notification.
+Use it to correlate with system notification APIs if needed.
+     */
+    identifier: string;
+
+}
+
+/**
  * Run AppleScript and OSA JavaScript from Hammerspoon scripts.
 Script execution is isolated in a separate XPC helper process
 (`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the
@@ -1827,6 +1955,237 @@ Prefer `applescriptSync()` or `javascriptSync()` over calling this directly.
 }
 
 /**
+ * Module for interacting with the macOS pasteboard (clipboard)
+The macOS pasteboard is "rich" — a single clipboard operation can carry multiple representations
+of the same content for different applications to consume. For example, text copied from a web
+browser may carry plain text, HTML, and RTF representations simultaneously.
+## Basic Usage
+```js
+// Read and write plain text
+const text = hs.pasteboard.readString()
+hs.pasteboard.writeString("Hello from Hammerspoon!")
+
+// Check what types are currently on the pasteboard
+const available = hs.pasteboard.types()
+
+// Write multiple representations at once
+hs.pasteboard.writeObjects({
+    "public.utf8-plain-text": "Hello",
+    "public.html": "<b>Hello</b>"
+})
+
+// Watch for pasteboard changes
+const handler = (changeCount) => {
+    console.log("Pasteboard changed, count:", changeCount)
+    console.log("New text:", hs.pasteboard.readString())
+}
+hs.pasteboard.addWatcher(handler)
+// Later: hs.pasteboard.removeWatcher(handler)
+```
+## Pasteboard Conventions (nspasteboard.org)
+macOS has no built-in notification API for transient or confidential clipboard content, so a
+community convention has emerged (see [nspasteboard.org](https://nspasteboard.org)) around four
+`org.nspasteboard.*` UTI marker types. These markers carry no payload — their mere presence on
+the pasteboard signals intent to other applications.
+### Standard marker UTIs
+| UTI | Meaning |
+|-----|---------|
+| `org.nspasteboard.TransientType` | Content is temporary; it will be removed or overwritten shortly. Clipboard historians should **not** record this change. |
+| `org.nspasteboard.ConcealedType` | Content is sensitive (e.g. a password). Historians should obfuscate it if displayed and ideally encrypt it if stored. |
+| `org.nspasteboard.AutoGeneratedType` | Content was placed by an application without any user Copy action. Historians should generally skip recording it. |
+| `org.nspasteboard.source` | The bundle identifier of the application that placed the content. Use an empty string when the source is unknown. |
+### Legacy proprietary markers
+Several apps defined their own markers before the `org.nspasteboard.*` standard existed.
+| UTI | Application |
+|-----|-------------|
+| `de.petermaurer.TransientPasteboardType` | TextExpander, Butler |
+| `com.typeit4me.clipping` | TypeIt4Me |
+| `Pasteboard generator type` | Typinator |
+| `com.agilebits.onepassword` | 1Password (confidential) |
+| `com.apple.is-remote-clipboard` | macOS (remote content) |
+### For scripts that write to the pasteboard
+If your script temporarily commandeers the pasteboard (e.g. to trigger a paste), add
+```js
+hs.pasteboard.writeObjects({
+    "public.utf8-plain-text": "temporary value",
+    "org.nspasteboard.TransientType": ""
+})
+```
+```js
+hs.pasteboard.writeObjects({
+    "public.utf8-plain-text": "s3cr3t!",
+    "org.nspasteboard.ConcealedType": ""
+})
+```
+### For scripts that monitor the pasteboard
+If you are building a clipboard history tool with `addWatcher`, skip or obfuscate entries that
+```js
+const SKIP_TYPES = [
+    "org.nspasteboard.TransientType",
+    "org.nspasteboard.AutoGeneratedType",
+    "de.petermaurer.TransientPasteboardType",
+    "com.typeit4me.clipping",
+    "Pasteboard generator type",
+]
+const CONCEAL_TYPES = [
+    "org.nspasteboard.ConcealedType",
+    "com.agilebits.onepassword",
+]
+
+hs.pasteboard.addWatcher((changeCount) => {
+    const types = hs.pasteboard.types()
+    if (SKIP_TYPES.some(t => types.includes(t))) return        // ignore transient
+    const conceal = CONCEAL_TYPES.some(t => types.includes(t)) // handle sensitively
+    // … record or display the pasteboard contents …
+})
+```
+ */
+declare namespace hs.pasteboard {
+    /**
+     * Read plain text from the pasteboard
+     * @returns The plain text string, or null if not available
+     */
+    function readString(): string | undefined;
+
+    /**
+     * Read HTML from the pasteboard
+     * @returns The HTML string, or null if not available
+     */
+    function readHTML(): string | undefined;
+
+    /**
+     * Read RTF from the pasteboard
+     * @returns The RTF string, or null if not available
+     */
+    function readRTF(): string | undefined;
+
+    /**
+     * Read a URL from the pasteboard
+     * @returns The URL as a string, or null if not available
+     */
+    function readURL(): string | undefined;
+
+    /**
+     * Read an image from the pasteboard
+     * @returns An HSImage, or null if not available
+     */
+    function readImage(): HSImage | undefined;
+
+    /**
+     * Read raw data for a specific UTI type, returned as a base64-encoded string.
+Use this for types not covered by the convenience read methods.
+     * @param uti A UTI type string (e.g. "com.adobe.pdf")
+     * @returns A base64-encoded string, or null if the type is not available
+     */
+    function readData(uti: string): string | undefined;
+
+    /**
+     * Write plain text to the pasteboard, replacing all current contents
+     * @param str The text string to write
+     * @returns true if the write succeeded
+     */
+    function writeString(str: string): boolean;
+
+    /**
+     * Write HTML to the pasteboard, replacing all current contents
+     * @param html The HTML string to write
+     * @returns true if the write succeeded
+     */
+    function writeHTML(html: string): boolean;
+
+    /**
+     * Write RTF to the pasteboard, replacing all current contents
+     * @param rtf The RTF string to write
+     * @returns true if the write succeeded
+     */
+    function writeRTF(rtf: string): boolean;
+
+    /**
+     * Write a URL to the pasteboard, replacing all current contents
+     * @param url The URL string to write
+     * @returns true if the write succeeded
+     */
+    function writeURL(url: string): boolean;
+
+    /**
+     * Write an image to the pasteboard, replacing all current contents
+     * @param image An HSImage to write
+     * @returns true if the write succeeded
+     */
+    function writeImage(image: HSImage): boolean;
+
+    /**
+     * Write raw base64-encoded data for a specific UTI type, replacing all current contents.
+Use this for types not covered by the convenience write methods.
+     * @param base64 The data encoded as a base64 string
+     * @param uti A UTI type string (e.g. "com.adobe.pdf")
+     * @returns true if the write succeeded
+     */
+    function writeData(base64: string, uti: string): boolean;
+
+    /**
+     * Write multiple type representations to the pasteboard atomically, replacing all current contents.
+Keys must be UTI type strings; values must be strings. This is how you provide both a plain-text
+fallback and a richer representation (such as HTML) in a single clipboard operation.
+```js
+hs.pasteboard.writeObjects({
+    "public.utf8-plain-text": "Hello",
+    "public.html":            "<b>Hello</b>"
+})
+```
+     * @param representations A JavaScript object whose keys are UTI strings and values are strings
+     * @returns true if the write succeeded
+     */
+    function writeObjects(representations: JSValue): boolean;
+
+    /**
+     * Get all UTI type strings currently on the pasteboard, across all items
+     * @returns An array of UTI strings (e.g. ["public.utf8-plain-text", "public.html"])
+     */
+    function types(): string[];
+
+    /**
+     * Check whether a specific UTI type is currently available on the pasteboard
+     * @param uti A UTI type string to check for
+     * @returns true if the type is available
+     */
+    function hasType(uti: string): boolean;
+
+    /**
+     * Clear all contents from the pasteboard
+     */
+    function clear(): void;
+
+    /**
+     * Add a watcher that is called whenever the pasteboard contents change.
+Multiple watchers may be registered; they are each called independently.
+Because macOS provides no pasteboard change notification API, this is implemented
+by polling `changeCount` at the interval specified by `watcherInterval`.
+     * @param listener A function called with one argument: the new `changeCount` integer
+     */
+    function addWatcher(listener: JSValue): void;
+
+    /**
+     * Remove a previously registered pasteboard watcher
+     * @param listener The function previously passed to `addWatcher`
+     */
+    function removeWatcher(listener: JSValue): void;
+
+    /**
+     * The pasteboard change count. Increments each time any application writes to the pasteboard.
+Comparing a saved value to the current value is the standard way to detect external changes.
+     */
+    const changeCount: number;
+
+    /**
+     * The polling interval for the pasteboard watcher, in seconds. Defaults to 0.5.
+Changes take effect the next time a watcher is started (i.e. after removing and re-adding).
+     */
+    const watcherInterval: number;
+
+}
+
+/**
  * Module for checking and requesting system permissions
  */
 declare namespace hs.permissions {
@@ -1875,6 +2234,23 @@ declare namespace hs.permissions {
      * @returns A Promise that resolves to true if granted, false if denied
      */
     function requestMicrophone(): Promise<boolean>;
+
+    /**
+     * Check if the app has permission to display notifications.
+The result is cached from the last request or check; the cache is refreshed asynchronously,
+so the very first call in a session may return `false` before the cached value is populated.
+Use `requestNotifications()` on first launch to ensure the result is accurate.
+     * @returns true if notification permission is granted
+     */
+    function checkNotifications(): boolean;
+
+    /**
+     * Request notification permission (shows the system dialog if the user has not yet decided).
+It is safe to call this on every launch — the dialog only appears once; subsequent calls
+resolve immediately with the previously granted or denied state.
+     * @returns A Promise that resolves to true if granted, false if denied
+     */
+    function requestNotifications(): Promise<boolean>;
 
 }
 

@@ -394,6 +394,8 @@ extension JSTestHarness {
                 loadModule(HSAXModule.self, as: name)
             case "pasteboard":
                 loadModule(HSPasteboardModule.self, as: name)
+            case "notify":
+                loadModule(HSNotifyModule.self, as: name)
             case "audiodevice":
                 loadModule(HSAudioDeviceModule.self, as: name)
             case "window":
