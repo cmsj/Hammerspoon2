@@ -1741,8 +1741,23 @@ n.withdraw()
 | `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |
 | `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |
 | `interruptionLevel` | string | `"active"` | `"passive"`, `"active"`, or `"timeSensitive"` — controls Focus/DND behaviour (macOS 12+) |
+| `trigger` | object | — | When to deliver the notification (see below). Omit for immediate delivery. |
 | `actions` | array | — | Action buttons (see below) |
 | `callback` | function | — | Invoked when the user interacts with the notification |
+## Triggers
+Pass a `trigger` object in `new()`'s options to schedule the notification instead of delivering it
+```js
+trigger: { type: "timeInterval", interval: 300 }
+```
+**Calendar** — deliver at a specific date/time. Provide either a JS `Date` object or individual
+```js
+// At a specific moment
+trigger: { type: "calendar", date: new Date("2026-06-01T09:00:00") }
+
+// At 09:00 on the next day that matches (e.g. next Monday, weekday 2)
+trigger: { type: "calendar", weekday: 2, hour: 9, minute: 0 }
+```
+Supported component keys: `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`.
 ## Action objects
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -1800,6 +1815,12 @@ n.send()
 declare class HSNotification {
     /**
      * Deliver this notification immediately to Notification Center.
+     * @returns self, for method chaining
+     */
+    static send(): HSNotification;
+
+    /**
+     * Remove this notification from Notification Center (if delivered) or cancel it (if pending).
      */
     static withdraw(): void;
 

@@ -162,7 +162,7 @@ function parseSwiftFile(filePath, repoRoot) {
 
             if (trimmed.startsWith('@objc')) {
                 // @objc func or @objc var
-                methodMatch = trimmed.match(/@objc(?:\([^)]*\))?\s+(?:(?:static\s+)?func\s+(\w+)|var\s+(\w+))/);
+                methodMatch = trimmed.match(/@objc(?:\([^)]*\))?\s+(?:@\w+\s+)*(?:(?:static\s+)?func\s+(\w+)|var\s+(\w+))/);
             } else if (pendingObjcSelector && trimmed.startsWith('func ')) {
                 // This is a func following @objc(selector) on the previous line
                 methodMatch = trimmed.match(/func\s+(\w+)/);
