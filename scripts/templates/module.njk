@@ -1,99 +1,109 @@
 {% extends "base.njk" %}
 
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">{{ module.name }}</span>
+</nav>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <h1>{{ module.name }}</h1>
-    <p class="module-type">Module</p>
+    <span class="page-badge">Module</span>
 </div>
 
 {% if module.rawDocumentation %}
-<div class="section">
-    <div class="type-description">{{ module.rawDocumentation | markdown | safe }}</div>
-</div>
+<div class="module-description">{{ module.rawDocumentation | markdown | safe }}</div>
 {% endif %}
 
-<div class="section">
-    <h2>Types</h2>
-    {% if typeDefinitions.length > 0 %}
-        <p>This module provides the following types:</p>
-        <ul class="type-list">
-        {% for typeDef in typeDefinitions %}
-            <li>
-                <a href="{{ typeDef.name | replace('API', '') }}.html" class="type-link">{{ typeDef.name | replace('API', '') }}</a>
-            </li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>This module does not provide any types.</p>
-    {% endif %}
+{% if typeDefinitions.length > 0 %}
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+{% for typeDef in typeDefinitions %}
+    <li>
+        <a href="{{ typeDef.name | replace('API', '') }}.html">{{ typeDef.name | replace('API', '') }}</a>
+    </li>
+{% endfor %}
+</ul>
+{% endif %}
 
-    <h2>Properties</h2>
-    {% if module.properties and module.properties.length > 0 %}
-        {% for prop in module.properties %}
-        <div class="property" id="{{ prop.name }}">
-            <h3>{{ module.name }}.{{ prop.name }}</h3>
-            <p class="type">{{ prop.signature | extractPropertyType | formatType }}</p>
-            <p class="description">{{ prop.description }}</p>
-            {% if prop | githubSourceUrl %}
-            <p class="source-link">
-                <a href="{{ prop | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">
-                    {{ prop.filePath }}:{{ prop.lineNumber }}
-                </a>
-            </p>
-            {% endif %}
+<h2 class="section-heading">Properties</h2>
+{% if module.properties and module.properties.length > 0 %}
+    {% for prop in module.properties %}
+    <div class="property" id="{{ prop.name }}">
+        <h3><a href="#{{ prop.name }}">{{ module.name }}.{{ prop.name }}</a></h3>
+        <div class="prop-type">{{ prop.signature | extractPropertyType | formatType }}</div>
+        <div class="description">{{ prop.description }}</div>
+        {% if prop | githubSourceUrl %}
+        <div class="source-link">
+            <a href="{{ prop | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">{{ prop.filePath }}:{{ prop.lineNumber }}</a>
         </div>
-        {% endfor %}
-    {% else %}
-        <p>This module has no properties.</p>
-    {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+{% endif %}
 
-    <h2>Methods</h2>
-    {% if methods.length > 0 %}
-        {% for method in methods %}
-        <div class="method" id="{{ method.name }}">
-            <!-- <h3>{{ module.name }}.{{ method.name }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns.type}}{% else %}None{% endif %}</h3> -->
-            <a id="{{ method.name }}"></a>
-            <h3><a href="#{{ method.name}}">{{ module.name }}.{{ method.name }}</a></h3>
-            <p class="description">{{ method.description }}</p>
-            {% if method | githubSourceUrl %}
-            <p class="source-link">
-                <a href="{{ method | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">
-                    {{ method.filePath }}:{{ method.lineNumber }}
-                </a>
-            </p>
-            {% endif %}
-            <hr />
-            <h4>Declaration</h4>
-            <pre><code class="language-javascript">{{ module.name }}.{{ method.name }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</code></pre>
+<h2 class="section-heading">Methods</h2>
+{% if methods.length > 0 %}
+    {% for method in methods %}
+    <div class="method" id="{{ method.name }}">
+        <h3><a href="#{{ method.name }}">{{ module.name }}.{{ method.name }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</a></h3>
 
-            <h4>Parameters</h4>
-            {% if method.params.length > 0 %}
-            <ul class="params">
+        <div class="description">{{ method.description }}</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">{{ module.name }}.{{ method.name }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</code></pre>
+
+        {% if method.params.length > 0 %}
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
                 {% for param in method.params %}
-                <li>
-                    <code>{{ param.name }}</code>
-                    <span class="type">{{ param.type | formatType }}</span>
-                    <p class="param-desc">{{ param.description }}</p>
-                </li>
+                <tr>
+                    <td class="param-name">{{ param.name }}</td>
+                    <td class="param-type">{{ param.type | formatType }}</td>
+                    <td class="param-desc">{{ param.description }}</td>
+                </tr>
                 {% endfor %}
-            </ul>
-            {% else %}
-            <p>None</p>
-            {% endif %}
+            </tbody>
+        </table>
+        {% endif %}
 
-            <h4>Return Value</h4>
-            {% if method.returns %}
-            <p>
-                <!-- <span class="type">{{ method.returns.type | formatType }}</span> - -->
-                {{ method.returns.description }}
-            </p>
-            {% else %}
-            <p>None</p>
-            {% endif %}
-        </div>
+        <div class="card-section-label">Returns</div>
+        {% if method.returns %}
+        <div class="return-type">{{ method.returns | formatReturnType | safe }}</div>
+        <div class="return-desc">{{ method.returns.description }}</div>
+        {% else %}
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+        {% endif %}
+
+        {% if method.examples and method.examples.length > 0 %}
+        <div class="card-section-label">Example</div>
+        {% for example in method.examples %}
+        <pre><code class="language-{{ example.lang }}">{{ example.code }}</code></pre>
         {% endfor %}
-    {% else %}
-        <p>This module has no methods.</p>
-    {% endif %}
-</div>
+        {% endif %}
+
+        {% if method | githubSourceUrl %}
+        <div class="source-link">
+            <a href="{{ method | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">{{ method.filePath }}:{{ method.lineNumber }}</a>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<p style="color: var(--text-secondary); font-size: 0.9375rem;">This module has no methods.</p>
+{% endif %}
 {% endblock %}

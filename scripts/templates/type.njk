@@ -1,86 +1,107 @@
 {% extends "base.njk" %}
 
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">{{ typeName }}</span>
+</nav>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <h1>{{ typeName }}</h1>
-    <p class="module-type">Type</p>
+    <span class="page-badge">Type</span>
 </div>
 
 {% if protocol.rawDocumentation %}
-<div class="section">
-    <div class="type-description">{{ protocol.rawDocumentation | markdown | safe }}</div>
-</div>
+<div class="module-description">{{ protocol.rawDocumentation | markdown | safe }}</div>
 {% endif %}
 
-<div class="section">
-    <h2>Properties</h2>
-    {% if protocol.properties.length > 0 %}
-        {% for prop in protocol.properties %}
-        <div class="property" id="{{ prop.name }}">
-            <h3>{{ prop.name }}</h3>
-            <p class="type">{{ prop.signature | extractPropertyType | formatType }}</p>
-            <p class="description">{{ prop.description }}</p>
-            {% if prop | githubSourceUrl %}
-            <p class="source-link">
-                <a href="{{ prop | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">
-                    {{ prop.filePath }}:{{ prop.lineNumber }}
-                </a>
-            </p>
-            {% endif %}
+<h2 class="section-heading">Properties</h2>
+{% if protocol.properties.length > 0 %}
+    {% for prop in protocol.properties %}
+    <div class="property" id="{{ prop.name }}">
+        <h3><a href="#{{ prop.name }}">{{ prop.name }}</a></h3>
+        <div class="prop-type">{{ prop.signature | extractPropertyType | formatType }}</div>
+        <div class="description">{{ prop.description }}</div>
+        {% if prop | githubSourceUrl %}
+        <div class="source-link">
+            <a href="{{ prop | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">{{ prop.filePath }}:{{ prop.lineNumber }}</a>
         </div>
-        {% endfor %}
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This type has no properties.</p>
+{% endif %}
+
+<h2 class="section-heading">Methods</h2>
+{% set filteredMethods = protocol.methods | filterInitMethods(isGlobal) %}
+{% if filteredMethods.length > 0 %}
+    {% for method in filteredMethods %}
+    {% set isStatic = method.signature and 'static func' in method.signature %}
+    {% set methodName = 'constructor' if method.name == 'init' else method.name %}
+    {% if isStatic %}
+    {% set declarationPrefix = typeName + '.' %}
     {% else %}
-        <p>This type has no properties.</p>
+    {% set declarationPrefix = '' %}
     {% endif %}
+    <div class="method" id="{{ methodName }}">
+        <h3>
+            {% if isStatic %}<span class="static-badge">static</span>{% endif %}<a href="#{{ methodName }}">{{ declarationPrefix }}{{ methodName }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</a>
+        </h3>
 
-    <h2>Methods</h2>
-    {% set filteredMethods = protocol.methods | filterInitMethods(isGlobal) %}
-    {% if filteredMethods.length > 0 %}
-        {% for method in filteredMethods %}
-        {% set isStatic = method.signature and 'static func' in method.signature %}
-        {% set methodName = 'constructor' if method.name == 'init' else method.name %}
-        <div class="method" id="{{ methodName }}">
-            <h3>
-                {% if isStatic %}<span class="static-badge">static</span> {% endif %}
-                {% if isStatic %}{{ typeName }}.{% endif %}{{ methodName }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %})
-            </h3>
-            <p class="description">{{ method.description }}</p>
-            {% if method | githubSourceUrl %}
-            <p class="source-link">
-                <a href="{{ method | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">
-                    {{ method.filePath }}:{{ method.lineNumber }}
-                </a>
-            </p>
-            {% endif %}
+        <div class="description">{{ method.description }}</div>
 
-            <h4>Parameters</h4>
-            {% if method.params.length > 0 %}
-            <ul class="params">
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">{{ declarationPrefix }}{{ methodName }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</code></pre>
+
+        {% if method.params.length > 0 %}
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
                 {% for param in method.params %}
-                <li>
-                    <code>{{ param.name }}</code>
-                    <span class="type">{{ param.type | formatType }}</span>
-                    <p class="param-desc">{{ param.description }}</p>
-                </li>
+                <tr>
+                    <td class="param-name">{{ param.name }}</td>
+                    <td class="param-type">{{ param.type | formatType }}</td>
+                    <td class="param-desc">{{ param.description }}</td>
+                </tr>
                 {% endfor %}
-            </ul>
-            {% else %}
-            <p>None</p>
-            {% endif %}
+            </tbody>
+        </table>
+        {% endif %}
 
-            <h4>Returns</h4>
-            {% if method.returns %}
-            <p>
-                <span class="type">{{ method.returns | formatReturnType | safe }}</span>
-                 - {{ method.returns.description }}
-            </p>
-            {% else %}
-            <p>Nothing</p>
-            {% endif %}
-        </div>
+        <div class="card-section-label">Returns</div>
+        {% if method.returns %}
+        <div class="return-type">{{ method.returns | formatReturnType | safe }}</div>
+        <div class="return-desc">{{ method.returns.description }}</div>
+        {% else %}
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+        {% endif %}
+
+        {% if method.examples and method.examples.length > 0 %}
+        <div class="card-section-label">Example</div>
+        {% for example in method.examples %}
+        <pre><code class="language-{{ example.lang }}">{{ example.code }}</code></pre>
         {% endfor %}
-    {% else %}
-        <p>This type has no methods.</p>
-    {% endif %}
-</div>
+        {% endif %}
+
+        {% if method | githubSourceUrl %}
+        <div class="source-link">
+            <a href="{{ method | githubSourceUrl }}" target="_blank" rel="noopener noreferrer">{{ method.filePath }}:{{ method.lineNumber }}</a>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<p style="color: var(--text-secondary); font-size: 0.9375rem;">This type has no methods.</p>
+{% endif %}
 {% endblock %}

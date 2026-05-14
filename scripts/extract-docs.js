@@ -265,6 +265,7 @@ function parseSwiftFile(filePath, repoRoot) {
                             description: formatDocCToJSDoc(rawDoc),
                             params: extractParams(fullSignature, currentDoc),
                             returns: extractReturns(fullSignature, currentDoc),
+                            examples: extractExamples(currentDoc),
                             source: 'swift',
                             filePath: relativePath,
                             lineNumber: getLineNumber(lineStartPos)
@@ -285,6 +286,7 @@ function parseSwiftFile(filePath, repoRoot) {
                             signature: trimmed.replace(/@objc\s*/, ''),
                             rawDocumentation: rawDoc,
                             description: formatDocCToJSDoc(rawDoc),
+                            examples: extractExamples(currentDoc),
                             source: 'swift',
                             filePath: relativePath,
                             lineNumber: getLineNumber(lineStartPos)
@@ -492,6 +494,50 @@ function extractReturns(signature, docLines) {
         return result;
     }
     return null;
+}
+
+/**
+ * Extract fenced code-block examples from Swift /// doc lines.
+ * Looks for "- Example:" (or "- Example") followed by one or more ```lang ... ``` blocks.
+ * Returns an array of { lang, code } objects.
+ */
+function extractExamples(docLines) {
+    const examples = [];
+    let inExample = false;
+    let inFence = false;
+    let lang = 'js';
+    let codeLines = [];
+
+    for (const line of docLines) {
+        const trimmed = line.trim();
+
+        if (!inExample) {
+            if (trimmed === '- Example:' || trimmed === '- Example' ||
+                trimmed === 'Example:' || trimmed === 'Example') {
+                inExample = true;
+            }
+            continue;
+        }
+
+        if (!inFence && trimmed.startsWith('```')) {
+            inFence = true;
+            lang = trimmed.slice(3).trim() || 'js';
+            codeLines = [];
+            continue;
+        }
+
+        if (inFence) {
+            if (trimmed === '```') {
+                examples.push({ lang, code: codeLines.join('\n') });
+                inFence = false;
+                // Allow multiple code blocks under one Example section
+            } else {
+                codeLines.push(line);
+            }
+        }
+    }
+
+    return examples;
 }
 
 /**
@@ -908,8 +954,10 @@ function formatDocCToJSDoc(documentation) {
             continue;
         }
 
-        // Skip returns line (with or without leading dash)
-        if (trimmed.startsWith('- Returns:') || trimmed.startsWith('Returns:')) {
+        // Skip returns and example sections
+        if (trimmed.startsWith('- Returns:') || trimmed.startsWith('Returns:') ||
+            trimmed === '- Example:' || trimmed === '- Example' ||
+            trimmed === 'Example:' || trimmed === 'Example') {
             break;
         }
 

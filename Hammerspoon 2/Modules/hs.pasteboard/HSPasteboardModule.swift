@@ -186,14 +186,15 @@ import AppKit
     /// Keys must be UTI type strings; values must be strings. This is how you provide both a plain-text
     /// fallback and a richer representation (such as HTML) in a single clipboard operation.
     ///
+    /// - Parameter representations: A JavaScript object whose keys are UTI strings and values are strings
+    /// - Returns: true if the write succeeded
+    /// - Example:
     /// ```js
     /// hs.pasteboard.writeObjects({
     ///     "public.utf8-plain-text": "Hello",
     ///     "public.html":            "<b>Hello</b>"
     /// })
     /// ```
-    /// - Parameter representations: A JavaScript object whose keys are UTI strings and values are strings
-    /// - Returns: true if the write succeeded
     @objc func writeObjects(_ representations: JSValue) -> Bool
 
     // MARK: Introspection

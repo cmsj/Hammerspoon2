@@ -16,6 +16,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
           "lineNumber": 16
@@ -33,6 +34,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
           "lineNumber": 20
@@ -50,6 +52,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
           "lineNumber": 24
@@ -67,6 +70,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
           "lineNumber": 28
@@ -84,6 +88,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
           "lineNumber": 32
@@ -103,6 +108,7 @@
           "signature": "var appName: String { get }",
           "rawDocumentation": "The application's internal name (e.g., \"Hammerspoon 2\")",
           "description": "The application's internal name (e.g., \"Hammerspoon 2\")",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 16
@@ -112,6 +118,7 @@
           "signature": "var displayName: String { get }",
           "rawDocumentation": "The application's display name shown to users",
           "description": "The application's display name shown to users",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 19
@@ -121,6 +128,7 @@
           "signature": "var version: String { get }",
           "rawDocumentation": "The application's version string (e.g., \"2.0.0\")",
           "description": "The application's version string (e.g., \"2.0.0\")",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 22
@@ -130,6 +138,7 @@
           "signature": "var build: String { get }",
           "rawDocumentation": "The application's build number",
           "description": "The application's build number",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 25
@@ -139,6 +148,7 @@
           "signature": "var minimumOSVersion: String { get }",
           "rawDocumentation": "The minimum macOS version required to run this application",
           "description": "The minimum macOS version required to run this application",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 28
@@ -148,6 +158,7 @@
           "signature": "var copyrightNotice: String { get }",
           "rawDocumentation": "The copyright notice for this application",
           "description": "The copyright notice for this application",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 31
@@ -157,6 +168,7 @@
           "signature": "var bundleIdentifier: String { get }",
           "rawDocumentation": "The application's bundle identifier (e.g., \"com.hammerspoon.Hammerspoon-2\")",
           "description": "The application's bundle identifier (e.g., \"com.hammerspoon.Hammerspoon-2\")",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 34
@@ -166,6 +178,7 @@
           "signature": "var bundlePath: String { get }",
           "rawDocumentation": "The filesystem path to the application bundle",
           "description": "The filesystem path to the application bundle",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 37
@@ -175,6 +188,7 @@
           "signature": "var resourcePath: String { get }",
           "rawDocumentation": "The filesystem path to the application's resource directory",
           "description": "The filesystem path to the application's resource directory",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 40
@@ -197,6 +211,7 @@
             "type": "[HSApplication]",
             "description": "An array of all currently running applications"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 20
@@ -217,6 +232,7 @@
             "type": "HSApplication?",
             "description": "The first matching application, or nil if none matched"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 25
@@ -237,6 +253,7 @@
             "type": "HSApplication?",
             "description": "The first matching application, or nil if none matched"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 30
@@ -257,6 +274,7 @@
             "type": "HSApplication?",
             "description": "The matching application, or nil if none matched"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 35
@@ -271,6 +289,7 @@
             "type": "HSApplication?",
             "description": "The matching application, or nil if none matched"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 39
@@ -285,6 +304,7 @@
             "type": "HSApplication?",
             "description": "The matching application, or nil if none matched"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 43
@@ -305,6 +325,7 @@
             "type": "String?",
             "description": "The application's filesystem path, or nil if it was not found"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 48
@@ -325,6 +346,7 @@
             "type": "[String]",
             "description": "An array of strings containing any filesystem paths that were found"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 53
@@ -345,6 +367,7 @@
             "type": "String?",
             "description": "The path to an application for the given filetype, or il if none were found"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 64
@@ -365,6 +388,7 @@
             "type": "[String]",
             "description": "An array of strings containing the filesystem paths for any applications that were found"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 69
@@ -386,6 +410,7 @@
             "description": "A Promise that resolves to true if successful, false otherwise",
             "promiseType": "boolean"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 74
@@ -403,6 +428,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 79
@@ -420,6 +446,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.application/HSApplicationModule.swift",
           "lineNumber": 84
@@ -443,6 +470,7 @@
                 "type": "Bool",
                 "description": "True if the application was terminated, otherwise false"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 35
@@ -457,6 +485,7 @@
                 "type": "Bool",
                 "description": "True if the application was force-terminated, otherwise false"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 39
@@ -471,6 +500,7 @@
                 "type": "HSAXElement?",
                 "description": "An HSAXElement object, or nil if it could not be obtained"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 55
@@ -482,6 +512,7 @@
               "signature": "var pid: Int { get }",
               "rawDocumentation": "POSIX Process Identifier",
               "description": "POSIX Process Identifier",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 16
@@ -491,6 +522,7 @@
               "signature": "var bundleID: String? { get }",
               "rawDocumentation": "Bundle Identifier (e.g. com.apple.Safari)",
               "description": "Bundle Identifier (e.g. com.apple.Safari)",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 19
@@ -500,6 +532,7 @@
               "signature": "var title: String? { get }",
               "rawDocumentation": "The application's title",
               "description": "The application's title",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 22
@@ -509,6 +542,7 @@
               "signature": "var bundlePath: String? { get }",
               "rawDocumentation": "Location of the application on disk",
               "description": "Location of the application on disk",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 25
@@ -518,6 +552,7 @@
               "signature": "var isHidden: Bool { get set }",
               "rawDocumentation": "Is the application hidden",
               "description": "Is the application hidden",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 28
@@ -527,6 +562,7 @@
               "signature": "var isActive: Bool { get }",
               "rawDocumentation": "Is the application focused",
               "description": "Is the application focused",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 31
@@ -536,6 +572,7 @@
               "signature": "var mainWindow: HSWindow? { get }",
               "rawDocumentation": "The main window of this application, or nil if there is no main window",
               "description": "The main window of this application, or nil if there is no main window",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 42
@@ -545,6 +582,7 @@
               "signature": "var focusedWindow: HSWindow? { get }",
               "rawDocumentation": "The focused window of this application, or nil if there is no focused window",
               "description": "The focused window of this application, or nil if there is no focused window",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 45
@@ -554,6 +592,7 @@
               "signature": "var allWindows: [HSWindow] { get }",
               "rawDocumentation": "All windows of this application",
               "description": "All windows of this application",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 48
@@ -563,6 +602,7 @@
               "signature": "var visibleWindows: [HSWindow] { get }",
               "rawDocumentation": "All visible (ie non-hidden) windows of this application",
               "description": "All visible (ie non-hidden) windows of this application",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.application/HSApplication.swift",
               "lineNumber": 51
@@ -586,6 +626,7 @@
             "type": "[HSAudioDevice]",
             "description": "An array of HSAudioDevice objects"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 43
@@ -600,6 +641,7 @@
             "type": "[HSAudioDevice]",
             "description": "An array of HSAudioDevice objects"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 47
@@ -614,6 +656,7 @@
             "type": "[HSAudioDevice]",
             "description": "An array of HSAudioDevice objects"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 51
@@ -628,6 +671,7 @@
             "type": "HSAudioDevice?",
             "description": "An HSAudioDevice, or null if none is set"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 55
@@ -642,6 +686,7 @@
             "type": "HSAudioDevice?",
             "description": "An HSAudioDevice, or null if none is set"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 59
@@ -656,6 +701,7 @@
             "type": "HSAudioDevice?",
             "description": "An HSAudioDevice, or null if none is set"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 63
@@ -676,6 +722,7 @@
             "type": "HSAudioDevice?",
             "description": "An HSAudioDevice if found, null otherwise"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 68
@@ -696,6 +743,7 @@
             "type": "HSAudioDevice?",
             "description": "An HSAudioDevice if found, null otherwise"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 73
@@ -713,6 +761,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 85
@@ -730,6 +779,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 90
@@ -764,6 +814,7 @@
                 "type": "NSDictionary?",
                 "description": "A dictionary containing the id and name of the current output data source"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 269
@@ -778,6 +829,7 @@
                 "type": "NSDictionary?",
                 "description": "A dictionary containing the id and name of the current input data source"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 273
@@ -792,6 +844,7 @@
                 "type": "[NSDictionary]",
                 "description": "A dictionary containing the ids and names of all available output data sources"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 277
@@ -806,6 +859,7 @@
                 "type": "[NSDictionary]",
                 "description": "A dictionary containing the ids and names of all available input data sources"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 281
@@ -826,6 +880,7 @@
                 "type": "Bool",
                 "description": "`true` on success"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 286
@@ -846,6 +901,7 @@
                 "type": "Bool",
                 "description": "`true` on success"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 291
@@ -860,6 +916,7 @@
                 "type": "Bool",
                 "description": "`true` on success"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 297
@@ -874,6 +931,7 @@
                 "type": "Bool",
                 "description": "`true` on success"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 301
@@ -888,6 +946,7 @@
                 "type": "Bool",
                 "description": "`true` on success"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 305
@@ -905,6 +964,7 @@
                 }
               ],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 321
@@ -922,6 +982,7 @@
                 }
               ],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 326
@@ -933,6 +994,7 @@
               "signature": "var id: Int { get }",
               "rawDocumentation": "The CoreAudio object ID of this device.",
               "description": "The CoreAudio object ID of this device.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 205
@@ -942,6 +1004,7 @@
               "signature": "var name: String { get }",
               "rawDocumentation": "The human-readable name of this device (e.g. `\"Built-in Output\"`).",
               "description": "The human-readable name of this device (e.g. `\"Built-in Output\"`).",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 208
@@ -951,6 +1014,7 @@
               "signature": "var uid: String { get }",
               "rawDocumentation": "The persistent unique identifier for this device.",
               "description": "The persistent unique identifier for this device.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 211
@@ -960,6 +1024,7 @@
               "signature": "var isOutput: Bool { get }",
               "rawDocumentation": "Whether this device has output streams (can play audio).",
               "description": "Whether this device has output streams (can play audio).",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 216
@@ -969,6 +1034,7 @@
               "signature": "var isInput: Bool { get }",
               "rawDocumentation": "Whether this device has input streams (can record audio).",
               "description": "Whether this device has input streams (can record audio).",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 219
@@ -978,6 +1044,7 @@
               "signature": "var transportType: String { get }",
               "rawDocumentation": "The transport mechanism: `\"built-in\"`, `\"usb\"`, `\"bluetooth\"`, `\"bluetooth-le\"`,\n`\"hdmi\"`, `\"display-port\"`, `\"firewire\"`, `\"airplay\"`, `\"avb\"`,\n`\"thunderbolt\"`, `\"virtual\"`, `\"aggregate\"`, `\"pci\"`, or `\"unknown\"`.",
               "description": "The transport mechanism: `\"built-in\"`, `\"usb\"`, `\"bluetooth\"`, `\"bluetooth-le\"`,\n`\"hdmi\"`, `\"display-port\"`, `\"firewire\"`, `\"airplay\"`, `\"avb\"`,\n`\"thunderbolt\"`, `\"virtual\"`, `\"aggregate\"`, `\"pci\"`, or `\"unknown\"`.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 224
@@ -987,6 +1054,7 @@
               "signature": "var outputChannels: Int { get }",
               "rawDocumentation": "Number of output channels, or 0 if the device has no output.",
               "description": "Number of output channels, or 0 if the device has no output.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 229
@@ -996,6 +1064,7 @@
               "signature": "var inputChannels: Int { get }",
               "rawDocumentation": "Number of input channels, or 0 if the device has no input.",
               "description": "Number of input channels, or 0 if the device has no input.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 232
@@ -1005,6 +1074,7 @@
               "signature": "var volume: NSNumber? { get set }",
               "rawDocumentation": "Output volume scalar in the range `0.0`–`1.0`, or `null` if the device has\nno controllable output volume. Setting `null` is a no-op.",
               "description": "Output volume scalar in the range `0.0`–`1.0`, or `null` if the device has\nno controllable output volume. Setting `null` is a no-op.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 238
@@ -1014,6 +1084,7 @@
               "signature": "var muted: Bool { get set }",
               "rawDocumentation": "Whether output is muted. Always `false` if the device has no mutable output.",
               "description": "Whether output is muted. Always `false` if the device has no mutable output.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 241
@@ -1023,6 +1094,7 @@
               "signature": "var balance: NSNumber? { get set }",
               "rawDocumentation": "Output stereo balance in the range `0.0` (full left)–`1.0` (full right),\nor `null` if balance control is not available.",
               "description": "Output stereo balance in the range `0.0` (full left)–`1.0` (full right),\nor `null` if balance control is not available.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 245
@@ -1032,6 +1104,7 @@
               "signature": "var inputVolume: NSNumber? { get set }",
               "rawDocumentation": "Input (microphone) volume scalar in the range `0.0`–`1.0`, or `null` if\nthe device has no controllable input volume.",
               "description": "Input (microphone) volume scalar in the range `0.0`–`1.0`, or `null` if\nthe device has no controllable input volume.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 251
@@ -1041,6 +1114,7 @@
               "signature": "var inputMuted: Bool { get set }",
               "rawDocumentation": "Whether input is muted. Always `false` if the device has no mutable input.",
               "description": "Whether input is muted. Always `false` if the device has no mutable input.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 254
@@ -1050,6 +1124,7 @@
               "signature": "var sampleRate: NSNumber? { get set }",
               "rawDocumentation": "The current nominal sample rate in Hz (e.g. `44100`), or `null` if unknown.",
               "description": "The current nominal sample rate in Hz (e.g. `44100`), or `null` if unknown.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 259
@@ -1059,6 +1134,7 @@
               "signature": "var availableSampleRates: [NSNumber] { get }",
               "rawDocumentation": "All sample rates (in Hz) that this device supports.\nFor devices that support a range, both the minimum and maximum are included.",
               "description": "All sample rates (in Hz) that this device supports.\nFor devices that support a range, both the minimum and maximum are included.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
               "lineNumber": 263
@@ -1082,6 +1158,7 @@
             "type": "HSAXElement?",
             "description": "The system-wide AXElement, or nil if accessibility is not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 40
@@ -1102,6 +1179,7 @@
             "type": "HSAXElement?",
             "description": "The AXElement for the application, or nil if accessibility is not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 46
@@ -1122,6 +1200,7 @@
             "type": "HSAXElement?",
             "description": "The AXElement for the window, or nil if accessibility is not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 52
@@ -1142,6 +1221,7 @@
             "type": "HSAXElement?",
             "description": "The AXElement at that position, or nil if none found"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 57
@@ -1169,6 +1249,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 67
@@ -1196,6 +1277,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 74
@@ -1293,6 +1375,7 @@
           "signature": "var notificationTypes: [String: String] { get }",
           "rawDocumentation": "A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()",
           "description": "A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 60
@@ -1302,6 +1385,7 @@
           "signature": "var focusedElement: JSValue? { get set }",
           "rawDocumentation": "Fetch the focused UI element. Swift-retained storage for the JS implementation.",
           "description": "Fetch the focused UI element. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 87
@@ -1311,6 +1395,7 @@
           "signature": "var findByRole: JSValue? { get set }",
           "rawDocumentation": "Find AX elements by role. Swift-retained storage for the JS implementation.",
           "description": "Find AX elements by role. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 90
@@ -1320,6 +1405,7 @@
           "signature": "var findByTitle: JSValue? { get set }",
           "rawDocumentation": "Find AX elements by title. Swift-retained storage for the JS implementation.",
           "description": "Find AX elements by title. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 93
@@ -1329,6 +1415,7 @@
           "signature": "var printHierarchy: JSValue? { get set }",
           "rawDocumentation": "Print the element hierarchy. Swift-retained storage for the JS implementation.",
           "description": "Print the element hierarchy. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
           "lineNumber": 96
@@ -1351,6 +1438,7 @@
                 "type": "[HSAXElement]",
                 "description": "An array of HSAXElement objects"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 55
@@ -1371,6 +1459,7 @@
                 "type": "HSAXElement?",
                 "description": "An HSAXElement object, if a child exists at the given index"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 60
@@ -1385,6 +1474,7 @@
                 "type": "[String]",
                 "description": "An array of attribute names"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 66
@@ -1405,6 +1495,7 @@
                 "type": "Any?",
                 "description": "The requested value, or nil if none was found"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 71
@@ -1430,6 +1521,7 @@
                 "type": "Bool",
                 "description": "True if the operation succeeded, otherwise False"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 78
@@ -1450,6 +1542,7 @@
                 "type": "Bool",
                 "description": "True if the attribute is settable, otherwise False"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 83
@@ -1464,6 +1557,7 @@
                 "type": "[String]",
                 "description": "An array of available action names"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 89
@@ -1484,6 +1578,7 @@
                 "type": "Bool",
                 "description": "True if the action succeeded, otherwise False"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 94
@@ -1495,6 +1590,7 @@
               "signature": "var role: String? { get }",
               "rawDocumentation": "The element's role (e.g., \"AXWindow\", \"AXButton\")",
               "description": "The element's role (e.g., \"AXWindow\", \"AXButton\")",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 17
@@ -1504,6 +1600,7 @@
               "signature": "var subrole: String? { get }",
               "rawDocumentation": "The element's subrole",
               "description": "The element's subrole",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 20
@@ -1513,6 +1610,7 @@
               "signature": "var title: String? { get }",
               "rawDocumentation": "The element's title",
               "description": "The element's title",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 23
@@ -1522,6 +1620,7 @@
               "signature": "var value: Any? { get }",
               "rawDocumentation": "The element's value",
               "description": "The element's value",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 26
@@ -1531,6 +1630,7 @@
               "signature": "var elementDescription: String? { get }",
               "rawDocumentation": "The element's description",
               "description": "The element's description",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 29
@@ -1540,6 +1640,7 @@
               "signature": "var isEnabled: Bool { get }",
               "rawDocumentation": "Whether the element is enabled",
               "description": "Whether the element is enabled",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 32
@@ -1549,6 +1650,7 @@
               "signature": "var isFocused: Bool { get set }",
               "rawDocumentation": "Whether the element is focused",
               "description": "Whether the element is focused",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 35
@@ -1558,6 +1660,7 @@
               "signature": "var position: HSPoint? { get set }",
               "rawDocumentation": "The element's position on screen",
               "description": "The element's position on screen",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 40
@@ -1567,6 +1670,7 @@
               "signature": "var size: HSSize? { get set }",
               "rawDocumentation": "The element's size",
               "description": "The element's size",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 43
@@ -1576,6 +1680,7 @@
               "signature": "var frame: HSRect? { get set }",
               "rawDocumentation": "The element's frame (position and size combined)",
               "description": "The element's frame (position and size combined)",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 46
@@ -1585,6 +1690,7 @@
               "signature": "var parent: HSAXElement? { get }",
               "rawDocumentation": "The element's parent",
               "description": "The element's parent",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 51
@@ -1594,6 +1700,7 @@
               "signature": "var pid: Int { get }",
               "rawDocumentation": "Get the process ID of the application that owns this element",
               "description": "Get the process ID of the application that owns this element",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 99
@@ -1614,6 +1721,7 @@
           "description": "Open the console window",
           "params": [],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
           "lineNumber": 19
@@ -1625,6 +1733,7 @@
           "description": "Close the console window",
           "params": [],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
           "lineNumber": 22
@@ -1636,6 +1745,7 @@
           "description": "Clear all console output",
           "params": [],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
           "lineNumber": 25
@@ -1653,6 +1763,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
           "lineNumber": 29
@@ -1670,6 +1781,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
           "lineNumber": 33
@@ -1687,6 +1799,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
           "lineNumber": 37
@@ -1704,6 +1817,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
           "lineNumber": 41
@@ -1721,6 +1835,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
           "lineNumber": 45
@@ -1760,6 +1875,7 @@
             "type": "String?",
             "description": "The file contents as a UTF-8 string, or `null` if the file cannot be read."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 80
@@ -1785,6 +1901,7 @@
             "type": "Bool",
             "description": "`true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 98
@@ -1815,6 +1932,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 109
@@ -1840,6 +1958,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 117
@@ -1860,6 +1979,7 @@
             "type": "Bool",
             "description": "`true` if any filesystem entry (file, directory, symlink, etc.) exists at the path."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 126
@@ -1880,6 +2000,7 @@
             "type": "Bool",
             "description": "`true` if a regular file (not a directory or symlink) exists at the path."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 133
@@ -1900,6 +2021,7 @@
             "type": "Bool",
             "description": "`true` if a directory exists at the path."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 140
@@ -1920,6 +2042,7 @@
             "type": "Bool",
             "description": "`true` if the path is a symbolic link."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 146
@@ -1940,6 +2063,7 @@
             "type": "Bool",
             "description": "`true` if the current process can read the file or directory at the path."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 152
@@ -1960,6 +2084,7 @@
             "type": "Bool",
             "description": "`true` if the current process can write to the file or directory at the path."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 158
@@ -1985,6 +2110,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 171
@@ -2010,6 +2136,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 181
@@ -2030,6 +2157,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 190
@@ -2050,6 +2178,7 @@
             "type": "[String]?",
             "description": "Sorted array of filenames, or `null` if the path cannot be read."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 201
@@ -2070,6 +2199,7 @@
             "type": "[String]?",
             "description": "Sorted array of relative paths, or `null` if the path cannot be read."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 209
@@ -2090,6 +2220,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 217
@@ -2110,6 +2241,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 226
@@ -2124,6 +2256,7 @@
             "type": "String?",
             "description": "Current directory path, or `null` on error."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 233
@@ -2144,6 +2277,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 239
@@ -2164,6 +2298,7 @@
             "type": "String?",
             "description": "Absolute canonical path, or `null` if it cannot be resolved."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 250
@@ -2184,6 +2319,7 @@
             "type": "String?",
             "description": "Display name string, or `null` if the path does not exist."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 259
@@ -2198,6 +2334,7 @@
             "type": "String",
             "description": "Temporary directory path (always ends with `/`)."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 264
@@ -2212,6 +2349,7 @@
             "type": "String",
             "description": "Home directory path string."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 269
@@ -2232,6 +2370,7 @@
             "type": "String",
             "description": "URL string"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 280
@@ -2252,6 +2391,7 @@
             "type": "NSDictionary?",
             "description": "Attributes object, or `null` if the path cannot be accessed."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 300
@@ -2272,6 +2412,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 308
@@ -2297,6 +2438,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 320
@@ -2322,6 +2464,7 @@
             "type": "Bool",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 331
@@ -2342,6 +2485,7 @@
             "type": "String?",
             "description": "The raw path the link points to, or `null` if the path is not a symlink."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 337
@@ -2362,6 +2506,7 @@
             "type": "[String]?",
             "description": "Array of tag name strings, or `null` if no tags are set."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 345
@@ -2382,6 +2527,7 @@
             "type": "String?",
             "description": "`true` on success, `false` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 387
@@ -2402,6 +2548,7 @@
             "type": "String?",
             "description": "Base64-encoded bookmark string, or `null` on failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 398
@@ -2422,6 +2569,7 @@
             "type": "String?",
             "description": "The current file path, or `null` if the bookmark cannot be resolved."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 404
@@ -2451,6 +2599,7 @@
             "type": "String",
             "description": "Base64 encoded string"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 20
@@ -2471,6 +2620,7 @@
             "type": "String?",
             "description": "Decoded string, or nil if the input is invalid"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 25
@@ -2491,6 +2641,7 @@
             "type": "String",
             "description": "Hexadecimal MD5 hash"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 31
@@ -2511,6 +2662,7 @@
             "type": "String",
             "description": "Hexadecimal SHA1 hash"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 36
@@ -2531,6 +2683,7 @@
             "type": "String",
             "description": "Hexadecimal SHA256 hash"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 41
@@ -2551,6 +2704,7 @@
             "type": "String",
             "description": "Hexadecimal SHA512 hash"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 46
@@ -2576,6 +2730,7 @@
             "type": "String",
             "description": "Hexadecimal HMAC-MD5"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 54
@@ -2601,6 +2756,7 @@
             "type": "String",
             "description": "Hexadecimal HMAC-SHA1"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 61
@@ -2626,6 +2782,7 @@
             "type": "String",
             "description": "Hexadecimal HMAC-SHA256"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 68
@@ -2651,6 +2808,7 @@
             "type": "String",
             "description": "Hexadecimal HMAC-SHA512"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hash/HSHashModule.swift",
           "lineNumber": 75
@@ -2695,6 +2853,7 @@
             "type": "HSHotkey?",
             "description": "A hotkey object, or nil if binding failed"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 23
@@ -2735,6 +2894,7 @@
             "type": "HSHotkey?",
             "description": "A hotkey object, or nil if binding failed"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 34
@@ -2749,6 +2909,7 @@
             "type": "[String: UInt32]",
             "description": "A dictionary mapping key names to numeric key codes"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 38
@@ -2763,6 +2924,7 @@
             "type": "[String: UInt32]",
             "description": "A dictionary mapping modifier names to their numeric values"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 42
@@ -2786,6 +2948,7 @@
                 "type": "Bool",
                 "description": "True if the hotkey was enabled, otherwise False"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
               "lineNumber": 16
@@ -2797,6 +2960,7 @@
               "description": "Disable the hotkey",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
               "lineNumber": 19
@@ -2811,6 +2975,7 @@
                 "type": "Bool",
                 "description": "True if the hotkey is enabled, otherwise False"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
               "lineNumber": 23
@@ -2822,6 +2987,7 @@
               "description": "Delete the hotkey (disables and clears callbacks)",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
               "lineNumber": 26
@@ -2833,6 +2999,7 @@
               "signature": "var callbackPressed: JSValue? { get set }",
               "rawDocumentation": "The callback function to be called when the hotkey is pressed",
               "description": "The callback function to be called when the hotkey is pressed",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
               "lineNumber": 29
@@ -2842,6 +3009,7 @@
               "signature": "var callbackReleased: JSValue? { get set }",
               "rawDocumentation": "The callback function to be called when the hotkey is released",
               "description": "The callback function to be called when the hotkey is released",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
               "lineNumber": 32
@@ -2878,6 +3046,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
           "lineNumber": 131
@@ -2898,6 +3067,7 @@
             "type": "HSNotification?",
             "description": "An `HSNotification` object. Call `.send()` on it to deliver the notification."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
           "lineNumber": 139
@@ -2909,6 +3079,7 @@
           "description": "Remove all delivered Hammerspoon notifications from Notification Center.",
           "params": [],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
           "lineNumber": 144
@@ -2920,6 +3091,7 @@
           "description": "Cancel all pending (not yet delivered) Hammerspoon notifications.",
           "params": [],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
           "lineNumber": 147
@@ -2931,7 +3103,7 @@
           "name": "HSNotificationAPI",
           "type": "typedef",
           "rawDocumentation": "A notification created by `hs.notify.new()`.\n\nCall `.send()` to deliver it to macOS Notification Center. You can hold a reference\nto the object and call `.withdraw()` later to remove it.\n\nExample:\n```js\nconst n = hs.notify.new({\n    title: \"Build finished\",\n    body: \"Your project compiled successfully.\",\n    actions: [{ identifier: \"OPEN\", title: \"Open\" }],\n    callback: (r) => { if (r.actionIdentifier === \"OPEN\") openProject() }\n})\nn.send()\n```",
-          "description": "A notification created by `hs.notify.new()`.\nCall `.send()` to deliver it to macOS Notification Center. You can hold a reference\nto the object and call `.withdraw()` later to remove it.\n```js\nconst n = hs.notify.new({\n    title: \"Build finished\",\n    body: \"Your project compiled successfully.\",\n    actions: [{ identifier: \"OPEN\", title: \"Open\" }],\n    callback: (r) => { if (r.actionIdentifier === \"OPEN\") openProject() }\n})\nn.send()\n```",
+          "description": "A notification created by `hs.notify.new()`.\nCall `.send()` to deliver it to macOS Notification Center. You can hold a reference\nto the object and call `.withdraw()` later to remove it.",
           "methods": [
             {
               "name": "send",
@@ -2943,6 +3115,7 @@
                 "type": "HSNotification",
                 "description": "self, for method chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotification.swift",
               "lineNumber": 35
@@ -2954,6 +3127,7 @@
               "description": "Remove this notification from Notification Center (if delivered) or cancel it (if pending).",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotification.swift",
               "lineNumber": 38
@@ -2965,6 +3139,7 @@
               "signature": "var identifier: String { get }",
               "rawDocumentation": "The unique identifier assigned to this notification.\nUse it to correlate with system notification APIs if needed.",
               "description": "The unique identifier assigned to this notification.\nUse it to correlate with system notification APIs if needed.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotification.swift",
               "lineNumber": 31
@@ -2994,6 +3169,7 @@
             "type": "JSPromise?",
             "description": "A `Promise` resolving to `{ success, result, raw }`."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 84
@@ -3014,6 +3190,7 @@
             "type": "JSPromise?",
             "description": "A `Promise` resolving to `{ success, result, raw }`."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 94
@@ -3034,6 +3211,7 @@
             "type": "JSPromise?",
             "description": "A `Promise` resolving to `{ success, result, raw }`."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 104
@@ -3054,6 +3232,7 @@
             "type": "JSPromise?",
             "description": "A `Promise` resolving to `{ success, result, raw }`."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 114
@@ -3079,6 +3258,7 @@
             "type": "JSPromise?",
             "description": "A `Promise` resolving to `{ success, result, raw }`."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 124
@@ -3099,6 +3279,7 @@
             "type": "[String: Any]?",
             "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 134
@@ -3119,6 +3300,7 @@
             "type": "[String: Any]?",
             "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 142
@@ -3139,6 +3321,7 @@
             "type": "[String: Any]?",
             "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 148
@@ -3159,6 +3342,7 @@
             "type": "[String: Any]?",
             "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 154
@@ -3184,6 +3368,7 @@
             "type": "[String: Any]?",
             "description": "An object `{ success, result, raw }`, or `null` on XPC failure."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift",
           "lineNumber": 164
@@ -3207,6 +3392,7 @@
             "type": "String?",
             "description": "The plain text string, or null if not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 126
@@ -3221,6 +3407,7 @@
             "type": "String?",
             "description": "The HTML string, or null if not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 130
@@ -3235,6 +3422,7 @@
             "type": "String?",
             "description": "The RTF string, or null if not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 134
@@ -3249,6 +3437,7 @@
             "type": "String?",
             "description": "The URL as a string, or null if not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 138
@@ -3263,6 +3452,7 @@
             "type": "HSImage?",
             "description": "An HSImage, or null if not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 142
@@ -3283,6 +3473,7 @@
             "type": "String?",
             "description": "A base64-encoded string, or null if the type is not available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 148
@@ -3303,6 +3494,7 @@
             "type": "Bool",
             "description": "true if the write succeeded"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 155
@@ -3323,6 +3515,7 @@
             "type": "Bool",
             "description": "true if the write succeeded"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 160
@@ -3343,6 +3536,7 @@
             "type": "Bool",
             "description": "true if the write succeeded"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 165
@@ -3363,6 +3557,7 @@
             "type": "Bool",
             "description": "true if the write succeeded"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 170
@@ -3383,6 +3578,7 @@
             "type": "Bool",
             "description": "true if the write succeeded"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 175
@@ -3408,6 +3604,7 @@
             "type": "Bool",
             "description": "true if the write succeeded"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
           "lineNumber": 183
@@ -3415,8 +3612,8 @@
         {
           "name": "writeObjects",
           "signature": "func writeObjects(_ representations: JSValue) -> Bool",
-          "rawDocumentation": "Write multiple type representations to the pasteboard atomically, replacing all current contents.\nKeys must be UTI type strings; values must be strings. This is how you provide both a plain-text\nfallback and a richer representation (such as HTML) in a single clipboard operation.\n\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"Hello\",\n    \"public.html\":            \"<b>Hello</b>\"\n})\n```\n- Parameter representations: A JavaScript object whose keys are UTI strings and values are strings\n- Returns: true if the write succeeded",
-          "description": "Write multiple type representations to the pasteboard atomically, replacing all current contents.\nKeys must be UTI type strings; values must be strings. This is how you provide both a plain-text\nfallback and a richer representation (such as HTML) in a single clipboard operation.\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"Hello\",\n    \"public.html\":            \"<b>Hello</b>\"\n})\n```",
+          "rawDocumentation": "Write multiple type representations to the pasteboard atomically, replacing all current contents.\nKeys must be UTI type strings; values must be strings. This is how you provide both a plain-text\nfallback and a richer representation (such as HTML) in a single clipboard operation.\n\n- Parameter representations: A JavaScript object whose keys are UTI strings and values are strings\n- Returns: true if the write succeeded\n- Example:\n```js\nhs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"Hello\",\n    \"public.html\":            \"<b>Hello</b>\"\n})\n```",
+          "description": "Write multiple type representations to the pasteboard atomically, replacing all current contents.\nKeys must be UTI type strings; values must be strings. This is how you provide both a plain-text\nfallback and a richer representation (such as HTML) in a single clipboard operation.",
           "params": [
             {
               "name": "representations",
@@ -3428,9 +3625,15 @@
             "type": "Bool",
             "description": "true if the write succeeded"
           },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.pasteboard.writeObjects({\n    \"public.utf8-plain-text\": \"Hello\",\n    \"public.html\":            \"<b>Hello</b>\"\n})"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
-          "lineNumber": 197
+          "lineNumber": 198
         },
         {
           "name": "types",
@@ -3442,9 +3645,10 @@
             "type": "[String]",
             "description": "An array of UTI strings (e.g. [\"public.utf8-plain-text\", \"public.html\"])"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
-          "lineNumber": 203
+          "lineNumber": 204
         },
         {
           "name": "hasType",
@@ -3462,9 +3666,10 @@
             "type": "Bool",
             "description": "true if the type is available"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
-          "lineNumber": 208
+          "lineNumber": 209
         },
         {
           "name": "clear",
@@ -3473,9 +3678,10 @@
           "description": "Clear all contents from the pasteboard",
           "params": [],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
-          "lineNumber": 217
+          "lineNumber": 218
         },
         {
           "name": "addWatcher",
@@ -3490,9 +3696,10 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
-          "lineNumber": 230
+          "lineNumber": 231
         },
         {
           "name": "removeWatcher",
@@ -3507,9 +3714,10 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
-          "lineNumber": 234
+          "lineNumber": 235
         }
       ],
       "properties": [
@@ -3518,18 +3726,20 @@
           "signature": "var changeCount: Int { get }",
           "rawDocumentation": "The pasteboard change count. Increments each time any application writes to the pasteboard.\nComparing a saved value to the current value is the standard way to detect external changes.",
           "description": "The pasteboard change count. Increments each time any application writes to the pasteboard.\nComparing a saved value to the current value is the standard way to detect external changes.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
-          "lineNumber": 212
+          "lineNumber": 213
         },
         {
           "name": "watcherInterval",
           "signature": "var watcherInterval: Double { get set }",
           "rawDocumentation": "The polling interval for the pasteboard watcher, in seconds. Defaults to 0.5.\nChanges take effect the next time a watcher is started (i.e. after removing and re-adding).",
           "description": "The polling interval for the pasteboard watcher, in seconds. Defaults to 0.5.\nChanges take effect the next time a watcher is started (i.e. after removing and re-adding).",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.pasteboard/HSPasteboardModule.swift",
-          "lineNumber": 223
+          "lineNumber": 224
         }
       ],
       "types": [],
@@ -3549,6 +3759,7 @@
             "type": "Bool",
             "description": "true if permission is granted, false otherwise"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 18
@@ -3560,6 +3771,7 @@
           "description": "Request Accessibility permission (shows system dialog if not granted)",
           "params": [],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 21
@@ -3574,6 +3786,7 @@
             "type": "Bool",
             "description": "true if permission is granted, false otherwise"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 25
@@ -3585,6 +3798,7 @@
           "description": "Request Screen Recording permission",
           "params": [],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 29
@@ -3599,6 +3813,7 @@
             "type": "Bool",
             "description": "true if permission is granted, false otherwise"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 33
@@ -3614,6 +3829,7 @@
             "description": "A Promise that resolves to true if granted, false if denied",
             "promiseType": "boolean"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 37
@@ -3628,6 +3844,7 @@
             "type": "Bool",
             "description": "true if permission is granted, false otherwise"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 41
@@ -3643,6 +3860,7 @@
             "description": "A Promise that resolves to true if granted, false if denied",
             "promiseType": "boolean"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 45
@@ -3657,6 +3875,7 @@
             "type": "Bool",
             "description": "true if notification permission is granted"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 53
@@ -3672,6 +3891,7 @@
             "description": "A Promise that resolves to true if granted, false if denied",
             "promiseType": "boolean"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 60
@@ -3695,6 +3915,7 @@
             "type": "[HSScreen]",
             "description": "An array of HSScreen objects"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift",
           "lineNumber": 48
@@ -3709,6 +3930,7 @@
             "type": "HSScreen?",
             "description": "An HSScreen object or `null` if no main screen can be determined."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift",
           "lineNumber": 54
@@ -3723,6 +3945,7 @@
             "type": "HSScreen?",
             "description": "An HSScreen object or `null` if no primary screen can be determined."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift",
           "lineNumber": 59
@@ -3767,6 +3990,7 @@
                 "type": "Bool",
                 "description": "`true` on success."
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 80
@@ -3782,6 +4006,7 @@
                 "description": "Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).",
                 "promiseType": "HSImage"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 96
@@ -3796,6 +4021,7 @@
                 "type": "HSScreen",
                 "description": "An HSScreen object"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 102
@@ -3810,6 +4036,7 @@
                 "type": "HSScreen",
                 "description": "An HSScreen object"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 106
@@ -3824,6 +4051,7 @@
                 "type": "HSScreen?",
                 "description": "An HSScreen object"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 110
@@ -3838,6 +4066,7 @@
                 "type": "HSScreen?",
                 "description": "An HSScreen object"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 114
@@ -3852,6 +4081,7 @@
                 "type": "HSScreen?",
                 "description": "An HSScreen object"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 118
@@ -3866,6 +4096,7 @@
                 "type": "HSScreen?",
                 "description": "An HSScreen object"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 122
@@ -3891,6 +4122,7 @@
                 "type": "Bool",
                 "description": "`true` on success."
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 132
@@ -3905,6 +4137,7 @@
                 "type": "Bool",
                 "description": "`true` on success."
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 137
@@ -3925,6 +4158,7 @@
                 "type": "Bool",
                 "description": "`true` on success."
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 143
@@ -3939,6 +4173,7 @@
                 "type": "Bool",
                 "description": "`true` on success."
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 148
@@ -3959,6 +4194,7 @@
                 "type": "HSRect?",
                 "description": "The rect offset to be relative to this screen's top-left, or `null` if the input is invalid."
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 158
@@ -3979,6 +4215,7 @@
                 "type": "HSRect?",
                 "description": "The rect in global Hammerspoon coordinates, or `null` if the input is invalid."
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 164
@@ -3990,6 +4227,7 @@
               "signature": "var id: Int { get }",
               "rawDocumentation": "Unique display identifier (matches `CGDirectDisplayID`).",
               "description": "Unique display identifier (matches `CGDirectDisplayID`).",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 39
@@ -3999,6 +4237,7 @@
               "signature": "var name: String { get }",
               "rawDocumentation": "The manufacturer-assigned localized display name.",
               "description": "The manufacturer-assigned localized display name.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 42
@@ -4008,6 +4247,7 @@
               "signature": "var uuid: String { get }",
               "rawDocumentation": "The display's UUID string.",
               "description": "The display's UUID string.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 45
@@ -4017,6 +4257,7 @@
               "signature": "var frame: HSRect { get }",
               "rawDocumentation": "The usable screen area in Hammerspoon coordinates, excluding the menu bar and Dock.",
               "description": "The usable screen area in Hammerspoon coordinates, excluding the menu bar and Dock.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 50
@@ -4026,6 +4267,7 @@
               "signature": "var fullFrame: HSRect { get }",
               "rawDocumentation": "The full screen area in Hammerspoon coordinates, including menu bar and Dock regions.",
               "description": "The full screen area in Hammerspoon coordinates, including menu bar and Dock regions.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 53
@@ -4035,6 +4277,7 @@
               "signature": "var position: HSPoint { get }",
               "rawDocumentation": "The screen's top-left corner in global Hammerspoon coordinates.",
               "description": "The screen's top-left corner in global Hammerspoon coordinates.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 56
@@ -4044,6 +4287,7 @@
               "signature": "var mode: NSDictionary { get }",
               "rawDocumentation": "The currently active display mode.\n\nAn object with keys: `width`, `height`, `scale`, `frequency`.",
               "description": "The currently active display mode.\nAn object with keys: `width`, `height`, `scale`, `frequency`.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 63
@@ -4053,6 +4297,7 @@
               "signature": "var availableModes: [NSDictionary] { get }",
               "rawDocumentation": "All display modes supported by this screen.\n\nEach element has keys: `width`, `height`, `scale`, `frequency`.",
               "description": "All display modes supported by this screen.\nEach element has keys: `width`, `height`, `scale`, `frequency`.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 68
@@ -4062,6 +4307,7 @@
               "signature": "var rotation: Double { get set }",
               "rawDocumentation": "The current screen rotation in degrees (0, 90, 180, or 270).\n\nAssign one of `0`, `90`, `180`, or `270` to rotate the display.",
               "description": "The current screen rotation in degrees (0, 90, 180, or 270).\nAssign one of `0`, `90`, `180`, or `270` to rotate the display.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 87
@@ -4071,6 +4317,7 @@
               "signature": "var desktopImage: String? { get set }",
               "rawDocumentation": "The URL string of the current desktop background image for this screen, or `null`.\n\nAssign a new absolute file path or `file://` URL string to change the wallpaper.",
               "description": "The URL string of the current desktop background image for this screen, or `null`.\nAssign a new absolute file path or `file://` URL string to change the wallpaper.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 171
@@ -4120,6 +4367,7 @@
             "type": "HSTask",
             "description": "A task object. Call start() to begin execution."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
           "lineNumber": 25
@@ -4247,6 +4495,7 @@
           "signature": "var runAsync: JSValue? { get set }",
           "rawDocumentation": "Run a task, returning a Promise. Swift-retained storage for the JS implementation.",
           "description": "Run a task, returning a Promise. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
           "lineNumber": 28
@@ -4256,6 +4505,7 @@
           "signature": "var shell: JSValue? { get set }",
           "rawDocumentation": "Run a shell command. Swift-retained storage for the JS implementation.",
           "description": "Run a shell command. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
           "lineNumber": 31
@@ -4265,6 +4515,7 @@
           "signature": "var parallel: JSValue? { get set }",
           "rawDocumentation": "Run multiple tasks in parallel. Swift-retained storage for the JS implementation.",
           "description": "Run multiple tasks in parallel. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
           "lineNumber": 34
@@ -4274,6 +4525,7 @@
           "signature": "var sequence: JSValue? { get set }",
           "rawDocumentation": "Run multiple tasks in sequence. Swift-retained storage for the JS implementation.",
           "description": "Run multiple tasks in sequence. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
           "lineNumber": 37
@@ -4283,6 +4535,7 @@
           "signature": "var builder: JSValue? { get set }",
           "rawDocumentation": "Create a task builder. Swift-retained storage for the JS implementation.",
           "description": "Create a task builder. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
           "lineNumber": 40
@@ -4292,6 +4545,7 @@
           "signature": "var TaskBuilder: JSValue? { get set }",
           "rawDocumentation": "TaskBuilder class. Swift-retained storage for the JS implementation.",
           "description": "TaskBuilder class. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
           "lineNumber": 43
@@ -4314,6 +4568,7 @@
                 "type": "HSTask",
                 "description": "The task object for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 16
@@ -4325,6 +4580,7 @@
               "description": "Terminate the task (send SIGTERM)",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 19
@@ -4336,6 +4592,7 @@
               "description": "Terminate the task with extreme prejudice (send SIGKILL)",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 22
@@ -4347,6 +4604,7 @@
               "description": "Interrupt the task (send SIGINT)",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 25
@@ -4358,6 +4616,7 @@
               "description": "Pause the task (send SIGSTOP)",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 28
@@ -4369,6 +4628,7 @@
               "description": "Resume the task (send SIGCONT)",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 31
@@ -4380,6 +4640,7 @@
               "description": "Wait for the task to complete (blocking)",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 34
@@ -4397,6 +4658,7 @@
                 }
               ],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 38
@@ -4408,6 +4670,7 @@
               "description": "Close the task's stdin",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 41
@@ -4419,6 +4682,7 @@
               "signature": "var isRunning: Bool { get }",
               "rawDocumentation": "Check if the task is currently running\n- Note: true if the task is running, false otherwise",
               "description": "Check if the task is currently running",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 45
@@ -4428,6 +4692,7 @@
               "signature": "var pid: Int32 { get }",
               "rawDocumentation": "The process ID of the running task\n- Note: The value will be -1 if the task is not running",
               "description": "The process ID of the running task",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 49
@@ -4437,6 +4702,7 @@
               "signature": "var environment: [String: String] { get set }",
               "rawDocumentation": "The environment variables for the task\n- Note: Can only be modified before calling start()",
               "description": "The environment variables for the task",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 53
@@ -4446,6 +4712,7 @@
               "signature": "var workingDirectory: String? { get set }",
               "rawDocumentation": "The working directory for the task\n- Note: Can only be modified before calling start()",
               "description": "The working directory for the task",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 57
@@ -4455,6 +4722,7 @@
               "signature": "var terminationStatus: NSNumber? { get }",
               "rawDocumentation": "The termination status of the task\n- Note: Returns the exit code, or nil if the task hasn't terminated",
               "description": "The termination status of the task",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 61
@@ -4464,6 +4732,7 @@
               "signature": "var terminationReason: String? { get }",
               "rawDocumentation": "The termination reason\n- Note: Returns a string describing why the task terminated, or nil if still running",
               "description": "The termination reason",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.task/HSTask.swift",
               "lineNumber": 65
@@ -4503,6 +4772,7 @@
             "type": "HSTimer",
             "description": "A timer object. Call start() to begin the timer."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 21
@@ -4533,6 +4803,7 @@
             "type": "HSTimer",
             "description": "A timer object. Call start() to begin the timer."
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 30
@@ -4558,6 +4829,7 @@
             "type": "HSTimer",
             "description": "A timer object (already started)"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 37
@@ -4583,6 +4855,7 @@
             "type": "HSTimer",
             "description": "A timer object (already started)"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 44
@@ -4618,6 +4891,7 @@
             "type": "HSTimer",
             "description": "A timer object (already started)"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 54
@@ -4635,6 +4909,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 59
@@ -4649,6 +4924,7 @@
             "type": "TimeInterval",
             "description": "Fractional seconds since midnight, January 1, 1970 UTC"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 63
@@ -4663,6 +4939,7 @@
             "type": "UInt64",
             "description": "Nanoseconds since boot"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 67
@@ -4677,6 +4954,7 @@
             "type": "TimeInterval",
             "description": "Seconds since midnight in the local timezone"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 71
@@ -4697,6 +4975,7 @@
             "type": "Double",
             "description": "The equivalent number of seconds"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 76
@@ -4717,6 +4996,7 @@
             "type": "Double",
             "description": "The equivalent number of seconds"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 81
@@ -4737,6 +5017,7 @@
             "type": "Double",
             "description": "The equivalent number of seconds"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 86
@@ -4757,6 +5038,7 @@
             "type": "Double",
             "description": "The equivalent number of seconds"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 91
@@ -4876,6 +5158,7 @@
           "signature": "var doUntil: JSValue? { get set }",
           "rawDocumentation": "Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.",
           "description": "Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 94
@@ -4885,6 +5168,7 @@
           "signature": "var doWhile: JSValue? { get set }",
           "rawDocumentation": "Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.",
           "description": "Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 97
@@ -4894,6 +5178,7 @@
           "signature": "var waitUntil: JSValue? { get set }",
           "rawDocumentation": "Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.",
           "description": "Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 100
@@ -4903,6 +5188,7 @@
           "signature": "var waitWhile: JSValue? { get set }",
           "rawDocumentation": "Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.",
           "description": "Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
           "lineNumber": 103
@@ -4922,6 +5208,7 @@
               "description": "Start the timer",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
               "lineNumber": 20
@@ -4933,6 +5220,7 @@
               "description": "Stop the timer",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
               "lineNumber": 23
@@ -4944,6 +5232,7 @@
               "description": "Immediately fire the timer's callback",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
               "lineNumber": 26
@@ -4958,6 +5247,7 @@
                 "type": "Bool",
                 "description": "true if the timer is running, false otherwise"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
               "lineNumber": 30
@@ -4972,6 +5262,7 @@
                 "type": "TimeInterval",
                 "description": "Seconds until next trigger, or a negative value if the timer is not running"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
               "lineNumber": 34
@@ -4989,6 +5280,7 @@
                 }
               ],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
               "lineNumber": 38
@@ -5000,6 +5292,7 @@
               "signature": "var interval: TimeInterval { get }",
               "rawDocumentation": "The timer's interval in seconds",
               "description": "The timer's interval in seconds",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
               "lineNumber": 14
@@ -5009,6 +5302,7 @@
               "signature": "var repeats: Bool { get }",
               "rawDocumentation": "Whether the timer repeats",
               "description": "Whether the timer repeats",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
               "lineNumber": 17
@@ -5038,6 +5332,7 @@
             "type": "HSUIWindow",
             "description": "An `HSUIWindow` object for chaining"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
           "lineNumber": 308
@@ -5058,6 +5353,7 @@
             "type": "HSUIAlert",
             "description": "An `HSUIAlert` object for chaining"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
           "lineNumber": 344
@@ -5078,6 +5374,7 @@
             "type": "HSUIDialog",
             "description": "An `HSUIDialog` object for chaining"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
           "lineNumber": 384
@@ -5098,6 +5395,7 @@
             "type": "HSUITextPrompt",
             "description": "An `HSUITextPrompt` object for chaining"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
           "lineNumber": 424
@@ -5118,6 +5416,7 @@
             "type": "HSString",
             "description": "An `HSString` object whose value can be updated with `.set()`"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
           "lineNumber": 445
@@ -5132,6 +5431,7 @@
             "type": "HSUIFilePicker",
             "description": "An `HSUIFilePicker` object for chaining"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
           "lineNumber": 501
@@ -5155,6 +5455,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 73
@@ -5166,6 +5467,7 @@
               "description": "Hide the window (keeps it in memory)",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 76
@@ -5177,6 +5479,7 @@
               "description": "Close and destroy the window",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 79
@@ -5197,6 +5500,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 86
@@ -5211,6 +5515,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining (apply modifiers like `fill()`, `frame()`)"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 92
@@ -5225,6 +5530,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining (apply modifiers like `fill()`, `frame()`)"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 96
@@ -5245,6 +5551,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining (apply modifiers like `font()`, `foregroundColor()`)"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 102
@@ -5265,6 +5572,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 107
@@ -5285,6 +5593,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining (apply `.fill()`, `.cornerRadius()`, `.font()`,"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 114
@@ -5299,6 +5608,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining (call `end()` when done)"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 120
@@ -5313,6 +5623,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining (call `end()` when done)"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 124
@@ -5327,6 +5638,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining (call `end()` when done)"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 128
@@ -5341,6 +5653,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 132
@@ -5355,6 +5668,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 136
@@ -5375,6 +5689,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 143
@@ -5395,6 +5710,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 148
@@ -5415,6 +5731,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 153
@@ -5435,6 +5752,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 158
@@ -5455,6 +5773,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 163
@@ -5475,6 +5794,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 168
@@ -5495,6 +5815,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 175
@@ -5515,6 +5836,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 180
@@ -5529,6 +5851,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 186
@@ -5549,6 +5872,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 191
@@ -5569,6 +5893,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 198
@@ -5589,6 +5914,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 203
@@ -5609,6 +5935,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 210
@@ -5629,6 +5956,7 @@
                 "type": "HSUIWindow",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 215
@@ -5658,6 +5986,7 @@
                 "type": "HSUIAlert",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
               "lineNumber": 33
@@ -5678,6 +6007,7 @@
                 "type": "HSUIAlert",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
               "lineNumber": 38
@@ -5698,6 +6028,7 @@
                 "type": "HSUIAlert",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
               "lineNumber": 43
@@ -5718,6 +6049,7 @@
                 "type": "HSUIAlert",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
               "lineNumber": 48
@@ -5732,6 +6064,7 @@
                 "type": "HSUIAlert",
                 "description": "Self for chaining (can store reference to close manually)"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
               "lineNumber": 52
@@ -5743,6 +6076,7 @@
               "description": "Close the alert immediately",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
               "lineNumber": 55
@@ -5772,6 +6106,7 @@
                 "type": "HSUIDialog",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
               "lineNumber": 39
@@ -5792,6 +6127,7 @@
                 "type": "HSUIDialog",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
               "lineNumber": 44
@@ -5812,6 +6148,7 @@
                 "type": "HSUIDialog",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
               "lineNumber": 49
@@ -5832,6 +6169,7 @@
                 "type": "HSUIDialog",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
               "lineNumber": 54
@@ -5846,6 +6184,7 @@
                 "type": "HSUIDialog",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
               "lineNumber": 58
@@ -5857,6 +6196,7 @@
               "description": "Close the dialog programmatically",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIDialog.swift",
               "lineNumber": 61
@@ -5886,6 +6226,7 @@
                 "type": "HSUIFilePicker",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 55
@@ -5906,6 +6247,7 @@
                 "type": "HSUIFilePicker",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 60
@@ -5926,6 +6268,7 @@
                 "type": "HSUIFilePicker",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 65
@@ -5946,6 +6289,7 @@
                 "type": "HSUIFilePicker",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 70
@@ -5966,6 +6310,7 @@
                 "type": "HSUIFilePicker",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 75
@@ -5986,6 +6331,7 @@
                 "type": "HSUIFilePicker",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 80
@@ -6006,6 +6352,7 @@
                 "type": "HSUIFilePicker",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 85
@@ -6026,6 +6373,7 @@
                 "type": "HSUIFilePicker",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 92
@@ -6037,6 +6385,7 @@
               "description": "Show the file picker dialog",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
               "lineNumber": 95
@@ -6066,6 +6415,7 @@
                 "type": "HSUITextPrompt",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
               "lineNumber": 37
@@ -6086,6 +6436,7 @@
                 "type": "HSUITextPrompt",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
               "lineNumber": 42
@@ -6106,6 +6457,7 @@
                 "type": "HSUITextPrompt",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
               "lineNumber": 47
@@ -6126,6 +6478,7 @@
                 "type": "HSUITextPrompt",
                 "description": "Self for chaining"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
               "lineNumber": 52
@@ -6137,6 +6490,7 @@
               "description": "Show the prompt dialog",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUITextPrompt.swift",
               "lineNumber": 55
@@ -6161,6 +6515,7 @@
             "type": "HSWindow?",
             "description": "The focused window, or nil if none"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 19
@@ -6175,6 +6530,7 @@
             "type": "[HSWindow]",
             "description": "An array of all windows"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 23
@@ -6189,6 +6545,7 @@
             "type": "[HSWindow]",
             "description": "An array of visible windows"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 27
@@ -6209,6 +6566,7 @@
             "type": "[HSWindow]",
             "description": "An array of windows for that application"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 32
@@ -6229,6 +6587,7 @@
             "type": "[HSWindow]",
             "description": "An array of windows on that screen"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 37
@@ -6249,6 +6608,7 @@
             "type": "HSWindow?",
             "description": "The topmost window at that position, or nil if none"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 43
@@ -6263,6 +6623,7 @@
             "type": "[HSWindow]",
             "description": "An array of windows in z-order"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.window/HSWindowModule.swift",
           "lineNumber": 47
@@ -6391,6 +6752,7 @@
                 "type": "Bool",
                 "description": "true if successful"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 61
@@ -6405,6 +6767,7 @@
                 "type": "Bool",
                 "description": "true if successful"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 65
@@ -6419,6 +6782,7 @@
                 "type": "Bool",
                 "description": "true if successful"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 69
@@ -6433,6 +6797,7 @@
                 "type": "Bool",
                 "description": "true if successful"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 73
@@ -6447,6 +6812,7 @@
                 "type": "Bool",
                 "description": "true if successful"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 77
@@ -6461,6 +6827,7 @@
                 "type": "Bool",
                 "description": "true if successful"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 81
@@ -6472,6 +6839,7 @@
               "description": "Center the window on the screen",
               "params": [],
               "returns": null,
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 85
@@ -6486,6 +6854,7 @@
                 "type": "HSAXElement",
                 "description": "The accessibility element for this window"
               },
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 91
@@ -6497,6 +6866,7 @@
               "signature": "var title: String? { get }",
               "rawDocumentation": "The window's title",
               "description": "The window's title",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 18
@@ -6506,6 +6876,7 @@
               "signature": "var application: HSApplication? { get }",
               "rawDocumentation": "The application that owns this window",
               "description": "The application that owns this window",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 21
@@ -6515,6 +6886,7 @@
               "signature": "var pid: Int { get }",
               "rawDocumentation": "The process ID of the application that owns this window",
               "description": "The process ID of the application that owns this window",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 24
@@ -6524,6 +6896,7 @@
               "signature": "var isMinimized: Bool { get set }",
               "rawDocumentation": "Whether the window is minimized",
               "description": "Whether the window is minimized",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 29
@@ -6533,6 +6906,7 @@
               "signature": "var isVisible: Bool { get }",
               "rawDocumentation": "Whether the window is visible (not minimized or hidden)",
               "description": "Whether the window is visible (not minimized or hidden)",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 32
@@ -6542,6 +6916,7 @@
               "signature": "var isFocused: Bool { get }",
               "rawDocumentation": "Whether the window is focused",
               "description": "Whether the window is focused",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 35
@@ -6551,6 +6926,7 @@
               "signature": "var isFullscreen: Bool { get set }",
               "rawDocumentation": "Whether the window is fullscreen",
               "description": "Whether the window is fullscreen",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 38
@@ -6560,6 +6936,7 @@
               "signature": "var isStandard: Bool { get }",
               "rawDocumentation": "Whether the window is standard (has a titlebar)",
               "description": "Whether the window is standard (has a titlebar)",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 41
@@ -6569,6 +6946,7 @@
               "signature": "var position: HSPoint? { get set }",
               "rawDocumentation": "The window's position on screen {x: Int, y: Int}",
               "description": "The window's position on screen {x: Int, y: Int}",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 46
@@ -6578,6 +6956,7 @@
               "signature": "var size: HSSize? { get set }",
               "rawDocumentation": "The window's size {w: Int, h: Int}",
               "description": "The window's size {w: Int, h: Int}",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 49
@@ -6587,6 +6966,7 @@
               "signature": "var frame: HSRect? { get set }",
               "rawDocumentation": "The window's frame {x: Int, y: Int, w: Int, h: Int}",
               "description": "The window's frame {x: Int, y: Int, w: Int, h: Int}",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 52
@@ -6596,6 +6976,7 @@
               "signature": "var screen: HSScreen? { get }",
               "rawDocumentation": "The screen that contains the largest portion of this window.",
               "description": "The screen that contains the largest portion of this window.",
+              "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
               "lineNumber": 55
@@ -6645,6 +7026,7 @@
             "type": "HSColor",
             "description": "An HSColor object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
           "lineNumber": 26
@@ -6665,6 +7047,7 @@
             "type": "HSColor",
             "description": "An HSColor object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
           "lineNumber": 31
@@ -6685,6 +7068,7 @@
             "type": "HSColor",
             "description": "An HSColor object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
           "lineNumber": 36
@@ -6702,6 +7086,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
           "lineNumber": 40
@@ -6726,6 +7111,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 16
@@ -6740,6 +7126,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 20
@@ -6754,6 +7141,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 24
@@ -6768,6 +7156,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 28
@@ -6782,6 +7171,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 32
@@ -6796,6 +7186,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 36
@@ -6810,6 +7201,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 40
@@ -6824,6 +7216,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 44
@@ -6838,6 +7231,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 48
@@ -6852,6 +7246,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 52
@@ -6866,6 +7261,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 56
@@ -6886,6 +7282,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 61
@@ -6911,6 +7308,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 68
@@ -6936,6 +7334,7 @@
             "type": "HSFont",
             "description": "An HSFont object"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSFont.swift",
           "lineNumber": 75
@@ -6966,6 +7365,7 @@
             "type": "HSImage?",
             "description": "An HSImage object, or null if the file couldn't be loaded"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 65
@@ -6986,6 +7386,7 @@
             "type": "HSImage?",
             "description": "An HSImage object, or null if the image couldn't be found"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 70
@@ -7006,6 +7407,7 @@
             "type": "HSImage?",
             "description": "An HSImage object, or null if the app couldn't be found"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 75
@@ -7026,6 +7428,7 @@
             "type": "HSImage?",
             "description": "An HSImage object representing the file's icon"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 80
@@ -7046,6 +7449,7 @@
             "type": "HSImage?",
             "description": "An HSImage object representing the file type's icon"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 85
@@ -7067,6 +7471,7 @@
             "description": "A Promise that resolves to the loaded image, or rejects on error",
             "promiseType": "HSImage"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 90
@@ -7087,6 +7492,7 @@
             "type": "JSValue",
             "description": "The current size as HSSize, or a resized copy if size was provided"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 95
@@ -7107,6 +7513,7 @@
             "type": "String?",
             "description": "The current or new name"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 100
@@ -7132,6 +7539,7 @@
             "type": "HSImage?",
             "description": "A new resized HSImage"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 107
@@ -7146,6 +7554,7 @@
             "type": "HSImage?",
             "description": "A new HSImage copy"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 111
@@ -7166,6 +7575,7 @@
             "type": "HSImage?",
             "description": "A new cropped HSImage, or null if cropping failed"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 116
@@ -7186,6 +7596,7 @@
             "type": "Bool",
             "description": "true if saved successfully, false otherwise"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 121
@@ -7206,6 +7617,7 @@
             "type": "Bool",
             "description": "Current template state"
           },
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 126
@@ -7223,6 +7635,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 130
@@ -7255,6 +7668,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
           "lineNumber": 28
@@ -7266,6 +7680,7 @@
           "signature": "var x: Double { get set }",
           "rawDocumentation": "A coordinate for the x-axis position of this point",
           "description": "A coordinate for the x-axis position of this point",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
           "lineNumber": 19
@@ -7275,6 +7690,7 @@
           "signature": "var y: Double { get set }",
           "rawDocumentation": "A coordinate for the y-axis position of this point",
           "description": "A coordinate for the y-axis position of this point",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
           "lineNumber": 22
@@ -7316,6 +7732,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
           "lineNumber": 42
@@ -7327,6 +7744,7 @@
           "signature": "var x: Double { get set }",
           "rawDocumentation": "An x-axis coordinate for the top-left point of the rectangle",
           "description": "An x-axis coordinate for the top-left point of the rectangle",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
           "lineNumber": 19
@@ -7336,6 +7754,7 @@
           "signature": "var y: Double { get set }",
           "rawDocumentation": "A y-axis coordinate for the top-left point of the rectangle",
           "description": "A y-axis coordinate for the top-left point of the rectangle",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
           "lineNumber": 22
@@ -7345,6 +7764,7 @@
           "signature": "var w: Double { get set }",
           "rawDocumentation": "The width of the rectangle",
           "description": "The width of the rectangle",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
           "lineNumber": 25
@@ -7354,6 +7774,7 @@
           "signature": "var h: Double { get set }",
           "rawDocumentation": "The height of the rectangle",
           "description": "The height of the rectangle",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
           "lineNumber": 28
@@ -7363,6 +7784,7 @@
           "signature": "var origin: HSPoint { get set }",
           "rawDocumentation": "The \"origin\" of the rectangle, ie the coordinates of its top left corner, as an HSPoint object",
           "description": "The \"origin\" of the rectangle, ie the coordinates of its top left corner, as an HSPoint object",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
           "lineNumber": 31
@@ -7372,6 +7794,7 @@
           "signature": "var size: HSSize { get set }",
           "rawDocumentation": "The size of the rectangle, ie its width and height, as an HSSize object",
           "description": "The size of the rectangle, ie its width and height, as an HSSize object",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
           "lineNumber": 34
@@ -7403,6 +7826,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSSize.swift",
           "lineNumber": 28
@@ -7414,6 +7838,7 @@
           "signature": "var w: Double { get set }",
           "rawDocumentation": "The width of the rectangle",
           "description": "The width of the rectangle",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSSize.swift",
           "lineNumber": 19
@@ -7423,6 +7848,7 @@
           "signature": "var h: Double { get set }",
           "rawDocumentation": "The height of the rectangle",
           "description": "The height of the rectangle",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSSize.swift",
           "lineNumber": 22
@@ -7449,6 +7875,7 @@
             }
           ],
           "returns": null,
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSString.swift",
           "lineNumber": 24
@@ -7460,6 +7887,7 @@
           "signature": "var value: String { get }",
           "rawDocumentation": "The current string value",
           "description": "The current string value",
+          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSString.swift",
           "lineNumber": 20
@@ -7468,5 +7896,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-14T09:10:09.670Z"
+  "generatedAt": "2026-05-14T09:39:37.776Z"
 }
