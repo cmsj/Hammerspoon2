@@ -1667,6 +1667,165 @@ declare class HSHotkey {
 }
 
 /**
+ * Determine the Mac's location via macOS Location Services.
+Location data is obtained through WiFi network scanning and, where available, GPS
+hardware. User permission is required — call `hs.permissions.requestLocation()`
+before using any tracking features.
+The module exposes a `geocoder` sub-object for forward/reverse geocoding without
+requiring Location Services.
+## locationTable
+| Key | Type | Description |
+|-----|------|-------------|
+| `latitude` | number | Degrees north (positive) or south (negative) |
+| `longitude` | number | Degrees east (positive) or west (negative) |
+| `altitude` | number | Metres above sea level (`0` if unknown) |
+| `horizontalAccuracy` | number | Uncertainty radius in metres (`-1` if invalid) |
+| `verticalAccuracy` | number | Altitude accuracy in metres (`-1` if invalid) |
+| `course` | number | Direction of travel in degrees (`-1` if invalid) |
+| `speed` | number | Metres per second (`-1` if invalid) |
+| `timestamp` | number | Seconds since the Unix epoch |
+ */
+declare namespace hs.location {
+    /**
+     * Geocodes an address string into an array of placemarkTables.
+Returns a Promise that resolves with an array of placemarkTable objects
+(sorted by relevance) or rejects with an error message.
+     * @param address a free-form address string in any locale
+     * @returns a Promise resolving to an array of placemarkTables
+     */
+    function lookupAddress(address: string): Promise<placemarkTable[]>;
+
+    /**
+     * Reverse-geocodes a locationTable into an array of placemarkTables.
+Returns a Promise that resolves with matching placemarks or rejects with
+an error.
+     * @param locationTable an object with at least `latitude` and `longitude`
+     * @returns a Promise resolving to an array of placemarkTables
+     */
+    function lookupLocation(locationTable: JSValue): Promise<placemarkTable[]>;
+
+    /**
+     * Returns true if Location Services are enabled system-wide.
+     * @returns true if enabled, false otherwise
+     */
+    function servicesEnabled(): boolean;
+
+    /**
+     * Returns the app's current Location Services authorization status as a string.
+     * @returns `"authorized"`, `"denied"`, `"restricted"`, or `"notDetermined"`
+     */
+    function authorizationStatus(): string;
+
+    /**
+     * Returns the most recently cached location as a locationTable, or null.
+Activates Location Services if not already running. The cache is updated
+periodically while any watcher is running.
+     * @returns a locationTable, or null if no cached location is available
+     */
+    function get(): Record<AnyHashable, any> | undefined;
+
+    /**
+     * Calculates the straight-line distance in metres between two locationTables.
+Does not require Location Services.
+     * @param from locationTable with at least `latitude` and `longitude`
+     * @param to locationTable with at least `latitude` and `longitude`
+     * @returns distance in metres, or `-1` if either table is invalid
+     */
+    function distance(from: JSValue, to: JSValue): number;
+
+    /**
+     * Returns the time of sunrise for the given coordinates and date as seconds
+since the Unix epoch, or null if the sun does not rise on that date (polar
+night). Pass a JS `Date` for `date`, or omit/pass null to use today.
+     * @param latitude degrees north (positive) or south (negative)
+     * @param longitude degrees east (positive) or west (negative)
+     * @param date optional JS `Date`; defaults to today
+     * @returns seconds since epoch of sunrise, or null
+     */
+    function sunrise(latitude: number, longitude: number, date: JSValue): NSNumber | undefined;
+
+    /**
+     * Returns the time of sunset for the given coordinates and date as seconds
+since the Unix epoch, or null if the sun does not set on that date (midnight
+sun). Pass a JS `Date` for `date`, or omit/pass null to use today.
+     * @param latitude degrees north (positive) or south (negative)
+     * @param longitude degrees east (positive) or west (negative)
+     * @param date optional JS `Date`; defaults to today
+     * @returns seconds since epoch of sunset, or null
+     */
+    function sunset(latitude: number, longitude: number, date: JSValue): NSNumber | undefined;
+
+    /**
+     * Creates a new location watcher object. Call `.start()` on it to begin
+receiving updates. The watcher is automatically stopped when the module
+shuts down.
+     * @returns an HSLocationWatcher
+     */
+    function addWatcher(): HSLocationWatcher;
+
+    /**
+     * Removes a previously created watcher and stops it if running.
+     * @param watcher the watcher returned by `addWatcher()`
+     */
+    function removeWatcher(watcher: HSLocationWatcher): void;
+
+    /**
+     * The geocoder subobject for forward and reverse geocoding.
+     */
+    const geocoder: HSLocationGeocoder;
+
+}
+
+/**
+ * An independent location tracking object.
+Create via `hs.location.addWatcher()`. Call `start()` to begin receiving
+updates, and set a callback to handle them.
+| Event | Data |
+|-------|------|
+| `"location"` | a locationTable |
+| `"error"` | an error message string |
+| `"authorizationChanged"` | the new status string (`"authorized"`, `"denied"`, `"restricted"`, `"notDetermined"`) |
+ */
+declare class HSLocationWatcher {
+    /**
+     * Starts location updates. The callback must be set first.
+     * @returns self, for chaining
+     */
+    static start(): HSLocationWatcher;
+
+    /**
+     * Stops location updates.
+     * @returns self, for chaining
+     */
+    static stop(): HSLocationWatcher;
+
+    /**
+     * Sets the callback function invoked when location events occur.
+     * @param fn `function(event, data)` — see type documentation for event names
+     * @returns self, for chaining
+     */
+    static setCallback(fn: JSValue): HSLocationWatcher;
+
+    /**
+     * Returns the most recently received location, or null if none yet.
+     * @returns a locationTable, or null
+     */
+    static location(): Record<AnyHashable, any> | undefined;
+
+    /**
+     * The unique identifier assigned to this watcher.
+     */
+    identifier: string;
+
+    /**
+     * The minimum distance in metres the device must move before a new update
+is delivered. Defaults to `kCLDistanceFilterNone` (all movements reported).
+     */
+    distanceFilter: number;
+
+}
+
+/**
  * Module for creating and displaying macOS system notifications.
 macOS notifications require user permission before they will appear. Request it once
 (typically at startup) via `hs.permissions.requestNotifications()` and it will be
@@ -2242,6 +2401,18 @@ resolve immediately with the previously granted or denied state.
      * @returns A Promise that resolves to true if granted, false if denied
      */
     function requestNotifications(): Promise<boolean>;
+
+    /**
+     * Check if the app has Location permission.
+     * @returns true if permission is granted, false otherwise
+     */
+    function checkLocation(): boolean;
+
+    /**
+     * Request Location permission (shows the system dialog if the user has not yet decided).
+     * @returns A Promise that resolves to true if granted, false if denied
+     */
+    function requestLocation(): Promise<boolean>;
 
 }
 

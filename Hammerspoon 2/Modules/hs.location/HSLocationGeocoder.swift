@@ -92,15 +92,15 @@ import CoreLocation
     }
 
     @objc func lookupAddress(_ address: String) -> JSPromise? {
-        return JSEngine.shared.createPromise { holder in
-            self.geocoder.geocodeAddressString(address) { placemarks, error in
-                Task { @MainActor in
-                    if let error {
-                        holder.rejectWithMessage(error.localizedDescription)
-                    } else {
-                        let tables = (placemarks ?? []).map { HSLocationGeocoder.placemarkTable(from: $0) }
-                        holder.resolveWith(tables)
-                    }
+        guard let context = JSContext.current() else { return nil }
+        return wrapAsyncInJSPromise(in: context) { holder in
+            Task { @MainActor [self] in
+                do {
+                    let placemarks = try await self.geocoder.geocodeAddressString(address)
+                    let tables = placemarks.map { HSLocationGeocoder.placemarkTable(from: $0) }
+                    holder.resolveWith(tables)
+                } catch {
+                    holder.rejectWithMessage(error.localizedDescription)
                 }
             }
         }
@@ -111,15 +111,15 @@ import CoreLocation
             AKError("hs.location.geocoder.lookupLocation(): invalid locationTable — needs latitude and longitude")
             return nil
         }
-        return JSEngine.shared.createPromise { holder in
-            self.geocoder.reverseGeocodeLocation(loc) { placemarks, error in
-                Task { @MainActor in
-                    if let error {
-                        holder.rejectWithMessage(error.localizedDescription)
-                    } else {
-                        let tables = (placemarks ?? []).map { HSLocationGeocoder.placemarkTable(from: $0) }
-                        holder.resolveWith(tables)
-                    }
+        guard let context = JSContext.current() else { return nil }
+        return wrapAsyncInJSPromise(in: context) { holder in
+            Task { @MainActor [self] in
+                do {
+                    let placemarks = try await self.geocoder.reverseGeocodeLocation(loc)
+                    let tables = placemarks.map { HSLocationGeocoder.placemarkTable(from: $0) }
+                    holder.resolveWith(tables)
+                } catch {
+                    holder.rejectWithMessage(error.localizedDescription)
                 }
             }
         }

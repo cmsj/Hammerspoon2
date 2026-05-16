@@ -58,9 +58,14 @@ struct HSLocationStructureTests {
         makeHarness().expectTrue("typeof hs.location.sunset === 'function'")
     }
 
-    @Test("new is a function")
-    func testNewIsFunction() {
-        makeHarness().expectTrue("typeof hs.location.new === 'function'")
+    @Test("addWatcher is a function")
+    func testAddWatcherIsFunction() {
+        makeHarness().expectTrue("typeof hs.location.addWatcher === 'function'")
+    }
+
+    @Test("removeWatcher is a function")
+    func testRemoveWatcherIsFunction() {
+        makeHarness().expectTrue("typeof hs.location.removeWatcher === 'function'")
     }
 
     @Test("geocoder is an object")
@@ -151,7 +156,7 @@ struct HSLocationCalculationTests {
     func testSunriseLondon() {
         let harness = makeHarness()
         harness.eval("""
-            var rise = hs.location.sunrise(51.5074, -0.1278, 0, new Date('2024-01-01T12:00:00Z'));
+            var rise = hs.location.sunrise(51.5074, -0.1278, new Date('2024-01-01T12:00:00Z'));
         """)
         harness.expectTrue("typeof rise === 'number'")
         // Known: 1 Jan 2024 sunrise London ≈ 08:06 UTC → unix ≈ 1704096360
@@ -163,7 +168,7 @@ struct HSLocationCalculationTests {
     func testSunsetLondon() {
         let harness = makeHarness()
         harness.eval("""
-            var set = hs.location.sunset(51.5074, -0.1278, 0, new Date('2024-01-01T12:00:00Z'));
+            var set = hs.location.sunset(51.5074, -0.1278, new Date('2024-01-01T12:00:00Z'));
         """)
         harness.expectTrue("typeof set === 'number'")
         // 1 Jan 2024 sunset London ≈ 16:01 UTC → unix ≈ 1704124800 (accept wider band)
@@ -175,7 +180,7 @@ struct HSLocationCalculationTests {
     func testSunrisePolarNight() {
         let harness = makeHarness()
         harness.eval("""
-            var rise = hs.location.sunrise(89.0, 0.0, 0, new Date('2024-12-21T12:00:00Z'));
+            var rise = hs.location.sunrise(89.0, 0.0, new Date('2024-12-21T12:00:00Z'));
         """)
         harness.expectTrue("rise === null || rise === undefined")
         #expect(!harness.hasException)
@@ -185,7 +190,7 @@ struct HSLocationCalculationTests {
     func testSunsetMidnightSun() {
         let harness = makeHarness()
         harness.eval("""
-            var set = hs.location.sunset(89.0, 0.0, 0, new Date('2024-06-21T12:00:00Z'));
+            var set = hs.location.sunset(89.0, 0.0, new Date('2024-06-21T12:00:00Z'));
         """)
         harness.expectTrue("set === null || set === undefined")
         #expect(!harness.hasException)
@@ -195,7 +200,7 @@ struct HSLocationCalculationTests {
     func testSunriseDefaultDate() {
         let harness = makeHarness()
         harness.eval("""
-            var rise = hs.location.sunrise(51.5074, -0.1278, 0);
+            var rise = hs.location.sunrise(51.5074, -0.1278);
         """)
         // Should still return a number for London (sun rises every day)
         harness.expectTrue("typeof rise === 'number'")
@@ -206,7 +211,7 @@ struct HSLocationCalculationTests {
     func testSunriseNullDate() {
         let harness = makeHarness()
         harness.eval("""
-            var rise = hs.location.sunrise(51.5074, -0.1278, 0, null);
+            var rise = hs.location.sunrise(51.5074, -0.1278, null);
         """)
         harness.expectTrue("typeof rise === 'number'")
         #expect(!harness.hasException)
@@ -217,8 +222,8 @@ struct HSLocationCalculationTests {
         let harness = makeHarness()
         harness.eval("""
             var d = new Date('2024-06-15T12:00:00Z');
-            var rise = hs.location.sunrise(51.5074, -0.1278, 0, d);
-            var set  = hs.location.sunset(51.5074, -0.1278, 0, d);
+            var rise = hs.location.sunrise(51.5074, -0.1278, d);
+            var set  = hs.location.sunset(51.5074, -0.1278, d);
         """)
         harness.expectTrue("rise < set")
         #expect(!harness.hasException)
@@ -266,6 +271,8 @@ struct HSLocationGeocoderTests {
         let harness = makeHarness()
         harness.eval("""
             var p = hs.location.geocoder.lookupLocation({ latitude: 37.3349, longitude: -122.0090 });
+        console.log("typeof p: " + typeof p);
+        console.log("typeof p.then: " + typeof p.then);
         """)
         // A Promise has a 'then' method
         harness.expectTrue("p !== null && typeof p.then === 'function'")
@@ -294,8 +301,8 @@ struct HSLocationWatcherTests {
         return harness
     }
 
-    @Test("new() returns a watcher object")
-    func testNewReturnsObject() {
+    @Test("addWatcher() returns a watcher object")
+    func testAddWatcherReturnsObject() {
         makeHarness().expectTrue("typeof hs.location.addWatcher() === 'object'")
     }
 
@@ -380,6 +387,16 @@ struct HSLocationWatcherTests {
                 var w = hs.location.addWatcher();
                 return w.stop() === w;
             })()
+        """)
+        #expect(!harness.hasException)
+    }
+
+    @Test("removeWatcher stops and removes a watcher without error")
+    func testRemoveWatcher() {
+        let harness = makeHarness()
+        harness.eval("""
+            var w = hs.location.addWatcher();
+            hs.location.removeWatcher(w);
         """)
         #expect(!harness.hasException)
     }

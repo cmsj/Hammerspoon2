@@ -13,8 +13,8 @@ import CoreLocation
 
 /// An independent location tracking object.
 ///
-/// Create via `hs.location.new()`. Call `start()` to begin receiving updates,
-/// and set a callback to handle them.
+/// Create via `hs.location.addWatcher()`. Call `start()` to begin receiving
+/// updates, and set a callback to handle them.
 ///
 /// The callback receives `(event, data)`:
 ///
@@ -26,7 +26,7 @@ import CoreLocation
 ///
 /// Example:
 /// ```js
-/// const w = hs.location.new()
+/// const w = hs.location.addWatcher()
 /// w.setCallback((event, data) => {
 ///     if (event === 'location') console.log(data.latitude, data.longitude)
 /// })
@@ -36,7 +36,7 @@ import CoreLocation
     /// The unique identifier assigned to this watcher.
     /// - Example:
     /// ```js
-    /// const w = hs.location.new()
+    /// const w = hs.location.addWatcher()
     /// console.log(w.identifier)
     /// ```
     @objc var identifier: String { get }
@@ -45,7 +45,7 @@ import CoreLocation
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
-    /// const w = hs.location.new()
+    /// const w = hs.location.addWatcher()
     /// w.setCallback((ev, d) => console.log(ev, d)).start()
     /// ```
     @objc @discardableResult func start() -> HSLocationWatcher
@@ -110,11 +110,13 @@ import CoreLocation
 
     @objc @discardableResult func start() -> HSLocationWatcher {
         manager.startUpdatingLocation()
+        AKTrace("HSLocationWatcher(\(identifier)).start(): Started")
         return self
     }
 
     @objc @discardableResult func stop() -> HSLocationWatcher {
         manager.stopUpdatingLocation()
+        AKTrace("HSLocationWatcher(\(identifier)).stop(): Stopped")
         return self
     }
 

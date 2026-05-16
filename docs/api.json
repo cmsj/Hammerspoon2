@@ -3927,17 +3927,17 @@
         {
           "name": "authorizationStatus",
           "signature": "func authorizationStatus() -> String",
-          "rawDocumentation": "Returns the current authorization status as a string:\n`\"authorized\"`, `\"denied\"`, `\"restricted\"`, or `\"notDetermined\"`.\n- Returns: the status string\n- Example:\n```js\nhs.location.authorizationStatus() // → \"authorized\"\n```",
-          "description": "`\"authorized\"`, `\"denied\"`, `\"restricted\"`, or `\"notDetermined\"`.",
+          "rawDocumentation": "Returns the app's current Location Services authorization status as a string.\n- Returns: `\"authorized\"`, `\"denied\"`, `\"restricted\"`, or `\"notDetermined\"`\n- Example:\n```js\nconst status = hs.location.authorizationStatus()\nif (status === 'notDetermined') hs.permissions.requestLocation()\n```",
+          "description": "Returns the app's current Location Services authorization status as a string.",
           "params": [],
           "returns": {
             "type": "String",
-            "description": "the status string"
+            "description": "`\"authorized\"`, `\"denied\"`, `\"restricted\"`, or `\"notDetermined\"`"
           },
           "examples": [
             {
               "lang": "js",
-              "code": "hs.location.authorizationStatus() // → \"authorized\""
+              "code": "const status = hs.location.authorizationStatus()\nif (status === 'notDetermined') hs.permissions.requestLocation()"
             }
           ],
           "source": "swift",
@@ -3997,9 +3997,9 @@
         },
         {
           "name": "sunrise",
-          "signature": "func sunrise(_ latitude: Double, _ longitude: Double, _ utcOffset: Double, _ date: JSValue) -> NSNumber?",
-          "rawDocumentation": "Returns the time of sunrise for the given coordinates, UTC offset, and date as\nseconds since the Unix epoch, or null if the sun does not rise on that date\n(polar night). Pass a JS `Date` for `date`, or omit/pass null to use today.\n- Parameters:\n  - latitude: degrees north (positive) or south (negative)\n  - longitude: degrees east (positive) or west (negative)\n  - utcOffset: hours offset from UTC (e.g. `-5` for EST, `1` for CET)\n  - date: optional JS `Date`; defaults to today\n- Returns: seconds since epoch of sunrise, or null\n- Example:\n```js\nconst rise = hs.location.sunrise(51.5, -0.1, 0)\nconsole.log(new Date(rise * 1000).toTimeString())\n```",
-          "description": "Returns the time of sunrise for the given coordinates, UTC offset, and date as\nseconds since the Unix epoch, or null if the sun does not rise on that date\n(polar night). Pass a JS `Date` for `date`, or omit/pass null to use today.",
+          "signature": "func sunrise(_ latitude: Double, _ longitude: Double, _ date: JSValue) -> NSNumber?",
+          "rawDocumentation": "Returns the time of sunrise for the given coordinates and date as seconds\nsince the Unix epoch, or null if the sun does not rise on that date (polar\nnight). Pass a JS `Date` for `date`, or omit/pass null to use today.\n- Parameters:\n  - latitude: degrees north (positive) or south (negative)\n  - longitude: degrees east (positive) or west (negative)\n  - date: optional JS `Date`; defaults to today\n- Returns: seconds since epoch of sunrise, or null\n- Example:\n```js\nconst rise = hs.location.sunrise(51.5, -0.1)\nconsole.log(new Date(rise * 1000).toTimeString())\n```",
+          "description": "Returns the time of sunrise for the given coordinates and date as seconds\nsince the Unix epoch, or null if the sun does not rise on that date (polar\nnight). Pass a JS `Date` for `date`, or omit/pass null to use today.",
           "params": [
             {
               "name": "latitude",
@@ -4010,11 +4010,6 @@
               "name": "longitude",
               "type": "Double",
               "description": "degrees east (positive) or west (negative)"
-            },
-            {
-              "name": "utcOffset",
-              "type": "Double",
-              "description": "hours offset from UTC (e.g. `-5` for EST, `1` for CET)"
             },
             {
               "name": "date",
@@ -4029,18 +4024,18 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const rise = hs.location.sunrise(51.5, -0.1, 0)\nconsole.log(new Date(rise * 1000).toTimeString())"
+              "code": "const rise = hs.location.sunrise(51.5, -0.1)\nconsole.log(new Date(rise * 1000).toTimeString())"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
-          "lineNumber": 98
+          "lineNumber": 97
         },
         {
           "name": "sunset",
-          "signature": "func sunset(_ latitude: Double, _ longitude: Double, _ utcOffset: Double, _ date: JSValue) -> NSNumber?",
-          "rawDocumentation": "Returns the time of sunset for the given coordinates, UTC offset, and date as\nseconds since the Unix epoch, or null if the sun does not set on that date\n(midnight sun). Pass a JS `Date` for `date`, or omit/pass null to use today.\n- Parameters:\n  - latitude: degrees north (positive) or south (negative)\n  - longitude: degrees east (positive) or west (negative)\n  - utcOffset: hours offset from UTC (e.g. `-5` for EST, `1` for CET)\n  - date: optional JS `Date`; defaults to today\n- Returns: seconds since epoch of sunset, or null\n- Example:\n```js\nconst set = hs.location.sunset(51.5, -0.1, 0)\nconsole.log(new Date(set * 1000).toTimeString())\n```",
-          "description": "Returns the time of sunset for the given coordinates, UTC offset, and date as\nseconds since the Unix epoch, or null if the sun does not set on that date\n(midnight sun). Pass a JS `Date` for `date`, or omit/pass null to use today.",
+          "signature": "func sunset(_ latitude: Double, _ longitude: Double, _ date: JSValue) -> NSNumber?",
+          "rawDocumentation": "Returns the time of sunset for the given coordinates and date as seconds\nsince the Unix epoch, or null if the sun does not set on that date (midnight\nsun). Pass a JS `Date` for `date`, or omit/pass null to use today.\n- Parameters:\n  - latitude: degrees north (positive) or south (negative)\n  - longitude: degrees east (positive) or west (negative)\n  - date: optional JS `Date`; defaults to today\n- Returns: seconds since epoch of sunset, or null\n- Example:\n```js\nconst set = hs.location.sunset(51.5, -0.1)\nconsole.log(new Date(set * 1000).toTimeString())\n```",
+          "description": "Returns the time of sunset for the given coordinates and date as seconds\nsince the Unix epoch, or null if the sun does not set on that date (midnight\nsun). Pass a JS `Date` for `date`, or omit/pass null to use today.",
           "params": [
             {
               "name": "latitude",
@@ -4051,11 +4046,6 @@
               "name": "longitude",
               "type": "Double",
               "description": "degrees east (positive) or west (negative)"
-            },
-            {
-              "name": "utcOffset",
-              "type": "Double",
-              "description": "hours offset from UTC (e.g. `-5` for EST, `1` for CET)"
             },
             {
               "name": "date",
@@ -4070,18 +4060,18 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const set = hs.location.sunset(51.5, -0.1, 0)\nconsole.log(new Date(set * 1000).toTimeString())"
+              "code": "const set = hs.location.sunset(51.5, -0.1)\nconsole.log(new Date(set * 1000).toTimeString())"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
-          "lineNumber": 114
+          "lineNumber": 112
         },
         {
-          "name": "new",
-          "signature": "func new() -> HSLocationWatcher",
-          "rawDocumentation": "Creates a new location watcher object. Call `.start()` on it to begin\nreceiving updates.\n- Returns: an HSLocationWatcher\n- Example:\n```js\nconst w = hs.location.new()\nw.setCallback((event, data) => console.log(event, data))\nw.start()\n```",
-          "description": "Creates a new location watcher object. Call `.start()` on it to begin\nreceiving updates.",
+          "name": "addWatcher",
+          "signature": "func addWatcher() -> HSLocationWatcher",
+          "rawDocumentation": "Creates a new location watcher object. Call `.start()` on it to begin\nreceiving updates. The watcher is automatically stopped when the module\nshuts down.\n- Returns: an HSLocationWatcher\n- Example:\n```js\nconst w = hs.location.addWatcher()\nw.setCallback((event, data) => console.log(event, data))\nw.start()\n```",
+          "description": "Creates a new location watcher object. Call `.start()` on it to begin\nreceiving updates. The watcher is automatically stopped when the module\nshuts down.",
           "params": [],
           "returns": {
             "type": "HSLocationWatcher",
@@ -4090,12 +4080,35 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const w = hs.location.new()\nw.setCallback((event, data) => console.log(event, data))\nw.start()"
+              "code": "const w = hs.location.addWatcher()\nw.setCallback((event, data) => console.log(event, data))\nw.start()"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
-          "lineNumber": 125
+          "lineNumber": 124
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ watcher: HSLocationWatcher)",
+          "rawDocumentation": "Removes a previously created watcher and stops it if running.\n- Parameter watcher: the watcher returned by `addWatcher()`\n- Example:\n```js\nconst w = hs.location.addWatcher()\nw.start()\nhs.location.removeWatcher(w)\n```",
+          "description": "Removes a previously created watcher and stops it if running.",
+          "params": [
+            {
+              "name": "watcher",
+              "type": "HSLocationWatcher",
+              "description": "the watcher returned by `addWatcher()`"
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const w = hs.location.addWatcher()\nw.start()\nhs.location.removeWatcher(w)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
+          "lineNumber": 134
         }
       ],
       "properties": [
@@ -4112,20 +4125,20 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
-          "lineNumber": 134
+          "lineNumber": 143
         }
       ],
       "types": [
         {
           "name": "HSLocationWatcherAPI",
           "type": "typedef",
-          "rawDocumentation": "An independent location tracking object.\n\nCreate via `hs.location.new()`. Call `start()` to begin receiving updates,\nand set a callback to handle them.\n\nThe callback receives `(event, data)`:\n\n| Event | Data |\n|-------|------|\n| `\"location\"` | a locationTable |\n| `\"error\"` | an error message string |\n| `\"authorizationChanged\"` | the new status string (`\"authorized\"`, `\"denied\"`, `\"restricted\"`, `\"notDetermined\"`) |\n\nExample:\n```js\nconst w = hs.location.new()\nw.setCallback((event, data) => {\n    if (event === 'location') console.log(data.latitude, data.longitude)\n})\nw.start()\n```",
-          "description": "An independent location tracking object.\nCreate via `hs.location.new()`. Call `start()` to begin receiving updates,\nand set a callback to handle them.\n| Event | Data |\n|-------|------|\n| `\"location\"` | a locationTable |\n| `\"error\"` | an error message string |\n| `\"authorizationChanged\"` | the new status string (`\"authorized\"`, `\"denied\"`, `\"restricted\"`, `\"notDetermined\"`) |",
+          "rawDocumentation": "An independent location tracking object.\n\nCreate via `hs.location.addWatcher()`. Call `start()` to begin receiving\nupdates, and set a callback to handle them.\n\nThe callback receives `(event, data)`:\n\n| Event | Data |\n|-------|------|\n| `\"location\"` | a locationTable |\n| `\"error\"` | an error message string |\n| `\"authorizationChanged\"` | the new status string (`\"authorized\"`, `\"denied\"`, `\"restricted\"`, `\"notDetermined\"`) |\n\nExample:\n```js\nconst w = hs.location.addWatcher()\nw.setCallback((event, data) => {\n    if (event === 'location') console.log(data.latitude, data.longitude)\n})\nw.start()\n```",
+          "description": "An independent location tracking object.\nCreate via `hs.location.addWatcher()`. Call `start()` to begin receiving\nupdates, and set a callback to handle them.\n| Event | Data |\n|-------|------|\n| `\"location\"` | a locationTable |\n| `\"error\"` | an error message string |\n| `\"authorizationChanged\"` | the new status string (`\"authorized\"`, `\"denied\"`, `\"restricted\"`, `\"notDetermined\"`) |",
           "methods": [
             {
               "name": "start",
               "signature": "func start() -> HSLocationWatcher",
-              "rawDocumentation": "Starts location updates. The callback must be set first.\n- Returns: self, for chaining\n- Example:\n```js\nconst w = hs.location.new()\nw.setCallback((ev, d) => console.log(ev, d)).start()\n```",
+              "rawDocumentation": "Starts location updates. The callback must be set first.\n- Returns: self, for chaining\n- Example:\n```js\nconst w = hs.location.addWatcher()\nw.setCallback((ev, d) => console.log(ev, d)).start()\n```",
               "description": "Starts location updates. The callback must be set first.",
               "params": [],
               "returns": {
@@ -4135,7 +4148,7 @@
               "examples": [
                 {
                   "lang": "js",
-                  "code": "const w = hs.location.new()\nw.setCallback((ev, d) => console.log(ev, d)).start()"
+                  "code": "const w = hs.location.addWatcher()\nw.setCallback((ev, d) => console.log(ev, d)).start()"
                 }
               ],
               "source": "swift",
@@ -4213,12 +4226,12 @@
             {
               "name": "identifier",
               "signature": "var identifier: String { get }",
-              "rawDocumentation": "The unique identifier assigned to this watcher.\n- Example:\n```js\nconst w = hs.location.new()\nconsole.log(w.identifier)\n```",
+              "rawDocumentation": "The unique identifier assigned to this watcher.\n- Example:\n```js\nconst w = hs.location.addWatcher()\nconsole.log(w.identifier)\n```",
               "description": "The unique identifier assigned to this watcher.",
               "examples": [
                 {
                   "lang": "js",
-                  "code": "const w = hs.location.new()\nconsole.log(w.identifier)"
+                  "code": "const w = hs.location.addWatcher()\nconsole.log(w.identifier)"
                 }
               ],
               "source": "swift",
@@ -5351,6 +5364,47 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 100
+        },
+        {
+          "name": "checkLocation",
+          "signature": "func checkLocation() -> Bool",
+          "rawDocumentation": "Check if the app has Location permission.\n- Returns: true if permission is granted, false otherwise\n- Example:\n```js\nconsole.log(hs.permissions.checkLocation())\n```",
+          "description": "Check if the app has Location permission.",
+          "params": [],
+          "returns": {
+            "type": "Bool",
+            "description": "true if permission is granted, false otherwise"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.permissions.checkLocation())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
+          "lineNumber": 108
+        },
+        {
+          "name": "requestLocation",
+          "signature": "func requestLocation() -> JSPromise?",
+          "rawDocumentation": "Request Location permission (shows the system dialog if the user has not yet decided).\n- Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied\n- Example:\n```js\nhs.permissions.requestLocation().then(granted => {\n    if (granted) console.log(hs.location.get())\n})\n```",
+          "description": "Request Location permission (shows the system dialog if the user has not yet decided).",
+          "params": [],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "A Promise that resolves to true if granted, false if denied",
+            "promiseType": "boolean"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.permissions.requestLocation().then(granted => {\n    if (granted) console.log(hs.location.get())\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
+          "lineNumber": 118
         }
       ],
       "properties": [],
@@ -10017,5 +10071,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-14T15:17:32.020Z"
+  "generatedAt": "2026-05-16T21:51:13.277Z"
 }

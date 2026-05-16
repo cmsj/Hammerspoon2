@@ -81,37 +81,35 @@ import CoreLocation
     /// ```
     @objc(distance::) func distance(_ from: JSValue, _ to: JSValue) -> Double
 
-    /// Returns the time of sunrise for the given coordinates, UTC offset, and date as
-    /// seconds since the Unix epoch, or null if the sun does not rise on that date
-    /// (polar night). Pass a JS `Date` for `date`, or omit/pass null to use today.
+    /// Returns the time of sunrise for the given coordinates and date as seconds
+    /// since the Unix epoch, or null if the sun does not rise on that date (polar
+    /// night). Pass a JS `Date` for `date`, or omit/pass null to use today.
     /// - Parameters:
     ///   - latitude: degrees north (positive) or south (negative)
     ///   - longitude: degrees east (positive) or west (negative)
-    ///   - utcOffset: hours offset from UTC (e.g. `-5` for EST, `1` for CET)
     ///   - date: optional JS `Date`; defaults to today
     /// - Returns: seconds since epoch of sunrise, or null
     /// - Example:
     /// ```js
-    /// const rise = hs.location.sunrise(51.5, -0.1, 0)
+    /// const rise = hs.location.sunrise(51.5, -0.1)
     /// console.log(new Date(rise * 1000).toTimeString())
     /// ```
-    @objc(sunrise::::) func sunrise(_ latitude: Double, _ longitude: Double, _ utcOffset: Double, _ date: JSValue) -> NSNumber?
+    @objc(sunrise:::) func sunrise(_ latitude: Double, _ longitude: Double, _ date: JSValue) -> NSNumber?
 
-    /// Returns the time of sunset for the given coordinates, UTC offset, and date as
-    /// seconds since the Unix epoch, or null if the sun does not set on that date
-    /// (midnight sun). Pass a JS `Date` for `date`, or omit/pass null to use today.
+    /// Returns the time of sunset for the given coordinates and date as seconds
+    /// since the Unix epoch, or null if the sun does not set on that date (midnight
+    /// sun). Pass a JS `Date` for `date`, or omit/pass null to use today.
     /// - Parameters:
     ///   - latitude: degrees north (positive) or south (negative)
     ///   - longitude: degrees east (positive) or west (negative)
-    ///   - utcOffset: hours offset from UTC (e.g. `-5` for EST, `1` for CET)
     ///   - date: optional JS `Date`; defaults to today
     /// - Returns: seconds since epoch of sunset, or null
     /// - Example:
     /// ```js
-    /// const set = hs.location.sunset(51.5, -0.1, 0)
+    /// const set = hs.location.sunset(51.5, -0.1)
     /// console.log(new Date(set * 1000).toTimeString())
     /// ```
-    @objc(sunset::::) func sunset(_ latitude: Double, _ longitude: Double, _ utcOffset: Double, _ date: JSValue) -> NSNumber?
+    @objc(sunset:::) func sunset(_ latitude: Double, _ longitude: Double, _ date: JSValue) -> NSNumber?
 
     /// Creates a new location watcher object. Call `.start()` on it to begin
     /// receiving updates. The watcher is automatically stopped when the module
@@ -124,6 +122,16 @@ import CoreLocation
     /// w.start()
     /// ```
     @objc func addWatcher() -> HSLocationWatcher
+
+    /// Removes a previously created watcher and stops it if running.
+    /// - Parameter watcher: the watcher returned by `addWatcher()`
+    /// - Example:
+    /// ```js
+    /// const w = hs.location.addWatcher()
+    /// w.start()
+    /// hs.location.removeWatcher(w)
+    /// ```
+    @objc func removeWatcher(_ watcher: HSLocationWatcher)
 
     /// The geocoder subobject for forward and reverse geocoding.
     /// - Example:
@@ -142,18 +150,16 @@ import CoreLocation
 @objc class HSLocationModule: NSObject, HSModuleAPI, HSLocationModuleAPI, CLLocationManagerDelegate {
     var name = "hs.location"
     private let _geocoder = HSLocationGeocoder()
-    private lazy var locationManager: CLLocationManager = {
-        let m = CLLocationManager()
-        m.delegate = self
-        return m
-    }()
+    private var locationManager: CLLocationManager
     private var _lastLocation: CLLocation?
     private var watchers: [HSLocationWatcher] = []
 
     @objc var geocoder: HSLocationGeocoder { _geocoder }
 
     override required init() {
+        locationManager = CLLocationManager()
         super.init()
+        locationManager.delegate = self
     }
 
     func shutdown() {
@@ -209,20 +215,25 @@ import CoreLocation
         return fromLoc.distance(from: toLoc)
     }
 
-    @objc(sunrise::::) func sunrise(_ latitude: Double, _ longitude: Double, _ utcOffset: Double, _ date: JSValue) -> NSNumber? {
+    @objc(sunrise:::) func sunrise(_ latitude: Double, _ longitude: Double, _ date: JSValue) -> NSNumber? {
         let d = Self.date(from: date)
-        return Self.sunTime(latitude: latitude, longitude: longitude, utcOffset: utcOffset, date: d, isSunrise: true).map { NSNumber(value: $0.timeIntervalSince1970) }
+        return Self.sunTime(latitude: latitude, longitude: longitude, date: d, isSunrise: true).map { NSNumber(value: $0.timeIntervalSince1970) }
     }
 
-    @objc(sunset::::) func sunset(_ latitude: Double, _ longitude: Double, _ utcOffset: Double, _ date: JSValue) -> NSNumber? {
+    @objc(sunset:::) func sunset(_ latitude: Double, _ longitude: Double, _ date: JSValue) -> NSNumber? {
         let d = Self.date(from: date)
-        return Self.sunTime(latitude: latitude, longitude: longitude, utcOffset: utcOffset, date: d, isSunrise: false).map { NSNumber(value: $0.timeIntervalSince1970) }
+        return Self.sunTime(latitude: latitude, longitude: longitude, date: d, isSunrise: false).map { NSNumber(value: $0.timeIntervalSince1970) }
     }
 
     func addWatcher() -> HSLocationWatcher {
         let w = HSLocationWatcher()
         watchers.append(w)
         return w
+    }
+
+    func removeWatcher(_ watcher: HSLocationWatcher) {
+        watcher.stop()
+        watchers.removeAll { $0 === watcher }
     }
 
     // MARK: - Helpers
@@ -258,8 +269,7 @@ import CoreLocation
 
     // USNO algorithm for sunrise/sunset
     private static func sunTime(latitude: Double, longitude: Double,
-                                 utcOffset: Double, date: Date,
-                                 isSunrise: Bool) -> Date? {
+                                 date: Date, isSunrise: Bool) -> Date? {
         let toRad = Double.pi / 180.0
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = TimeZone(secondsFromGMT: 0)!
@@ -270,9 +280,8 @@ import CoreLocation
         let y   = year + 4800 - a
         let m   = month + 12 * a - 3
         let jdn = Double(day + (153*m + 2)/5 + 365*y + y/4 - y/100 + y/400 - 32045)
-        let jd  = jdn - 0.5 // noon UT
 
-        let n       = jd - 2451545.0
+        let n       = jdn - 2451545.0
         let jStar   = n - longitude / 360.0
         let Msun    = (357.5291 + 0.98560028 * jStar).truncatingRemainder(dividingBy: 360.0)
         let Mrad    = Msun * toRad
@@ -288,10 +297,6 @@ import CoreLocation
         let omega   = acos(cosW) * 180.0 / .pi
         let jEvent  = jTransit + (isSunrise ? -omega : omega) / 360.0
         let unix    = (jEvent - 2440587.5) * 86400.0
-        // utcOffset is informational — caller can interpret the returned epoch
-        // in whatever timezone they like. We include it in the signature for API
-        // future-proofing.
-        _ = utcOffset
         return Date(timeIntervalSince1970: unix)
     }
 }

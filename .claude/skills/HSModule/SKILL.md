@@ -52,16 +52,29 @@ The HSFooModuleAPI protocol should observe the following rules:
 
 ## Promise-returning methods
 
- Several modules return Promises for async operations. This pattern is not described at all. The return type is JSPromise? (a typealias for JSValue), and the docstring - Returns: line should include {Promise<T>} to signal
-  this to the docs generator:
+  Several modules return Promises for async operations. The return type is JSPromise? (a
+  typealias for JSValue), and the docstring - Returns: line should include {Promise<T>} to
+  signal this to the docs generator.
 
+  ### Critical: always use JSContext.current()
+
+  Promises MUST be created in the JSContext that made the call, not in JSEngine.shared's
+  context. JSEngine.shared has its own JSContext; if you create a Promise there and return
+  it to JS running in a different context (e.g. the test harness), JavaScriptCore delivers
+  it as an opaque ObjC object with no `then` method — the JS caller cannot use it as a
+  Promise at all.
+
+  The correct pattern is:
+
+  ```swift
   // In the protocol:
   /// - Returns: {Promise<boolean>} A Promise that resolves to true if successful
   @objc func doSomethingAsync() -> JSPromise?
 
   // In the implementation:
   @objc func doSomethingAsync() -> JSPromise? {
-      return JSEngine.shared.createPromise { holder in
+      guard let context = JSContext.current() else { return nil }
+      return wrapAsyncInJSPromise(in: context) { holder in
           Task { @MainActor in
               // ... do async work ...
               holder.resolveWith(result)       // or:
@@ -69,10 +82,21 @@ The HSFooModuleAPI protocol should observe the following rules:
           }
       }
   }
+  ```
 
-  For immediately-known results, use the shorthand helpers:
-  return JSEngine.shared.createResolvedPromise(with: value)
-  return JSEngine.shared.createRejectedPromise(with: "error message")
+  `JSContext.current()` returns the JSContext that invoked the current `@objc` method via
+  JSExport. It is always non-nil when called from a JS→Swift bridge method, so the guard is
+  just a safety net.
+
+  **Never use `JSEngine.shared.createPromise`** in an `@objc` JSExport method — that creates
+  the Promise in the wrong context.
+
+  For immediately-known results, use the JSContext extensions instead of JSEngine.shared:
+  ```swift
+  guard let context = JSContext.current() else { return nil }
+  return context.createResolvedPromise(with: value)
+  return context.createRejectedPromise(with: "error message")
+  ```
 
 ## Watchers
 
