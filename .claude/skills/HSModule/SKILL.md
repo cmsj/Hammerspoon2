@@ -23,6 +23,24 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
  * HSFooModule.swift should always contain at least the following:
   * A protocol definition of the form "@objc protocol HSFooModuleAPI: JSExport" - this is where we define the API that will be exported to JSON
   * A class implementation of "HSFooModuleAPI" of the form: "@objc class HSFooModule: NSObject, HSModuleAPI, HSFooModuleAPI"
+  * Conformance to HSModuleAPI requires only three things:
+    * A property called "name" that is set to "hs.foo"
+    * An init in the form: "override required init() { super.init() }" (which can also be used to do any initialisation the module requires
+    * A "shutdown()" method that will be called by the core engine when it is tearing down the JS environment
+ * The HSFooModule class should be annotated with: @_documentation(visibility: private)
+ * If HSFooModule needs to be marked with @MainActor and it needs a deinit method then the the deinit method should be declared as "isolated deinit"
+
+## Module registration
+
+A new module needs to be registered with the core JS engine so it can be loaded, these are both in Engine/ModuleRoot.swift:
+ * In the ModuleRootAPI protocol: @objc var foo: HSFooModule { get }
+ * In the ModuleRoot class body: @objc var foo: HSFooModule { getOrCreate(name: "foo", type: HSFooModule.self) }
+
+This will automatically load hs.foo.js if it exists in the Hammerspoon 2 app bundle, as well as exposing the HSFooModule class to JavaScript
+
+Additionally, the module should be exposed to "Hammerspoon 2Tests/Helpers/JStestHarness.swift" in the loadModules switch:
+  case "foo":
+    loadModule(HSFooModule.self, as: name)
 
 ## JavaScript API considerations
 
@@ -31,6 +49,30 @@ The HSFooModuleAPI protocol should observe the following rules:
  * Method parameters need to have their labels omitted, ie "@objc func doFoo(_ someParameter: String)" - the underscore before the label means it will not be required to call the method with the label. If this rule is ignored, the name of the method exposed to JavaScript will be a complex mixture of the name of the method and the labels of its parameters.
  * If for some reason we must have parameter labels, the name of the method exposed to JavaScript can be overridden thusly: "@objc(doFoo:) func doFoo(someParameter: String)"
  * If we are allowing users to create "watcher" objects that respond to macOS events and call user-supplied JS callbacks, they should be created/destroyed with methods called "addWatcher" and "removeWatcher"
+
+## Promise-returning methods
+
+ Several modules return Promises for async operations. This pattern is not described at all. The return type is JSPromise? (a typealias for JSValue), and the docstring - Returns: line should include {Promise<T>} to signal
+  this to the docs generator:
+
+  // In the protocol:
+  /// - Returns: {Promise<boolean>} A Promise that resolves to true if successful
+  @objc func doSomethingAsync() -> JSPromise?
+
+  // In the implementation:
+  @objc func doSomethingAsync() -> JSPromise? {
+      return JSEngine.shared.createPromise { holder in
+          Task { @MainActor in
+              // ... do async work ...
+              holder.resolveWith(result)       // or:
+              holder.rejectWithMessage("reason")
+          }
+      }
+  }
+
+  For immediately-known results, use the shorthand helpers:
+  return JSEngine.shared.createResolvedPromise(with: value)
+  return JSEngine.shared.createRejectedPromise(with: "error message")
 
 ## Watchers
 
@@ -283,5 +325,22 @@ The HSFooModuleAPI protocol should observe the following rules:
 
   The section covers both patterns (module-level EventEmitter and object-level watcher), the JS emitter template, the composite-key variant from hs.ax, and all the subtle rules around lazy start, `[weak self]`,
   `assumeIsolated`, discarding `JSValue?`, and the `_watcherEmitter` GC anchor.
+
+## Docstrings convensions
+
+  - Every method/property in the HSFooModuleAPI protocol needs a /// docstring that describes the item, and in the case of methods, also documents each parameter and any return value
+  - Every docstring should have a - Example: section with a fenced ```js block
+  - Private/internal protocol members (the _addWatcher, _watcherEmitter underbelly) use /// SKIP_DOCS to be omitted from generated HTML
+  - Async methods annotate their return: /// - Returns: {Promise<boolean>} A Promise resolving to...
+
+## Logging
+
+Hammerspoon 2 provides several convenience functions that handle logging per the user's configuration:
+ * AKInfo - useful information for the user
+ * AKTrace — debug events (module loaded, timer fired, etc.)
+ * AKWarning — recoverable bad states (invalid input, refused duplicate)
+ * AKError — unrecoverable failures (OS call failed, nil context)
+
+These all log into the app's Console window
 
 
