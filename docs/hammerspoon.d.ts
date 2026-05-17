@@ -1148,6 +1148,258 @@ declare class HSAXElement {
 }
 
 /**
+ * Discover and publish Bonjour (mDNS / Zeroconf) network services.
+Use `createBrowser()` to search the network for services advertised by other
+devices, and `createService()` to advertise your own. The `networkServices()`
+convenience function returns a snapshot of all service types currently active
+on the local network.
+## Common service type strings
+The `hs.bonjour.serviceTypes` object (populated by the JS enhancement) maps
+short names to their mDNS strings, e.g. `hs.bonjour.serviceTypes.ssh` →
+`"_ssh._tcp."`.
+## Quick example
+```js
+// Find all SSH services on the local network and resolve each one
+const browser = hs.bonjour.createBrowser()
+browser.searchForServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {
+    if (event === 'serviceFound') {
+        svc.resolve(5, ev => {
+            if (ev === 'resolved') console.log(svc.hostname, svc.port)
+        })
+    }
+})
+```
+ */
+declare namespace hs.bonjour {
+    /**
+     * Creates a new Bonjour browser for discovering services or domains.
+Call one of the `searchFor…` methods on the returned browser to start
+discovering. Remove it with `removeBrowser()` when finished.
+     * @returns a new `HSBonjourBrowser`
+     */
+    function createBrowser(): HSBonjourBrowser;
+
+    /**
+     * Stops and removes a previously created browser.
+     * @param browser the browser returned by `createBrowser()`
+     */
+    function removeBrowser(browser: HSBonjourBrowser): void;
+
+    /**
+     * Creates a new local Bonjour service for publishing.
+Call `publish()` on the returned object to begin advertising. Remove it
+with `removeService()` when finished.
+     * @param name human-readable name shown to browsers (e.g. `"My Web Server"`)
+     * @param type service type in `"_proto._tcp."` or `"_proto._udp."` form (e.g. `"_http._tcp."`)
+     * @param port port number the service listens on
+     * @param domain mDNS domain; almost always `"local."`
+     * @returns a new `HSBonjourService`
+     */
+    function createService(name: string, type: string, port: Int32, domain: string): HSBonjourService;
+
+    /**
+     * Stops and removes a previously created local service.
+     * @param service the service returned by `createService()`
+     */
+    function removeService(service: HSBonjourService): void;
+
+    /**
+     * Returns a Promise that resolves to an array of service-type strings
+currently advertised on the local network.
+Internally searches for `_services._dns-sd._udp.` services, collects
+results for up to `timeout` seconds (or until the browser signals no more
+results), then resolves.
+     * @param timeout maximum seconds to wait (pass `0` to use the default 5 s)
+     * @returns a Promise resolving to an array of service-type strings such as `"_http._tcp."`
+     */
+    function networkServices(timeout: number): Promise<string[]>;
+
+}
+
+/**
+ * Discovers Bonjour services and domains advertised on the local network.
+Create via `hs.bonjour.createBrowser()`, then call one of the `searchFor…`
+methods. Only one search may be active at a time; starting a new search
+implicitly cancels the current one.
+## Service search callback events
+| Event | Data | Description |
+|-------|------|-------------|
+| `"serviceFound"` | `HSBonjourService` | A matching service appeared |
+| `"serviceRemoved"` | `HSBonjourService` | A previously found service disappeared |
+| `"error"` | error string | The search failed |
+## Domain search callback events
+| Event | Data | Description |
+|-------|------|-------------|
+| `"domainFound"` | domain string | A domain was discovered |
+| `"domainRemoved"` | domain string | A domain disappeared |
+| `"error"` | error string | The search failed |
+ */
+declare class HSBonjourBrowser {
+    /**
+     * Searches for services of the given type in the given domain.
+The callback receives `(event, service, moreComing)` — see the type
+documentation for the complete event table.
+     * @param type service type string, e.g. `"_http._tcp."` or `"_ssh._tcp."`
+     * @param domain mDNS domain; `"local."` for the local link, `""` for all domains
+     * @param callback `function(event, service, moreComing)` called for each result
+     * @returns self, for chaining
+     */
+    static searchForServices(type: string, domain: string, callback: JSValue): HSBonjourBrowser;
+
+    /**
+     * Searches for domains visible to this machine (browsable domains).
+The callback receives `(event, domain, moreComing)` — see the type
+documentation for the complete event table.
+     * @param callback `function(event, domain, moreComing)` called for each result
+     * @returns self, for chaining
+     */
+    static searchForBrowsableDomains(callback: JSValue): HSBonjourBrowser;
+
+    /**
+     * Searches for domains on which this machine can register services.
+The callback receives `(event, domain, moreComing)` — see the type
+documentation for the complete event table.
+     * @param callback `function(event, domain, moreComing)` called for each result
+     * @returns self, for chaining
+     */
+    static searchForRegistrationDomains(callback: JSValue): HSBonjourBrowser;
+
+    /**
+     * Stops the current search. Safe to call when no search is active.
+     * @returns self, for chaining
+     */
+    static stop(): HSBonjourBrowser;
+
+    /**
+     * A unique identifier for this browser object.
+     */
+    identifier: string;
+
+    /**
+     * Whether to search over peer-to-peer Bluetooth/Wi-Fi in addition to
+standard network interfaces. Defaults to `false`.
+     */
+    includesPeerToPeer: boolean;
+
+}
+
+/**
+ * A Bonjour service record for publishing or resolving on the local network.
+Obtain a local service via `hs.bonjour.createService()` and call `publish()`.
+Remote services are delivered by an `HSBonjourBrowser` search callback; call
+`resolve()` on them to discover their hostname, port, and addresses.
+## Callback events
+| Method | Event | Extra data |
+|--------|-------|------------|
+| `publish()` | `"published"` | _(none)_ |
+| `publish()` | `"stopped"` | _(none)_ |
+| `publish()` | `"error"` | error message string |
+| `resolve()` | `"resolved"` | _(none)_ |
+| `resolve()` | `"stopped"` | _(none)_ |
+| `resolve()` | `"error"` | error message string |
+| `monitor()` | `"txtRecord"` | updated TXT record dict |
+ */
+declare class HSBonjourService {
+    /**
+     * Publishes this service on the local network. Only valid for local services.
+     * @param callback `function(event, data?)` called on status changes
+     * @returns self, for chaining
+     */
+    static publish(callback: JSValue): HSBonjourService;
+
+    /**
+     * Resolves the hostname, port, addresses, and TXT record of a remote service.
+     * @param timeout seconds before giving up; pass `0` for no timeout
+     * @param callback `function(event, data?)` called on status changes
+     * @returns self, for chaining
+     */
+    static resolve(timeout: number, callback: JSValue): HSBonjourService;
+
+    /**
+     * Starts monitoring the TXT record for changes. The callback fires with the
+updated TXT record dict whenever it changes.
+Call `stopMonitoring()` to unsubscribe.
+     * @param callback `function(txtRecord)` called when TXT data changes
+     * @returns self, for chaining
+     */
+    static monitor(callback: JSValue): HSBonjourService;
+
+    /**
+     * Stops any active publication or resolution.
+     * @returns self, for chaining
+     */
+    static stop(): HSBonjourService;
+
+    /**
+     * Stops TXT record monitoring started by `monitor()`.
+     * @returns self, for chaining
+     */
+    static stopMonitoring(): HSBonjourService;
+
+    /**
+     * Updates the TXT record for a published service.
+Has no effect before `publish()` is called.
+     * @param record a `{key: value}` object of string pairs
+     * @returns `true` if the update succeeded, `false` otherwise
+     */
+    static setTXTRecord(record: Record<string, string>): boolean;
+
+    /**
+     * A unique identifier assigned to this service object.
+     */
+    identifier: string;
+
+    /**
+     * The service name (e.g. `"My Web Server"`).
+     */
+    name: string;
+
+    /**
+     * The service type string (e.g. `"_http._tcp."`).
+     */
+    type: string;
+
+    /**
+     * The mDNS domain (almost always `"local."`).
+     */
+    domain: string;
+
+    /**
+     * The resolved hostname, or `null` before `resolve()` completes.
+     */
+    hostname: string | undefined;
+
+    /**
+     * The service port. For local services this is set immediately; for remote
+services it is `-1` until `resolve()` completes.
+     */
+    port: number;
+
+    /**
+     * IP address strings (IPv4 and/or IPv6) populated after `resolve()` completes.
+     */
+    addresses: string[];
+
+    /**
+     * The TXT record as a `{key: value}` object, or `null` if none is set.
+Populated after `resolve()` or `publish()`, or when updated via `monitor()`.
+     */
+    txtRecord: Record<string, string> | undefined;
+
+    /**
+     * `true` if this is a locally-created service that can be published;
+`false` for services discovered by a browser that can only be resolved.
+     */
+    isLocal: boolean;
+
+    /**
+     * Whether peer-to-peer Bluetooth/Wi-Fi is included in publication/resolution.
+     */
+    includesPeerToPeer: boolean;
+
+}
+
+/**
  * Module for controlling the Hammerspoon console
  */
 declare namespace hs.console {

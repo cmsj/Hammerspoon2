@@ -2222,6 +2222,607 @@
       "rawDocumentation": "# Accessibility API Module\n\nThis module provides access to macOS's powerful **Accessibility API**, allowing you to:\n- Inspect UI elements in any application\n- Monitor window and element changes\n- Programmatically interact with UI elements\n\n## Basic Usage\n\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n```\n\n**Note:** Requires accessibility permissions in System Preferences."
     },
     {
+      "name": "hs.bonjour",
+      "methods": [
+        {
+          "name": "createBrowser",
+          "signature": "func createBrowser() -> HSBonjourBrowser",
+          "rawDocumentation": "Creates a new Bonjour browser for discovering services or domains.\n\nCall one of the `searchFor…` methods on the returned browser to start\ndiscovering. Remove it with `removeBrowser()` when finished.\n- Returns: a new `HSBonjourBrowser`\n- Example:\n```js\nconst browser = hs.bonjour.createBrowser()\nbrowser.searchForServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
+          "description": "Creates a new Bonjour browser for discovering services or domains.\nCall one of the `searchFor…` methods on the returned browser to start\ndiscovering. Remove it with `removeBrowser()` when finished.",
+          "params": [],
+          "returns": {
+            "type": "HSBonjourBrowser",
+            "description": "a new `HSBonjourBrowser`"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const browser = hs.bonjour.createBrowser()\nbrowser.searchForServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
+          "lineNumber": 51
+        },
+        {
+          "name": "removeBrowser",
+          "signature": "func removeBrowser(_ browser: HSBonjourBrowser)",
+          "rawDocumentation": "Stops and removes a previously created browser.\n- Parameter browser: the browser returned by `createBrowser()`\n- Example:\n```js\nconst b = hs.bonjour.createBrowser()\n// ... use browser ...\nhs.bonjour.removeBrowser(b)\n```",
+          "description": "Stops and removes a previously created browser.",
+          "params": [
+            {
+              "name": "browser",
+              "type": "HSBonjourBrowser",
+              "description": "the browser returned by `createBrowser()`"
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const b = hs.bonjour.createBrowser()\n// ... use browser ...\nhs.bonjour.removeBrowser(b)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
+          "lineNumber": 61
+        },
+        {
+          "name": "createService",
+          "signature": "func createService(_ name: String, _ type: String, _ port: Int32, _ domain: String) -> HSBonjourService",
+          "rawDocumentation": "Creates a new local Bonjour service for publishing.\n\nCall `publish()` on the returned object to begin advertising. Remove it\nwith `removeService()` when finished.\n- Parameter name: human-readable name shown to browsers (e.g. `\"My Web Server\"`)\n- Parameter type: service type in `\"_proto._tcp.\"` or `\"_proto._udp.\"` form (e.g. `\"_http._tcp.\"`)\n- Parameter port: port number the service listens on\n- Parameter domain: mDNS domain; almost always `\"local.\"`\n- Returns: a new `HSBonjourService`\n- Example:\n```js\nconst svc = hs.bonjour.createService('My Server', '_http._tcp.', 8080, 'local.')\nsvc.publish(ev => console.log('Publish event:', ev))\n```",
+          "description": "Creates a new local Bonjour service for publishing.\nCall `publish()` on the returned object to begin advertising. Remove it\nwith `removeService()` when finished.",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "human-readable name shown to browsers (e.g. `\"My Web Server\"`)"
+            },
+            {
+              "name": "type",
+              "type": "String",
+              "description": "service type in `\"_proto._tcp.\"` or `\"_proto._udp.\"` form (e.g. `\"_http._tcp.\"`)"
+            },
+            {
+              "name": "port",
+              "type": "Int32",
+              "description": "port number the service listens on"
+            },
+            {
+              "name": "domain",
+              "type": "String",
+              "description": "mDNS domain; almost always `\"local.\"`"
+            }
+          ],
+          "returns": {
+            "type": "HSBonjourService",
+            "description": "a new `HSBonjourService`"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const svc = hs.bonjour.createService('My Server', '_http._tcp.', 8080, 'local.')\nsvc.publish(ev => console.log('Publish event:', ev))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
+          "lineNumber": 77
+        },
+        {
+          "name": "removeService",
+          "signature": "func removeService(_ service: HSBonjourService)",
+          "rawDocumentation": "Stops and removes a previously created local service.\n- Parameter service: the service returned by `createService()`\n- Example:\n```js\nconst svc = hs.bonjour.createService('Test', '_http._tcp.', 9000, 'local.')\nsvc.publish(ev => {})\nhs.bonjour.removeService(svc)\n```",
+          "description": "Stops and removes a previously created local service.",
+          "params": [
+            {
+              "name": "service",
+              "type": "HSBonjourService",
+              "description": "the service returned by `createService()`"
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const svc = hs.bonjour.createService('Test', '_http._tcp.', 9000, 'local.')\nsvc.publish(ev => {})\nhs.bonjour.removeService(svc)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
+          "lineNumber": 87
+        },
+        {
+          "name": "networkServices",
+          "signature": "func networkServices(_ timeout: Double) -> JSPromise?",
+          "rawDocumentation": "Returns a Promise that resolves to an array of service-type strings\ncurrently advertised on the local network.\n\nInternally searches for `_services._dns-sd._udp.` services, collects\nresults for up to `timeout` seconds (or until the browser signals no more\nresults), then resolves.\n- Parameter timeout: maximum seconds to wait (pass `0` to use the default 5 s)\n- Returns: {Promise<string[]>} a Promise resolving to an array of service-type strings such as `\"_http._tcp.\"`\n- Example:\n```js\nhs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types:', types.join(', '))\n})\n```",
+          "description": "Returns a Promise that resolves to an array of service-type strings\ncurrently advertised on the local network.\nInternally searches for `_services._dns-sd._udp.` services, collects\nresults for up to `timeout` seconds (or until the browser signals no more\nresults), then resolves.",
+          "params": [
+            {
+              "name": "timeout",
+              "type": "Double",
+              "description": "maximum seconds to wait (pass `0` to use the default 5 s)"
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "a Promise resolving to an array of service-type strings such as `\"_http._tcp.\"`",
+            "promiseType": "string[]"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types:', types.join(', '))\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
+          "lineNumber": 103
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSBonjourBrowserAPI",
+          "type": "typedef",
+          "rawDocumentation": "Discovers Bonjour services and domains advertised on the local network.\n\nCreate via `hs.bonjour.createBrowser()`, then call one of the `searchFor…`\nmethods. Only one search may be active at a time; starting a new search\nimplicitly cancels the current one.\n\n## Service search callback events\n\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"serviceFound\"` | `HSBonjourService` | A matching service appeared |\n| `\"serviceRemoved\"` | `HSBonjourService` | A previously found service disappeared |\n| `\"error\"` | error string | The search failed |\n\n## Domain search callback events\n\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"domainFound\"` | domain string | A domain was discovered |\n| `\"domainRemoved\"` | domain string | A domain disappeared |\n| `\"error\"` | error string | The search failed |\n\nExample:\n```js\nconst browser = hs.bonjour.createBrowser()\nbrowser.searchForServices('_ssh._tcp.', 'local.', (event, item, moreComing) => {\n    if (event === 'serviceFound') {\n        console.log('Found:', item.name, '— more coming:', moreComing)\n    }\n})\n```",
+          "description": "Discovers Bonjour services and domains advertised on the local network.\nCreate via `hs.bonjour.createBrowser()`, then call one of the `searchFor…`\nmethods. Only one search may be active at a time; starting a new search\nimplicitly cancels the current one.\n## Service search callback events\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"serviceFound\"` | `HSBonjourService` | A matching service appeared |\n| `\"serviceRemoved\"` | `HSBonjourService` | A previously found service disappeared |\n| `\"error\"` | error string | The search failed |\n## Domain search callback events\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"domainFound\"` | domain string | A domain was discovered |\n| `\"domainRemoved\"` | domain string | A domain disappeared |\n| `\"error\"` | error string | The search failed |",
+          "methods": [
+            {
+              "name": "searchForServices",
+              "signature": "func searchForServices(_ type: String, _ domain: String, _ callback: JSValue) -> HSBonjourBrowser",
+              "rawDocumentation": "Searches for services of the given type in the given domain.\n\nThe callback receives `(event, service, moreComing)` — see the type\ndocumentation for the complete event table.\n- Parameter type: service type string, e.g. `\"_http._tcp.\"` or `\"_ssh._tcp.\"`\n- Parameter domain: mDNS domain; `\"local.\"` for the local link, `\"\"` for all domains\n- Parameter callback: `function(event, service, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
+              "description": "Searches for services of the given type in the given domain.\nThe callback receives `(event, service, moreComing)` — see the type\ndocumentation for the complete event table.",
+              "params": [
+                {
+                  "name": "type",
+                  "type": "String",
+                  "description": "service type string, e.g. `\"_http._tcp.\"` or `\"_ssh._tcp.\"`"
+                },
+                {
+                  "name": "domain",
+                  "type": "String",
+                  "description": "mDNS domain; `\"local.\"` for the local link, `\"\"` for all domains"
+                },
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "`function(event, service, moreComing)` called for each result"
+                }
+              ],
+              "returns": {
+                "type": "HSBonjourBrowser",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "browser.searchForServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
+              "lineNumber": 73
+            },
+            {
+              "name": "searchForBrowsableDomains",
+              "signature": "func searchForBrowsableDomains(_ callback: JSValue) -> HSBonjourBrowser",
+              "rawDocumentation": "Searches for domains visible to this machine (browsable domains).\n\nThe callback receives `(event, domain, moreComing)` — see the type\ndocumentation for the complete event table.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForBrowsableDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Domain:', domain)\n})\n```",
+              "description": "Searches for domains visible to this machine (browsable domains).\nThe callback receives `(event, domain, moreComing)` — see the type\ndocumentation for the complete event table.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "`function(event, domain, moreComing)` called for each result"
+                }
+              ],
+              "returns": {
+                "type": "HSBonjourBrowser",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "browser.searchForBrowsableDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Domain:', domain)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
+              "lineNumber": 87
+            },
+            {
+              "name": "searchForRegistrationDomains",
+              "signature": "func searchForRegistrationDomains(_ callback: JSValue) -> HSBonjourBrowser",
+              "rawDocumentation": "Searches for domains on which this machine can register services.\n\nThe callback receives `(event, domain, moreComing)` — see the type\ndocumentation for the complete event table.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForRegistrationDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Can register in:', domain)\n})\n```",
+              "description": "Searches for domains on which this machine can register services.\nThe callback receives `(event, domain, moreComing)` — see the type\ndocumentation for the complete event table.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "`function(event, domain, moreComing)` called for each result"
+                }
+              ],
+              "returns": {
+                "type": "HSBonjourBrowser",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "browser.searchForRegistrationDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Can register in:', domain)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
+              "lineNumber": 101
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSBonjourBrowser",
+              "rawDocumentation": "Stops the current search. Safe to call when no search is active.\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.stop()\n```",
+              "description": "Stops the current search. Safe to call when no search is active.",
+              "params": [],
+              "returns": {
+                "type": "HSBonjourBrowser",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "browser.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
+              "lineNumber": 109
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier for this browser object.\n- Example:\n```js\nconsole.log(hs.bonjour.createBrowser().identifier)\n```",
+              "description": "A unique identifier for this browser object.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(hs.bonjour.createBrowser().identifier)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
+              "lineNumber": 49
+            },
+            {
+              "name": "includesPeerToPeer",
+              "signature": "var includesPeerToPeer: Bool { get set }",
+              "rawDocumentation": "Whether to search over peer-to-peer Bluetooth/Wi-Fi in addition to\nstandard network interfaces. Defaults to `false`.\n- Example:\n```js\nbrowser.includesPeerToPeer = true\n```",
+              "description": "Whether to search over peer-to-peer Bluetooth/Wi-Fi in addition to\nstandard network interfaces. Defaults to `false`.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "browser.includesPeerToPeer = true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
+              "lineNumber": 57
+            }
+          ]
+        },
+        {
+          "name": "HSBonjourServiceAPI",
+          "type": "typedef",
+          "rawDocumentation": "A Bonjour service record for publishing or resolving on the local network.\n\nObtain a local service via `hs.bonjour.createService()` and call `publish()`.\nRemote services are delivered by an `HSBonjourBrowser` search callback; call\n`resolve()` on them to discover their hostname, port, and addresses.\n\n## Callback events\n\n| Method | Event | Extra data |\n|--------|-------|------------|\n| `publish()` | `\"published\"` | _(none)_ |\n| `publish()` | `\"stopped\"` | _(none)_ |\n| `publish()` | `\"error\"` | error message string |\n| `resolve()` | `\"resolved\"` | _(none)_ |\n| `resolve()` | `\"stopped\"` | _(none)_ |\n| `resolve()` | `\"error\"` | error message string |\n| `monitor()` | `\"txtRecord\"` | updated TXT record dict |",
+          "description": "A Bonjour service record for publishing or resolving on the local network.\nObtain a local service via `hs.bonjour.createService()` and call `publish()`.\nRemote services are delivered by an `HSBonjourBrowser` search callback; call\n`resolve()` on them to discover their hostname, port, and addresses.\n## Callback events\n| Method | Event | Extra data |\n|--------|-------|------------|\n| `publish()` | `\"published\"` | _(none)_ |\n| `publish()` | `\"stopped\"` | _(none)_ |\n| `publish()` | `\"error\"` | error message string |\n| `resolve()` | `\"resolved\"` | _(none)_ |\n| `resolve()` | `\"stopped\"` | _(none)_ |\n| `resolve()` | `\"error\"` | error message string |\n| `monitor()` | `\"txtRecord\"` | updated TXT record dict |",
+          "methods": [
+            {
+              "name": "publish",
+              "signature": "func publish(_ callback: JSValue) -> HSBonjourService",
+              "rawDocumentation": "Publishes this service on the local network. Only valid for local services.\n\nThe callback is called with `(event)` or `(event, errorMessage)`:\n- `\"published\"` — now advertising\n- `\"stopped\"` — advertisement stopped\n- `\"error\"` — publication failed; error message in second argument\n- Parameter callback: `function(event, data?)` called on status changes\n- Returns: self, for chaining\n- Example:\n```js\nhs.bonjour.createService('My Server', '_http._tcp.', 8080, 'local.')\n    .publish(ev => console.log('Publish event:', ev))\n```",
+              "description": "Publishes this service on the local network. Only valid for local services.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "`function(event, data?)` called on status changes"
+                }
+              ],
+              "returns": {
+                "type": "HSBonjourService",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.bonjour.createService('My Server', '_http._tcp.', 8080, 'local.')\n    .publish(ev => console.log('Publish event:', ev))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 122
+            },
+            {
+              "name": "resolve",
+              "signature": "func resolve(_ timeout: Double, _ callback: JSValue) -> HSBonjourService",
+              "rawDocumentation": "Resolves the hostname, port, addresses, and TXT record of a remote service.\n\nThe callback is called with `(event)` or `(event, errorMessage)`:\n- `\"resolved\"` — resolution complete; read `hostname`, `port`, `addresses`, `txtRecord`\n- `\"stopped\"` — resolution stopped before completing\n- `\"error\"` — resolution failed; error message in second argument\n- Parameter timeout: seconds before giving up; pass `0` for no timeout\n- Parameter callback: `function(event, data?)` called on status changes\n- Returns: self, for chaining\n- Example:\n```js\nservice.resolve(5, (ev, err) => {\n    if (ev === 'resolved') console.log(service.hostname, service.port)\n    else console.error('Resolve failed:', err)\n})\n```",
+              "description": "Resolves the hostname, port, addresses, and TXT record of a remote service.",
+              "params": [
+                {
+                  "name": "timeout",
+                  "type": "Double",
+                  "description": "seconds before giving up; pass `0` for no timeout"
+                },
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "`function(event, data?)` called on status changes"
+                }
+              ],
+              "returns": {
+                "type": "HSBonjourService",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "service.resolve(5, (ev, err) => {\n    if (ev === 'resolved') console.log(service.hostname, service.port)\n    else console.error('Resolve failed:', err)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 140
+            },
+            {
+              "name": "monitor",
+              "signature": "func monitor(_ callback: JSValue) -> HSBonjourService",
+              "rawDocumentation": "Starts monitoring the TXT record for changes. The callback fires with the\nupdated TXT record dict whenever it changes.\n\nCall `stopMonitoring()` to unsubscribe.\n- Parameter callback: `function(txtRecord)` called when TXT data changes\n- Returns: self, for chaining\n- Example:\n```js\nservice.monitor(txt => console.log('TXT updated:', txt))\n```",
+              "description": "Starts monitoring the TXT record for changes. The callback fires with the\nupdated TXT record dict whenever it changes.\nCall `stopMonitoring()` to unsubscribe.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "`function(txtRecord)` called when TXT data changes"
+                }
+              ],
+              "returns": {
+                "type": "HSBonjourService",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "service.monitor(txt => console.log('TXT updated:', txt))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 152
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSBonjourService",
+              "rawDocumentation": "Stops any active publication or resolution.\n- Returns: self, for chaining\n- Example:\n```js\nservice.stop()\n```",
+              "description": "Stops any active publication or resolution.",
+              "params": [],
+              "returns": {
+                "type": "HSBonjourService",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "service.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 160
+            },
+            {
+              "name": "stopMonitoring",
+              "signature": "func stopMonitoring() -> HSBonjourService",
+              "rawDocumentation": "Stops TXT record monitoring started by `monitor()`.\n- Returns: self, for chaining\n- Example:\n```js\nservice.stopMonitoring()\n```",
+              "description": "Stops TXT record monitoring started by `monitor()`.",
+              "params": [],
+              "returns": {
+                "type": "HSBonjourService",
+                "description": "self, for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "service.stopMonitoring()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 168
+            },
+            {
+              "name": "setTXTRecord",
+              "signature": "func setTXTRecord(_ record: [String: String]) -> Bool",
+              "rawDocumentation": "Updates the TXT record for a published service.\n\nHas no effect before `publish()` is called.\n- Parameter record: a `{key: value}` object of string pairs\n- Returns: `true` if the update succeeded, `false` otherwise\n- Example:\n```js\nservice.setTXTRecord({ version: '2', status: 'online' })\n```",
+              "description": "Updates the TXT record for a published service.\nHas no effect before `publish()` is called.",
+              "params": [
+                {
+                  "name": "record",
+                  "type": "[String: String]",
+                  "description": "a `{key: value}` object of string pairs"
+                }
+              ],
+              "returns": {
+                "type": "Bool",
+                "description": "`true` if the update succeeded, `false` otherwise"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "service.setTXTRecord({ version: '2', status: 'online' })"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 179
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier assigned to this service object.\n- Example:\n```js\nconst svc = hs.bonjour.createService('My Server', '_http._tcp.', 8080, 'local.')\nconsole.log(svc.identifier)\n```",
+              "description": "A unique identifier assigned to this service object.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const svc = hs.bonjour.createService('My Server', '_http._tcp.', 8080, 'local.')\nconsole.log(svc.identifier)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 37
+            },
+            {
+              "name": "name",
+              "signature": "var name: String { get }",
+              "rawDocumentation": "The service name (e.g. `\"My Web Server\"`).\n- Example:\n```js\nconsole.log(service.name)\n```",
+              "description": "The service name (e.g. `\"My Web Server\"`).",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(service.name)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 44
+            },
+            {
+              "name": "type",
+              "signature": "var type: String { get }",
+              "rawDocumentation": "The service type string (e.g. `\"_http._tcp.\"`).\n- Example:\n```js\nconsole.log(service.type)\n```",
+              "description": "The service type string (e.g. `\"_http._tcp.\"`).",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(service.type)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 51
+            },
+            {
+              "name": "domain",
+              "signature": "var domain: String { get }",
+              "rawDocumentation": "The mDNS domain (almost always `\"local.\"`).\n- Example:\n```js\nconsole.log(service.domain)\n```",
+              "description": "The mDNS domain (almost always `\"local.\"`).",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(service.domain)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 58
+            },
+            {
+              "name": "hostname",
+              "signature": "var hostname: String? { get }",
+              "rawDocumentation": "The resolved hostname, or `null` before `resolve()` completes.\n- Example:\n```js\nservice.resolve(5, ev => {\n    if (ev === 'resolved') console.log(service.hostname)\n})\n```",
+              "description": "The resolved hostname, or `null` before `resolve()` completes.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "service.resolve(5, ev => {\n    if (ev === 'resolved') console.log(service.hostname)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 67
+            },
+            {
+              "name": "port",
+              "signature": "var port: Int { get }",
+              "rawDocumentation": "The service port. For local services this is set immediately; for remote\nservices it is `-1` until `resolve()` completes.\n- Example:\n```js\nconsole.log(service.port)\n```",
+              "description": "The service port. For local services this is set immediately; for remote\nservices it is `-1` until `resolve()` completes.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(service.port)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 75
+            },
+            {
+              "name": "addresses",
+              "signature": "var addresses: [String] { get }",
+              "rawDocumentation": "IP address strings (IPv4 and/or IPv6) populated after `resolve()` completes.\n- Example:\n```js\nservice.resolve(5, ev => {\n    if (ev === 'resolved') console.log(service.addresses)\n})\n```",
+              "description": "IP address strings (IPv4 and/or IPv6) populated after `resolve()` completes.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "service.resolve(5, ev => {\n    if (ev === 'resolved') console.log(service.addresses)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 84
+            },
+            {
+              "name": "txtRecord",
+              "signature": "var txtRecord: [String: String]? { get }",
+              "rawDocumentation": "The TXT record as a `{key: value}` object, or `null` if none is set.\nPopulated after `resolve()` or `publish()`, or when updated via `monitor()`.\n- Example:\n```js\nconsole.log(service.txtRecord)\n```",
+              "description": "The TXT record as a `{key: value}` object, or `null` if none is set.\nPopulated after `resolve()` or `publish()`, or when updated via `monitor()`.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(service.txtRecord)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 92
+            },
+            {
+              "name": "isLocal",
+              "signature": "var isLocal: Bool { get }",
+              "rawDocumentation": "`true` if this is a locally-created service that can be published;\n`false` for services discovered by a browser that can only be resolved.\n- Example:\n```js\nconsole.log(service.isLocal)\n```",
+              "description": "`true` if this is a locally-created service that can be published;\n`false` for services discovered by a browser that can only be resolved.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(service.isLocal)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 100
+            },
+            {
+              "name": "includesPeerToPeer",
+              "signature": "var includesPeerToPeer: Bool { get set }",
+              "rawDocumentation": "Whether peer-to-peer Bluetooth/Wi-Fi is included in publication/resolution.\n- Example:\n```js\nservice.includesPeerToPeer = true\n```",
+              "description": "Whether peer-to-peer Bluetooth/Wi-Fi is included in publication/resolution.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "service.includesPeerToPeer = true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourService.swift",
+              "lineNumber": 107
+            }
+          ]
+        }
+      ],
+      "description": "Discover and publish Bonjour (mDNS / Zeroconf) network services.\nUse `createBrowser()` to search the network for services advertised by other\ndevices, and `createService()` to advertise your own. The `networkServices()`\nconvenience function returns a snapshot of all service types currently active\non the local network.\n## Common service type strings\nThe `hs.bonjour.serviceTypes` object (populated by the JS enhancement) maps\nshort names to their mDNS strings, e.g. `hs.bonjour.serviceTypes.ssh` →\n`\"_ssh._tcp.\"`.\n## Quick example\n```js\n// Find all SSH services on the local network and resolve each one\nconst browser = hs.bonjour.createBrowser()\nbrowser.searchForServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {\n    if (event === 'serviceFound') {\n        svc.resolve(5, ev => {\n            if (ev === 'resolved') console.log(svc.hostname, svc.port)\n        })\n    }\n})\n```",
+      "rawDocumentation": "Discover and publish Bonjour (mDNS / Zeroconf) network services.\n\nUse `createBrowser()` to search the network for services advertised by other\ndevices, and `createService()` to advertise your own. The `networkServices()`\nconvenience function returns a snapshot of all service types currently active\non the local network.\n\n## Common service type strings\n\nThe `hs.bonjour.serviceTypes` object (populated by the JS enhancement) maps\nshort names to their mDNS strings, e.g. `hs.bonjour.serviceTypes.ssh` →\n`\"_ssh._tcp.\"`.\n\n## Quick example\n\n```js\n// Find all SSH services on the local network and resolve each one\nconst browser = hs.bonjour.createBrowser()\nbrowser.searchForServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {\n    if (event === 'serviceFound') {\n        svc.resolve(5, ev => {\n            if (ev === 'resolved') console.log(svc.hostname, svc.port)\n        })\n    }\n})\n```"
+    },
+    {
       "name": "hs.console",
       "methods": [
         {
@@ -10071,5 +10672,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-16T21:51:13.277Z"
+  "generatedAt": "2026-05-17T21:06:57.627Z"
 }
