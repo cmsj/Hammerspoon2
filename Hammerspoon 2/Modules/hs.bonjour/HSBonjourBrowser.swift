@@ -158,6 +158,7 @@ import JavaScriptCore
 
     @objc @discardableResult func searchForServices(_ type: String, _ domain: String, _ callback: JSValue) -> HSBonjourBrowser {
         servicesBrowser.stop()
+        serviceTable.removeAll()
         servicesCallback = callback.isObject ? callback : nil
         servicesBrowser.searchForServices(ofType: type, inDomain: domain)
         AKTrace("HSBonjourBrowser(\(identifier)): Searching for \(type) in '\(domain)'")
