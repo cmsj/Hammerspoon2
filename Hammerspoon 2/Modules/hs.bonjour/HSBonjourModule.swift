@@ -142,6 +142,7 @@ import JavaScriptCore
     }
 
     @objc func removeBrowser(_ browser: HSBonjourBrowser) {
+        browser.stopAllDiscoveredServices()
         browser.stop()
         browsers.removeAll { $0 === browser }
         AKTrace("HSBonjourModule: Removed browser \(browser.identifier)")

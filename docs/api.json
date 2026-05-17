@@ -2364,14 +2364,14 @@
         {
           "name": "HSBonjourBrowserAPI",
           "type": "typedef",
-          "rawDocumentation": "Discovers Bonjour services and domains advertised on the local network.\n\nCreate via `hs.bonjour.createBrowser()`, then call one of the `searchFor…`\nmethods. Only one search may be active at a time; starting a new search\nimplicitly cancels the current one.\n\n## Service search callback events\n\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"serviceFound\"` | `HSBonjourService` | A matching service appeared |\n| `\"serviceRemoved\"` | `HSBonjourService` | A previously found service disappeared |\n| `\"error\"` | error string | The search failed |\n\n## Domain search callback events\n\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"domainFound\"` | domain string | A domain was discovered |\n| `\"domainRemoved\"` | domain string | A domain disappeared |\n| `\"error\"` | error string | The search failed |\n\nExample:\n```js\nconst browser = hs.bonjour.createBrowser()\nbrowser.searchForServices('_ssh._tcp.', 'local.', (event, item, moreComing) => {\n    if (event === 'serviceFound') {\n        console.log('Found:', item.name, '— more coming:', moreComing)\n    }\n})\n```",
-          "description": "Discovers Bonjour services and domains advertised on the local network.\nCreate via `hs.bonjour.createBrowser()`, then call one of the `searchFor…`\nmethods. Only one search may be active at a time; starting a new search\nimplicitly cancels the current one.\n## Service search callback events\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"serviceFound\"` | `HSBonjourService` | A matching service appeared |\n| `\"serviceRemoved\"` | `HSBonjourService` | A previously found service disappeared |\n| `\"error\"` | error string | The search failed |\n## Domain search callback events\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"domainFound\"` | domain string | A domain was discovered |\n| `\"domainRemoved\"` | domain string | A domain disappeared |\n| `\"error\"` | error string | The search failed |",
+          "rawDocumentation": "Discovers Bonjour services and domains advertised on the local network.\n\nCreate via `hs.bonjour.createBrowser()`, then call one of the `searchFor…`\nmethods. Each search type uses its own underlying `NetServiceBrowser`, so\nservice and domain searches can run concurrently. Restarting any single\nsearch type stops only that type's browser before beginning the new search.\n\n## Service search callback events\n\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"serviceFound\"` | `HSBonjourService` | A matching service appeared |\n| `\"serviceRemoved\"` | `HSBonjourService` | A previously found service disappeared |\n| `\"error\"` | error string | The search failed |\n\n## Domain search callback events\n\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"domainFound\"` | domain string | A domain was discovered |\n| `\"domainRemoved\"` | domain string | A domain disappeared |\n| `\"error\"` | error string | The search failed |\n\nExample:\n```js\nconst browser = hs.bonjour.createBrowser()\nbrowser.searchForServices('_ssh._tcp.', 'local.', (event, item, moreComing) => {\n    if (event === 'serviceFound') {\n        console.log('Found:', item.name, '— more coming:', moreComing)\n    }\n})\n```",
+          "description": "Discovers Bonjour services and domains advertised on the local network.\nCreate via `hs.bonjour.createBrowser()`, then call one of the `searchFor…`\nmethods. Each search type uses its own underlying `NetServiceBrowser`, so\nservice and domain searches can run concurrently. Restarting any single\nsearch type stops only that type's browser before beginning the new search.\n## Service search callback events\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"serviceFound\"` | `HSBonjourService` | A matching service appeared |\n| `\"serviceRemoved\"` | `HSBonjourService` | A previously found service disappeared |\n| `\"error\"` | error string | The search failed |\n## Domain search callback events\n| Event | Data | Description |\n|-------|------|-------------|\n| `\"domainFound\"` | domain string | A domain was discovered |\n| `\"domainRemoved\"` | domain string | A domain disappeared |\n| `\"error\"` | error string | The search failed |",
           "methods": [
             {
               "name": "searchForServices",
               "signature": "func searchForServices(_ type: String, _ domain: String, _ callback: JSValue) -> HSBonjourBrowser",
-              "rawDocumentation": "Searches for services of the given type in the given domain.\n\nThe callback receives `(event, service, moreComing)` — see the type\ndocumentation for the complete event table.\n- Parameter type: service type string, e.g. `\"_http._tcp.\"` or `\"_ssh._tcp.\"`\n- Parameter domain: mDNS domain; `\"local.\"` for the local link, `\"\"` for all domains\n- Parameter callback: `function(event, service, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
-              "description": "Searches for services of the given type in the given domain.\nThe callback receives `(event, service, moreComing)` — see the type\ndocumentation for the complete event table.",
+              "rawDocumentation": "Searches for services of the given type in the given domain.\n\nIf a service search is already active it is stopped before starting\nthe new one. Domain searches are unaffected. The callback receives\n`(event, service, moreComing)` — see the type documentation for the\ncomplete event table.\n- Parameter type: service type string, e.g. `\"_http._tcp.\"` or `\"_ssh._tcp.\"`\n- Parameter domain: mDNS domain; `\"local.\"` for the local link, `\"\"` for all domains\n- Parameter callback: `function(event, service, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
+              "description": "Searches for services of the given type in the given domain.\nIf a service search is already active it is stopped before starting\nthe new one. Domain searches are unaffected. The callback receives\n`(event, service, moreComing)` — see the type documentation for the\ncomplete event table.",
               "params": [
                 {
                   "name": "type",
@@ -2401,13 +2401,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
-              "lineNumber": 73
+              "lineNumber": 76
             },
             {
               "name": "searchForBrowsableDomains",
               "signature": "func searchForBrowsableDomains(_ callback: JSValue) -> HSBonjourBrowser",
-              "rawDocumentation": "Searches for domains visible to this machine (browsable domains).\n\nThe callback receives `(event, domain, moreComing)` — see the type\ndocumentation for the complete event table.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForBrowsableDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Domain:', domain)\n})\n```",
-              "description": "Searches for domains visible to this machine (browsable domains).\nThe callback receives `(event, domain, moreComing)` — see the type\ndocumentation for the complete event table.",
+              "rawDocumentation": "Searches for domains visible to this machine (browsable domains).\n\nIf a browsable-domain search is already active it is stopped before\nstarting the new one. Service and registration-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)` — see\nthe type documentation for the complete event table.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForBrowsableDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Domain:', domain)\n})\n```",
+              "description": "Searches for domains visible to this machine (browsable domains).\nIf a browsable-domain search is already active it is stopped before\nstarting the new one. Service and registration-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)` — see\nthe type documentation for the complete event table.",
               "params": [
                 {
                   "name": "callback",
@@ -2427,13 +2427,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
-              "lineNumber": 87
+              "lineNumber": 92
             },
             {
               "name": "searchForRegistrationDomains",
               "signature": "func searchForRegistrationDomains(_ callback: JSValue) -> HSBonjourBrowser",
-              "rawDocumentation": "Searches for domains on which this machine can register services.\n\nThe callback receives `(event, domain, moreComing)` — see the type\ndocumentation for the complete event table.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForRegistrationDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Can register in:', domain)\n})\n```",
-              "description": "Searches for domains on which this machine can register services.\nThe callback receives `(event, domain, moreComing)` — see the type\ndocumentation for the complete event table.",
+              "rawDocumentation": "Searches for domains on which this machine can register services.\n\nIf a registration-domain search is already active it is stopped before\nstarting the new one. Service and browsable-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)` — see\nthe type documentation for the complete event table.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.searchForRegistrationDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Can register in:', domain)\n})\n```",
+              "description": "Searches for domains on which this machine can register services.\nIf a registration-domain search is already active it is stopped before\nstarting the new one. Service and browsable-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)` — see\nthe type documentation for the complete event table.",
               "params": [
                 {
                   "name": "callback",
@@ -2453,13 +2453,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
-              "lineNumber": 101
+              "lineNumber": 108
             },
             {
               "name": "stop",
               "signature": "func stop() -> HSBonjourBrowser",
-              "rawDocumentation": "Stops the current search. Safe to call when no search is active.\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.stop()\n```",
-              "description": "Stops the current search. Safe to call when no search is active.",
+              "rawDocumentation": "Stops all active searches. Safe to call when no search is active.\n- Returns: self, for chaining\n- Example:\n```js\nbrowser.stop()\n```",
+              "description": "Stops all active searches. Safe to call when no search is active.",
               "params": [],
               "returns": {
                 "type": "HSBonjourBrowser",
@@ -2473,7 +2473,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
-              "lineNumber": 109
+              "lineNumber": 116
             }
           ],
           "properties": [
@@ -2490,7 +2490,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
-              "lineNumber": 49
+              "lineNumber": 50
             },
             {
               "name": "includesPeerToPeer",
@@ -2505,7 +2505,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourBrowser.swift",
-              "lineNumber": 57
+              "lineNumber": 58
             }
           ]
         },
@@ -10672,5 +10672,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-17T21:06:57.627Z"
+  "generatedAt": "2026-05-17T21:25:06.387Z"
 }

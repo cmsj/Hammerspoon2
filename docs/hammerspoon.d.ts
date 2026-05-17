@@ -1219,8 +1219,9 @@ results), then resolves.
 /**
  * Discovers Bonjour services and domains advertised on the local network.
 Create via `hs.bonjour.createBrowser()`, then call one of the `searchFor…`
-methods. Only one search may be active at a time; starting a new search
-implicitly cancels the current one.
+methods. Each search type uses its own underlying `NetServiceBrowser`, so
+service and domain searches can run concurrently. Restarting any single
+search type stops only that type's browser before beginning the new search.
 ## Service search callback events
 | Event | Data | Description |
 |-------|------|-------------|
@@ -1237,8 +1238,10 @@ implicitly cancels the current one.
 declare class HSBonjourBrowser {
     /**
      * Searches for services of the given type in the given domain.
-The callback receives `(event, service, moreComing)` — see the type
-documentation for the complete event table.
+If a service search is already active it is stopped before starting
+the new one. Domain searches are unaffected. The callback receives
+`(event, service, moreComing)` — see the type documentation for the
+complete event table.
      * @param type service type string, e.g. `"_http._tcp."` or `"_ssh._tcp."`
      * @param domain mDNS domain; `"local."` for the local link, `""` for all domains
      * @param callback `function(event, service, moreComing)` called for each result
@@ -1248,8 +1251,10 @@ documentation for the complete event table.
 
     /**
      * Searches for domains visible to this machine (browsable domains).
-The callback receives `(event, domain, moreComing)` — see the type
-documentation for the complete event table.
+If a browsable-domain search is already active it is stopped before
+starting the new one. Service and registration-domain searches are
+unaffected. The callback receives `(event, domain, moreComing)` — see
+the type documentation for the complete event table.
      * @param callback `function(event, domain, moreComing)` called for each result
      * @returns self, for chaining
      */
@@ -1257,15 +1262,17 @@ documentation for the complete event table.
 
     /**
      * Searches for domains on which this machine can register services.
-The callback receives `(event, domain, moreComing)` — see the type
-documentation for the complete event table.
+If a registration-domain search is already active it is stopped before
+starting the new one. Service and browsable-domain searches are
+unaffected. The callback receives `(event, domain, moreComing)` — see
+the type documentation for the complete event table.
      * @param callback `function(event, domain, moreComing)` called for each result
      * @returns self, for chaining
      */
     static searchForRegistrationDomains(callback: JSValue): HSBonjourBrowser;
 
     /**
-     * Stops the current search. Safe to call when no search is active.
+     * Stops all active searches. Safe to call when no search is active.
      * @returns self, for chaining
      */
     static stop(): HSBonjourBrowser;
