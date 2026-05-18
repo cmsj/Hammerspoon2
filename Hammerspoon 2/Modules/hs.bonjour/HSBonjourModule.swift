@@ -17,9 +17,8 @@ import JavaScriptCore
 ///
 /// ## Common service type strings
 ///
-/// The `hs.bonjour.serviceTypes` object (populated by the JS enhancement) maps
-/// short names to their mDNS strings, e.g. `hs.bonjour.serviceTypes.ssh` →
-/// `"_ssh._tcp."`.
+/// The `hs.bonjour.serviceTypes` object maps short names to their mDNS strings,
+/// e.g. `hs.bonjour.serviceTypes.ssh` →`"_ssh._tcp."`.
 ///
 /// ## Quick example
 ///
