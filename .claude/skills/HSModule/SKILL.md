@@ -369,4 +369,5 @@ Hammerspoon 2 provides several convenience functions that handle logging per the
 
 These all log into the app's Console window
 
+If we ever emit a console.log() call, even in example code, please note that Hammerspoon 2's implementation of console.log does not support the form console.log("foo: ", bar); - either concatenate strings with + or use interpolated strings.
 

@@ -5970,6 +5970,369 @@
       "rawDocumentation": "Module for checking and requesting system permissions"
     },
     {
+      "name": "hs.power",
+      "methods": [
+        {
+          "name": "preventSleep",
+          "signature": "func preventSleep(_ type: String) -> Bool",
+          "rawDocumentation": "Prevents the specified type of system sleep.\n\nCreates an IOKit power assertion that stops macOS from allowing the specified\ntype of sleep. Call `allowSleep` with the same type to release the assertion.\n- Parameter type: The sleep type to prevent. One of: `\"display\"` (prevent display\n  idle sleep), `\"systemIdle\"` (prevent system idle sleep), `\"system\"` (prevent\n  all system sleep, including from power button or lid close).\n- Returns: `true` if the assertion was created successfully.\n- Example:\n  ```js\n  hs.power.preventSleep(\"display\")\n  ```",
+          "description": "Prevents the specified type of system sleep.\nCreates an IOKit power assertion that stops macOS from allowing the specified\ntype of sleep. Call `allowSleep` with the same type to release the assertion.\nidle sleep), `\"systemIdle\"` (prevent system idle sleep), `\"system\"` (prevent\nall system sleep, including from power button or lid close).",
+          "params": [
+            {
+              "name": "type",
+              "type": "String",
+              "description": "The sleep type to prevent. One of: `\"display\"` (prevent display"
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` if the assertion was created successfully."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.preventSleep(\"display\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 59
+        },
+        {
+          "name": "allowSleep",
+          "signature": "func allowSleep(_ type: String) -> Bool",
+          "rawDocumentation": "Releases a previously created sleep prevention assertion.\n\n- Parameter type: The sleep type to allow again. One of: `\"display\"`, `\"systemIdle\"`, `\"system\"`.\n- Returns: `true` if an assertion existed and was released, `false` if none was active.\n- Example:\n  ```js\n  hs.power.allowSleep(\"display\")\n  ```",
+          "description": "Releases a previously created sleep prevention assertion.",
+          "params": [
+            {
+              "name": "type",
+              "type": "String",
+              "description": "The sleep type to allow again. One of: `\"display\"`, `\"systemIdle\"`, `\"system\"`."
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` if an assertion existed and was released, `false` if none was active."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.allowSleep(\"display\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 69
+        },
+        {
+          "name": "isSleepPrevented",
+          "signature": "func isSleepPrevented(_ type: String) -> Bool",
+          "rawDocumentation": "Returns whether Hammerspoon is currently preventing the specified type of sleep.\n\n- Parameter type: The sleep type to check. One of: `\"display\"`, `\"systemIdle\"`, `\"system\"`.\n- Returns: `true` if this sleep type is currently being prevented.\n- Example:\n  ```js\n  if (hs.power.isSleepPrevented(\"display\")) console.log(\"display sleep is prevented\")\n  ```",
+          "description": "Returns whether Hammerspoon is currently preventing the specified type of sleep.",
+          "params": [
+            {
+              "name": "type",
+              "type": "String",
+              "description": "The sleep type to check. One of: `\"display\"`, `\"systemIdle\"`, `\"system\"`."
+            }
+          ],
+          "returns": {
+            "type": "Bool",
+            "description": "`true` if this sleep type is currently being prevented."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  if (hs.power.isSleepPrevented(\"display\")) console.log(\"display sleep is prevented\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 79
+        },
+        {
+          "name": "declareActivity",
+          "signature": "func declareActivity()",
+          "rawDocumentation": "Simulates user activity, briefly resetting the display idle timer.\n\nEquivalent to moving the mouse — does not create a persistent assertion.\n- Example:\n  ```js\n  hs.power.declareActivity()\n  ```",
+          "description": "Simulates user activity, briefly resetting the display idle timer.\nEquivalent to moving the mouse — does not create a persistent assertion.",
+          "params": [],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.declareActivity()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 88
+        },
+        {
+          "name": "currentAssertions",
+          "signature": "func currentAssertions() -> NSArray",
+          "rawDocumentation": "Returns the active power management assertions from all processes on the system.\n\n- Returns: An array of objects with `pid` (number), `name` (string), and `type` (string) properties.\n- Example:\n  ```js\n  hs.power.currentAssertions().forEach(a => console.log(a.pid + \" \" + a.name))\n  ```",
+          "description": "Returns the active power management assertions from all processes on the system.",
+          "params": [],
+          "returns": {
+            "type": "NSArray",
+            "description": "An array of objects with `pid` (number), `name` (string), and `type` (string) properties."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.currentAssertions().forEach(a => console.log(a.pid + \" \" + a.name))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 97
+        },
+        {
+          "name": "systemSleep",
+          "signature": "func systemSleep()",
+          "rawDocumentation": "Puts the system to sleep immediately.\n\nRequires the Automation permission for System Events.\n- Example:\n  ```js\n  hs.power.systemSleep()\n  ```",
+          "description": "Puts the system to sleep immediately.\nRequires the Automation permission for System Events.",
+          "params": [],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.systemSleep()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 108
+        },
+        {
+          "name": "lockScreen",
+          "signature": "func lockScreen()",
+          "rawDocumentation": "Locks the screen immediately.\n\n- Example:\n  ```js\n  hs.power.lockScreen()\n  ```",
+          "description": "Locks the screen immediately.",
+          "params": [],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.lockScreen()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 116
+        },
+        {
+          "name": "startScreensaver",
+          "signature": "func startScreensaver()",
+          "rawDocumentation": "Starts the screensaver immediately.\n\n- Example:\n  ```js\n  hs.power.startScreensaver()\n  ```",
+          "description": "Starts the screensaver immediately.",
+          "params": [],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.startScreensaver()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 124
+        },
+        {
+          "name": "batteryInfo",
+          "signature": "func batteryInfo() -> NSDictionary?",
+          "rawDocumentation": "Returns a snapshot of all available battery information, or `null` if no battery is present.\n\nThe returned object contains (values may be `null` if unavailable on the current hardware):\n- `percentage` — charge level 0–100\n- `isCharging` — whether charging\n- `isCharged` — whether fully charged\n- `source` — `\"ac\"`, `\"battery\"`, `\"ups\"`, or `\"unknown\"`\n- `health` — health string, e.g. `\"Good\"`\n- `healthCondition` — health condition detail, or `null`\n- `cycleCount` — charge cycle count\n- `capacity` — current capacity in mAh\n- `maxCapacity` — current maximum capacity in mAh\n- `designCapacity` — original design capacity in mAh\n- `voltage` — voltage in millivolts\n- `amperage` — current in milliamps (negative when discharging)\n- `watts` — power in watts (negative when discharging)\n- `temperature` — temperature in °C\n- `timeRemaining` — estimated minutes remaining, or `null` if calculating\n- `timeToFullCharge` — estimated minutes to full charge, or `null` if not applicable\n- `serial` — battery serial number\n- Returns: An object with battery fields, or `null` if no battery is present.\n- Example:\n  ```js\n  const info = hs.power.batteryInfo()\n  if (info) console.log(`${info.percentage}% — ${info.timeRemaining}m remaining`)\n  ```",
+          "description": "Returns a snapshot of all available battery information, or `null` if no battery is present.",
+          "params": [],
+          "returns": {
+            "type": "NSDictionary?",
+            "description": "An object with battery fields, or `null` if no battery is present."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  const info = hs.power.batteryInfo()\n  if (info) console.log(`${info.percentage}% — ${info.timeRemaining}m remaining`)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 198
+        },
+        {
+          "name": "addEventWatcher",
+          "signature": "func addEventWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Registers a listener that fires when system power events occur.\n\nThe listener receives a single string identifying the event. Possible values:\n`\"screensDidSleep\"`, `\"screensDidWake\"`, `\"screensDidLock\"`, `\"screensDidUnlock\"`,\n`\"screensaverDidStart\"`, `\"screensaverDidStop\"`, `\"screensaverWillStop\"`,\n`\"systemWillSleep\"`, `\"systemDidWake\"`, `\"systemWillPowerOff\"`,\n`\"sessionDidBecomeActive\"`, `\"sessionDidResignActive\"`.\n\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.\n- Parameter listener: A function receiving `(eventName: string)`.\n- Example:\n  ```js\n  hs.power.addEventWatcher(event => console.log(\"Power event: \" + event))\n  ```",
+          "description": "Registers a listener that fires when system power events occur.\n`\"screensDidSleep\"`, `\"screensDidWake\"`, `\"screensDidLock\"`, `\"screensDidUnlock\"`,\n`\"screensaverDidStart\"`, `\"screensaverDidStop\"`, `\"screensaverWillStop\"`,\n`\"systemWillSleep\"`, `\"systemDidWake\"`, `\"systemWillPowerOff\"`,\n`\"sessionDidBecomeActive\"`, `\"sessionDidResignActive\"`.\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "A function receiving `(eventName: string)`."
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.addEventWatcher(event => console.log(\"Power event: \" + event))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 217
+        },
+        {
+          "name": "removeEventWatcher",
+          "signature": "func removeEventWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Removes a previously registered power event listener.\n\n- Parameter listener: The function originally passed to `addEventWatcher`.\n- Example:\n  ```js\n  const handler = event => console.log(event)\n  hs.power.addEventWatcher(handler)\n  hs.power.removeEventWatcher(handler)\n  ```",
+          "description": "Removes a previously registered power event listener.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "The function originally passed to `addEventWatcher`."
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  const handler = event => console.log(event)\n  hs.power.addEventWatcher(handler)\n  hs.power.removeEventWatcher(handler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 228
+        },
+        {
+          "name": "addBatteryWatcher",
+          "signature": "func addBatteryWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Registers a listener that fires whenever battery state changes.\n\nThe listener receives no arguments; call `batteryInfo()` or read individual\nproperties inside the callback to determine what changed.\n\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.\n- Parameter listener: A function called with no arguments on battery state change.\n- Example:\n  ```js\n  hs.power.addBatteryWatcher(() => {\n      console.log(\"Battery now: \" + hs.power.percentage + \"%\")\n  })\n  ```",
+          "description": "Registers a listener that fires whenever battery state changes.\nThe listener receives no arguments; call `batteryInfo()` or read individual\nproperties inside the callback to determine what changed.\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "A function called with no arguments on battery state change."
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  hs.power.addBatteryWatcher(() => {\n      console.log(\"Battery now: \" + hs.power.percentage + \"%\")\n  })"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 253
+        },
+        {
+          "name": "removeBatteryWatcher",
+          "signature": "func removeBatteryWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Removes a previously registered battery change listener.\n\n- Parameter listener: The function originally passed to `addBatteryWatcher`.\n- Example:\n  ```js\n  const handler = () => console.log(\"battery changed\")\n  hs.power.addBatteryWatcher(handler)\n  hs.power.removeBatteryWatcher(handler)\n  ```",
+          "description": "Removes a previously registered battery change listener.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "The function originally passed to `addBatteryWatcher`."
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  const handler = () => console.log(\"battery changed\")\n  hs.power.addBatteryWatcher(handler)\n  hs.power.removeBatteryWatcher(handler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 264
+        }
+      ],
+      "properties": [
+        {
+          "name": "percentage",
+          "signature": "var percentage: Int { get }",
+          "rawDocumentation": "The current battery charge percentage (0–100), or `-1` if no battery is present.\n\n- Example:\n  ```js\n  console.log(\"Battery:\" + hs.power.percentage + \"%\")\n  ```",
+          "description": "The current battery charge percentage (0–100), or `-1` if no battery is present.",
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  console.log(\"Battery:\" + hs.power.percentage + \"%\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 134
+        },
+        {
+          "name": "isCharging",
+          "signature": "var isCharging: Bool { get }",
+          "rawDocumentation": "Whether the battery is currently charging.\n\nReturns `false` when no battery is present.\n- Example:\n  ```js\n  if (hs.power.isCharging) console.log(\"Charging\")\n  ```",
+          "description": "Whether the battery is currently charging.\nReturns `false` when no battery is present.",
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  if (hs.power.isCharging) console.log(\"Charging\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 143
+        },
+        {
+          "name": "powerSource",
+          "signature": "var powerSource: String { get }",
+          "rawDocumentation": "The current power source.\n\nReturns `\"ac\"` when plugged in, `\"battery\"` when on battery power, `\"ups\"` when\npowered by a UPS, or `\"unknown\"` if the source cannot be determined.\n- Example:\n  ```js\n  if (hs.power.powerSource === \"battery\") console.log(\"Running on battery\")\n  ```",
+          "description": "The current power source.\nReturns `\"ac\"` when plugged in, `\"battery\"` when on battery power, `\"ups\"` when\npowered by a UPS, or `\"unknown\"` if the source cannot be determined.",
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  if (hs.power.powerSource === \"battery\") console.log(\"Running on battery\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 153
+        },
+        {
+          "name": "isLowPowerMode",
+          "signature": "var isLowPowerMode: Bool { get }",
+          "rawDocumentation": "Whether Low Power Mode is currently active.\n\n- Example:\n  ```js\n  if (hs.power.isLowPowerMode) console.log(\"Low power mode active\")\n  ```",
+          "description": "Whether Low Power Mode is currently active.",
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  if (hs.power.isLowPowerMode) console.log(\"Low power mode active\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 161
+        },
+        {
+          "name": "thermalState",
+          "signature": "var thermalState: String { get }",
+          "rawDocumentation": "The current thermal state of the system.\n\nReturns one of: `\"nominal\"`, `\"fair\"`, `\"serious\"`, `\"critical\"`.\n- Example:\n  ```js\n  console.log(\"Thermal state: \" + hs.power.thermalState)\n  ```",
+          "description": "The current thermal state of the system.\nReturns one of: `\"nominal\"`, `\"fair\"`, `\"serious\"`, `\"critical\"`.",
+          "examples": [
+            {
+              "lang": "js",
+              "code": "  console.log(\"Thermal state: \" + hs.power.thermalState)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
+          "lineNumber": 170
+        }
+      ],
+      "types": [],
+      "description": "Monitor and control system power: prevent sleep, read battery state, respond to\npower events, and lock or sleep the machine.\n## Preventing sleep\n```js\n// Prevent the display from sleeping while a task runs\nhs.power.preventSleep(\"display\")\n// ... do work ...\nhs.power.allowSleep(\"display\")\n```\n## Watching for system events\n```js\nhs.power.addEventWatcher(event => {\n    if (event === \"screensDidLock\") console.log(\"Screen locked!\")\n})\n```\n## Reading battery state\n```js\nconst info = hs.power.batteryInfo()\nif (info) {\n    console.log(`Battery: ${info.percentage}%, ${info.timeRemaining} minutes remaining`)\n}\n```",
+      "rawDocumentation": "Monitor and control system power: prevent sleep, read battery state, respond to\npower events, and lock or sleep the machine.\n\n## Preventing sleep\n\n```js\n// Prevent the display from sleeping while a task runs\nhs.power.preventSleep(\"display\")\n// ... do work ...\nhs.power.allowSleep(\"display\")\n```\n\n## Watching for system events\n\n```js\nhs.power.addEventWatcher(event => {\n    if (event === \"screensDidLock\") console.log(\"Screen locked!\")\n})\n```\n\n## Reading battery state\n\n```js\nconst info = hs.power.batteryInfo()\nif (info) {\n    console.log(`Battery: ${info.percentage}%, ${info.timeRemaining} minutes remaining`)\n}\n```"
+    },
+    {
       "name": "hs.screen",
       "methods": [
         {
@@ -10628,5 +10991,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-18T15:04:15.891Z"
+  "generatedAt": "2026-05-18T21:05:57.792Z"
 }

@@ -31,6 +31,7 @@ import JavaScriptCoreExtras
     @objc var pasteboard: HSPasteboardModule { get }
     @objc var screen: HSScreenModule { get }
     @objc var task: HSTaskModule { get }
+    @objc var power: HSPowerModule { get }
     @objc var timer: HSTimerModule { get }
     @objc var ui: HSUIModule { get }
     @objc var window: HSWindowModule { get }
@@ -93,6 +94,7 @@ import JavaScriptCoreExtras
     @objc var pasteboard: HSPasteboardModule { get { getOrCreate(name: "pasteboard", type: HSPasteboardModule.self)}}
     @objc var screen: HSScreenModule { get { getOrCreate(name: "screen", type: HSScreenModule.self)}}
     @objc var task: HSTaskModule { get { getOrCreate(name: "task", type: HSTaskModule.self)}}
+    @objc var power: HSPowerModule { get { getOrCreate(name: "power", type: HSPowerModule.self)}}
     @objc var timer: HSTimerModule { get { getOrCreate(name: "timer", type: HSTimerModule.self)}}
     @objc var ui: HSUIModule { get { getOrCreate(name: "ui", type: HSUIModule.self)}}
     @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}

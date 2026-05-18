@@ -398,6 +398,8 @@ extension JSTestHarness {
                 loadModule(HSNotifyModule.self, as: name)
             case "bonjour":
                 loadModule(HSBonjourModule.self, as: name)
+            case "power":
+                loadModule(HSPowerModule.self, as: name)
             case "location":
                 loadModule(HSLocationModule.self, as: name)
             case "audiodevice":

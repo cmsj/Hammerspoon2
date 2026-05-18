@@ -2672,6 +2672,155 @@ resolve immediately with the previously granted or denied state.
 }
 
 /**
+ * Monitor and control system power: prevent sleep, read battery state, respond to
+power events, and lock or sleep the machine.
+## Preventing sleep
+```js
+// Prevent the display from sleeping while a task runs
+hs.power.preventSleep("display")
+// ... do work ...
+hs.power.allowSleep("display")
+```
+## Watching for system events
+```js
+hs.power.addEventWatcher(event => {
+    if (event === "screensDidLock") console.log("Screen locked!")
+})
+```
+## Reading battery state
+```js
+const info = hs.power.batteryInfo()
+if (info) {
+    console.log(`Battery: ${info.percentage}%, ${info.timeRemaining} minutes remaining`)
+}
+```
+ */
+declare namespace hs.power {
+    /**
+     * Prevents the specified type of system sleep.
+Creates an IOKit power assertion that stops macOS from allowing the specified
+type of sleep. Call `allowSleep` with the same type to release the assertion.
+idle sleep), `"systemIdle"` (prevent system idle sleep), `"system"` (prevent
+all system sleep, including from power button or lid close).
+     * @param type The sleep type to prevent. One of: `"display"` (prevent display
+     * @returns `true` if the assertion was created successfully.
+     */
+    function preventSleep(type: string): boolean;
+
+    /**
+     * Releases a previously created sleep prevention assertion.
+     * @param type The sleep type to allow again. One of: `"display"`, `"systemIdle"`, `"system"`.
+     * @returns `true` if an assertion existed and was released, `false` if none was active.
+     */
+    function allowSleep(type: string): boolean;
+
+    /**
+     * Returns whether Hammerspoon is currently preventing the specified type of sleep.
+     * @param type The sleep type to check. One of: `"display"`, `"systemIdle"`, `"system"`.
+     * @returns `true` if this sleep type is currently being prevented.
+     */
+    function isSleepPrevented(type: string): boolean;
+
+    /**
+     * Simulates user activity, briefly resetting the display idle timer.
+Equivalent to moving the mouse — does not create a persistent assertion.
+     */
+    function declareActivity(): void;
+
+    /**
+     * Returns the active power management assertions from all processes on the system.
+     * @returns An array of objects with `pid` (number), `name` (string), and `type` (string) properties.
+     */
+    function currentAssertions(): NSArray;
+
+    /**
+     * Puts the system to sleep immediately.
+Requires the Automation permission for System Events.
+     */
+    function systemSleep(): void;
+
+    /**
+     * Locks the screen immediately.
+     */
+    function lockScreen(): void;
+
+    /**
+     * Starts the screensaver immediately.
+     */
+    function startScreensaver(): void;
+
+    /**
+     * Returns a snapshot of all available battery information, or `null` if no battery is present.
+     * @returns An object with battery fields, or `null` if no battery is present.
+     */
+    function batteryInfo(): NSDictionary | undefined;
+
+    /**
+     * Registers a listener that fires when system power events occur.
+`"screensDidSleep"`, `"screensDidWake"`, `"screensDidLock"`, `"screensDidUnlock"`,
+`"screensaverDidStart"`, `"screensaverDidStop"`, `"screensaverWillStop"`,
+`"systemWillSleep"`, `"systemDidWake"`, `"systemWillPowerOff"`,
+`"sessionDidBecomeActive"`, `"sessionDidResignActive"`.
+The OS notification subscription starts lazily on the first listener and
+is released automatically when the last listener is removed.
+     * @param listener A function receiving `(eventName: string)`.
+     */
+    function addEventWatcher(listener: JSValue): void;
+
+    /**
+     * Removes a previously registered power event listener.
+     * @param listener The function originally passed to `addEventWatcher`.
+     */
+    function removeEventWatcher(listener: JSValue): void;
+
+    /**
+     * Registers a listener that fires whenever battery state changes.
+The listener receives no arguments; call `batteryInfo()` or read individual
+properties inside the callback to determine what changed.
+The OS notification subscription starts lazily on the first listener and
+is released automatically when the last listener is removed.
+     * @param listener A function called with no arguments on battery state change.
+     */
+    function addBatteryWatcher(listener: JSValue): void;
+
+    /**
+     * Removes a previously registered battery change listener.
+     * @param listener The function originally passed to `addBatteryWatcher`.
+     */
+    function removeBatteryWatcher(listener: JSValue): void;
+
+    /**
+     * The current battery charge percentage (0–100), or `-1` if no battery is present.
+     */
+    const percentage: number;
+
+    /**
+     * Whether the battery is currently charging.
+Returns `false` when no battery is present.
+     */
+    const isCharging: boolean;
+
+    /**
+     * The current power source.
+Returns `"ac"` when plugged in, `"battery"` when on battery power, `"ups"` when
+powered by a UPS, or `"unknown"` if the source cannot be determined.
+     */
+    const powerSource: string;
+
+    /**
+     * Whether Low Power Mode is currently active.
+     */
+    const isLowPowerMode: boolean;
+
+    /**
+     * The current thermal state of the system.
+Returns one of: `"nominal"`, `"fair"`, `"serious"`, `"critical"`.
+     */
+    const thermalState: string;
+
+}
+
+/**
  * Inspect and control the displays attached to the system.
 ## Obtaining screens
 ```javascript
