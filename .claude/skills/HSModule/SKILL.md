@@ -13,6 +13,18 @@ Hammerspoon 2 consists of two main components:
 
 In the directory "Hammerspoon 2/Modules", each within a further directory that shares the name they will be exposed to JS with, e.g. "hs.location"
 
+## Module registration
+
+A new module needs to be registered with the core JS engine so it can be loaded, these are both in Engine/ModuleRoot.swift:
+ * In the ModuleRootAPI protocol: @objc var foo: HSFooModule { get }
+ * In the ModuleRoot class body: @objc var foo: HSFooModule { getOrCreate(name: "foo", type: HSFooModule.self) }
+
+This will automatically load hs.foo.js if it exists in the Hammerspoon 2 app bundle, as well as exposing the HSFooModule class to JavaScript
+
+Additionally, the module should be exposed to "Hammerspoon 2Tests/Helpers/JStestHarness.swift" in the loadModules switch:
+  case "foo":
+    loadModule(HSFooModule.self, as: name)
+
 ## Basic structure of a module
 
 For the case of a module that we intend to be accessible in JS as "hs.foo", the following structural rules must be observed:
@@ -29,18 +41,8 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
     * A "shutdown()" method that will be called by the core engine when it is tearing down the JS environment
  * The HSFooModule class should be annotated with: @_documentation(visibility: private)
  * If HSFooModule needs to be marked with @MainActor and it needs a deinit method then the the deinit method should be declared as "isolated deinit"
-
-## Module registration
-
-A new module needs to be registered with the core JS engine so it can be loaded, these are both in Engine/ModuleRoot.swift:
- * In the ModuleRootAPI protocol: @objc var foo: HSFooModule { get }
- * In the ModuleRoot class body: @objc var foo: HSFooModule { getOrCreate(name: "foo", type: HSFooModule.self) }
-
-This will automatically load hs.foo.js if it exists in the Hammerspoon 2 app bundle, as well as exposing the HSFooModule class to JavaScript
-
-Additionally, the module should be exposed to "Hammerspoon 2Tests/Helpers/JStestHarness.swift" in the loadModules switch:
-  case "foo":
-    loadModule(HSFooModule.self, as: name)
+ * If HSFooModule includes an hs.foo.js file, and that file needs to store any properties/methods/objects/etc in the hs.foo namespace, there must be a declaration in HSFooModuleAPI to hold it. JavaScriptCore cannot modify HSFooModule instances at runtime to add additional properties/methods and they will go silently out of scope in unpredictable ways.
+ * In general we should avoid creating an hs.foo.js file unless absolutely necessary - it is strongly preferred to keep all code together in Swift. Legitimate uses of a .js file would include the watcher patterns mentioned below
 
 ## JavaScript API considerations
 

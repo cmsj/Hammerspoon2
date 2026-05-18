@@ -19,6 +19,7 @@ import JavaScriptCoreExtras
     @objc var application: HSApplicationModule { get }
     @objc var audiodevice: HSAudioDeviceModule { get }
     @objc var ax: HSAXModule { get }
+    @objc var bonjour: HSBonjourModule { get }
     @objc var console: HSConsoleModule { get }
     @objc var fs: HSFSModule { get }
     @objc var hashing: HSHashModule { get }
@@ -80,6 +81,7 @@ import JavaScriptCoreExtras
     @objc var application: HSApplicationModule { get { getOrCreate(name: "application", type: HSApplicationModule.self)}}
     @objc var audiodevice: HSAudioDeviceModule { get { getOrCreate(name: "audiodevice", type: HSAudioDeviceModule.self)}}
     @objc var ax: HSAXModule { get { getOrCreate(name: "ax", type: HSAXModule.self)}}
+    @objc var bonjour: HSBonjourModule { get { getOrCreate(name: "bonjour", type: HSBonjourModule.self)}}
     @objc var console: HSConsoleModule { get { getOrCreate(name: "console", type: HSConsoleModule.self)}}
     @objc var fs: HSFSModule { get { getOrCreate(name: "fs", type: HSFSModule.self)}}
     @objc var hashing: HSHashModule { get { getOrCreate(name: "hashing", type: HSHashModule.self)}}

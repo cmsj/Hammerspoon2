@@ -1148,6 +1148,261 @@ declare class HSAXElement {
 }
 
 /**
+ * Discover and publish Bonjour (mDNS / Zeroconf) network services.
+Use `newSearch()` to search the network for services advertised by other
+devices, and `advertise()` to advertise your own. The `networkServices()`
+convenience function returns a snapshot of all service types currently
+active on the local network.
+## Common service type strings
+The `hs.bonjour.serviceTypes` object maps short names to their mDNS strings,
+e.g. `hs.bonjour.serviceTypes.ssh` → `"_ssh._tcp."`.
+## Searching for a service
+```js
+// Find all SSH services on the local network and resolve each one
+const search = hs.bonjour.newSearch()
+search.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {
+    if (event === 'serviceFound') {
+        svc.resolve(5, ev => {
+            if (ev === 'resolved') console.log(svc.hostname + ':' + svc.port)
+        })
+    }
+})
+```
+## Advertising a service
+```js
+hs.bonjour.advertise('My Web Server', '_http._tcp.', 8080, ev => {
+    if (ev === 'published') console.log('Now advertising!')
+    else if (ev === 'error') console.error('Advertising failed')
+})
+// Later, to stop:
+hs.bonjour.stopAdvertising('My Web Server', '_http._tcp.')
+```
+## Listing all active service types
+```js
+hs.bonjour.networkServices(5).then(types => {
+    console.log('Active service types: ' + types.join(', '))
+})
+```
+ */
+declare namespace hs.bonjour {
+    /**
+     * Creates a new Bonjour search for discovering services or domains.
+Call one of the `find…` methods on the returned search to start
+discovering. Remove it with `removeSearch()` when finished.
+     * @returns a new `HSBonjourSearch`
+     */
+    function newSearch(): HSBonjourSearch;
+
+    /**
+     * Stops and removes a previously created search.
+     * @param search the search returned by `newSearch()`
+     */
+    function removeSearch(search: HSBonjourSearch): void;
+
+    /**
+     * Starts advertising a local service on the network.
+If `domain` is omitted or not a string, it defaults to `"local."`.
+If the 4th argument is a function, it is used as the callback and domain
+defaults to `"local."`.
+     * @param name human-readable name shown to browsers (e.g. `"My Web Server"`)
+     * @param type service type in `"_proto._tcp."` or `"_proto._udp."` form
+     * @param port port number the service listens on
+     * @param domain mDNS domain; defaults to `"local."` if omitted
+     * @param callback optional `function(event, data?)` called on status changes
+     */
+    function advertise(name: string, type: string, port: Int32, domain: JSValue, callback: JSValue): void;
+
+    /**
+     * Stops advertising a service previously started with `advertise()`.
+     * @param name the name passed to `advertise()`
+     * @param type the type passed to `advertise()`
+     */
+    function stopAdvertising(name: string, type: string): void;
+
+    /**
+     * Returns a Promise that resolves to an array of service-type strings
+currently advertised on the local network.
+Internally searches for `_services._dns-sd._udp.` services, collects
+results for up to `timeout` seconds (or until the browser signals no more
+results), then resolves.
+     * @param timeout maximum seconds to wait (pass `0` to use the default 5 s)
+     * @returns a Promise resolving to an array of service-type strings such as `"_http._tcp."`
+     */
+    function networkServices(timeout: number): Promise<string[]>;
+
+    /**
+     * A frozen object mapping short service-type names to their mDNS strings.
+Populated by the JavaScript enhancement layer.
+     */
+    const serviceTypes: Record<string, string>;
+
+}
+
+/**
+ * Discovers Bonjour services and domains advertised on the local network.
+Create via `hs.bonjour.newSearch()`, then call one of the `find…` methods.
+Each search type uses its own underlying `NetServiceBrowser`, so service and
+domain searches can run concurrently. Restarting any single search type stops
+only that browser before beginning the new one.
+## Service search callback events
+| Event | Data | Description |
+|-------|------|-------------|
+| `"serviceFound"` | `HSBonjourService` | A matching service appeared |
+| `"serviceRemoved"` | `HSBonjourService` | A previously found service disappeared |
+| `"error"` | error string | The search failed |
+## Domain search callback events
+| Event | Data | Description |
+|-------|------|-------------|
+| `"domainFound"` | domain string | A domain was discovered |
+| `"domainRemoved"` | domain string | A domain disappeared |
+| `"error"` | error string | The search failed |
+ */
+declare class HSBonjourSearch {
+    /**
+     * Searches for services of the given type in the given domain.
+If a service search is already active it is stopped before starting the
+new one. Domain searches are unaffected. The callback receives
+`(event, service, moreComing)` — see the type documentation for the
+complete event table.
+     * @param type service type string, e.g. `"_http._tcp."` or `"_ssh._tcp."`
+     * @param domain mDNS domain; `"local."` for the local link, `""` for all domains
+     * @param callback `function(event, service, moreComing)` called for each result
+     * @returns self, for chaining
+     */
+    static findServices(type: string, domain: string, callback: JSValue): HSBonjourSearch;
+
+    /**
+     * Searches for domains visible to this machine (browsable domains).
+If a browsable-domain search is already active it is stopped before
+starting the new one. Service and registration-domain searches are
+unaffected. The callback receives `(event, domain, moreComing)`.
+     * @param callback `function(event, domain, moreComing)` called for each result
+     * @returns self, for chaining
+     */
+    static findBrowsableDomains(callback: JSValue): HSBonjourSearch;
+
+    /**
+     * Searches for domains on which this machine can register services.
+If a registration-domain search is already active it is stopped before
+starting the new one. Service and browsable-domain searches are
+unaffected. The callback receives `(event, domain, moreComing)`.
+     * @param callback `function(event, domain, moreComing)` called for each result
+     * @returns self, for chaining
+     */
+    static findRegistrationDomains(callback: JSValue): HSBonjourSearch;
+
+    /**
+     * Stops all active searches. Safe to call when no search is active.
+     * @returns self, for chaining
+     */
+    static stop(): HSBonjourSearch;
+
+    /**
+     * A unique identifier for this search object.
+     */
+    identifier: string;
+
+    /**
+     * Whether to search over peer-to-peer Bluetooth/Wi-Fi in addition to
+standard network interfaces. Defaults to `false`.
+     */
+    includesPeerToPeer: boolean;
+
+}
+
+/**
+ * A discovered Bonjour service record. Call `resolve()` to look up its
+hostname, port, and addresses.
+Instances are delivered by an `HSBonjourSearch` callback. Call `resolve()`
+to discover their hostname, port, and addresses, and optionally `monitor()`
+to watch for TXT record changes.
+## Callback events
+| Method | Event | Extra data |
+|--------|-------|------------|
+| `resolve()` | `"resolved"` | _(none)_ |
+| `resolve()` | `"stopped"` | _(none)_ |
+| `resolve()` | `"error"` | error message string |
+| `monitor()` | `"txtRecord"` | updated TXT record dict |
+ */
+declare class HSBonjourService {
+    /**
+     * Resolves the hostname, port, addresses, and TXT record of this service.
+     * @param timeout seconds before giving up; pass `0` for no timeout
+     * @param callback `function(event, data?)` called on status changes
+     * @returns self, for chaining
+     */
+    static resolve(timeout: number, callback: JSValue): HSBonjourService;
+
+    /**
+     * Starts monitoring the TXT record for changes. The callback fires whenever
+the TXT record is updated.
+Call `stopMonitoring()` to unsubscribe.
+     * @param callback `function(txtRecord)` called when TXT data changes
+     * @returns self, for chaining
+     */
+    static monitor(callback: JSValue): HSBonjourService;
+
+    /**
+     * Stops any active resolution.
+     * @returns self, for chaining
+     */
+    static stop(): HSBonjourService;
+
+    /**
+     * Stops TXT record monitoring started by `monitor()`.
+     * @returns self, for chaining
+     */
+    static stopMonitoring(): HSBonjourService;
+
+    /**
+     * A unique identifier assigned to this service object.
+     */
+    identifier: string;
+
+    /**
+     * The service name (e.g. `"My Web Server"`).
+     */
+    name: string;
+
+    /**
+     * The service type string (e.g. `"_http._tcp."`).
+     */
+    type: string;
+
+    /**
+     * The mDNS domain (almost always `"local."`).
+     */
+    domain: string;
+
+    /**
+     * The resolved hostname, or `null` before `resolve()` completes.
+     */
+    hostname: string | undefined;
+
+    /**
+     * The service port. `-1` until `resolve()` completes.
+     */
+    port: number;
+
+    /**
+     * IP address strings (IPv4 and/or IPv6) populated after `resolve()` completes.
+     */
+    addresses: string[];
+
+    /**
+     * The TXT record as a `{key: value}` object, or `null` if none is available.
+Populated after `resolve()` completes or when updated via `monitor()`.
+     */
+    txtRecord: Record<string, string> | undefined;
+
+    /**
+     * Whether peer-to-peer Bluetooth/Wi-Fi is included in resolution.
+     */
+    includesPeerToPeer: boolean;
+
+}
+
+/**
  * Module for controlling the Hammerspoon console
  */
 declare namespace hs.console {
