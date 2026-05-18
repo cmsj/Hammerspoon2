@@ -2242,7 +2242,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
-          "lineNumber": 61
+          "lineNumber": 60
         },
         {
           "name": "removeSearch",
@@ -2265,7 +2265,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
-          "lineNumber": 71
+          "lineNumber": 70
         },
         {
           "name": "advertise",
@@ -2308,7 +2308,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
-          "lineNumber": 94
+          "lineNumber": 93
         },
         {
           "name": "stopAdvertising",
@@ -2336,12 +2336,12 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
-          "lineNumber": 103
+          "lineNumber": 102
         },
         {
           "name": "networkServices",
           "signature": "func networkServices(_ timeout: Double) -> JSPromise?",
-          "rawDocumentation": "Returns a Promise that resolves to an array of service-type strings\ncurrently advertised on the local network.\n\nInternally searches for `_services._dns-sd._udp.` services, collects\nresults for up to `timeout` seconds (or until the browser signals no more\nresults), then resolves.\n- Parameter timeout: maximum seconds to wait (pass `0` to use the default 5 s)\n- Returns: {Promise<string[]>} a Promise resolving to an array of service-type strings such as `\"_http._tcp.\"`\n- Example:\n```js\nhs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types:', types.join(', '))\n})\n```",
+          "rawDocumentation": "Returns a Promise that resolves to an array of service-type strings\ncurrently advertised on the local network.\n\nInternally searches for `_services._dns-sd._udp.` services, collects\nresults for up to `timeout` seconds (or until the browser signals no more\nresults), then resolves.\n- Parameter timeout: maximum seconds to wait (pass `0` to use the default 5 s)\n- Returns: {Promise<string[]>} a Promise resolving to an array of service-type strings such as `\"_http._tcp.\"`\n- Example:\n```js\nhs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types: ' + types.join(', '))\n})\n```",
           "description": "Returns a Promise that resolves to an array of service-type strings\ncurrently advertised on the local network.\nInternally searches for `_services._dns-sd._udp.` services, collects\nresults for up to `timeout` seconds (or until the browser signals no more\nresults), then resolves.",
           "params": [
             {
@@ -2358,12 +2358,12 @@
           "examples": [
             {
               "lang": "js",
-              "code": "hs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types:', types.join(', '))\n})"
+              "code": "hs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types: ' + types.join(', '))\n})"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
-          "lineNumber": 119
+          "lineNumber": 118
         }
       ],
       "properties": [
@@ -2380,7 +2380,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift",
-          "lineNumber": 47
+          "lineNumber": 46
         }
       ],
       "types": [
@@ -10628,5 +10628,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-18T12:07:37.475Z"
+  "generatedAt": "2026-05-18T14:36:45.754Z"
 }

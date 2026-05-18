@@ -5,7 +5,6 @@
 
 import Foundation
 import JavaScriptCore
-import Synchronization
 import dnssd
 
 // MARK: - Module API protocol
@@ -30,7 +29,7 @@ import dnssd
 /// search.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {
 ///     if (event === 'serviceFound') {
 ///         svc.resolve(5, ev => {
-///             if (ev === 'resolved') console.log(svc.hostname, svc.port)
+///             if (ev === 'resolved') console.log(svc.hostname + ":" + svc.port)
 ///         })
 ///     }
 /// })
@@ -113,7 +112,7 @@ import dnssd
     /// - Example:
     /// ```js
     /// hs.bonjour.networkServices(5).then(types => {
-    ///     console.log('Active service types:', types.join(', '))
+    ///     console.log('Active service types: ' + types.join(', '))
     /// })
     /// ```
     @objc func networkServices(_ timeout: Double) -> JSPromise?
@@ -225,50 +224,43 @@ import dnssd
         let waitSeconds = timeout > 0 ? timeout : 5.0
         return wrapAsyncInJSPromise(in: context) { holder in
             Task { @MainActor in
-                // Sendable context box passed through the C callback's context pointer.
-                // final class + let Mutex<Set> → automatically Sendable.
-                final class ResultCollector: Sendable {
-                    let found = Mutex<Set<String>>([])
-                }
-                let collector = ResultCollector()
-                let ctxPtr = Unmanaged.passRetained(collector).toOpaque()
-
-                // @convention(c) — captures nothing; uses ctxPtr to reach collector.
-                // Strings are built from raw pointers immediately (only valid during callback).
-                // The meta-query splits the type across two parameters:
-                //   namePtr   = "_ssh"        (service name / first label)
-                //   regtypePtr = "_tcp.local." (protocol.domain.)
+                // NSMutableSet is an ObjC reference type that can be passed through the
+                // @convention(c) callback's context pointer without a custom wrapper class.
+                // The meta-query splits the service type across two callback parameters:
+                //   namePtr    = "_ssh"         (first label)
+                //   regtypePtr = "_tcp.local."  (protocol.domain.)
                 // Full service type = "\(name).\(proto)." e.g. "_ssh._tcp."
+                let found = NSMutableSet()
+                let ctxPtr = unsafe Unmanaged.passRetained(found).toOpaque()
+
                 let browseReply: DNSServiceBrowseReply = { _, flags, _, error, namePtr, regtypePtr, _, ctx in
-                    guard let ctx,
+                    guard let ctx = unsafe ctx,
                           error == kDNSServiceErr_NoError,
                           (flags & kDNSServiceFlagsAdd) != 0,
-                          let name    = namePtr.flatMap    { String(utf8String: $0) },
-                          let regtype = regtypePtr.flatMap { String(utf8String: $0) },
+                          let name    = unsafe namePtr.flatMap({ unsafe String(utf8String: $0) }),
+                          let regtype = unsafe regtypePtr.flatMap({ unsafe String(utf8String: $0) }),
                           let proto   = regtype.components(separatedBy: ".").first,
                           !proto.isEmpty else { return }
-                    let c = Unmanaged<ResultCollector>.fromOpaque(ctx).takeUnretainedValue()
-                    c.found.withLock { $0.insert("\(name).\(proto).") }
+                    unsafe Unmanaged<NSMutableSet>.fromOpaque(ctx).takeUnretainedValue()
+                        .add("\(name).\(proto).")
                 }
 
                 var sdRef: DNSServiceRef?
-                let err = DNSServiceBrowse(&sdRef, 0, 0, "_services._dns-sd._udp", "local.", browseReply, ctxPtr)
-                AKTrace("hs.bonjour.networkServices: DNSServiceBrowse returned \(err), waiting \(waitSeconds)s")
-                guard err == kDNSServiceErr_NoError, let sdRef else {
-                    Unmanaged<ResultCollector>.fromOpaque(ctxPtr).release()
+                let err = unsafe DNSServiceBrowse(&sdRef, 0, 0, "_services._dns-sd._udp", "local.", browseReply, ctxPtr)
+                guard err == kDNSServiceErr_NoError, let sdRef = unsafe sdRef else {
+                    unsafe Unmanaged<NSMutableSet>.fromOpaque(ctxPtr).release()
                     AKError("hs.bonjour.networkServices: DNSServiceBrowse failed (error \(err))")
                     holder.resolveWith([String]())
                     return
                 }
-                DNSServiceSetDispatchQueue(sdRef, .main)
+                unsafe DNSServiceSetDispatchQueue(sdRef, .main)
 
                 try? await Task.sleep(for: .seconds(waitSeconds))
 
-                DNSServiceRefDeallocate(sdRef)
-                let result = collector.found.withLock { Array($0) }
-                Unmanaged<ResultCollector>.fromOpaque(ctxPtr).release()
-                AKTrace("hs.bonjour.networkServices: done — \(result.count) types: \(result)")
-                holder.resolveWith(result)
+                unsafe DNSServiceRefDeallocate(sdRef)
+                // takeRetainedValue() releases the +1 from passRetained above.
+                let result = unsafe Unmanaged<NSMutableSet>.fromOpaque(ctxPtr).takeRetainedValue()
+                holder.resolveWith(result.allObjects as! [String])
             }
         }
     }
