@@ -364,13 +364,13 @@ import IOKit.pwr_mgt
         guard let assertionID = sleepAssertions[type] else { return false }
 
         let result = IOPMAssertionRelease(assertionID)
-        sleepAssertions.removeValue(forKey: type)
 
         if result != kIOReturnSuccess {
             AKError("hs.power.allowSleep(\(type)): IOPMAssertionRelease failed (\(result))")
             return false
         }
 
+        sleepAssertions.removeValue(forKey: type)
         AKTrace("hs.power.allowSleep(\(type)): assertion \(assertionID) released")
         return true
     }
