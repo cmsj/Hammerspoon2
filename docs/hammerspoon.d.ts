@@ -1403,6 +1403,159 @@ Populated after `resolve()` completes or when updated via `monitor()`.
 }
 
 /**
+ * Module for discovering and interacting with camera devices.
+This module lets you enumerate cameras, capture still images, and react to
+device connect/disconnect events in real time.
+Camera access requires user permission. Call `hs.permissions.requestCamera()`
+before using ``captureImage()`` or reading ``isInUse``.
+## Enumerating cameras
+```javascript
+const cameras = hs.camera.all()
+cameras.forEach(cam => {
+    console.log(cam.name + " — " + (cam.isInUse ? "in use" : "idle"))
+})
+```
+## Finding a specific camera
+```javascript
+const cam = hs.camera.findByName("FaceTime HD Camera")
+if (cam) {
+    cam.captureImage()
+        .then(img => img.saveToFile("/tmp/snapshot.png"))
+        .catch(err => console.error("Capture error: " + err))
+}
+```
+## Watching for connect / disconnect events
+```javascript
+const handler = (event, camera) => {
+    if (event === "connected")    console.log("Camera connected: " + camera.name)
+    if (event === "disconnected") console.log("Camera disconnected: " + camera.name)
+}
+hs.camera.addWatcher(handler)
+// Later…
+hs.camera.removeWatcher(handler)
+```
+## Watching a camera's in-use state
+```javascript
+const cam = hs.camera.all()[0]
+cam.addWatcher((isInUse) => {
+    console.log(cam.name + " is now " + (isInUse ? "in use" : "idle"))
+})
+```
+ */
+declare namespace hs.camera {
+    /**
+     * All video camera devices currently connected to the system.
+     * @returns An array of `HSCamera` objects
+     */
+    function all(): HSCamera[];
+
+    /**
+     * Find the first camera whose name matches the given string.
+     * @param name The device name to search for (exact match)
+     * @returns An `HSCamera` if found, `null` otherwise
+     */
+    function findByName(name: string): HSCamera | undefined;
+
+    /**
+     * Find the camera with the given unique identifier.
+     * @param uid The device UID to search for
+     * @returns An `HSCamera` if found, `null` otherwise
+     */
+    function findByUID(uid: string): HSCamera | undefined;
+
+    /**
+     * Register a listener for camera device connect/disconnect events.
+     * @param listener A JavaScript function receiving `(event: string, camera: HSCamera)`
+     */
+    function addWatcher(listener: JSValue): void;
+
+    /**
+     * Remove a previously registered module-level event listener.
+     * @param listener The function originally passed to ``addWatcher(_:)``
+     */
+    function removeWatcher(listener: JSValue): void;
+
+    /**
+     * SKIP_DOCS
+     */
+    function _makeCameraEmitter(): void;
+
+}
+
+/**
+ * A camera device attached to the system.
+Obtain instances via the ``hs.camera`` module — do not instantiate directly.
+## Reading camera properties
+```javascript
+const cam = hs.camera.all()[0]
+console.log(cam.name + " uid=" + cam.uid + " inUse=" + cam.isInUse)
+```
+## Watching for in-use state changes
+```javascript
+const cam = hs.camera.all()[0]
+const fn = (isInUse) => {
+    console.log(cam.name + " is now " + (isInUse ? "in use" : "not in use"))
+}
+cam.addWatcher(fn)
+// later…
+cam.removeWatcher(fn)
+```
+## Capturing a still image
+```javascript
+const cam = hs.camera.all()[0]
+cam.captureImage()
+    .then(img => img.saveToFile("/tmp/shot.png"))
+    .catch(err => console.error("Capture failed: " + err))
+```
+ */
+declare class HSCamera {
+    /**
+     * Register a listener that fires whenever this camera's in-use state changes.
+The listener receives one argument: a boolean that is `true` when the camera
+starts being used and `false` when it is released.
+     * @param listener A JavaScript function receiving `(isInUse: boolean)`
+     */
+    static addWatcher(listener: JSValue): void;
+
+    /**
+     * Remove a previously registered per-camera in-use listener.
+     * @param listener The function originally passed to ``addWatcher(_:)``
+     */
+    static removeWatcher(listener: JSValue): void;
+
+    /**
+     * Capture a still image from this camera.
+Camera permission must be granted via `hs.permissions.requestCamera()` before calling
+this method. The returned `HSImage` can be saved, displayed in a UI element, or
+passed to other image-processing APIs.
+     * @returns A Promise that resolves to an `HSImage`, or rejects on error
+     */
+    static captureImage(): Promise<HSImage>;
+
+    /**
+     * The type name for JavaScript introspection. Always `"HSCamera"`.
+     */
+    typeName: string;
+
+    /**
+     * The persistent unique identifier for this camera.
+     */
+    uid: string;
+
+    /**
+     * The human-readable name of this camera (e.g. `"FaceTime HD Camera"`).
+     */
+    name: string;
+
+    /**
+     * Whether this camera is currently being used by any application.
+Queries the underlying CoreMediaIO device state each time it is read.
+     */
+    isInUse: boolean;
+
+}
+
+/**
  * Module for controlling the Hammerspoon console
  */
 declare namespace hs.console {

@@ -2779,6 +2779,277 @@
       "rawDocumentation": "Discover and publish Bonjour (mDNS / Zeroconf) network services.\n\nUse `newSearch()` to search the network for services advertised by other\ndevices, and `advertise()` to advertise your own. The `networkServices()`\nconvenience function returns a snapshot of all service types currently\nactive on the local network.\n\n## Common service type strings\n\nThe `hs.bonjour.serviceTypes` object maps short names to their mDNS strings,\ne.g. `hs.bonjour.serviceTypes.ssh` → `\"_ssh._tcp.\"`.\n\n## Searching for a service\n\n```js\n// Find all SSH services on the local network and resolve each one\nconst search = hs.bonjour.newSearch()\nsearch.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {\n    if (event === 'serviceFound') {\n        svc.resolve(5, ev => {\n            if (ev === 'resolved') console.log(svc.hostname + ':' + svc.port)\n        })\n    }\n})\n```\n\n## Advertising a service\n\n```js\nhs.bonjour.advertise('My Web Server', '_http._tcp.', 8080, ev => {\n    if (ev === 'published') console.log('Now advertising!')\n    else if (ev === 'error') console.error('Advertising failed')\n})\n// Later, to stop:\nhs.bonjour.stopAdvertising('My Web Server', '_http._tcp.')\n```\n\n## Listing all active service types\n\n```js\nhs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types: ' + types.join(', '))\n})\n```"
     },
     {
+      "name": "hs.camera",
+      "methods": [
+        {
+          "name": "all",
+          "signature": "func all() -> [HSCamera]",
+          "rawDocumentation": "All video camera devices currently connected to the system.\n- Returns: An array of `HSCamera` objects\n- Example:\n```js\nhs.camera.all().forEach(c => console.log(c.name))\n```",
+          "description": "All video camera devices currently connected to the system.",
+          "params": [],
+          "returns": {
+            "type": "[HSCamera]",
+            "description": "An array of `HSCamera` objects"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.camera.all().forEach(c => console.log(c.name))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
+          "lineNumber": 68
+        },
+        {
+          "name": "findByName",
+          "signature": "func findByName(_ name: String) -> HSCamera?",
+          "rawDocumentation": "Find the first camera whose name matches the given string.\n- Parameter name: The device name to search for (exact match)\n- Returns: An `HSCamera` if found, `null` otherwise\n- Example:\n```js\nconst cam = hs.camera.findByName(\"FaceTime HD Camera\")\n```",
+          "description": "Find the first camera whose name matches the given string.",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "The device name to search for (exact match)"
+            }
+          ],
+          "returns": {
+            "type": "HSCamera?",
+            "description": "An `HSCamera` if found, `null` otherwise"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const cam = hs.camera.findByName(\"FaceTime HD Camera\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
+          "lineNumber": 77
+        },
+        {
+          "name": "findByUID",
+          "signature": "func findByUID(_ uid: String) -> HSCamera?",
+          "rawDocumentation": "Find the camera with the given unique identifier.\n- Parameter uid: The device UID to search for\n- Returns: An `HSCamera` if found, `null` otherwise\n- Example:\n```js\nconst cam = hs.camera.findByUID(\"CC26C0000082005\")\n```",
+          "description": "Find the camera with the given unique identifier.",
+          "params": [
+            {
+              "name": "uid",
+              "type": "String",
+              "description": "The device UID to search for"
+            }
+          ],
+          "returns": {
+            "type": "HSCamera?",
+            "description": "An `HSCamera` if found, `null` otherwise"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const cam = hs.camera.findByUID(\"CC26C0000082005\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
+          "lineNumber": 86
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Register a listener for camera device connect/disconnect events.\n\nThe listener is called with two arguments:\n- `event` — either `\"connected\"` or `\"disconnected\"`\n- `camera` — an `HSCamera` representing the affected device\n\n- Parameter listener: A JavaScript function receiving `(event: string, camera: HSCamera)`\n- Example:\n```js\nhs.camera.addWatcher((event, camera) => {\n    console.log(event + \": \" + camera.name)\n})\n```",
+          "description": "Register a listener for camera device connect/disconnect events.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "A JavaScript function receiving `(event: string, camera: HSCamera)`"
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.camera.addWatcher((event, camera) => {\n    console.log(event + \": \" + camera.name)\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
+          "lineNumber": 101
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Remove a previously registered module-level event listener.\n- Parameter listener: The function originally passed to ``addWatcher(_:)``\n- Example:\n```js\nhs.camera.removeWatcher(myHandler)\n```",
+          "description": "Remove a previously registered module-level event listener.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "The function originally passed to ``addWatcher(_:)``"
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.camera.removeWatcher(myHandler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
+          "lineNumber": 109
+        },
+        {
+          "name": "_makeCameraEmitter",
+          "rawDocumentation": "SKIP_DOCS",
+          "description": "SKIP_DOCS",
+          "params": [],
+          "returns": null,
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.camera/hs.camera.js",
+          "lineNumber": 89,
+          "type": "function"
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSCameraAPI",
+          "type": "typedef",
+          "rawDocumentation": "A camera device attached to the system.\n\nObtain instances via the ``hs.camera`` module — do not instantiate directly.\n\n## Reading camera properties\n\n```javascript\nconst cam = hs.camera.all()[0]\nconsole.log(cam.name + \" uid=\" + cam.uid + \" inUse=\" + cam.isInUse)\n```\n\n## Watching for in-use state changes\n\n```javascript\nconst cam = hs.camera.all()[0]\nconst fn = (isInUse) => {\n    console.log(cam.name + \" is now \" + (isInUse ? \"in use\" : \"not in use\"))\n}\ncam.addWatcher(fn)\n// later…\ncam.removeWatcher(fn)\n```\n\n## Capturing a still image\n\n```javascript\nconst cam = hs.camera.all()[0]\ncam.captureImage()\n    .then(img => img.saveToFile(\"/tmp/shot.png\"))\n    .catch(err => console.error(\"Capture failed: \" + err))\n```",
+          "description": "A camera device attached to the system.\nObtain instances via the ``hs.camera`` module — do not instantiate directly.\n## Reading camera properties\n```javascript\nconst cam = hs.camera.all()[0]\nconsole.log(cam.name + \" uid=\" + cam.uid + \" inUse=\" + cam.isInUse)\n```\n## Watching for in-use state changes\n```javascript\nconst cam = hs.camera.all()[0]\nconst fn = (isInUse) => {\n    console.log(cam.name + \" is now \" + (isInUse ? \"in use\" : \"not in use\"))\n}\ncam.addWatcher(fn)\n// later…\ncam.removeWatcher(fn)\n```\n## Capturing a still image\n```javascript\nconst cam = hs.camera.all()[0]\ncam.captureImage()\n    .then(img => img.saveToFile(\"/tmp/shot.png\"))\n    .catch(err => console.error(\"Capture failed: \" + err))\n```",
+          "methods": [
+            {
+              "name": "addWatcher",
+              "signature": "func addWatcher(_ listener: JSValue)",
+              "rawDocumentation": "Register a listener that fires whenever this camera's in-use state changes.\n\nThe listener receives one argument: a boolean that is `true` when the camera\nstarts being used and `false` when it is released.\n\n- Parameter listener: A JavaScript function receiving `(isInUse: boolean)`\n- Example:\n```js\nconst cam = hs.camera.all()[0]\ncam.addWatcher((inUse) => {\n    console.log(cam.name + \" is \" + (inUse ? \"now in use\" : \"no longer in use\"))\n})\n```",
+              "description": "Register a listener that fires whenever this camera's in-use state changes.\nThe listener receives one argument: a boolean that is `true` when the camera\nstarts being used and `false` when it is released.",
+              "params": [
+                {
+                  "name": "listener",
+                  "type": "JSValue",
+                  "description": "A JavaScript function receiving `(isInUse: boolean)`"
+                }
+              ],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const cam = hs.camera.all()[0]\ncam.addWatcher((inUse) => {\n    console.log(cam.name + \" is \" + (inUse ? \"now in use\" : \"no longer in use\"))\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
+              "lineNumber": 125
+            },
+            {
+              "name": "removeWatcher",
+              "signature": "func removeWatcher(_ listener: JSValue)",
+              "rawDocumentation": "Remove a previously registered per-camera in-use listener.\n- Parameter listener: The function originally passed to ``addWatcher(_:)``\n- Example:\n```js\ncam.removeWatcher(myHandler)\n```",
+              "description": "Remove a previously registered per-camera in-use listener.",
+              "params": [
+                {
+                  "name": "listener",
+                  "type": "JSValue",
+                  "description": "The function originally passed to ``addWatcher(_:)``"
+                }
+              ],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "cam.removeWatcher(myHandler)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
+              "lineNumber": 133
+            },
+            {
+              "name": "captureImage",
+              "signature": "func captureImage() -> JSPromise?",
+              "rawDocumentation": "Capture a still image from this camera.\n\nCamera permission must be granted via `hs.permissions.requestCamera()` before calling\nthis method. The returned `HSImage` can be saved, displayed in a UI element, or\npassed to other image-processing APIs.\n\n- Returns: {Promise<HSImage>} A Promise that resolves to an `HSImage`, or rejects on error\n- Example:\n```js\nconst img = await hs.camera.all()[0].captureImage()\nimg.saveToFile(\"/tmp/snapshot.png\")\n```",
+              "description": "Capture a still image from this camera.\nCamera permission must be granted via `hs.permissions.requestCamera()` before calling\nthis method. The returned `HSImage` can be saved, displayed in a UI element, or\npassed to other image-processing APIs.",
+              "params": [],
+              "returns": {
+                "type": "JSPromise?",
+                "description": "A Promise that resolves to an `HSImage`, or rejects on error",
+                "promiseType": "HSImage"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const img = await hs.camera.all()[0].captureImage()\nimg.saveToFile(\"/tmp/snapshot.png\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
+              "lineNumber": 154
+            }
+          ],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "The type name for JavaScript introspection. Always `\"HSCamera\"`.",
+              "description": "The type name for JavaScript introspection. Always `\"HSCamera\"`.",
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
+              "lineNumber": 87
+            },
+            {
+              "name": "uid",
+              "signature": "var uid: String { get }",
+              "rawDocumentation": "The persistent unique identifier for this camera.\n- Example:\n```js\nconsole.log(hs.camera.all()[0].uid)\n```",
+              "description": "The persistent unique identifier for this camera.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(hs.camera.all()[0].uid)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
+              "lineNumber": 94
+            },
+            {
+              "name": "name",
+              "signature": "var name: String { get }",
+              "rawDocumentation": "The human-readable name of this camera (e.g. `\"FaceTime HD Camera\"`).\n- Example:\n```js\nconsole.log(hs.camera.all()[0].name)\n```",
+              "description": "The human-readable name of this camera (e.g. `\"FaceTime HD Camera\"`).",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(hs.camera.all()[0].name)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
+              "lineNumber": 101
+            },
+            {
+              "name": "isInUse",
+              "signature": "var isInUse: Bool { get }",
+              "rawDocumentation": "Whether this camera is currently being used by any application.\n\nQueries the underlying CoreMediaIO device state each time it is read.\n- Example:\n```js\nif (hs.camera.all()[0].isInUse) console.log(\"Camera is busy\")\n```",
+              "description": "Whether this camera is currently being used by any application.\nQueries the underlying CoreMediaIO device state each time it is read.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "if (hs.camera.all()[0].isInUse) console.log(\"Camera is busy\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
+              "lineNumber": 110
+            }
+          ]
+        }
+      ],
+      "description": "Module for discovering and interacting with camera devices.\nThis module lets you enumerate cameras, capture still images, and react to\ndevice connect/disconnect events in real time.\nCamera access requires user permission. Call `hs.permissions.requestCamera()`\nbefore using ``captureImage()`` or reading ``isInUse``.\n## Enumerating cameras\n```javascript\nconst cameras = hs.camera.all()\ncameras.forEach(cam => {\n    console.log(cam.name + \" — \" + (cam.isInUse ? \"in use\" : \"idle\"))\n})\n```\n## Finding a specific camera\n```javascript\nconst cam = hs.camera.findByName(\"FaceTime HD Camera\")\nif (cam) {\n    cam.captureImage()\n        .then(img => img.saveToFile(\"/tmp/snapshot.png\"))\n        .catch(err => console.error(\"Capture error: \" + err))\n}\n```\n## Watching for connect / disconnect events\n```javascript\nconst handler = (event, camera) => {\n    if (event === \"connected\")    console.log(\"Camera connected: \" + camera.name)\n    if (event === \"disconnected\") console.log(\"Camera disconnected: \" + camera.name)\n}\nhs.camera.addWatcher(handler)\n// Later…\nhs.camera.removeWatcher(handler)\n```\n## Watching a camera's in-use state\n```javascript\nconst cam = hs.camera.all()[0]\ncam.addWatcher((isInUse) => {\n    console.log(cam.name + \" is now \" + (isInUse ? \"in use\" : \"idle\"))\n})\n```",
+      "rawDocumentation": "Module for discovering and interacting with camera devices.\n\nThis module lets you enumerate cameras, capture still images, and react to\ndevice connect/disconnect events in real time.\n\nCamera access requires user permission. Call `hs.permissions.requestCamera()`\nbefore using ``captureImage()`` or reading ``isInUse``.\n\n## Enumerating cameras\n\n```javascript\nconst cameras = hs.camera.all()\ncameras.forEach(cam => {\n    console.log(cam.name + \" — \" + (cam.isInUse ? \"in use\" : \"idle\"))\n})\n```\n\n## Finding a specific camera\n\n```javascript\nconst cam = hs.camera.findByName(\"FaceTime HD Camera\")\nif (cam) {\n    cam.captureImage()\n        .then(img => img.saveToFile(\"/tmp/snapshot.png\"))\n        .catch(err => console.error(\"Capture error: \" + err))\n}\n```\n\n## Watching for connect / disconnect events\n\n```javascript\nconst handler = (event, camera) => {\n    if (event === \"connected\")    console.log(\"Camera connected: \" + camera.name)\n    if (event === \"disconnected\") console.log(\"Camera disconnected: \" + camera.name)\n}\nhs.camera.addWatcher(handler)\n// Later…\nhs.camera.removeWatcher(handler)\n```\n\n## Watching a camera's in-use state\n\n```javascript\nconst cam = hs.camera.all()[0]\ncam.addWatcher((isInUse) => {\n    console.log(cam.name + \" is now \" + (isInUse ? \"in use\" : \"idle\"))\n})\n```"
+    },
+    {
       "name": "hs.console",
       "methods": [
         {
@@ -10991,5 +11262,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-18T22:09:48.703Z"
+  "generatedAt": "2026-05-19T10:33:23.122Z"
 }
