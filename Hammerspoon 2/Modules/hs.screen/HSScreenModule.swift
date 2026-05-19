@@ -80,10 +80,19 @@ import JavaScriptCore
 @MainActor
 @objc class HSScreenModule: NSObject, HSModuleAPI, HSScreenModuleAPI {
     var name = "hs.screen"
+    let engineID: UUID
 
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {}
+
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
+    }
 
     @objc func all() -> [HSScreen] {
         NSScreen.screens.map { HSScreen(screen: $0) }

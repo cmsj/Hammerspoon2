@@ -170,15 +170,18 @@ import JavaScriptCore
 @MainActor
 @objc class HSNotifyModule: NSObject, HSModuleAPI, HSNotifyModuleAPI {
     var name = "hs.notify"
+    let engineID: UUID
 
     private var callbacks: [String: JSValue] = [:]
 
     // Private userInfo key used to carry the category ID through to didReceive for pruning.
     fileprivate static let categoryIdKey = "_hs.notify.categoryId"
 
-    override required init() {
+    required init(engineID: UUID) {
+        self.engineID = engineID
         super.init()
         UNUserNotificationCenter.current().delegate = self
+        AKTrace("Init of \(name): \(engineID)")
     }
 
     func shutdown() {
@@ -186,7 +189,7 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        print("Deinit of \(name)")
+        AKTrace("Deinit of \(name): \(engineID)")
         shutdown()
     }
 

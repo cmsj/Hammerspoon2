@@ -328,6 +328,7 @@ import AppKit
 @MainActor
 @objc class HSPasteboardModule: NSObject, HSModuleAPI, HSPasteboardModuleAPI {
     var name = "hs.pasteboard"
+    let engineID: UUID
 
     @objc var watcherInterval: Double = 0.5
     @objc var _watcherEmitter: JSValue? = nil
@@ -336,14 +337,18 @@ import AppKit
     private var watcherCallback: JSValue? = nil
     private var lastChangeCount: Int = 0
 
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {
         _stopWatcher()
     }
 
     isolated deinit {
-        print("Deinit of \(name)")
+        AKTrace("Deinit of \(name): \(engineID)")
         shutdown()
     }
 

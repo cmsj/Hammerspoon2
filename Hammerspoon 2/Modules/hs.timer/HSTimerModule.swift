@@ -179,18 +179,24 @@ import JavaScriptCore
 // MARK: - Implementation
 
 @_documentation(visibility: private)
+@MainActor
 @objc class HSTimerModule: NSObject, HSModuleAPI, HSTimerModuleAPI {
     var name = "hs.timer"
+    let engineID: UUID
 
     // MARK: - Module lifecycle
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {
         // Timers clean themselves up in their deinit
     }
 
-    deinit {
-        print("Deinit of \(name)")
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Swift-retained storage for JS-defined functions

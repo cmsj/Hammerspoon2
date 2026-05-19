@@ -156,6 +156,7 @@ import AXSwift
 @MainActor
 @objc class HSAXModule: NSObject, HSModuleAPI, HSAXModuleAPI {
     var name = "hs.ax"
+    let engineID: UUID
 
     // Store observers by PID
     private var observers: [pid_t: Observer] = [:]
@@ -175,7 +176,8 @@ import AXSwift
 
     // MARK: - Module lifecycle
 
-    override required init() {
+    required init(engineID: UUID) {
+        self.engineID = engineID
         // Build the notification types dictionary
         for notificationType in UIElement.AXNotification.allCases {
             var name = notificationType.rawValue
@@ -189,6 +191,7 @@ import AXSwift
             _notificationTypes[name] = notificationType.rawValue
         }
         super.init()
+        AKTrace("Init of \(self.name)")
     }
 
     func shutdown() {
@@ -220,7 +223,7 @@ import AXSwift
     }
 
     isolated deinit {
-        print("Deinit of \(name)")
+        AKTrace("Deinit of \(name): \(engineID)")
         shutdown()
     }
 

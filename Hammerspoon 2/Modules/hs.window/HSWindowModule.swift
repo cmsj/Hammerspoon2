@@ -84,16 +84,21 @@ import AXSwift
 @MainActor
 @objc class HSWindowModule: NSObject, HSModuleAPI, HSWindowModuleAPI {
     var name = "hs.window"
+    let engineID: UUID
 
     // MARK: - Module lifecycle
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {
         // No cleanup needed for this module
     }
 
-    deinit {
-        print("Deinit of \(name)")
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Helper Methods

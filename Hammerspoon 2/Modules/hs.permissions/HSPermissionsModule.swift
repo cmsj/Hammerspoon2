@@ -121,16 +121,22 @@ import AVFoundation
 // MARK: - Implementation
 
 @_documentation(visibility: private)
+@MainActor
 @objc class HSPermissionsModule: NSObject, HSModuleAPI, HSPermissionsModuleAPI {
     var name = "hs.permissions"
+    let engineID: UUID
 
     // MARK: - Module lifecycle
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {}
 
-    deinit {
-        print("Deinit of \(name)")
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Accessibility

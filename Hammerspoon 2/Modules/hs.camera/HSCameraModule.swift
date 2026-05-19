@@ -122,12 +122,17 @@ import AVFoundation
 @MainActor
 @objc class HSCameraModule: NSObject, HSModuleAPI, HSCameraModuleAPI {
     var name = "hs.camera"
+    let engineID: UUID
 
     private var cameraCache: [String: HSCamera] = [:]
     private var connectObserver: NSObjectProtocol?
     private var disconnectObserver: NSObjectProtocol?
 
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {
         _removeWatcher()
@@ -138,7 +143,7 @@ import AVFoundation
     }
 
     isolated deinit {
-        print("Deinit of \(name)")
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Device Enumeration

@@ -11,6 +11,7 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @objc protocol HSModuleAPI: JSExport {
     @objc var name: String { get }
-    init()
+    @objc var engineID: UUID { get }
+    init(engineID: UUID)
     func shutdown()
 }

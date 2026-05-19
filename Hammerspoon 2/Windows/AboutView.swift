@@ -12,7 +12,7 @@ struct AboutView: View {
     @Environment(\.colorScheme) var colorScheme: ColorScheme
     private var glowColor = Color(red: 0.984, green: 0.537, blue: 0.122, opacity: 0.6) // FB891F
 
-    private let appInfo = HSAppInfoModule()
+    private let appInfo = HSAppInfoModule(engineID: UUID())
 
     var body: some View {
         HStack(spacing: 0) {

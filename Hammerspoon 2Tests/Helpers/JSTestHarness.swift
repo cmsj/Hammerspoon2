@@ -104,7 +104,7 @@ class JSTestHarness {
     ///   - moduleType: The Swift module class to instantiate
     ///   - name: The JavaScript property name (without 'hs.' prefix)
     func loadModule<T: HSModuleAPI>(_ moduleType: T.Type, as name: String) {
-        let module = moduleType.init()
+        let module = moduleType.init(engineID: UUID())
 
         // Track task module for cleanup
         if name == "task", let taskMod = module as? HSTaskModule {
@@ -149,7 +149,7 @@ class JSTestHarness {
 
     /// Load the full ModuleRoot as 'hs' (mimics real environment)
     func loadModuleRoot() {
-        let moduleRoot = ModuleRoot()
+        let moduleRoot = ModuleRoot(engineID: UUID())
         context.setObject(moduleRoot, forKeyedSubscript: "hs" as NSString)
     }
 

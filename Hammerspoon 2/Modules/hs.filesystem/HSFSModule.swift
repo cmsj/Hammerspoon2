@@ -539,9 +539,20 @@ import UniformTypeIdentifiers
 @MainActor
 @objc class HSFSModule: NSObject, HSModuleAPI, HSFSModuleAPI {
     var name = "hs.fs"
+    let engineID: UUID
 
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
+
     func shutdown() {}
+
+    deinit {
+        let n = name
+        Task { @MainActor in AKTrace("Deinit of \(n)") }
+    }
 
     // MARK: - Private helpers
 

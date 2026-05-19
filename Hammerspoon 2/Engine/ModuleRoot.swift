@@ -40,14 +40,20 @@ import JavaScriptCoreExtras
 
 @_documentation(visibility: private)
 @objc class ModuleRoot: NSObject, ModuleRootAPI {
+    let engineID: UUID
     @objc var modules: [String: HSModuleAPI] = [:]
+
+    init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+    }
 
     private func getOrCreate<T>(name: String, type: T.Type) -> T where T:HSModuleAPI {
         if let result = modules[name] as? T {
             return result
         } else {
             AKTrace("Loading module: \(name)")
-            let module = type.init()
+            let module = type.init(engineID: engineID)
             modules[name] = module
 
             if let moduleJS = Bundle.main.url(forResource: "hs.\(name)", withExtension: "js") {
@@ -105,7 +111,9 @@ import JavaScriptCoreExtras
 // MARK: - JSContextInstallable
 
 struct ModuleRootInstaller: JSContextInstallable {
+    let engineID: UUID
+
     func install(in context: JSContext) throws {
-        context.setObject(ModuleRoot(), forKeyedSubscript: "hs" as NSString)
+        context.setObject(ModuleRoot(engineID: engineID), forKeyedSubscript: "hs" as NSString)
     }
 }

@@ -35,12 +35,25 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
  * HSFooModule.swift should always contain at least the following:
    * A protocol definition of the form "@objc protocol HSFooModuleAPI: JSExport" - this is where we define the API that will be exported to JavaScript
    * A class implementation of "HSFooModuleAPI" of the form: "@objc class HSFooModule: NSObject, HSModuleAPI, HSFooModuleAPI"
-   * Conformance to HSModuleAPI requires only three things:
-      * A property called "name" that is set to "hs.foo"
-      * An init in the form: "override required init() { super.init() }" (which can also be used to do any initialisation the module requires
-      * A "shutdown()" method that will be called by the core engine when it is tearing down the JS environment
- * The HSFooModule class should be annotated with: @_documentation(visibility: private)
- * HSFooModule should always have an "isolated deinit" method that uses AKTrace() to announce its deinitialisation.
+   * The class must be annotated with `@MainActor` (all JS-facing code runs on the main thread)
+   * Conformance to HSModuleAPI requires four things:
+      * `var name: String` set to `"hs.foo"`
+      * `let engineID: UUID` — stored property identifying which engine instance owns this module
+      * An init in the form:
+        ```swift
+        required init(engineID: UUID) {
+            self.engineID = engineID
+            // ... any pre-super initialisation ...
+            super.init()
+            AKTrace("Init of \(name): \(engineID)")
+        }
+        ```
+      * A `shutdown()` method called by the core engine when tearing down the JS environment
+ * The HSFooModule class should be annotated with: `@_documentation(visibility: private)`
+ * HSFooModule should always have an `isolated deinit` that calls `AKTrace("Deinit of \(name): \(engineID)")`.
+   Exception: if tests instantiate this module as a stored property of an `@MainActor` struct,
+   use `deinit { let n = name; Task { @MainActor in AKTrace("Deinit of \(n)") } }` instead
+   to avoid Swift Testing teardown crashes.
  * If the module allocates/retains any data (e.g. watchers, instance children, etc) then it should be sure to clean them up in its shutdown() method.
  * Any instance child classes should always have an "isolated deinit" method that uses AKTrace() to announce their deinitialisation.
  * If HSFooModule includes an hs.foo.js file, and that file needs to store any properties/methods/objects/etc in the hs.foo namespace, there must be a declaration in HSFooModuleAPI to hold it. JavaScriptCore cannot modify HSFooModule instances at runtime to add additional properties/methods and they will go silently out of scope in unpredictable ways.

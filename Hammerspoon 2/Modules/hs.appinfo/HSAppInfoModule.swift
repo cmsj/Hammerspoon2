@@ -79,11 +79,14 @@ import JavaScriptCore
 // MARK: - Implementation
 
 @_documentation(visibility: private)
+@MainActor
 @objc class HSAppInfoModule: NSObject, HSModuleAPI, HSAppInfoModuleAPI {
     var name = "hs.appinfo"
+    let engineID: UUID
 
     // MARK: - Module lifecycle
-    override required init() {
+    required init(engineID: UUID) {
+        self.engineID = engineID
         // Read all values from the bundle at initialization time
         // This is more efficient than reading from the plist on every access
         func readFromInfoPlist(withKey key: String) -> String? {
@@ -101,12 +104,13 @@ import JavaScriptCore
         self._resourcePath = Bundle.main.resourcePath ?? "(unknown resource path)"
 
         super.init()
+        AKTrace("Init of \(name): \(engineID)")
     }
 
     func shutdown() {}
 
-    deinit {
-        print("Deinit of \(name)")
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Private storage

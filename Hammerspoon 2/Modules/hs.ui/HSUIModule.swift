@@ -369,8 +369,10 @@ import AppKit
 // MARK: - Implementation
 
 @_documentation(visibility: private)
+@MainActor
 @objc class HSUIModule: NSObject, HSModuleAPI, HSUIModuleAPI {
     var name = "hs.ui"
+    let engineID: UUID
 
     // Keep strong references to active windows to prevent premature deallocation
     private var activeWindows: [UUID: HSUIWindow] = [:]
@@ -378,8 +380,10 @@ import AppKit
     private var activeDialogs: [UUID: HSUIDialog] = [:]
 
     // MARK: - Module lifecycle
-    override required init() {
+    required init(engineID: UUID) {
+        self.engineID = engineID
         super.init()
+        AKTrace("Init of \(name): \(engineID)")
     }
 
     func shutdown() {
@@ -402,8 +406,8 @@ import AppKit
         activeDialogs.removeAll()
     }
 
-    deinit {
-        print("Deinit of \(name)")
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Object Registration (called by UI objects when shown/closed)

@@ -183,20 +183,25 @@ class HSApplicationWatcherObject {
 @MainActor
 @objc class HSApplicationModule: NSObject, HSModuleAPI, HSApplicationModuleAPI {
     var name = "hs.application"
+    let engineID: UUID
     private var watcher: HSApplicationWatcherObject? = nil
 
     // Swift-retained storage for the JS-defined ApplicationModuleWatcherEmitter instance
     @objc var _watcherEmitter: JSValue? = nil
 
     // MARK: - Module lifecycle
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {
         _removeWatcher()
     }
 
     isolated deinit {
-        print("Deinit of \(name)")
+        AKTrace("Deinit of \(name): \(engineID)")
         shutdown()
     }
 

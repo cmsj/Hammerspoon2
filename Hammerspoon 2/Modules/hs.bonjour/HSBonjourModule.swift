@@ -143,6 +143,7 @@ import dnssd
 @MainActor
 @objc class HSBonjourModule: NSObject, HSModuleAPI, HSBonjourModuleAPI {
     var name = "hs.bonjour"
+    let engineID: UUID
 
     @objc var serviceTypes: [String: String] = [
         "airplay":      "_airplay._tcp.",
@@ -173,8 +174,10 @@ import dnssd
     private var searches: [HSBonjourSearch] = []
     private var advertisedServices: [String: AdvertisedService] = [:]
 
-    override required init() {
+    required init(engineID: UUID) {
+        self.engineID = engineID
         super.init()
+        AKTrace("Init of \(name): \(engineID)")
     }
 
     func shutdown() {
@@ -188,7 +191,7 @@ import dnssd
     }
 
     isolated deinit {
-        print("Deinit of \(name)")
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - HSBonjourModuleAPI

@@ -67,14 +67,17 @@ import Carbon
 @_documentation(visibility: private)
 @objc class HSHotkeyModule: NSObject, HSModuleAPI, HSHotkeyModuleAPI {
     var name = "hs.hotkey"
+    let engineID: UUID
 
     // Track active hotkeys for cleanup
     private var activeHotkeys: [HSHotkey] = []
 
     // MARK: - Module lifecycle
 
-    override required init() {
+    required init(engineID: UUID) {
+        self.engineID = engineID
         super.init()
+        AKTrace("Init of \(name): \(engineID)")
     }
 
     func shutdown() {
@@ -86,7 +89,7 @@ import Carbon
     }
 
     isolated deinit {
-        AKTrace("Deinit of \(name)")
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Hotkey binding

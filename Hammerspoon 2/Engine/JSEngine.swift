@@ -52,7 +52,7 @@ class JSEngine {
                 RequireInstaller(),            // require() function
                 TypeBridgesInstaller(),        // HSPoint, HSSize, HSRect, HSFont, HSAlert
                 .bundled(path: "engine.js", in: .main),  // EventEmitter class
-                ModuleRootInstaller(),         // hs namespace
+                ModuleRootInstaller(engineID: id),  // hs namespace
             ])
         } catch {
             throw HammerspoonError(.vmCreation, msg: "Failed to install context components: \(error.localizedDescription)")

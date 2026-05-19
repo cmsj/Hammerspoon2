@@ -277,6 +277,7 @@ import IOKit.pwr_mgt
 @MainActor
 @objc class HSPowerModule: NSObject, HSModuleAPI, HSPowerModuleAPI {
     var name = "hs.power"
+    let engineID: UUID
 
     private var sleepAssertions: [String: IOPMAssertionID] = [:]
 
@@ -308,8 +309,10 @@ import IOKit.pwr_mgt
         ("com.apple.screenIsUnlocked",     "screensDidUnlock"),
     ]
 
-    override required init() {
+    required init(engineID: UUID) {
+        self.engineID = engineID
         super.init()
+        AKTrace("Init of \(name): \(engineID)")
     }
 
     func shutdown() {
@@ -321,7 +324,7 @@ import IOKit.pwr_mgt
     }
 
     isolated deinit {
-        print("HSPowerModule deinit")
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Sleep Prevention

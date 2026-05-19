@@ -53,7 +53,7 @@ private final class TempDir {
 /// independent regardless of execution order.
 @MainActor
 struct HSFSIntegrationTests {
-    let sut = HSFSModule()
+    let sut = HSFSModule(engineID: UUID())
 
     // MARK: - File I/O
 

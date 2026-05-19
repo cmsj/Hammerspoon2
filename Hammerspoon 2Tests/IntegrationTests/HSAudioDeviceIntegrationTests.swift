@@ -361,7 +361,7 @@ struct HSAudioDeviceIntegrationTests {
     func testDeviceWatcherFiresOnVolumeChange() async throws {
         let harness = makeHarness()
 
-        let module = HSAudioDeviceModule()
+        let module = HSAudioDeviceModule(engineID: UUID())
         guard let dev = module.defaultOutputDevice(), dev.isOutput,
               let originalVolume = dev.volume else { return }
 
@@ -390,7 +390,7 @@ struct HSAudioDeviceIntegrationTests {
     func testMultipleDeviceWatchersAllFire() async throws {
         let harness = makeHarness()
 
-        let module = HSAudioDeviceModule()
+        let module = HSAudioDeviceModule(engineID: UUID())
         guard let dev = module.defaultOutputDevice(), dev.isOutput,
               let originalVolume = dev.volume else { return }
 
@@ -432,7 +432,7 @@ struct HSAudioDeviceIntegrationTests {
     func testSystemWatcherFiresOnDefaultOutputChange() async throws {
         let harness = makeHarness()
 
-        let module = HSAudioDeviceModule()
+        let module = HSAudioDeviceModule(engineID: UUID())
         let outputs = module.allOutputDevices()
         guard outputs.count >= 2, let originalDefault = module.defaultOutputDevice() else { return }
         guard let altDevice = outputs.first(where: { $0.uid != originalDefault.uid }) else { return }
@@ -457,7 +457,7 @@ struct HSAudioDeviceIntegrationTests {
     func testSystemWatcherFiresOnDefaultInputChange() async throws {
         let harness = makeHarness()
 
-        let module = HSAudioDeviceModule()
+        let module = HSAudioDeviceModule(engineID: UUID())
         let inputs = module.allInputDevices()
         guard inputs.count >= 2, let originalDefault = module.defaultInputDevice() else { return }
         guard let altDevice = inputs.first(where: { $0.uid != originalDefault.uid }) else { return }

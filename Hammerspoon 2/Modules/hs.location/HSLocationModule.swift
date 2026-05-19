@@ -149,6 +149,7 @@ import CoreLocation
 @MainActor
 @objc class HSLocationModule: NSObject, HSModuleAPI, HSLocationModuleAPI, CLLocationManagerDelegate {
     var name = "hs.location"
+    let engineID: UUID
     private let _geocoder = HSLocationGeocoder()
     private var locationManager: CLLocationManager
     private var _lastLocation: CLLocation?
@@ -156,10 +157,12 @@ import CoreLocation
 
     @objc var geocoder: HSLocationGeocoder { _geocoder }
 
-    override required init() {
+    required init(engineID: UUID) {
+        self.engineID = engineID
         locationManager = CLLocationManager()
         super.init()
         locationManager.delegate = self
+        AKTrace("Init of \(name): \(engineID)")
     }
 
     func shutdown() {
@@ -169,7 +172,7 @@ import CoreLocation
     }
 
     isolated deinit {
-        print("Deinit of \(name)")
+        AKTrace("Deinit of \(name): \(engineID)")
         shutdown()
     }
 

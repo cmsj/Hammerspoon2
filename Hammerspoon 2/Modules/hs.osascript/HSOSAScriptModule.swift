@@ -214,19 +214,24 @@ import JavaScriptCore
 @MainActor
 @objc class HSOSAScriptModule: NSObject, HSModuleAPI, HSOSAScriptModuleAPI {
     var name = "hs.osascript"
+    let engineID: UUID
 
     private let runner = HSOSAScriptRunner()
 
     // MARK: - Module lifecycle
 
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {
         runner.shutdown()
     }
 
-    deinit {
-        print("Deinit of \(name)")
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Public API

@@ -108,6 +108,7 @@ struct TaskTracker {
 @MainActor
 @objc class HSTaskModule: NSObject, HSModuleAPI, HSTaskModuleAPI {
     var name = "hs.task"
+    let engineID: UUID
 
     // Keep weak references to tasks for shutdown cleanup
     // Uses weak references to allow JavaScript garbage collection
@@ -126,7 +127,11 @@ struct TaskTracker {
     private var taskTracker = TaskTracker()
 
     // MARK: - Module lifecycle
-    override required init() { super.init() }
+    required init(engineID: UUID) {
+        self.engineID = engineID
+        super.init()
+        AKTrace("Init of \(name): \(engineID)")
+    }
 
     func shutdown() {
         // Terminate all running tasks that still exist
@@ -137,8 +142,8 @@ struct TaskTracker {
         tasks.removeAllObjects()
     }
 
-    deinit {
-        print("Deinit of \(name)")
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Task Tracking (for testing)
