@@ -169,6 +169,14 @@ import JavaScriptCoreExtras
     private var exitCode: Int32?
     private var exitReason: String?
 
+    // EOF and exit coordination: the termination callback must only fire after both
+    // stdout and stderr pipes have reached EOF, ensuring all streaming data has been
+    // delivered to JS before the termination callback sees the accumulated result.
+    // stdoutEOF/stderrEOF start true so the non-streaming path works without change.
+    private var processExited = false
+    private var stdoutEOF = true
+    private var stderrEOF = true
+
     // Reference to module for task tracking
     private weak var module: HSTaskModule?
 
@@ -260,46 +268,23 @@ import JavaScriptCoreExtras
             setupStreamingCallbacks(stdout: stdoutPipe, stderr: stderrPipe)
         }
 
-        // Set up termination handler
+        // Set up termination handler.
+        // We only mark the process as exited here; the actual termination callback
+        // fires via callTerminationCallbackIfReady() once both pipes also signal EOF.
+        // This prevents the race where the termination callback resolves the JS
+        // Promise with empty stdout because streaming Tasks haven't run yet.
         process.terminationHandler = { [weak self] process in
             guard let self = self else { return }
 
-            // Store exit code before dispatching
             let exitCode = process.terminationStatus
             let terminationReason = process.terminationReason
 
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
-
-                // Compute exit reason and update state
-                let exitReason = self.getTerminationReasonString(terminationReason)
                 self.exitCode = exitCode
-                self.exitReason = exitReason
-
-                // Call termination callback if provided
-                if let callback = self.terminationCallback, callback.isFunction, !callback.isUndefined {
-                    // Check if context is still valid before calling
-                    guard let context = callback.context else {
-                        // Unregister task if callback context is gone
-                        self.module?.unregisterActiveTask(self)
-                        return
-                    }
-
-                    callback.call(withArguments: [exitCode, exitReason])
-
-                    // Check for JavaScript errors
-                    if let exception = context.exception,
-                       !exception.isUndefined {
-                        AKError("hs.task: Error in termination callback: \(exception.toString() ?? "unknown error")")
-                        context.exception = nil
-                    }
-                }
-
-                self.stdoutPipe?.fileHandleForReading.readabilityHandler = nil
-                self.stderrPipe?.fileHandleForReading.readabilityHandler = nil
-
-                // Unregister task after all callbacks complete
-                self.module?.unregisterActiveTask(self)
+                self.exitReason = self.getTerminationReasonString(terminationReason)
+                self.processExited = true
+                self.callTerminationCallbackIfReady()
             }
         }
 
@@ -393,13 +378,22 @@ import JavaScriptCoreExtras
     // MARK: - Private helpers
 
     private func setupStreamingCallbacks(stdout: Pipe, stderr: Pipe) {
-        // Set up stdout reading
+        // Mark both pipes as not-yet-closed; callTerminationCallbackIfReady() will
+        // only fire once both signal EOF AND the process has exited.
+        stdoutEOF = false
+        stderrEOF = false
+
         stdout.fileHandleForReading.readabilityHandler = { [weak self] handle in
             guard let self = self else { return }
 
             let data = handle.availableData
             guard !data.isEmpty else {
                 handle.readabilityHandler = nil
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    self.stdoutEOF = true
+                    self.callTerminationCallbackIfReady()
+                }
                 return
             }
             guard let output = String(data: data, encoding: .utf8) else { return }
@@ -407,28 +401,26 @@ import JavaScriptCoreExtras
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
                 guard let callback = self.streamingCallback, !callback.isUndefined else { return }
-
-                // Check if context is still valid before calling
                 guard let context = callback.context else { return }
-
                 callback.call(withArguments: ["stdout", output])
-
-                // Check for JavaScript errors
-                if let exception = context.exception,
-                   !exception.isUndefined {
+                if let exception = context.exception, !exception.isUndefined {
                     AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
                     context.exception = nil
                 }
             }
         }
 
-        // Set up stderr reading
         stderr.fileHandleForReading.readabilityHandler = { [weak self] handle in
             guard let self = self else { return }
 
             let data = handle.availableData
             guard !data.isEmpty else {
                 handle.readabilityHandler = nil
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    self.stderrEOF = true
+                    self.callTerminationCallbackIfReady()
+                }
                 return
             }
             guard let output = String(data: data, encoding: .utf8) else { return }
@@ -436,20 +428,32 @@ import JavaScriptCoreExtras
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
                 guard let callback = self.streamingCallback, !callback.isUndefined else { return }
-
-                // Check if context is still valid before calling
                 guard let context = callback.context else { return }
-
                 callback.call(withArguments: ["stderr", output])
-
-                // Check for JavaScript errors
-                if let exception = context.exception,
-                   !exception.isUndefined {
+                if let exception = context.exception, !exception.isUndefined {
                     AKError("hs.task: Error in streaming callback: \(exception.toString() ?? "unknown error")")
                     context.exception = nil
                 }
             }
         }
+    }
+
+    private func callTerminationCallbackIfReady() {
+        guard processExited && stdoutEOF && stderrEOF else { return }
+
+        if let callback = terminationCallback, callback.isFunction, !callback.isUndefined {
+            guard let context = callback.context else {
+                module?.unregisterActiveTask(self)
+                return
+            }
+            callback.call(withArguments: [exitCode ?? 0, exitReason ?? "unknown"])
+            if let exception = context.exception, !exception.isUndefined {
+                AKError("hs.task: Error in termination callback: \(exception.toString() ?? "unknown error")")
+                context.exception = nil
+            }
+        }
+
+        module?.unregisterActiveTask(self)
     }
 
     private func getTerminationReasonString(_ reason: Process.TerminationReason) -> String {
