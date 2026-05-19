@@ -33,12 +33,12 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
  * The code to be loaded when JavaScript accesses "hs.foo" should live in a file called "HSFooModule.swift"
  * HSFooModule.swift should always import the "Foundation" and "JavaScriptCore" frameworks
  * HSFooModule.swift should always contain at least the following:
-  * A protocol definition of the form "@objc protocol HSFooModuleAPI: JSExport" - this is where we define the API that will be exported to JavaScript
-  * A class implementation of "HSFooModuleAPI" of the form: "@objc class HSFooModule: NSObject, HSModuleAPI, HSFooModuleAPI"
-  * Conformance to HSModuleAPI requires only three things:
-    * A property called "name" that is set to "hs.foo"
-    * An init in the form: "override required init() { super.init() }" (which can also be used to do any initialisation the module requires
-    * A "shutdown()" method that will be called by the core engine when it is tearing down the JS environment
+   * A protocol definition of the form "@objc protocol HSFooModuleAPI: JSExport" - this is where we define the API that will be exported to JavaScript
+   * A class implementation of "HSFooModuleAPI" of the form: "@objc class HSFooModule: NSObject, HSModuleAPI, HSFooModuleAPI"
+   * Conformance to HSModuleAPI requires only three things:
+      * A property called "name" that is set to "hs.foo"
+      * An init in the form: "override required init() { super.init() }" (which can also be used to do any initialisation the module requires
+      * A "shutdown()" method that will be called by the core engine when it is tearing down the JS environment
  * The HSFooModule class should be annotated with: @_documentation(visibility: private)
  * If HSFooModule needs to be marked with @MainActor and it needs a deinit method then the the deinit method should be declared as "isolated deinit"
  * If HSFooModule includes an hs.foo.js file, and that file needs to store any properties/methods/objects/etc in the hs.foo namespace, there must be a declaration in HSFooModuleAPI to hold it. JavaScriptCore cannot modify HSFooModule instances at runtime to add additional properties/methods and they will go silently out of scope in unpredictable ways.
