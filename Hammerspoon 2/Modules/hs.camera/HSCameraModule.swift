@@ -197,6 +197,9 @@ import AVFoundation
             AKWarning("hs.camera._addWatcher(): Already watching. Refusing to create a second.")
             return
         }
+        // Populate the cache now so any camera that disconnects before all() is ever
+        // called still has an HSCamera entry — not a raw UID string — in the callback.
+        _ = all()
         moduleCallback = callback
 
         let nc = NotificationCenter.default
@@ -228,8 +231,10 @@ import AVFoundation
                   device.hasMediaType(.video) else { return }
             let uid = device.uniqueID  // String is Sendable
             MainActor.assumeIsolated {
-                let cam = self.cameraCache.removeValue(forKey: uid)
-                _ = self.moduleCallback?.call(withArguments: ["disconnected", cam as Any? ?? uid as Any])
+                // Cache was primed in _addWatcher, so removeValue should always find the camera.
+                if let cam = self.cameraCache.removeValue(forKey: uid) {
+                    _ = self.moduleCallback?.call(withArguments: ["disconnected", cam])
+                }
             }
         }
 
