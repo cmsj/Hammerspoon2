@@ -10,6 +10,22 @@ import JavaScriptCore
 
 // MARK: - Declare our JavaScript API
 
+func readFromInfoPlist(withKey key: String) -> String? {
+    return Bundle.main.infoDictionary?[key] as? String
+}
+
+struct HSAppInfoData {
+    let appName = readFromInfoPlist(withKey: "CFBundleName") ?? "(unknown app name)"
+    let displayName = readFromInfoPlist(withKey: "CFBundleDisplayName") ?? "(unknown app display name)"
+    let version = readFromInfoPlist(withKey: "CFBundleShortVersionString") ?? "(unknown app version)"
+    let build = readFromInfoPlist(withKey: "CFBundleVersion") ?? "(unknown build number)"
+    let minimumOSVersion = readFromInfoPlist(withKey: "LSMinimumSystemVersion") ?? "(unknown minimum OS version)"
+    let copyrightNotice = readFromInfoPlist(withKey: "NSHumanReadableCopyright") ?? "(unknown copyright notice)"
+    let bundleIdentifier = readFromInfoPlist(withKey: "CFBundleIdentifier") ?? "(unknown bundle identifier)"
+    let bundlePath = Bundle.main.bundlePath
+    let resourcePath = Bundle.main.resourcePath ?? "(unknown resource path)"
+}
+
 /// Module for accessing information about the Hammerspoon application itself
 @objc protocol HSAppInfoModuleAPI: JSExport {
     /// The application's internal name (e.g., "Hammerspoon 2")
@@ -89,19 +105,16 @@ import JavaScriptCore
         self.engineID = engineID
         // Read all values from the bundle at initialization time
         // This is more efficient than reading from the plist on every access
-        func readFromInfoPlist(withKey key: String) -> String? {
-            return Bundle.main.infoDictionary?[key] as? String
-        }
-
-        self._appName = readFromInfoPlist(withKey: "CFBundleName") ?? "(unknown app name)"
-        self._displayName = readFromInfoPlist(withKey: "CFBundleDisplayName") ?? "(unknown app display name)"
-        self._version = readFromInfoPlist(withKey: "CFBundleShortVersionString") ?? "(unknown app version)"
-        self._build = readFromInfoPlist(withKey: "CFBundleVersion") ?? "(unknown build number)"
-        self._minimumOSVersion = readFromInfoPlist(withKey: "LSMinimumSystemVersion") ?? "(unknown minimum OS version)"
-        self._copyrightNotice = readFromInfoPlist(withKey: "NSHumanReadableCopyright") ?? "(unknown copyright notice)"
-        self._bundleIdentifier = readFromInfoPlist(withKey: "CFBundleIdentifier") ?? "(unknown bundle identifier)"
-        self._bundlePath = Bundle.main.bundlePath
-        self._resourcePath = Bundle.main.resourcePath ?? "(unknown resource path)"
+        let appData = HSAppInfoData()
+        _appName = appData.appName
+        _displayName = appData.displayName
+        _version = appData.version
+        _build = appData.build
+        _minimumOSVersion = appData.minimumOSVersion
+        _copyrightNotice = appData.copyrightNotice
+        _bundleIdentifier = appData.bundleIdentifier
+        _bundlePath = appData.bundlePath
+        _resourcePath = appData.resourcePath
 
         super.init()
         AKTrace("Init of \(name): \(engineID)")

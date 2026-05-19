@@ -17,11 +17,10 @@ class JSEngine {
     private var vm: JSVirtualMachine?
     private var context: JSContext?
 
-
-
     // MARK: - JSContext Managing
     private func createContext() throws(HammerspoonError) {
-        AKTrace("createContext()")
+        id = UUID()
+        AKTrace("createContext(): \(id)")
         vm = JSVirtualMachine()
         guard vm != nil else {
             throw HammerspoonError(.vmCreation, msg: "Unknown error (vm)")
@@ -32,7 +31,6 @@ class JSEngine {
             throw HammerspoonError(.vmCreation, msg: "Unknown error (context)")
         }
 
-        id = UUID()
         context.name = "Hammerspoon \(id)"
 
         // Set up exception handler to catch JavaScript errors
