@@ -33,7 +33,7 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
  * The code to be loaded when JavaScript accesses "hs.foo" should live in a file called "HSFooModule.swift"
  * HSFooModule.swift should always import the "Foundation" and "JavaScriptCore" frameworks
  * HSFooModule.swift should always contain at least the following:
-  * A protocol definition of the form "@objc protocol HSFooModuleAPI: JSExport" - this is where we define the API that will be exported to JSON
+  * A protocol definition of the form "@objc protocol HSFooModuleAPI: JSExport" - this is where we define the API that will be exported to JavaScript
   * A class implementation of "HSFooModuleAPI" of the form: "@objc class HSFooModule: NSObject, HSModuleAPI, HSFooModuleAPI"
   * Conformance to HSModuleAPI requires only three things:
     * A property called "name" that is set to "hs.foo"
