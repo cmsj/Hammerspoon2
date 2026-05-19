@@ -437,6 +437,8 @@ and record all call arguments so tests can assert on them.
 - **Real-time sensor data**: GPS location, camera frames, and microphone audio
   are unavailable in the test environment. Test API shape and watcher object
   lifecycle only.
+- **Existence of class methods/properties** There is little point testing that the source
+  code still contains itself.
 
 ---
 

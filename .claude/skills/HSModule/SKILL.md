@@ -40,7 +40,9 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
       * An init in the form: "override required init() { super.init() }" (which can also be used to do any initialisation the module requires
       * A "shutdown()" method that will be called by the core engine when it is tearing down the JS environment
  * The HSFooModule class should be annotated with: @_documentation(visibility: private)
- * If HSFooModule needs to be marked with @MainActor and it needs a deinit method then the the deinit method should be declared as "isolated deinit"
+ * HSFooModule should always have an "isolated deinit" method that uses AKTrace() to announce its deinitialisation.
+ * If the module allocates/retains any data (e.g. watchers, instance children, etc) then it should be sure to clean them up in its shutdown() method.
+ * Any instance child classes should always have an "isolated deinit" method that uses AKTrace() to announce their deinitialisation.
  * If HSFooModule includes an hs.foo.js file, and that file needs to store any properties/methods/objects/etc in the hs.foo namespace, there must be a declaration in HSFooModuleAPI to hold it. JavaScriptCore cannot modify HSFooModule instances at runtime to add additional properties/methods and they will go silently out of scope in unpredictable ways.
  * In general we should avoid creating an hs.foo.js file unless absolutely necessary - it is strongly preferred to keep all code together in Swift. Legitimate uses of a .js file would include the watcher patterns mentioned below
 
@@ -371,3 +373,4 @@ These all log into the app's Console window
 
 If we ever emit a console.log() call, even in example code, please note that Hammerspoon 2's implementation of console.log does not support the form console.log("foo: ", bar); - either concatenate strings with + or use interpolated strings.
 
+Avoid using print() if possible.
