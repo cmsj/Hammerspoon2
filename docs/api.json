@@ -116,7 +116,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 20
+          "lineNumber": 36
         },
         {
           "name": "displayName",
@@ -131,7 +131,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 27
+          "lineNumber": 43
         },
         {
           "name": "version",
@@ -146,7 +146,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 34
+          "lineNumber": 50
         },
         {
           "name": "build",
@@ -161,7 +161,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 41
+          "lineNumber": 57
         },
         {
           "name": "minimumOSVersion",
@@ -176,7 +176,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 48
+          "lineNumber": 64
         },
         {
           "name": "copyrightNotice",
@@ -191,7 +191,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 55
+          "lineNumber": 71
         },
         {
           "name": "bundleIdentifier",
@@ -206,7 +206,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 62
+          "lineNumber": 78
         },
         {
           "name": "bundlePath",
@@ -221,7 +221,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 69
+          "lineNumber": 85
         },
         {
           "name": "resourcePath",
@@ -236,7 +236,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 76
+          "lineNumber": 92
         }
       ],
       "types": [],
@@ -11262,5 +11262,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-19T20:40:43.588Z"
+  "generatedAt": "2026-05-19T23:02:04.173Z"
 }

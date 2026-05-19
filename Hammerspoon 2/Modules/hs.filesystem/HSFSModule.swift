@@ -549,10 +549,8 @@ import UniformTypeIdentifiers
 
     func shutdown() {}
 
-    deinit {
-        let n = name
-        let id = engineID
-        Task { @MainActor in AKTrace("Deinit of \(n): \(id)") }
+    isolated deinit {
+        AKTrace("Deinit of \(name): \(engineID)")
     }
 
     // MARK: - Private helpers

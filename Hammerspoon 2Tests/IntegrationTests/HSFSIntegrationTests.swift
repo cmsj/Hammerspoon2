@@ -53,12 +53,11 @@ private final class TempDir {
 /// independent regardless of execution order.
 @MainActor
 struct HSFSIntegrationTests {
-    let sut = HSFSModule(engineID: UUID())
-
     // MARK: - File I/O
 
     @Test("write creates a file and read returns its content")
     func writeAndRead() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("hello.txt")
 
@@ -74,6 +73,7 @@ struct HSFSIntegrationTests {
 
     @Test("write overwrites existing file content")
     func writeOverwrites() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("overwrite.txt")
 
@@ -86,6 +86,7 @@ struct HSFSIntegrationTests {
 
     @Test("append adds content to an existing file")
     func appendToExisting() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("append.txt")
 
@@ -99,6 +100,7 @@ struct HSFSIntegrationTests {
 
     @Test("append creates the file when it does not exist")
     func appendCreatesFile() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("new.txt")
 
@@ -109,11 +111,13 @@ struct HSFSIntegrationTests {
 
     @Test("read returns null for a non-existent file")
     func readMissing() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.read("/nonexistent/path/file.txt", 0, 0) == nil)
     }
 
     @Test("read with offset skips leading bytes")
     func readWithOffset() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("offset.txt")
         _ = sut.write(file, "Hello, world!")
@@ -125,6 +129,7 @@ struct HSFSIntegrationTests {
 
     @Test("read with length limits bytes returned")
     func readWithLength() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("length.txt")
         _ = sut.write(file, "Hello, world!")
@@ -135,6 +140,7 @@ struct HSFSIntegrationTests {
 
     @Test("read with offset and length returns the specified slice")
     func readWithOffsetAndLength() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("slice.txt")
         _ = sut.write(file, "Hello, world!")
@@ -146,6 +152,7 @@ struct HSFSIntegrationTests {
 
     @Test("readLines delivers all lines to the callback")
     func readLinesAll() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("lines.txt")
         _ = sut.write(file, "alpha\nbeta\ngamma\n")
@@ -165,6 +172,7 @@ struct HSFSIntegrationTests {
 
     @Test("readLines handles a file with no trailing newline")
     func readLinesNoTrailingNewline() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("notrail.txt")
         _ = sut.write(file, "first\nsecond")  // no trailing \n
@@ -183,6 +191,7 @@ struct HSFSIntegrationTests {
 
     @Test("readLines stops early when callback returns false")
     func readLinesEarlyStop() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("stop.txt")
         _ = sut.write(file, "line1\nline2\nline3\n")
@@ -202,6 +211,7 @@ struct HSFSIntegrationTests {
 
     @Test("readLines strips Windows-style CRLF line endings")
     func readLinesCRLF() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("crlf.txt")
         // Write raw bytes with \r\n endings.
@@ -222,6 +232,7 @@ struct HSFSIntegrationTests {
 
     @Test("readLines returns false for a non-existent file")
     func readLinesMissing() throws {
+        let sut = HSFSModule(engineID: UUID())
         let ctx = JSContext()!
         let block: @convention(block) (String) -> Bool = { _ in true }
         let callback = JSValue(object: block, in: ctx)!
@@ -234,6 +245,7 @@ struct HSFSIntegrationTests {
 
     @Test("exists returns true for a file and false for a missing path")
     func existsFile() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("exists.txt")
         _ = sut.write(file, "")
@@ -243,12 +255,14 @@ struct HSFSIntegrationTests {
 
     @Test("exists returns true for a directory")
     func existsDirectory() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         #expect(sut.exists(tmp.path))
     }
 
     @Test("isFile is true for a regular file and false for a directory")
     func isFileChecks() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("f.txt")
         _ = sut.write(file, "")
@@ -258,6 +272,7 @@ struct HSFSIntegrationTests {
 
     @Test("isDirectory is true for a directory and false for a file")
     func isDirectoryChecks() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("f.txt")
         _ = sut.write(file, "")
@@ -267,6 +282,7 @@ struct HSFSIntegrationTests {
 
     @Test("isSymlink detects symbolic links but not regular files")
     func isSymlinkChecks() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("target.txt")
         let link = tmp.child("link.txt")
@@ -278,6 +294,7 @@ struct HSFSIntegrationTests {
 
     @Test("isReadable and isWritable are true for a newly created file")
     func readableWritable() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("rw.txt")
         _ = sut.write(file, "")
@@ -289,6 +306,7 @@ struct HSFSIntegrationTests {
 
     @Test("copy creates an independent copy of a file")
     func copyFile() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let src = tmp.child("src.txt")
         let dst = tmp.child("dst.txt")
@@ -302,6 +320,7 @@ struct HSFSIntegrationTests {
 
     @Test("copy fails when the destination already exists")
     func copyFailsIfDestinationExists() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let src = tmp.child("src.txt")
         let dst = tmp.child("dst.txt")
@@ -312,6 +331,7 @@ struct HSFSIntegrationTests {
 
     @Test("move relocates a file and removes the source")
     func moveFile() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let src = tmp.child("before.txt")
         let dst = tmp.child("after.txt")
@@ -325,6 +345,7 @@ struct HSFSIntegrationTests {
 
     @Test("delete removes a file")
     func deleteFile() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("delete-me.txt")
         _ = sut.write(file, "")
@@ -336,6 +357,7 @@ struct HSFSIntegrationTests {
 
     @Test("delete removes a directory recursively")
     func deleteDirectoryRecursive() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let dir = tmp.child("subtree")
         _ = sut.mkdir(dir)
@@ -348,6 +370,7 @@ struct HSFSIntegrationTests {
 
     @Test("delete returns false for a non-existent path")
     func deleteMissing() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.delete("/nonexistent/\(UUID().uuidString)") == false)
     }
 
@@ -355,6 +378,7 @@ struct HSFSIntegrationTests {
 
     @Test("mkdir creates a directory including intermediate directories")
     func mkdirDeep() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let deep = (tmp.path as NSString)
             .appendingPathComponent("a/b/c")
@@ -366,12 +390,14 @@ struct HSFSIntegrationTests {
 
     @Test("mkdir succeeds silently when the directory already exists")
     func mkdirIdempotent() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         #expect(sut.mkdir(tmp.path), "mkdir on an existing dir should return true")
     }
 
     @Test("rmdir removes an empty directory")
     func rmdirEmpty() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let dir = tmp.child("empty")
         _ = sut.mkdir(dir)
@@ -383,6 +409,7 @@ struct HSFSIntegrationTests {
 
     @Test("rmdir fails on a non-empty directory")
     func rmdirNonEmpty() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let dir = tmp.child("nonempty")
         _ = sut.mkdir(dir)
@@ -394,6 +421,7 @@ struct HSFSIntegrationTests {
 
     @Test("list returns sorted filenames without . or ..")
     func listContents() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         _ = sut.write(tmp.child("b.txt"), "")
         _ = sut.write(tmp.child("a.txt"), "")
@@ -407,11 +435,13 @@ struct HSFSIntegrationTests {
 
     @Test("list returns null for a non-existent directory")
     func listMissing() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.list("/nonexistent/\(UUID().uuidString)") == nil)
     }
 
     @Test("listRecursive returns sorted relative paths for all descendants")
     func listRecursiveContents() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         _ = sut.mkdir(tmp.child("sub"))
         _ = sut.write(tmp.child("root.txt"), "")
@@ -428,12 +458,14 @@ struct HSFSIntegrationTests {
 
     @Test("currentDir returns a non-empty string")
     func currentDirNonEmpty() throws {
+        let sut = HSFSModule(engineID: UUID())
         let dir = try #require(sut.currentDir())
         #expect(dir.isEmpty == false)
     }
 
     @Test("chdir changes the working directory and can be reversed")
     func chdirAndRestore() throws {
+        let sut = HSFSModule(engineID: UUID())
         let original = try #require(sut.currentDir())
         defer { _ = sut.chdir(original) }
 
@@ -445,6 +477,7 @@ struct HSFSIntegrationTests {
 
     @Test("chdir returns false for a non-existent path")
     func chdirMissing() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.chdir("/nonexistent/\(UUID().uuidString)") == false)
     }
 
@@ -452,6 +485,7 @@ struct HSFSIntegrationTests {
 
     @Test("pathToAbsolute expands ~ to the home directory")
     func pathToAbsoluteExpandsTilde() throws {
+        let sut = HSFSModule(engineID: UUID())
         let home = sut.homeDirectory()
         let abs  = try #require(sut.pathToAbsolute("~"))
         #expect(abs == home)
@@ -459,11 +493,13 @@ struct HSFSIntegrationTests {
 
     @Test("pathToAbsolute returns null for a non-existent path")
     func pathToAbsoluteMissing() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.pathToAbsolute("/nonexistent/\(UUID().uuidString)") == nil)
     }
 
     @Test("pathToAbsolute resolves symlinks to their canonical path")
     func pathToAbsoluteResolvesSymlinks() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let target = tmp.child("real.txt")
         let link   = tmp.child("link.txt")
@@ -476,6 +512,7 @@ struct HSFSIntegrationTests {
 
     @Test("temporaryDirectory returns a non-empty path")
     func temporaryDirectoryNonEmpty() {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = sut.temporaryDirectory()
         #expect(tmp.isEmpty == false)
         #expect(sut.isDirectory(tmp))
@@ -483,12 +520,14 @@ struct HSFSIntegrationTests {
 
     @Test("homeDirectory returns the current user's home directory")
     func homeDirectoryMatchesFileManager() {
+        let sut = HSFSModule(engineID: UUID())
         let expected = FileManager.default.homeDirectoryForCurrentUser.path
         #expect(sut.homeDirectory() == expected)
     }
 
     @Test("urlFromPath returns a file:// URL string")
     func urlFromPathFormat() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("url.txt")
         _ = sut.write(file, "")
@@ -500,6 +539,7 @@ struct HSFSIntegrationTests {
 
     @Test("urlFromPath includes the expanded home directory for ~ paths")
     func urlFromPathExpandsTilde() throws {
+        let sut = HSFSModule(engineID: UUID())
         let urlString = sut.urlFromPath("~")
         #expect(urlString.hasPrefix("file://"))
         #expect(urlString.contains(sut.homeDirectory().trimmingCharacters(in: CharacterSet(charactersIn: "/"))))
@@ -509,6 +549,7 @@ struct HSFSIntegrationTests {
 
     @Test("attributes returns expected keys for a regular file")
     func attributesFile() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("attrs.txt")
         _ = sut.write(file, "hello")
@@ -525,6 +566,7 @@ struct HSFSIntegrationTests {
 
     @Test("attributes reports type as 'directory' for directories")
     func attributesDirectory() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let attrs = try #require(sut.attributes(tmp.path))
         #expect(attrs["type"] as? String == "directory")
@@ -532,6 +574,7 @@ struct HSFSIntegrationTests {
 
     @Test("attributes reports type as 'symlink' for symbolic links")
     func attributesSymlink() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let target = tmp.child("t.txt")
         let link   = tmp.child("l.txt")
@@ -545,11 +588,13 @@ struct HSFSIntegrationTests {
 
     @Test("attributes returns null for a non-existent path")
     func attributesMissing() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.attributes("/nonexistent/\(UUID().uuidString)") == nil)
     }
 
     @Test("touch creates a file when it does not exist")
     func touchCreatesFile() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("new.txt")
         #expect(sut.exists(file) == false)
@@ -561,6 +606,7 @@ struct HSFSIntegrationTests {
 
     @Test("touch updates the modification date of an existing file")
     func touchUpdatesMtime() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("mtime.txt")
         _ = sut.write(file, "")
@@ -580,6 +626,7 @@ struct HSFSIntegrationTests {
 
     @Test("link creates a hard link — both paths point to the same inode")
     func hardLink() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let src  = tmp.child("orig.txt")
         let hard = tmp.child("hard.txt")
@@ -603,6 +650,7 @@ struct HSFSIntegrationTests {
 
     @Test("symlink creates a symbolic link pointing at the source")
     func symbolicLink() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp    = try TempDir()
         let target = tmp.child("target.txt")
         let link   = tmp.child("link.txt")
@@ -616,6 +664,7 @@ struct HSFSIntegrationTests {
 
     @Test("readlink returns the raw symlink target without resolving it")
     func readlinkTarget() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp    = try TempDir()
         let target = tmp.child("target.txt")
         let link   = tmp.child("link.txt")
@@ -628,6 +677,7 @@ struct HSFSIntegrationTests {
 
     @Test("readlink returns null for a regular file")
     func readlinkOnFile() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("f.txt")
         _ = sut.write(file, "")
@@ -639,6 +689,7 @@ struct HSFSIntegrationTests {
     @available(macOS 26.0, *)
     @Test("setTags, tags, addTags, removeTags round-trip correctly")
     func finderTagsRoundTrip() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("tagged.txt")
         _ = sut.write(file, "")
@@ -673,6 +724,7 @@ struct HSFSIntegrationTests {
     @available(macOS 26.0, *)
     @Test("addTags is idempotent — adding an existing tag does not duplicate it")
     func addTagsIdempotent() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("idem.txt")
         _ = sut.write(file, "")
@@ -687,6 +739,7 @@ struct HSFSIntegrationTests {
     @available(macOS 26.0, *)
     @Test("removeTags silently ignores tags that are not present")
     func removeTagsIgnoresMissing() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("ignore.txt")
         _ = sut.write(file, "")
@@ -702,6 +755,7 @@ struct HSFSIntegrationTests {
 
     @Test("fileUTI returns a UTI string for a plain text file")
     func fileUTIPlainText() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("sample.txt")
         _ = sut.write(file, "hello")
@@ -712,6 +766,7 @@ struct HSFSIntegrationTests {
 
     @Test("fileUTI returns null for a non-existent path")
     func fileUTIMissing() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.fileUTI("/nonexistent/\(UUID().uuidString).txt") == nil)
     }
 
@@ -719,6 +774,7 @@ struct HSFSIntegrationTests {
 
     @Test("pathToBookmark and pathFromBookmark round-trip a file path")
     func bookmarkRoundTrip() throws {
+        let sut = HSFSModule(engineID: UUID())
         let tmp  = try TempDir()
         let file = tmp.child("bookmark.txt")
         _ = sut.write(file, "")
@@ -735,11 +791,13 @@ struct HSFSIntegrationTests {
 
     @Test("pathFromBookmark returns null for invalid base64")
     func pathFromBookmarkInvalidBase64() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.pathFromBookmark("not-valid-base64!!!") == nil)
     }
 
     @Test("pathToBookmark returns null for a non-existent path")
     func pathToBookmarkMissing() {
+        let sut = HSFSModule(engineID: UUID())
         #expect(sut.pathToBookmark("/nonexistent/\(UUID().uuidString)") == nil)
     }
 
@@ -750,6 +808,7 @@ struct HSFSIntegrationTests {
         arguments: ["read", "write", "exists"]
     )
     func tildeExpansion(method: String) throws {
+        let sut = HSFSModule(engineID: UUID())
         // Just verify none of these crash or misparse the tilde.
         let home = sut.homeDirectory()
         switch method {

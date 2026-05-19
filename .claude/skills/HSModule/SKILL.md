@@ -51,9 +51,6 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
       * A `shutdown()` method called by the core engine when tearing down the JS environment
  * The HSFooModule class should be annotated with: `@_documentation(visibility: private)`
  * HSFooModule should always have an `isolated deinit` that calls `AKTrace("Deinit of \(name): \(engineID)")`.
-   Exception: if tests instantiate this module as a stored property of an `@MainActor` struct,
-   use `deinit { let n = name; Task { @MainActor in AKTrace("Deinit of \(n)") } }` instead
-   to avoid Swift Testing teardown crashes.
  * If the module allocates/retains any data (e.g. watchers, instance children, etc) then it should be sure to clean them up in its shutdown() method.
  * Any instance child classes should always have an "isolated deinit" method that uses AKTrace() to announce their deinitialisation.
  * If HSFooModule includes an hs.foo.js file, and that file needs to store any properties/methods/objects/etc in the hs.foo namespace, there must be a declaration in HSFooModuleAPI to hold it. JavaScriptCore cannot modify HSFooModule instances at runtime to add additional properties/methods and they will go silently out of scope in unpredictable ways.
