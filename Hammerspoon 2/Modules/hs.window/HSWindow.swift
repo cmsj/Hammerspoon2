@@ -10,6 +10,9 @@ import JavaScriptCore
 import AppKit
 import AXSwift
 
+// Expose some private API, per https://github.com/saagarjha/Ensemble/blob/27f3fd77c261660c1f469a246858d23d06aa8c1f/macOS/SPI.swift#L21
+let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "_AXUIElementGetWindow"), to: (@convention(c) (AXUIElement, UnsafeMutablePointer<CGWindowID>) -> AXError)?.self)
+
 /// Object representing a window. You should not instantiate these directly, but rather, use the methods in hs.window to create them for you.
 @objc protocol HSWindowAPI: HSTypeAPI, JSExport {
     // MARK: - Basic Properties
@@ -37,6 +40,15 @@ import AXSwift
     /// console.log(win.pid)
     /// ```
     @objc var pid: Int { get }
+
+    /// The window's underlying ID.
+    /// A value of 0 or -1 likely means no window ID could be determined.
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.focusedWindow()
+    /// console.log(win.id)
+    /// ```
+    @objc var id: Int { get }
 
     // MARK: - Window State
 
@@ -196,10 +208,17 @@ import AXSwift
     @objc var typeName = "HSWindow"
     let element: UIElement
     let app: NSRunningApplication
+    var id: Int = -1
 
     init(element: UIElement, app: NSRunningApplication) {
         self.element = element
         self.app = app
+
+        var winId: CGWindowID = 0
+        if let _AXUIElementGetWindow = unsafe _AXUIElementGetWindow {
+            _ = unsafe _AXUIElementGetWindow(element.element, &winId)
+        }
+
         super.init()
     }
 
