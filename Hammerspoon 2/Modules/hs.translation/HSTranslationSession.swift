@@ -8,7 +8,7 @@ import JavaScriptCore
 @unsafe @preconcurrency import Translation
 
 /// JavaScript-visible API for a translation session bound to a specific language pair.
-@objc protocol HSTranslationSessionAPI: JSExport {
+@objc protocol HSTranslationSessionAPI: HSTypeAPI, JSExport {
     /// The Swift type name, for JavaScript introspection.
     ///
     /// - Example:

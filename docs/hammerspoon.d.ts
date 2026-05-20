@@ -3603,37 +3603,41 @@ pairs from merely supported ones.
 
     /**
      * Create a translation session for a language pair.
-Returns an `HSTranslationSession` if both language packs are installed on the
-device, or `null` if either pack is missing or if the system is running macOS
-older than 26.0. Check `status()` first, or install packs via
-**System Settings → General → Language & Region → Translation Languages**.
+Returns an `HSTranslationSession`, or `null` if the system is running macOS
+older than 26.0.
      * @param sourceLanguage BCP-47 code of the source language (e.g. `"en"`).
      * @param targetLanguage BCP-47 code of the target language (e.g. `"fr"`).
-     * @returns An `HSTranslationSession`, or `null` if the language pair is not installed.
+     * @returns An `HSTranslationSession`, or `null` on unsupported versions of macOS.
      */
     function session(sourceLanguage: string, targetLanguage: string): HSTranslationSession | undefined;
 
+}
+
+/**
+ * JavaScript-visible API for a translation session bound to a specific language pair.
+ */
+declare class HSTranslationSession {
     /**
      * Translate a string from the session's source language to its target language.
      * @param text The text to translate.
      * @returns A Promise resolving to the translated string,
      */
-    function translate(text: string): Promise<string>;
+    static translate(text: string): Promise<string>;
 
     /**
      * The Swift type name, for JavaScript introspection.
      */
-    const typeName: string;
+    typeName: string;
 
     /**
      * BCP-47 identifier of the source language (e.g. `"en"`).
      */
-    const sourceLanguage: string;
+    sourceLanguage: string;
 
     /**
      * BCP-47 identifier of the target language (e.g. `"fr"`).
      */
-    const targetLanguage: string;
+    targetLanguage: string;
 
 }
 
