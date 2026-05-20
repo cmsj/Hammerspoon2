@@ -85,20 +85,15 @@ import JavaScriptCore
     @objc func session(_ sourceLanguage: String, _ targetLanguage: String) -> HSTranslationSession?
 }
 
-private class WeakRef<T: AnyObject> {
-    weak var value: T?
-    init(_ value: T) { self.value = value }
-}
-
 @_documentation(visibility: private)
 @MainActor
 @objc class HSTranslationModule: NSObject, HSModuleAPI, HSTranslationModuleAPI {
     var name = "hs.translation"
     let engineID: UUID
 
-    // Weak references so sessions are released when JS GC drops them.
-    // The array is compacted on each new session() call to avoid accumulating nils.
-    private var sessions: [WeakRef<HSTranslationSession>] = []
+    // Weak refs: sessions are released when JS GC drops them.
+    // allObjects returns only live sessions; dead entries are compacted on each access.
+    private var sessions = HSWeakObjectSet<HSTranslationSession>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -107,8 +102,8 @@ private class WeakRef<T: AnyObject> {
     }
 
     func shutdown() {
-        sessions.compactMap(\.value).forEach { $0.cancel() }
-        sessions.removeAll()
+        sessions.allObjects.forEach { $0.cancel() }
+        sessions.removeAllObjects()
     }
 
     isolated deinit {
@@ -170,8 +165,7 @@ private class WeakRef<T: AnyObject> {
             targetLanguage: targetLanguage,
             session: ts
         )
-        sessions.removeAll { $0.value == nil }
-        sessions.append(WeakRef(session))
+        sessions.add(session)
         return session
     }
 }

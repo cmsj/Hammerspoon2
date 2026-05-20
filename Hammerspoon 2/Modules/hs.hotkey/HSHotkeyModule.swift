@@ -69,8 +69,9 @@ import Carbon
     var name = "hs.hotkey"
     let engineID: UUID
 
-    // Track active hotkeys for cleanup
-    private var activeHotkeys: [HSHotkey] = []
+    // Weak refs: enabled hotkeys stay alive via HotkeyManager.shared; weak refs here
+    // allow disabled/dropped hotkeys to be GC'd while still supporting shutdown().
+    private var activeHotkeys = HSWeakObjectSet<HSHotkey>()
 
     // MARK: - Module lifecycle
 
@@ -81,11 +82,10 @@ import Carbon
     }
 
     func shutdown() {
-        // Disable all active hotkeys
-        for hotkey in activeHotkeys {
+        for hotkey in activeHotkeys.allObjects {
             hotkey.disable()
         }
-        activeHotkeys.removeAll()
+        activeHotkeys.removeAllObjects()
     }
 
     isolated deinit {
@@ -129,8 +129,7 @@ import Carbon
             return nil
         }
 
-        // Track for cleanup
-        activeHotkeys.append(hotkey)
+        activeHotkeys.add(hotkey)
 
         return hotkey
     }

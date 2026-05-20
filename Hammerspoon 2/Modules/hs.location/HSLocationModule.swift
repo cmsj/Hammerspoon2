@@ -153,7 +153,9 @@ import CoreLocation
     private let _geocoder = HSLocationGeocoder()
     private var locationManager: CLLocationManager
     private var _lastLocation: CLLocation?
-    private var watchers: [HSLocationWatcher] = []
+    // Weak refs: watchers stay active while CLLocationManager is alive inside them;
+    // weak refs allow dropped watchers to be GC'd without an explicit removeWatcher() call.
+    private var watchers = HSWeakObjectSet<HSLocationWatcher>()
 
     @objc var geocoder: HSLocationGeocoder { _geocoder }
 
@@ -166,8 +168,8 @@ import CoreLocation
     }
 
     func shutdown() {
-        watchers.forEach { $0.stop() }
-        watchers.removeAll()
+        for watcher in watchers.allObjects { watcher.stop() }
+        watchers.removeAllObjects()
         locationManager.stopUpdatingLocation()
     }
 
@@ -230,13 +232,13 @@ import CoreLocation
 
     func addWatcher() -> HSLocationWatcher {
         let w = HSLocationWatcher()
-        watchers.append(w)
+        watchers.add(w)
         return w
     }
 
     func removeWatcher(_ watcher: HSLocationWatcher) {
         watcher.stop()
-        watchers.removeAll { $0 === watcher }
+        watchers.remove(watcher)
     }
 
     // MARK: - Helpers

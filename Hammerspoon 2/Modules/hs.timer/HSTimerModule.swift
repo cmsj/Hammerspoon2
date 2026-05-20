@@ -184,6 +184,10 @@ import JavaScriptCore
     var name = "hs.timer"
     let engineID: UUID
 
+    // Weak refs: running timers stay alive via the Foundation run loop (Timer target);
+    // stopped/GC'd timers are automatically zeroed. allObjects only returns live timers.
+    private var timers = HSWeakObjectSet<HSTimer>()
+
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -192,7 +196,10 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        // Timers clean themselves up in their deinit
+        for timer in timers.allObjects {
+            timer.stop()
+        }
+        timers.removeAllObjects()
     }
 
     isolated deinit {
@@ -208,7 +215,9 @@ import JavaScriptCore
     // MARK: - Timer constructors
 
     @objc func create(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimer {
-        return HSTimer(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError)
+        let timer = HSTimer(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError)
+        timers.add(timer)
+        return timer
     }
 
     @objc(new:::)
@@ -218,12 +227,14 @@ import JavaScriptCore
 
     @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer {
         let timer = HSTimer(interval: seconds, repeats: false, callback: callback)
+        timers.add(timer)
         timer.start()
         return timer
     }
 
     @objc func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimer {
         let timer = HSTimer(interval: interval, repeats: true, callback: callback)
+        timers.add(timer)
         timer.start()
         return timer
     }
@@ -238,11 +249,8 @@ import JavaScriptCore
             secondsUntilTarget += 86400 // Add 24 hours
         }
 
-        // Create initial one-shot timer to fire at the target time
         let timer = HSTimer(interval: secondsUntilTarget, repeats: false, callback: callback, continueOnError: continueOnError)
-
-        // If repeatInterval is specified, we'll need to reschedule after each fire
-        // This is handled in JavaScript for simplicity
+        timers.add(timer)
         timer.start()
         return timer
     }

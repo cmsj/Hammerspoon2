@@ -51,8 +51,43 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
       * A `shutdown()` method called by the core engine when tearing down the JS environment
  * The HSFooModule class should be annotated with: `@_documentation(visibility: private)`
  * HSFooModule should always have an `isolated deinit` that calls `AKTrace("Deinit of \(name): \(engineID)")`.
- * If the module allocates/retains any data (e.g. watchers, instance children, etc) then it should be sure to clean them up in its shutdown() method.
+ * If the module allocates/retains any data (e.g. watchers, instance children, etc) then it should store weak references to them and be sure to clean them up in its shutdown() method.
  * Any instance child classes should always have an "isolated deinit" method that uses AKTrace() to announce their deinitialisation.
+
+## Child object tracking
+
+When a module creates child objects that are returned to JavaScript (e.g. `HSTimer`, `HSHotkey`, `HSBonjourSearch`), it must track them so `shutdown()` can clean them all up.
+
+**The canonical pattern is `HSWeakObjectSet<T>` (`Engine/HSWeakObjectSet.swift`):**
+
+```swift
+// Declaration (in the module class body)
+private var children = HSWeakObjectSet<HSChild>()
+
+// Adding a new child
+children.add(child)
+
+// Removing an explicit child (e.g. in removeSearch/removeWatcher)
+children.remove(child)
+
+// Shutdown — allObjects returns only live entries (dead ones are compacted on access)
+func shutdown() {
+    for child in children.allObjects {
+        child.stop()   // or disable(), cancel(), etc.
+    }
+    children.removeAllObjects()
+}
+```
+
+**Why `HSWeakObjectSet` and not `NSHashTable.weakObjects()`?**
+- `NSHashTable.weakObjects()` has documented autoreleasepool interactions where entries can persist or zero out unpredictably (see https://github.com/GitHawkApp/FlatCache/issues/3 and http://cocoamine.net/blog/2013/12/13/nsmaptable-and-zeroing-weak-references/). `HSWeakObjectSet` uses plain Swift `weak var` references which zero correctly per ARC semantics.
+- `HSWeakObjectSet` stores entries in a `[ObjectIdentifier: WeakBox]` dictionary, giving O(1) `add`/`remove`. Dead entries are compacted lazily on `allObjects` access.
+- Centralising the implementation means we can change the backing storage in one place without touching every module.
+- Weak refs allow the JS garbage collector to reclaim objects the user has dropped, without requiring an explicit `removeXxx()` call.
+- The underlying OS keeps active objects alive independently (e.g. the Carbon event handler keeps `HSHotkey` alive while enabled; the run loop `Timer` keeps `HSTimer` alive while running; `CLLocationManager` holds `HSLocationWatcher` alive via its delegate). Module tracking is only needed for `shutdown()`.
+
+**Exception — strong refs for visible UI objects:**
+`hs.ui` intentionally uses `[UUID: HSUIWindow]` (strong) for windows, alerts, and dialogs. These must stay alive on screen even if JS drops the reference. This is the only legitimate reason to use strong tracking. UI objects call back to the module to `register`/`unregister` themselves when shown/closed.
  * If HSFooModule includes an hs.foo.js file, and that file needs to store any properties/methods/objects/etc in the hs.foo namespace, there must be a declaration in HSFooModuleAPI to hold it. JavaScriptCore cannot modify HSFooModule instances at runtime to add additional properties/methods and they will go silently out of scope in unpredictable ways.
  * In general we should avoid creating an hs.foo.js file unless absolutely necessary - it is strongly preferred to keep all code together in Swift. Legitimate uses of a .js file would include the watcher patterns mentioned below
 
