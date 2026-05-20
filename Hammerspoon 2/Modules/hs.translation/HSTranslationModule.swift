@@ -67,14 +67,12 @@ import JavaScriptCore
 
     /// Create a translation session for a language pair.
     ///
-    /// Returns an `HSTranslationSession` if both language packs are installed on the
-    /// device, or `null` if either pack is missing or if the system is running macOS
-    /// older than 26.0. Check `status()` first, or install packs via
-    /// **System Settings → General → Language & Region → Translation Languages**.
+    /// Returns an `HSTranslationSession`, or `null` if the system is running macOS
+    /// older than 26.0.
     ///
     /// - Parameter sourceLanguage: BCP-47 code of the source language (e.g. `"en"`).
     /// - Parameter targetLanguage: BCP-47 code of the target language (e.g. `"fr"`).
-    /// - Returns: An `HSTranslationSession`, or `null` if the language pair is not installed.
+    /// - Returns: An `HSTranslationSession`, or `null` on unsupported versions of macOS.
     /// - Example:
     /// ```js
     /// const session = hs.translation.session("en", "fr")
