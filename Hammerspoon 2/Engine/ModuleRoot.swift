@@ -12,7 +12,10 @@ import JavaScriptCoreExtras
 @_documentation(visibility: private)
 @objc protocol ModuleRootAPI: JSExport {
     // Core
+    /// Destroy the current JavaScript runtime and start a new one, loading all configuration from disk again
     @objc func reload()
+    /// Force garbage collection of JavaScript objects that no longer have any references
+    @objc func collectGarbage()
 
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
@@ -83,6 +86,10 @@ import JavaScriptCoreExtras
         } catch {
             AKError("Unable to reload config: \(error.localizedDescription)")
         }
+    }
+
+    @objc func collectGarbage() {
+        unsafe JavaScriptCore.JSGarbageCollect(JSContext.current().jsGlobalContextRef)
     }
 
     // Modules
