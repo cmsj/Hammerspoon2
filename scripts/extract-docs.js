@@ -261,6 +261,7 @@ function parseSwiftFile(filePath, repoRoot) {
                         protocol.methods.push({
                             name: methodName,
                             signature: fullSignature,
+                            isStatic: /(?:^|\s)static\s+func\b/.test(fullSignature),
                             rawDocumentation: rawDoc,
                             description: formatDocCToJSDoc(rawDoc),
                             params: extractParams(fullSignature, currentDoc),

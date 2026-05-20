@@ -202,8 +202,9 @@ function generateTypeDefinition(protocol) {
             }).join(', ');
 
             const returnType = method.returns ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : 'void';
+            const staticPrefix = method.isStatic ? 'static ' : '';
 
-            output += `    static ${method.name}(${params}): ${returnType};\n\n`;
+            output += `    ${staticPrefix}${method.name}(${params}): ${returnType};\n\n`;
         }
 
         // Properties as instance members

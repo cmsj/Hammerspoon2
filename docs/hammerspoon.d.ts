@@ -38,7 +38,7 @@ declare class HSColor {
      * Update this color's value
      * @param value New color as a hex string (e.g. "#FF0000") or another HSColor object
      */
-    static set(value: JSValue): void;
+    set(value: JSValue): void;
 
 }
 
@@ -225,14 +225,14 @@ declare class HSImage {
      * @param size Optional HSSize to set (if provided, returns a resized copy)
      * @returns The current size as HSSize, or a resized copy if size was provided
      */
-    static size(size: JSValue): JSValue;
+    size(size: JSValue): JSValue;
 
     /**
      * Get or set the image name
      * @param name Optional name to set
      * @returns The current or new name
      */
-    static name(name: JSValue): string | undefined;
+    name(name: JSValue): string | undefined;
 
     /**
      * Create a resized copy of the image
@@ -240,40 +240,40 @@ declare class HSImage {
      * @param absolute If true, resize exactly to specified dimensions. If false, maintain aspect ratio
      * @returns A new resized HSImage
      */
-    static setSize(size: JSValue, absolute: boolean): HSImage | undefined;
+    setSize(size: JSValue, absolute: boolean): HSImage | undefined;
 
     /**
      * Create a copy of the image
      * @returns A new HSImage copy
      */
-    static copyImage(): HSImage | undefined;
+    copyImage(): HSImage | undefined;
 
     /**
      * Create a cropped copy of the image
      * @param rect HSRect defining the crop area
      * @returns A new cropped HSImage, or null if cropping failed
      */
-    static croppedCopy(rect: JSValue): HSImage | undefined;
+    croppedCopy(rect: JSValue): HSImage | undefined;
 
     /**
      * Save the image to a file
      * @param path Destination file path (extension determines format: png, jpg, tiff, bmp, gif)
      * @returns true if saved successfully, false otherwise
      */
-    static saveToFile(path: string): boolean;
+    saveToFile(path: string): boolean;
 
     /**
      * Get or set the template image flag
      * @param state Optional boolean to set template state
      * @returns Current template state
      */
-    static template(state: JSValue): boolean;
+    template(state: JSValue): boolean;
 
     /**
      * Replace the image with a new one, triggering a re-render if bound to a UI element
      * @param value New image as an HSImage object or a file path string
      */
-    static set(value: JSValue): void;
+    set(value: JSValue): void;
 
 }
 
@@ -377,7 +377,7 @@ declare class HSString {
      * Update the string value, triggering a re-render if bound to a UI element
      * @param newValue The new string
      */
-    static set(newValue: string): void;
+    set(newValue: string): void;
 
     /**
      * The current string value
@@ -577,19 +577,19 @@ declare class HSApplication {
      * Terminate the application
      * @returns True if the application was terminated, otherwise false
      */
-    static kill(): boolean;
+    kill(): boolean;
 
     /**
      * Force-terminate the application
      * @returns True if the application was force-terminated, otherwise false
      */
-    static kill9(): boolean;
+    kill9(): boolean;
 
     /**
      * The application's HSAXElement object, for use with the hs.ax APIs
      * @returns An HSAXElement object, or nil if it could not be obtained
      */
-    static axElement(): HSAXElement | undefined;
+    axElement(): HSAXElement | undefined;
 
     /**
      * POSIX Process Identifier
@@ -764,69 +764,69 @@ declare class HSAudioDevice {
      * The current output data source as `{ id, name }`, or `null` if unavailable.
      * @returns A dictionary containing the id and name of the current output data source
      */
-    static currentOutputDataSource(): NSDictionary | undefined;
+    currentOutputDataSource(): NSDictionary | undefined;
 
     /**
      * The current input data source as `{ id, name }`, or `null` if unavailable.
      * @returns A dictionary containing the id and name of the current input data source
      */
-    static currentInputDataSource(): NSDictionary | undefined;
+    currentInputDataSource(): NSDictionary | undefined;
 
     /**
      * All available output data sources as an array of `{ id, name }` objects.
      * @returns A dictionary containing the ids and names of all available output data sources
      */
-    static outputDataSources(): NSDictionary[];
+    outputDataSources(): NSDictionary[];
 
     /**
      * All available input data sources as an array of `{ id, name }` objects.
      * @returns A dictionary containing the ids and names of all available input data sources
      */
-    static inputDataSources(): NSDictionary[];
+    inputDataSources(): NSDictionary[];
 
     /**
      * Select an output data source by its numeric ID.
      * @param sourceID The `id` value from ``outputDataSources()``
      * @returns `true` on success
      */
-    static setCurrentOutputDataSource(sourceID: number): boolean;
+    setCurrentOutputDataSource(sourceID: number): boolean;
 
     /**
      * Select an input data source by its numeric ID.
      * @param sourceID The `id` value from ``inputDataSources()``
      * @returns `true` on success
      */
-    static setCurrentInputDataSource(sourceID: number): boolean;
+    setCurrentInputDataSource(sourceID: number): boolean;
 
     /**
      * Make this device the system default output device.
      * @returns `true` on success
      */
-    static setDefaultOutputDevice(): boolean;
+    setDefaultOutputDevice(): boolean;
 
     /**
      * Make this device the system default input device.
      * @returns `true` on success
      */
-    static setDefaultInputDevice(): boolean;
+    setDefaultInputDevice(): boolean;
 
     /**
      * Make this device the system alert sound (effect) device.
      * @returns `true` on success
      */
-    static setDefaultEffectDevice(): boolean;
+    setDefaultEffectDevice(): boolean;
 
     /**
      * Register a listener for a per-device property-change event.
      * @param listener A JavaScript function that receives an event name string
      */
-    static addWatcher(listener: JSValue): void;
+    addWatcher(listener: JSValue): void;
 
     /**
      * Remove a previously registered per-device listener.
      * @param listener The JavaScript function that was passed to ``addWatcher(_:)``
      */
-    static removeWatcher(listener: JSValue): void;
+    removeWatcher(listener: JSValue): void;
 
     /**
      * The CoreAudio object ID of this device.
@@ -1035,27 +1035,27 @@ declare class HSAXElement {
      * The element's children
      * @returns An array of HSAXElement objects
      */
-    static children(): HSAXElement[];
+    children(): HSAXElement[];
 
     /**
      * Get a specific child by index
      * @param index The index to fetch
      * @returns An HSAXElement object, if a child exists at the given index
      */
-    static childAtIndex(index: number): HSAXElement | undefined;
+    childAtIndex(index: number): HSAXElement | undefined;
 
     /**
      * Get all available attribute names
      * @returns An array of attribute names
      */
-    static attributeNames(): string[];
+    attributeNames(): string[];
 
     /**
      * Get the value of a specific attribute
      * @param attribute The attribute name to fetch the value for
      * @returns The requested value, or nil if none was found
      */
-    static attributeValue(attribute: string): any | undefined;
+    attributeValue(attribute: string): any | undefined;
 
     /**
      * Set the value of a specific attribute
@@ -1063,27 +1063,27 @@ declare class HSAXElement {
      * @param value The value to set
      * @returns True if the operation succeeded, otherwise False
      */
-    static setAttributeValue(attribute: string, value: any): boolean;
+    setAttributeValue(attribute: string, value: any): boolean;
 
     /**
      * Check if an attribute is settable
      * @param attribute An attribute name
      * @returns True if the attribute is settable, otherwise False
      */
-    static isAttributeSettable(attribute: string): boolean;
+    isAttributeSettable(attribute: string): boolean;
 
     /**
      * Get all available action names
      * @returns An array of available action names
      */
-    static actionNames(): string[];
+    actionNames(): string[];
 
     /**
      * Perform a specific action
      * @param action The action to perform
      * @returns True if the action succeeded, otherwise False
      */
-    static performAction(action: string): boolean;
+    performAction(action: string): boolean;
 
     /**
      * The element's role (e.g., "AXWindow", "AXButton")
@@ -1269,7 +1269,7 @@ complete event table.
      * @param callback `function(event, service, moreComing)` called for each result
      * @returns self, for chaining
      */
-    static findServices(type: string, domain: string, callback: JSValue): HSBonjourSearch;
+    findServices(type: string, domain: string, callback: JSValue): HSBonjourSearch;
 
     /**
      * Searches for domains visible to this machine (browsable domains).
@@ -1279,7 +1279,7 @@ unaffected. The callback receives `(event, domain, moreComing)`.
      * @param callback `function(event, domain, moreComing)` called for each result
      * @returns self, for chaining
      */
-    static findBrowsableDomains(callback: JSValue): HSBonjourSearch;
+    findBrowsableDomains(callback: JSValue): HSBonjourSearch;
 
     /**
      * Searches for domains on which this machine can register services.
@@ -1289,13 +1289,13 @@ unaffected. The callback receives `(event, domain, moreComing)`.
      * @param callback `function(event, domain, moreComing)` called for each result
      * @returns self, for chaining
      */
-    static findRegistrationDomains(callback: JSValue): HSBonjourSearch;
+    findRegistrationDomains(callback: JSValue): HSBonjourSearch;
 
     /**
      * Stops all active searches. Safe to call when no search is active.
      * @returns self, for chaining
      */
-    static stop(): HSBonjourSearch;
+    stop(): HSBonjourSearch;
 
     /**
      * A unique identifier for this search object.
@@ -1331,7 +1331,7 @@ declare class HSBonjourService {
      * @param callback `function(event, data?)` called on status changes
      * @returns self, for chaining
      */
-    static resolve(timeout: number, callback: JSValue): HSBonjourService;
+    resolve(timeout: number, callback: JSValue): HSBonjourService;
 
     /**
      * Starts monitoring the TXT record for changes. The callback fires whenever
@@ -1340,19 +1340,19 @@ Call `stopMonitoring()` to unsubscribe.
      * @param callback `function(txtRecord)` called when TXT data changes
      * @returns self, for chaining
      */
-    static monitor(callback: JSValue): HSBonjourService;
+    monitor(callback: JSValue): HSBonjourService;
 
     /**
      * Stops any active resolution.
      * @returns self, for chaining
      */
-    static stop(): HSBonjourService;
+    stop(): HSBonjourService;
 
     /**
      * Stops TXT record monitoring started by `monitor()`.
      * @returns self, for chaining
      */
-    static stopMonitoring(): HSBonjourService;
+    stopMonitoring(): HSBonjourService;
 
     /**
      * A unique identifier assigned to this service object.
@@ -1515,13 +1515,13 @@ The listener receives one argument: a boolean that is `true` when the camera
 starts being used and `false` when it is released.
      * @param listener A JavaScript function receiving `(isInUse: boolean)`
      */
-    static addWatcher(listener: JSValue): void;
+    addWatcher(listener: JSValue): void;
 
     /**
      * Remove a previously registered per-camera in-use listener.
      * @param listener The function originally passed to ``addWatcher(_:)``
      */
-    static removeWatcher(listener: JSValue): void;
+    removeWatcher(listener: JSValue): void;
 
     /**
      * Capture a still image from this camera.
@@ -1530,7 +1530,7 @@ this method. The returned `HSImage` can be saved, displayed in a UI element, or
 passed to other image-processing APIs.
      * @returns A Promise that resolves to an `HSImage`, or rejects on error
      */
-    static captureImage(): Promise<HSImage>;
+    captureImage(): Promise<HSImage>;
 
     /**
      * The type name for JavaScript introspection. Always `"HSCamera"`.
@@ -2044,23 +2044,23 @@ declare class HSHotkey {
      * Enable the hotkey
      * @returns True if the hotkey was enabled, otherwise False
      */
-    static enable(): boolean;
+    enable(): boolean;
 
     /**
      * Disable the hotkey
      */
-    static disable(): void;
+    disable(): void;
 
     /**
      * Check if the hotkey is currently enabled
      * @returns True if the hotkey is enabled, otherwise False
      */
-    static isEnabled(): boolean;
+    isEnabled(): boolean;
 
     /**
      * Delete the hotkey (disables and clears callbacks)
      */
-    static delete(): void;
+    delete(): void;
 
     /**
      * The callback function to be called when the hotkey is pressed
@@ -2199,26 +2199,26 @@ declare class HSLocationWatcher {
      * Starts location updates. The callback must be set first.
      * @returns self, for chaining
      */
-    static start(): HSLocationWatcher;
+    start(): HSLocationWatcher;
 
     /**
      * Stops location updates.
      * @returns self, for chaining
      */
-    static stop(): HSLocationWatcher;
+    stop(): HSLocationWatcher;
 
     /**
      * Sets the callback function invoked when location events occur.
      * @param fn `function(event, data)` — see type documentation for event names
      * @returns self, for chaining
      */
-    static setCallback(fn: JSValue): HSLocationWatcher;
+    setCallback(fn: JSValue): HSLocationWatcher;
 
     /**
      * Returns the most recently received location, or null if none yet.
      * @returns a locationTable, or null
      */
-    static location(): Record<AnyHashable, any> | undefined;
+    location(): Record<AnyHashable, any> | undefined;
 
     /**
      * The unique identifier assigned to this watcher.
@@ -2360,12 +2360,12 @@ declare class HSNotification {
      * Deliver this notification immediately to Notification Center.
      * @returns self, for method chaining
      */
-    static send(): HSNotification;
+    send(): HSNotification;
 
     /**
      * Remove this notification from Notification Center (if delivered) or cancel it (if pending).
      */
-    static withdraw(): void;
+    withdraw(): void;
 
     /**
      * The unique identifier assigned to this notification.
@@ -3049,50 +3049,50 @@ Pass `0` for `scale` or `frequency` to match any value.
      * @param frequency Refresh rate in Hz. Pass `0` to ignore.
      * @returns `true` on success.
      */
-    static setMode(width: number, height: number, scale: number, frequency: number): boolean;
+    setMode(width: number, height: number, scale: number, frequency: number): boolean;
 
     /**
      * Capture the current contents of this screen as an image.
 Requires **Screen Recording** permission.
      * @returns Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).
      */
-    static snapshot(): Promise<HSImage>;
+    snapshot(): Promise<HSImage>;
 
     /**
      * The next screen in `hs.screen.all()` order, wrapping around.
      * @returns An HSScreen object
      */
-    static next(): HSScreen;
+    next(): HSScreen;
 
     /**
      * The previous screen in `hs.screen.all()` order, wrapping around.
      * @returns An HSScreen object
      */
-    static previous(): HSScreen;
+    previous(): HSScreen;
 
     /**
      * The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.
      * @returns An HSScreen object
      */
-    static toEast(): HSScreen | undefined;
+    toEast(): HSScreen | undefined;
 
     /**
      * The nearest screen whose right edge is at or before this screen's left edge, or `null`.
      * @returns An HSScreen object
      */
-    static toWest(): HSScreen | undefined;
+    toWest(): HSScreen | undefined;
 
     /**
      * The nearest screen that is physically above this screen, or `null`.
      * @returns An HSScreen object
      */
-    static toNorth(): HSScreen | undefined;
+    toNorth(): HSScreen | undefined;
 
     /**
      * The nearest screen that is physically below this screen, or `null`.
      * @returns An HSScreen object
      */
-    static toSouth(): HSScreen | undefined;
+    toSouth(): HSScreen | undefined;
 
     /**
      * Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.
@@ -3100,26 +3100,26 @@ Requires **Screen Recording** permission.
      * @param y The Y coordinate to move to
      * @returns `true` on success.
      */
-    static setOrigin(x: number, y: number): boolean;
+    setOrigin(x: number, y: number): boolean;
 
     /**
      * Designate this screen as the primary display (moves the menu bar here).
      * @returns `true` on success.
      */
-    static setPrimary(): boolean;
+    setPrimary(): boolean;
 
     /**
      * Configure this screen to mirror another screen.
      * @param screen The screen to mirror.
      * @returns `true` on success.
      */
-    static mirrorOf(screen: HSScreen): boolean;
+    mirrorOf(screen: HSScreen): boolean;
 
     /**
      * Stop mirroring, restoring this screen to an independent display.
      * @returns `true` on success.
      */
-    static mirrorStop(): boolean;
+    mirrorStop(): boolean;
 
     /**
      * Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.
@@ -3127,14 +3127,14 @@ The result origin is relative to this screen's top-left corner.
      * @param rect An `HSRect` in global Hammerspoon coordinates.
      * @returns The rect offset to be relative to this screen's top-left, or `null` if the input is invalid.
      */
-    static absoluteToLocal(rect: JSValue): HSRect | undefined;
+    absoluteToLocal(rect: JSValue): HSRect | undefined;
 
     /**
      * Convert a rect in local screen coordinates to global Hammerspoon coordinates.
      * @param rect An `HSRect` relative to this screen's top-left corner.
      * @returns The rect in global Hammerspoon coordinates, or `null` if the input is invalid.
      */
-    static localToAbsolute(rect: JSValue): HSRect | undefined;
+    localToAbsolute(rect: JSValue): HSRect | undefined;
 
     /**
      * Unique display identifier (matches `CGDirectDisplayID`).
@@ -3282,48 +3282,48 @@ declare class HSTask {
      * Start the task
      * @returns The task object for chaining
      */
-    static start(): HSTask;
+    start(): HSTask;
 
     /**
      * Terminate the task (send SIGTERM)
      */
-    static terminate(): void;
+    terminate(): void;
 
     /**
      * Terminate the task with extreme prejudice (send SIGKILL)
      */
-    static kill9(): void;
+    kill9(): void;
 
     /**
      * Interrupt the task (send SIGINT)
      */
-    static interrupt(): void;
+    interrupt(): void;
 
     /**
      * Pause the task (send SIGSTOP)
      */
-    static pause(): void;
+    pause(): void;
 
     /**
      * Resume the task (send SIGCONT)
      */
-    static resume(): void;
+    resume(): void;
 
     /**
      * Wait for the task to complete (blocking)
      */
-    static waitUntilExit(): void;
+    waitUntilExit(): void;
 
     /**
      * Write data to the task's stdin
      * @param data The string data to write
      */
-    static sendInput(data: string): void;
+    sendInput(data: string): void;
 
     /**
      * Close the task's stdin
      */
-    static closeInput(): void;
+    closeInput(): void;
 
     /**
      * Check if the task is currently running
@@ -3518,35 +3518,35 @@ declare class HSTimer {
     /**
      * Start the timer
      */
-    static start(): void;
+    start(): void;
 
     /**
      * Stop the timer
      */
-    static stop(): void;
+    stop(): void;
 
     /**
      * Immediately fire the timer's callback
      */
-    static fire(): void;
+    fire(): void;
 
     /**
      * Check if the timer is currently running
      * @returns true if the timer is running, false otherwise
      */
-    static running(): boolean;
+    running(): boolean;
 
     /**
      * Get the number of seconds until the timer next fires
      * @returns Seconds until next trigger, or a negative value if the timer is not running
      */
-    static nextTrigger(): number;
+    nextTrigger(): number;
 
     /**
      * Set when the timer should next fire
      * @param seconds Number of seconds from now when the timer should fire
      */
-    static setNextTrigger(seconds: number): void;
+    setNextTrigger(seconds: number): void;
 
     /**
      * The timer's interval in seconds
@@ -3622,7 +3622,7 @@ declare class HSTranslationSession {
      * @param text The text to translate.
      * @returns A Promise resolving to the translated string,
      */
-    static translate(text: string): Promise<string>;
+    translate(text: string): Promise<string>;
 
     /**
      * The Swift type name, for JavaScript introspection.
@@ -3963,36 +3963,36 @@ declare class HSUIWindow {
      * Show the window
      * @returns Self for chaining
      */
-    static show(): HSUIWindow;
+    show(): HSUIWindow;
 
     /**
      * Hide the window (keeps it in memory)
      */
-    static hide(): void;
+    hide(): void;
 
     /**
      * Close and destroy the window
      */
-    static close(): void;
+    close(): void;
 
     /**
      * Set the window's background color
      * @param colorValue Color as hex string (e.g., "#FF0000") or HSColor object
      * @returns Self for chaining
      */
-    static backgroundColor(colorValue: JSValue): HSUIWindow;
+    backgroundColor(colorValue: JSValue): HSUIWindow;
 
     /**
      * Add a rectangle shape
      * @returns Self for chaining (apply modifiers like `fill()`, `frame()`)
      */
-    static rectangle(): HSUIWindow;
+    rectangle(): HSUIWindow;
 
     /**
      * Add a circle shape
      * @returns Self for chaining (apply modifiers like `fill()`, `frame()`)
      */
-    static circle(): HSUIWindow;
+    circle(): HSUIWindow;
 
     /**
      * Add a text element
@@ -4000,14 +4000,14 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text
      * @param content The text to display — a plain JS string for static text,
      * @returns Self for chaining (apply modifiers like `font()`, `foregroundColor()`)
      */
-    static text(content: JSValue): HSUIWindow;
+    text(content: JSValue): HSUIWindow;
 
     /**
      * Add an image element
      * @param imageValue Image as HSImage object or file path string
      * @returns Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)
      */
-    static image(imageValue: JSValue): HSUIWindow;
+    image(imageValue: JSValue): HSUIWindow;
 
     /**
      * Add a button element
@@ -4015,134 +4015,134 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text
      * @param label The button label — a plain JS string for static text,
      * @returns Self for chaining (apply `.fill()`, `.cornerRadius()`, `.font()`,
      */
-    static button(label: JSValue): HSUIWindow;
+    button(label: JSValue): HSUIWindow;
 
     /**
      * Begin a vertical stack (elements arranged top to bottom)
      * @returns Self for chaining (call `end()` when done)
      */
-    static vstack(): HSUIWindow;
+    vstack(): HSUIWindow;
 
     /**
      * Begin a horizontal stack (elements arranged left to right)
      * @returns Self for chaining (call `end()` when done)
      */
-    static hstack(): HSUIWindow;
+    hstack(): HSUIWindow;
 
     /**
      * Begin a z-stack (overlapping elements)
      * @returns Self for chaining (call `end()` when done)
      */
-    static zstack(): HSUIWindow;
+    zstack(): HSUIWindow;
 
     /**
      * Add flexible spacing that expands to fill available space
      * @returns Self for chaining
      */
-    static spacer(): HSUIWindow;
+    spacer(): HSUIWindow;
 
     /**
      * End the current layout container
      * @returns Self for chaining
      */
-    static end(): HSUIWindow;
+    end(): HSUIWindow;
 
     /**
      * Fill a shape with a color
      * @param colorValue Color as hex string or HSColor
      * @returns Self for chaining
      */
-    static fill(colorValue: JSValue): HSUIWindow;
+    fill(colorValue: JSValue): HSUIWindow;
 
     /**
      * Add a stroke (border) to a shape
      * @param colorValue Color as hex string or HSColor
      * @returns Self for chaining
      */
-    static stroke(colorValue: JSValue): HSUIWindow;
+    stroke(colorValue: JSValue): HSUIWindow;
 
     /**
      * Set the stroke width
      * @param width Width in points
      * @returns Self for chaining
      */
-    static strokeWidth(width: number): HSUIWindow;
+    strokeWidth(width: number): HSUIWindow;
 
     /**
      * Round the corners of a shape
      * @param radius Corner radius in points
      * @returns Self for chaining
      */
-    static cornerRadius(radius: number): HSUIWindow;
+    cornerRadius(radius: number): HSUIWindow;
 
     /**
      * Set the frame (size) of an element
      * @param dict Dictionary with `w` and/or `h` (can be numbers or percentage strings like "50%")
      * @returns Self for chaining
      */
-    static frame(dict: Record<string, any>): HSUIWindow;
+    frame(dict: Record<string, any>): HSUIWindow;
 
     /**
      * Set the opacity of an element
      * @param value Opacity from 0.0 (transparent) to 1.0 (opaque)
      * @returns Self for chaining
      */
-    static opacity(value: number): HSUIWindow;
+    opacity(value: number): HSUIWindow;
 
     /**
      * Set the font for a text element
      * @param font An HSFont object (e.g., `HSFont.title()`)
      * @returns Self for chaining
      */
-    static font(font: HSFont): HSUIWindow;
+    font(font: HSFont): HSUIWindow;
 
     /**
      * Set the text color
      * @param colorValue Color as hex string or HSColor
      * @returns Self for chaining
      */
-    static foregroundColor(colorValue: JSValue): HSUIWindow;
+    foregroundColor(colorValue: JSValue): HSUIWindow;
 
     /**
      * Make an image resizable (allows it to scale with frame size)
      * @returns Self for chaining
      */
-    static resizable(): HSUIWindow;
+    resizable(): HSUIWindow;
 
     /**
      * Set the aspect ratio mode for an image
      * @param mode "fit" (scales to fit within frame) or "fill" (scales to fill frame)
      * @returns Self for chaining
      */
-    static aspectRatio(mode: string): HSUIWindow;
+    aspectRatio(mode: string): HSUIWindow;
 
     /**
      * Add padding around a layout container
      * @param value Padding in points
      * @returns Self for chaining
      */
-    static padding(value: number): HSUIWindow;
+    padding(value: number): HSUIWindow;
 
     /**
      * Set spacing between elements in a stack
      * @param value Spacing in points
      * @returns Self for chaining
      */
-    static spacing(value: number): HSUIWindow;
+    spacing(value: number): HSUIWindow;
 
     /**
      * Set a callback to fire when the element is clicked
      * @param callback A JavaScript function to call on click
      * @returns Self for chaining
      */
-    static onClick(callback: JSValue): HSUIWindow;
+    onClick(callback: JSValue): HSUIWindow;
 
     /**
      * Set a callback to fire when the cursor enters or leaves the element
      * @param callback A JavaScript function called with a boolean: true when entering, false when leaving
      * @returns Self for chaining
      */
-    static onHover(callback: JSValue): HSUIWindow;
+    onHover(callback: JSValue): HSUIWindow;
 
 }
 
@@ -4166,39 +4166,39 @@ declare class HSUIAlert {
      * @param font An HSFont object (e.g., `HSFont.headline()`)
      * @returns Self for chaining
      */
-    static font(font: HSFont): HSUIAlert;
+    font(font: HSFont): HSUIAlert;
 
     /**
      * Set how long the alert is displayed
      * @param seconds Duration in seconds (default: 5.0)
      * @returns Self for chaining
      */
-    static duration(seconds: number): HSUIAlert;
+    duration(seconds: number): HSUIAlert;
 
     /**
      * Set the padding around the alert text
      * @param points Padding in points (default: 20)
      * @returns Self for chaining
      */
-    static padding(points: number): HSUIAlert;
+    padding(points: number): HSUIAlert;
 
     /**
      * Set a custom position for the alert
      * @param dict Dictionary with `x` and `y` coordinates
      * @returns Self for chaining
      */
-    static position(dict: Record<string, any>): HSUIAlert;
+    position(dict: Record<string, any>): HSUIAlert;
 
     /**
      * Show the alert
      * @returns Self for chaining (can store reference to close manually)
      */
-    static show(): HSUIAlert;
+    show(): HSUIAlert;
 
     /**
      * Close the alert immediately
      */
-    static close(): void;
+    close(): void;
 
 }
 
@@ -4228,39 +4228,39 @@ declare class HSUIDialog {
      * @param text The informative text
      * @returns Self for chaining
      */
-    static informativeText(text: string): HSUIDialog;
+    informativeText(text: string): HSUIDialog;
 
     /**
      * Set custom button labels
      * @param labels Array of button labels (default: ["OK"])
      * @returns Self for chaining
      */
-    static buttons(labels: string[]): HSUIDialog;
+    buttons(labels: string[]): HSUIDialog;
 
     /**
      * Set the dialog style
      * @param style Style name (e.g., "informational", "warning", "critical")
      * @returns Self for chaining
      */
-    static style(style: string): HSUIDialog;
+    style(style: string): HSUIDialog;
 
     /**
      * Set the callback for button presses
      * @param callback Function receiving button index (0-based)
      * @returns Self for chaining
      */
-    static onButton(callback: JSValue): HSUIDialog;
+    onButton(callback: JSValue): HSUIDialog;
 
     /**
      * Show the dialog
      * @returns Self for chaining
      */
-    static show(): HSUIDialog;
+    show(): HSUIDialog;
 
     /**
      * Close the dialog programmatically
      */
-    static close(): void;
+    close(): void;
 
 }
 
@@ -4305,61 +4305,61 @@ declare class HSUIFilePicker {
      * @param text The message text
      * @returns Self for chaining
      */
-    static message(text: string): HSUIFilePicker;
+    message(text: string): HSUIFilePicker;
 
     /**
      * Set the starting directory
      * @param path Path to directory (supports `~` for home)
      * @returns Self for chaining
      */
-    static defaultPath(path: string): HSUIFilePicker;
+    defaultPath(path: string): HSUIFilePicker;
 
     /**
      * Set whether files can be selected
      * @param value true to allow file selection (default: true)
      * @returns Self for chaining
      */
-    static canChooseFiles(value: boolean): HSUIFilePicker;
+    canChooseFiles(value: boolean): HSUIFilePicker;
 
     /**
      * Set whether directories can be selected
      * @param value true to allow directory selection (default: false)
      * @returns Self for chaining
      */
-    static canChooseDirectories(value: boolean): HSUIFilePicker;
+    canChooseDirectories(value: boolean): HSUIFilePicker;
 
     /**
      * Set whether multiple items can be selected
      * @param value true to allow multiple selection (default: false)
      * @returns Self for chaining
      */
-    static allowsMultipleSelection(value: boolean): HSUIFilePicker;
+    allowsMultipleSelection(value: boolean): HSUIFilePicker;
 
     /**
      * Restrict to specific file types
      * @param types Array of file extensions (e.g., ["txt", "md"])
      * @returns Self for chaining
      */
-    static allowedFileTypes(types: string[]): HSUIFilePicker;
+    allowedFileTypes(types: string[]): HSUIFilePicker;
 
     /**
      * Set whether to resolve symbolic links
      * @param value true to resolve aliases (default: true)
      * @returns Self for chaining
      */
-    static resolvesAliases(value: boolean): HSUIFilePicker;
+    resolvesAliases(value: boolean): HSUIFilePicker;
 
     /**
      * Set the callback for file selection
      * @param callback Function receiving selected path(s) or null if cancelled
      * @returns Self for chaining
      */
-    static onSelection(callback: JSValue): HSUIFilePicker;
+    onSelection(callback: JSValue): HSUIFilePicker;
 
     /**
      * Show the file picker dialog
      */
-    static show(): void;
+    show(): void;
 
 }
 
@@ -4388,33 +4388,33 @@ declare class HSUITextPrompt {
      * @param text The informative text
      * @returns Self for chaining
      */
-    static informativeText(text: string): HSUITextPrompt;
+    informativeText(text: string): HSUITextPrompt;
 
     /**
      * Set the default text in the input field
      * @param text Default text value
      * @returns Self for chaining
      */
-    static defaultText(text: string): HSUITextPrompt;
+    defaultText(text: string): HSUITextPrompt;
 
     /**
      * Set custom button labels
      * @param labels Array of button labels (default: ["OK", "Cancel"])
      * @returns Self for chaining
      */
-    static buttons(labels: string[]): HSUITextPrompt;
+    buttons(labels: string[]): HSUITextPrompt;
 
     /**
      * Set the callback for button presses
      * @param callback Function receiving (buttonIndex, inputText)
      * @returns Self for chaining
      */
-    static onButton(callback: JSValue): HSUITextPrompt;
+    onButton(callback: JSValue): HSUITextPrompt;
 
     /**
      * Show the prompt dialog
      */
-    static show(): void;
+    show(): void;
 
 }
 
@@ -4520,48 +4520,48 @@ declare class HSWindow {
      * Focus this window
      * @returns true if successful
      */
-    static focus(): boolean;
+    focus(): boolean;
 
     /**
      * Minimize this window
      * @returns true if successful
      */
-    static minimize(): boolean;
+    minimize(): boolean;
 
     /**
      * Unminimize this window
      * @returns true if successful
      */
-    static unminimize(): boolean;
+    unminimize(): boolean;
 
     /**
      * Raise this window to the front
      * @returns true if successful
      */
-    static raise(): boolean;
+    raise(): boolean;
 
     /**
      * Toggle fullscreen mode
      * @returns true if successful
      */
-    static toggleFullscreen(): boolean;
+    toggleFullscreen(): boolean;
 
     /**
      * Close this window
      * @returns true if successful
      */
-    static close(): boolean;
+    close(): boolean;
 
     /**
      * Center the window on the screen
      */
-    static centerOnScreen(): void;
+    centerOnScreen(): void;
 
     /**
      * Get the underlying AXElement
      * @returns The accessibility element for this window
      */
-    static axElement(): HSAXElement;
+    axElement(): HSAXElement;
 
     /**
      * The window's title
