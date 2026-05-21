@@ -131,8 +131,11 @@ extension JSEngine: JSEngineProtocol {
             // unwinds completely. With the IIFE, JSC's incremental GC can collect the proxy once the
             // function returns, allowing moduleRoot.shutdown() to be the sole cleanup path.
             //
-            // Note: error line numbers reported by JSC will be offset by 1 (the opening IIFE line).
-            script = "(function(){\n" + script + "\n})();"
+            // The opening brace is placed on the same line as the script's first line so that
+            // JSC line numbers match the user's file exactly (line N in the error = line N in the file).
+            // The only artefact is a +12-column offset for errors on line 1, which is far less
+            // confusing than every line number being off by one.
+            script = "(function(){" + script + "\n})();"
         }
         return context?.evaluateScript(script, withSourceURL: url)
     }
