@@ -345,6 +345,7 @@ import AppKit
 
     func shutdown() {
         _stopWatcher()
+        _watcherEmitter = nil
     }
 
     isolated deinit {

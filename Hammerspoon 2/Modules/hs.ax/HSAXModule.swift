@@ -196,7 +196,7 @@ import AXSwift
 
     func shutdown() {
         // Clean up all watchers
-        for key in watchers.keys {
+        for key in Array(watchers.keys) {
             if let watcherObject = watchers[key] {
                 do {
                     let pid = try watcherObject.element.pid()
@@ -212,14 +212,20 @@ import AXSwift
                     AKError("hs.ax: Error getting PID during shutdown: \(error)")
                 }
             }
-            watchers.removeValue(forKey: key)
         }
+        watchers.removeAll()
 
         // Stop all observers
         for (_, observer) in observers {
             observer.stop()
         }
         observers.removeAll()
+
+        _watcherEmitter = nil
+        focusedElement = nil
+        findByRole = nil
+        findByTitle = nil
+        printHierarchy = nil
     }
 
     isolated deinit {

@@ -140,6 +140,7 @@ import AVFoundation
             camera._removeWatcher()
         }
         cameraCache.removeAll()
+        _watcherEmitter = nil
     }
 
     isolated deinit {

@@ -95,7 +95,7 @@ import CoreLocation
     @objc var typeName = "HSLocationWatcher"
     @objc let identifier = UUID().uuidString
     private let manager = CLLocationManager()
-    private var callback: JSValue?
+    private var callback: JSCallback?
     private var _lastLocation: CLLocation?
 
     @objc var distanceFilter: Double {
@@ -106,6 +106,16 @@ import CoreLocation
     override init() {
         super.init()
         manager.delegate = self
+    }
+
+    isolated deinit {
+        destroy()
+    }
+
+    func destroy() {
+        _ = stop()
+        callback?.detach(from: self)
+        callback = nil
     }
 
     @objc @discardableResult func start() -> HSLocationWatcher {
@@ -121,7 +131,8 @@ import CoreLocation
     }
 
     @objc func setCallback(_ fn: JSValue) -> HSLocationWatcher {
-        callback = fn.isObject ? fn : nil
+        callback?.detach(from: self)
+        callback = JSCallback(value: fn, owner: self)
         return self
     }
 
@@ -136,7 +147,7 @@ import CoreLocation
         MainActor.assumeIsolated {
             if let loc = lastLoc {
                 _lastLocation = loc
-                _ = callback?.call(withArguments: ["location", HSLocationModule.locationTable(from: loc)])
+                _ = callback?.value?.call(withArguments: ["location", HSLocationModule.locationTable(from: loc)])
             }
         }
     }
@@ -144,7 +155,7 @@ import CoreLocation
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         let message = error.localizedDescription
         MainActor.assumeIsolated {
-            _ = callback?.call(withArguments: ["error", message])
+            _ = callback?.value?.call(withArguments: ["error", message])
         }
     }
 
@@ -158,7 +169,7 @@ import CoreLocation
             case .restricted:                    status = "restricted"
             default:                             status = "notDetermined"
             }
-            _ = callback?.call(withArguments: ["authorizationChanged", status])
+            _ = callback?.value?.call(withArguments: ["authorizationChanged", status])
         }
     }
 }

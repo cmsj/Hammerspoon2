@@ -69,12 +69,12 @@ import JavaScriptCoreExtras
     }
 
     func shutdown() {
-        for moduleName in modules.keys {
+        let names = Array(modules.keys)
+        for moduleName in names {
             AKTrace("Destroying module \(moduleName)")
-            let module = modules[moduleName]
-            module?.shutdown()
-            modules.removeValue(forKey: moduleName)
+            modules[moduleName]?.shutdown()
         }
+        modules.removeAll()
     }
 
     // MARK: - ModuleRootAPI conformance

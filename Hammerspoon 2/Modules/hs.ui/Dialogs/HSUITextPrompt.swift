@@ -148,11 +148,12 @@ import AppKit
         // Get the text input
         let inputText = textField.stringValue
 
-        // Invoke callback
+        // Invoke callback, then release it so the captured JSValue doesn't outlive
+        // the call. show() is one-shot — the callback won't be needed again.
         if let callback = buttonCallback {
+            buttonCallback = nil
             callback.call(withArguments: [buttonIndex, inputText])
 
-            // Check for JavaScript errors
             if let context = callback.context,
                let exception = context.exception,
                !exception.isUndefined {

@@ -321,6 +321,8 @@ import IOKit.pwr_mgt
         }
         _removeEventWatcher()
         _removeBatteryWatcher()
+        _eventWatcherEmitter = nil
+        _batteryWatcherEmitter = nil
     }
 
     isolated deinit {

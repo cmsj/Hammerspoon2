@@ -171,7 +171,9 @@ import dnssd
         "workstation":  "_workstation._tcp.",
     ]
 
-    private var searches: [HSBonjourSearch] = []
+    // Weak refs: searches stay active via their NSNetServiceBrowser delegate chain;
+    // weak refs allow dropped searches to be GC'd without an explicit removeSearch() call.
+    private var searches = HSWeakObjectSet<HSBonjourSearch>()
     private var advertisedServices: [String: AdvertisedService] = [:]
 
     required init(engineID: UUID) {
@@ -181,11 +183,10 @@ import dnssd
     }
 
     func shutdown() {
-        searches.forEach { search in
-            search.stopAllDiscoveredServices()
-            search.stop()
+        for search in searches.allObjects {
+            search.destroy()
         }
-        searches.removeAll()
+        searches.removeAllObjects()
         advertisedServices.values.forEach { $0.stop() }
         advertisedServices.removeAll()
     }
@@ -198,14 +199,14 @@ import dnssd
 
     @objc func newSearch() -> HSBonjourSearch {
         let search = HSBonjourSearch()
-        searches.append(search)
+        searches.add(search)
         AKTrace("HSBonjourModule: Created search \(search.identifier)")
         return search
     }
 
     @objc func removeSearch(_ search: HSBonjourSearch) {
-        search.stop()
-        searches.removeAll { $0 === search }
+        search.destroy()
+        searches.remove(search)
         AKTrace("HSBonjourModule: Removed search \(search.identifier)")
     }
 

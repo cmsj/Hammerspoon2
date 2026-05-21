@@ -10529,7 +10529,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 126
+              "lineNumber": 138
             },
             {
               "name": "minimize",
@@ -10550,7 +10550,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 135
+              "lineNumber": 147
             },
             {
               "name": "unminimize",
@@ -10571,7 +10571,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 144
+              "lineNumber": 156
             },
             {
               "name": "raise",
@@ -10592,7 +10592,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 153
+              "lineNumber": 165
             },
             {
               "name": "toggleFullscreen",
@@ -10613,7 +10613,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 162
+              "lineNumber": 174
             },
             {
               "name": "close",
@@ -10634,7 +10634,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 171
+              "lineNumber": 183
             },
             {
               "name": "centerOnScreen",
@@ -10652,7 +10652,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 180
+              "lineNumber": 192
             },
             {
               "name": "axElement",
@@ -10673,7 +10673,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 191
+              "lineNumber": 203
             }
           ],
           "properties": [
@@ -10690,7 +10690,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 23
+              "lineNumber": 26
             },
             {
               "name": "application",
@@ -10705,7 +10705,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 31
+              "lineNumber": 34
             },
             {
               "name": "pid",
@@ -10720,7 +10720,22 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 39
+              "lineNumber": 42
+            },
+            {
+              "name": "id",
+              "signature": "var id: Int { get }",
+              "rawDocumentation": "The window's underlying ID.\nA value of 0 or -1 likely means no window ID could be determined.\n- Example:\n```js\nconst win = hs.window.focusedWindow()\nconsole.log(win.id)\n```",
+              "description": "The window's underlying ID.\nA value of 0 or -1 likely means no window ID could be determined.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const win = hs.window.focusedWindow()\nconsole.log(win.id)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
+              "lineNumber": 51
             },
             {
               "name": "isMinimized",
@@ -10735,7 +10750,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 49
+              "lineNumber": 61
             },
             {
               "name": "isVisible",
@@ -10750,7 +10765,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 57
+              "lineNumber": 69
             },
             {
               "name": "isFocused",
@@ -10765,7 +10780,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 65
+              "lineNumber": 77
             },
             {
               "name": "isFullscreen",
@@ -10780,7 +10795,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 73
+              "lineNumber": 85
             },
             {
               "name": "isStandard",
@@ -10795,7 +10810,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 81
+              "lineNumber": 93
             },
             {
               "name": "position",
@@ -10810,7 +10825,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 91
+              "lineNumber": 103
             },
             {
               "name": "size",
@@ -10825,7 +10840,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 99
+              "lineNumber": 111
             },
             {
               "name": "frame",
@@ -10840,7 +10855,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 107
+              "lineNumber": 119
             },
             {
               "name": "screen",
@@ -10855,7 +10870,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.window/HSWindow.swift",
-              "lineNumber": 115
+              "lineNumber": 127
             }
           ]
         }
@@ -11808,5 +11823,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-20T15:53:16.284Z"
+  "generatedAt": "2026-05-21T16:28:08.061Z"
 }

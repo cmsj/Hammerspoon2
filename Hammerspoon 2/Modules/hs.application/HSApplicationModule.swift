@@ -198,6 +198,7 @@ class HSApplicationWatcherObject {
 
     func shutdown() {
         _removeWatcher()
+        _watcherEmitter = nil
     }
 
     isolated deinit {

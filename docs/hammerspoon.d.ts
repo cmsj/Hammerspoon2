@@ -4579,6 +4579,12 @@ declare class HSWindow {
     pid: number;
 
     /**
+     * The window's underlying ID.
+A value of 0 or -1 likely means no window ID could be determined.
+     */
+    id: number;
+
+    /**
      * Whether the window is minimized
      */
     isMinimized: boolean;

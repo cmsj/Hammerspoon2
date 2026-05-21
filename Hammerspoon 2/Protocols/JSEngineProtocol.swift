@@ -19,10 +19,14 @@ protocol JSEngineProtocol {
     @discardableResult func eval(_ script: String) -> Any?
 
     /// Evaluates JavaScript from a file URL
-    /// - Parameter url: The URL of the JavaScript file to evaluate
+    /// - Parameters:
+    ///   - url: The URL of the JavaScript file to evaluate
+    ///   - wrapInIIFE: If true, wraps the script in an immediately-invoked function expression.
+    ///     This scopes `const`/`let` bindings to the function rather than the global lexical
+    ///     environment, making JS proxies for Swift objects GC-eligible once the script finishes.
     /// - Returns: The result of the evaluation, or nil if evaluation fails
     /// - Throws: HammerspoonError if the file cannot be read or evaluated
-    @discardableResult func evalFromURL(_ url: URL) throws -> Any?
+    @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool) throws -> Any?
 
     /// Resets the JavaScript context, creating a fresh environment
     /// - Throws: HammerspoonError if context creation fails
@@ -31,4 +35,11 @@ protocol JSEngineProtocol {
     /// Checks if a JavaScript context exists
     /// - Returns: true if a context exists, false otherwise
     func hasContext() -> Bool
+}
+
+extension JSEngineProtocol {
+    /// Convenience overload that evaluates without IIFE wrapping.
+    @discardableResult func evalFromURL(_ url: URL) throws -> Any? {
+        try evalFromURL(url, wrapInIIFE: false)
+    }
 }

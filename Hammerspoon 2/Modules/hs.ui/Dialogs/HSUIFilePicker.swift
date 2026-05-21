@@ -232,11 +232,12 @@ import UniformTypeIdentifiers
             }
         }
 
-        // Invoke callback
+        // Invoke callback, then release it so the captured JSValue doesn't outlive
+        // the call. show() is one-shot — the callback won't be needed again.
         if let callback = selectionCallback {
+            selectionCallback = nil
             callback.call(withArguments: [result])
 
-            // Check for JavaScript errors
             if let context = callback.context,
                let exception = context.exception,
                !exception.isUndefined {

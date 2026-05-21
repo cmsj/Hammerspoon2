@@ -82,7 +82,7 @@ import JavaScriptCore
 @objc class HSTimer: NSObject, HSTimerAPI {
     @objc var typeName = "HSTimer"
     private var timer: Timer?
-    private let callback: JSValue
+    private var callback: JSCallback?
     private let continueOnError: Bool
 
     @objc let interval: TimeInterval
@@ -91,14 +91,20 @@ import JavaScriptCore
     init(interval: TimeInterval, repeats: Bool, callback: JSValue, continueOnError: Bool = false) {
         self.interval = interval
         self.repeats = repeats
-        self.callback = callback
         self.continueOnError = continueOnError
         super.init()
+        self.callback = JSCallback(value: callback, owner: self)
     }
 
     isolated deinit {
-        timer?.invalidate()
+        destroy()
         print("deinit of HSTimerObject: interval=\(interval), repeats=\(repeats)")
+    }
+
+    func destroy() {
+        stop()
+        callback?.detach(from: self)
+        callback = nil
     }
 
     @objc func start() {
@@ -114,7 +120,7 @@ import JavaScriptCore
                                      repeats: repeats)
 
         // Add to common run loop modes so timer fires during modal dialogs, etc.
-        if let timer = timer {
+        if let timer {
             RunLoop.current.add(timer, forMode: .common)
         }
     }
@@ -155,8 +161,7 @@ import JavaScriptCore
     }
 
     @objc private func timerDidFire() {
-        // Check if callback is actually a function
-        guard callback.isObject else {
+        guard let callbackValue = callback?.value, callbackValue.isObject else {
             AKError("hs.timer: callback is not a function")
             if !continueOnError {
                 stop()
@@ -164,19 +169,13 @@ import JavaScriptCore
             return
         }
 
-        // Call the callback
-        callback.call(withArguments: [])
+        callbackValue.call(withArguments: [])
 
-        // Check for JavaScript errors
-        if let context = callback.context,
+        if let context = callbackValue.context,
            let exception = context.exception,
            !exception.isUndefined {
             AKError("hs.timer: Error in callback: \(exception.toString() ?? "unknown error")")
-
-            // Clear the exception
             context.exception = nil
-
-            // Stop the timer if we're not supposed to continue on error
             if !continueOnError {
                 stop()
             }

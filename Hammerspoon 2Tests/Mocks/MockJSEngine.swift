@@ -12,7 +12,7 @@ import Foundation
 class MockJSEngine: JSEngineProtocol {
     // Track calls for verification
     var evalCalls: [(script: String, result: Any?)] = []
-    var evalFromURLCalls: [(url: URL, result: Any?)] = []
+    var evalFromURLCalls: [(url: URL, wrapInIIFE: Bool, result: Any?)] = []
     var resetContextCalls: Int = 0
     var hasContextValue: Bool = true
 
@@ -44,12 +44,12 @@ class MockJSEngine: JSEngineProtocol {
         return result
     }
 
-    @discardableResult func evalFromURL(_ url: URL) throws -> Any? {
+    @discardableResult func evalFromURL(_ url: URL, wrapInIIFE: Bool = false) throws -> Any? {
         if shouldThrowOnEvalFromURL {
             throw HammerspoonError(.vmCreation, msg: "Mock error: evalFromURL failed")
         }
         let result = evalFromURLReturnValue
-        evalFromURLCalls.append((url: url, result: result))
+        evalFromURLCalls.append((url: url, wrapInIIFE: wrapInIIFE, result: result))
         return result
     }
 

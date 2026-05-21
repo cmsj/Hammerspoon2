@@ -110,10 +110,9 @@ struct TaskTracker {
     var name = "hs.task"
     let engineID: UUID
 
-    // Keep weak references to tasks for shutdown cleanup
-    // Uses weak references to allow JavaScript garbage collection
-    // Running tasks stay alive via their Process termination handler closure
-    private var tasks = NSHashTable<HSTask>.weakObjects()
+    // Weak refs: running tasks stay alive via their Process termination handler closure;
+    // weak refs allow completed/GC'd tasks to be reclaimed while supporting shutdown().
+    private var tasks = HSWeakObjectSet<HSTask>()
 
     // Swift-retained storage for JS-defined functions
     @objc var runAsync: JSValue? = nil
@@ -134,12 +133,17 @@ struct TaskTracker {
     }
 
     func shutdown() {
-        // Terminate all running tasks that still exist
-        for task in tasks.allObjects.filter({ $0.isRunning }) {
+        for task in tasks.allObjects {
             taskTracker.unregister(task)
-            task._shutdown()
+            task.destroy()
         }
         tasks.removeAllObjects()
+        runAsync = nil
+        shell = nil
+        parallel = nil
+        sequence = nil
+        builder = nil
+        TaskBuilder = nil
     }
 
     isolated deinit {

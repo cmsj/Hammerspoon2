@@ -163,6 +163,7 @@ import JavaScriptCore
     func shutdown() {
         _removeWatcher()
         HSAudioDeviceManager.shared.stopAllWatchers()
+        _watcherEmitter = nil
     }
 
     isolated deinit {
