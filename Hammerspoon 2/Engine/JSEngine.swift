@@ -126,7 +126,7 @@ extension JSEngine: JSEngineProtocol {
         if wrapInIIFE {
             // Wrapping in an IIFE scopes top-level `const`/`let` bindings to the function
             // rather than the global lexical environment. Without this, every `const t = hs.timer.new(...)`
-            // creates a permanent GC root that prevents the JS proxy (and thus the Swift HSTimer) from
+            // creates a permanent GC root that prevents the JS proxy from
             // being collected until the entire JSContext is torn down — which only happens after reload
             // unwinds completely. With the IIFE, JSC's incremental GC can collect the proxy once the
             // function returns, allowing moduleRoot.shutdown() to be the sole cleanup path.

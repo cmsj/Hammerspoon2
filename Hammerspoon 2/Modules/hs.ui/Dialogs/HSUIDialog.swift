@@ -185,13 +185,15 @@ import SwiftUI
     @objc func close() {
         guard nsWindow != nil else { return } // Already closed
 
-        // Unregister from module
         module?.unregister(dialog: dialogID)
 
         nsWindow?.delegate = nil
         nsWindow?.orderOut(nil)
         nsWindow?.close()
         nsWindow = nil
+
+        // Release the callback so its captured JSValue doesn't hold the old JSContext alive.
+        buttonCallback = nil
     }
 
     // MARK: - NSWindowDelegate

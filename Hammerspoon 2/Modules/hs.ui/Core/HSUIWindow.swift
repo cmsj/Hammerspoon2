@@ -295,9 +295,16 @@ import SwiftUI
     }
 
     @objc func close() {
-        guard nsWindow != nil else { return } // Already closed
+        guard nsWindow != nil || rootElement != nil else { return } // Already closed
 
-        // Unregister from module
+        // Release the element tree. Each element may hold closures that captured JSValue
+        // callbacks (from onClick/onHover), which would otherwise hold the old JSContext
+        // alive until the entire context is torn down. Clearing these now breaks the
+        // closure → JSValue → JSContext chain so the context can be freed promptly.
+        rootElement = nil
+        currentElement = nil
+        containerStack.removeAll()
+
         module?.unregister(window: windowID)
 
         nsWindow?.delegate = nil
