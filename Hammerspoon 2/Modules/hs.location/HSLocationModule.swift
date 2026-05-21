@@ -168,7 +168,7 @@ import CoreLocation
     }
 
     func shutdown() {
-        for watcher in watchers.allObjects { watcher.stop() }
+        for watcher in watchers.allObjects { watcher.destroy() }
         watchers.removeAllObjects()
         locationManager.stopUpdatingLocation()
     }
@@ -237,7 +237,7 @@ import CoreLocation
     }
 
     func removeWatcher(_ watcher: HSLocationWatcher) {
-        watcher.stop()
+        watcher.destroy()
         watchers.remove(watcher)
     }
 

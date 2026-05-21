@@ -197,7 +197,7 @@ import JavaScriptCore
 
     func shutdown() {
         for timer in timers.allObjects {
-            timer.stop()
+            timer.destroy()
         }
         timers.removeAllObjects()
     }

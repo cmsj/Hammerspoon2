@@ -184,8 +184,7 @@ import dnssd
 
     func shutdown() {
         for search in searches.allObjects {
-            search.stopAllDiscoveredServices()
-            search.stop()
+            search.destroy()
         }
         searches.removeAllObjects()
         advertisedServices.values.forEach { $0.stop() }
@@ -206,7 +205,7 @@ import dnssd
     }
 
     @objc func removeSearch(_ search: HSBonjourSearch) {
-        search.stop()
+        search.destroy()
         searches.remove(search)
         AKTrace("HSBonjourModule: Removed search \(search.identifier)")
     }

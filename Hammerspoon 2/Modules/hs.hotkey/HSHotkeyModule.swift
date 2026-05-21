@@ -83,7 +83,7 @@ import Carbon
 
     func shutdown() {
         for hotkey in activeHotkeys.allObjects {
-            hotkey.disable()
+            hotkey.destroy()
         }
         activeHotkeys.removeAllObjects()
     }

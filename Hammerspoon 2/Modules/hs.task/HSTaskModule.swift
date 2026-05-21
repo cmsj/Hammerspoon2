@@ -133,10 +133,9 @@ struct TaskTracker {
     }
 
     func shutdown() {
-        // Terminate all running tasks that still exist
-        for task in tasks.allObjects.filter({ $0.isRunning }) {
+        for task in tasks.allObjects {
             taskTracker.unregister(task)
-            task._shutdown()
+            task.destroy()
         }
         tasks.removeAllObjects()
     }
