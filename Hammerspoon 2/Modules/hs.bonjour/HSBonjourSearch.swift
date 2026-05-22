@@ -163,6 +163,9 @@ import JavaScriptCore
     func destroy() {
         stopAllDiscoveredServices()
         _ = stop()
+        unsafe servicesBrowser.delegate = nil
+        unsafe domainsBrowser.delegate = nil
+        unsafe registrationBrowser.delegate = nil
     }
 
     // MARK: - HSBonjourSearchAPI
