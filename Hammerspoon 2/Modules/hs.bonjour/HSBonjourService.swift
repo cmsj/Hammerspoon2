@@ -266,19 +266,19 @@ import Darwin
 
     static func parseIPAddresses(from addressData: [Data]) -> [String] {
         return addressData.compactMap { data in
-            data.withUnsafeBytes { rawBuffer -> String? in
+            unsafe data.withUnsafeBytes { rawBuffer -> String? in
                 guard let base = rawBuffer.baseAddress else { return nil }
-                let family = Int32(base.assumingMemoryBound(to: sockaddr.self).pointee.sa_family)
+                let family = unsafe Int32(base.assumingMemoryBound(to: sockaddr.self).pointee.sa_family)
                 switch family {
                 case AF_INET:
-                    var addr = base.assumingMemoryBound(to: sockaddr_in.self).pointee.sin_addr
+                    var addr = unsafe base.assumingMemoryBound(to: sockaddr_in.self).pointee.sin_addr
                     var buffer = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
-                    guard inet_ntop(AF_INET, &addr, &buffer, socklen_t(INET_ADDRSTRLEN)) != nil else { return nil }
+                    guard unsafe inet_ntop(AF_INET, &addr, &buffer, socklen_t(INET_ADDRSTRLEN)) != nil else { return nil }
                     return String(cString: buffer)
                 case AF_INET6:
-                    var addr = base.assumingMemoryBound(to: sockaddr_in6.self).pointee.sin6_addr
+                    var addr = unsafe base.assumingMemoryBound(to: sockaddr_in6.self).pointee.sin6_addr
                     var buffer = [CChar](repeating: 0, count: Int(INET6_ADDRSTRLEN))
-                    guard inet_ntop(AF_INET6, &addr, &buffer, socklen_t(INET6_ADDRSTRLEN)) != nil else { return nil }
+                    guard unsafe inet_ntop(AF_INET6, &addr, &buffer, socklen_t(INET6_ADDRSTRLEN)) != nil else { return nil }
                     return String(cString: buffer)
                 default:
                     return nil
