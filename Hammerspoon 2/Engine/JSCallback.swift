@@ -58,6 +58,13 @@ final class JSCallback {
     /// because JS dropped all references to the owner.
     var value: JSValue? { managed?.value }
 
+    /// Call the callback JavaScript function
+    /// - Parameter arguments: An array of arguments to pass to the JavaScript function
+    /// - Returns: Whatever the JavaScript callback returns
+    func call(withArguments arguments: [Any]!) -> JSValue! {
+        return value?.call(withArguments: arguments)
+    }
+
     /// Removes the VM-managed reference, allowing both the callback and owner to be collected.
     ///
     /// Call this before the owner is deallocated. Pass the owner explicitly — do not rely

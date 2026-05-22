@@ -293,37 +293,47 @@ import dnssd
 
 @MainActor
 private class AdvertisedService: NSObject, NetServiceDelegate {
-    private let service: NetService
-    private var callback: JSValue?
+    private var service: NetService?
+    private var callback: JSCallback?
 
     init(name: String, type: String, port: Int32, domain: String, callback: JSValue?) {
-        self.service = NetService(domain: domain, type: type, name: name, port: port)
-        self.callback = callback
         super.init()
-        unsafe self.service.delegate = self
+
+        self.service = NetService(domain: domain, type: type, name: name, port: port)
+        unsafe self.service?.delegate = self
+
+        if let callback {
+            self.callback = JSCallback(value: callback, owner: self)
+        }
     }
 
     func publish() {
-        service.publish()
+        service?.publish()
     }
 
     func stop() {
-        service.stop()
+        service?.stop()
+        unsafe service?.delegate = nil
+        self.callback?.detach(from: self)
         callback = nil
+        service = nil
     }
 
     func netServiceDidPublish(_ sender: NetService) {
+        guard let service else { return }
         AKTrace("hs.bonjour: Published '\(service.name)'")
         _ = callback?.call(withArguments: ["published"])
     }
 
     func netService(_ sender: NetService, didNotPublish errorDict: [String: NSNumber]) {
+        guard let service else { return }
         let msg = HSBonjourService.errorMessage(from: errorDict)
         AKError("hs.bonjour: Failed to publish '\(service.name)': \(msg)")
         _ = callback?.call(withArguments: ["error", msg])
     }
 
     func netServiceDidStop(_ sender: NetService) {
+        guard let service else { return }
         AKTrace("hs.bonjour: Stopped '\(service.name)'")
         _ = callback?.call(withArguments: ["stopped"])
         callback = nil
