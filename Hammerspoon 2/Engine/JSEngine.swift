@@ -86,12 +86,23 @@ class JSEngine {
         // require() isn't even an object, so we can just nil it out
         self["require"] = nil
 
-        // Remove global properties from the lexical environment so JSC's GC can collect
-        // any remaining JS proxies for Swift objects.
         if let context = context {
+            // Remove global properties from the lexical environment.
             context.globalObject.deleteProperty("hs")
             context.globalObject.deleteProperty("console")
             context.globalObject.deleteProperty("require")
+
+            // Force a synchronous full GC cycle (mark → sweep → finalize) before
+            // tearing down the VM. JSC's concurrent GC defers ObjC bridge finalizers
+            // (CFRelease) to a background sweep thread; if VM teardown races with that
+            // thread, the finalizer never runs and Swift objects leak permanently.
+            // After shutdown() above, all managed references are removed and all JS
+            // variables referencing module proxies are cleared, so every proxy is
+            // now GC-unreachable. The synchronous GC collects them and calls each
+            // proxy's destructor (CFRelease) before this line returns.
+            // Do NOT use JSGarbageCollect here — it schedules an asynchronous
+            // collection and returns immediately, re-introducing the same race.
+            unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
         }
 
         context = nil

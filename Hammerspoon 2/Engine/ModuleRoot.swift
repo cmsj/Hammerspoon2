@@ -89,7 +89,9 @@ import JavaScriptCoreExtras
     }
 
     @objc func collectGarbage() {
-        unsafe JavaScriptCore.JSGarbageCollect(JSContext.current().jsGlobalContextRef)
+        // For now we're using a private API synchronous garbage collector
+//        unsafe JavaScriptCore.JSGarbageCollect(JSContext.current().jsGlobalContextRef)
+        unsafe JSSynchronousGarbageCollectForDebugging(JSContext.current().jsGlobalContextRef)
     }
 
     // Modules
