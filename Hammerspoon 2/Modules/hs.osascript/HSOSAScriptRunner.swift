@@ -33,8 +33,10 @@ class HSOSAScriptRunner {
 #if DEBUG
         AKWarning("OSASCRIPT XPC SERVICE RUNNING WITHOUT PEER REQUIREMENTS. This is a serious security risk, do not use this build for production.")
 #else
-        AKTrace("Enforcing peer requirement for XPC connections.")
-        session.setPeerRequirement(.isFromSameTeam())
+        if #available(macOS 26.0, *) {
+            AKTrace("Enforcing peer requirement for XPC connections.")
+            session.setPeerRequirement(.isFromSameTeam())
+        }
 #endif
         try session.activate()
 
@@ -89,8 +91,10 @@ class HSOSAScriptRunner {
 #if DEBUG
         AKWarning("OSASCRIPT XPC SERVICE RUNNING WITHOUT PEER REQUIREMENTS. This is a serious security risk, do not use this build for production.")
 #else
-        AKTrace("Enforcing peer requirement for XPC connections.")
-        session.setPeerRequirement(.isFromSameTeam())
+        if #available(macOS 26.0, *) {
+            AKTrace("Enforcing peer requirement for XPC connections.")
+            session.setPeerRequirement(.isFromSameTeam())
+        }
 #endif
         try session.activate()
         defer { session.cancel(reason: "OSAScriptRunner.runSync completed") }

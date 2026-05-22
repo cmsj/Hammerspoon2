@@ -82,7 +82,12 @@ let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest
     xpcListener = try XPCListener(service: serviceName, incomingSessionHandler: xpcSessionHandler)
 #else
     print("Enforcing XPC peer requirements.")
+if #available(macOS 26.0, *) {
     xpcListener = try XPCListener(service: serviceName, requirement: .isFromSameTeam(), incomingSessionHandler: xpcSessionHandler)
+} else {
+    // Fallback on earlier versions
+    xpcListener = try XPCListener(service: serviceName, incomingSessionHandler: xpcSessionHandler)
+}
 #endif
 
 dispatchMain()
