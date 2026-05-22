@@ -45,7 +45,7 @@ struct Hammerspoon_2App: App {
             let managerManager = ManagerManager.shared
 
             Button("Reload Config") {
-                try? managerManager.boot()
+                try? managerManager.reload()
             }
 
             Divider()

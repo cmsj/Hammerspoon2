@@ -35,6 +35,12 @@ struct SettingsAdvancedView: View {
                                 updaterController.updater.automaticallyChecksForUpdates = newValue
                             }
                     }
+                    GridRow {
+                        Text("Relaunch app on config reload:")
+                            .gridColumnAlignment(.trailing)
+                        Toggle("Relaunch app on config reload", isOn: Bindable(settingsManager).relaunchOnReload)
+                            .labelsHidden()
+                    }
                 }
                 Spacer()
             }

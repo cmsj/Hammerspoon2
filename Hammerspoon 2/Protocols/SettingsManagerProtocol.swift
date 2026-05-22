@@ -16,6 +16,10 @@ protocol SettingsManagerProtocol {
     /// The maximum number of console history entries to retain
     var consoleHistoryLength: Int { get set }
 
+    /// Whether `hs.reload()` and the Reload Config menu item relaunch the app
+    /// process rather than resetting only the JavaScript context
+    var relaunchOnReload: Bool { get set }
+
     /// Resets all settings to their default values
     func resetToDefaults()
 }

@@ -82,7 +82,7 @@ import JavaScriptCoreExtras
     // Core
     @objc func reload() {
         do {
-            try ManagerManager.shared.boot()
+            try ManagerManager.shared.reload()
         } catch {
             AKError("Unable to reload config: \(error.localizedDescription)")
         }

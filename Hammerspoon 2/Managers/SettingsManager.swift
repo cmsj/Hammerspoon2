@@ -17,6 +17,7 @@ final class SettingsManager {
     enum Keys: String, CaseIterable {
         case configLocation
         case consoleHistoryLength
+        case relaunchOnReload
 
         var id: String { "\(self)" }
 
@@ -26,6 +27,8 @@ final class SettingsManager {
                 return URL(filePath: NSString("~/.config/Hammerspoon2/init.js").expandingTildeInPath)
             case .consoleHistoryLength:
                 return 100
+            case .relaunchOnReload:
+                return false
             }
         }
     }
@@ -67,8 +70,22 @@ extension SettingsManager: SettingsManagerProtocol {
         }
     }
 
+    @ObservationIgnored
+    var relaunchOnReload: Bool {
+        get {
+            access(keyPath: \.relaunchOnReload)
+            return UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
+        }
+        set {
+            withMutation(keyPath: \.relaunchOnReload) {
+                UserDefaults.standard.set(newValue, forKey: Keys.relaunchOnReload.rawValue)
+            }
+        }
+    }
+
     func resetToDefaults() {
         UserDefaults.standard.removeObject(forKey: Keys.configLocation.rawValue)
         UserDefaults.standard.removeObject(forKey: Keys.consoleHistoryLength.rawValue)
+        UserDefaults.standard.removeObject(forKey: Keys.relaunchOnReload.rawValue)
     }
 }
