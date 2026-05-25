@@ -76,6 +76,10 @@ class PermissionsManager: NSObject {
     // The cache is populated on first check and after every request.
     private var cachedNotificationState: PermissionsState = .unknown
 
+    isolated deinit {
+        locationManager?.delegate = nil
+    }
+
     private func refreshNotificationState() {
         UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
             // Extract the Sendable enum value before crossing into the main actor task.
