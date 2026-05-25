@@ -172,7 +172,7 @@ import JavaScriptCore
     var name = "hs.notify"
     let engineID: UUID
 
-    private var callbacks: [String: JSValue] = [:]
+    private var callbacks: [String: JSCallback] = [:]
 
     // Private userInfo key used to carry the category ID through to didReceive for pruning.
     fileprivate static let categoryIdKey = "_hs.notify.categoryId"
@@ -185,7 +185,11 @@ import JavaScriptCore
     }
 
     func shutdown() {
+        for key in callbacks.keys {
+            callbacks[key]?.detach(from: self)
+        }
         callbacks.removeAll()
+        UNUserNotificationCenter.current().delegate = nil
     }
 
     isolated deinit {
@@ -196,7 +200,7 @@ import JavaScriptCore
     // MARK: - Internal callback registration
 
     func storeCallback(identifier: String, callback: JSValue) {
-        callbacks[identifier] = callback
+        callbacks[identifier] = JSCallback(value: callback, owner: self)
     }
 
     // MARK: - HSNotifyModuleAPI
@@ -209,7 +213,7 @@ import JavaScriptCore
 
         let id = UUID().uuidString
         if callback.isObject {
-            callbacks[id] = callback
+            callbacks[id] = JSCallback(value: callback, owner: self)
         }
 
         let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
@@ -416,7 +420,8 @@ extension HSNotifyModule: UNUserNotificationCenterDelegate {
                     "notificationId":   notifId,
                 ]
                 if let text = userText { responseObj["userText"] = text }
-                cb.call(withArguments: [responseObj])
+                _ = cb.call(withArguments: [responseObj])
+                cb.detach(from: self)
             }
 
             // Prune the per-notification category now that it has served its purpose.

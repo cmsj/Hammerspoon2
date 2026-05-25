@@ -150,8 +150,8 @@ import Darwin
     @objc let identifier = UUID().uuidString
 
     let service: NetService
-    private var resolveCallback: JSValue?
-    private var monitorCallback: JSValue?
+    private var resolveCallback: JSCallback?
+    private var monitorCallback: JSCallback?
 
     init(netService: NetService) {
         self.service = netService
@@ -187,14 +187,14 @@ import Darwin
 
     @objc @discardableResult func resolve(_ timeout: Double, _ callback: JSValue) -> HSBonjourService {
         service.stop()
-        resolveCallback = callback.isObject ? callback : nil
+        resolveCallback = callback.isObject ? JSCallback(value: callback, owner: self) : nil
         service.resolve(withTimeout: timeout)
         AKTrace("HSBonjourService(\(identifier)).resolve(): Resolving '\(name)' (timeout: \(timeout)s)")
         return self
     }
 
     @objc @discardableResult func monitor(_ callback: JSValue) -> HSBonjourService {
-        monitorCallback = callback.isObject ? callback : nil
+        monitorCallback = callback.isObject ? JSCallback(value: callback, owner: self) : nil
         service.startMonitoring()
         AKTrace("HSBonjourService(\(identifier)).monitor(): Started TXT monitoring for '\(name)'")
         return self
@@ -216,6 +216,8 @@ import Darwin
     // MARK: - Internal helpers for module shutdown
 
     func clearCallbacks() {
+        resolveCallback?.detach(from: self)
+        monitorCallback?.detach(from: self)
         resolveCallback = nil
         monitorCallback = nil
     }

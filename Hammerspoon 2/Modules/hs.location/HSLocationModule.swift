@@ -171,6 +171,7 @@ import CoreLocation
         for watcher in watchers.allObjects { watcher.destroy() }
         watchers.removeAllObjects()
         locationManager.stopUpdatingLocation()
+        locationManager.delegate = nil
     }
 
     isolated deinit {

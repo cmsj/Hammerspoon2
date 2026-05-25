@@ -116,6 +116,7 @@ import CoreLocation
         _ = stop()
         callback?.detach(from: self)
         callback = nil
+        manager.delegate = nil
     }
 
     @objc @discardableResult func start() -> HSLocationWatcher {
