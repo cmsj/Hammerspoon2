@@ -1149,7 +1149,7 @@ declare class HSAXElement {
 
 /**
  * Discover and publish Bonjour (mDNS / Zeroconf) network services.
-Use `newSearch()` to search the network for services advertised by other
+Use `createSearch()` to search the network for services advertised by other
 devices, and `advertise()` to advertise your own. The `networkServices()`
 convenience function returns a snapshot of all service types currently
 active on the local network.
@@ -1159,7 +1159,7 @@ e.g. `hs.bonjour.serviceTypes.ssh` → `"_ssh._tcp."`.
 ## Searching for a service
 ```js
 // Find all SSH services on the local network and resolve each one
-const search = hs.bonjour.newSearch()
+const search = hs.bonjour.createSearch()
 search.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {
     if (event === 'serviceFound') {
         svc.resolve(5, ev => {
@@ -1191,11 +1191,11 @@ Call one of the `find…` methods on the returned search to start
 discovering. Remove it with `removeSearch()` when finished.
      * @returns a new `HSBonjourSearch`
      */
-    function newSearch(): HSBonjourSearch;
+    function createSearch(): HSBonjourSearch;
 
     /**
      * Stops and removes a previously created search.
-     * @param search the search returned by `newSearch()`
+     * @param search the search returned by `createSearch()`
      */
     function removeSearch(search: HSBonjourSearch): void;
 
@@ -2254,7 +2254,7 @@ hs.notify.show("Build complete", "Click to view the log.", (response) => {
 ```
 ## Rich notification
 ```js
-const n = hs.notify.new({
+const n = hs.notify.create({
     title:    "New message",
     subtitle: "From Alice",
     body:     "Are you free tonight?",
@@ -2280,9 +2280,9 @@ n.withdraw()
 |----------|------|-------------|
 | `actionIdentifier` | string | `"DEFAULT"` when the user tapped the notification body; `"DISMISS"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |
 | `userText` | string? | Text entered in a `textInput` action; only present when applicable |
-| `userInfo` | object | The `userInfo` object originally passed to `new()`, if any |
+| `userInfo` | object | The `userInfo` object originally passed to `create()`, if any |
 | `notificationId` | string | The notification's unique identifier |
-## Options for `new()`
+## Options for `create()`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `title` | string | *(required)* | The bold heading line |
@@ -2297,7 +2297,7 @@ n.withdraw()
 | `actions` | array | — | Action buttons (see below) |
 | `callback` | function | — | Invoked when the user interacts with the notification |
 ## Triggers
-Pass a `trigger` object in `new()`'s options to schedule the notification instead of delivering it
+Pass a `trigger` object in `create()`'s options to schedule the notification instead of delivering it
 ```js
 trigger: { type: "timeInterval", interval: 300 }
 ```
@@ -2336,7 +2336,7 @@ Receives a response object (see module docs for shape).
      * @param options A JavaScript object — see module documentation for supported keys.
      * @returns An `HSNotification` object. Call `.send()` on it to deliver the notification.
      */
-    function new(options: JSValue): HSNotification | undefined;
+    function create(options: JSValue): HSNotification | undefined;
 
     /**
      * Remove all delivered Hammerspoon notifications from Notification Center.
@@ -2372,6 +2372,116 @@ declare class HSNotification {
 Use it to correlate with system notification APIs if needed.
      */
     identifier: string;
+
+}
+
+/**
+ * Recognize text in images using Apple's Vision framework.
+`hs.ocr` provides access to on-device text recognition without requiring
+network access or any third-party dependencies. Pass a file path to
+`recognizeText()` and receive back an `HSOCRResult` containing the full
+recognized text and individual per-region observations with confidence
+scores and normalized bounding boxes.
+ */
+declare namespace hs.ocr {
+    /**
+     * Recognize text in the image at the given file path.
+Returns a Promise that resolves with an `HSOCRResult` containing all
+recognized text and per-region observations. The image must exist on
+disk; URLs and data buffers are not supported.
+Recognition is performed on a background thread; the main thread is
+not blocked during the operation.
+`"accurate"` uses a larger neural network for better results;
+`"fast"` trades accuracy for speed.
+Observations whose `confidence` is below this threshold are excluded
+from `result.observations` (and therefore from `result.text`).
+Hints Vision toward specific languages. Use `supportedLanguages()` to
+enumerate the available codes for the current device.
+When `true`, Vision selects recognition languages automatically.
+Overrides `languages` when set.
+     * @param path Absolute path to the image file.
+     * @param options Optional configuration object (see description).
+     * @returns Resolves with the recognition result.
+     */
+    function recognizeText(path: string, options: JSValue | undefined): Promise<HSOCRResult>;
+
+    /**
+     * Returns the BCP-47 language codes supported by the Vision text recognizer
+on this device.
+The set of languages varies between macOS versions and hardware. Call
+this at runtime to discover which codes are valid for the `languages`
+option passed to `recognizeText()`.
+     * @returns An array of BCP-47 language code strings (e.g. `["en-US", "fr-FR"]`).
+     */
+    function supportedLanguages(): string[];
+
+}
+
+/**
+ * A single region of text recognized in an image.
+Instances are delivered inside the `observations` array of an `HSOCRResult`.
+Each observation represents a discrete text run found in the source image,
+along with a confidence score and a normalized bounding box.
+`(0, 0)` is the top-left corner of the image and `(1, 1)` is the bottom-right.
+This matches the convention used by most image-processing tools and differs
+from Vision's internal bottom-left-origin system (the conversion is automatic).
+ */
+declare class HSOCRObservation {
+    /**
+     * The Swift type name, for JavaScript introspection.
+     */
+    typeName: string;
+
+    /**
+     * The recognized text string for this observation.
+     */
+    text: string;
+
+    /**
+     * Recognition confidence in the range `0.0` (uncertain) to `1.0` (certain).
+Use `minimumConfidence` in the options passed to `recognizeText()` to
+pre-filter observations below a threshold rather than filtering here.
+     */
+    confidence: number;
+
+    /**
+     * Normalized bounding box of this observation in the source image.
+An object with keys `x`, `y`, `width`, and `height`, all in the
+range 0–1 with **top-left origin** (`(0, 0)` = top-left corner,
+`(1, 1)` = bottom-right corner).
+     */
+    bounds: Record<string, number>;
+
+}
+
+/**
+ * The result of a text recognition operation on an image.
+An `HSOCRResult` is returned by `hs.ocr.recognizeText()` and bundles the
+full recognized text together with an array of per-region observations,
+each carrying its own confidence score and bounding box.
+ */
+declare class HSOCRResult {
+    /**
+     * The Swift type name, for JavaScript introspection.
+     */
+    typeName: string;
+
+    /**
+     * The full recognized text from the image, with each observation's text
+joined by newlines in the order Vision returned them.
+Use this when you only need the raw text and don't care about bounding
+boxes or per-region confidence scores.
+     */
+    text: string;
+
+    /**
+     * The individual text observations that make up this result.
+Each entry in the array is an `HSOCRObservation` with its own `text`,
+`confidence`, and `bounds` properties. Observations are returned in the
+order Vision produced them (typically top-to-bottom, left-to-right, but
+this is image-dependent).
+     */
+    observations: HSOCRObservation[];
 
 }
 
@@ -3205,7 +3315,7 @@ declare namespace hs.task {
      * @param streamingCallback Optional callback function called when the task produces output
      * @returns A task object. Call start() to begin execution.
      */
-    function new(launchPath: string, arguments: string[], completionCallback: JSValue | undefined, environment: JSValue | undefined, streamingCallback: JSValue | undefined): HSTask;
+    function create(launchPath: string, arguments: string[], completionCallback: JSValue | undefined, environment: JSValue | undefined, streamingCallback: JSValue | undefined): HSTask;
 
     /**
      * Create and run a task asynchronously
@@ -3369,15 +3479,6 @@ declare namespace hs.timer {
      * @returns A timer object. Call start() to begin the timer.
      */
     function create(interval: number, callback: JSValue, continueOnError: boolean): HSTimer;
-
-    /**
-     * Create a new timer (alias for create())
-     * @param interval The interval in seconds at which the timer should fire
-     * @param callback A JavaScript function to call when the timer fires
-     * @param continueOnError If true, the timer will continue running even if the callback throws an error
-     * @returns A timer object. Call start() to begin the timer.
-     */
-    function new(interval: number, callback: JSValue, continueOnError: boolean): HSTimer;
 
     /**
      * Create and start a one-shot timer

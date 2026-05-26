@@ -396,6 +396,8 @@ extension JSTestHarness {
                 loadModule(HSPasteboardModule.self, as: name)
             case "notify":
                 loadModule(HSNotifyModule.self, as: name)
+            case "ocr":
+                loadModule(HSOCRModule.self, as: name)
             case "bonjour":
                 loadModule(HSBonjourModule.self, as: name)
             case "camera":

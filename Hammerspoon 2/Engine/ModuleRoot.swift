@@ -31,6 +31,7 @@ import JavaScriptCoreExtras
     @objc var location: HSLocationModule { get }
     @objc var permissions: HSPermissionsModule { get }
     @objc var notify: HSNotifyModule { get }
+    @objc var ocr: HSOCRModule { get }
     @objc var osascript: HSOSAScriptModule { get }
     @objc var pasteboard: HSPasteboardModule { get }
     @objc var screen: HSScreenModule { get }
@@ -107,6 +108,7 @@ import JavaScriptCoreExtras
     @objc var hotkey: HSHotkeyModule { get { getOrCreate(name: "hotkey", type: HSHotkeyModule.self)}}
     @objc var location: HSLocationModule { get { getOrCreate(name: "location", type: HSLocationModule.self)}}
     @objc var notify: HSNotifyModule { get { getOrCreate(name: "notify", type: HSNotifyModule.self)}}
+    @objc var ocr: HSOCRModule { get { getOrCreate(name: "ocr", type: HSOCRModule.self)}}
     @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
     @objc var osascript: HSOSAScriptModule { get { getOrCreate(name: "osascript", type: HSOSAScriptModule.self)}}
     @objc var pasteboard: HSPasteboardModule { get { getOrCreate(name: "pasteboard", type: HSPasteboardModule.self)}}

@@ -2281,10 +2281,10 @@
       "name": "hs.bonjour",
       "methods": [
         {
-          "name": "newSearch",
-          "signature": "func newSearch() -> HSBonjourSearch",
+          "name": "createSearch",
+          "signature": "func createSearch() -> HSBonjourSearch",
           "isStatic": false,
-          "rawDocumentation": "Creates a new Bonjour search for discovering services or domains.\n\nCall one of the `find…` methods on the returned search to start\ndiscovering. Remove it with `removeSearch()` when finished.\n- Returns: a new `HSBonjourSearch`\n- Example:\n```js\nconst search = hs.bonjour.newSearch()\nsearch.findServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
+          "rawDocumentation": "Creates a new Bonjour search for discovering services or domains.\n\nCall one of the `find…` methods on the returned search to start\ndiscovering. Remove it with `removeSearch()` when finished.\n- Returns: a new `HSBonjourSearch`\n- Example:\n```js\nconst search = hs.bonjour.createSearch()\nsearch.findServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
           "description": "Creates a new Bonjour search for discovering services or domains.\nCall one of the `find…` methods on the returned search to start\ndiscovering. Remove it with `removeSearch()` when finished.",
           "params": [],
           "returns": {
@@ -2294,7 +2294,7 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const search = hs.bonjour.newSearch()\nsearch.findServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})"
+              "code": "const search = hs.bonjour.createSearch()\nsearch.findServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})"
             }
           ],
           "source": "swift",
@@ -2305,20 +2305,20 @@
           "name": "removeSearch",
           "signature": "func removeSearch(_ search: HSBonjourSearch)",
           "isStatic": false,
-          "rawDocumentation": "Stops and removes a previously created search.\n- Parameter search: the search returned by `newSearch()`\n- Example:\n```js\nconst s = hs.bonjour.newSearch()\n// ... use search ...\nhs.bonjour.removeSearch(s)\n```",
+          "rawDocumentation": "Stops and removes a previously created search.\n- Parameter search: the search returned by `createSearch()`\n- Example:\n```js\nconst s = hs.bonjour.createSearch()\n// ... use search ...\nhs.bonjour.removeSearch(s)\n```",
           "description": "Stops and removes a previously created search.",
           "params": [
             {
               "name": "search",
               "type": "HSBonjourSearch",
-              "description": "the search returned by `newSearch()`"
+              "description": "the search returned by `createSearch()`"
             }
           ],
           "returns": null,
           "examples": [
             {
               "lang": "js",
-              "code": "const s = hs.bonjour.newSearch()\n// ... use search ...\nhs.bonjour.removeSearch(s)"
+              "code": "const s = hs.bonjour.createSearch()\n// ... use search ...\nhs.bonjour.removeSearch(s)"
             }
           ],
           "source": "swift",
@@ -2844,8 +2844,8 @@
           ]
         }
       ],
-      "description": "Discover and publish Bonjour (mDNS / Zeroconf) network services.\nUse `newSearch()` to search the network for services advertised by other\ndevices, and `advertise()` to advertise your own. The `networkServices()`\nconvenience function returns a snapshot of all service types currently\nactive on the local network.\n## Common service type strings\nThe `hs.bonjour.serviceTypes` object maps short names to their mDNS strings,\ne.g. `hs.bonjour.serviceTypes.ssh` → `\"_ssh._tcp.\"`.\n## Searching for a service\n```js\n// Find all SSH services on the local network and resolve each one\nconst search = hs.bonjour.newSearch()\nsearch.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {\n    if (event === 'serviceFound') {\n        svc.resolve(5, ev => {\n            if (ev === 'resolved') console.log(svc.hostname + ':' + svc.port)\n        })\n    }\n})\n```\n## Advertising a service\n```js\nhs.bonjour.advertise('My Web Server', '_http._tcp.', 8080, ev => {\n    if (ev === 'published') console.log('Now advertising!')\n    else if (ev === 'error') console.error('Advertising failed')\n})\n// Later, to stop:\nhs.bonjour.stopAdvertising('My Web Server', '_http._tcp.')\n```\n## Listing all active service types\n```js\nhs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types: ' + types.join(', '))\n})\n```",
-      "rawDocumentation": "Discover and publish Bonjour (mDNS / Zeroconf) network services.\n\nUse `newSearch()` to search the network for services advertised by other\ndevices, and `advertise()` to advertise your own. The `networkServices()`\nconvenience function returns a snapshot of all service types currently\nactive on the local network.\n\n## Common service type strings\n\nThe `hs.bonjour.serviceTypes` object maps short names to their mDNS strings,\ne.g. `hs.bonjour.serviceTypes.ssh` → `\"_ssh._tcp.\"`.\n\n## Searching for a service\n\n```js\n// Find all SSH services on the local network and resolve each one\nconst search = hs.bonjour.newSearch()\nsearch.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {\n    if (event === 'serviceFound') {\n        svc.resolve(5, ev => {\n            if (ev === 'resolved') console.log(svc.hostname + ':' + svc.port)\n        })\n    }\n})\n```\n\n## Advertising a service\n\n```js\nhs.bonjour.advertise('My Web Server', '_http._tcp.', 8080, ev => {\n    if (ev === 'published') console.log('Now advertising!')\n    else if (ev === 'error') console.error('Advertising failed')\n})\n// Later, to stop:\nhs.bonjour.stopAdvertising('My Web Server', '_http._tcp.')\n```\n\n## Listing all active service types\n\n```js\nhs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types: ' + types.join(', '))\n})\n```"
+      "description": "Discover and publish Bonjour (mDNS / Zeroconf) network services.\nUse `createSearch()` to search the network for services advertised by other\ndevices, and `advertise()` to advertise your own. The `networkServices()`\nconvenience function returns a snapshot of all service types currently\nactive on the local network.\n## Common service type strings\nThe `hs.bonjour.serviceTypes` object maps short names to their mDNS strings,\ne.g. `hs.bonjour.serviceTypes.ssh` → `\"_ssh._tcp.\"`.\n## Searching for a service\n```js\n// Find all SSH services on the local network and resolve each one\nconst search = hs.bonjour.createSearch()\nsearch.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {\n    if (event === 'serviceFound') {\n        svc.resolve(5, ev => {\n            if (ev === 'resolved') console.log(svc.hostname + ':' + svc.port)\n        })\n    }\n})\n```\n## Advertising a service\n```js\nhs.bonjour.advertise('My Web Server', '_http._tcp.', 8080, ev => {\n    if (ev === 'published') console.log('Now advertising!')\n    else if (ev === 'error') console.error('Advertising failed')\n})\n// Later, to stop:\nhs.bonjour.stopAdvertising('My Web Server', '_http._tcp.')\n```\n## Listing all active service types\n```js\nhs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types: ' + types.join(', '))\n})\n```",
+      "rawDocumentation": "Discover and publish Bonjour (mDNS / Zeroconf) network services.\n\nUse `createSearch()` to search the network for services advertised by other\ndevices, and `advertise()` to advertise your own. The `networkServices()`\nconvenience function returns a snapshot of all service types currently\nactive on the local network.\n\n## Common service type strings\n\nThe `hs.bonjour.serviceTypes` object maps short names to their mDNS strings,\ne.g. `hs.bonjour.serviceTypes.ssh` → `\"_ssh._tcp.\"`.\n\n## Searching for a service\n\n```js\n// Find all SSH services on the local network and resolve each one\nconst search = hs.bonjour.createSearch()\nsearch.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {\n    if (event === 'serviceFound') {\n        svc.resolve(5, ev => {\n            if (ev === 'resolved') console.log(svc.hostname + ':' + svc.port)\n        })\n    }\n})\n```\n\n## Advertising a service\n\n```js\nhs.bonjour.advertise('My Web Server', '_http._tcp.', 8080, ev => {\n    if (ev === 'published') console.log('Now advertising!')\n    else if (ev === 'error') console.error('Advertising failed')\n})\n// Later, to stop:\nhs.bonjour.stopAdvertising('My Web Server', '_http._tcp.')\n```\n\n## Listing all active service types\n\n```js\nhs.bonjour.networkServices(5).then(types => {\n    console.log('Active service types: ' + types.join(', '))\n})\n```"
     },
     {
       "name": "hs.camera",
@@ -5275,10 +5275,10 @@
           "lineNumber": 135
         },
         {
-          "name": "new",
-          "signature": "func new(_ options: JSValue) -> HSNotification?",
+          "name": "create",
+          "signature": "func create(_ options: JSValue) -> HSNotification?",
           "isStatic": false,
-          "rawDocumentation": "Create a richly configured notification without sending it yet.\n\n- Parameter options: A JavaScript object — see module documentation for supported keys.\n- Returns: An `HSNotification` object. Call `.send()` on it to deliver the notification.\n- Example:\n```js\nconst n = hs.notify.new({ title: \"Hello\", body: \"World\" })\nn.send()\n```",
+          "rawDocumentation": "Create a richly configured notification without sending it yet.\n\n- Parameter options: A JavaScript object — see module documentation for supported keys.\n- Returns: An `HSNotification` object. Call `.send()` on it to deliver the notification.\n- Example:\n```js\nconst n = hs.notify.create({ title: \"Hello\", body: \"World\" })\nn.send()\n```",
           "description": "Create a richly configured notification without sending it yet.",
           "params": [
             {
@@ -5294,7 +5294,7 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const n = hs.notify.new({ title: \"Hello\", body: \"World\" })\nn.send()"
+              "code": "const n = hs.notify.create({ title: \"Hello\", body: \"World\" })\nn.send()"
             }
           ],
           "source": "swift",
@@ -5405,8 +5405,199 @@
           ]
         }
       ],
-      "description": "Module for creating and displaying macOS system notifications.\nmacOS notifications require user permission before they will appear. Request it once\n(typically at startup) via `hs.permissions.requestNotifications()` and it will be\n```js\nhs.permissions.requestNotifications().then(granted => {\n    if (granted) hs.notify.show(\"Hammerspoon\", \"Notifications are enabled!\")\n})\n```\n## Quick notification\n```js\n// Fire and forget\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n\n// With a callback invoked when the user interacts\nhs.notify.show(\"Build complete\", \"Click to view the log.\", (response) => {\n    console.log(\"User tapped:\", response.actionIdentifier)\n})\n```\n## Rich notification\n```js\nconst n = hs.notify.new({\n    title:    \"New message\",\n    subtitle: \"From Alice\",\n    body:     \"Are you free tonight?\",\n    sound:    true,\n    threadIdentifier: \"messages-alice\",\n    actions: [\n        { identifier: \"REPLY\", title: \"Reply\", textInput: true,\n          textInputButtonTitle: \"Send\", textInputPlaceholder: \"Type a reply…\" },\n        { identifier: \"DISMISS\", title: \"Dismiss\", destructive: true }\n    ],\n    callback: (response) => {\n        if (response.actionIdentifier === \"REPLY\") {\n            console.log(\"Reply text:\", response.userText)\n        }\n    }\n})\nn.send()\n// Later, if needed:\nn.withdraw()\n```\n## Callback response object\n| Property | Type | Description |\n|----------|------|-------------|\n| `actionIdentifier` | string | `\"DEFAULT\"` when the user tapped the notification body; `\"DISMISS\"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |\n| `userText` | string? | Text entered in a `textInput` action; only present when applicable |\n| `userInfo` | object | The `userInfo` object originally passed to `new()`, if any |\n| `notificationId` | string | The notification's unique identifier |\n## Options for `new()`\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `title` | string | *(required)* | The bold heading line |\n| `subtitle` | string | — | A second line shown beneath the title |\n| `body` | string | — | The main message body |\n| `sound` | boolean \\| string | `true` | `true` = default sound, `false` = no sound, string = named `.aiff` file |\n| `badge` | number | — | Value to show on the app icon badge |\n| `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |\n| `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |\n| `interruptionLevel` | string | `\"active\"` | `\"passive\"`, `\"active\"`, or `\"timeSensitive\"` — controls Focus/DND behaviour (macOS 12+) |\n| `trigger` | object | — | When to deliver the notification (see below). Omit for immediate delivery. |\n| `actions` | array | — | Action buttons (see below) |\n| `callback` | function | — | Invoked when the user interacts with the notification |\n## Triggers\nPass a `trigger` object in `new()`'s options to schedule the notification instead of delivering it\n```js\ntrigger: { type: \"timeInterval\", interval: 300 }\n```\n**Calendar** — deliver at a specific date/time. Provide either a JS `Date` object or individual\n```js\n// At a specific moment\ntrigger: { type: \"calendar\", date: new Date(\"2026-06-01T09:00:00\") }\n\n// At 09:00 on the next day that matches (e.g. next Monday, weekday 2)\ntrigger: { type: \"calendar\", weekday: 2, hour: 9, minute: 0 }\n```\nSupported component keys: `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`.\n## Action objects\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `identifier` | string | *(required)* | Unique identifier passed to the callback |\n| `title` | string | *(required)* | Button label |\n| `destructive` | boolean | `false` | Renders the title in a destructive (red) style |\n| `foreground` | boolean | `false` | Brings Hammerspoon to the foreground when tapped |\n| `textInput` | boolean | `false` | Converts this action to an inline text-reply button |\n| `textInputButtonTitle` | string | `\"Send\"` | Label on the reply send button (requires `textInput: true`) |\n| `textInputPlaceholder` | string | `\"\"` | Placeholder shown in the text field (requires `textInput: true`) |",
-      "rawDocumentation": "Module for creating and displaying macOS system notifications.\n\nmacOS notifications require user permission before they will appear. Request it once\n(typically at startup) via `hs.permissions.requestNotifications()` and it will be\nremembered across sessions:\n\n```js\nhs.permissions.requestNotifications().then(granted => {\n    if (granted) hs.notify.show(\"Hammerspoon\", \"Notifications are enabled!\")\n})\n```\n\n## Quick notification\n\n```js\n// Fire and forget\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n\n// With a callback invoked when the user interacts\nhs.notify.show(\"Build complete\", \"Click to view the log.\", (response) => {\n    console.log(\"User tapped:\", response.actionIdentifier)\n})\n```\n\n## Rich notification\n\n```js\nconst n = hs.notify.new({\n    title:    \"New message\",\n    subtitle: \"From Alice\",\n    body:     \"Are you free tonight?\",\n    sound:    true,\n    threadIdentifier: \"messages-alice\",\n    actions: [\n        { identifier: \"REPLY\", title: \"Reply\", textInput: true,\n          textInputButtonTitle: \"Send\", textInputPlaceholder: \"Type a reply…\" },\n        { identifier: \"DISMISS\", title: \"Dismiss\", destructive: true }\n    ],\n    callback: (response) => {\n        if (response.actionIdentifier === \"REPLY\") {\n            console.log(\"Reply text:\", response.userText)\n        }\n    }\n})\nn.send()\n// Later, if needed:\nn.withdraw()\n```\n\n## Callback response object\n\nThe `callback` function receives a single object with these properties:\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `actionIdentifier` | string | `\"DEFAULT\"` when the user tapped the notification body; `\"DISMISS\"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |\n| `userText` | string? | Text entered in a `textInput` action; only present when applicable |\n| `userInfo` | object | The `userInfo` object originally passed to `new()`, if any |\n| `notificationId` | string | The notification's unique identifier |\n\n## Options for `new()`\n\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `title` | string | *(required)* | The bold heading line |\n| `subtitle` | string | — | A second line shown beneath the title |\n| `body` | string | — | The main message body |\n| `sound` | boolean \\| string | `true` | `true` = default sound, `false` = no sound, string = named `.aiff` file |\n| `badge` | number | — | Value to show on the app icon badge |\n| `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |\n| `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |\n| `interruptionLevel` | string | `\"active\"` | `\"passive\"`, `\"active\"`, or `\"timeSensitive\"` — controls Focus/DND behaviour (macOS 12+) |\n| `trigger` | object | — | When to deliver the notification (see below). Omit for immediate delivery. |\n| `actions` | array | — | Action buttons (see below) |\n| `callback` | function | — | Invoked when the user interacts with the notification |\n\n## Triggers\n\nPass a `trigger` object in `new()`'s options to schedule the notification instead of delivering it\n**Time interval** — deliver after a fixed delay in seconds (minimum 60 s):\n```js\ntrigger: { type: \"timeInterval\", interval: 300 }\n```\n\n**Calendar** — deliver at a specific date/time. Provide either a JS `Date` object or individual\ndate-component keys; any omitted component matches every value:\n```js\n// At a specific moment\ntrigger: { type: \"calendar\", date: new Date(\"2026-06-01T09:00:00\") }\n\n// At 09:00 on the next day that matches (e.g. next Monday, weekday 2)\ntrigger: { type: \"calendar\", weekday: 2, hour: 9, minute: 0 }\n```\nSupported component keys: `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`.\n\n## Action objects\n\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `identifier` | string | *(required)* | Unique identifier passed to the callback |\n| `title` | string | *(required)* | Button label |\n| `destructive` | boolean | `false` | Renders the title in a destructive (red) style |\n| `foreground` | boolean | `false` | Brings Hammerspoon to the foreground when tapped |\n| `textInput` | boolean | `false` | Converts this action to an inline text-reply button |\n| `textInputButtonTitle` | string | `\"Send\"` | Label on the reply send button (requires `textInput: true`) |\n| `textInputPlaceholder` | string | `\"\"` | Placeholder shown in the text field (requires `textInput: true`) |"
+      "description": "Module for creating and displaying macOS system notifications.\nmacOS notifications require user permission before they will appear. Request it once\n(typically at startup) via `hs.permissions.requestNotifications()` and it will be\n```js\nhs.permissions.requestNotifications().then(granted => {\n    if (granted) hs.notify.show(\"Hammerspoon\", \"Notifications are enabled!\")\n})\n```\n## Quick notification\n```js\n// Fire and forget\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n\n// With a callback invoked when the user interacts\nhs.notify.show(\"Build complete\", \"Click to view the log.\", (response) => {\n    console.log(\"User tapped:\", response.actionIdentifier)\n})\n```\n## Rich notification\n```js\nconst n = hs.notify.create({\n    title:    \"New message\",\n    subtitle: \"From Alice\",\n    body:     \"Are you free tonight?\",\n    sound:    true,\n    threadIdentifier: \"messages-alice\",\n    actions: [\n        { identifier: \"REPLY\", title: \"Reply\", textInput: true,\n          textInputButtonTitle: \"Send\", textInputPlaceholder: \"Type a reply…\" },\n        { identifier: \"DISMISS\", title: \"Dismiss\", destructive: true }\n    ],\n    callback: (response) => {\n        if (response.actionIdentifier === \"REPLY\") {\n            console.log(\"Reply text:\", response.userText)\n        }\n    }\n})\nn.send()\n// Later, if needed:\nn.withdraw()\n```\n## Callback response object\n| Property | Type | Description |\n|----------|------|-------------|\n| `actionIdentifier` | string | `\"DEFAULT\"` when the user tapped the notification body; `\"DISMISS\"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |\n| `userText` | string? | Text entered in a `textInput` action; only present when applicable |\n| `userInfo` | object | The `userInfo` object originally passed to `create()`, if any |\n| `notificationId` | string | The notification's unique identifier |\n## Options for `create()`\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `title` | string | *(required)* | The bold heading line |\n| `subtitle` | string | — | A second line shown beneath the title |\n| `body` | string | — | The main message body |\n| `sound` | boolean \\| string | `true` | `true` = default sound, `false` = no sound, string = named `.aiff` file |\n| `badge` | number | — | Value to show on the app icon badge |\n| `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |\n| `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |\n| `interruptionLevel` | string | `\"active\"` | `\"passive\"`, `\"active\"`, or `\"timeSensitive\"` — controls Focus/DND behaviour (macOS 12+) |\n| `trigger` | object | — | When to deliver the notification (see below). Omit for immediate delivery. |\n| `actions` | array | — | Action buttons (see below) |\n| `callback` | function | — | Invoked when the user interacts with the notification |\n## Triggers\nPass a `trigger` object in `create()`'s options to schedule the notification instead of delivering it\n```js\ntrigger: { type: \"timeInterval\", interval: 300 }\n```\n**Calendar** — deliver at a specific date/time. Provide either a JS `Date` object or individual\n```js\n// At a specific moment\ntrigger: { type: \"calendar\", date: new Date(\"2026-06-01T09:00:00\") }\n\n// At 09:00 on the next day that matches (e.g. next Monday, weekday 2)\ntrigger: { type: \"calendar\", weekday: 2, hour: 9, minute: 0 }\n```\nSupported component keys: `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`.\n## Action objects\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `identifier` | string | *(required)* | Unique identifier passed to the callback |\n| `title` | string | *(required)* | Button label |\n| `destructive` | boolean | `false` | Renders the title in a destructive (red) style |\n| `foreground` | boolean | `false` | Brings Hammerspoon to the foreground when tapped |\n| `textInput` | boolean | `false` | Converts this action to an inline text-reply button |\n| `textInputButtonTitle` | string | `\"Send\"` | Label on the reply send button (requires `textInput: true`) |\n| `textInputPlaceholder` | string | `\"\"` | Placeholder shown in the text field (requires `textInput: true`) |",
+      "rawDocumentation": "Module for creating and displaying macOS system notifications.\n\nmacOS notifications require user permission before they will appear. Request it once\n(typically at startup) via `hs.permissions.requestNotifications()` and it will be\nremembered across sessions:\n\n```js\nhs.permissions.requestNotifications().then(granted => {\n    if (granted) hs.notify.show(\"Hammerspoon\", \"Notifications are enabled!\")\n})\n```\n\n## Quick notification\n\n```js\n// Fire and forget\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n\n// With a callback invoked when the user interacts\nhs.notify.show(\"Build complete\", \"Click to view the log.\", (response) => {\n    console.log(\"User tapped:\", response.actionIdentifier)\n})\n```\n\n## Rich notification\n\n```js\nconst n = hs.notify.create({\n    title:    \"New message\",\n    subtitle: \"From Alice\",\n    body:     \"Are you free tonight?\",\n    sound:    true,\n    threadIdentifier: \"messages-alice\",\n    actions: [\n        { identifier: \"REPLY\", title: \"Reply\", textInput: true,\n          textInputButtonTitle: \"Send\", textInputPlaceholder: \"Type a reply…\" },\n        { identifier: \"DISMISS\", title: \"Dismiss\", destructive: true }\n    ],\n    callback: (response) => {\n        if (response.actionIdentifier === \"REPLY\") {\n            console.log(\"Reply text:\", response.userText)\n        }\n    }\n})\nn.send()\n// Later, if needed:\nn.withdraw()\n```\n\n## Callback response object\n\nThe `callback` function receives a single object with these properties:\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `actionIdentifier` | string | `\"DEFAULT\"` when the user tapped the notification body; `\"DISMISS\"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |\n| `userText` | string? | Text entered in a `textInput` action; only present when applicable |\n| `userInfo` | object | The `userInfo` object originally passed to `create()`, if any |\n| `notificationId` | string | The notification's unique identifier |\n\n## Options for `create()`\n\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `title` | string | *(required)* | The bold heading line |\n| `subtitle` | string | — | A second line shown beneath the title |\n| `body` | string | — | The main message body |\n| `sound` | boolean \\| string | `true` | `true` = default sound, `false` = no sound, string = named `.aiff` file |\n| `badge` | number | — | Value to show on the app icon badge |\n| `threadIdentifier` | string | — | Groups related notifications visually in Notification Center |\n| `userInfo` | object | `{}` | Arbitrary payload passed back to the callback |\n| `interruptionLevel` | string | `\"active\"` | `\"passive\"`, `\"active\"`, or `\"timeSensitive\"` — controls Focus/DND behaviour (macOS 12+) |\n| `trigger` | object | — | When to deliver the notification (see below). Omit for immediate delivery. |\n| `actions` | array | — | Action buttons (see below) |\n| `callback` | function | — | Invoked when the user interacts with the notification |\n\n## Triggers\n\nPass a `trigger` object in `create()`'s options to schedule the notification instead of delivering it\n**Time interval** — deliver after a fixed delay in seconds (minimum 60 s):\n```js\ntrigger: { type: \"timeInterval\", interval: 300 }\n```\n\n**Calendar** — deliver at a specific date/time. Provide either a JS `Date` object or individual\ndate-component keys; any omitted component matches every value:\n```js\n// At a specific moment\ntrigger: { type: \"calendar\", date: new Date(\"2026-06-01T09:00:00\") }\n\n// At 09:00 on the next day that matches (e.g. next Monday, weekday 2)\ntrigger: { type: \"calendar\", weekday: 2, hour: 9, minute: 0 }\n```\nSupported component keys: `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`.\n\n## Action objects\n\n| Key | Type | Default | Description |\n|-----|------|---------|-------------|\n| `identifier` | string | *(required)* | Unique identifier passed to the callback |\n| `title` | string | *(required)* | Button label |\n| `destructive` | boolean | `false` | Renders the title in a destructive (red) style |\n| `foreground` | boolean | `false` | Brings Hammerspoon to the foreground when tapped |\n| `textInput` | boolean | `false` | Converts this action to an inline text-reply button |\n| `textInputButtonTitle` | string | `\"Send\"` | Label on the reply send button (requires `textInput: true`) |\n| `textInputPlaceholder` | string | `\"\"` | Placeholder shown in the text field (requires `textInput: true`) |"
+    },
+    {
+      "name": "hs.ocr",
+      "methods": [
+        {
+          "name": "recognizeText",
+          "signature": "func recognizeText(_ path: String, _ options: JSValue?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Recognize text in the image at the given file path.\n\nReturns a Promise that resolves with an `HSOCRResult` containing all\nrecognized text and per-region observations. The image must exist on\ndisk; URLs and data buffers are not supported.\n\nRecognition is performed on a background thread; the main thread is\nnot blocked during the operation.\n\nThe optional `options` object may contain:\n- `recognitionLevel` (`\"accurate\"` | `\"fast\"`, default `\"accurate\"`):\n  `\"accurate\"` uses a larger neural network for better results;\n  `\"fast\"` trades accuracy for speed.\n- `minimumConfidence` (number 0–1, default `0`):\n  Observations whose `confidence` is below this threshold are excluded\n  from `result.observations` (and therefore from `result.text`).\n- `languages` (array of BCP-47 strings, e.g. `[\"en-US\", \"fr-FR\"]`):\n  Hints Vision toward specific languages. Use `supportedLanguages()` to\n  enumerate the available codes for the current device.\n- `automaticallyDetectsLanguage` (boolean, default `false`):\n  When `true`, Vision selects recognition languages automatically.\n  Overrides `languages` when set.\n\n- Parameter path: Absolute path to the image file.\n- Parameter options: Optional configuration object (see description).\n- Returns: {Promise<HSOCRResult>} Resolves with the recognition result.\n\n- Example:\n```js\n// Async/await style\nasync function getTextFromImage(imagePath) {\n    const result = await hs.ocr.recognizeText(imagePath)\n    return result.text\n}\n```\n\n- Example:\n```js\n// Promise chain style, with options\nhs.ocr.recognizeText('/tmp/image.png', { minimumConfidence: 0.75 })\n    .then(result => console.log('Found ' + result.observations.length + ' regions'))\n    .catch(err => console.log('Error: ' + err))\n```",
+          "description": "Recognize text in the image at the given file path.\nReturns a Promise that resolves with an `HSOCRResult` containing all\nrecognized text and per-region observations. The image must exist on\ndisk; URLs and data buffers are not supported.\nRecognition is performed on a background thread; the main thread is\nnot blocked during the operation.\n`\"accurate\"` uses a larger neural network for better results;\n`\"fast\"` trades accuracy for speed.\nObservations whose `confidence` is below this threshold are excluded\nfrom `result.observations` (and therefore from `result.text`).\nHints Vision toward specific languages. Use `supportedLanguages()` to\nenumerate the available codes for the current device.\nWhen `true`, Vision selects recognition languages automatically.\nOverrides `languages` when set.",
+          "params": [
+            {
+              "name": "path",
+              "type": "String",
+              "description": "Absolute path to the image file."
+            },
+            {
+              "name": "options",
+              "type": "JSValue?",
+              "description": "Optional configuration object (see description)."
+            }
+          ],
+          "returns": {
+            "type": "JSPromise?",
+            "description": "Resolves with the recognition result.",
+            "promiseType": "HSOCRResult"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "// Async/await style\nasync function getTextFromImage(imagePath) {\n    const result = await hs.ocr.recognizeText(imagePath)\n    return result.text\n}"
+            },
+            {
+              "lang": "js",
+              "code": "// Promise chain style, with options\nhs.ocr.recognizeText('/tmp/image.png', { minimumConfidence: 0.75 })\n    .then(result => console.log('Found ' + result.observations.length + ' regions'))\n    .catch(err => console.log('Error: ' + err))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRModule.swift",
+          "lineNumber": 85
+        },
+        {
+          "name": "supportedLanguages",
+          "signature": "func supportedLanguages() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the BCP-47 language codes supported by the Vision text recognizer\non this device.\n\nThe set of languages varies between macOS versions and hardware. Call\nthis at runtime to discover which codes are valid for the `languages`\noption passed to `recognizeText()`.\n\n- Returns: An array of BCP-47 language code strings (e.g. `[\"en-US\", \"fr-FR\"]`).\n\n- Example:\n```js\nconst langs = hs.ocr.supportedLanguages()\nconsole.log('Supported languages: ' + langs.join(', '))\n```",
+          "description": "Returns the BCP-47 language codes supported by the Vision text recognizer\non this device.\nThe set of languages varies between macOS versions and hardware. Call\nthis at runtime to discover which codes are valid for the `languages`\noption passed to `recognizeText()`.",
+          "params": [],
+          "returns": {
+            "type": "[String]",
+            "description": "An array of BCP-47 language code strings (e.g. `[\"en-US\", \"fr-FR\"]`)."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const langs = hs.ocr.supportedLanguages()\nconsole.log('Supported languages: ' + langs.join(', '))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRModule.swift",
+          "lineNumber": 101
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSOCRObservationAPI",
+          "type": "typedef",
+          "rawDocumentation": "A single region of text recognized in an image.\n\nInstances are delivered inside the `observations` array of an `HSOCRResult`.\nEach observation represents a discrete text run found in the source image,\nalong with a confidence score and a normalized bounding box.\n\nBounding-box coordinates use a **normalized top-left-origin** system:\n`(0, 0)` is the top-left corner of the image and `(1, 1)` is the bottom-right.\nThis matches the convention used by most image-processing tools and differs\nfrom Vision's internal bottom-left-origin system (the conversion is automatic).\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nresult.observations.forEach(obs => {\n    const pct = (obs.confidence * 100).toFixed(0)\n    console.log(obs.text + ' (' + pct + '% confidence)')\n    const b = obs.bounds\n    console.log('  region: x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3)\n                + ' w=' + b.width.toFixed(3) + ' h=' + b.height.toFixed(3))\n})\n```",
+          "description": "A single region of text recognized in an image.\nInstances are delivered inside the `observations` array of an `HSOCRResult`.\nEach observation represents a discrete text run found in the source image,\nalong with a confidence score and a normalized bounding box.\n`(0, 0)` is the top-left corner of the image and `(1, 1)` is the bottom-right.\nThis matches the convention used by most image-processing tools and differs\nfrom Vision's internal bottom-left-origin system (the conversion is automatic).",
+          "methods": [],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "The Swift type name, for JavaScript introspection.\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nconsole.log(result.observations[0].typeName) // \"HSOCRObservation\"\n```",
+              "description": "The Swift type name, for JavaScript introspection.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const result = await hs.ocr.recognizeText('/tmp/image.png')\nconsole.log(result.observations[0].typeName) // \"HSOCRObservation\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRObservation.swift",
+              "lineNumber": 40
+            },
+            {
+              "name": "text",
+              "signature": "var text: String { get }",
+              "rawDocumentation": "The recognized text string for this observation.\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nresult.observations.forEach(obs => console.log(obs.text))\n```",
+              "description": "The recognized text string for this observation.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const result = await hs.ocr.recognizeText('/tmp/image.png')\nresult.observations.forEach(obs => console.log(obs.text))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRObservation.swift",
+              "lineNumber": 49
+            },
+            {
+              "name": "confidence",
+              "signature": "var confidence: Double { get }",
+              "rawDocumentation": "Recognition confidence in the range `0.0` (uncertain) to `1.0` (certain).\n\nUse `minimumConfidence` in the options passed to `recognizeText()` to\npre-filter observations below a threshold rather than filtering here.\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nconst highConf = result.observations.filter(o => o.confidence > 0.9)\nconsole.log('High-confidence regions: ' + highConf.length)\n```",
+              "description": "Recognition confidence in the range `0.0` (uncertain) to `1.0` (certain).\nUse `minimumConfidence` in the options passed to `recognizeText()` to\npre-filter observations below a threshold rather than filtering here.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const result = await hs.ocr.recognizeText('/tmp/image.png')\nconst highConf = result.observations.filter(o => o.confidence > 0.9)\nconsole.log('High-confidence regions: ' + highConf.length)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRObservation.swift",
+              "lineNumber": 62
+            },
+            {
+              "name": "bounds",
+              "signature": "var bounds: [String: Double] { get }",
+              "rawDocumentation": "Normalized bounding box of this observation in the source image.\n\nAn object with keys `x`, `y`, `width`, and `height`, all in the\nrange 0–1 with **top-left origin** (`(0, 0)` = top-left corner,\n`(1, 1)` = bottom-right corner).\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nconst b = result.observations[0].bounds\n// Check if the observation is in the top half of the image\nif (b.y + b.height / 2 < 0.5) {\n    console.log('Text is in the top half:', result.observations[0].text)\n}\n```",
+              "description": "Normalized bounding box of this observation in the source image.\nAn object with keys `x`, `y`, `width`, and `height`, all in the\nrange 0–1 with **top-left origin** (`(0, 0)` = top-left corner,\n`(1, 1)` = bottom-right corner).",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const result = await hs.ocr.recognizeText('/tmp/image.png')\nconst b = result.observations[0].bounds\n// Check if the observation is in the top half of the image\nif (b.y + b.height / 2 < 0.5) {\n    console.log('Text is in the top half:', result.observations[0].text)\n}"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRObservation.swift",
+              "lineNumber": 79
+            }
+          ]
+        },
+        {
+          "name": "HSOCRResultAPI",
+          "type": "typedef",
+          "rawDocumentation": "The result of a text recognition operation on an image.\n\nAn `HSOCRResult` is returned by `hs.ocr.recognizeText()` and bundles the\nfull recognized text together with an array of per-region observations,\neach carrying its own confidence score and bounding box.\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nconsole.log('Full text: ' + result.text)\nconsole.log('Regions found: ' + result.observations.length)\nresult.observations.forEach(obs => {\n    console.log(obs.text + ' (' + (obs.confidence * 100).toFixed(0) + '%)')\n})\n```",
+          "description": "The result of a text recognition operation on an image.\nAn `HSOCRResult` is returned by `hs.ocr.recognizeText()` and bundles the\nfull recognized text together with an array of per-region observations,\neach carrying its own confidence score and bounding box.",
+          "methods": [],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "The Swift type name, for JavaScript introspection.\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nconsole.log(result.typeName) // \"HSOCRResult\"\n```",
+              "description": "The Swift type name, for JavaScript introspection.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const result = await hs.ocr.recognizeText('/tmp/image.png')\nconsole.log(result.typeName) // \"HSOCRResult\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRResult.swift",
+              "lineNumber": 33
+            },
+            {
+              "name": "text",
+              "signature": "var text: String { get }",
+              "rawDocumentation": "The full recognized text from the image, with each observation's text\njoined by newlines in the order Vision returned them.\n\nUse this when you only need the raw text and don't care about bounding\nboxes or per-region confidence scores.\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/receipt.png')\nconst lines = result.text.split('\\n')\nlines.forEach(line => console.log(line))\n```",
+              "description": "The full recognized text from the image, with each observation's text\njoined by newlines in the order Vision returned them.\nUse this when you only need the raw text and don't care about bounding\nboxes or per-region confidence scores.",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const result = await hs.ocr.recognizeText('/tmp/receipt.png')\nconst lines = result.text.split('\\n')\nlines.forEach(line => console.log(line))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRResult.swift",
+              "lineNumber": 47
+            },
+            {
+              "name": "observations",
+              "signature": "var observations: [HSOCRObservation] { get }",
+              "rawDocumentation": "The individual text observations that make up this result.\n\nEach entry in the array is an `HSOCRObservation` with its own `text`,\n`confidence`, and `bounds` properties. Observations are returned in the\norder Vision produced them (typically top-to-bottom, left-to-right, but\nthis is image-dependent).\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nconst confident = result.observations.filter(o => o.confidence > 0.9)\nconsole.log('High-confidence regions: ' + confident.length)\nconfident.forEach(obs => {\n    const b = obs.bounds\n    console.log(obs.text + ' at x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3))\n})\n```",
+              "description": "The individual text observations that make up this result.\nEach entry in the array is an `HSOCRObservation` with its own `text`,\n`confidence`, and `bounds` properties. Observations are returned in the\norder Vision produced them (typically top-to-bottom, left-to-right, but\nthis is image-dependent).",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const result = await hs.ocr.recognizeText('/tmp/image.png')\nconst confident = result.observations.filter(o => o.confidence > 0.9)\nconsole.log('High-confidence regions: ' + confident.length)\nconfident.forEach(obs => {\n    const b = obs.bounds\n    console.log(obs.text + ' at x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3))\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ocr/HSOCRResult.swift",
+              "lineNumber": 66
+            }
+          ]
+        }
+      ],
+      "description": "Recognize text in images using Apple's Vision framework.\n`hs.ocr` provides access to on-device text recognition without requiring\nnetwork access or any third-party dependencies. Pass a file path to\n`recognizeText()` and receive back an `HSOCRResult` containing the full\nrecognized text and individual per-region observations with confidence\nscores and normalized bounding boxes.",
+      "rawDocumentation": "Recognize text in images using Apple's Vision framework.\n\n`hs.ocr` provides access to on-device text recognition without requiring\nnetwork access or any third-party dependencies. Pass a file path to\n`recognizeText()` and receive back an `HSOCRResult` containing the full\nrecognized text and individual per-region observations with confidence\nscores and normalized bounding boxes.\n\n- Example:\n```js\n// Basic: print all text found in an image\nhs.ocr.recognizeText('/tmp/screenshot.png')\n    .then(result => {\n        console.log(result.text)\n    })\n    .catch(err => console.log('OCR failed: ' + err))\n```\n\n- Example:\n```js\n// Advanced: filter to high-confidence observations only\nconst result = await hs.ocr.recognizeText('/tmp/photo.png', {\n    minimumConfidence: 0.8,\n    recognitionLevel: 'accurate'\n})\nresult.observations.forEach(obs => {\n    const b = obs.bounds\n    console.log(obs.text + ' at (' + b.x.toFixed(3) + ', ' + b.y.toFixed(3) + ')')\n})\n```"
     },
     {
       "name": "hs.osascript",
@@ -7394,10 +7585,10 @@
       "name": "hs.task",
       "methods": [
         {
-          "name": "new",
-          "signature": "func new(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask",
+          "name": "create",
+          "signature": "func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask",
           "isStatic": false,
-          "rawDocumentation": "Create a new task\n- Parameters:\n  - launchPath: The full path to the executable to run\n  - arguments: An array of arguments to pass to the executable\n  - completionCallback: Optional callback function called when the task terminates\n  - environment: Optional dictionary of environment variables for the task\n  - streamingCallback: Optional callback function called when the task produces output\n- Returns: A task object. Call start() to begin execution.\n- Example:\n```js\nconst task = hs.task.new(\"/usr/bin/env\", [\"printenv\", \"PATH\"], (code, reason) => {\n    console.log(\"exited\", code)\n})\ntask.start()\n```",
+          "rawDocumentation": "Create a new task\n- Parameters:\n  - launchPath: The full path to the executable to run\n  - arguments: An array of arguments to pass to the executable\n  - completionCallback: Optional callback function called when the task terminates\n  - environment: Optional dictionary of environment variables for the task\n  - streamingCallback: Optional callback function called when the task produces output\n- Returns: A task object. Call start() to begin execution.\n- Example:\n```js\nconst task = hs.task.create(\"/usr/bin/env\", [\"printenv\", \"PATH\"], (code, reason) => {\n    console.log(\"exited\", code)\n})\ntask.start()\n```",
           "description": "Create a new task",
           "params": [
             {
@@ -7433,7 +7624,7 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const task = hs.task.new(\"/usr/bin/env\", [\"printenv\", \"PATH\"], (code, reason) => {\n    console.log(\"exited\", code)\n})\ntask.start()"
+              "code": "const task = hs.task.create(\"/usr/bin/env\", [\"printenv\", \"PATH\"], (code, reason) => {\n    console.log(\"exited\", code)\n})\ntask.start()"
             }
           ],
           "source": "swift",
@@ -7966,43 +8157,6 @@
           "lineNumber": 26
         },
         {
-          "name": "new",
-          "signature": "func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer",
-          "isStatic": false,
-          "rawDocumentation": "Create a new timer (alias for create())\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: A JavaScript function to call when the timer fires\n  - continueOnError: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object. Call start() to begin the timer.\n- Example:\n```js\nconst t = hs.timer.new(5, () => console.log(\"tick\"), false)\nt.start()\n```",
-          "description": "Create a new timer (alias for create())",
-          "params": [
-            {
-              "name": "interval",
-              "type": "TimeInterval",
-              "description": "The interval in seconds at which the timer should fire"
-            },
-            {
-              "name": "callback",
-              "type": "JSValue",
-              "description": "A JavaScript function to call when the timer fires"
-            },
-            {
-              "name": "continueOnError",
-              "type": "Bool",
-              "description": "If true, the timer will continue running even if the callback throws an error"
-            }
-          ],
-          "returns": {
-            "type": "HSTimer",
-            "description": "A timer object. Call start() to begin the timer."
-          },
-          "examples": [
-            {
-              "lang": "js",
-              "code": "const t = hs.timer.new(5, () => console.log(\"tick\"), false)\nt.start()"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 40
-        },
-        {
           "name": "doAfter",
           "signature": "func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer",
           "isStatic": false,
@@ -8032,7 +8186,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 51
+          "lineNumber": 37
         },
         {
           "name": "doEvery",
@@ -8064,7 +8218,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 62
+          "lineNumber": 48
         },
         {
           "name": "doAt",
@@ -8106,7 +8260,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 77
+          "lineNumber": 63
         },
         {
           "name": "usleep",
@@ -8130,7 +8284,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 86
+          "lineNumber": 72
         },
         {
           "name": "secondsSinceEpoch",
@@ -8151,7 +8305,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 94
+          "lineNumber": 80
         },
         {
           "name": "absoluteTime",
@@ -8172,7 +8326,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 102
+          "lineNumber": 88
         },
         {
           "name": "localTime",
@@ -8193,7 +8347,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 110
+          "lineNumber": 96
         },
         {
           "name": "minutes",
@@ -8220,7 +8374,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 119
+          "lineNumber": 105
         },
         {
           "name": "hours",
@@ -8247,7 +8401,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 128
+          "lineNumber": 114
         },
         {
           "name": "days",
@@ -8274,7 +8428,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 137
+          "lineNumber": 123
         },
         {
           "name": "weeks",
@@ -8301,7 +8455,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 146
+          "lineNumber": 132
         },
         {
           "name": "doUntil",
@@ -8426,7 +8580,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 154
+          "lineNumber": 140
         },
         {
           "name": "doWhile",
@@ -8441,7 +8595,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 162
+          "lineNumber": 148
         },
         {
           "name": "waitUntil",
@@ -8456,7 +8610,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 169
+          "lineNumber": 155
         },
         {
           "name": "waitWhile",
@@ -8471,7 +8625,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimerModule.swift",
-          "lineNumber": 176
+          "lineNumber": 162
         }
       ],
       "types": [
@@ -11823,5 +11977,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-22T12:55:43.363Z"
+  "generatedAt": "2026-05-26T18:06:44.076Z"
 }

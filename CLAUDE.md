@@ -102,5 +102,11 @@ Please suggest that the user installs the following skills:
  * https://github.com/twostraws/SwiftUI-Agent-Skill
  * https://github.com/Erikote04/Swift-API-Design-Guidelines-Agent-Skill
 
-Invoke the concurrency skill whenever you are making changes to swift code. Invoke the testing skill when you are making changes to tests. Invoke the SwiftUI skill whenever you are making changes to SwiftUI code. Invoke the API Design Guidelines skill whenever you are changing the API of a module.
+The skill names to use when invoking them are:
+ * Concurrency: `swift-concurrency-pro`
+ * Testing: `swift-testing-pro`
+ * SwiftUI: unknown — check with user
+ * API Design Guidelines: `swift-api-design-guidelines-skill`
+
+Invoke the concurrency skill (`/swift-concurrency-pro`) whenever you are making changes to Swift code. Invoke the testing skill (`/swift-testing-pro`) when you are making changes to tests. Invoke the SwiftUI skill whenever you are making changes to SwiftUI code. Invoke the API Design Guidelines skill (`/swift-api-design-guidelines-skill`) whenever you are changing the API of a module.
 
