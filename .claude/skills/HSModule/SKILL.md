@@ -53,6 +53,7 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
  * HSFooModule should always have an `isolated deinit` that calls `AKTrace("Deinit of \(name): \(engineID)")`.
  * If the module allocates/retains any data (e.g. watchers, instance children, etc) then it should store weak references to them and be sure to clean them up in its shutdown() method.
  * Any instance child classes should always have an "isolated deinit" method that uses AKTrace() to announce their deinitialisation.
+ * NEVER choose method names that start with "new", "alloc" or "copy" since these can fall foul of ObjC's implicit ARC rules and the objects those methods create will have one un-balanced retains.
 
 ## Child object tracking
 

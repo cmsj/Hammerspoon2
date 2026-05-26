@@ -301,6 +301,7 @@ conversions can live in the module file.
 - [ ] Protocol has docstrings with `- Example:` on every member
 - [ ] `super.init()` called at the end of every `init`
 - [ ] `@objc` on every property and method in the protocol
+- [ ] There are no methods with names that start with `new`, `alloc` or `copy`
 
 ### Engine types only
 - [ ] No `@_documentation(visibility: private)` on the class (engine types are public)

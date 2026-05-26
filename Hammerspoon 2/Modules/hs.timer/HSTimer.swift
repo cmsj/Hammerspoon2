@@ -182,7 +182,7 @@ import JavaScriptCore
 
         // For one-shot timers, clean up after firing
         if !repeats {
-            timer = nil
+            stop()
         }
     }
 }

@@ -68,7 +68,7 @@ class ManagerManager {
             AKError("No config file found at: \(settings.configLocation.path)")
             return
         }
-        try engine.evalFromURL(settings.configLocation, wrapInIIFE: true)
+        try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
     }
 
     func shutdown() {

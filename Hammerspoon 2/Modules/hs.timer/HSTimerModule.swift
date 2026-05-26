@@ -25,20 +25,6 @@ import JavaScriptCore
     /// ```
     @objc func create(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer
 
-    /// Create a new timer (alias for create())
-    /// - Parameters:
-    ///   - interval: The interval in seconds at which the timer should fire
-    ///   - callback: A JavaScript function to call when the timer fires
-    ///   - continueOnError: If true, the timer will continue running even if the callback throws an error
-    /// - Returns: A timer object. Call start() to begin the timer.
-    /// - Example:
-    /// ```js
-    /// const t = hs.timer.new(5, () => console.log("tick"), false)
-    /// t.start()
-    /// ```
-    @objc(new:::)
-    func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer
-
     /// Create and start a one-shot timer
     /// - Parameters:
     ///   - seconds: Number of seconds to wait before firing
@@ -222,11 +208,6 @@ import JavaScriptCore
         let timer = HSTimer(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError)
         timers.add(timer)
         return timer
-    }
-
-    @objc(new:::)
-    func new(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimer {
-        return create(interval, callback, continueOnError)
     }
 
     @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer {

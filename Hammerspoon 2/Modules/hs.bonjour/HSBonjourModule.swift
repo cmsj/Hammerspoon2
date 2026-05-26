@@ -11,7 +11,7 @@ import dnssd
 
 /// Discover and publish Bonjour (mDNS / Zeroconf) network services.
 ///
-/// Use `newSearch()` to search the network for services advertised by other
+/// Use `createSearch()` to search the network for services advertised by other
 /// devices, and `advertise()` to advertise your own. The `networkServices()`
 /// convenience function returns a snapshot of all service types currently
 /// active on the local network.
@@ -25,7 +25,7 @@ import dnssd
 ///
 /// ```js
 /// // Find all SSH services on the local network and resolve each one
-/// const search = hs.bonjour.newSearch()
+/// const search = hs.bonjour.createSearch()
 /// search.findServices('_ssh._tcp.', 'local.', (event, svc, moreComing) => {
 ///     if (event === 'serviceFound') {
 ///         svc.resolve(5, ev => {
@@ -71,18 +71,18 @@ import dnssd
     /// - Returns: a new `HSBonjourSearch`
     /// - Example:
     /// ```js
-    /// const search = hs.bonjour.newSearch()
+    /// const search = hs.bonjour.createSearch()
     /// search.findServices('_http._tcp.', 'local.', (ev, svc, more) => {
     ///     if (ev === 'serviceFound') console.log('Found:', svc.name)
     /// })
     /// ```
-    @objc func newSearch() -> HSBonjourSearch
+    @objc func createSearch() -> HSBonjourSearch
 
     /// Stops and removes a previously created search.
-    /// - Parameter search: the search returned by `newSearch()`
+    /// - Parameter search: the search returned by `createSearch()`
     /// - Example:
     /// ```js
-    /// const s = hs.bonjour.newSearch()
+    /// const s = hs.bonjour.createSearch()
     /// // ... use search ...
     /// hs.bonjour.removeSearch(s)
     /// ```
@@ -197,7 +197,7 @@ import dnssd
 
     // MARK: - HSBonjourModuleAPI
 
-    @objc func newSearch() -> HSBonjourSearch {
+    @objc func createSearch() -> HSBonjourSearch {
         let search = HSBonjourSearch()
         searches.add(search)
         AKTrace("HSBonjourModule: Created search \(search.identifier)")

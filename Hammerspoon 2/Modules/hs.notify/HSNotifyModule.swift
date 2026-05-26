@@ -38,7 +38,7 @@ import JavaScriptCore
 /// ## Rich notification
 ///
 /// ```js
-/// const n = hs.notify.new({
+/// const n = hs.notify.create({
 ///     title:    "New message",
 ///     subtitle: "From Alice",
 ///     body:     "Are you free tonight?",
@@ -68,10 +68,10 @@ import JavaScriptCore
 /// |----------|------|-------------|
 /// | `actionIdentifier` | string | `"DEFAULT"` when the user tapped the notification body; `"DISMISS"` when dismissed (if `.customDismissAction` is set); otherwise the action's `identifier` string |
 /// | `userText` | string? | Text entered in a `textInput` action; only present when applicable |
-/// | `userInfo` | object | The `userInfo` object originally passed to `new()`, if any |
+/// | `userInfo` | object | The `userInfo` object originally passed to `create()`, if any |
 /// | `notificationId` | string | The notification's unique identifier |
 ///
-/// ## Options for `new()`
+/// ## Options for `create()`
 ///
 /// | Key | Type | Default | Description |
 /// |-----|------|---------|-------------|
@@ -89,7 +89,7 @@ import JavaScriptCore
 ///
 /// ## Triggers
 ///
-/// Pass a `trigger` object in `new()`'s options to schedule the notification instead of delivering it
+/// Pass a `trigger` object in `create()`'s options to schedule the notification instead of delivering it
 /// **Time interval** — deliver after a fixed delay in seconds (minimum 60 s):
 /// ```js
 /// trigger: { type: "timeInterval", interval: 300 }
@@ -142,10 +142,10 @@ import JavaScriptCore
     /// - Returns: An `HSNotification` object. Call `.send()` on it to deliver the notification.
     /// - Example:
     /// ```js
-    /// const n = hs.notify.new({ title: "Hello", body: "World" })
+    /// const n = hs.notify.create({ title: "Hello", body: "World" })
     /// n.send()
     /// ```
-    @objc func new(_ options: JSValue) -> HSNotification?
+    @objc func create(_ options: JSValue) -> HSNotification?
 
     // MARK: Management
 
@@ -226,14 +226,14 @@ import JavaScriptCore
         }
     }
 
-    @objc func new(_ options: JSValue) -> HSNotification? {
+    @objc func create(_ options: JSValue) -> HSNotification? {
         guard options.isObject, let dict = options.toDictionary() else {
-            AKError("hs.notify.new(): Expected a JavaScript object with options")
+            AKError("hs.notify.create(): Expected a JavaScript object with options")
             return nil
         }
 
         guard let title = dict["title"] as? String, !title.isEmpty else {
-            AKError("hs.notify.new(): 'title' is required and must be a non-empty string")
+            AKError("hs.notify.create(): 'title' is required and must be a non-empty string")
             return nil
         }
 

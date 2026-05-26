@@ -23,13 +23,13 @@ import JavaScriptCoreExtras
     /// - Returns: A task object. Call start() to begin execution.
     /// - Example:
     /// ```js
-    /// const task = hs.task.new("/usr/bin/env", ["printenv", "PATH"], (code, reason) => {
+    /// const task = hs.task.create("/usr/bin/env", ["printenv", "PATH"], (code, reason) => {
     ///     console.log("exited", code)
     /// })
     /// task.start()
     /// ```
-    @objc(new:::::)
-    func new(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask
+    @objc(create:::::)
+    func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask
 
     /// Run a task, returning a Promise. Swift-retained storage for the JS implementation.
     /// - Example:
@@ -179,7 +179,7 @@ struct TaskTracker {
 
     // MARK: - Task constructors
 
-    @objc func new(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue? = nil, _ environment: JSValue? = nil, _ streamingCallback: JSValue? = nil) -> HSTask {
+    @objc func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue? = nil, _ environment: JSValue? = nil, _ streamingCallback: JSValue? = nil) -> HSTask {
         // Parse environment dictionary if provided
         var envDict: [String: String]? = nil
         if let envValue = environment, envValue.isObject && !envValue.isFunction {
