@@ -2445,12 +2445,12 @@ pre-filter observations below a threshold rather than filtering here.
     confidence: number;
 
     /**
-     * Normalized bounding box of this observation in the source image.
-An object with keys `x`, `y`, `width`, and `height`, all in the
-range 0–1 with **top-left origin** (`(0, 0)` = top-left corner,
-`(1, 1)` = bottom-right corner).
+     * Normalized bounding box of this observation in the source image, as an `HSRect`.
+All values are in the range 0–1 with **top-left origin**
+(`(0, 0)` = top-left corner, `(1, 1)` = bottom-right corner).
+Use `bounds.x`, `bounds.y`, `bounds.w`, and `bounds.h` to access the components.
      */
-    bounds: Record<string, number>;
+    bounds: HSRect;
 
 }
 

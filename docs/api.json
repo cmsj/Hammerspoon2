@@ -5475,7 +5475,7 @@
         {
           "name": "HSOCRObservationAPI",
           "type": "typedef",
-          "rawDocumentation": "A single region of text recognized in an image.\n\nInstances are delivered inside the `observations` array of an `HSOCRResult`.\nEach observation represents a discrete text run found in the source image,\nalong with a confidence score and a normalized bounding box.\n\nBounding-box coordinates use a **normalized top-left-origin** system:\n`(0, 0)` is the top-left corner of the image and `(1, 1)` is the bottom-right.\nThis matches the convention used by most image-processing tools and differs\nfrom Vision's internal bottom-left-origin system (the conversion is automatic).\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nresult.observations.forEach(obs => {\n    const pct = (obs.confidence * 100).toFixed(0)\n    console.log(obs.text + ' (' + pct + '% confidence)')\n    const b = obs.bounds\n    console.log('  region: x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3)\n                + ' w=' + b.width.toFixed(3) + ' h=' + b.height.toFixed(3))\n})\n```",
+          "rawDocumentation": "A single region of text recognized in an image.\n\nInstances are delivered inside the `observations` array of an `HSOCRResult`.\nEach observation represents a discrete text run found in the source image,\nalong with a confidence score and a normalized bounding box.\n\nBounding-box coordinates use a **normalized top-left-origin** system:\n`(0, 0)` is the top-left corner of the image and `(1, 1)` is the bottom-right.\nThis matches the convention used by most image-processing tools and differs\nfrom Vision's internal bottom-left-origin system (the conversion is automatic).\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nresult.observations.forEach(obs => {\n    const pct = (obs.confidence * 100).toFixed(0)\n    console.log(obs.text + ' (' + pct + '% confidence)')\n    const b = obs.bounds\n    console.log('  region: x=' + b.x.toFixed(3) + ' y=' + b.y.toFixed(3)\n                + ' w=' + b.w.toFixed(3) + ' h=' + b.h.toFixed(3))\n})\n```",
           "description": "A single region of text recognized in an image.\nInstances are delivered inside the `observations` array of an `HSOCRResult`.\nEach observation represents a discrete text run found in the source image,\nalong with a confidence score and a normalized bounding box.\n`(0, 0)` is the top-left corner of the image and `(1, 1)` is the bottom-right.\nThis matches the convention used by most image-processing tools and differs\nfrom Vision's internal bottom-left-origin system (the conversion is automatic).",
           "methods": [],
           "properties": [
@@ -5526,13 +5526,13 @@
             },
             {
               "name": "bounds",
-              "signature": "var bounds: [String: Double] { get }",
-              "rawDocumentation": "Normalized bounding box of this observation in the source image.\n\nAn object with keys `x`, `y`, `width`, and `height`, all in the\nrange 0–1 with **top-left origin** (`(0, 0)` = top-left corner,\n`(1, 1)` = bottom-right corner).\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nconst b = result.observations[0].bounds\n// Check if the observation is in the top half of the image\nif (b.y + b.height / 2 < 0.5) {\n    console.log('Text is in the top half:', result.observations[0].text)\n}\n```",
-              "description": "Normalized bounding box of this observation in the source image.\nAn object with keys `x`, `y`, `width`, and `height`, all in the\nrange 0–1 with **top-left origin** (`(0, 0)` = top-left corner,\n`(1, 1)` = bottom-right corner).",
+              "signature": "var bounds: HSRect { get }",
+              "rawDocumentation": "Normalized bounding box of this observation in the source image, as an `HSRect`.\n\nAll values are in the range 0–1 with **top-left origin**\n(`(0, 0)` = top-left corner, `(1, 1)` = bottom-right corner).\nUse `bounds.x`, `bounds.y`, `bounds.w`, and `bounds.h` to access the components.\n\n- Example:\n```js\nconst result = await hs.ocr.recognizeText('/tmp/image.png')\nconst b = result.observations[0].bounds\n// Check if the observation is in the top half of the image\nif (b.y + b.h / 2 < 0.5) {\n    console.log('Text is in the top half:', result.observations[0].text)\n}\n```",
+              "description": "Normalized bounding box of this observation in the source image, as an `HSRect`.\nAll values are in the range 0–1 with **top-left origin**\n(`(0, 0)` = top-left corner, `(1, 1)` = bottom-right corner).\nUse `bounds.x`, `bounds.y`, `bounds.w`, and `bounds.h` to access the components.",
               "examples": [
                 {
                   "lang": "js",
-                  "code": "const result = await hs.ocr.recognizeText('/tmp/image.png')\nconst b = result.observations[0].bounds\n// Check if the observation is in the top half of the image\nif (b.y + b.height / 2 < 0.5) {\n    console.log('Text is in the top half:', result.observations[0].text)\n}"
+                  "code": "const result = await hs.ocr.recognizeText('/tmp/image.png')\nconst b = result.observations[0].bounds\n// Check if the observation is in the top half of the image\nif (b.y + b.h / 2 < 0.5) {\n    console.log('Text is in the top half:', result.observations[0].text)\n}"
                 }
               ],
               "source": "swift",
@@ -5597,7 +5597,7 @@
         }
       ],
       "description": "Recognize text in images using Apple's Vision framework.\n`hs.ocr` provides access to on-device text recognition without requiring\nnetwork access or any third-party dependencies. Pass a file path to\n`recognizeText()` and receive back an `HSOCRResult` containing the full\nrecognized text and individual per-region observations with confidence\nscores and normalized bounding boxes.",
-      "rawDocumentation": "Recognize text in images using Apple's Vision framework.\n\n`hs.ocr` provides access to on-device text recognition without requiring\nnetwork access or any third-party dependencies. Pass a file path to\n`recognizeText()` and receive back an `HSOCRResult` containing the full\nrecognized text and individual per-region observations with confidence\nscores and normalized bounding boxes.\n\n- Example:\n```js\n// Basic: print all text found in an image\nhs.ocr.recognizeText('/tmp/screenshot.png')\n    .then(result => {\n        console.log(result.text)\n    })\n    .catch(err => console.log('OCR failed: ' + err))\n```\n\n- Example:\n```js\n// Advanced: filter to high-confidence observations only\nconst result = await hs.ocr.recognizeText('/tmp/photo.png', {\n    minimumConfidence: 0.8,\n    recognitionLevel: 'accurate'\n})\nresult.observations.forEach(obs => {\n    const b = obs.bounds\n    console.log(obs.text + ' at (' + b.x.toFixed(3) + ', ' + b.y.toFixed(3) + ')')\n})\n```"
+      "rawDocumentation": "Recognize text in images using Apple's Vision framework.\n\n`hs.ocr` provides access to on-device text recognition without requiring\nnetwork access or any third-party dependencies. Pass a file path to\n`recognizeText()` and receive back an `HSOCRResult` containing the full\nrecognized text and individual per-region observations with confidence\nscores and normalized bounding boxes.\n\n- Example:\n```js\n// Basic: print all text found in an image\nhs.ocr.recognizeText('/tmp/screenshot.png')\n    .then(result => {\n        console.log(result.text)\n    })\n    .catch(err => console.log('OCR failed: ' + err))\n```\n\n- Example:\n```js\n// Advanced: filter to high-confidence observations only\nconst result = await hs.ocr.recognizeText('/tmp/photo.png', {\n    minimumConfidence: 0.8,\n    recognitionLevel: 'accurate'\n})\nresult.observations.forEach(obs => {\n    const b = obs.bounds\n    console.log(obs.text + ' at (' + b.x.toFixed(3) + ', ' + b.y.toFixed(3) + ') ' + b.w.toFixed(3) + 'x' + b.h.toFixed(3))\n})\n```"
     },
     {
       "name": "hs.osascript",
@@ -11977,5 +11977,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-05-26T18:06:44.076Z"
+  "generatedAt": "2026-05-27T07:47:51.705Z"
 }

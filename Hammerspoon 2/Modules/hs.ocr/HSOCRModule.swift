@@ -34,7 +34,7 @@ import Vision
 /// })
 /// result.observations.forEach(obs => {
 ///     const b = obs.bounds
-///     console.log(obs.text + ' at (' + b.x.toFixed(3) + ', ' + b.y.toFixed(3) + ')')
+///     console.log(obs.text + ' at (' + b.x.toFixed(3) + ', ' + b.y.toFixed(3) + ') ' + b.w.toFixed(3) + 'x' + b.h.toFixed(3))
 /// })
 /// ```
 @objc protocol HSOCRModuleAPI: JSExport {

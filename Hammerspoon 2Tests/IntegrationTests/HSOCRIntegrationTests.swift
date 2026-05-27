@@ -293,8 +293,8 @@ struct HSOCRFunctionalTests {
                     && typeof first.bounds === 'object'
                     && typeof first.bounds.x === 'number'
                     && typeof first.bounds.y === 'number'
-                    && typeof first.bounds.width === 'number'
-                    && typeof first.bounds.height === 'number'
+                    && typeof first.bounds.w === 'number'
+                    && typeof first.bounds.h === 'number'
             })()
         """)
     }
@@ -371,8 +371,8 @@ struct HSOCRFunctionalTests {
                 var b = o.bounds
                 return b.x >= 0 && b.x <= 1
                     && b.y >= 0 && b.y <= 1
-                    && b.width > 0 && b.width <= 1
-                    && b.height > 0 && b.height <= 1
+                    && b.w > 0 && b.w <= 1
+                    && b.h > 0 && b.h <= 1
             })
         """)
     }
