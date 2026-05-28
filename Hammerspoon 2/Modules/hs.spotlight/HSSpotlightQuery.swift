@@ -343,7 +343,12 @@ import JavaScriptCore
         }
         let wasRunning = isRunning
         if wasRunning { query.stop() }
-        query.predicate = NSPredicate(format: predicate)
+        guard let pred = NSPredicate(fromMetadataQueryString: predicate) else {
+            AKError("hs.spotlight.setQuery(): invalid predicate syntax — \(predicate)")
+            if wasRunning { _ = start() }
+            return self
+        }
+        query.predicate = pred
         if wasRunning { _ = start() }
         return self
     }
