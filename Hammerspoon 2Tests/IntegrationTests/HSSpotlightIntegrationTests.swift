@@ -35,29 +35,39 @@ struct HSSpotlightStructureTests {
         makeHarness().expectTrue("typeof hs.spotlight.scope === 'object'")
     }
 
-    @Test("scope.home is a string")
-    func testScopeHomeIsString() {
-        makeHarness().expectTrue("typeof hs.spotlight.scope.home === 'string'")
+    @Test("scope.home is an array")
+    func testScopeHomeIsArray() {
+        makeHarness().expectTrue("Array.isArray(hs.spotlight.scope.home)")
     }
 
-    @Test("scope.computer is a string")
-    func testScopeComputerIsString() {
-        makeHarness().expectTrue("typeof hs.spotlight.scope.computer === 'string'")
+    @Test("scope.computer is an array")
+    func testScopeComputerIsArray() {
+        makeHarness().expectTrue("Array.isArray(hs.spotlight.scope.computer)")
     }
 
-    @Test("scope.network is a string")
-    func testScopeNetworkIsString() {
-        makeHarness().expectTrue("typeof hs.spotlight.scope.network === 'string'")
+    @Test("scope.network is an array")
+    func testScopeNetworkIsArray() {
+        makeHarness().expectTrue("Array.isArray(hs.spotlight.scope.network)")
     }
 
-    @Test("scope.icloud is a string")
-    func testScopeICloudIsString() {
-        makeHarness().expectTrue("typeof hs.spotlight.scope.icloud === 'string'")
+    @Test("scope.applications is an array")
+    func testScopeApplicationsIsArray() {
+        makeHarness().expectTrue("Array.isArray(hs.spotlight.scope.applications)")
     }
 
-    @Test("scope.icloudData is a string")
-    func testScopeICloudDataIsString() {
-        makeHarness().expectTrue("typeof hs.spotlight.scope.icloudData === 'string'")
+    @Test("scope.applications contains /Applications")
+    func testScopeApplicationsContainsApplications() {
+        makeHarness().expectTrue("hs.spotlight.scope.applications.includes('/Applications')")
+    }
+
+    @Test("scope.icloud is an array")
+    func testScopeICloudIsArray() {
+        makeHarness().expectTrue("Array.isArray(hs.spotlight.scope.icloud)")
+    }
+
+    @Test("scope.icloudData is an array")
+    func testScopeICloudDataIsArray() {
+        makeHarness().expectTrue("Array.isArray(hs.spotlight.scope.icloudData)")
     }
 
     @Test("attribute is an object")
@@ -158,7 +168,7 @@ struct HSSpotlightQueryStructureTests {
     func testSetScopesIsChainable() {
         let harness = makeHarness()
         harness.eval("var q = hs.spotlight.create()")
-        harness.expectTrue("q.setScopes([hs.spotlight.scope.home]) === q")
+        harness.expectTrue("q.setScopes(hs.spotlight.scope.home) === q")
         #expect(!harness.hasException)
     }
 
@@ -266,7 +276,7 @@ struct HSSpotlightQueryConfigTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemKind == 'Application'")
-             .setScopes([hs.spotlight.scope.computer])
+             .setScopes(hs.spotlight.scope.computer)
              .setSortDescriptors([{ attribute: 'kMDItemFSName', ascending: true }])
              .setGroupingAttributes(['kMDItemContentType'])
              .setValueListAttributes(['kMDItemKind'])
@@ -474,7 +484,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
              })
@@ -488,7 +498,7 @@ struct HSSpotlightQueryLiveTests {
         }
         harness.eval("q.stop()")
         #expect(ok, "Query should complete within timeout")
-        #expect(resultCount > 0, "Expected at least one app in /Applications, found \(resultCount)")
+        #expect(resultCount > 0, "Expected at least one app in scope.applications, found \(resultCount)")
         #expect(!harness.hasException)
     }
 
@@ -500,7 +510,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
              })
@@ -530,7 +540,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
              })
@@ -557,7 +567,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
              })
@@ -584,7 +594,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
              })
@@ -613,7 +623,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
              })
@@ -641,7 +651,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
              })
@@ -669,7 +679,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setSortDescriptors([{ attribute: 'kMDItemFSName', ascending: true }])
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
@@ -689,7 +699,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setGroupingAttributes([hs.spotlight.attribute.contentType])
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
@@ -711,7 +721,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setGroupingAttributes([hs.spotlight.attribute.contentType])
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
@@ -747,7 +757,7 @@ struct HSSpotlightQueryLiveTests {
         harness.eval("""
             var q = hs.spotlight.create()
             q.setQuery("kMDItemContentType == 'com.apple.application-bundle'")
-             .setScopes(['/Applications'])
+             .setScopes(hs.spotlight.scope.applications)
              .setValueListAttributes([hs.spotlight.attribute.kind])
              .setCallback((event) => {
                  if (event === 'didFinish') __test_callback('onFinish')
