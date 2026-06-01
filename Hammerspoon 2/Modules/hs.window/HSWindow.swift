@@ -218,6 +218,7 @@ let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "
         if let _AXUIElementGetWindow = unsafe _AXUIElementGetWindow {
             _ = unsafe _AXUIElementGetWindow(element.element, &winId)
         }
+        self.id = Int(winId)
 
         super.init()
     }
