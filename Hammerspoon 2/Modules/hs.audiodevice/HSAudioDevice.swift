@@ -154,8 +154,8 @@ private func caDataSourceName(_ objectID: AudioObjectID,
                                scope: AudioObjectPropertyScope) -> String {
     var inputID = sourceID
     var outputName: CFString? = nil
-    unsafe withUnsafeMutablePointer(to: &inputID) { inputPtr in
-        unsafe withUnsafeMutablePointer(to: &outputName) { outputPtr in
+    withUnsafeMutablePointer(to: &inputID) { inputPtr in
+        withUnsafeMutablePointer(to: &outputName) { outputPtr in
             var translation = unsafe AudioValueTranslation(
                 mInputData: UnsafeMutableRawPointer(inputPtr),
                 mInputDataSize: UInt32(MemoryLayout<UInt32>.size),

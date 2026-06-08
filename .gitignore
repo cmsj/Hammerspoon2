@@ -30,6 +30,7 @@ DerivedData/
 *.xccheckout
 *.xcscmblueprint
 **/*.xcbkptlist
+Hammerspoon\ 2.xcodeproj/xcshareddata/xcodecloud
 
 # Node.js
 node_modules/
