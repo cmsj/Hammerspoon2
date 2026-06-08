@@ -262,7 +262,10 @@ import SwiftUI
 
     @objc var selectedRow: Int {
         get { viewModel.selectedIndex }
-        set { viewModel.selectedIndex = max(0, newValue) }
+        set {
+            let maxIndex = viewModel.filteredChoices.isEmpty ? 0 : viewModel.filteredChoices.count - 1
+            viewModel.selectedIndex = min(max(0, newValue), maxIndex)
+        }
     }
 
     // MARK: - Callbacks (JSCallback-backed properties)
