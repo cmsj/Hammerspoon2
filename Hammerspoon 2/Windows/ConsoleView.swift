@@ -207,7 +207,7 @@ struct ConsoleView: View {
                 }
             }
 
-            TextField(">", text: $evalString, selection: $textSelection, prompt: Text("Javascript: >"))
+            TextField(">", text: $evalString, selection: $textSelection, prompt: Text("Javascript: >"), axis: .vertical)
                 .padding()
                 .onKeyPress(keys: [.upArrow], phases: .up, action: { _ in
                     activeCompletion = nil
