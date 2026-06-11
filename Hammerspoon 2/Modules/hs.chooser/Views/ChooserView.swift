@@ -61,7 +61,7 @@ struct ChooserView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(viewModel.filteredChoices.enumerated()), id: \.element.id) { index, item in
                         ChooserRowView(item: item, isSelected: index == viewModel.selectedIndex)
-                            .id(index)
+                            .id(item.id)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 viewModel.selectedIndex = index
@@ -75,7 +75,8 @@ struct ChooserView: View {
             }
             .frame(height: CGFloat(visibleCount) * ChooserViewModel.rowHeight)
             .onChange(of: viewModel.selectedIndex) { _, newIndex in
-                proxy.scrollTo(newIndex, anchor: .center)
+                guard newIndex < viewModel.filteredChoices.count else { return }
+                proxy.scrollTo(viewModel.filteredChoices[newIndex].id, anchor: .center)
             }
         }
     }
