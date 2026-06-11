@@ -9,7 +9,7 @@ import Observation
 /// A single entry in a row's context menu — either an action button or a separator.
 struct ChooserContextMenuEntry {
     enum Kind {
-        case button(title: String, action: (ChooserItem) -> Void)
+        case button(title: String, action: () -> Void)
         case divider
     }
     let kind: Kind

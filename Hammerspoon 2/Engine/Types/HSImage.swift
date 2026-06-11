@@ -75,9 +75,11 @@ import Observation
     @objc static func fromSymbol(_ name: String) -> HSImage?
 
     /// Load an app's icon by bundle identifier
-    /// - Parameter bundleID: Bundle identifier of the application
+    /// - Parameter:
+    ///  - bundleID: Bundle identifier of the application
+    ///  - withFallbackSymbol: The name of an SF Symbol to use if no bundle image could be loaded. Defaults to questionmark.circle
     /// - Returns: An HSImage object, or null if the app couldn't be found
-    @objc static func fromAppBundle(_ bundleID: String) -> HSImage?
+    @objc static func fromAppBundle(_ bundleID: String, _ withFallbackSymbol: String) -> HSImage?
 
     /// Get the icon for a file
     /// - Parameter path: Path to the file
@@ -173,13 +175,22 @@ import Observation
         return image.toBridge()
     }
 
-    @objc static func fromAppBundle(_ bundleID: String) -> HSImage? {
-        guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
-            AKError("HSImage: Failed to find app with bundle ID: \(bundleID)")
-            return nil
+    @objc static func fromAppBundle(_ bundleID: String, _ withFallbackSymbol: String) -> HSImage? {
+        let image: NSImage?
+        let fallbackSymbol: String
+
+        if withFallbackSymbol == "undefined" {
+            fallbackSymbol = "questionmark.circle"
+        } else {
+            fallbackSymbol = withFallbackSymbol
         }
-        let image = NSWorkspace.shared.icon(forFile: appURL.path)
-        return image.toBridge()
+
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
+            image = NSWorkspace.shared.icon(forFile: appURL.path)
+        } else {
+            image = NSImage(systemSymbolName: fallbackSymbol, accessibilityDescription: nil)
+        }
+        return image?.toBridge()
     }
 
     @objc static func iconForFile(_ path: String) -> HSImage? {

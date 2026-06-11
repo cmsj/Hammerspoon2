@@ -25,9 +25,9 @@ import SwiftUI
 ///   text: "Open Safari", subText: "com.apple.Safari",
 ///   image: HSImage.fromAppBundle("com.apple.Safari"), valid: true, myData: 42,
 ///   contextMenu: [
-///     { title: "Open", action: (item) => hs.urlevent.openURL("https://apple.com") },
+///     { title: "Open", action: () => hs.urlevent.openURL("https://apple.com") },
 ///     { type: "divider" },
-///     { title: "Copy bundle ID", action: (item) => hs.pasteboard.writeString(item.bundleID) }
+///     { title: "Copy bundle ID", action: () => hs.pasteboard.writeString("com.apple.Safari") }
 ///   ]
 /// }
 /// ```
@@ -697,8 +697,8 @@ import SwiftUI
 
             guard let cb = JSCallback(value: actionVal, owner: self) else { return nil }
             contextMenuCallbacks.append(cb)
-            return ChooserContextMenuEntry(kind: .button(title: title, action: { [weak cb] item in
-                _ = cb?.value?.call(withArguments: [item])
+            return ChooserContextMenuEntry(kind: .button(title: title, action: { [weak cb] in
+                _ = cb?.value?.call(withArguments: [])
             }))
         }
     }

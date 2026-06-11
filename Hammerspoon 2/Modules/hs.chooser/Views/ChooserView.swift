@@ -74,7 +74,7 @@ struct ChooserView: View {
                             }
                             .contextMenu {
                                 ForEach(Array(item.contextMenuItems.enumerated()), id: \.offset) { _, entry in
-                                    contextMenuEntryView(for: entry, on: item)
+                                    contextMenuEntryView(for: entry)
                                 }
                             }
                     }
@@ -93,12 +93,12 @@ struct ChooserView: View {
 
 extension ChooserView {
     @ViewBuilder
-    func contextMenuEntryView(for entry: ChooserContextMenuEntry, on item: ChooserItem) -> some View {
+    func contextMenuEntryView(for entry: ChooserContextMenuEntry) -> some View {
         switch entry.kind {
         case .divider:
             Divider()
         case .button(let title, let action):
-            Button(title, action: { action(item) })
+            Button(title, action: action)
         }
     }
 }
