@@ -36,13 +36,13 @@ import JavaScriptCore
 /// For search-as-you-type filtering powered by your own data:
 ///
 /// ```javascript
-/// const allApps = hs.application.list()
+/// const allApps = hs.application.runningApplications()
 ///
 /// chooser.setChoices((query) => {
 ///     const q = query.toLowerCase()
 ///     return allApps
-///         .filter(a => a.name.toLowerCase().includes(q))
-///         .map(a => ({ text: a.name, subText: a.bundleID }))
+///         .filter(a => a.title.toLowerCase().includes(q))
+///         .map(a => ({ text: a.title, subText: a.bundleID }))
 /// })
 /// ```
 ///

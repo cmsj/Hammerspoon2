@@ -132,7 +132,7 @@ import AXSwift
     }
 
     deinit {
-        print("deinit of \(self): \(self.runningApplication.localizedName ?? "UNKNOWN")")
+//        print("deinit of \(self): \(self.runningApplication.localizedName ?? "UNKNOWN")")
     }
 
     @objc var pid: Int { Int(self.runningApplication.processIdentifier) }
