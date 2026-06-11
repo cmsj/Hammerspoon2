@@ -3156,8 +3156,8 @@
         {
           "name": "HSChooserAPI",
           "type": "typedef",
-          "rawDocumentation": "A keyboard-driven floating chooser panel.\n\nCreate via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.\n\n## Choice format\n\nEach choice is a plain object with required `text` and optional `subText`, `image`, and\n`valid` fields. All other fields are passed through to the `onSelect` callback unchanged:\n\n```javascript\n{ text: \"Open Safari\", subText: \"com.apple.Safari\", image: HSImage.fromAppBundle(\"com.apple.Safari\"), valid: true, myData: 42 }\n```\n\n## Keyboard shortcuts\n\n- **Return** — confirm selection\n- **Escape** — dismiss (calls `onSelect` with `null`)\n- **↑ / ↓** — move through results",
-          "description": "A keyboard-driven floating chooser panel.\nCreate via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.\n## Choice format\nEach choice is a plain object with required `text` and optional `subText`, `image`, and\n```javascript\n{ text: \"Open Safari\", subText: \"com.apple.Safari\", image: HSImage.fromAppBundle(\"com.apple.Safari\"), valid: true, myData: 42 }\n```\n## Keyboard shortcuts",
+          "rawDocumentation": "A keyboard-driven floating chooser panel.\n\nCreate via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.\n\n## Choice format\n\nEach choice is a plain object with required `text` and optional `subText`, `image`, `valid`,\nand `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.\n\nThe `contextMenu` array defines per-row right-click menu entries. Each entry is either\n`{ title: \"...\", action: (item) => {} }` for a button or `{ type: \"divider\" }` for a separator:\n\n```javascript\n{\n  text: \"Open Safari\", subText: \"com.apple.Safari\",\n  image: HSImage.fromAppBundle(\"com.apple.Safari\"), valid: true, myData: 42,\n  contextMenu: [\n    { title: \"Open\", action: (item) => hs.urlevent.openURL(\"https://apple.com\") },\n    { type: \"divider\" },\n    { title: \"Copy bundle ID\", action: (item) => hs.pasteboard.writeString(item.bundleID) }\n  ]\n}\n```\n\n## Keyboard shortcuts\n\n- **Return** — confirm selection\n- **Escape** — dismiss (calls `onSelect` with `null`)\n- **↑ / ↓** — move through results",
+          "description": "A keyboard-driven floating chooser panel.\nCreate via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.\n## Choice format\nEach choice is a plain object with required `text` and optional `subText`, `image`, `valid`,\nand `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.\nThe `contextMenu` array defines per-row right-click menu entries. Each entry is either\n```javascript\n{\n  text: \"Open Safari\", subText: \"com.apple.Safari\",\n  image: HSImage.fromAppBundle(\"com.apple.Safari\"), valid: true, myData: 42,\n  contextMenu: [\n    { title: \"Open\", action: (item) => hs.urlevent.openURL(\"https://apple.com\") },\n    { type: \"divider\" },\n    { title: \"Copy bundle ID\", action: (item) => hs.pasteboard.writeString(item.bundleID) }\n  ]\n}\n```\n## Keyboard shortcuts",
           "methods": [
             {
               "name": "setChoices",
@@ -3184,7 +3184,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 88
+              "lineNumber": 99
             },
             {
               "name": "refreshChoices",
@@ -3205,7 +3205,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 97
+              "lineNumber": 108
             },
             {
               "name": "show",
@@ -3226,7 +3226,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 132
+              "lineNumber": 143
             },
             {
               "name": "hide",
@@ -3247,7 +3247,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 140
+              "lineNumber": 151
             },
             {
               "name": "destroy",
@@ -3265,7 +3265,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 154
+              "lineNumber": 165
             },
             {
               "name": "select",
@@ -3292,7 +3292,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 227
+              "lineNumber": 231
             },
             {
               "name": "selectedRowContents",
@@ -3319,7 +3319,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 239
+              "lineNumber": 243
             }
           ],
           "properties": [
@@ -3331,7 +3331,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 32
+              "lineNumber": 43
             },
             {
               "name": "identifier",
@@ -3341,7 +3341,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 35
+              "lineNumber": 46
             },
             {
               "name": "query",
@@ -3356,7 +3356,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 45
+              "lineNumber": 56
             },
             {
               "name": "placeholder",
@@ -3371,7 +3371,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 52
+              "lineNumber": 63
             },
             {
               "name": "searchSubText",
@@ -3386,7 +3386,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 60
+              "lineNumber": 71
             },
             {
               "name": "enableDefaultForQuery",
@@ -3401,7 +3401,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 68
+              "lineNumber": 79
             },
             {
               "name": "selectedRow",
@@ -3416,7 +3416,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 106
+              "lineNumber": 117
             },
             {
               "name": "width",
@@ -3431,7 +3431,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 115
+              "lineNumber": 126
             },
             {
               "name": "visibleRows",
@@ -3446,7 +3446,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 122
+              "lineNumber": 133
             },
             {
               "name": "isVisible",
@@ -3461,7 +3461,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 147
+              "lineNumber": 158
             },
             {
               "name": "onSelect",
@@ -3476,7 +3476,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 171
+              "lineNumber": 182
             },
             {
               "name": "onQueryChange",
@@ -3491,7 +3491,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 183
+              "lineNumber": 194
             },
             {
               "name": "onShow",
@@ -3506,7 +3506,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 190
+              "lineNumber": 201
             },
             {
               "name": "onHide",
@@ -3521,22 +3521,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 197
-            },
-            {
-              "name": "onRightClick",
-              "signature": "var onRightClick: JSValue? { get set }",
-              "rawDocumentation": "Called when the user right-clicks a row. The argument is the zero-based row index.\n- Example:\n```js\nchooser.onRightClick = (rowIndex) => console.log(\"Right-clicked row \" + rowIndex)\n```",
-              "description": "Called when the user right-clicks a row. The argument is the zero-based row index.",
-              "examples": [
-                {
-                  "lang": "js",
-                  "code": "chooser.onRightClick = (rowIndex) => console.log(\"Right-clicked row \" + rowIndex)"
-                }
-              ],
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 204
+              "lineNumber": 208
             },
             {
               "name": "onInvalid",
@@ -3551,13 +3536,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 213
+              "lineNumber": 217
             }
           ]
         }
       ],
-      "description": "# hs.chooser\n**A Spotlight-style chooser for presenting options to the user**\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n## Quick Start\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n## Dynamic Choices\n```javascript\nconst allApps = hs.application.list()\n\nchooser.setChoices((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.name.toLowerCase().includes(q))\n        .map(a => ({ text: a.name, subText: a.bundleID }))\n})\n```\n## Async Choices (with debounce)\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoices(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```",
-      "rawDocumentation": "# hs.chooser\n\n**A Spotlight-style chooser for presenting options to the user**\n\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n\n## Quick Start\n\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n\n## Dynamic Choices\n\nFor search-as-you-type filtering powered by your own data:\n\n```javascript\nconst allApps = hs.application.list()\n\nchooser.setChoices((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.name.toLowerCase().includes(q))\n        .map(a => ({ text: a.name, subText: a.bundleID }))\n})\n```\n\n## Async Choices (with debounce)\n\nFor results fetched from an external source:\n\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoices(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```"
+      "description": "# hs.chooser\n**A Spotlight-style chooser for presenting options to the user**\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n## Quick Start\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n## Dynamic Choices\n```javascript\nconst allApps = hs.application.runningApplications()\n\nchooser.setChoices((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.title.toLowerCase().includes(q))\n        .map(a => ({ text: a.title, subText: a.bundleID }))\n})\n```\n## Async Choices (with debounce)\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoices(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```",
+      "rawDocumentation": "# hs.chooser\n\n**A Spotlight-style chooser for presenting options to the user**\n\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n\n## Quick Start\n\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n\n## Dynamic Choices\n\nFor search-as-you-type filtering powered by your own data:\n\n```javascript\nconst allApps = hs.application.runningApplications()\n\nchooser.setChoices((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.title.toLowerCase().includes(q))\n        .map(a => ({ text: a.title, subText: a.bundleID }))\n})\n```\n\n## Async Choices (with debounce)\n\nFor results fetched from an external source:\n\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoices(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```"
     },
     {
       "name": "hs.console",
@@ -12510,6 +12495,28 @@
           "lineNumber": 70
         },
         {
+          "name": "fromSymbol",
+          "signature": "static func fromSymbol(_ name: String) -> HSImage?",
+          "isStatic": true,
+          "rawDocumentation": "Load a system symbol by name\n- Parameter name: Name of the symbol (e.g., \"hammer\", \"questionmark.circle\")\n- Returns: An HSImage object, or null if the symbol couldn't be found",
+          "description": "Load a system symbol by name",
+          "params": [
+            {
+              "name": "name",
+              "type": "String",
+              "description": "Name of the symbol (e.g., \"hammer\", \"questionmark.circle\")"
+            }
+          ],
+          "returns": {
+            "type": "HSImage?",
+            "description": "An HSImage object, or null if the symbol couldn't be found"
+          },
+          "examples": [],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 75
+        },
+        {
           "name": "fromAppBundle",
           "signature": "static func fromAppBundle(_ bundleID: String) -> HSImage?",
           "isStatic": true,
@@ -12529,7 +12536,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 75
+          "lineNumber": 80
         },
         {
           "name": "iconForFile",
@@ -12551,7 +12558,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 80
+          "lineNumber": 85
         },
         {
           "name": "iconForFileType",
@@ -12573,7 +12580,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 85
+          "lineNumber": 90
         },
         {
           "name": "fromURL",
@@ -12596,7 +12603,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 90
+          "lineNumber": 95
         },
         {
           "name": "size",
@@ -12618,7 +12625,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 95
+          "lineNumber": 100
         },
         {
           "name": "name",
@@ -12640,7 +12647,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 100
+          "lineNumber": 105
         },
         {
           "name": "setSize",
@@ -12667,7 +12674,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 107
+          "lineNumber": 112
         },
         {
           "name": "copyImage",
@@ -12683,7 +12690,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 111
+          "lineNumber": 116
         },
         {
           "name": "croppedCopy",
@@ -12705,7 +12712,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 116
+          "lineNumber": 121
         },
         {
           "name": "saveToFile",
@@ -12727,7 +12734,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 121
+          "lineNumber": 126
         },
         {
           "name": "template",
@@ -12749,7 +12756,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 126
+          "lineNumber": 131
         },
         {
           "name": "set",
@@ -12768,7 +12775,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 130
+          "lineNumber": 135
         }
       ],
       "properties": [],
@@ -13030,5 +13037,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-06-09T14:21:34.628Z"
+  "generatedAt": "2026-06-11T20:44:29.944Z"
 }

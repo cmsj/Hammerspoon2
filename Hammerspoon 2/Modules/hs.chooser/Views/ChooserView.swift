@@ -11,7 +11,6 @@ struct ChooserView: View {
     /// Binding for the text field — setter notifies HSChooser of user typing.
     var queryBinding: Binding<String>
     let onSelect: (Int?) -> Void
-    let onRightClick: (Int) -> Void
 
     @FocusState private var searchFocused: Bool
 
@@ -74,7 +73,9 @@ struct ChooserView: View {
                                 onSelect(index)
                             }
                             .contextMenu {
-                                Button("Right-click action") { onRightClick(index) }
+                                ForEach(Array(item.contextMenuItems.enumerated()), id: \.offset) { _, entry in
+                                    contextMenuEntryView(for: entry, on: item)
+                                }
                             }
                     }
                 }
@@ -84,6 +85,20 @@ struct ChooserView: View {
                 guard newIndex < viewModel.filteredChoices.count else { return }
                 proxy.scrollTo(viewModel.filteredChoices[newIndex].id, anchor: .center)
             }
+        }
+    }
+}
+
+// MARK: - Context menu
+
+extension ChooserView {
+    @ViewBuilder
+    func contextMenuEntryView(for entry: ChooserContextMenuEntry, on item: ChooserItem) -> some View {
+        switch entry.kind {
+        case .divider:
+            Divider()
+        case .button(let title, let action):
+            Button(title, action: { action(item) })
         }
     }
 }

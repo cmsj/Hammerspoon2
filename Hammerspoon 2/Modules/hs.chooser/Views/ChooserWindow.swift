@@ -18,8 +18,7 @@ final class ChooserPanel: NSPanel {
         width: CGFloat,
         viewModel: ChooserViewModel,
         queryBinding: Binding<String>,
-        onSelect: @escaping (Int?) -> Void,
-        onRightClick: @escaping (Int) -> Void
+        onSelect: @escaping (Int?) -> Void
     ) {
         let s = screen ?? NSScreen.main ?? NSScreen.screens[0]
         let frame = ChooserPanel.initialFrame(on: s, width: width, height: ChooserViewModel.searchBarHeight)
@@ -44,8 +43,7 @@ final class ChooserPanel: NSPanel {
         let view = ChooserView(
             viewModel: viewModel,
             queryBinding: queryBinding,
-            onSelect: onSelect,
-            onRightClick: onRightClick
+            onSelect: onSelect
         )
         let hosting = NSHostingView(rootView: view)
         // Disable automatic window-resizing driven by SwiftUI content size.

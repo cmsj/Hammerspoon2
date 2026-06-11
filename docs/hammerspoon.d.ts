@@ -193,6 +193,13 @@ declare class HSImage {
     static fromName(name: string): HSImage | undefined;
 
     /**
+     * Load a system symbol by name
+     * @param name Name of the symbol (e.g., "hammer", "questionmark.circle")
+     * @returns An HSImage object, or null if the symbol couldn't be found
+     */
+    static fromSymbol(name: string): HSImage | undefined;
+
+    /**
      * Load an app's icon by bundle identifier
      * @param bundleID Bundle identifier of the application
      * @returns An HSImage object, or null if the app couldn't be found
@@ -1578,13 +1585,13 @@ chooser.show()
 ```
 ## Dynamic Choices
 ```javascript
-const allApps = hs.application.list()
+const allApps = hs.application.runningApplications()
 
 chooser.setChoices((query) => {
     const q = query.toLowerCase()
     return allApps
-        .filter(a => a.name.toLowerCase().includes(q))
-        .map(a => ({ text: a.name, subText: a.bundleID }))
+        .filter(a => a.title.toLowerCase().includes(q))
+        .map(a => ({ text: a.title, subText: a.bundleID }))
 })
 ```
 ## Async Choices (with debounce)
@@ -1618,9 +1625,19 @@ declare namespace hs.chooser {
  * A keyboard-driven floating chooser panel.
 Create via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.
 ## Choice format
-Each choice is a plain object with required `text` and optional `subText`, `image`, and
+Each choice is a plain object with required `text` and optional `subText`, `image`, `valid`,
+and `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.
+The `contextMenu` array defines per-row right-click menu entries. Each entry is either
 ```javascript
-{ text: "Open Safari", subText: "com.apple.Safari", image: HSImage.fromAppBundle("com.apple.Safari"), valid: true, myData: 42 }
+{
+  text: "Open Safari", subText: "com.apple.Safari",
+  image: HSImage.fromAppBundle("com.apple.Safari"), valid: true, myData: 42,
+  contextMenu: [
+    { title: "Open", action: (item) => hs.urlevent.openURL("https://apple.com") },
+    { type: "divider" },
+    { title: "Copy bundle ID", action: (item) => hs.pasteboard.writeString(item.bundleID) }
+  ]
+}
 ```
 ## Keyboard shortcuts
  */
@@ -1749,11 +1766,6 @@ Use this to debounce expensive searches or trigger async data fetching.
      * Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).
      */
     onHide: JSValue | undefined;
-
-    /**
-     * Called when the user right-clicks a row. The argument is the zero-based row index.
-     */
-    onRightClick: JSValue | undefined;
 
     /**
      * Called when the user activates a row whose `valid` field is `false`.

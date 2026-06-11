@@ -14,11 +14,22 @@ import SwiftUI
 ///
 /// ## Choice format
 ///
-/// Each choice is a plain object with required `text` and optional `subText`, `image`, and
-/// `valid` fields. All other fields are passed through to the `onSelect` callback unchanged:
+/// Each choice is a plain object with required `text` and optional `subText`, `image`, `valid`,
+/// and `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.
+///
+/// The `contextMenu` array defines per-row right-click menu entries. Each entry is either
+/// `{ title: "...", action: (item) => {} }` for a button or `{ type: "divider" }` for a separator:
 ///
 /// ```javascript
-/// { text: "Open Safari", subText: "com.apple.Safari", image: HSImage.fromAppBundle("com.apple.Safari"), valid: true, myData: 42 }
+/// {
+///   text: "Open Safari", subText: "com.apple.Safari",
+///   image: HSImage.fromAppBundle("com.apple.Safari"), valid: true, myData: 42,
+///   contextMenu: [
+///     { title: "Open", action: (item) => hs.urlevent.openURL("https://apple.com") },
+///     { type: "divider" },
+///     { title: "Copy bundle ID", action: (item) => hs.pasteboard.writeString(item.bundleID) }
+///   ]
+/// }
 /// ```
 ///
 /// ## Keyboard shortcuts
@@ -196,13 +207,6 @@ import SwiftUI
     /// ```
     @objc var onHide: JSValue? { get set }
 
-    /// Called when the user right-clicks a row. The argument is the zero-based row index.
-    /// - Example:
-    /// ```js
-    /// chooser.onRightClick = (rowIndex) => console.log("Right-clicked row " + rowIndex)
-    /// ```
-    @objc var onRightClick: JSValue? { get set }
-
     /// Called when the user activates a row whose `valid` field is `false`.
     /// The chooser stays open; the argument is the row dict (same shape as `onSelect`).
     /// If unset, activating an invalid row is silently ignored.
@@ -266,8 +270,8 @@ import SwiftUI
     private var _onQueryChange: JSCallback?
     private var _onShow: JSCallback?
     private var _onHide: JSCallback?
-    private var _onRightClick: JSCallback?
     private var _onInvalid: JSCallback?
+    private var contextMenuCallbacks: [JSCallback] = []
 
     private var previouslyActiveWindow: NSWindow?
     private var keyEventMonitor: Any?
@@ -338,14 +342,6 @@ import SwiftUI
         }
     }
 
-    @objc var onRightClick: JSValue? {
-        get { _onRightClick?.value }
-        set {
-            _onRightClick?.detach(from: self)
-            _onRightClick = newValue.flatMap { JSCallback(value: $0, owner: self) }
-        }
-    }
-
     @objc var onInvalid: JSValue? {
         get { _onInvalid?.value }
         set {
@@ -361,7 +357,8 @@ import SwiftUI
             isStaticChoices = true
             _choicesFunction?.detach(from: self)
             _choicesFunction = nil
-            allChoices = parseChoiceArray(choices.toArray())
+            clearContextMenuCallbacks()
+            allChoices = parseChoiceArray(choices)
             viewModel.filteredChoices = filteredChoices(for: _storedQuery)
             viewModel.selectedIndex = 0
         } else if choices.isObject && !choices.isNull && !choices.isUndefined {
@@ -373,6 +370,7 @@ import SwiftUI
             isStaticChoices = true
             _choicesFunction?.detach(from: self)
             _choicesFunction = nil
+            clearContextMenuCallbacks()
             allChoices = []
             viewModel.filteredChoices = []
         }
@@ -463,10 +461,9 @@ import SwiftUI
         _onShow = nil
         _onHide?.detach(from: self)
         _onHide = nil
-        _onRightClick?.detach(from: self)
-        _onRightClick = nil
         _onInvalid?.detach(from: self)
         _onInvalid = nil
+        clearContextMenuCallbacks()
 
         allChoices = []
         viewModel.filteredChoices = []
@@ -586,9 +583,6 @@ import SwiftUI
             queryBinding: queryBinding,
             onSelect: { [weak self] index in
                 self?.handleSelection(index)
-            },
-            onRightClick: { [weak self] index in
-                _ = self?._onRightClick?.call(withArguments: [index])
             }
         )
     }
@@ -596,7 +590,8 @@ import SwiftUI
     private func callChoicesFunction() {
         guard let fn = _choicesFunction?.value else { return }
         let result = fn.call(withArguments: [_storedQuery])
-        allChoices = parseChoiceArray(result?.toArray())
+        clearContextMenuCallbacks()
+        allChoices = parseChoiceArray(result)
         viewModel.filteredChoices = allChoices
         viewModel.selectedIndex = 0
         viewModel.onContentSizeChange?(viewModel.expectedHeight())
@@ -651,14 +646,17 @@ import SwiftUI
         return dict
     }
 
-    private func parseChoiceArray(_ raw: [Any]?) -> [ChooserItem] {
-        guard let raw else { return [] }
-        return raw.compactMap { parseChoice($0) }
+    private func parseChoiceArray(_ raw: JSValue?) -> [ChooserItem] {
+        guard let raw, raw.isArray else { return [] }
+        let basicItems = raw.toArray() ?? []
+        return basicItems.indices.compactMap { i in
+            guard let dict = basicItems[i] as? [String: Any] else { return nil }
+            return parseChoice(dict, jsValue: raw.objectAtIndexedSubscript(i))
+        }
     }
 
-    private func parseChoice(_ value: Any) -> ChooserItem? {
-        guard let dict = value as? [String: Any],
-              let text = dict["text"] as? String else { return nil }
+    private func parseChoice(_ dict: [String: Any], jsValue: JSValue?) -> ChooserItem? {
+        guard let text = dict["text"] as? String else { return nil }
 
         let subText = dict["subText"] as? String
         let isValid = dict["valid"] as? Bool ?? true
@@ -670,12 +668,43 @@ import SwiftUI
             image = nsImg
         }
 
+        let contextMenuItems = parseContextMenu(jsValue?.objectForKeyedSubscript("contextMenu"))
+
         var extra = dict
         extra.removeValue(forKey: "text")
         extra.removeValue(forKey: "subText")
         extra.removeValue(forKey: "image")
         extra.removeValue(forKey: "valid")
+        extra.removeValue(forKey: "contextMenu")
 
-        return ChooserItem(id: UUID(), text: text, subText: subText, image: image, isValid: isValid, extra: extra)
+        return ChooserItem(id: UUID(), text: text, subText: subText, image: image, isValid: isValid, extra: extra, contextMenuItems: contextMenuItems)
+    }
+
+    private func parseContextMenu(_ value: JSValue?) -> [ChooserContextMenuEntry] {
+        guard let value, value.isArray else { return [] }
+        let length = Int(value.objectForKeyedSubscript("length")?.toInt32() ?? 0)
+        return (0..<length).compactMap { i -> ChooserContextMenuEntry? in
+            guard let jsItem = value.objectAtIndexedSubscript(i),
+                  jsItem.isObject, !jsItem.isNull, !jsItem.isUndefined else { return nil }
+
+            if jsItem.objectForKeyedSubscript("type")?.toString() == "divider" {
+                return ChooserContextMenuEntry(kind: .divider)
+            }
+
+            guard let title = jsItem.objectForKeyedSubscript("title")?.toString(), !title.isEmpty else { return nil }
+            let actionVal = jsItem.objectForKeyedSubscript("action")
+            guard let actionVal, actionVal.isObject, !actionVal.isNull, !actionVal.isUndefined else { return nil }
+
+            guard let cb = JSCallback(value: actionVal, owner: self) else { return nil }
+            contextMenuCallbacks.append(cb)
+            return ChooserContextMenuEntry(kind: .button(title: title, action: { [weak cb] item in
+                _ = cb?.value?.call(withArguments: [item])
+            }))
+        }
+    }
+
+    private func clearContextMenuCallbacks() {
+        for cb in contextMenuCallbacks { cb.detach(from: self) }
+        contextMenuCallbacks.removeAll()
     }
 }

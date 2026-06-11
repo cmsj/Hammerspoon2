@@ -6,6 +6,15 @@
 import AppKit
 import Observation
 
+/// A single entry in a row's context menu — either an action button or a separator.
+struct ChooserContextMenuEntry {
+    enum Kind {
+        case button(title: String, action: (ChooserItem) -> Void)
+        case divider
+    }
+    let kind: Kind
+}
+
 /// A single selectable item in the chooser list.
 struct ChooserItem: Identifiable, Equatable {
     let id: UUID
@@ -13,8 +22,10 @@ struct ChooserItem: Identifiable, Equatable {
     let subText: String?
     let image: NSImage?
     let isValid: Bool
-    /// Original JS-side fields (excluding text/subText/image/valid) for passback to onSelect.
+    /// Original JS-side fields (excluding text/subText/image/valid/contextMenu) for passback to onSelect.
     let extra: [String: Any]
+    /// Per-row context menu entries, parsed from the JS `contextMenu` array.
+    let contextMenuItems: [ChooserContextMenuEntry]
 
     static func == (lhs: ChooserItem, rhs: ChooserItem) -> Bool {
         lhs.id == rhs.id

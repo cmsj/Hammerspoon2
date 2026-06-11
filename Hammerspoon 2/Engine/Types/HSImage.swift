@@ -69,6 +69,11 @@ import Observation
     /// - Returns: An HSImage object, or null if the image couldn't be found
     @objc static func fromName(_ name: String) -> HSImage?
 
+    /// Load a system symbol by name
+    /// - Parameter name: Name of the symbol (e.g., "hammer", "questionmark.circle")
+    /// - Returns: An HSImage object, or null if the symbol couldn't be found
+    @objc static func fromSymbol(_ name: String) -> HSImage?
+
     /// Load an app's icon by bundle identifier
     /// - Parameter bundleID: Bundle identifier of the application
     /// - Returns: An HSImage object, or null if the app couldn't be found
@@ -155,6 +160,14 @@ import Observation
     @objc static func fromName(_ name: String) -> HSImage? {
         guard let image = NSImage(named: NSImage.Name(name)) else {
             AKError("HSImage: Failed to find system image named: \(name)")
+            return nil
+        }
+        return image.toBridge()
+    }
+
+    @objc static func fromSymbol(_ name: String) -> HSImage? {
+        guard let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) else {
+            AKError("HSImage: Failed to find symbol named: \(name)")
             return nil
         }
         return image.toBridge()
