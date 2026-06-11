@@ -57,7 +57,7 @@ final class ChooserPanel: NSPanel {
         self.hostingView = hosting
     }
 
-    override var canBecomeKey: Bool { true }
+    override var canBecomeKey: Bool { isVisible }
     override var canBecomeMain: Bool { false }
 
     /// Position: horizontally centered on the screen, 25 % down from the top.

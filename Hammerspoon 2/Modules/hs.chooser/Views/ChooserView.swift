@@ -27,6 +27,9 @@ struct ChooserView: View {
         .frame(maxWidth: .infinity)
         .chooserBackground()
         .onAppear { searchFocused = true }
+        .onChange(of: viewModel.isVisible) { _, visible in
+            if visible { searchFocused = true }
+        }
         .onChange(of: viewModel.filteredChoices.count) { _, _ in
             // Fallback height update for static-choices mode; dynamic mode is
             // handled imperatively by callChoicesFunction().
@@ -35,6 +38,9 @@ struct ChooserView: View {
         .onChange(of: searchFocused) { _, focused in
             // The scroll view's underlying NSScrollView can capture first responder
             // when the user clicks or scrolls. Re-assert TextField focus immediately.
+            // Guard against hidden window: re-asserting focus in a hidden panel causes
+            // SwiftUI to call makeKeyAndOrderFront, stealing key status from other windows.
+            guard viewModel.isVisible else { return }
             if !focused { searchFocused = true }
         }
     }

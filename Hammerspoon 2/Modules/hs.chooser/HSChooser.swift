@@ -407,6 +407,7 @@ import SwiftUI
         // here we set it imperatively one more time to be sure.
         window?.setHeight(viewModel.expectedHeight())
 
+        viewModel.isVisible = true
         startKeyMonitor()
         startResignKeyObserver()
         window?.makeKeyAndOrderFront(nil)
@@ -417,6 +418,7 @@ import SwiftUI
 
     @objc @discardableResult func hide() -> HSChooser {
         guard let w = window, w.isVisible else { return self }
+        viewModel.isVisible = false
         stopKeyMonitor()
         stopResignKeyObserver()  // must be before orderOut — orderOut resigns key, which would re-fire the observer
         w.orderOut(nil)

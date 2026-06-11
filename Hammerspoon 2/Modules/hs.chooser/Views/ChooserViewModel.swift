@@ -29,6 +29,7 @@ final class ChooserViewModel {
     var selectedIndex: Int = 0
     var placeholder: String = "Search..."
     var visibleRows: Int = 10
+    var isVisible: Bool = false
 
     /// Notified when the user types in the search field (not when set programmatically).
     @ObservationIgnored var onUserQueryChange: ((String) -> Void)?
