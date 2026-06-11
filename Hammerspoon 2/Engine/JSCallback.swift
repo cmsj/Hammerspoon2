@@ -17,14 +17,13 @@ import JavaScriptCore
 /// from JS. When JS GC collects the wrapper, the managed value becomes nil
 /// and the owner can be freed.
 ///
-/// **Key design:** the JSVirtualMachine is captured at init time (when
-/// `JSContext.current()` is valid — JS is calling into Swift). This allows
-/// `detach(from:)` to work correctly even when called outside a JS execution
-/// context (e.g., from `shutdown()`).
+/// **Key design:** the JSVirtualMachine is resolved from `value.context` at
+/// init time, so construction works regardless of whether JS is actively
+/// executing. This allows `detach(from:)` to work correctly even when called
+/// outside a JS execution context (e.g., from `shutdown()`).
 ///
 /// Usage:
 /// ```swift
-/// // In init or a JS-called setter — JSContext.current() is non-nil here:
 /// self.callback = JSCallback(value: jsValue, owner: self)
 ///
 /// // In deinit or a destroy() method — owner must be passed explicitly
@@ -41,14 +40,10 @@ final class JSCallback {
 
     /// Creates a JSCallback for a value passed through the JS→Swift bridge.
     ///
-    /// Returns nil if the value is not an object/function and no virtual machine
-    /// can be resolved. Prefers `JSContext.current()` (JS actively calling Swift),
-    /// but falls back to `value.context` — allowing safe construction even when
-    /// called after a nested `fn.call()` has returned and cleared `current()`.
+    /// Returns nil if the value is not an object/function.
     init?(value: JSValue, owner: AnyObject) {
         guard value.isObject else { return nil }
-        let currentVM = JSContext.current()?.virtualMachine ?? value.context?.virtualMachine
-        guard let currentVM else { return nil }
+        guard let currentVM = value.context?.virtualMachine else { return nil }
 
         let managedValue = JSManagedValue(value: value)
         currentVM.addManagedReference(managedValue, withOwner: owner)
