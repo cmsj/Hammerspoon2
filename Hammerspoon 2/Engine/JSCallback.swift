@@ -41,11 +41,14 @@ final class JSCallback {
 
     /// Creates a JSCallback for a value passed through the JS→Swift bridge.
     ///
-    /// Returns nil if the value is not an object/function, or if called outside
-    /// a JS execution context (i.e., `JSContext.current()` is nil).
+    /// Returns nil if the value is not an object/function and no virtual machine
+    /// can be resolved. Prefers `JSContext.current()` (JS actively calling Swift),
+    /// but falls back to `value.context` — allowing safe construction even when
+    /// called after a nested `fn.call()` has returned and cleared `current()`.
     init?(value: JSValue, owner: AnyObject) {
         guard value.isObject else { return nil }
-        guard let currentVM = JSContext.current()?.virtualMachine else { return nil }
+        let currentVM = JSContext.current()?.virtualMachine ?? value.context?.virtualMachine
+        guard let currentVM else { return nil }
 
         let managedValue = JSManagedValue(value: value)
         currentVM.addManagedReference(managedValue, withOwner: owner)
