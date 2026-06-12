@@ -152,6 +152,10 @@ import JavaScriptCore
     }
 
     @objc func session(_ sourceLanguage: String, _ targetLanguage: String) -> HSTranslationSession? {
+        guard #available(macOS 26.0, *) else {
+            AKWarning("hs.translation.session: TranslationSession.init(installedSource:target:) requires macOS 26.0 or later")
+            return nil
+        }
         let source = Locale.Language(identifier: sourceLanguage)
         let target = Locale.Language(identifier: targetLanguage)
         let ts = TranslationSession(installedSource: source, target: target)

@@ -22,7 +22,7 @@ struct UIAlertView: View {
                     .font(alert.font)
                     .multilineTextAlignment(.center)
                     .padding(alert.padding ?? 20)
-                    .glassEffect(.regular)
+                    .optionalGlassEffect()
                 Spacer()
             }
             Spacer()

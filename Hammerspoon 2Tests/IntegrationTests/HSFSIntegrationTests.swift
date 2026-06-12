@@ -686,6 +686,7 @@ struct HSFSIntegrationTests {
 
     // MARK: - Finder Tags
 
+    @available(macOS 26.0, *)
     @Test("setTags, tags, addTags, removeTags round-trip correctly")
     func finderTagsRoundTrip() throws {
         let sut = HSFSModule(engineID: UUID())
@@ -720,6 +721,7 @@ struct HSFSIntegrationTests {
         #expect(sut.tags(file) == nil, "setTags([]) should clear all tags")
     }
 
+    @available(macOS 26.0, *)
     @Test("addTags is idempotent — adding an existing tag does not duplicate it")
     func addTagsIdempotent() throws {
         let sut = HSFSModule(engineID: UUID())
@@ -734,6 +736,7 @@ struct HSFSIntegrationTests {
         #expect(redCount == 1, "Duplicate tags should not be created")
     }
 
+    @available(macOS 26.0, *)
     @Test("removeTags silently ignores tags that are not present")
     func removeTagsIgnoresMissing() throws {
         let sut = HSFSModule(engineID: UUID())

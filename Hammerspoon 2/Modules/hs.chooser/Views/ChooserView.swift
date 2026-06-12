@@ -25,8 +25,7 @@ struct ChooserView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .shadow(color: .black.opacity(0.15), radius: 24, y: 12)
+        .chooserBackground()
         .onAppear { searchFocused = true }
         .onChange(of: viewModel.isVisible) { _, visible in
             if visible { searchFocused = true }
@@ -107,6 +106,31 @@ extension ChooserView {
             Divider()
         case .button(let title, let action):
             Button(title, action: action)
+        }
+    }
+}
+
+// MARK: - Glass background modifier
+
+private extension View {
+    func chooserBackground() -> some View {
+        modifier(ChooserBackgroundModifier())
+    }
+}
+
+private struct ChooserBackgroundModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *) {
+            content
+                .glassEffect(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .shadow(color: .black.opacity(0.15), radius: 24, y: 12)
+        } else {
+            content
+                .background(
+                    .ultraThinMaterial,
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                )
+                .shadow(color: .black.opacity(0.25), radius: 20, y: 8)
         }
     }
 }

@@ -259,11 +259,13 @@ import JavaScriptCore
             content.sound = .default
         }
 
-        if let level = dict["interruptionLevel"] as? String {
-            switch level {
-            case "passive":       content.interruptionLevel = .passive
-            case "timeSensitive": content.interruptionLevel = .timeSensitive
-            default:              content.interruptionLevel = .active
+        if #available(macOS 12.0, *) {
+            if let level = dict["interruptionLevel"] as? String {
+                switch level {
+                case "passive":       content.interruptionLevel = .passive
+                case "timeSensitive": content.interruptionLevel = .timeSensitive
+                default:              content.interruptionLevel = .active
+                }
             }
         }
 
