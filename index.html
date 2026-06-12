@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hammerspoon 2 — API Documentation</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+        }
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #e6edf3;
+            margin-bottom: 0.25rem;
+        }
+        .subtitle {
+            color: #8b949e;
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+        }
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #8b949e;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+        .version-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .version-list li a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #58a6ff;
+            text-decoration: none;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.9375rem;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .version-list li a:hover {
+            background: #1c2128;
+            border-color: #58a6ff;
+        }
+        .badge {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(31, 111, 235, 0.15);
+            color: #58a6ff;
+            border: 1px solid rgba(88, 166, 255, 0.3);
+        }
+        .badge.dev {
+            background: rgba(63, 185, 80, 0.1);
+            color: #3fb950;
+            border-color: rgba(63, 185, 80, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Hammerspoon 2</div>
+        <p class="subtitle">API Documentation</p>
+        <div class="section-label">Available Versions</div>
+        <ul class="version-list">
+            <li><a href="main/">main <span class="badge dev">dev</span></a></li>
+            <li><a href="0.0.6/">0.0.6 <span class="badge">latest</span></a></li>
+            <li><a href="0.0.5/">0.0.5</a></li>
+        </ul>
+    </div>
+</body>
+</html>
