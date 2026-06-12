@@ -10,6 +10,7 @@ struct ChooserView: View {
     var viewModel: ChooserViewModel
     /// Binding for the text field — setter notifies HSChooser of user typing.
     var queryBinding: Binding<String>
+    @State var querySelection: TextSelection? = nil
     let onSelect: (Int?) -> Void
 
     @FocusState private var searchFocused: Bool
@@ -49,10 +50,16 @@ struct ChooserView: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(.secondary)
-            TextField(viewModel.placeholder, text: queryBinding)
+            TextField(viewModel.placeholder, text: queryBinding, selection: $querySelection)
                 .textFieldStyle(.plain)
                 .font(.system(size: 20))
                 .focused($searchFocused)
+                .onChange(of: viewModel.isVisible) { _, visible in
+                    guard visible == true else { return }
+
+                    let range = queryBinding.wrappedValue.startIndex..<queryBinding.wrappedValue.endIndex
+                    querySelection = .init(range: range)
+                }
         }
         .padding(.horizontal, 16)
         .frame(height: ChooserViewModel.searchBarHeight)
