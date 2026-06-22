@@ -619,7 +619,7 @@ declare class HSApplication {
      * Get the full menu structure of this application
      * @returns An array of top-level menu objects, each with title and items keys, or null if unavailable
      */
-    getMenuItems(): [[String: Any]] | undefined;
+    getMenuItems(): Record<string, any>[] | undefined;
 
     /**
      * Find a menu item by searching all menus for a matching title (case-insensitive)
@@ -3803,7 +3803,7 @@ the search once you have what you need.
 | `icloud` | iCloud Documents |
 | `icloudData` | iCloud Data (non-document ubiquitous files) |
      */
-    const scope: [String: [String]];
+    const scope: Record<string, string[]>;
 
     /**
      * Common Spotlight metadata attribute key shortcuts.
@@ -4016,7 +4016,7 @@ Returns an empty array if `setGroupingAttributes()` was not called.
 Returns an empty array if `setValueListAttributes()` was not called.
      * @returns An array of summary objects
      */
-    valueLists(): [[String: Any]];
+    valueLists(): Record<string, any>[];
 
     /**
      * Stops the query and releases all associated resources.
