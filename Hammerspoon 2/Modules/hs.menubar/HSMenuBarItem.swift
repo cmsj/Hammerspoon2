@@ -253,11 +253,11 @@ import JavaScriptCore
         clearMenuHandlers()
 
         guard let callbackValue = _menuCallback?.value else { return }
-        guard let result = callbackValue.call(withArguments: []) else { return }
+        let result = callbackValue.call(withArguments: [])
 
         logJSException(from: callbackValue, context: "menu callback")
 
-        guard result.isArray else {
+        guard let result, result.isArray else {
             AKError("hs.menubar: Menu callback must return an array")
             return
         }

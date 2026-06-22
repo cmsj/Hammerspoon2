@@ -47,17 +47,16 @@ import JavaScriptCore
 /// ```
 @objc protocol HSMenuBarModuleAPI: JSExport {
     /// Create a new menu bar item
-    /// - Parameter inMenuBar: If true (default), the item is immediately visible in the menu bar.
-    ///   Pass false to create the item without showing it; call show() when ready.
+    /// - Parameter hidden: If true, the item is immediately visible in the menu bar. Defaults to false
     /// - Returns: A new HSMenuBarItem
     /// - Example:
     /// ```js
     /// const item = hs.menubar.create()
-    /// const hidden = hs.menubar.create(false)  // not shown yet
+    /// const hidden = hs.menubar.create(true)  // not shown yet
     /// hidden.setTitle("Ready")
     /// hidden.show()
     /// ```
-    @objc func create(_ inMenuBar: JSValue) -> HSMenuBarItem
+    @objc func create(_ hidden: Bool) -> HSMenuBarItem
 }
 
 // MARK: - Implementation
@@ -87,9 +86,8 @@ import JavaScriptCore
         AKTrace("Deinit of \(name): \(engineID)")
     }
 
-    @objc func create(_ inMenuBar: JSValue) -> HSMenuBarItem {
-        let show = inMenuBar.isUndefined || inMenuBar.isNull ? true : inMenuBar.toBool()
-        let item = HSMenuBarItem(inMenuBar: show)
+    @objc func create(_ hidden: Bool) -> HSMenuBarItem {
+        let item = HSMenuBarItem(inMenuBar: !hidden)
         items.add(item)
         return item
     }
