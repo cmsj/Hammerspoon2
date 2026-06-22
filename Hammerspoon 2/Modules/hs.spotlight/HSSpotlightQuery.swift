@@ -255,11 +255,6 @@ import JavaScriptCore
     /// ```
     @objc func valueLists() -> [[String: Any]]
 
-    /// Stops the query and releases all associated resources.
-    ///
-    /// Called automatically during module shutdown. After calling `destroy()`,
-    /// the query object should not be used further.
-    @objc func destroy()
 }
 
 // MARK: - Implementation
@@ -448,7 +443,7 @@ import JavaScriptCore
         }
     }
 
-    @objc func destroy() {
+    func destroy() {
         _ = stop()
         tearDownNotifications()
         callback?.detach(from: self)

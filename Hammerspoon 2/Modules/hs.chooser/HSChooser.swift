@@ -157,13 +157,6 @@ import SwiftUI
     /// ```
     @objc var isVisible: Bool { get }
 
-    /// Destroy the chooser and release all resources. After calling this, the object is unusable.
-    /// - Example:
-    /// ```js
-    /// chooser.destroy()
-    /// ```
-    @objc func destroy()
-
     // MARK: Callbacks
 
     /// Called when the user confirms a selection.
@@ -444,7 +437,7 @@ import SwiftUI
         return buildReturnDict(for: viewModel.filteredChoices[index])
     }
 
-    @objc func destroy() {
+    func destroy() {
         stopKeyMonitor()
         stopResignKeyObserver()
         _ = hide()
@@ -473,6 +466,7 @@ import SwiftUI
     }
 
     isolated deinit {
+        destroy()
         AKTrace("deinit of HSChooser(\(identifier))")
     }
 

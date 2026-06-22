@@ -92,6 +92,7 @@ import JavaScriptCore
     }
 
     isolated deinit {
+        cancel()
         AKTrace("Deinit of HSTranslationSession: \(sourceLanguage) -> \(targetLanguage)")
     }
 }

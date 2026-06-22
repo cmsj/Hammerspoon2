@@ -3598,24 +3598,6 @@
               "lineNumber": 151
             },
             {
-              "name": "destroy",
-              "signature": "func destroy()",
-              "isStatic": false,
-              "rawDocumentation": "Destroy the chooser and release all resources. After calling this, the object is unusable.\n- Example:\n```js\nchooser.destroy()\n```",
-              "description": "Destroy the chooser and release all resources. After calling this, the object is unusable.",
-              "params": [],
-              "returns": null,
-              "examples": [
-                {
-                  "lang": "js",
-                  "code": "chooser.destroy()"
-                }
-              ],
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 165
-            },
-            {
               "name": "select",
               "signature": "func select(_ row: JSValue) -> HSChooser",
               "isStatic": false,
@@ -3641,7 +3623,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 231
+              "lineNumber": 224
             },
             {
               "name": "selectedRowContents",
@@ -3669,7 +3651,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 243
+              "lineNumber": 236
             }
           ],
           "properties": [
@@ -3826,7 +3808,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 182
+              "lineNumber": 175
             },
             {
               "name": "onQueryChange",
@@ -3841,7 +3823,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 194
+              "lineNumber": 187
             },
             {
               "name": "onShow",
@@ -3856,7 +3838,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 201
+              "lineNumber": 194
             },
             {
               "name": "onHide",
@@ -3871,7 +3853,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 208
+              "lineNumber": 201
             },
             {
               "name": "onInvalid",
@@ -3886,7 +3868,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 217
+              "lineNumber": 210
             }
           ]
         }
@@ -5590,24 +5572,6 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
               "lineNumber": 38
-            },
-            {
-              "name": "destroy",
-              "signature": "func destroy()",
-              "isStatic": false,
-              "rawDocumentation": "Permanently destroy this hotkey, disabling it and clearing its callbacks.\n\nUnlike `disable()`, this cannot be reversed. The hotkey is unregistered and\nits callback references are released.\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.destroy()\n```",
-              "description": "Permanently destroy this hotkey, disabling it and clearing its callbacks.\nUnlike `disable()`, this cannot be reversed. The hotkey is unregistered and\nits callback references are released.",
-              "params": [],
-              "returns": null,
-              "examples": [
-                {
-                  "lang": "js",
-                  "code": "const hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.destroy()"
-                }
-              ],
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 49
             }
           ],
           "properties": [
@@ -5624,7 +5588,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 57
+              "lineNumber": 46
             },
             {
               "name": "callbackReleased",
@@ -5639,7 +5603,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 65
+              "lineNumber": 54
             }
           ]
         }
@@ -6306,24 +6270,6 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
               "lineNumber": 98
-            },
-            {
-              "name": "destroy",
-              "signature": "func destroy()",
-              "isStatic": false,
-              "rawDocumentation": "Permanently destroy this item and remove it from the menu bar.\n\nReleases all resources held by this item. After calling this, the item\nis removed from the menu bar and should not be used again.\n- Example:\n```js\nitem.destroy()\n```",
-              "description": "Permanently destroy this item and remove it from the menu bar.\nReleases all resources held by this item. After calling this, the item\nis removed from the menu bar and should not be used again.",
-              "params": [],
-              "returns": null,
-              "examples": [
-                {
-                  "lang": "js",
-                  "code": "item.destroy()"
-                }
-              ],
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
-              "lineNumber": 108
             }
           ],
           "properties": [
@@ -6340,13 +6286,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
-              "lineNumber": 115
+              "lineNumber": 105
             }
           ]
         }
       ],
-      "description": "Module for creating and managing macOS system menu bar items.\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n## Creating a simple title item\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n## Creating an icon item with a static menu\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.destroy() }\n])\n```\n## Creating an item with a dynamic menu\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.destroy() }\n])\n```",
-      "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.destroy() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.destroy() }\n])\n```"
+      "description": "Module for creating and managing macOS system menu bar items.\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n## Creating a simple title item\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n## Creating an icon item with a static menu\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.hide() }\n])\n```\n## Creating an item with a dynamic menu\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.hide() }\n])\n```",
+      "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.hide() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.hide() }\n])\n```"
     },
     {
       "name": "hs.notify",
@@ -9290,19 +9236,6 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.spotlight/HSSpotlightQuery.swift",
               "lineNumber": 256
-            },
-            {
-              "name": "destroy",
-              "signature": "func destroy()",
-              "isStatic": false,
-              "rawDocumentation": "Stops the query and releases all associated resources.\n\nCalled automatically during module shutdown. After calling `destroy()`,\nthe query object should not be used further.",
-              "description": "Stops the query and releases all associated resources.\nCalled automatically during module shutdown. After calling `destroy()`,\nthe query object should not be used further.",
-              "params": [],
-              "returns": null,
-              "examples": [],
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.spotlight/HSSpotlightQuery.swift",
-              "lineNumber": 262
             }
           ],
           "properties": [
@@ -13916,5 +13849,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-06-22T18:33:48.417Z"
+  "generatedAt": "2026-06-22T19:52:22.419Z"
 }

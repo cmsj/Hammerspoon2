@@ -1744,11 +1744,6 @@ Call after updating an external data source in an async `onQueryChange` handler.
     hide(): HSChooser;
 
     /**
-     * Destroy the chooser and release all resources. After calling this, the object is unusable.
-     */
-    destroy(): void;
-
-    /**
      * Programmatically confirm a selection.
 Omit `row` to confirm the currently highlighted row. Fires `onSelect` (or `onInvalid`
 for rows with `valid: false`) and hides the chooser.
@@ -2354,13 +2349,6 @@ declare class HSHotkey {
     isEnabled(): boolean;
 
     /**
-     * Permanently destroy this hotkey, disabling it and clearing its callbacks.
-Unlike `disable()`, this cannot be reversed. The hotkey is unregistered and
-its callback references are released.
-     */
-    destroy(): void;
-
-    /**
      * The callback function to be called when the hotkey is pressed
      */
     callbackPressed: JSValue | undefined;
@@ -2549,7 +2537,7 @@ item.setTooltip("My automation")
 item.setMenu([
     { title: "Reload config", fn: () => hs.reload() },
     { title: "-" },
-    { title: "Remove item", fn: () => item.destroy() }
+    { title: "Remove item", fn: () => item.hide() }
 ])
 ```
 ## Creating an item with a dynamic menu
@@ -2559,7 +2547,7 @@ item.setTitle("Dynamic")
 item.setMenu(() => [
     { title: "Time: " + new Date().toLocaleTimeString() },
     { title: "-" },
-    { title: "Close", fn: () => item.destroy() }
+    { title: "Close", fn: () => item.hide() }
 ])
 ```
  */
@@ -2624,13 +2612,6 @@ or a function that returns an array for a dynamic menu populated each time it op
      * @returns true if the item is visible in the menu bar
      */
     isVisible(): boolean;
-
-    /**
-     * Permanently destroy this item and remove it from the menu bar.
-Releases all resources held by this item. After calling this, the item
-is removed from the menu bar and should not be used again.
-     */
-    destroy(): void;
 
     /**
      * The current title text, or null if none is set
@@ -4021,13 +4002,6 @@ Returns an empty array if `setValueListAttributes()` was not called.
      * @returns An array of summary objects
      */
     valueLists(): Record<string, any>[];
-
-    /**
-     * Stops the query and releases all associated resources.
-Called automatically during module shutdown. After calling `destroy()`,
-the query object should not be used further.
-     */
-    destroy(): void;
 
     /**
      * A unique identifier for this query object (UUID string).

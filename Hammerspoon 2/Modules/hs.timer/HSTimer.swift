@@ -96,7 +96,8 @@ import JavaScriptCore
         self.callback = JSCallback(value: callback, owner: self)
     }
 
-    deinit {
+    isolated deinit {
+        destroy()
         print("HSTimer deinit")
     }
 
