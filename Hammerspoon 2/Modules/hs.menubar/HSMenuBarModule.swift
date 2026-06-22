@@ -30,7 +30,7 @@ import JavaScriptCore
 /// item.setMenu([
 ///     { title: "Reload config", fn: () => hs.reload() },
 ///     { title: "-" },
-///     { title: "Remove item", fn: () => item.hide() }
+///     { title: "Remove from menubar", fn: () => item.hide() }
 /// ])
 /// ```
 ///
@@ -42,7 +42,7 @@ import JavaScriptCore
 /// item.setMenu(() => [
 ///     { title: "Time: " + new Date().toLocaleTimeString() },
 ///     { title: "-" },
-///     { title: "Close", fn: () => item.hide() }
+///     { title: "Remove from menubar", fn: () => item.hide() }
 /// ])
 /// ```
 @objc protocol HSMenuBarModuleAPI: JSExport {
