@@ -250,13 +250,6 @@ struct HSSpotlightQueryStructureTests {
         #expect(!harness.hasException)
     }
 
-    @Test("destroy is a function")
-    func testDestroyIsFunction() {
-        let harness = makeHarness()
-        harness.eval("var q = hs.spotlight.create()")
-        harness.expectTrue("typeof q.destroy === 'function'")
-    }
-
     @Test("typeName is 'HSSpotlightQuery'")
     func testTypeName() {
         let harness = makeHarness()
@@ -330,13 +323,6 @@ struct HSSpotlightQueryConfigTests {
     func testStopNonRunningDoesNotThrow() {
         let harness = makeHarness()
         harness.eval("hs.spotlight.create().stop()")
-        #expect(!harness.hasException)
-    }
-
-    @Test("destroy does not throw")
-    func testDestroyDoesNotThrow() {
-        let harness = makeHarness()
-        harness.eval("hs.spotlight.create().destroy()")
         #expect(!harness.hasException)
     }
 

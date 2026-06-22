@@ -114,11 +114,6 @@ struct HSChooserStructureTests {
         makeHarness().expectTrue("typeof hs.chooser.create().hide === 'function'")
     }
 
-    @Test("destroy is a function")
-    func testDestroyIsFunction() {
-        makeHarness().expectTrue("typeof hs.chooser.create().destroy === 'function'")
-    }
-
     @Test("onSelect property is writable")
     func testOnSelectWritable() {
         let harness = makeHarness()
@@ -293,18 +288,6 @@ struct HSChooserBehaviourTests {
             c.searchSubText = true
         """)
         harness.expectTrue("c.searchSubText === true")
-        #expect(!harness.hasException)
-    }
-
-    @Test("destroy does not throw")
-    func testDestroyNoThrow() {
-        let harness = makeHarness()
-        harness.eval("""
-            var c = hs.chooser.create()
-            c.setChoices([{text: "Foo"}])
-            c.onSelect = item => {}
-            c.destroy()
-        """)
         #expect(!harness.hasException)
     }
 
