@@ -2456,6 +2456,113 @@ is delivered. Defaults to `kCLDistanceFilterNone` (all movements reported).
 }
 
 /**
+ * Module for creating and managing macOS system menu bar items.
+Menu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).
+Each item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.
+## Creating a simple title item
+```js
+const item = hs.menubar.create()
+item.setTitle("Hello")
+item.setClickCallback(() => console.log("clicked!"))
+```
+## Creating an icon item with a static menu
+```js
+const item = hs.menubar.create()
+item.setIcon(HSImage.fromSymbol("star.fill"))
+item.setTooltip("My automation")
+item.setMenu([
+    { title: "Reload config", fn: () => hs.reload() },
+    { title: "-" },
+    { title: "Remove item", fn: () => item.delete() }
+])
+```
+## Creating an item with a dynamic menu
+```js
+const item = hs.menubar.create()
+item.setTitle("Dynamic")
+item.setMenu(() => [
+    { title: "Time: " + new Date().toLocaleTimeString() },
+    { title: "-" },
+    { title: "Close", fn: () => item.delete() }
+])
+```
+ */
+declare namespace hs.menubar {
+    /**
+     * Create a new menu bar item
+Pass false to create the item without showing it; call returnToMenuBar() when ready.
+     * @param inMenuBar If true (default), the item is immediately visible in the menu bar.
+     * @returns A new HSMenuBarItem
+     */
+    function create(inMenuBar: JSValue): HSMenuBarItem;
+
+}
+
+/**
+ * Object representing a macOS system menu bar item.
+Create instances with `hs.menubar.create()`.
+ */
+declare class HSMenuBarItem {
+    /**
+     * Set the text title displayed in the menu bar
+     * @param title Text to display, or null to remove the title
+     */
+    setTitle(title: JSValue): void;
+
+    /**
+     * Set the icon displayed in the menu bar
+     * @param image An HSImage object, or null to remove the icon
+     */
+    setIcon(image: JSValue): void;
+
+    /**
+     * Set the tooltip shown when hovering over the menu bar item
+     * @param tooltip Tooltip text, or null to remove the tooltip
+     */
+    setTooltip(tooltip: JSValue): void;
+
+    /**
+     * Set a callback invoked when the item is clicked (only fires when no menu is set)
+     * @param fn A function to call on click, or null to remove the callback
+     */
+    setClickCallback(fn: JSValue): void;
+
+    /**
+     * Set the menu for this item. Pass an array of menu item objects for a static menu,
+or a function that returns an array for a dynamic menu populated each time it opens.
+     * @param menuOrFn Array of menu item objects, a function returning such an array, or null to remove the menu
+     */
+    setMenu(menuOrFn: JSValue): void;
+
+    /**
+     * Remove this item from the menu bar. The item is retained and can be shown again with returnToMenuBar().
+     */
+    removeFromMenuBar(): void;
+
+    /**
+     * Show this item in the menu bar (reverses removeFromMenuBar).
+     */
+    returnToMenuBar(): void;
+
+    /**
+     * Check if this item is currently visible in the menu bar.
+     * @returns true if the item is visible in the menu bar
+     */
+    isInMenuBar(): boolean;
+
+    /**
+     * Permanently destroy this item and remove it from the menu bar.
+     */
+    delete(): void;
+
+    /**
+     * The current title text, or null if none is set
+     */
+    title: string | undefined;
+
+}
+
+/**
  * Module for creating and displaying macOS system notifications.
 macOS notifications require user permission before they will appear. Request it once
 (typically at startup) via `hs.permissions.requestNotifications()` and it will be

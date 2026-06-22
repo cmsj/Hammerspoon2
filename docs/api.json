@@ -5656,6 +5656,263 @@
       "rawDocumentation": "Determine the Mac's location via macOS Location Services.\n\nLocation data is obtained through WiFi network scanning and, where available, GPS\nhardware. User permission is required — call `hs.permissions.requestLocation()`\nbefore using any tracking features.\n\nThe module exposes a `geocoder` sub-object for forward/reverse geocoding without\nrequiring Location Services.\n\n## locationTable\n\nA `locationTable` is a plain JS object with the following keys:\n\n| Key | Type | Description |\n|-----|------|-------------|\n| `latitude` | number | Degrees north (positive) or south (negative) |\n| `longitude` | number | Degrees east (positive) or west (negative) |\n| `altitude` | number | Metres above sea level (`0` if unknown) |\n| `horizontalAccuracy` | number | Uncertainty radius in metres (`-1` if invalid) |\n| `verticalAccuracy` | number | Altitude accuracy in metres (`-1` if invalid) |\n| `course` | number | Direction of travel in degrees (`-1` if invalid) |\n| `speed` | number | Metres per second (`-1` if invalid) |\n| `timestamp` | number | Seconds since the Unix epoch |"
     },
     {
+      "name": "hs.menubar",
+      "methods": [
+        {
+          "name": "create",
+          "signature": "func create(_ inMenuBar: JSValue) -> HSMenuBarItem",
+          "isStatic": false,
+          "rawDocumentation": "Create a new menu bar item\n- Parameter inMenuBar: If true (default), the item is immediately visible in the menu bar.\n  Pass false to create the item without showing it; call returnToMenuBar() when ready.\n- Returns: A new HSMenuBarItem\n- Example:\n```js\nconst item = hs.menubar.create()\nconst hidden = hs.menubar.create(false)  // not shown yet\nhidden.setTitle(\"Ready\")\nhidden.returnToMenuBar()\n```",
+          "description": "Create a new menu bar item\nPass false to create the item without showing it; call returnToMenuBar() when ready.",
+          "params": [
+            {
+              "name": "inMenuBar",
+              "type": "JSValue",
+              "description": "If true (default), the item is immediately visible in the menu bar."
+            }
+          ],
+          "returns": {
+            "type": "HSMenuBarItem",
+            "description": "A new HSMenuBarItem"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const item = hs.menubar.create()\nconst hidden = hs.menubar.create(false)  // not shown yet\nhidden.setTitle(\"Ready\")\nhidden.returnToMenuBar()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarModule.swift",
+          "lineNumber": 60
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSMenuBarItemAPI",
+          "type": "typedef",
+          "rawDocumentation": "Object representing a macOS system menu bar item.\nCreate instances with `hs.menubar.create()`.",
+          "description": "Object representing a macOS system menu bar item.\nCreate instances with `hs.menubar.create()`.",
+          "methods": [
+            {
+              "name": "setTitle",
+              "signature": "func setTitle(_ title: JSValue)",
+              "isStatic": false,
+              "rawDocumentation": "Set the text title displayed in the menu bar\n- Parameter title: Text to display, or null to remove the title\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\n```",
+              "description": "Set the text title displayed in the menu bar",
+              "params": [
+                {
+                  "name": "title",
+                  "type": "JSValue",
+                  "description": "Text to display, or null to remove the title"
+                }
+              ],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const item = hs.menubar.create()\nitem.setTitle(\"Hello\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 22
+            },
+            {
+              "name": "setIcon",
+              "signature": "func setIcon(_ image: JSValue)",
+              "isStatic": false,
+              "rawDocumentation": "Set the icon displayed in the menu bar\n- Parameter image: An HSImage object, or null to remove the icon\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\n```",
+              "description": "Set the icon displayed in the menu bar",
+              "params": [
+                {
+                  "name": "image",
+                  "type": "JSValue",
+                  "description": "An HSImage object, or null to remove the icon"
+                }
+              ],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 31
+            },
+            {
+              "name": "setTooltip",
+              "signature": "func setTooltip(_ tooltip: JSValue)",
+              "isStatic": false,
+              "rawDocumentation": "Set the tooltip shown when hovering over the menu bar item\n- Parameter tooltip: Tooltip text, or null to remove the tooltip\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.setTooltip(\"My menu bar item\")\n```",
+              "description": "Set the tooltip shown when hovering over the menu bar item",
+              "params": [
+                {
+                  "name": "tooltip",
+                  "type": "JSValue",
+                  "description": "Tooltip text, or null to remove the tooltip"
+                }
+              ],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const item = hs.menubar.create()\nitem.setTooltip(\"My menu bar item\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 40
+            },
+            {
+              "name": "setClickCallback",
+              "signature": "func setClickCallback(_ fn: JSValue)",
+              "isStatic": false,
+              "rawDocumentation": "Set a callback invoked when the item is clicked (only fires when no menu is set)\n- Parameter fn: A function to call on click, or null to remove the callback\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Click me\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```",
+              "description": "Set a callback invoked when the item is clicked (only fires when no menu is set)",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSValue",
+                  "description": "A function to call on click, or null to remove the callback"
+                }
+              ],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const item = hs.menubar.create()\nitem.setTitle(\"Click me\")\nitem.setClickCallback(() => console.log(\"clicked!\"))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 50
+            },
+            {
+              "name": "setMenu",
+              "signature": "func setMenu(_ menuOrFn: JSValue)",
+              "isStatic": false,
+              "rawDocumentation": "Set the menu for this item. Pass an array of menu item objects for a static menu,\nor a function that returns an array for a dynamic menu populated each time it opens.\n\nMenu item object keys:\n- `title` (string, required): The item label. Use `\"-\"` for a separator line.\n- `fn` (function): Callback invoked when the item is chosen.\n- `checked` (boolean): If true, a checkmark is shown next to the item.\n- `disabled` (boolean): If true, the item is greyed out and cannot be chosen.\n- `tooltip` (string): Tooltip shown when hovering over the item.\n- `icon` (HSImage): Icon shown to the left of the title.\n- `menu` (array): Nested array of menu item objects to create a submenu.\n\n- Parameter menuOrFn: Array of menu item objects, a function returning such an array, or null to remove the menu\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Menu\")\nitem.setMenu([\n    { title: \"Option A\", fn: () => console.log(\"A\") },\n    { title: \"-\" },\n    { title: \"Option B\", checked: true, fn: () => console.log(\"B\") }\n])\n```",
+              "description": "Set the menu for this item. Pass an array of menu item objects for a static menu,\nor a function that returns an array for a dynamic menu populated each time it opens.",
+              "params": [
+                {
+                  "name": "menuOrFn",
+                  "type": "JSValue",
+                  "description": "Array of menu item objects, a function returning such an array, or null to remove the menu"
+                }
+              ],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const item = hs.menubar.create()\nitem.setTitle(\"Menu\")\nitem.setMenu([\n    { title: \"Option A\", fn: () => console.log(\"A\") },\n    { title: \"-\" },\n    { title: \"Option B\", checked: true, fn: () => console.log(\"B\") }\n])"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 75
+            },
+            {
+              "name": "removeFromMenuBar",
+              "signature": "func removeFromMenuBar()",
+              "isStatic": false,
+              "rawDocumentation": "Remove this item from the menu bar. The item is retained and can be shown again with returnToMenuBar().\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.removeFromMenuBar()\n```",
+              "description": "Remove this item from the menu bar. The item is retained and can be shown again with returnToMenuBar().",
+              "params": [],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const item = hs.menubar.create()\nitem.removeFromMenuBar()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 83
+            },
+            {
+              "name": "returnToMenuBar",
+              "signature": "func returnToMenuBar()",
+              "isStatic": false,
+              "rawDocumentation": "Show this item in the menu bar (reverses removeFromMenuBar).\n- Example:\n```js\nitem.returnToMenuBar()\n```",
+              "description": "Show this item in the menu bar (reverses removeFromMenuBar).",
+              "params": [],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "item.returnToMenuBar()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 90
+            },
+            {
+              "name": "isInMenuBar",
+              "signature": "func isInMenuBar() -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Check if this item is currently visible in the menu bar.\n- Returns: true if the item is visible in the menu bar\n- Example:\n```js\nconst visible = item.isInMenuBar()\n```",
+              "description": "Check if this item is currently visible in the menu bar.",
+              "params": [],
+              "returns": {
+                "type": "Bool",
+                "description": "true if the item is visible in the menu bar"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const visible = item.isInMenuBar()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 98
+            },
+            {
+              "name": "delete",
+              "signature": "func delete()",
+              "isStatic": false,
+              "rawDocumentation": "Permanently destroy this item and remove it from the menu bar.\n- Example:\n```js\nitem.delete()\n```",
+              "description": "Permanently destroy this item and remove it from the menu bar.",
+              "params": [],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "item.delete()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 105
+            }
+          ],
+          "properties": [
+            {
+              "name": "title",
+              "signature": "var title: String? { get }",
+              "rawDocumentation": "The current title text, or null if none is set\n- Example:\n```js\nconsole.log(item.title)\n```",
+              "description": "The current title text, or null if none is set",
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(item.title)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 112
+            }
+          ]
+        }
+      ],
+      "description": "Module for creating and managing macOS system menu bar items.\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n## Creating a simple title item\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n## Creating an icon item with a static menu\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.delete() }\n])\n```\n## Creating an item with a dynamic menu\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.delete() }\n])\n```",
+      "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.delete() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.delete() }\n])\n```"
+    },
+    {
       "name": "hs.notify",
       "methods": [
         {
@@ -13042,5 +13299,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-06-12T12:37:43.033Z"
+  "generatedAt": "2026-06-22T12:34:37.686Z"
 }
