@@ -98,11 +98,14 @@ import JavaScriptCore
     @objc func isVisible() -> Bool
 
     /// Permanently destroy this item and remove it from the menu bar.
+    ///
+    /// Releases all resources held by this item. After calling this, the item
+    /// is removed from the menu bar and should not be used again.
     /// - Example:
     /// ```js
-    /// item.delete()
+    /// item.destroy()
     /// ```
-    @objc func delete()
+    @objc func destroy()
 
     /// The current title text, or null if none is set
     /// - Example:
@@ -141,7 +144,7 @@ import JavaScriptCore
         AKTrace("deinit of HSMenuBarItem")
     }
 
-    func destroy() {
+    @objc func destroy() {
         clearMenuHandlers()
         _clickCallback?.detach(from: self)
         _clickCallback = nil
@@ -236,10 +239,6 @@ import JavaScriptCore
 
     @objc func isVisible() -> Bool {
         return statusItem?.isVisible ?? false
-    }
-
-    @objc func delete() {
-        destroy()
     }
 
     @objc var title: String? {

@@ -220,7 +220,7 @@ import UniformTypeIdentifiers
     /// ```
     @objc func move(_ source: String, _ destination: String) -> Bool
 
-    /// Delete a file or directory.
+    /// Delete a file or directory at the given path.
     ///
     /// Directories are removed recursively. To remove only an empty directory,
     /// use `rmdir` instead.
@@ -229,9 +229,9 @@ import UniformTypeIdentifiers
     /// - Returns: `true` on success, `false` on failure.
     /// - Example:
     /// ```js
-    /// hs.fs.delete("/tmp/old.txt")
+    /// hs.fs.deletePath("/tmp/old.txt")
     /// ```
-    @objc func delete(_ path: String) -> Bool
+    @objc func deletePath(_ path: String) -> Bool
 
     // MARK: - Directory Operations
 
@@ -274,7 +274,7 @@ import UniformTypeIdentifiers
 
     /// Remove an empty directory.
     ///
-    /// Fails if the directory is not empty. Use `delete` to remove a non-empty
+    /// Fails if the directory is not empty. Use `deletePath` to remove a non-empty
     /// directory recursively.
     ///
     /// - Parameter path: Path of the directory to remove. `~` is expanded.
@@ -730,12 +730,12 @@ import UniformTypeIdentifiers
         }
     }
 
-    @objc func delete(_ path: String) -> Bool {
+    @objc func deletePath(_ path: String) -> Bool {
         do {
             try fm.removeItem(atPath: expand(path))
             return true
         } catch {
-            AKError("hs.fs.delete: \(error.localizedDescription)")
+            AKError("hs.fs.deletePath: \(error.localizedDescription)")
             return false
         }
     }

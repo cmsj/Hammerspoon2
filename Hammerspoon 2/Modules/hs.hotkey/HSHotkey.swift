@@ -37,13 +37,16 @@ import Carbon
     /// ```
     @objc func isEnabled() -> Bool
 
-    /// Delete the hotkey (disables and clears callbacks)
+    /// Permanently destroy this hotkey, disabling it and clearing its callbacks.
+    ///
+    /// Unlike `disable()`, this cannot be reversed. The hotkey is unregistered and
+    /// its callback references are released.
     /// - Example:
     /// ```js
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
-    /// hk.delete()
+    /// hk.destroy()
     /// ```
-    @objc func delete()
+    @objc func destroy()
 
     /// The callback function to be called when the hotkey is pressed
     /// - Example:
@@ -107,7 +110,7 @@ import Carbon
         AKTrace("deinit of HSHotkeyObject: id=\(hotkeyID)")
     }
 
-    func destroy() {
+    @objc func destroy() {
         _callbackPressed?.detach(from: self)
         _callbackPressed = nil
         _callbackReleased?.detach(from: self)
@@ -158,11 +161,6 @@ import Carbon
 
     @objc func isEnabled() -> Bool {
         return enabled
-    }
-
-    @objc func delete() {
-        disable()
-        HotkeyManager.shared.unregister(hotkeyID: hotkeyID)
     }
 
     /// Internal method called by HotkeyManager when the hotkey is triggered

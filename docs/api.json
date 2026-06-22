@@ -4470,11 +4470,11 @@
           "lineNumber": 221
         },
         {
-          "name": "delete",
-          "signature": "func delete(_ path: String) -> Bool",
+          "name": "deletePath",
+          "signature": "func deletePath(_ path: String) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Delete a file or directory.\n\nDirectories are removed recursively. To remove only an empty directory,\nuse `rmdir` instead.\n\n- Parameter path: Path to delete. `~` is expanded.\n- Returns: `true` on success, `false` on failure.\n- Example:\n```js\nhs.fs.delete(\"/tmp/old.txt\")\n```",
-          "description": "Delete a file or directory.\nDirectories are removed recursively. To remove only an empty directory,\nuse `rmdir` instead.",
+          "rawDocumentation": "Delete a file or directory at the given path.\n\nDirectories are removed recursively. To remove only an empty directory,\nuse `rmdir` instead.\n\n- Parameter path: Path to delete. `~` is expanded.\n- Returns: `true` on success, `false` on failure.\n- Example:\n```js\nhs.fs.deletePath(\"/tmp/old.txt\")\n```",
+          "description": "Delete a file or directory at the given path.\nDirectories are removed recursively. To remove only an empty directory,\nuse `rmdir` instead.",
           "params": [
             {
               "name": "path",
@@ -4490,7 +4490,7 @@
           "examples": [
             {
               "lang": "js",
-              "code": "hs.fs.delete(\"/tmp/old.txt\")"
+              "code": "hs.fs.deletePath(\"/tmp/old.txt\")"
             }
           ],
           "source": "swift",
@@ -4585,8 +4585,8 @@
           "name": "rmdir",
           "signature": "func rmdir(_ path: String) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Remove an empty directory.\n\nFails if the directory is not empty. Use `delete` to remove a non-empty\ndirectory recursively.\n\n- Parameter path: Path of the directory to remove. `~` is expanded.\n- Returns: `true` on success, `false` on failure.\n- Example:\n```js\nhs.fs.rmdir(\"/tmp/empty-dir\")\n```",
-          "description": "Remove an empty directory.\nFails if the directory is not empty. Use `delete` to remove a non-empty\ndirectory recursively.",
+          "rawDocumentation": "Remove an empty directory.\n\nFails if the directory is not empty. Use `deletePath` to remove a non-empty\ndirectory recursively.\n\n- Parameter path: Path of the directory to remove. `~` is expanded.\n- Returns: `true` on success, `false` on failure.\n- Example:\n```js\nhs.fs.rmdir(\"/tmp/empty-dir\")\n```",
+          "description": "Remove an empty directory.\nFails if the directory is not empty. Use `deletePath` to remove a non-empty\ndirectory recursively.",
           "params": [
             {
               "name": "path",
@@ -5592,22 +5592,22 @@
               "lineNumber": 38
             },
             {
-              "name": "delete",
-              "signature": "func delete()",
+              "name": "destroy",
+              "signature": "func destroy()",
               "isStatic": false,
-              "rawDocumentation": "Delete the hotkey (disables and clears callbacks)\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.delete()\n```",
-              "description": "Delete the hotkey (disables and clears callbacks)",
+              "rawDocumentation": "Permanently destroy this hotkey, disabling it and clearing its callbacks.\n\nUnlike `disable()`, this cannot be reversed. The hotkey is unregistered and\nits callback references are released.\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.destroy()\n```",
+              "description": "Permanently destroy this hotkey, disabling it and clearing its callbacks.\nUnlike `disable()`, this cannot be reversed. The hotkey is unregistered and\nits callback references are released.",
               "params": [],
               "returns": null,
               "examples": [
                 {
                   "lang": "js",
-                  "code": "const hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.delete()"
+                  "code": "const hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.destroy()"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 46
+              "lineNumber": 49
             }
           ],
           "properties": [
@@ -5624,7 +5624,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 54
+              "lineNumber": 57
             },
             {
               "name": "callbackReleased",
@@ -5639,7 +5639,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 62
+              "lineNumber": 65
             }
           ]
         }
@@ -6308,22 +6308,22 @@
               "lineNumber": 98
             },
             {
-              "name": "delete",
-              "signature": "func delete()",
+              "name": "destroy",
+              "signature": "func destroy()",
               "isStatic": false,
-              "rawDocumentation": "Permanently destroy this item and remove it from the menu bar.\n- Example:\n```js\nitem.delete()\n```",
-              "description": "Permanently destroy this item and remove it from the menu bar.",
+              "rawDocumentation": "Permanently destroy this item and remove it from the menu bar.\n\nReleases all resources held by this item. After calling this, the item\nis removed from the menu bar and should not be used again.\n- Example:\n```js\nitem.destroy()\n```",
+              "description": "Permanently destroy this item and remove it from the menu bar.\nReleases all resources held by this item. After calling this, the item\nis removed from the menu bar and should not be used again.",
               "params": [],
               "returns": null,
               "examples": [
                 {
                   "lang": "js",
-                  "code": "item.delete()"
+                  "code": "item.destroy()"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
-              "lineNumber": 105
+              "lineNumber": 108
             }
           ],
           "properties": [
@@ -6340,13 +6340,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
-              "lineNumber": 112
+              "lineNumber": 115
             }
           ]
         }
       ],
-      "description": "Module for creating and managing macOS system menu bar items.\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n## Creating a simple title item\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n## Creating an icon item with a static menu\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.delete() }\n])\n```\n## Creating an item with a dynamic menu\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.delete() }\n])\n```",
-      "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.delete() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.delete() }\n])\n```"
+      "description": "Module for creating and managing macOS system menu bar items.\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n## Creating a simple title item\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n## Creating an icon item with a static menu\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.destroy() }\n])\n```\n## Creating an item with a dynamic menu\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.destroy() }\n])\n```",
+      "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.destroy() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.destroy() }\n])\n```"
     },
     {
       "name": "hs.notify",
@@ -13916,5 +13916,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-06-22T16:20:58.927Z"
+  "generatedAt": "2026-06-22T18:33:48.417Z"
 }

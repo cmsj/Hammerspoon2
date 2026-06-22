@@ -343,35 +343,35 @@ struct HSFSIntegrationTests {
         #expect(sut.read(dst, 0, 0) == "content")
     }
 
-    @Test("delete removes a file")
-    func deleteFile() throws {
+    @Test("deletePath removes a file")
+    func deletePathFile() throws {
         let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let file = tmp.child("delete-me.txt")
         _ = sut.write(file, "")
 
-        let ok = sut.delete(file)
-        #expect(ok, "delete should succeed")
+        let ok = sut.deletePath(file)
+        #expect(ok, "deletePath should succeed")
         #expect(sut.exists(file) == false)
     }
 
-    @Test("delete removes a directory recursively")
-    func deleteDirectoryRecursive() throws {
+    @Test("deletePath removes a directory recursively")
+    func deletePathDirectoryRecursive() throws {
         let sut = HSFSModule(engineID: UUID())
         let tmp = try TempDir()
         let dir = tmp.child("subtree")
         _ = sut.mkdir(dir)
         _ = sut.write((dir as NSString).appendingPathComponent("f.txt"), "x")
 
-        let ok = sut.delete(dir)
-        #expect(ok, "delete should remove a non-empty directory")
+        let ok = sut.deletePath(dir)
+        #expect(ok, "deletePath should remove a non-empty directory")
         #expect(sut.exists(dir) == false)
     }
 
-    @Test("delete returns false for a non-existent path")
-    func deleteMissing() {
+    @Test("deletePath returns false for a non-existent path")
+    func deletePathMissing() {
         let sut = HSFSModule(engineID: UUID())
-        #expect(sut.delete("/nonexistent/\(UUID().uuidString)") == false)
+        #expect(sut.deletePath("/nonexistent/\(UUID().uuidString)") == false)
     }
 
     // MARK: - Directory Operations

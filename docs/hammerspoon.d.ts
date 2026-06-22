@@ -2046,13 +2046,13 @@ The destination must not already exist.
     function move(source: string, destination: string): boolean;
 
     /**
-     * Delete a file or directory.
+     * Delete a file or directory at the given path.
 Directories are removed recursively. To remove only an empty directory,
 use `rmdir` instead.
      * @param path Path to delete. `~` is expanded.
      * @returns `true` on success, `false` on failure.
      */
-    function delete(path: string): boolean;
+    function deletePath(path: string): boolean;
 
     /**
      * List the immediate contents of a directory.
@@ -2081,7 +2081,7 @@ Succeeds silently if the directory already exists.
 
     /**
      * Remove an empty directory.
-Fails if the directory is not empty. Use `delete` to remove a non-empty
+Fails if the directory is not empty. Use `deletePath` to remove a non-empty
 directory recursively.
      * @param path Path of the directory to remove. `~` is expanded.
      * @returns `true` on success, `false` on failure.
@@ -2354,9 +2354,11 @@ declare class HSHotkey {
     isEnabled(): boolean;
 
     /**
-     * Delete the hotkey (disables and clears callbacks)
+     * Permanently destroy this hotkey, disabling it and clearing its callbacks.
+Unlike `disable()`, this cannot be reversed. The hotkey is unregistered and
+its callback references are released.
      */
-    delete(): void;
+    destroy(): void;
 
     /**
      * The callback function to be called when the hotkey is pressed
@@ -2547,7 +2549,7 @@ item.setTooltip("My automation")
 item.setMenu([
     { title: "Reload config", fn: () => hs.reload() },
     { title: "-" },
-    { title: "Remove item", fn: () => item.delete() }
+    { title: "Remove item", fn: () => item.destroy() }
 ])
 ```
 ## Creating an item with a dynamic menu
@@ -2557,7 +2559,7 @@ item.setTitle("Dynamic")
 item.setMenu(() => [
     { title: "Time: " + new Date().toLocaleTimeString() },
     { title: "-" },
-    { title: "Close", fn: () => item.delete() }
+    { title: "Close", fn: () => item.destroy() }
 ])
 ```
  */
@@ -2625,8 +2627,10 @@ or a function that returns an array for a dynamic menu populated each time it op
 
     /**
      * Permanently destroy this item and remove it from the menu bar.
+Releases all resources held by this item. After calling this, the item
+is removed from the menu bar and should not be used again.
      */
-    delete(): void;
+    destroy(): void;
 
     /**
      * The current title text, or null if none is set
