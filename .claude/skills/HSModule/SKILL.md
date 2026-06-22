@@ -54,6 +54,7 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
  * If the module allocates/retains any data (e.g. watchers, instance children, etc) then it should store weak references to them and be sure to clean them up in its shutdown() method.
  * Any instance child classes should always have an "isolated deinit" method that uses AKTrace() to announce their deinitialisation.
  * NEVER choose method names that start with "new", "alloc" or "copy" since these can fall foul of ObjC's implicit ARC rules and the objects those methods create will have one un-balanced retains.
+ * NEVER name a method "delete" since this is a reserved keyword in JavaScript and cannot be called as a method (e.g. `obj.delete()` is a syntax error). Use a descriptive alternative such as `deletePath()`, `destroy()`, or `remove()` instead.
 
 ## Child object tracking
 
