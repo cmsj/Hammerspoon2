@@ -145,6 +145,9 @@ import Carbon
 
         unsafe UnregisterEventHotKey(hotKeyRef)
         unsafe carbonHotKeyRef = nil
+
+        // Unregister with the manager so we can be garbage collected if needed
+        HotkeyManager.shared.unregister(hotkeyID: hotkeyID)
         enabled = false
     }
 
