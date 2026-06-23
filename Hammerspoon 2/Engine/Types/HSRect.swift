@@ -96,10 +96,3 @@ extension CGRect: JSConvertible {
     }
 }
 
-// Optional: detect and auto-unbox from JSValue
-extension JSValue {
-    func toCGRect() -> CGRect? {
-        guard let bridge = toObjectOf(HSRect.self) as? HSRect else { return nil }
-        return CGRect(from: bridge)
-    }
-}

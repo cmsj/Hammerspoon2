@@ -6291,8 +6291,8 @@
           ]
         }
       ],
-      "description": "Module for creating and managing macOS system menu bar items.\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n## Creating a simple title item\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n## Creating an icon item with a static menu\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.hide() }\n])\n```\n## Creating an item with a dynamic menu\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.hide() }\n])\n```",
-      "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove item\", fn: () => item.hide() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Close\", fn: () => item.hide() }\n])\n```"
+      "description": "Module for creating and managing macOS system menu bar items.\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n## Creating a simple title item\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n## Creating an icon item with a static menu\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```\n## Creating an item with a dynamic menu\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```",
+      "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Hello\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Dynamic\")\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```"
     },
     {
       "name": "hs.notify",
@@ -12180,8 +12180,8 @@
           "properties": []
         }
       ],
-      "description": "# hs.ui\n**Create custom user interfaces, alerts, dialogs, and file pickers**\nThe `hs.ui` module provides a set of tools for creating custom user interfaces\nin Hammerspoon with SwiftUI-like declarative syntax.\n## Key Features\nthen call `.set()` on it from any callback to re-render the canvas automatically\nthen call `.set()` on it to update the displayed content live\nto swap the image without rebuilding the window\n## Basic Examples\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .duration(3)\n    .show();\n```\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) print(\"Saving...\");\n    })\n    .show();\n```\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .defaultText(\"John Doe\")\n    .onButton((buttonIndex, text) => {\n        print(\"User entered: \" + text);\n    })\n    .show();\n```\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file\")\n    .allowedFileTypes([\"txt\", \"md\"])\n    .onSelection((path) => {\n        if (path) print(\"Selected: \" + path);\n    })\n    .show();\n```\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Hello, World!\")\n            .font(HSFont.title())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n### Reactive Color on Hover\n```javascript\n// Create a mutable color, then mutate it inside the hover callback\nconst btnColor = HSColor.hex(\"#4A90E2\");\n\nhs.ui.window({x: 100, y: 100, w: 160, h: 60})\n    .rectangle()\n        .fill(btnColor)\n        .cornerRadius(8)\n        .frame({w: \"100%\", h: \"100%\"})\n        .onHover((isHovered) => {\n            btnColor.set(isHovered ? \"#E24A4A\" : \"#4A90E2\");\n        })\n    .show();\n```\n### Reactive Text on Hover\n```javascript\n// Create a mutable string, then mutate it inside the hover callback\nconst label = hs.ui.string(\"Move your mouse here\");\n\nhs.ui.window({x: 100, y: 200, w: 220, h: 50})\n    .text(label)\n        .font(HSFont.body())\n        .foregroundColor(\"#FFFFFF\")\n        .onHover((isHovered) => {\n            label.set(isHovered ? \"You're hovering!\" : \"Move your mouse here\");\n        })\n    .show();\n```\n### Reactive Image on Click\n```javascript\n// Toggle between two system icons on each click\nconst icon = HSImage.fromName(\"NSStatusAvailable\");\n\nhs.ui.window({x: 100, y: 300, w: 80, h: 80})\n    .image(icon)\n        .resizable()\n        .aspectRatio(\"fit\")\n        .frame({w: 64, h: 64})\n        .onClick(() => {\n            const next = (icon.name() === \"NSStatusAvailable\")\n                ? HSImage.fromName(\"NSStatusUnavailable\")\n                : HSImage.fromName(\"NSStatusAvailable\");\n            icon.set(next);\n        })\n    .show();\n```\n## Complete Example: Status Dashboard\nHere's a more complex example showing how to build an interactive status dashboard\n```javascript\n// Create a status dashboard window\nconst statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})\n    .vstack()\n        .spacing(15)\n        .padding(20)\n\n        // Header\n        .text(\"System Status Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n\n        // Status cards\n        .hstack()\n            .spacing(10)\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#4CAF50\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"CPU: 45%\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#2196F3\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"Memory: 8.2GB\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n        .end()\n\n        // Activity indicator with image\n        .hstack()\n            .spacing(10)\n            .image(HSImage.fromName(\"NSComputer\"))\n                .resizable()\n                .aspectRatio(\"fit\")\n                .frame({w: 64, h: 64})\n            .vstack()\n                .text(\"System Running\")\n                    .font(HSFont.title())\n                .text(\"All services operational\")\n                    .font(HSFont.caption())\n                    .foregroundColor(\"#A0A0A0\")\n            .end()\n        .end()\n\n        // Circle status indicators\n        .hstack()\n            .spacing(20)\n            .circle()\n                .fill(\"#4CAF50\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#FFC107\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#F44336\")\n                .frame({w: 30, h: 30})\n        .end()\n    .end()\n    .backgroundColor(\"#2C3E50\");\n\n// Show the dashboard\nstatusWindow.show();\n\n// Later, interact with dialogs\nhs.ui.dialog(\"Shutdown system?\")\n    .informativeText(\"This will close all applications.\")\n    .buttons([\"Shutdown\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            hs.ui.alert(\"Shutting down...\")\n                .duration(3)\n                .show();\n        }\n    })\n    .show();\n```\n## Complete Example: Reactive Hover Card\nDemonstrates reactive colors and reactive text together — a single `.onHover()`\n```javascript\nconst cardColor = HSColor.hex(\"#3498DB\");\nconst cardLabel = hs.ui.string(\"Hover the card\");\n\nhs.ui.window({x: 100, y: 100, w: 220, h: 120})\n    .vstack()\n        .spacing(12)\n        .padding(16)\n        .rectangle()\n            .fill(cardColor)\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n            .onHover((isHovered) => {\n                cardColor.set(isHovered ? \"#E74C3C\" : \"#3498DB\");\n                cardLabel.set(isHovered ? \"You found it!\" : \"Hover the card\");\n            })\n        .text(cardLabel)\n            .font(HSFont.headline())\n            .foregroundColor(\"#FFFFFF\")\n    .end()\n    .backgroundColor(\"#1A252F\")\n    .show();\n```",
-      "rawDocumentation": "# hs.ui\n\n**Create custom user interfaces, alerts, dialogs, and file pickers**\n\nThe `hs.ui` module provides a set of tools for creating custom user interfaces\nin Hammerspoon with SwiftUI-like declarative syntax.\n\n## Key Features\n\n- **Custom Windows**: Build custom UI windows with shapes, text, and layouts\n- **Alerts**: Display temporary on-screen notifications\n- **Dialogs**: Show modal dialogs with custom buttons and callbacks\n- **Text Input**: Prompt users for text input\n- **File Pickers**: Let users select files or directories\n- **Reactive Colors**: Pass an `HSColor` object to `.fill()`, `.stroke()`, or `.foregroundColor()`,\n  then call `.set()` on it from any callback to re-render the canvas automatically\n- **Reactive Text**: Create a string with `hs.ui.string()`, pass it to `.text()`,\n  then call `.set()` on it to update the displayed content live\n- **Reactive Images**: Pass an `HSImage` object to `.image()`, then call `.set()` on it\n  to swap the image without rebuilding the window\n\n## Basic Examples\n\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .duration(3)\n    .show();\n```\n\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) print(\"Saving...\");\n    })\n    .show();\n```\n\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .defaultText(\"John Doe\")\n    .onButton((buttonIndex, text) => {\n        print(\"User entered: \" + text);\n    })\n    .show();\n```\n\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file\")\n    .allowedFileTypes([\"txt\", \"md\"])\n    .onSelection((path) => {\n        if (path) print(\"Selected: \" + path);\n    })\n    .show();\n```\n\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Hello, World!\")\n            .font(HSFont.title())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n### Reactive Color on Hover\n```javascript\n// Create a mutable color, then mutate it inside the hover callback\nconst btnColor = HSColor.hex(\"#4A90E2\");\n\nhs.ui.window({x: 100, y: 100, w: 160, h: 60})\n    .rectangle()\n        .fill(btnColor)\n        .cornerRadius(8)\n        .frame({w: \"100%\", h: \"100%\"})\n        .onHover((isHovered) => {\n            btnColor.set(isHovered ? \"#E24A4A\" : \"#4A90E2\");\n        })\n    .show();\n```\n\n### Reactive Text on Hover\n```javascript\n// Create a mutable string, then mutate it inside the hover callback\nconst label = hs.ui.string(\"Move your mouse here\");\n\nhs.ui.window({x: 100, y: 200, w: 220, h: 50})\n    .text(label)\n        .font(HSFont.body())\n        .foregroundColor(\"#FFFFFF\")\n        .onHover((isHovered) => {\n            label.set(isHovered ? \"You're hovering!\" : \"Move your mouse here\");\n        })\n    .show();\n```\n\n### Reactive Image on Click\n```javascript\n// Toggle between two system icons on each click\nconst icon = HSImage.fromName(\"NSStatusAvailable\");\n\nhs.ui.window({x: 100, y: 300, w: 80, h: 80})\n    .image(icon)\n        .resizable()\n        .aspectRatio(\"fit\")\n        .frame({w: 64, h: 64})\n        .onClick(() => {\n            const next = (icon.name() === \"NSStatusAvailable\")\n                ? HSImage.fromName(\"NSStatusUnavailable\")\n                : HSImage.fromName(\"NSStatusAvailable\");\n            icon.set(next);\n        })\n    .show();\n```\n\n## Complete Example: Status Dashboard\n\nHere's a more complex example showing how to build an interactive status dashboard\nthat combines multiple UI elements:\n\n```javascript\n// Create a status dashboard window\nconst statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})\n    .vstack()\n        .spacing(15)\n        .padding(20)\n\n        // Header\n        .text(\"System Status Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n\n        // Status cards\n        .hstack()\n            .spacing(10)\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#4CAF50\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"CPU: 45%\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#2196F3\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"Memory: 8.2GB\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n        .end()\n\n        // Activity indicator with image\n        .hstack()\n            .spacing(10)\n            .image(HSImage.fromName(\"NSComputer\"))\n                .resizable()\n                .aspectRatio(\"fit\")\n                .frame({w: 64, h: 64})\n            .vstack()\n                .text(\"System Running\")\n                    .font(HSFont.title())\n                .text(\"All services operational\")\n                    .font(HSFont.caption())\n                    .foregroundColor(\"#A0A0A0\")\n            .end()\n        .end()\n\n        // Circle status indicators\n        .hstack()\n            .spacing(20)\n            .circle()\n                .fill(\"#4CAF50\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#FFC107\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#F44336\")\n                .frame({w: 30, h: 30})\n        .end()\n    .end()\n    .backgroundColor(\"#2C3E50\");\n\n// Show the dashboard\nstatusWindow.show();\n\n// Later, interact with dialogs\nhs.ui.dialog(\"Shutdown system?\")\n    .informativeText(\"This will close all applications.\")\n    .buttons([\"Shutdown\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            hs.ui.alert(\"Shutting down...\")\n                .duration(3)\n                .show();\n        }\n    })\n    .show();\n```\n\n## Complete Example: Reactive Hover Card\n\nDemonstrates reactive colors and reactive text together — a single `.onHover()`\ncallback updates both the fill color of a shape and the content of a text label:\n\n```javascript\nconst cardColor = HSColor.hex(\"#3498DB\");\nconst cardLabel = hs.ui.string(\"Hover the card\");\n\nhs.ui.window({x: 100, y: 100, w: 220, h: 120})\n    .vstack()\n        .spacing(12)\n        .padding(16)\n        .rectangle()\n            .fill(cardColor)\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n            .onHover((isHovered) => {\n                cardColor.set(isHovered ? \"#E74C3C\" : \"#3498DB\");\n                cardLabel.set(isHovered ? \"You found it!\" : \"Hover the card\");\n            })\n        .text(cardLabel)\n            .font(HSFont.headline())\n            .foregroundColor(\"#FFFFFF\")\n    .end()\n    .backgroundColor(\"#1A252F\")\n    .show();\n```"
+      "description": "# hs.ui\n**Create custom user interfaces, alerts, dialogs, and file pickers**\nThe `hs.ui` module provides a set of tools for creating custom user interfaces\nin Hammerspoon with SwiftUI-like declarative syntax.\n## Key Features\nthen call `.set()` on it from any callback to re-render the canvas automatically\nthen call `.set()` on it to update the displayed content live\nto swap the image without rebuilding the window\n## Basic Examples\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .duration(3)\n    .show();\n```\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) print(\"Saving...\");\n    })\n    .show();\n```\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .defaultText(\"John Doe\")\n    .onButton((buttonIndex, text) => {\n        print(\"User entered: \" + text);\n    })\n    .show();\n```\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file\")\n    .allowedFileTypes([\"txt\", \"md\"])\n    .onSelection((path) => {\n        if (path) print(\"Selected: \" + path);\n    })\n    .show();\n```\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Hello, World!\")\n            .font(HSFont.title())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n### Reactive Color on Hover\n```javascript\n// Create a mutable color, then mutate it inside the hover callback\nconst btnColor = HSColor.hex(\"#4A90E2\");\n\nhs.ui.window({x: 100, y: 100, w: 160, h: 60})\n    .rectangle()\n        .fill(btnColor)\n        .cornerRadius(8)\n        .frame({w: \"100%\", h: \"100%\"})\n        .onHover((isHovered) => {\n            btnColor.set(isHovered ? \"#E24A4A\" : \"#4A90E2\");\n        })\n    .show();\n```\n### Reactive Text on Hover\n```javascript\n// Create a mutable string, then mutate it inside the hover callback\nconst label = hs.ui.string(\"Move your mouse here\");\n\nhs.ui.window({x: 100, y: 200, w: 220, h: 50})\n    .text(label)\n        .font(HSFont.body())\n        .foregroundColor(\"#FFFFFF\")\n        .onHover((isHovered) => {\n            label.set(isHovered ? \"You're hovering!\" : \"Move your mouse here\");\n        })\n    .show();\n```\n### Reactive Image on Click\n```javascript\n// Toggle between two system icons on each click\nconst icon = HSImage.fromName(\"NSStatusAvailable\");\n\nhs.ui.window({x: 100, y: 300, w: 80, h: 80})\n    .image(icon)\n        .resizable()\n        .aspectRatio(\"fit\")\n        .frame({w: 64, h: 64})\n        .onClick(() => {\n            const next = (icon.name === \"NSStatusAvailable\")\n                ? HSImage.fromName(\"NSStatusUnavailable\")\n                : HSImage.fromName(\"NSStatusAvailable\");\n            icon.replaceWithImage(next);\n        })\n    .show();\n```\n## Complete Example: Status Dashboard\nHere's a more complex example showing how to build an interactive status dashboard\n```javascript\n// Create a status dashboard window\nconst statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})\n    .vstack()\n        .spacing(15)\n        .padding(20)\n\n        // Header\n        .text(\"System Status Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n\n        // Status cards\n        .hstack()\n            .spacing(10)\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#4CAF50\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"CPU: 45%\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#2196F3\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"Memory: 8.2GB\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n        .end()\n\n        // Activity indicator with image\n        .hstack()\n            .spacing(10)\n            .image(HSImage.fromName(\"NSComputer\"))\n                .resizable()\n                .aspectRatio(\"fit\")\n                .frame({w: 64, h: 64})\n            .vstack()\n                .text(\"System Running\")\n                    .font(HSFont.title())\n                .text(\"All services operational\")\n                    .font(HSFont.caption())\n                    .foregroundColor(\"#A0A0A0\")\n            .end()\n        .end()\n\n        // Circle status indicators\n        .hstack()\n            .spacing(20)\n            .circle()\n                .fill(\"#4CAF50\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#FFC107\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#F44336\")\n                .frame({w: 30, h: 30})\n        .end()\n    .end()\n    .backgroundColor(\"#2C3E50\");\n\n// Show the dashboard\nstatusWindow.show();\n\n// Later, interact with dialogs\nhs.ui.dialog(\"Shutdown system?\")\n    .informativeText(\"This will close all applications.\")\n    .buttons([\"Shutdown\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            hs.ui.alert(\"Shutting down...\")\n                .duration(3)\n                .show();\n        }\n    })\n    .show();\n```\n## Complete Example: Reactive Hover Card\nDemonstrates reactive colors and reactive text together — a single `.onHover()`\n```javascript\nconst cardColor = HSColor.hex(\"#3498DB\");\nconst cardLabel = hs.ui.string(\"Hover the card\");\n\nhs.ui.window({x: 100, y: 100, w: 220, h: 120})\n    .vstack()\n        .spacing(12)\n        .padding(16)\n        .rectangle()\n            .fill(cardColor)\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n            .onHover((isHovered) => {\n                cardColor.set(isHovered ? \"#E74C3C\" : \"#3498DB\");\n                cardLabel.set(isHovered ? \"You found it!\" : \"Hover the card\");\n            })\n        .text(cardLabel)\n            .font(HSFont.headline())\n            .foregroundColor(\"#FFFFFF\")\n    .end()\n    .backgroundColor(\"#1A252F\")\n    .show();\n```",
+      "rawDocumentation": "# hs.ui\n\n**Create custom user interfaces, alerts, dialogs, and file pickers**\n\nThe `hs.ui` module provides a set of tools for creating custom user interfaces\nin Hammerspoon with SwiftUI-like declarative syntax.\n\n## Key Features\n\n- **Custom Windows**: Build custom UI windows with shapes, text, and layouts\n- **Alerts**: Display temporary on-screen notifications\n- **Dialogs**: Show modal dialogs with custom buttons and callbacks\n- **Text Input**: Prompt users for text input\n- **File Pickers**: Let users select files or directories\n- **Reactive Colors**: Pass an `HSColor` object to `.fill()`, `.stroke()`, or `.foregroundColor()`,\n  then call `.set()` on it from any callback to re-render the canvas automatically\n- **Reactive Text**: Create a string with `hs.ui.string()`, pass it to `.text()`,\n  then call `.set()` on it to update the displayed content live\n- **Reactive Images**: Pass an `HSImage` object to `.image()`, then call `.replaceWithImage()` or `.replaceFromFile()` on it\n  to swap the image without rebuilding the window\n\n## Basic Examples\n\n### Simple Alert\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .duration(3)\n    .show();\n```\n\n### Dialog with Buttons\n```javascript\nhs.ui.dialog(\"Save changes?\")\n    .informativeText(\"Your document has unsaved changes.\")\n    .buttons([\"Save\", \"Don't Save\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) print(\"Saving...\");\n    })\n    .show();\n```\n\n### Text Input Prompt\n```javascript\nhs.ui.textPrompt(\"Enter your name\")\n    .defaultText(\"John Doe\")\n    .onButton((buttonIndex, text) => {\n        print(\"User entered: \" + text);\n    })\n    .show();\n```\n\n### File Picker\n```javascript\nhs.ui.filePicker()\n    .message(\"Choose a file\")\n    .allowedFileTypes([\"txt\", \"md\"])\n    .onSelection((path) => {\n        if (path) print(\"Selected: \" + path);\n    })\n    .show();\n```\n\n### Custom Window\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Hello, World!\")\n            .font(HSFont.title())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n### Reactive Color on Hover\n```javascript\n// Create a mutable color, then mutate it inside the hover callback\nconst btnColor = HSColor.hex(\"#4A90E2\");\n\nhs.ui.window({x: 100, y: 100, w: 160, h: 60})\n    .rectangle()\n        .fill(btnColor)\n        .cornerRadius(8)\n        .frame({w: \"100%\", h: \"100%\"})\n        .onHover((isHovered) => {\n            btnColor.set(isHovered ? \"#E24A4A\" : \"#4A90E2\");\n        })\n    .show();\n```\n\n### Reactive Text on Hover\n```javascript\n// Create a mutable string, then mutate it inside the hover callback\nconst label = hs.ui.string(\"Move your mouse here\");\n\nhs.ui.window({x: 100, y: 200, w: 220, h: 50})\n    .text(label)\n        .font(HSFont.body())\n        .foregroundColor(\"#FFFFFF\")\n        .onHover((isHovered) => {\n            label.set(isHovered ? \"You're hovering!\" : \"Move your mouse here\");\n        })\n    .show();\n```\n\n### Reactive Image on Click\n```javascript\n// Toggle between two system icons on each click\nconst icon = HSImage.fromName(\"NSStatusAvailable\");\n\nhs.ui.window({x: 100, y: 300, w: 80, h: 80})\n    .image(icon)\n        .resizable()\n        .aspectRatio(\"fit\")\n        .frame({w: 64, h: 64})\n        .onClick(() => {\n            const next = (icon.name === \"NSStatusAvailable\")\n                ? HSImage.fromName(\"NSStatusUnavailable\")\n                : HSImage.fromName(\"NSStatusAvailable\");\n            icon.replaceWithImage(next);\n        })\n    .show();\n```\n\n## Complete Example: Status Dashboard\n\nHere's a more complex example showing how to build an interactive status dashboard\nthat combines multiple UI elements:\n\n```javascript\n// Create a status dashboard window\nconst statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})\n    .vstack()\n        .spacing(15)\n        .padding(20)\n\n        // Header\n        .text(\"System Status Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n\n        // Status cards\n        .hstack()\n            .spacing(10)\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#4CAF50\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"CPU: 45%\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n            .vstack()\n                .spacing(5)\n                .rectangle()\n                    .fill(\"#2196F3\")\n                    .cornerRadius(8)\n                    .frame({w: 180, h: 100})\n                .text(\"Memory: 8.2GB\")\n                    .font(HSFont.headline())\n                    .foregroundColor(\"#FFFFFF\")\n            .end()\n        .end()\n\n        // Activity indicator with image\n        .hstack()\n            .spacing(10)\n            .image(HSImage.fromName(\"NSComputer\"))\n                .resizable()\n                .aspectRatio(\"fit\")\n                .frame({w: 64, h: 64})\n            .vstack()\n                .text(\"System Running\")\n                    .font(HSFont.title())\n                .text(\"All services operational\")\n                    .font(HSFont.caption())\n                    .foregroundColor(\"#A0A0A0\")\n            .end()\n        .end()\n\n        // Circle status indicators\n        .hstack()\n            .spacing(20)\n            .circle()\n                .fill(\"#4CAF50\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#FFC107\")\n                .frame({w: 30, h: 30})\n            .circle()\n                .fill(\"#F44336\")\n                .frame({w: 30, h: 30})\n        .end()\n    .end()\n    .backgroundColor(\"#2C3E50\");\n\n// Show the dashboard\nstatusWindow.show();\n\n// Later, interact with dialogs\nhs.ui.dialog(\"Shutdown system?\")\n    .informativeText(\"This will close all applications.\")\n    .buttons([\"Shutdown\", \"Cancel\"])\n    .onButton((index) => {\n        if (index === 0) {\n            hs.ui.alert(\"Shutting down...\")\n                .duration(3)\n                .show();\n        }\n    })\n    .show();\n```\n\n## Complete Example: Reactive Hover Card\n\nDemonstrates reactive colors and reactive text together — a single `.onHover()`\ncallback updates both the fill color of a shape and the content of a text label:\n\n```javascript\nconst cardColor = HSColor.hex(\"#3498DB\");\nconst cardLabel = hs.ui.string(\"Hover the card\");\n\nhs.ui.window({x: 100, y: 100, w: 220, h: 120})\n    .vstack()\n        .spacing(12)\n        .padding(16)\n        .rectangle()\n            .fill(cardColor)\n            .cornerRadius(10)\n            .frame({w: \"100%\", h: 60})\n            .onHover((isHovered) => {\n                cardColor.set(isHovered ? \"#E74C3C\" : \"#3498DB\");\n                cardLabel.set(isHovered ? \"You found it!\" : \"Hover the card\");\n            })\n        .text(cardLabel)\n            .font(HSFont.headline())\n            .foregroundColor(\"#FFFFFF\")\n    .end()\n    .backgroundColor(\"#1A252F\")\n    .show();\n```"
     },
     {
       "name": "hs.window",
@@ -13229,14 +13229,14 @@
     {
       "name": "HSImageAPI",
       "type": "typedef",
-      "rawDocumentation": "Bridge type for working with images in JavaScript\n\nHSImage provides a comprehensive API for loading, manipulating, and saving images.\nIt supports various image sources including files, system icons, app bundles, and URLs.\n\n## Loading Images\n\n```javascript\n// Load from file\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Load system image\nconst icon = HSImage.fromName(\"NSComputer\")\n\n// Load app icon\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n\n// Load from URL (asynchronous with Promise)\nHSImage.fromURL(\"https://example.com/image.png\")\n    .then(image => console.log(\"Image loaded:\", image.size()))\n    .catch(err => console.error(\"Failed to load image:\", err))\n\n// Or with async/await\nconst image = await HSImage.fromURL(\"https://example.com/image.png\")\n```\n\n## Image Manipulation\n\n```javascript\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Get size\nconst size = img.size()  // Returns HSSize\n\n// Resize image\nconst resized = img.setSize({w: 100, h: 100}, false)  // Proportional\n\n// Crop image\nconst cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})\n\n// Save to file\nimg.saveToFile(\"/path/to/output.png\")\n```",
-      "description": "Bridge type for working with images in JavaScript\nHSImage provides a comprehensive API for loading, manipulating, and saving images.\nIt supports various image sources including files, system icons, app bundles, and URLs.\n## Loading Images\n```javascript\n// Load from file\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Load system image\nconst icon = HSImage.fromName(\"NSComputer\")\n\n// Load app icon\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n\n// Load from URL (asynchronous with Promise)\nHSImage.fromURL(\"https://example.com/image.png\")\n    .then(image => console.log(\"Image loaded:\", image.size()))\n    .catch(err => console.error(\"Failed to load image:\", err))\n\n// Or with async/await\nconst image = await HSImage.fromURL(\"https://example.com/image.png\")\n```\n## Image Manipulation\n```javascript\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Get size\nconst size = img.size()  // Returns HSSize\n\n// Resize image\nconst resized = img.setSize({w: 100, h: 100}, false)  // Proportional\n\n// Crop image\nconst cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})\n\n// Save to file\nimg.saveToFile(\"/path/to/output.png\")\n```",
+      "rawDocumentation": "Bridge type for working with images in JavaScript\n\nHSImage provides a comprehensive API for loading, manipulating, and saving images.\nIt supports various image sources including files, system icons, app bundles, and URLs.\n\n## Loading Images\n\n```javascript\n// Load from file\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Load system image\nconst icon = HSImage.fromName(\"NSComputer\")\n\n// Load app icon\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n\n// Load from URL (asynchronous with Promise)\nHSImage.fromURL(\"https://example.com/image.png\")\n    .then(image => console.log(\"Image loaded:\", image.size))\n    .catch(err => console.error(\"Failed to load image:\", err))\n\n// Or with async/await\nconst image = await HSImage.fromURL(\"https://example.com/image.png\")\n```\n\n## Image Manipulation\n\n```javascript\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Get size\nconst size = img.size  // Returns HSSize\n\n// Resize image (mutates in place)\nimg.size = HSSize(100, 100)\n\n// Crop image\nconst cropped = img.croppedCopy(HSRect(10, 10, 50, 50))\n\n// Save to file\nimg.saveToFile(\"/path/to/output.png\")\n```",
+      "description": "Bridge type for working with images in JavaScript\nHSImage provides a comprehensive API for loading, manipulating, and saving images.\nIt supports various image sources including files, system icons, app bundles, and URLs.\n## Loading Images\n```javascript\n// Load from file\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Load system image\nconst icon = HSImage.fromName(\"NSComputer\")\n\n// Load app icon\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n\n// Load from URL (asynchronous with Promise)\nHSImage.fromURL(\"https://example.com/image.png\")\n    .then(image => console.log(\"Image loaded:\", image.size))\n    .catch(err => console.error(\"Failed to load image:\", err))\n\n// Or with async/await\nconst image = await HSImage.fromURL(\"https://example.com/image.png\")\n```\n## Image Manipulation\n```javascript\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n\n// Get size\nconst size = img.size  // Returns HSSize\n\n// Resize image (mutates in place)\nimg.size = HSSize(100, 100)\n\n// Crop image\nconst cropped = img.croppedCopy(HSRect(10, 10, 50, 50))\n\n// Save to file\nimg.saveToFile(\"/path/to/output.png\")\n```",
       "methods": [
         {
           "name": "fromPath",
           "signature": "static func fromPath(_ path: String) -> HSImage?",
           "isStatic": true,
-          "rawDocumentation": "Load an image from a file path\n- Parameter path: Path to the image file\n- Returns: An HSImage object, or null if the file couldn't be loaded",
+          "rawDocumentation": "Load an image from a file path\n- Parameter path: Path to the image file\n- Returns: An HSImage object, or null if the file couldn't be loaded\n- Example:\n```js\nconst img = HSImage.fromPath(\"/path/to/image.png\")\n```",
           "description": "Load an image from a file path",
           "params": [
             {
@@ -13250,16 +13250,21 @@
             "type": "HSImage?",
             "description": "An HSImage object, or null if the file couldn't be loaded"
           },
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const img = HSImage.fromPath(\"/path/to/image.png\")"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 65
+          "lineNumber": 69
         },
         {
           "name": "fromName",
           "signature": "static func fromName(_ name: String) -> HSImage?",
           "isStatic": true,
-          "rawDocumentation": "Load a system image by name\n- Parameter name: Name of the system image (e.g., \"NSComputer\", \"NSFolder\")\n- Returns: An HSImage object, or null if the image couldn't be found",
+          "rawDocumentation": "Load a system image by name\n- Parameter name: Name of the system image (e.g., \"NSComputer\", \"NSFolder\")\n- Returns: An HSImage object, or null if the image couldn't be found\n- Example:\n```js\nconst icon = HSImage.fromName(\"NSComputer\")\n```",
           "description": "Load a system image by name",
           "params": [
             {
@@ -13273,16 +13278,21 @@
             "type": "HSImage?",
             "description": "An HSImage object, or null if the image couldn't be found"
           },
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const icon = HSImage.fromName(\"NSComputer\")"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 70
+          "lineNumber": 78
         },
         {
           "name": "fromSymbol",
           "signature": "static func fromSymbol(_ name: String) -> HSImage?",
           "isStatic": true,
-          "rawDocumentation": "Load a system symbol by name\n- Parameter name: Name of the symbol (e.g., \"hammer\", \"questionmark.circle\")\n- Returns: An HSImage object, or null if the symbol couldn't be found",
+          "rawDocumentation": "Load a system symbol by name\n- Parameter name: Name of the symbol (e.g., \"hammer\", \"questionmark.circle\")\n- Returns: An HSImage object, or null if the symbol couldn't be found\n- Example:\n```js\nconst sym = HSImage.fromSymbol(\"star.fill\")\n```",
           "description": "Load a system symbol by name",
           "params": [
             {
@@ -13296,16 +13306,21 @@
             "type": "HSImage?",
             "description": "An HSImage object, or null if the symbol couldn't be found"
           },
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const sym = HSImage.fromSymbol(\"star.fill\")"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 75
+          "lineNumber": 87
         },
         {
           "name": "fromAppBundle",
           "signature": "static func fromAppBundle(_ bundleID: String, _ withFallbackSymbol: String) -> HSImage?",
           "isStatic": true,
-          "rawDocumentation": "Load an app's icon by bundle identifier\n- Parameters:\n - bundleID: Bundle identifier of the application\n - withFallbackSymbol: The name of an SF Symbol to use if no bundle image could be loaded. Defaults to questionmark.circle\n- Returns: An HSImage object, or null if the app couldn't be found",
+          "rawDocumentation": "Load an app's icon by bundle identifier\n- Parameters:\n  - bundleID: Bundle identifier of the application\n  - withFallbackSymbol?: The name of an SF Symbol to use if no bundle image could be loaded. Defaults to questionmark.circle\n- Returns: An HSImage object, or null if the app couldn't be found\n- Example:\n```js\nconst appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")\n```",
           "description": "Load an app's icon by bundle identifier",
           "params": [
             {
@@ -13318,23 +13333,28 @@
               "name": "withFallbackSymbol",
               "type": "String",
               "description": "The name of an SF Symbol to use if no bundle image could be loaded. Defaults to questionmark.circle",
-              "optional": false
+              "optional": true
             }
           ],
           "returns": {
             "type": "HSImage?",
             "description": "An HSImage object, or null if the app couldn't be found"
           },
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const appIcon = HSImage.fromAppBundle(\"com.apple.Safari\")"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 82
+          "lineNumber": 98
         },
         {
           "name": "iconForFile",
           "signature": "static func iconForFile(_ path: String) -> HSImage?",
           "isStatic": true,
-          "rawDocumentation": "Get the icon for a file\n- Parameter path: Path to the file\n- Returns: An HSImage object representing the file's icon",
+          "rawDocumentation": "Get the icon for a file\n- Parameter path: Path to the file\n- Returns: An HSImage object representing the file's icon\n- Example:\n```js\nconst icon = HSImage.iconForFile(\"/Applications/Safari.app\")\n```",
           "description": "Get the icon for a file",
           "params": [
             {
@@ -13348,16 +13368,21 @@
             "type": "HSImage?",
             "description": "An HSImage object representing the file's icon"
           },
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const icon = HSImage.iconForFile(\"/Applications/Safari.app\")"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 87
+          "lineNumber": 107
         },
         {
           "name": "iconForFileType",
           "signature": "static func iconForFileType(_ fileType: String) -> HSImage?",
           "isStatic": true,
-          "rawDocumentation": "Get the icon for a file type\n- Parameter fileType: File extension or UTI (e.g., \"png\", \"public.png\")\n- Returns: An HSImage object representing the file type's icon",
+          "rawDocumentation": "Get the icon for a file type\n- Parameter fileType: File extension or UTI (e.g., \"png\", \"public.png\")\n- Returns: An HSImage object representing the file type's icon\n- Example:\n```js\nconst icon = HSImage.iconForFileType(\"pdf\")\n```",
           "description": "Get the icon for a file type",
           "params": [
             {
@@ -13371,16 +13396,21 @@
             "type": "HSImage?",
             "description": "An HSImage object representing the file type's icon"
           },
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const icon = HSImage.iconForFileType(\"pdf\")"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 92
+          "lineNumber": 116
         },
         {
           "name": "fromURL",
           "signature": "static func fromURL(_ url: String) -> JSPromise?",
           "isStatic": true,
-          "rawDocumentation": "Load an image from a URL (asynchronous)\n- Parameter url: URL string of the image\n- Returns: {Promise<HSImage>} A Promise that resolves to the loaded image, or rejects on error",
+          "rawDocumentation": "Load an image from a URL (asynchronous)\n- Parameter url: URL string of the image\n- Returns: {Promise<HSImage>} A Promise that resolves to the loaded image, or rejects on error\n- Example:\n```js\nconst img = await HSImage.fromURL(\"https://example.com/image.png\")\n```",
           "description": "Load an image from a URL (asynchronous)",
           "params": [
             {
@@ -13395,130 +13425,70 @@
             "description": "A Promise that resolves to the loaded image, or rejects on error",
             "promiseType": "HSImage"
           },
-          "examples": [],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 97
-        },
-        {
-          "name": "size",
-          "signature": "func size(_ size: JSValue) -> JSValue",
-          "isStatic": false,
-          "rawDocumentation": "Get or set the image size\n- Parameter size: Optional HSSize to set (if provided, returns a resized copy)\n- Returns: The current size as HSSize, or a resized copy if size was provided",
-          "description": "Get or set the image size",
-          "params": [
+          "examples": [
             {
-              "name": "size",
-              "type": "JSValue",
-              "description": "Optional HSSize to set (if provided, returns a resized copy)",
-              "optional": false
+              "lang": "js",
+              "code": "const img = await HSImage.fromURL(\"https://example.com/image.png\")"
             }
           ],
-          "returns": {
-            "type": "JSValue",
-            "description": "The current size as HSSize, or a resized copy if size was provided"
-          },
-          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 102
-        },
-        {
-          "name": "name",
-          "signature": "func name(_ name: JSValue) -> String?",
-          "isStatic": false,
-          "rawDocumentation": "Get or set the image name\n- Parameter name: Optional name to set\n- Returns: The current or new name",
-          "description": "Get or set the image name",
-          "params": [
-            {
-              "name": "name",
-              "type": "JSValue",
-              "description": "Optional name to set",
-              "optional": false
-            }
-          ],
-          "returns": {
-            "type": "String?",
-            "description": "The current or new name"
-          },
-          "examples": [],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 107
-        },
-        {
-          "name": "setSize",
-          "signature": "func setSize(_ size: JSValue, _ absolute: Bool) -> HSImage?",
-          "isStatic": false,
-          "rawDocumentation": "Create a resized copy of the image\n- Parameters:\n  - size: Target size as HSSize\n  - absolute: If true, resize exactly to specified dimensions. If false, maintain aspect ratio\n- Returns: A new resized HSImage",
-          "description": "Create a resized copy of the image",
-          "params": [
-            {
-              "name": "size",
-              "type": "JSValue",
-              "description": "Target size as HSSize",
-              "optional": false
-            },
-            {
-              "name": "absolute",
-              "type": "Bool",
-              "description": "If true, resize exactly to specified dimensions. If false, maintain aspect ratio",
-              "optional": false
-            }
-          ],
-          "returns": {
-            "type": "HSImage?",
-            "description": "A new resized HSImage"
-          },
-          "examples": [],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 114
+          "lineNumber": 125
         },
         {
           "name": "copyImage",
           "signature": "func copyImage() -> HSImage?",
           "isStatic": false,
-          "rawDocumentation": "Create a copy of the image\n- Returns: A new HSImage copy",
+          "rawDocumentation": "Create a copy of the image\n- Returns: A new HSImage copy\n- Example:\n```js\nconst copy = img.copyImage()\ncopy.size = HSSize(64, 64)\n```",
           "description": "Create a copy of the image",
           "params": [],
           "returns": {
             "type": "HSImage?",
             "description": "A new HSImage copy"
           },
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const copy = img.copyImage()\ncopy.size = HSSize(64, 64)"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 118
+          "lineNumber": 162
         },
         {
           "name": "croppedCopy",
-          "signature": "func croppedCopy(_ rect: JSValue) -> HSImage?",
+          "signature": "func croppedCopy(_ rect: HSRect) -> HSImage?",
           "isStatic": false,
-          "rawDocumentation": "Create a cropped copy of the image\n- Parameter rect: HSRect defining the crop area\n- Returns: A new cropped HSImage, or null if cropping failed",
+          "rawDocumentation": "Create a cropped copy of the image\n- Parameter rect: HSRect defining the crop area (x, y, w, h)\n- Returns: A new cropped HSImage, or null if the rect falls outside the image bounds\n- Example:\n```js\nconst cropped = img.croppedCopy(HSRect(10, 10, 80, 60))\n```",
           "description": "Create a cropped copy of the image",
           "params": [
             {
               "name": "rect",
-              "type": "JSValue",
-              "description": "HSRect defining the crop area",
+              "type": "HSRect",
+              "description": "HSRect defining the crop area (x, y, w, h)",
               "optional": false
             }
           ],
           "returns": {
             "type": "HSImage?",
-            "description": "A new cropped HSImage, or null if cropping failed"
+            "description": "A new cropped HSImage, or null if the rect falls outside the image bounds"
           },
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const cropped = img.croppedCopy(HSRect(10, 10, 80, 60))"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 123
+          "lineNumber": 171
         },
         {
           "name": "saveToFile",
           "signature": "func saveToFile(_ path: String) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Save the image to a file\n- Parameter path: Destination file path (extension determines format: png, jpg, tiff, bmp, gif)\n- Returns: true if saved successfully, false otherwise",
+          "rawDocumentation": "Save the image to a file\n- Parameter path: Destination file path (extension determines format: png, jpg, tiff, bmp, gif)\n- Returns: true if saved successfully, false otherwise\n- Example:\n```js\nimg.saveToFile(\"/tmp/output.png\")\n```",
           "description": "Save the image to a file",
           "params": [
             {
@@ -13532,56 +13502,114 @@
             "type": "Bool",
             "description": "true if saved successfully, false otherwise"
           },
-          "examples": [],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 128
-        },
-        {
-          "name": "template",
-          "signature": "func template(_ state: JSValue) -> Bool",
-          "isStatic": false,
-          "rawDocumentation": "Get or set the template image flag\n- Parameter state: Optional boolean to set template state\n- Returns: Current template state",
-          "description": "Get or set the template image flag",
-          "params": [
+          "examples": [
             {
-              "name": "state",
-              "type": "JSValue",
-              "description": "Optional boolean to set template state",
-              "optional": false
+              "lang": "js",
+              "code": "img.saveToFile(\"/tmp/output.png\")"
             }
           ],
-          "returns": {
-            "type": "Bool",
-            "description": "Current template state"
-          },
-          "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 133
+          "lineNumber": 180
         },
         {
-          "name": "set",
-          "signature": "func set(_ value: JSValue)",
+          "name": "replaceFromFile",
+          "signature": "func replaceFromFile(_ path: String)",
           "isStatic": false,
-          "rawDocumentation": "Replace the image with a new one, triggering a re-render if bound to a UI element\n- Parameter value: New image as an HSImage object or a file path string",
-          "description": "Replace the image with a new one, triggering a re-render if bound to a UI element",
+          "rawDocumentation": "Replace this image's content by loading a new image from a file path.\n\nIf this image is bound to a UI element, the canvas re-renders automatically.\n- Parameter path: Path to the image file. `~` is expanded.\n- Example:\n```js\nconst reactive = HSImage.fromPath(\"/path/to/initial.png\")\n// ...later...\nreactive.replaceFromFile(\"/path/to/updated.png\")\n```",
+          "description": "Replace this image's content by loading a new image from a file path.\nIf this image is bound to a UI element, the canvas re-renders automatically.",
           "params": [
             {
-              "name": "value",
-              "type": "JSValue",
-              "description": "New image as an HSImage object or a file path string",
+              "name": "path",
+              "type": "String",
+              "description": "Path to the image file. `~` is expanded.",
               "optional": false
             }
           ],
           "returns": null,
-          "examples": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const reactive = HSImage.fromPath(\"/path/to/initial.png\")\n// ...later...\nreactive.replaceFromFile(\"/path/to/updated.png\")"
+            }
+          ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 137
+          "lineNumber": 192
+        },
+        {
+          "name": "replaceWithImage",
+          "signature": "func replaceWithImage(_ image: HSImage)",
+          "isStatic": false,
+          "rawDocumentation": "Replace this image's content with that of another HSImage.\n\nIf this image is bound to a UI element, the canvas re-renders automatically.\n- Parameter image: The HSImage whose content to copy\n- Example:\n```js\nconst reactive = HSImage.fromName(\"NSStatusAvailable\")\n// ...later...\nreactive.replaceWithImage(HSImage.fromName(\"NSStatusUnavailable\"))\n```",
+          "description": "Replace this image's content with that of another HSImage.\nIf this image is bound to a UI element, the canvas re-renders automatically.",
+          "params": [
+            {
+              "name": "image",
+              "type": "HSImage",
+              "description": "The HSImage whose content to copy",
+              "optional": false
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const reactive = HSImage.fromName(\"NSStatusAvailable\")\n// ...later...\nreactive.replaceWithImage(HSImage.fromName(\"NSStatusUnavailable\"))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 204
         }
       ],
-      "properties": [],
+      "properties": [
+        {
+          "name": "size",
+          "signature": "var size: HSSize { get set }",
+          "rawDocumentation": "The size of the image. Setting this resizes the image in place to the exact dimensions.\n- Example:\n```js\nconst img = HSImage.fromPath(\"/path/to/image.png\")\nconsole.log(img.size)       // HSSize { w: 200, h: 150 }\nimg.size = HSSize(100, 75)  // resize in place\n```",
+          "description": "The size of the image. Setting this resizes the image in place to the exact dimensions.",
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const img = HSImage.fromPath(\"/path/to/image.png\")\nconsole.log(img.size)       // HSSize { w: 200, h: 150 }\nimg.size = HSSize(100, 75)  // resize in place"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 134
+        },
+        {
+          "name": "name",
+          "signature": "var name: String? { get set }",
+          "rawDocumentation": "The name of the image, or null if not set.\n- Example:\n```js\nconst img = HSImage.fromName(\"NSComputer\")\nconsole.log(img.name)  // \"NSComputer\"\nimg.name = \"MyIcon\"\n```",
+          "description": "The name of the image, or null if not set.",
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const img = HSImage.fromName(\"NSComputer\")\nconsole.log(img.name)  // \"NSComputer\"\nimg.name = \"MyIcon\""
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 143
+        },
+        {
+          "name": "template",
+          "signature": "var template: Bool { get set }",
+          "rawDocumentation": "Whether the image is a template image.\n\nTemplate images are tinted by the system to match the appearance context (e.g. menu bar icons).\n- Example:\n```js\nconst img = HSImage.fromSymbol(\"star.fill\")\nimg.template = true\n```",
+          "description": "Whether the image is a template image.\nTemplate images are tinted by the system to match the appearance context (e.g. menu bar icons).",
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const img = HSImage.fromSymbol(\"star.fill\")\nimg.template = true"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
+          "lineNumber": 153
+        }
+      ],
       "category": "type"
     },
     {
@@ -13849,5 +13877,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-06-22T19:52:22.419Z"
+  "generatedAt": "2026-06-23T13:46:21.516Z"
 }

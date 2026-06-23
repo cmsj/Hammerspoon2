@@ -29,7 +29,7 @@ import AppKit
 ///   then call `.set()` on it from any callback to re-render the canvas automatically
 /// - **Reactive Text**: Create a string with `hs.ui.string()`, pass it to `.text()`,
 ///   then call `.set()` on it to update the displayed content live
-/// - **Reactive Images**: Pass an `HSImage` object to `.image()`, then call `.set()` on it
+/// - **Reactive Images**: Pass an `HSImage` object to `.image()`, then call `.replaceWithImage()` or `.replaceFromFile()` on it
 ///   to swap the image without rebuilding the window
 ///
 /// ## Basic Examples
@@ -133,10 +133,10 @@ import AppKit
 ///         .aspectRatio("fit")
 ///         .frame({w: 64, h: 64})
 ///         .onClick(() => {
-///             const next = (icon.name() === "NSStatusAvailable")
+///             const next = (icon.name === "NSStatusAvailable")
 ///                 ? HSImage.fromName("NSStatusUnavailable")
 ///                 : HSImage.fromName("NSStatusAvailable");
-///             icon.set(next);
+///             icon.replaceWithImage(next);
 ///         })
 ///     .show();
 /// ```

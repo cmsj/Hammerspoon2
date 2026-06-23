@@ -417,7 +417,7 @@ struct HSCameraCaptureTests {
         harness.expectTrue("""
             (function() {
                 if (!_capturedImage) return false;
-                var size = _capturedImage.size();
+                var size = _capturedImage.size;
                 return typeof size === 'object' && size.w > 0 && size.h > 0;
             })()
         """)

@@ -64,10 +64,3 @@ extension CGSize: JSConvertible {
     }
 }
 
-// Optional: detect and auto-unbox from JSValue
-extension JSValue {
-    func toCGSize() -> CGSize? {
-        guard let bridge = toObjectOf(HSSize.self) as? HSSize else { return nil }
-        return CGSize(from: bridge)
-    }
-}

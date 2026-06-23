@@ -1,0 +1,7 @@
+{
+  "files": ["hammerspoon.d.ts"],
+  "typedocOptions": {
+    "entryPoints": ["hammerspoon.d.ts"],
+    "out": "html/ts"
+  }
+}

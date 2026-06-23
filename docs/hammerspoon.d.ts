@@ -154,7 +154,7 @@ const appIcon = HSImage.fromAppBundle("com.apple.Safari")
 
 // Load from URL (asynchronous with Promise)
 HSImage.fromURL("https://example.com/image.png")
-    .then(image => console.log("Image loaded:", image.size()))
+    .then(image => console.log("Image loaded:", image.size))
     .catch(err => console.error("Failed to load image:", err))
 
 // Or with async/await
@@ -165,13 +165,13 @@ const image = await HSImage.fromURL("https://example.com/image.png")
 const img = HSImage.fromPath("/path/to/image.png")
 
 // Get size
-const size = img.size()  // Returns HSSize
+const size = img.size  // Returns HSSize
 
-// Resize image
-const resized = img.setSize({w: 100, h: 100}, false)  // Proportional
+// Resize image (mutates in place)
+img.size = HSSize(100, 100)
 
 // Crop image
-const cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})
+const cropped = img.croppedCopy(HSRect(10, 10, 50, 50))
 
 // Save to file
 img.saveToFile("/path/to/output.png")
@@ -205,7 +205,7 @@ declare class HSImage {
      * @param withFallbackSymbol The name of an SF Symbol to use if no bundle image could be loaded. Defaults to questionmark.circle
      * @returns An HSImage object, or null if the app couldn't be found
      */
-    static fromAppBundle(bundleID: string, withFallbackSymbol: string): HSImage | undefined;
+    static fromAppBundle(bundleID: string, withFallbackSymbol?: string): HSImage | undefined;
 
     /**
      * Get the icon for a file
@@ -229,28 +229,6 @@ declare class HSImage {
     static fromURL(url: string): Promise<HSImage>;
 
     /**
-     * Get or set the image size
-     * @param size Optional HSSize to set (if provided, returns a resized copy)
-     * @returns The current size as HSSize, or a resized copy if size was provided
-     */
-    size(size: JSValue): JSValue;
-
-    /**
-     * Get or set the image name
-     * @param name Optional name to set
-     * @returns The current or new name
-     */
-    name(name: JSValue): string | undefined;
-
-    /**
-     * Create a resized copy of the image
-     * @param size Target size as HSSize
-     * @param absolute If true, resize exactly to specified dimensions. If false, maintain aspect ratio
-     * @returns A new resized HSImage
-     */
-    setSize(size: JSValue, absolute: boolean): HSImage | undefined;
-
-    /**
      * Create a copy of the image
      * @returns A new HSImage copy
      */
@@ -258,10 +236,10 @@ declare class HSImage {
 
     /**
      * Create a cropped copy of the image
-     * @param rect HSRect defining the crop area
-     * @returns A new cropped HSImage, or null if cropping failed
+     * @param rect HSRect defining the crop area (x, y, w, h)
+     * @returns A new cropped HSImage, or null if the rect falls outside the image bounds
      */
-    croppedCopy(rect: JSValue): HSImage | undefined;
+    croppedCopy(rect: HSRect): HSImage | undefined;
 
     /**
      * Save the image to a file
@@ -271,17 +249,34 @@ declare class HSImage {
     saveToFile(path: string): boolean;
 
     /**
-     * Get or set the template image flag
-     * @param state Optional boolean to set template state
-     * @returns Current template state
+     * Replace this image's content by loading a new image from a file path.
+If this image is bound to a UI element, the canvas re-renders automatically.
+     * @param path Path to the image file. `~` is expanded.
      */
-    template(state: JSValue): boolean;
+    replaceFromFile(path: string): void;
 
     /**
-     * Replace the image with a new one, triggering a re-render if bound to a UI element
-     * @param value New image as an HSImage object or a file path string
+     * Replace this image's content with that of another HSImage.
+If this image is bound to a UI element, the canvas re-renders automatically.
+     * @param image The HSImage whose content to copy
      */
-    set(value: JSValue): void;
+    replaceWithImage(image: HSImage): void;
+
+    /**
+     * The size of the image. Setting this resizes the image in place to the exact dimensions.
+     */
+    size: HSSize;
+
+    /**
+     * The name of the image, or null if not set.
+     */
+    name: string | undefined;
+
+    /**
+     * Whether the image is a template image.
+Template images are tinted by the system to match the appearance context (e.g. menu bar icons).
+     */
+    template: boolean;
 
 }
 
@@ -2537,7 +2532,7 @@ item.setTooltip("My automation")
 item.setMenu([
     { title: "Reload config", fn: () => hs.reload() },
     { title: "-" },
-    { title: "Remove item", fn: () => item.hide() }
+    { title: "Remove from menubar", fn: () => item.hide() }
 ])
 ```
 ## Creating an item with a dynamic menu
@@ -2547,7 +2542,7 @@ item.setTitle("Dynamic")
 item.setMenu(() => [
     { title: "Time: " + new Date().toLocaleTimeString() },
     { title: "-" },
-    { title: "Close", fn: () => item.hide() }
+    { title: "Remove from menubar", fn: () => item.hide() }
 ])
 ```
  */
@@ -4568,10 +4563,10 @@ hs.ui.window({x: 100, y: 300, w: 80, h: 80})
         .aspectRatio("fit")
         .frame({w: 64, h: 64})
         .onClick(() => {
-            const next = (icon.name() === "NSStatusAvailable")
+            const next = (icon.name === "NSStatusAvailable")
                 ? HSImage.fromName("NSStatusUnavailable")
                 : HSImage.fromName("NSStatusAvailable");
-            icon.set(next);
+            icon.replaceWithImage(next);
         })
     .show();
 ```

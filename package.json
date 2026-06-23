@@ -23,5 +23,8 @@
     "highlight.js": "^11.11.1",
     "marked": "^17.0.1",
     "nunjucks": "^3.2.4"
+  },
+  "dependencies": {
+    "typedoc": "^0.28.19"
   }
 }
