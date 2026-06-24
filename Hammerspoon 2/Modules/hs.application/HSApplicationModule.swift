@@ -128,7 +128,7 @@ import UniformTypeIdentifiers
     ///     console.log(event, app && app.title)
     /// })
     /// ```
-    @objc func addWatcher(_ listener: JSValue)
+    @objc func addWatcher(_ listener: JSFunction)
 
     /// Remove a watcher for application events
     /// - Parameters:
@@ -137,23 +137,23 @@ import UniformTypeIdentifiers
     /// ```js
     /// hs.application.removeWatcher(myHandler)
     /// ```
-    @objc func removeWatcher(_ listener: JSValue)
+    @objc func removeWatcher(_ listener: JSFunction)
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(callback: JSValue)
+    @objc(_addWatcher:) func _addWatcher(callback: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
 
     /// Swift-retained storage for the JS ApplicationModuleWatcherEmitter instance
     /// SKIP_DOCS
-    @objc var _watcherEmitter: JSValue? { get set }
+    @objc var _watcherEmitter: JSFunction? { get set }
 }
 
 // MARK: - Implementations
 
 class HSApplicationWatcherObject {
-    let callback: JSValue
+    let callback: JSFunction
 
     static let notificationToEventName: [NSNotification.Name: String] = [
         NSWorkspace.willLaunchApplicationNotification: "willLaunch",
@@ -165,7 +165,7 @@ class HSApplicationWatcherObject {
         NSWorkspace.didDeactivateApplicationNotification: "didDeactivate",
     ]
 
-    init(callback: JSValue) {
+    init(callback: JSFunction) {
         self.callback = callback
     }
 
@@ -187,7 +187,7 @@ class HSApplicationWatcherObject {
     private var watcher: HSApplicationWatcherObject? = nil
 
     // Swift-retained storage for the JS-defined ApplicationModuleWatcherEmitter instance
-    @objc var _watcherEmitter: JSValue? = nil
+    @objc var _watcherEmitter: JSFunction? = nil
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
@@ -232,15 +232,15 @@ class HSApplicationWatcherObject {
         return NSWorkspace.shared.menuBarOwningApplication?.asHSApplication()
     }
 
-    @objc func addWatcher(_ listener: JSValue) {
+    @objc func addWatcher(_ listener: JSFunction) {
         _watcherEmitter?.invokeMethod("on", withArguments: [listener])
     }
 
-    @objc func removeWatcher(_ listener: JSValue) {
+    @objc func removeWatcher(_ listener: JSFunction) {
         _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
     }
 
-    @objc(_addWatcher:) func _addWatcher(callback: JSValue) {
+    @objc(_addWatcher:) func _addWatcher(callback: JSFunction) {
         if watcher != nil {
             AKWarning("hs.application._addWatcher(): Already watching. Refusing to create a second.")
             return

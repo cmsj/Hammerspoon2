@@ -186,7 +186,7 @@ import JavaScriptCore
     ///     }
     /// })
     /// ```
-    @objc @discardableResult func setCallback(_ fn: JSValue) -> HSSpotlightQuery
+    @objc @discardableResult func setCallback(_ fn: JSFunction) -> HSSpotlightQuery
 
     /// Starts the query.
     ///
@@ -394,7 +394,7 @@ import JavaScriptCore
         return self
     }
 
-    @objc @discardableResult func setCallback(_ fn: JSValue) -> HSSpotlightQuery {
+    @objc @discardableResult func setCallback(_ fn: JSFunction) -> HSSpotlightQuery {
         callback?.detach(from: self)
         callback = JSCallback(value: fn, owner: self)
         return self

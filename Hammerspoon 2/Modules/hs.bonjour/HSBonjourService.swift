@@ -110,7 +110,7 @@ import Darwin
     ///     else console.error('Resolve failed:', err)
     /// })
     /// ```
-    @objc @discardableResult func resolve(_ timeout: Double, _ callback: JSValue) -> HSBonjourService
+    @objc @discardableResult func resolve(_ timeout: Double, _ callback: JSFunction) -> HSBonjourService
 
     /// Starts monitoring the TXT record for changes. The callback fires whenever
     /// the TXT record is updated.
@@ -122,7 +122,7 @@ import Darwin
     /// ```js
     /// service.monitor(txt => console.log('TXT updated:', txt))
     /// ```
-    @objc @discardableResult func monitor(_ callback: JSValue) -> HSBonjourService
+    @objc @discardableResult func monitor(_ callback: JSFunction) -> HSBonjourService
 
     /// Stops any active resolution.
     /// - Returns: self, for chaining
@@ -185,7 +185,7 @@ import Darwin
 
     // MARK: - HSBonjourServiceAPI methods
 
-    @objc @discardableResult func resolve(_ timeout: Double, _ callback: JSValue) -> HSBonjourService {
+    @objc @discardableResult func resolve(_ timeout: Double, _ callback: JSFunction) -> HSBonjourService {
         service.stop()
         resolveCallback = callback.isObject ? JSCallback(value: callback, owner: self) : nil
         service.resolve(withTimeout: timeout)
@@ -193,7 +193,7 @@ import Darwin
         return self
     }
 
-    @objc @discardableResult func monitor(_ callback: JSValue) -> HSBonjourService {
+    @objc @discardableResult func monitor(_ callback: JSFunction) -> HSBonjourService {
         monitorCallback = callback.isObject ? JSCallback(value: callback, owner: self) : nil
         service.startMonitoring()
         AKTrace("HSBonjourService(\(identifier)).monitor(): Started TXT monitoring for '\(name)'")

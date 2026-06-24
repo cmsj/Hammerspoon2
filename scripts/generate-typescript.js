@@ -51,6 +51,15 @@ function swiftTypeToTS(swiftType, promiseType = null) {
         'Void': 'void'
     };
 
+    // Handle JSFunction - convert to a callable type.
+    // JSFunction? is handled here too: the generic ?-stripper would produce
+    // "(...args: any[]) => any | undefined" which TS parses as a function
+    // returning "any | undefined" — wrong precedence. We parenthesise instead.
+    if (s === 'JSFunction?' || s === 'JSFunction') {
+        const fnType = '(...args: any[]) => any';
+        return s.endsWith('?') ? `(${fnType}) | undefined` : fnType;
+    }
+
     // Handle JSPromise - convert to Promise<T>
     // JSPromise? -> Promise<T> (the ? is expected since promises can fail to create)
     if (s === 'JSPromise?' || s === 'JSPromise') {
@@ -78,6 +87,15 @@ function swiftTypeToTS(swiftType, promiseType = null) {
     }
 
     return typeMap[s] || s;
+}
+
+/**
+ * Resolve the TypeScript type for a parameter.
+ * A {TypeScript type} annotation in the doc comment overrides the Swift-derived type.
+ */
+function resolveParamType(p, fromSwift = true) {
+    if (p.tsType) return p.tsType;
+    return fromSwift ? swiftTypeToTS(p.type) : p.type;
 }
 
 /**
@@ -129,8 +147,7 @@ function generateModuleDefinitions(moduleData) {
 
         // Method signature — p.optional maps to TypeScript's optional parameter (name?: type)
         const params = (method.params || []).map(p => {
-            const tsType = method.source === 'swift' ? swiftTypeToTS(p.type) : p.type;
-            return `${p.name}${p.optional ? '?' : ''}: ${tsType}`;
+            return `${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p, method.source === 'swift')}`;
         }).join(', ');
 
         const returnType = method.returns
@@ -194,7 +211,7 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (initMethod.params || []).map(p => {
-                return `${p.name}: ${swiftTypeToTS(p.type)}`;
+                return `${p.name}: ${resolveParamType(p)}`;
             }).join(', ');
 
             output += `    constructor(${params});\n\n`;
@@ -218,7 +235,7 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (method.params || []).map(p => {
-                return `${p.name}${p.optional ? '?' : ''}: ${swiftTypeToTS(p.type)}`;
+                return `${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p)}`;
             }).join(', ');
 
             const returnType = method.returns ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : 'void';
@@ -257,7 +274,7 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (initMethod.params || []).map(p => {
-                return `${p.name}: ${swiftTypeToTS(p.type)}`;
+                return `${p.name}: ${resolveParamType(p)}`;
             }).join(', ');
 
             output += `    constructor(${params});\n\n`;
@@ -292,7 +309,7 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (method.params || []).map(p => {
-                return `${p.name}${p.optional ? '?' : ''}: ${swiftTypeToTS(p.type)}`;
+                return `${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p)}`;
             }).join(', ');
 
             const returnType = method.returns ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : 'void';

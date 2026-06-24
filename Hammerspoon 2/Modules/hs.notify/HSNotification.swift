@@ -59,7 +59,7 @@ import JavaScriptCore
     @objc let identifier: String
 
     fileprivate let content: UNMutableNotificationContent
-    fileprivate let callback: JSValue?
+    fileprivate let callback: JSFunction?
 
     // Injected by HSNotifyModule so send() can register the callback without importing the module.
     fileprivate var registerCallback: (@MainActor (String, JSValue) -> Void)?
@@ -74,7 +74,7 @@ import JavaScriptCore
 
     init(identifier: String,
          content: UNMutableNotificationContent,
-         callback: JSValue?,
+         callback: JSFunction?,
          registerCallback: (@MainActor (String, JSValue) -> Void)?) {
         self.identifier = identifier
         self.content = content

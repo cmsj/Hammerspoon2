@@ -28,10 +28,10 @@ public typealias JSPromise = JSValue
 @_documentation(visibility: private)
 @MainActor
 final class JSPromiseHolder {
-    private let resolve: JSValue
-    private let reject: JSValue
+    private let resolve: JSFunction
+    private let reject: JSFunction
 
-    init(resolve: JSValue, reject: JSValue) {
+    init(resolve: JSFunction, reject: JSFunction) {
         self.resolve = resolve
         self.reject = reject
     }
@@ -71,7 +71,7 @@ final class JSPromiseHolder {
 @MainActor
 func wrapAsyncInJSPromise(in context: JSContext, body: @escaping @MainActor (JSPromiseHolder) -> Void) -> JSPromise? {
     // Create the Promise executor function
-    let executor: @convention(block) (JSValue, JSValue) -> Void = { resolve, reject in
+    let executor: @convention(block) (JSFunction, JSFunction) -> Void = { resolve, reject in
         MainActor.assumeIsolated {
             let holder = JSPromiseHolder(resolve: resolve, reject: reject)
             body(holder)

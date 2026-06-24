@@ -67,7 +67,7 @@ import CoreLocation
     ///     if (event === 'location') console.log(data.latitude, data.longitude)
     /// })
     /// ```
-    @objc func setCallback(_ fn: JSValue) -> HSLocationWatcher
+    @objc func setCallback(_ fn: JSFunction) -> HSLocationWatcher
 
     /// Returns the most recently received location, or null if none yet.
     /// - Returns: a locationTable, or null
@@ -131,7 +131,7 @@ import CoreLocation
         return self
     }
 
-    @objc func setCallback(_ fn: JSValue) -> HSLocationWatcher {
+    @objc func setCallback(_ fn: JSFunction) -> HSLocationWatcher {
         callback?.detach(from: self)
         callback = JSCallback(value: fn, owner: self)
         return self

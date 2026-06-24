@@ -445,7 +445,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// const dev = hs.audiodevice.defaultOutputDevice()
     /// dev.addWatcher((event) => console.log("Event:", event))
     /// ```
-    @objc func addWatcher(_ listener: JSValue)
+    @objc func addWatcher(_ listener: JSFunction)
 
     /// Remove a previously registered per-device listener.
     ///
@@ -455,17 +455,17 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// const dev = hs.audiodevice.defaultOutputDevice()
     /// dev.removeWatcher(myHandler)
     /// ```
-    @objc func removeWatcher(_ listener: JSValue)
+    @objc func removeWatcher(_ listener: JSFunction)
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue)
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
     /// SKIP_DOCS
     @objc(_removeWatcher) func _removeWatcher()
 
     /// Swift-retained storage for the JS AudioDeviceWatcherEmitter instance
     /// SKIP_DOCS
-    @objc var _watcherEmitter: JSValue? { get set }
+    @objc var _watcherEmitter: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -686,14 +686,14 @@ private func caDataSourceName(_ objectID: AudioObjectID,
 
     // MARK: - Per-device watcher
 
-    @objc var _watcherEmitter: JSValue? = nil
+    @objc var _watcherEmitter: JSFunction? = nil
     // Registrations keyed by event name: each value holds the CoreAudio address and
     // the heap-allocated ObjC block (stored to guarantee pointer equality on removal).
     private var deviceRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:]
     // Strong self-reference to keep the device alive while any watcher is active.
     private var selfRetain: HSAudioDevice? = nil
 
-    @objc func addWatcher(_ listener: JSValue) {
+    @objc func addWatcher(_ listener: JSFunction) {
         if _watcherEmitter == nil {
             guard let ctx = JSContext.current() else { return }
             let audiodevice = ctx.objectForKeyedSubscript("hs")?.objectForKeyedSubscript("audiodevice")
@@ -702,11 +702,11 @@ private func caDataSourceName(_ objectID: AudioObjectID,
         _watcherEmitter?.invokeMethod("on", withArguments: [listener])
     }
 
-    @objc func removeWatcher(_ listener: JSValue) {
+    @objc func removeWatcher(_ listener: JSFunction) {
         _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
     }
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) {
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
         guard unsafe deviceRegistrations.isEmpty else { return }
         selfRetain = self
 

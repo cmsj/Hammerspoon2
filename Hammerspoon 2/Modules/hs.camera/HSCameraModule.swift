@@ -98,7 +98,7 @@ import AVFoundation
     ///     console.log(event + ": " + camera.name)
     /// })
     /// ```
-    @objc func addWatcher(_ listener: JSValue)
+    @objc func addWatcher(_ listener: JSFunction)
 
     /// Remove a previously registered module-level event listener.
     /// - Parameter listener: The function originally passed to ``addWatcher(_:)``
@@ -106,14 +106,14 @@ import AVFoundation
     /// ```js
     /// hs.camera.removeWatcher(myHandler)
     /// ```
-    @objc func removeWatcher(_ listener: JSValue)
+    @objc func removeWatcher(_ listener: JSFunction)
 
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue)
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
-    @objc var _watcherEmitter: JSValue? { get set }
+    @objc var _watcherEmitter: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -180,10 +180,10 @@ import AVFoundation
 
     // MARK: - Module-level watcher
 
-    @objc var _watcherEmitter: JSValue? = nil
-    private var moduleCallback: JSValue? = nil
+    @objc var _watcherEmitter: JSFunction? = nil
+    private var moduleCallback: JSFunction? = nil
 
-    @objc func addWatcher(_ listener: JSValue) {
+    @objc func addWatcher(_ listener: JSFunction) {
         // invokeMethod doesn't propagate JS exceptions to the calling context's try-catch,
         // so we validate here and throw via context.exception before delegating.
         guard let context = JSContext.current() else { return }
@@ -194,11 +194,11 @@ import AVFoundation
         _watcherEmitter?.invokeMethod("on", withArguments: [listener])
     }
 
-    @objc func removeWatcher(_ listener: JSValue) {
+    @objc func removeWatcher(_ listener: JSFunction) {
         _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
     }
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) {
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
         guard moduleCallback == nil else {
             AKWarning("hs.camera._addWatcher(): Already watching. Refusing to create a second.")
             return

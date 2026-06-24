@@ -79,7 +79,7 @@ import JavaScriptCore
     ///     if (ev === 'serviceFound') console.log('Found:', svc.name)
     /// })
     /// ```
-    @objc @discardableResult func findServices(_ type: String, _ domain: String, _ callback: JSValue) -> HSBonjourSearch
+    @objc @discardableResult func findServices(_ type: String, _ domain: String, _ callback: JSFunction) -> HSBonjourSearch
 
     /// Searches for domains visible to this machine (browsable domains).
     ///
@@ -94,7 +94,7 @@ import JavaScriptCore
     ///     if (ev === 'domainFound') console.log('Domain:', domain)
     /// })
     /// ```
-    @objc @discardableResult func findBrowsableDomains(_ callback: JSValue) -> HSBonjourSearch
+    @objc @discardableResult func findBrowsableDomains(_ callback: JSFunction) -> HSBonjourSearch
 
     /// Searches for domains on which this machine can register services.
     ///
@@ -109,7 +109,7 @@ import JavaScriptCore
     ///     if (ev === 'domainFound') console.log('Can register in:', domain)
     /// })
     /// ```
-    @objc @discardableResult func findRegistrationDomains(_ callback: JSValue) -> HSBonjourSearch
+    @objc @discardableResult func findRegistrationDomains(_ callback: JSFunction) -> HSBonjourSearch
 
     /// Stops all active searches. Safe to call when no search is active.
     /// - Returns: self, for chaining
@@ -170,7 +170,7 @@ import JavaScriptCore
 
     // MARK: - HSBonjourSearchAPI
 
-    @objc @discardableResult func findServices(_ type: String, _ domain: String, _ callback: JSValue) -> HSBonjourSearch {
+    @objc @discardableResult func findServices(_ type: String, _ domain: String, _ callback: JSFunction) -> HSBonjourSearch {
         servicesBrowser.stop()
         serviceTable.removeAll()
         servicesCallback?.detach(from: self)
@@ -180,7 +180,7 @@ import JavaScriptCore
         return self
     }
 
-    @objc @discardableResult func findBrowsableDomains(_ callback: JSValue) -> HSBonjourSearch {
+    @objc @discardableResult func findBrowsableDomains(_ callback: JSFunction) -> HSBonjourSearch {
         domainsBrowser.stop()
         domainsCallback?.detach(from: self)
         domainsCallback = JSCallback(value: callback, owner: self)
@@ -189,7 +189,7 @@ import JavaScriptCore
         return self
     }
 
-    @objc @discardableResult func findRegistrationDomains(_ callback: JSValue) -> HSBonjourSearch {
+    @objc @discardableResult func findRegistrationDomains(_ callback: JSFunction) -> HSBonjourSearch {
         registrationBrowser.stop()
         registrationCallback?.detach(from: self)
         registrationCallback = JSCallback(value: callback, owner: self)

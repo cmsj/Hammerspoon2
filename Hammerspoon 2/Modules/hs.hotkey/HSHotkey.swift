@@ -43,7 +43,7 @@ import Carbon
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
     /// hk.callbackPressed = () => console.log("new handler")
     /// ```
-    @objc var callbackPressed: JSValue? { get set }
+    @objc var callbackPressed: JSFunction? { get set }
 
     /// The callback function to be called when the hotkey is released
     /// - Example:
@@ -51,7 +51,7 @@ import Carbon
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
     /// hk.callbackReleased = () => console.log("released")
     /// ```
-    @objc var callbackReleased: JSValue? { get set }
+    @objc var callbackReleased: JSFunction? { get set }
 }
 
 @_documentation(visibility: private)
@@ -62,14 +62,14 @@ import Carbon
     private let modifiers: UInt32
     private var _callbackPressed: JSCallback?
     private var _callbackReleased: JSCallback?
-    @objc var callbackPressed: JSValue? {
+    @objc var callbackPressed: JSFunction? {
         get { _callbackPressed?.value }
         set {
             _callbackPressed?.detach(from: self)
             _callbackPressed = newValue.flatMap { JSCallback(value: $0, owner: self) }
         }
     }
-    @objc var callbackReleased: JSValue? {
+    @objc var callbackReleased: JSFunction? {
         get { _callbackReleased?.value }
         set {
             _callbackReleased?.detach(from: self)
@@ -83,7 +83,7 @@ import Carbon
     // Generate unique IDs for each hotkey
     private static var nextID: UInt32 = 1
 
-    init(keyCode: UInt32, modifiers: UInt32, callbackPressed: JSValue? = nil, callbackReleased: JSValue? = nil) {
+    init(keyCode: UInt32, modifiers: UInt32, callbackPressed: JSFunction? = nil, callbackReleased: JSFunction? = nil) {
         self.keyCode = keyCode
         self.modifiers = modifiers
         self.hotkeyID = Self.nextID
@@ -157,7 +157,7 @@ import Carbon
 
     /// Internal method called by HotkeyManager when the hotkey is triggered
     func trigger(eventKind: UInt32) {
-        let callback: JSValue?
+        let callback: JSFunction?
 
         switch eventKind {
         case UInt32(kEventHotKeyPressed):

@@ -80,23 +80,29 @@ import SwiftUI
 
     // MARK: Choices
 
-    /// Set the choices list. Pass a static array or a function:
+    /// Set choices from a static array of choice objects.
     ///
-    /// - **Array** — the chooser filters it automatically as the user types.
-    /// - **Function** — called with the current query string on every `refreshChoices()` and
-    ///   on show. The function is responsible for filtering; the chooser displays all items it returns.
+    /// The chooser automatically filters the array as the user types.
     ///
-    /// - Parameter choices: An array of choice objects, or a function `(query) => [...]`
+    /// - Parameter choices: An array of choice objects, each with `text`, optional `subText`, `image`, `valid`, and custom fields
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js
-    /// // Static
-    /// chooser.setChoices([{text: "Foo"}, {text: "Bar"}])
-    ///
-    /// // Dynamic
-    /// chooser.setChoices(q => items.filter(i => i.text.toLowerCase().includes(q.toLowerCase())))
+    /// chooser.setStaticChoices([{text: "Foo"}, {text: "Bar"}])
     /// ```
-    @objc @discardableResult func setChoices(_ choices: JSValue) -> HSChooser
+    @objc @discardableResult func setStaticChoices(_ choices: [Any]) -> HSChooser
+
+    /// Set choices from a function called with the current query on each `refreshChoices()` and on show.
+    ///
+    /// The function is responsible for filtering; the chooser displays all items it returns.
+    ///
+    /// - Parameter fn: {(query: string) => object[]} A function called with the current query string that returns choice objects
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// chooser.setChoicesCallback(q => items.filter(i => i.text.toLowerCase().includes(q.toLowerCase())))
+    /// ```
+    @objc @discardableResult func setChoicesCallback(_ fn: JSFunction) -> HSChooser
 
     /// Re-apply filtering (static choices) or re-invoke the choices function (dynamic).
     /// Call after updating an external data source in an async `onQueryChange` handler.
@@ -172,7 +178,7 @@ import SwiftUI
     ///     else console.log("Dismissed")
     /// }
     /// ```
-    @objc var onSelect: JSValue? { get set }
+    @objc var onSelect: JSFunction? { get set }
 
     /// Called on every keystroke with the new query string.
     ///
@@ -184,21 +190,21 @@ import SwiftUI
     ///     hs.timer.doAfter(0.05, () => { fetchResults(q).then(r => { cache = r; chooser.refreshChoices() }) })
     /// }
     /// ```
-    @objc var onQueryChange: JSValue? { get set }
+    @objc var onQueryChange: JSFunction? { get set }
 
     /// Called after the panel becomes visible.
     /// - Example:
     /// ```js
     /// chooser.onShow = () => console.log("Chooser appeared")
     /// ```
-    @objc var onShow: JSValue? { get set }
+    @objc var onShow: JSFunction? { get set }
 
     /// Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).
     /// - Example:
     /// ```js
     /// chooser.onHide = () => console.log("Chooser hidden")
     /// ```
-    @objc var onHide: JSValue? { get set }
+    @objc var onHide: JSFunction? { get set }
 
     /// Called when the user activates a row whose `valid` field is `false`.
     /// The chooser stays open; the argument is the row dict (same shape as `onSelect`).
@@ -207,33 +213,51 @@ import SwiftUI
     /// ```js
     /// chooser.onInvalid = (item) => console.log("Tapped invalid row: " + item.text)
     /// ```
-    @objc var onInvalid: JSValue? { get set }
+    @objc var onInvalid: JSFunction? { get set }
 
-    /// Programmatically confirm a selection.
+    /// Programmatically confirm the selection at a specific row index.
     ///
-    /// Omit `row` to confirm the currently highlighted row. Fires `onSelect` (or `onInvalid`
-    /// for rows with `valid: false`) and hides the chooser.
+    /// Fires `onSelect` (or `onInvalid` for rows with `valid: false`) and hides the chooser.
     ///
-    /// - Parameter row: Zero-based row index, or omit to use the current selection.
+    /// - Parameter index: Zero-based row index to select
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js
-    /// chooser.select()     // confirm highlighted row
-    /// chooser.select(2)    // confirm row at index 2
+    /// chooser.selectRow(2)
     /// ```
-    @objc @discardableResult func select(_ row: JSValue) -> HSChooser
+    @objc @discardableResult func selectRow(_ index: Int) -> HSChooser
 
-    /// Returns the dict for the highlighted row, or for a specific row by index.
+    /// Programmatically confirm the currently highlighted row.
+    ///
+    /// Fires `onSelect` (or `onInvalid` for rows with `valid: false`) and hides the chooser.
+    ///
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// chooser.selectCurrentRow()
+    /// ```
+    @objc @discardableResult func selectCurrentRow() -> HSChooser
+
+    /// Returns the dict for a specific row by index.
     /// Returns `null` if the index is out of range or no choices are set.
     ///
-    /// - Parameter row: Zero-based row index, or omit to query the highlighted row.
+    /// - Parameter index: Zero-based row index
     /// - Returns: The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.
     /// - Example:
     /// ```js
-    /// const item = chooser.selectedRowContents()
-    /// const item = chooser.selectedRowContents(2)
+    /// const item = chooser.rowContents(2)
     /// ```
-    @objc func selectedRowContents(_ row: JSValue) -> NSDictionary?
+    @objc func rowContents(_ index: Int) -> NSDictionary?
+
+    /// Returns the dict for the currently highlighted row.
+    /// Returns `null` if no choices are set or the chooser is empty.
+    ///
+    /// - Returns: The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.
+    /// - Example:
+    /// ```js
+    /// const item = chooser.currentRowContents()
+    /// ```
+    @objc func currentRowContents() -> NSDictionary?
 }
 
 // MARK: -
@@ -303,7 +327,7 @@ import SwiftUI
 
     // MARK: - Callbacks (JSCallback-backed properties)
 
-    @objc var onSelect: JSValue? {
+    @objc var onSelect: JSFunction? {
         get { _onSelect?.value }
         set {
             _onSelect?.detach(from: self)
@@ -311,7 +335,7 @@ import SwiftUI
         }
     }
 
-    @objc var onQueryChange: JSValue? {
+    @objc var onQueryChange: JSFunction? {
         get { _onQueryChange?.value }
         set {
             _onQueryChange?.detach(from: self)
@@ -319,7 +343,7 @@ import SwiftUI
         }
     }
 
-    @objc var onShow: JSValue? {
+    @objc var onShow: JSFunction? {
         get { _onShow?.value }
         set {
             _onShow?.detach(from: self)
@@ -327,7 +351,7 @@ import SwiftUI
         }
     }
 
-    @objc var onHide: JSValue? {
+    @objc var onHide: JSFunction? {
         get { _onHide?.value }
         set {
             _onHide?.detach(from: self)
@@ -335,7 +359,7 @@ import SwiftUI
         }
     }
 
-    @objc var onInvalid: JSValue? {
+    @objc var onInvalid: JSFunction? {
         get { _onInvalid?.value }
         set {
             _onInvalid?.detach(from: self)
@@ -345,28 +369,23 @@ import SwiftUI
 
     // MARK: - Choices
 
-    @objc @discardableResult func setChoices(_ choices: JSValue) -> HSChooser {
-        if choices.isArray {
-            isStaticChoices = true
-            _choicesFunction?.detach(from: self)
-            _choicesFunction = nil
-            clearContextMenuCallbacks()
-            allChoices = parseChoiceArray(choices)
-            viewModel.filteredChoices = filteredChoices(for: _storedQuery)
-            viewModel.selectedIndex = 0
-        } else if choices.isObject && !choices.isNull && !choices.isUndefined {
-            isStaticChoices = false
-            _choicesFunction?.detach(from: self)
-            _choicesFunction = JSCallback(value: choices, owner: self)
-            callChoicesFunction()
-        } else {
-            isStaticChoices = true
-            _choicesFunction?.detach(from: self)
-            _choicesFunction = nil
-            clearContextMenuCallbacks()
-            allChoices = []
-            viewModel.filteredChoices = []
-        }
+    @objc @discardableResult func setStaticChoices(_ choices: [Any]) -> HSChooser {
+        isStaticChoices = true
+        _choicesFunction?.detach(from: self)
+        _choicesFunction = nil
+        clearContextMenuCallbacks()
+        allChoices = parseChoiceArray(from: choices)
+        viewModel.filteredChoices = filteredChoices(for: _storedQuery)
+        viewModel.selectedIndex = 0
+        viewModel.onContentSizeChange?(viewModel.expectedHeight())
+        return self
+    }
+
+    @objc @discardableResult func setChoicesCallback(_ fn: JSFunction) -> HSChooser {
+        isStaticChoices = false
+        _choicesFunction?.detach(from: self)
+        _choicesFunction = JSCallback(value: fn, owner: self)
+        callChoicesFunction()
         viewModel.onContentSizeChange?(viewModel.expectedHeight())
         return self
     }
@@ -424,15 +443,24 @@ import SwiftUI
         return self
     }
 
-    @objc @discardableResult func select(_ row: JSValue) -> HSChooser {
-        let index = row.isNumber ? Int(row.toInt32()) : viewModel.selectedIndex
+    @objc @discardableResult func selectRow(_ index: Int) -> HSChooser {
         let safeIndex = (index >= 0 && index < viewModel.filteredChoices.count) ? index : nil
         handleSelection(safeIndex)
         return self
     }
 
-    @objc func selectedRowContents(_ row: JSValue) -> NSDictionary? {
-        let index = row.isNumber ? Int(row.toInt32()) : viewModel.selectedIndex
+    @objc @discardableResult func selectCurrentRow() -> HSChooser {
+        handleSelection(viewModel.selectedIndex)
+        return self
+    }
+
+    @objc func rowContents(_ index: Int) -> NSDictionary? {
+        guard index >= 0, index < viewModel.filteredChoices.count else { return nil }
+        return buildReturnDict(for: viewModel.filteredChoices[index])
+    }
+
+    @objc func currentRowContents() -> NSDictionary? {
+        let index = viewModel.selectedIndex
         guard index >= 0, index < viewModel.filteredChoices.count else { return nil }
         return buildReturnDict(for: viewModel.filteredChoices[index])
     }
@@ -585,7 +613,7 @@ import SwiftUI
         guard let fn = _choicesFunction?.value else { return }
         let result = fn.call(withArguments: [_storedQuery])
         clearContextMenuCallbacks()
-        allChoices = parseChoiceArray(result)
+        allChoices = parseChoiceArray(fromJSValue: result)
         viewModel.filteredChoices = allChoices
         viewModel.selectedIndex = 0
         viewModel.onContentSizeChange?(viewModel.expectedHeight())
@@ -640,16 +668,23 @@ import SwiftUI
         return dict
     }
 
-    private func parseChoiceArray(_ raw: JSValue?) -> [ChooserItem] {
+    private func parseChoiceArray(from items: [Any]) -> [ChooserItem] {
+        return items.compactMap { item in
+            guard let dict = item as? [String: Any] else { return nil }
+            return parseChoice(dict, contextMenu: dict["contextMenu"] as? JSValue)
+        }
+    }
+
+    private func parseChoiceArray(fromJSValue raw: JSValue?) -> [ChooserItem] {
         guard let raw, raw.isArray else { return [] }
         let basicItems = raw.toArray() ?? []
         return basicItems.indices.compactMap { i in
             guard let dict = basicItems[i] as? [String: Any] else { return nil }
-            return parseChoice(dict, jsValue: raw.objectAtIndexedSubscript(i))
+            return parseChoice(dict, contextMenu: raw.objectAtIndexedSubscript(i)?.objectForKeyedSubscript("contextMenu"))
         }
     }
 
-    private func parseChoice(_ dict: [String: Any], jsValue: JSValue?) -> ChooserItem? {
+    private func parseChoice(_ dict: [String: Any], contextMenu: JSValue?) -> ChooserItem? {
         guard let text = dict["text"] as? String else { return nil }
 
         let subText = dict["subText"] as? String
@@ -662,7 +697,7 @@ import SwiftUI
             image = nsImg
         }
 
-        let contextMenuItems = parseContextMenu(jsValue?.objectForKeyedSubscript("contextMenu"))
+        let contextMenuItems = parseContextMenu(contextMenu)
 
         var extra = dict
         extra.removeValue(forKey: "text")

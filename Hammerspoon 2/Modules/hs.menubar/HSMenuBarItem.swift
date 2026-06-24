@@ -47,7 +47,7 @@ import JavaScriptCore
     /// item.setTitle("Click me")
     /// item.setClickCallback(() => console.log("clicked!"))
     /// ```
-    @objc func setClickCallback(_ fn: JSValue)
+    @objc func setClickCallback(_ fn: JSFunction)
 
     /// Set the menu for this item. Pass an array of menu item objects for a static menu,
     /// or a function that returns an array for a dynamic menu populated each time it opens.
@@ -186,7 +186,7 @@ import JavaScriptCore
         }
     }
 
-    @objc func setClickCallback(_ fnValue: JSValue) {
+    @objc func setClickCallback(_ fnValue: JSFunction) {
         _clickCallback?.detach(from: self)
         if fnValue.isNull || fnValue.isUndefined || !fnValue.isObject {
             _clickCallback = nil

@@ -95,7 +95,7 @@ import UniformTypeIdentifiers
     ///     return true
     /// })
     /// ```
-    @objc func readLines(_ path: String, _ callback: JSValue) -> Bool
+    @objc func readLines(_ path: String, _ callback: JSFunction) -> Bool
 
     /// Write a UTF-8 string to a file, creating it or overwriting any existing content.
     ///
@@ -600,7 +600,7 @@ import UniformTypeIdentifiers
         return result
     }
 
-    @objc func readLines(_ path: String, _ callback: JSValue) -> Bool {
+    @objc func readLines(_ path: String, _ callback: JSFunction) -> Bool {
         guard let handle = FileHandle(forReadingAtPath: expand(path)) else {
             AKError("hs.fs.readLines: could not open \(path)")
             return false

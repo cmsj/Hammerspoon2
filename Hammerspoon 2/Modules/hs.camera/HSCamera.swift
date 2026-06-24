@@ -122,7 +122,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     ///     console.log(cam.name + " is " + (inUse ? "now in use" : "no longer in use"))
     /// })
     /// ```
-    @objc func addWatcher(_ listener: JSValue)
+    @objc func addWatcher(_ listener: JSFunction)
 
     /// Remove a previously registered per-camera in-use listener.
     /// - Parameter listener: The function originally passed to ``addWatcher(_:)``
@@ -130,14 +130,14 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     /// ```js
     /// cam.removeWatcher(myHandler)
     /// ```
-    @objc func removeWatcher(_ listener: JSValue)
+    @objc func removeWatcher(_ listener: JSFunction)
 
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue)
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
-    @objc var _watcherEmitter: JSValue? { get set }
+    @objc var _watcherEmitter: JSFunction? { get set }
 
     /// Capture a still image from this camera.
     ///
@@ -196,14 +196,14 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
 
     // MARK: - Per-camera watcher
 
-    @objc var _watcherEmitter: JSValue? = nil
-    private var watcherCallback: JSValue? = nil
+    @objc var _watcherEmitter: JSFunction? = nil
+    private var watcherCallback: JSFunction? = nil
     private var cmioListenerBlock: CMIOObjectPropertyListenerBlock? = nil
     private var watcherCMIOID: CMIOObjectID? = nil
     // Self-retain while a watcher is active — keeps the object alive across GC cycles.
     private var selfRetain: HSCamera? = nil
 
-    @objc func addWatcher(_ listener: JSValue) {
+    @objc func addWatcher(_ listener: JSFunction) {
         // invokeMethod doesn't propagate JS exceptions to the calling context's try-catch,
         // so we validate here and throw via context.exception before delegating.
         guard let ctx = JSContext.current() else { return }
@@ -218,11 +218,11 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         _watcherEmitter?.invokeMethod("on", withArguments: [listener])
     }
 
-    @objc func removeWatcher(_ listener: JSValue) {
+    @objc func removeWatcher(_ listener: JSFunction) {
         _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
     }
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) {
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
         guard watcherCallback == nil else {
             AKWarning("hs.camera._addWatcher(): Already watching '\(name)'. Refusing to create a second.")
             return

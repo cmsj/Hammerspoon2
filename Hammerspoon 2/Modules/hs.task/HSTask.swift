@@ -209,7 +209,7 @@ import JavaScriptCoreExtras
         return process?.isRunning ?? false
     }
 
-    init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSValue?, streamingCallback: JSValue?, module: HSTaskModule?) {
+    init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSFunction?, streamingCallback: JSFunction?, module: HSTaskModule?) {
         self.launchPath = launchPath
         self.arguments = arguments
         self._environment = environment ?? ProcessInfo.processInfo.environment

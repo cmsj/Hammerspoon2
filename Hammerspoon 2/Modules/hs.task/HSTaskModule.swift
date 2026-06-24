@@ -29,21 +29,21 @@ import JavaScriptCoreExtras
     /// task.start()
     /// ```
     @objc(create:::::)
-    func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask
+    func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSFunction?, _ environment: JSValue?, _ streamingCallback: JSFunction?) -> HSTask
 
     /// Run a task, returning a Promise. Swift-retained storage for the JS implementation.
     /// - Example:
     /// ```js
     /// hs.task.runAsync("/bin/echo", ["hi"]).then(r => console.log(r.stdout))
     /// ```
-    @objc var runAsync: JSValue? { get set }
+    @objc var runAsync: JSFunction? { get set }
 
     /// Run a shell command. Swift-retained storage for the JS implementation.
     /// - Example:
     /// ```js
     /// hs.task.shell("ls -la /tmp").then(r => console.log(r.stdout))
     /// ```
-    @objc var shell: JSValue? { get set }
+    @objc var shell: JSFunction? { get set }
 
     /// Run multiple tasks in parallel. Swift-retained storage for the JS implementation.
     /// - Example:
@@ -53,7 +53,7 @@ import JavaScriptCoreExtras
     ///     ["/bin/echo", ["two"]]
     /// ]).then(results => console.log(results))
     /// ```
-    @objc var parallel: JSValue? { get set }
+    @objc var parallel: JSFunction? { get set }
 
     /// Run multiple tasks in sequence. Swift-retained storage for the JS implementation.
     /// - Example:
@@ -63,7 +63,7 @@ import JavaScriptCoreExtras
     ///     ["/bin/echo", ["two"]]
     /// ]).then(results => console.log(results))
     /// ```
-    @objc var sequence: JSValue? { get set }
+    @objc var sequence: JSFunction? { get set }
 
     /// Create a task builder. Swift-retained storage for the JS implementation.
     /// - Example:
@@ -71,14 +71,14 @@ import JavaScriptCoreExtras
     /// const b = hs.task.builder().launchPath("/bin/echo").arguments(["hi"])
     /// b.build().start()
     /// ```
-    @objc var builder: JSValue? { get set }
+    @objc var builder: JSFunction? { get set }
 
     /// TaskBuilder class. Swift-retained storage for the JS implementation.
     /// - Example:
     /// ```js
     /// const b = new hs.task.TaskBuilder().launchPath("/bin/echo")
     /// ```
-    @objc var TaskBuilder: JSValue? { get set }
+    @objc var TaskBuilder: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -115,12 +115,12 @@ struct TaskTracker {
     private var tasks = HSWeakObjectSet<HSTask>()
 
     // Swift-retained storage for JS-defined functions
-    @objc var runAsync: JSValue? = nil
-    @objc var shell: JSValue? = nil
-    @objc var parallel: JSValue? = nil
-    @objc var sequence: JSValue? = nil
-    @objc var builder: JSValue? = nil
-    @objc var TaskBuilder: JSValue? = nil
+    @objc var runAsync: JSFunction? = nil
+    @objc var shell: JSFunction? = nil
+    @objc var parallel: JSFunction? = nil
+    @objc var sequence: JSFunction? = nil
+    @objc var builder: JSFunction? = nil
+    @objc var TaskBuilder: JSFunction? = nil
 
     // Track active tasks for testing purposes (thread-safe via actor)
     private var taskTracker = TaskTracker()
@@ -179,7 +179,7 @@ struct TaskTracker {
 
     // MARK: - Task constructors
 
-    @objc func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue? = nil, _ environment: JSValue? = nil, _ streamingCallback: JSValue? = nil) -> HSTask {
+    @objc func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSFunction? = nil, _ environment: JSValue? = nil, _ streamingCallback: JSFunction? = nil) -> HSTask {
         // Parse environment dictionary if provided
         var envDict: [String: String]? = nil
         if let envValue = environment, envValue.isObject && !envValue.isFunction {

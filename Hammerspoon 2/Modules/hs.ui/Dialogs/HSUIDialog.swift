@@ -69,7 +69,7 @@ import SwiftUI
     ///     .onButton((i) => console.log("button", i))
     ///     .show()
     /// ```
-    @objc func onButton(_ callback: JSValue) -> HSUIDialog
+    @objc func onButton(_ callback: JSFunction) -> HSUIDialog
 
     /// Show the dialog
     /// - Returns: Self for chaining
@@ -97,7 +97,7 @@ import SwiftUI
     var buttons: [String] = ["OK"]
     var style: String = "informational"
 
-    private var buttonCallback: JSValue?
+    private var buttonCallback: JSFunction?
     private var nsWindow: NSWindow?
     private let dialogID: UUID = UUID()
     private weak var module: HSUIModule?
@@ -132,7 +132,7 @@ import SwiftUI
         return self
     }
 
-    @objc func onButton(_ callback: JSValue) -> HSUIDialog {
+    @objc func onButton(_ callback: JSFunction) -> HSUIDialog {
         self.buttonCallback = callback
         return self
     }

@@ -67,7 +67,7 @@ import AppKit
     ///     .onButton((idx, text) => console.log(idx, text))
     ///     .show()
     /// ```
-    @objc func onButton(_ callback: JSValue) -> HSUITextPrompt
+    @objc func onButton(_ callback: JSFunction) -> HSUITextPrompt
 
     /// Show the prompt dialog
     /// - Example:
@@ -86,7 +86,7 @@ import AppKit
     var defaultText: String = ""
     var buttons: [String] = ["OK", "Cancel"]
 
-    private var buttonCallback: JSValue?
+    private var buttonCallback: JSFunction?
     private weak var module: HSUIModule?
 
     init(message: String, module: HSUIModule) {
@@ -114,7 +114,7 @@ import AppKit
         return self
     }
 
-    @objc func onButton(_ callback: JSValue) -> HSUITextPrompt {
+    @objc func onButton(_ callback: JSFunction) -> HSUITextPrompt {
         self.buttonCallback = callback
         return self
     }

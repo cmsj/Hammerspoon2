@@ -88,7 +88,7 @@ import JavaScriptCore
     @objc let interval: TimeInterval
     @objc let repeats: Bool
 
-    init(interval: TimeInterval, repeats: Bool, callback: JSValue, continueOnError: Bool = false) {
+    init(interval: TimeInterval, repeats: Bool, callback: JSFunction, continueOnError: Bool = false) {
         self.interval = interval
         self.repeats = repeats
         self.continueOnError = continueOnError

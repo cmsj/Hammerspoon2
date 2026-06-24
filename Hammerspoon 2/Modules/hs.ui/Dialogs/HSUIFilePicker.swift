@@ -123,7 +123,7 @@ import UniformTypeIdentifiers
     ///     .onSelection((path) => console.log("picked:", path))
     ///     .show()
     /// ```
-    @objc func onSelection(_ callback: JSValue) -> HSUIFilePicker
+    @objc func onSelection(_ callback: JSFunction) -> HSUIFilePicker
 
     /// Show the file picker dialog
     /// - Example:
@@ -145,7 +145,7 @@ import UniformTypeIdentifiers
     var allowedFileTypes: [String]?
     var resolvesAliases: Bool = true
 
-    private var selectionCallback: JSValue?
+    private var selectionCallback: JSFunction?
     private weak var module: HSUIModule?
 
     init(module: HSUIModule) {
@@ -190,7 +190,7 @@ import UniformTypeIdentifiers
         return self
     }
 
-    @objc func onSelection(_ callback: JSValue) -> HSUIFilePicker {
+    @objc func onSelection(_ callback: JSFunction) -> HSUIFilePicker {
         self.selectionCallback = callback
         return self
     }

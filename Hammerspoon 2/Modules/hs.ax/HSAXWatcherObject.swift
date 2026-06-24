@@ -13,9 +13,9 @@ import AXSwift
 class HSAXWatcherObject {
     let element: UIElement
     let notification: UIElement.AXNotification
-    let callback: JSValue
+    let callback: JSFunction
 
-    init(element: UIElement, notification: UIElement.AXNotification, callback: JSValue) {
+    init(element: UIElement, notification: UIElement.AXNotification, callback: JSFunction) {
         self.element = element
         self.notification = notification
         self.callback = callback

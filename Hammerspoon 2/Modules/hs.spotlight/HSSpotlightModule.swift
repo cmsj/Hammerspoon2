@@ -122,7 +122,7 @@ import JavaScriptCore
     ///     }
     /// )
     /// ```
-    @objc func search(_ predicate: String, _ callback: JSValue) -> HSSpotlightQuery
+    @objc func search(_ predicate: String, _ callback: JSFunction) -> HSSpotlightQuery
 
     // MARK: Constants
 
@@ -216,7 +216,7 @@ import JavaScriptCore
         return q
     }
 
-    @objc func search(_ predicate: String, _ callback: JSValue) -> HSSpotlightQuery {
+    @objc func search(_ predicate: String, _ callback: JSFunction) -> HSSpotlightQuery {
         let q = create()
         _ = q.setQuery(predicate)
         _ = q.setCallback(callback)

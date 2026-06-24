@@ -101,15 +101,15 @@ import dnssd
     /// - Parameter name: human-readable name shown to browsers (e.g. `"My Web Server"`)
     /// - Parameter type: service type in `"_proto._tcp."` or `"_proto._udp."` form
     /// - Parameter port: port number the service listens on
-    /// - Parameter domain: mDNS domain; defaults to `"local."` if omitted
-    /// - Parameter callback: optional `function(event, data?)` called on status changes
+    /// - Parameter domain: mDNS domain; defaults to `"local."` if an empty string is passed
+    /// - Parameter callback?: optional `function(event, data?)` called on status changes
     /// - Example:
     /// ```js
-    /// hs.bonjour.advertise('My Server', '_http._tcp.', 8080, ev => {
+    /// hs.bonjour.advertise('My Server', '_http._tcp.', 8080, '', ev => {
     ///     if (ev === 'published') console.log('Now advertising!')
     /// })
     /// ```
-    @objc func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: JSValue, _ callback: JSValue)
+    @objc func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: String, _ callback: JSFunction)
 
     /// Stops advertising a service previously started with `advertise()`.
     /// - Parameter name: the name passed to `advertise()`
@@ -210,16 +210,11 @@ import dnssd
         AKTrace("HSBonjourModule: Removed search \(search.identifier)")
     }
 
-    @objc func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: JSValue, _ callback: JSValue) {
+    @objc func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: String, _ callback: JSFunction) {
         let effectiveDomain: String
-        let effectiveCallback: JSValue?
-        if domain.isString {
-            effectiveDomain = domain.toString() ?? "local."
-            effectiveCallback = callback.isObject ? callback : nil
-        } else {
-            effectiveDomain = "local."
-            effectiveCallback = domain.isObject ? domain : nil
-        }
+        let effectiveCallback: JSFunction?
+        effectiveDomain = domain == "" ? "local." : domain
+        effectiveCallback = callback.isObject ? callback : nil
 
         let key = "\(name):\(type)"
         guard advertisedServices[key] == nil else {
@@ -296,7 +291,7 @@ private class AdvertisedService: NSObject, NetServiceDelegate {
     private var service: NetService?
     private var callback: JSCallback?
 
-    init(name: String, type: String, port: Int32, domain: String, callback: JSValue?) {
+    init(name: String, type: String, port: Int32, domain: String, callback: JSFunction?) {
         super.init()
 
         self.service = NetService(domain: domain, type: type, name: name, port: port)

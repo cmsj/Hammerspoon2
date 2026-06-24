@@ -570,13 +570,13 @@ declare namespace hs.application {
      * Create a watcher for application events
      * @param listener A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
      */
-    function addWatcher(listener: JSValue): void;
+    function addWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Remove a watcher for application events
      * @param listener The javascript function/lambda that was previously being used to handle events
      */
-    function removeWatcher(listener: JSValue): void;
+    function removeWatcher(listener: (...args: any[]) => any): void;
 
 }
 
@@ -807,13 +807,13 @@ declare namespace hs.audiodevice {
      * Register a listener for all system-level audio configuration events.
      * @param listener A JavaScript function that receives the event name string
      */
-    function addWatcher(listener: JSValue): void;
+    function addWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Remove a previously registered system-level listener.
      * @param listener The JavaScript function that was passed to ``addWatcher(_:)``
      */
-    function removeWatcher(listener: JSValue): void;
+    function removeWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * SKIP_DOCS
@@ -905,13 +905,13 @@ declare class HSAudioDevice {
      * Register a listener for a per-device property-change event.
      * @param listener A JavaScript function that receives an event name string
      */
-    addWatcher(listener: JSValue): void;
+    addWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Remove a previously registered per-device listener.
      * @param listener The JavaScript function that was passed to ``addWatcher(_:)``
      */
-    removeWatcher(listener: JSValue): void;
+    removeWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * The CoreAudio object ID of this device.
@@ -1046,7 +1046,7 @@ declare namespace hs.ax {
      * @param notification An event name
      * @param listener A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to
      */
-    function addWatcher(application: HSApplication, notification: string, listener: JSValue): void;
+    function addWatcher(application: HSApplication, notification: string, listener: (...args: any[]) => any): void;
 
     /**
      * Remove a watcher for application AX events
@@ -1054,7 +1054,7 @@ declare namespace hs.ax {
      * @param notification The event name to stop watching
      * @param listener The function/lambda provided when adding the watcher
      */
-    function removeWatcher(application: HSApplication, notification: string, listener: JSValue): void;
+    function removeWatcher(application: HSApplication, notification: string, listener: (...args: any[]) => any): void;
 
     /**
      * Fetch the focused UI element
@@ -1093,22 +1093,22 @@ declare namespace hs.ax {
     /**
      * Fetch the focused UI element. Swift-retained storage for the JS implementation.
      */
-    const focusedElement: JSValue | undefined;
+    const focusedElement: ((...args: any[]) => any) | undefined;
 
     /**
      * Find AX elements by role. Swift-retained storage for the JS implementation.
      */
-    const findByRole: JSValue | undefined;
+    const findByRole: ((...args: any[]) => any) | undefined;
 
     /**
      * Find AX elements by title. Swift-retained storage for the JS implementation.
      */
-    const findByTitle: JSValue | undefined;
+    const findByTitle: ((...args: any[]) => any) | undefined;
 
     /**
      * Print the element hierarchy. Swift-retained storage for the JS implementation.
      */
-    const printHierarchy: JSValue | undefined;
+    const printHierarchy: ((...args: any[]) => any) | undefined;
 
 }
 
@@ -1292,10 +1292,10 @@ defaults to `"local."`.
      * @param name human-readable name shown to browsers (e.g. `"My Web Server"`)
      * @param type service type in `"_proto._tcp."` or `"_proto._udp."` form
      * @param port port number the service listens on
-     * @param domain mDNS domain; defaults to `"local."` if omitted
+     * @param domain mDNS domain; defaults to `"local."` if an empty string is passed
      * @param callback optional `function(event, data?)` called on status changes
      */
-    function advertise(name: string, type: string, port: Int32, domain: JSValue, callback: JSValue): void;
+    function advertise(name: string, type: string, port: Int32, domain: string, callback?: (...args: any[]) => any): void;
 
     /**
      * Stops advertising a service previously started with `advertise()`.
@@ -1354,7 +1354,7 @@ complete event table.
      * @param callback `function(event, service, moreComing)` called for each result
      * @returns self, for chaining
      */
-    findServices(type: string, domain: string, callback: JSValue): HSBonjourSearch;
+    findServices(type: string, domain: string, callback: (...args: any[]) => any): HSBonjourSearch;
 
     /**
      * Searches for domains visible to this machine (browsable domains).
@@ -1364,7 +1364,7 @@ unaffected. The callback receives `(event, domain, moreComing)`.
      * @param callback `function(event, domain, moreComing)` called for each result
      * @returns self, for chaining
      */
-    findBrowsableDomains(callback: JSValue): HSBonjourSearch;
+    findBrowsableDomains(callback: (...args: any[]) => any): HSBonjourSearch;
 
     /**
      * Searches for domains on which this machine can register services.
@@ -1374,7 +1374,7 @@ unaffected. The callback receives `(event, domain, moreComing)`.
      * @param callback `function(event, domain, moreComing)` called for each result
      * @returns self, for chaining
      */
-    findRegistrationDomains(callback: JSValue): HSBonjourSearch;
+    findRegistrationDomains(callback: (...args: any[]) => any): HSBonjourSearch;
 
     /**
      * Stops all active searches. Safe to call when no search is active.
@@ -1416,7 +1416,7 @@ declare class HSBonjourService {
      * @param callback `function(event, data?)` called on status changes
      * @returns self, for chaining
      */
-    resolve(timeout: number, callback: JSValue): HSBonjourService;
+    resolve(timeout: number, callback: (...args: any[]) => any): HSBonjourService;
 
     /**
      * Starts monitoring the TXT record for changes. The callback fires whenever
@@ -1425,7 +1425,7 @@ Call `stopMonitoring()` to unsubscribe.
      * @param callback `function(txtRecord)` called when TXT data changes
      * @returns self, for chaining
      */
-    monitor(callback: JSValue): HSBonjourService;
+    monitor(callback: (...args: any[]) => any): HSBonjourService;
 
     /**
      * Stops any active resolution.
@@ -1552,13 +1552,13 @@ declare namespace hs.camera {
      * Register a listener for camera device connect/disconnect events.
      * @param listener A JavaScript function receiving `(event: string, camera: HSCamera)`
      */
-    function addWatcher(listener: JSValue): void;
+    function addWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Remove a previously registered module-level event listener.
      * @param listener The function originally passed to ``addWatcher(_:)``
      */
-    function removeWatcher(listener: JSValue): void;
+    function removeWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * SKIP_DOCS
@@ -1600,13 +1600,13 @@ The listener receives one argument: a boolean that is `true` when the camera
 starts being used and `false` when it is released.
      * @param listener A JavaScript function receiving `(isInUse: boolean)`
      */
-    addWatcher(listener: JSValue): void;
+    addWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Remove a previously registered per-camera in-use listener.
      * @param listener The function originally passed to ``addWatcher(_:)``
      */
-    removeWatcher(listener: JSValue): void;
+    removeWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Capture a still image from this camera.
@@ -1650,7 +1650,7 @@ any interface where you want fast, keyboard-driven selection.
 ```javascript
 const chooser = hs.chooser.create()
 
-chooser.setChoices([
+chooser.setStaticChoices([
     { text: "Open Safari", subText: "Web browser", action: "safari" },
     { text: "Open Terminal", subText: "Command line", action: "terminal" }
 ])
@@ -1665,7 +1665,7 @@ chooser.show()
 ```javascript
 const allApps = hs.application.runningApplications()
 
-chooser.setChoices((query) => {
+chooser.setChoicesCallback((query) => {
     const q = query.toLowerCase()
     return allApps
         .filter(a => a.title.toLowerCase().includes(q))
@@ -1677,7 +1677,7 @@ chooser.setChoices((query) => {
 let debounceTimer = null
 let cachedResults = []
 
-chooser.setChoices(() => cachedResults)
+chooser.setChoicesCallback(() => cachedResults)
 
 chooser.onQueryChange = (query) => {
     if (debounceTimer) debounceTimer.invalidate()
@@ -1721,11 +1721,20 @@ The `contextMenu` array defines per-row right-click menu entries. Each entry is 
  */
 declare class HSChooser {
     /**
-     * on show. The function is responsible for filtering; the chooser displays all items it returns.
-     * @param choices An array of choice objects, or a function `(query) => [...]`
+     * Set choices from a static array of choice objects.
+The chooser automatically filters the array as the user types.
+     * @param choices An array of choice objects, each with `text`, optional `subText`, `image`, `valid`, and custom fields
      * @returns Self for chaining
      */
-    setChoices(choices: JSValue): HSChooser;
+    setStaticChoices(choices: any[]): HSChooser;
+
+    /**
+     * Set choices from a function called with the current query on each `refreshChoices()` and on show.
+The function is responsible for filtering; the chooser displays all items it returns.
+     * @param fn A function called with the current query string that returns choice objects
+     * @returns Self for chaining
+     */
+    setChoicesCallback(fn: (query: string) => object[]): HSChooser;
 
     /**
      * Re-apply filtering (static choices) or re-invoke the choices function (dynamic).
@@ -1747,21 +1756,34 @@ Call after updating an external data source in an async `onQueryChange` handler.
     hide(): HSChooser;
 
     /**
-     * Programmatically confirm a selection.
-Omit `row` to confirm the currently highlighted row. Fires `onSelect` (or `onInvalid`
-for rows with `valid: false`) and hides the chooser.
-     * @param row Zero-based row index, or omit to use the current selection.
+     * Programmatically confirm the selection at a specific row index.
+Fires `onSelect` (or `onInvalid` for rows with `valid: false`) and hides the chooser.
+     * @param index Zero-based row index to select
      * @returns Self for chaining
      */
-    select(row: JSValue): HSChooser;
+    selectRow(index: number): HSChooser;
 
     /**
-     * Returns the dict for the highlighted row, or for a specific row by index.
+     * Programmatically confirm the currently highlighted row.
+Fires `onSelect` (or `onInvalid` for rows with `valid: false`) and hides the chooser.
+     * @returns Self for chaining
+     */
+    selectCurrentRow(): HSChooser;
+
+    /**
+     * Returns the dict for a specific row by index.
 Returns `null` if the index is out of range or no choices are set.
-     * @param row Zero-based row index, or omit to query the highlighted row.
+     * @param index Zero-based row index
      * @returns The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.
      */
-    selectedRowContents(row: JSValue): NSDictionary | undefined;
+    rowContents(index: number): NSDictionary | undefined;
+
+    /**
+     * Returns the dict for the currently highlighted row.
+Returns `null` if no choices are set or the chooser is empty.
+     * @returns The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.
+     */
+    currentRowContents(): NSDictionary | undefined;
 
     /**
      * Read-only type identifier.
@@ -1822,30 +1844,30 @@ The argument is the chosen row object (the original dict you passed to `setChoic
 with `text`, `subText`, `image`, `valid`, and any custom fields intact).
 The argument is `null` when dismissed (Escape).
      */
-    onSelect: JSValue | undefined;
+    onSelect: ((...args: any[]) => any) | undefined;
 
     /**
      * Called on every keystroke with the new query string.
 Use this to debounce expensive searches or trigger async data fetching.
      */
-    onQueryChange: JSValue | undefined;
+    onQueryChange: ((...args: any[]) => any) | undefined;
 
     /**
      * Called after the panel becomes visible.
      */
-    onShow: JSValue | undefined;
+    onShow: ((...args: any[]) => any) | undefined;
 
     /**
      * Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).
      */
-    onHide: JSValue | undefined;
+    onHide: ((...args: any[]) => any) | undefined;
 
     /**
      * Called when the user activates a row whose `valid` field is `false`.
 The chooser stays open; the argument is the row dict (same shape as `onSelect`).
 If unset, activating an invalid row is silently ignored.
      */
-    onInvalid: JSValue | undefined;
+    onInvalid: ((...args: any[]) => any) | undefined;
 
 }
 
@@ -1959,7 +1981,7 @@ Lines are delivered with newline characters stripped. Both `\n` and `\r\n` line 
      * @param callback Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.
      * @returns `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.
      */
-    function readLines(path: string, callback: JSValue): boolean;
+    function readLines(path: string, callback: (...args: any[]) => any): boolean;
 
     /**
      * Write a UTF-8 string to a file, creating it or overwriting any existing content.
@@ -2303,7 +2325,7 @@ declare namespace hs.hotkey {
      * @param callbackReleased A JavaScript function to call when the hotkey is released
      * @returns A hotkey object, or nil if binding failed
      */
-    function bind(mods: JSValue, key: string, callbackPressed: JSValue, callbackReleased: JSValue): HSHotkey | undefined;
+    function bind(mods: JSValue, key: string, callbackPressed: (...args: any[]) => any, callbackReleased: (...args: any[]) => any): HSHotkey | undefined;
 
     /**
      * Bind a hotkey with a message description
@@ -2314,7 +2336,7 @@ declare namespace hs.hotkey {
      * @param callbackReleased A JavaScript function to call when the hotkey is released
      * @returns A hotkey object, or nil if binding failed
      */
-    function bindSpec(mods: JSValue, key: string, message: string | undefined, callbackPressed: JSValue, callbackReleased: JSValue): HSHotkey | undefined;
+    function bindSpec(mods: JSValue, key: string, message: string | undefined, callbackPressed: (...args: any[]) => any, callbackReleased: (...args: any[]) => any): HSHotkey | undefined;
 
     /**
      * Get the system-wide mapping of key names to key codes
@@ -2354,12 +2376,12 @@ declare class HSHotkey {
     /**
      * The callback function to be called when the hotkey is pressed
      */
-    callbackPressed: JSValue | undefined;
+    callbackPressed: ((...args: any[]) => any) | undefined;
 
     /**
      * The callback function to be called when the hotkey is released
      */
-    callbackReleased: JSValue | undefined;
+    callbackReleased: ((...args: any[]) => any) | undefined;
 
 }
 
@@ -2501,7 +2523,7 @@ declare class HSLocationWatcher {
      * @param fn `function(event, data)` — see type documentation for event names
      * @returns self, for chaining
      */
-    setCallback(fn: JSValue): HSLocationWatcher;
+    setCallback(fn: (...args: any[]) => any): HSLocationWatcher;
 
     /**
      * Returns the most recently received location, or null if none yet.
@@ -2591,7 +2613,7 @@ declare class HSMenuBarItem {
      * Set a callback invoked when the item is clicked (only fires when no menu is set)
      * @param fn A function to call on click, or null to remove the callback
      */
-    setClickCallback(fn: JSValue): void;
+    setClickCallback(fn: (...args: any[]) => any): void;
 
     /**
      * Set the menu for this item. Pass an array of menu item objects for a static menu,
@@ -2719,7 +2741,7 @@ Receives a response object (see module docs for shape).
      * @param body The notification body text
      * @param callback Optional function called when the user taps the notification.
      */
-    function show(title: string, body: string, callback: JSValue): void;
+    function show(title: string, body: string, callback: (...args: any[]) => any): void;
 
     /**
      * Create a richly configured notification without sending it yet.
@@ -3221,13 +3243,13 @@ Because macOS provides no pasteboard change notification API, this is implemente
 by polling `changeCount` at the interval specified by `watcherInterval`.
      * @param listener A function called with one argument: the new `changeCount` integer
      */
-    function addWatcher(listener: JSValue): void;
+    function addWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Remove a previously registered pasteboard watcher
      * @param listener The function previously passed to `addWatcher`
      */
-    function removeWatcher(listener: JSValue): void;
+    function removeWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * The pasteboard change count. Increments each time any application writes to the pasteboard.
@@ -3418,13 +3440,13 @@ The OS notification subscription starts lazily on the first listener and
 is released automatically when the last listener is removed.
      * @param listener A function receiving `(eventName: string)`.
      */
-    function addEventWatcher(listener: JSValue): void;
+    function addEventWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Removes a previously registered power event listener.
      * @param listener The function originally passed to `addEventWatcher`.
      */
-    function removeEventWatcher(listener: JSValue): void;
+    function removeEventWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Registers a listener that fires whenever battery state changes.
@@ -3434,13 +3456,13 @@ The OS notification subscription starts lazily on the first listener and
 is released automatically when the last listener is removed.
      * @param listener A function called with no arguments on battery state change.
      */
-    function addBatteryWatcher(listener: JSValue): void;
+    function addBatteryWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * Removes a previously registered battery change listener.
      * @param listener The function originally passed to `addBatteryWatcher`.
      */
-    function removeBatteryWatcher(listener: JSValue): void;
+    function removeBatteryWatcher(listener: (...args: any[]) => any): void;
 
     /**
      * The current battery charge percentage (0–100), or `-1` if no battery is present.
@@ -3778,7 +3800,7 @@ the search once you have what you need.
      * @param callback A function called with `(event, update?)` lifecycle events
      * @returns The `HSSpotlightQuery` object (use to stop the search early)
      */
-    function search(predicate: string, callback: JSValue): HSSpotlightQuery;
+    function search(predicate: string, callback: (...args: any[]) => any): HSSpotlightQuery;
 
     /**
      * Predefined search scope constants for use with `HSSpotlightQuery.setScopes()`.
@@ -3966,7 +3988,7 @@ of `HSSpotlightItem` objects describing what changed in this update cycle
      * @param fn A JavaScript function `(event, update?) => void`
      * @returns this query, for chaining
      */
-    setCallback(fn: JSValue): HSSpotlightQuery;
+    setCallback(fn: (...args: any[]) => any): HSSpotlightQuery;
 
     /**
      * Starts the query.
@@ -4042,7 +4064,7 @@ declare namespace hs.task {
      * @param streamingCallback Optional callback function called when the task produces output
      * @returns A task object. Call start() to begin execution.
      */
-    function create(launchPath: string, arguments: string[], completionCallback: JSValue | undefined, environment: JSValue | undefined, streamingCallback: JSValue | undefined): HSTask;
+    function create(launchPath: string, arguments: string[], completionCallback: ((...args: any[]) => any) | undefined, environment: JSValue | undefined, streamingCallback: ((...args: any[]) => any) | undefined): HSTask;
 
     /**
      * Create and run a task asynchronously
@@ -4082,32 +4104,32 @@ declare namespace hs.task {
     /**
      * Run a task, returning a Promise. Swift-retained storage for the JS implementation.
      */
-    const runAsync: JSValue | undefined;
+    const runAsync: ((...args: any[]) => any) | undefined;
 
     /**
      * Run a shell command. Swift-retained storage for the JS implementation.
      */
-    const shell: JSValue | undefined;
+    const shell: ((...args: any[]) => any) | undefined;
 
     /**
      * Run multiple tasks in parallel. Swift-retained storage for the JS implementation.
      */
-    const parallel: JSValue | undefined;
+    const parallel: ((...args: any[]) => any) | undefined;
 
     /**
      * Run multiple tasks in sequence. Swift-retained storage for the JS implementation.
      */
-    const sequence: JSValue | undefined;
+    const sequence: ((...args: any[]) => any) | undefined;
 
     /**
      * Create a task builder. Swift-retained storage for the JS implementation.
      */
-    const builder: JSValue | undefined;
+    const builder: ((...args: any[]) => any) | undefined;
 
     /**
      * TaskBuilder class. Swift-retained storage for the JS implementation.
      */
-    const TaskBuilder: JSValue | undefined;
+    const TaskBuilder: ((...args: any[]) => any) | undefined;
 
 }
 
@@ -4205,7 +4227,7 @@ declare namespace hs.timer {
      * @param continueOnError If true, the timer will continue running even if the callback throws an error
      * @returns A timer object. Call start() to begin the timer.
      */
-    function create(interval: number, callback: JSValue, continueOnError?: boolean): HSTimer;
+    function create(interval: number, callback: (...args: any[]) => any, continueOnError?: boolean): HSTimer;
 
     /**
      * Create and start a one-shot timer
@@ -4213,7 +4235,7 @@ declare namespace hs.timer {
      * @param callback A JavaScript function to call when the timer fires
      * @returns A timer object (already started)
      */
-    function doAfter(seconds: number, callback: JSValue): HSTimer;
+    function doAfter(seconds: number, callback: (...args: any[]) => any): HSTimer;
 
     /**
      * Create and start a repeating timer
@@ -4221,7 +4243,7 @@ declare namespace hs.timer {
      * @param callback A JavaScript function to call when the timer fires
      * @returns A timer object (already started)
      */
-    function doEvery(interval: number, callback: JSValue): HSTimer;
+    function doEvery(interval: number, callback: (...args: any[]) => any): HSTimer;
 
     /**
      * Create and start a timer that fires at a specific time
@@ -4231,7 +4253,7 @@ declare namespace hs.timer {
      * @param continueOnError If true, the timer will continue running even if the callback throws an error
      * @returns A timer object (already started)
      */
-    function doAt(time: number, repeatInterval: number, callback: JSValue, continueOnError?: boolean): HSTimer;
+    function doAt(time: number, repeatInterval: number, callback: (...args: any[]) => any, continueOnError?: boolean): HSTimer;
 
     /**
      * Block execution for a specified number of microseconds (strongly discouraged)
@@ -4320,22 +4342,22 @@ declare namespace hs.timer {
     /**
      * Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.
      */
-    const doUntil: JSValue | undefined;
+    const doUntil: ((...args: any[]) => any) | undefined;
 
     /**
      * Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.
      */
-    const doWhile: JSValue | undefined;
+    const doWhile: ((...args: any[]) => any) | undefined;
 
     /**
      * Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.
      */
-    const waitUntil: JSValue | undefined;
+    const waitUntil: ((...args: any[]) => any) | undefined;
 
     /**
      * Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.
      */
-    const waitWhile: JSValue | undefined;
+    const waitWhile: ((...args: any[]) => any) | undefined;
 
 }
 
@@ -4963,14 +4985,14 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text
      * @param callback A JavaScript function to call on click
      * @returns Self for chaining
      */
-    onClick(callback: JSValue): HSUIWindow;
+    onClick(callback: (...args: any[]) => any): HSUIWindow;
 
     /**
      * Set a callback to fire when the cursor enters or leaves the element
      * @param callback A JavaScript function called with a boolean: true when entering, false when leaving
      * @returns Self for chaining
      */
-    onHover(callback: JSValue): HSUIWindow;
+    onHover(callback: (...args: any[]) => any): HSUIWindow;
 
 }
 
@@ -5077,7 +5099,7 @@ declare class HSUIDialog {
      * @param callback Function receiving button index (0-based)
      * @returns Self for chaining
      */
-    onButton(callback: JSValue): HSUIDialog;
+    onButton(callback: (...args: any[]) => any): HSUIDialog;
 
     /**
      * Show the dialog
@@ -5182,7 +5204,7 @@ declare class HSUIFilePicker {
      * @param callback Function receiving selected path(s) or null if cancelled
      * @returns Self for chaining
      */
-    onSelection(callback: JSValue): HSUIFilePicker;
+    onSelection(callback: (...args: any[]) => any): HSUIFilePicker;
 
     /**
      * Show the file picker dialog
@@ -5237,7 +5259,7 @@ declare class HSUITextPrompt {
      * @param callback Function receiving (buttonIndex, inputText)
      * @returns Self for chaining
      */
-    onButton(callback: JSValue): HSUITextPrompt;
+    onButton(callback: (...args: any[]) => any): HSUITextPrompt;
 
     /**
      * Show the prompt dialog

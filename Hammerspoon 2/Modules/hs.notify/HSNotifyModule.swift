@@ -132,7 +132,7 @@ import JavaScriptCore
     /// ```js
     /// hs.notify.show("Build complete", "Your project compiled successfully.")
     /// ```
-    @objc(show:::) func show(_ title: String, _ body: String, _ callback: JSValue)
+    @objc(show:::) func show(_ title: String, _ body: String, _ callback: JSFunction)
 
     // MARK: Rich API
 
@@ -199,13 +199,13 @@ import JavaScriptCore
 
     // MARK: - Internal callback registration
 
-    func storeCallback(identifier: String, callback: JSValue) {
+    func storeCallback(identifier: String, callback: JSFunction) {
         callbacks[identifier] = JSCallback(value: callback, owner: self)
     }
 
     // MARK: - HSNotifyModuleAPI
 
-    @objc(show:::) func show(_ title: String, _ body: String, _ callback: JSValue) {
+    @objc(show:::) func show(_ title: String, _ body: String, _ callback: JSFunction) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
@@ -317,7 +317,7 @@ import JavaScriptCore
         // Extract the callback via forProperty so the JSValue function is preserved
         // (toDictionary() silently drops function values).
         let callbackVal = options.forProperty("callback")
-        let callback: JSValue? = (callbackVal?.isObject == true) ? callbackVal : nil
+        let callback: JSFunction? = (callbackVal?.isObject == true) ? callbackVal : nil
 
         let id = UUID().uuidString
         let notification = HSNotification(

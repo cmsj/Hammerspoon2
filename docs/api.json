@@ -14,7 +14,8 @@
               "name": "message",
               "type": "String",
               "description": "A message to log",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -34,7 +35,8 @@
               "name": "message",
               "type": "String",
               "description": "An error message",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -54,7 +56,8 @@
               "name": "message",
               "type": "String",
               "description": "A warning message",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -74,7 +77,8 @@
               "name": "message",
               "type": "String",
               "description": "An informational message",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -94,7 +98,8 @@
               "name": "message",
               "type": "String",
               "description": "A debug message",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -288,7 +293,8 @@
               "name": "name",
               "type": "String",
               "description": "The applicaiton name to search for",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -316,7 +322,8 @@
               "name": "bundleID",
               "type": "String",
               "description": "The identifier to search for",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -344,7 +351,8 @@
               "name": "pid",
               "type": "Int",
               "description": "The PID to search for",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -414,7 +422,8 @@
               "name": "bundleID",
               "type": "String",
               "description": "The application bundle identifier to search for (e.g. \"com.apple.Safari\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -442,7 +451,8 @@
               "name": "bundleID",
               "type": "String",
               "description": "The application bundle identifier to search for (e.g. \"com.apple.Safari\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -470,7 +480,8 @@
               "name": "fileType",
               "type": "String",
               "description": "The file type to search for. This can be a UTType identifier, a MIME type, or a filename extension",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -498,7 +509,8 @@
               "name": "fileType",
               "type": "String",
               "description": "The file type to search for. This can be a UTType identifier, a MIME type, or a filename extension",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -526,7 +538,8 @@
               "name": "bundleID",
               "type": "String",
               "description": "A bundle identifier for the app to launch/focus (e.g. \"com.apple.Safari\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -546,16 +559,17 @@
         },
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ listener: JSValue)",
+          "signature": "func addWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Create a watcher for application events\n- Parameters:\n   - listener: A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object\n- Example:\n```js\nhs.application.addWatcher((event, app) => {\n    console.log(event, app && app.title)\n})\n```",
           "description": "Create a watcher for application events",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -571,16 +585,17 @@
         },
         {
           "name": "removeWatcher",
-          "signature": "func removeWatcher(_ listener: JSValue)",
+          "signature": "func removeWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Remove a watcher for application events\n- Parameters:\n  - listener: The javascript function/lambda that was previously being used to handle events\n- Example:\n```js\nhs.application.removeWatcher(myHandler)\n```",
           "description": "Remove a watcher for application events",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "The javascript function/lambda that was previously being used to handle events",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -677,7 +692,8 @@
                   "name": "allWindows",
                   "type": "Bool",
                   "description": "Pass true to raise all application windows. Defaults to false.",
-                  "optional": true
+                  "optional": true,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -759,7 +775,8 @@
                   "name": "name",
                   "type": "String",
                   "description": "The menu item title to search for",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -787,7 +804,8 @@
                   "name": "path",
                   "type": "[String]",
                   "description": "An array of menu titles forming a path from the top-level menu to the item, e.g. [\"Edit\", \"Select All\"]",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -815,7 +833,8 @@
                   "name": "name",
                   "type": "String",
                   "description": "The menu item title to search for",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -843,7 +862,8 @@
                   "name": "path",
                   "type": "[String]",
                   "description": "An array of menu titles forming a path from the top-level menu to the item, e.g. [\"File\", \"New Window\"]",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -871,7 +891,8 @@
                   "name": "pattern",
                   "type": "String",
                   "description": "A string to search for in window titles",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -899,7 +920,8 @@
                   "name": "title",
                   "type": "String",
                   "description": "The exact window title to search for",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -1244,7 +1266,8 @@
               "name": "name",
               "type": "String",
               "description": "The device name to search for",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -1272,7 +1295,8 @@
               "name": "uid",
               "type": "String",
               "description": "The device UID to search for",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -1291,16 +1315,17 @@
         },
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ listener: JSValue)",
+          "signature": "func addWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Register a listener for all system-level audio configuration events.\n\nThe listener receives one of the following event name strings:\n- `\"dOut\"` — the default output device changed\n- `\"dIn\"` — the default input device changed\n- `\"dSErr\"` — the default alert sound device changed\n- `\"dev+\"` — an audio device was added\n- `\"dev-\"` — an audio device was removed\n\n- Parameter listener: A JavaScript function that receives the event name string\n- Example:\n```js\nhs.audiodevice.addWatcher((event) => {\n    if (event === \"dOut\") console.log(\"Default output changed\")\n})\n```",
           "description": "Register a listener for all system-level audio configuration events.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function that receives the event name string",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -1316,16 +1341,17 @@
         },
         {
           "name": "removeWatcher",
-          "signature": "func removeWatcher(_ listener: JSValue)",
+          "signature": "func removeWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Remove a previously registered system-level listener.\n\n- Parameter listener: The JavaScript function that was passed to ``addWatcher(_:)``\n- Example:\n```js\nhs.audiodevice.removeWatcher(myHandler)\n```",
           "description": "Remove a previously registered system-level listener.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "The JavaScript function that was passed to ``addWatcher(_:)``",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -1454,7 +1480,8 @@
                   "name": "sourceID",
                   "type": "Int",
                   "description": "The `id` value from ``outputDataSources()``",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -1482,7 +1509,8 @@
                   "name": "sourceID",
                   "type": "Int",
                   "description": "The `id` value from ``inputDataSources()``",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -1564,16 +1592,17 @@
             },
             {
               "name": "addWatcher",
-              "signature": "func addWatcher(_ listener: JSValue)",
+              "signature": "func addWatcher(_ listener: JSFunction)",
               "isStatic": false,
               "rawDocumentation": "Register a listener for a per-device property-change event.\n\nThe callback receives one of these event strings:\n- `\"vmout\"` — output volume changed\n- `\"vmin\"` — input volume changed\n- `\"mout\"` — output mute state changed\n- `\"min\"` — input mute state changed\n- `\"rate\"` — sample rate changed\n- `\"dsout\"` — output data source changed\n- `\"dsin\"` — input data source changed\n\n- Parameter listener: A JavaScript function that receives an event name string\n- Example:\n```js\nconst dev = hs.audiodevice.defaultOutputDevice()\ndev.addWatcher((event) => console.log(\"Event:\", event))\n```",
               "description": "Register a listener for a per-device property-change event.",
               "params": [
                 {
                   "name": "listener",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "A JavaScript function that receives an event name string",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -1589,16 +1618,17 @@
             },
             {
               "name": "removeWatcher",
-              "signature": "func removeWatcher(_ listener: JSValue)",
+              "signature": "func removeWatcher(_ listener: JSFunction)",
               "isStatic": false,
               "rawDocumentation": "Remove a previously registered per-device listener.\n\n- Parameter listener: The JavaScript function that was passed to ``addWatcher(_:)``\n- Example:\n```js\nconst dev = hs.audiodevice.defaultOutputDevice()\ndev.removeWatcher(myHandler)\n```",
               "description": "Remove a previously registered per-device listener.",
               "params": [
                 {
                   "name": "listener",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "The JavaScript function that was passed to ``addWatcher(_:)``",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -1880,7 +1910,8 @@
               "name": "element",
               "type": "HSApplication",
               "description": "An HSApplication object",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -1908,7 +1939,8 @@
               "name": "window",
               "type": "HSWindow",
               "description": "An HSWindow  object",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -1936,7 +1968,8 @@
               "name": "point",
               "type": "HSPoint",
               "description": "An HSPoint object containing screen coordinates",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -1955,7 +1988,7 @@
         },
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSValue)",
+          "signature": "func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Add a watcher for application AX events\n- Parameters:\n  - application: An HSApplication object\n  - notification: An event name\n  - listener: A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n```",
           "description": "Add a watcher for application AX events",
@@ -1964,19 +1997,22 @@
               "name": "application",
               "type": "HSApplication",
               "description": "An HSApplication object",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "notification",
               "type": "String",
               "description": "An event name",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -1992,7 +2028,7 @@
         },
         {
           "name": "removeWatcher",
-          "signature": "func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSValue)",
+          "signature": "func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Remove a watcher for application AX events\n- Parameters:\n  - application: An HSApplication object\n  - notification: The event name to stop watching\n  - listener: The function/lambda provided when adding the watcher\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.removeWatcher(app, \"AXWindowCreated\", myHandler)\n```",
           "description": "Remove a watcher for application AX events",
@@ -2001,19 +2037,22 @@
               "name": "application",
               "type": "HSApplication",
               "description": "An HSApplication object",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "notification",
               "type": "String",
               "description": "The event name to stop watching",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "The function/lambda provided when adding the watcher",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -2138,7 +2177,7 @@
         },
         {
           "name": "focusedElement",
-          "signature": "var focusedElement: JSValue? { get set }",
+          "signature": "var focusedElement: JSFunction? { get set }",
           "rawDocumentation": "Fetch the focused UI element. Swift-retained storage for the JS implementation.\n- Example:\n```js\nconst el = hs.ax.focusedElement()\nconsole.log(el.role, el.title)\n```",
           "description": "Fetch the focused UI element. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -2153,7 +2192,7 @@
         },
         {
           "name": "findByRole",
-          "signature": "var findByRole: JSValue? { get set }",
+          "signature": "var findByRole: JSFunction? { get set }",
           "rawDocumentation": "Find AX elements by role. Swift-retained storage for the JS implementation.\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(app, \"AXButton\")\n```",
           "description": "Find AX elements by role. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -2168,7 +2207,7 @@
         },
         {
           "name": "findByTitle",
-          "signature": "var findByTitle: JSValue? { get set }",
+          "signature": "var findByTitle: JSFunction? { get set }",
           "rawDocumentation": "Find AX elements by title. Swift-retained storage for the JS implementation.\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(app, \"OK\")\n```",
           "description": "Find AX elements by title. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -2183,7 +2222,7 @@
         },
         {
           "name": "printHierarchy",
-          "signature": "var printHierarchy: JSValue? { get set }",
+          "signature": "var printHierarchy: JSFunction? { get set }",
           "rawDocumentation": "Print the element hierarchy. Swift-retained storage for the JS implementation.\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.printHierarchy(app)\n```",
           "description": "Print the element hierarchy. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -2236,7 +2275,8 @@
                   "name": "index",
                   "type": "Int",
                   "description": "The index to fetch",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2285,7 +2325,8 @@
                   "name": "attribute",
                   "type": "String",
                   "description": "The attribute name to fetch the value for",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2313,13 +2354,15 @@
                   "name": "attribute",
                   "type": "String",
                   "description": "The attribute name to set",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 },
                 {
                   "name": "value",
                   "type": "Any",
                   "description": "The value to set",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2347,7 +2390,8 @@
                   "name": "attribute",
                   "type": "String",
                   "description": "An attribute name",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2396,7 +2440,8 @@
                   "name": "action",
                   "type": "String",
                   "description": "The action to perform",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2636,7 +2681,8 @@
               "name": "search",
               "type": "HSBonjourSearch",
               "description": "the search returned by `createSearch()`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -2652,47 +2698,52 @@
         },
         {
           "name": "advertise",
-          "signature": "func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: JSValue, _ callback: JSValue)",
+          "signature": "func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: String, _ callback: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Starts advertising a local service on the network.\n\nThe optional callback receives `(event)` or `(event, errorMessage)`:\n- `\"published\"` — now advertising\n- `\"stopped\"` — advertisement stopped\n- `\"error\"` — publication failed; error message in second argument\n\nIf `domain` is omitted or not a string, it defaults to `\"local.\"`.\nIf the 4th argument is a function, it is used as the callback and domain\ndefaults to `\"local.\"`.\n- Parameter name: human-readable name shown to browsers (e.g. `\"My Web Server\"`)\n- Parameter type: service type in `\"_proto._tcp.\"` or `\"_proto._udp.\"` form\n- Parameter port: port number the service listens on\n- Parameter domain: mDNS domain; defaults to `\"local.\"` if omitted\n- Parameter callback: optional `function(event, data?)` called on status changes\n- Example:\n```js\nhs.bonjour.advertise('My Server', '_http._tcp.', 8080, ev => {\n    if (ev === 'published') console.log('Now advertising!')\n})\n```",
+          "rawDocumentation": "Starts advertising a local service on the network.\n\nThe optional callback receives `(event)` or `(event, errorMessage)`:\n- `\"published\"` — now advertising\n- `\"stopped\"` — advertisement stopped\n- `\"error\"` — publication failed; error message in second argument\n\nIf `domain` is omitted or not a string, it defaults to `\"local.\"`.\nIf the 4th argument is a function, it is used as the callback and domain\ndefaults to `\"local.\"`.\n- Parameter name: human-readable name shown to browsers (e.g. `\"My Web Server\"`)\n- Parameter type: service type in `\"_proto._tcp.\"` or `\"_proto._udp.\"` form\n- Parameter port: port number the service listens on\n- Parameter domain: mDNS domain; defaults to `\"local.\"` if an empty string is passed\n- Parameter callback?: optional `function(event, data?)` called on status changes\n- Example:\n```js\nhs.bonjour.advertise('My Server', '_http._tcp.', 8080, '', ev => {\n    if (ev === 'published') console.log('Now advertising!')\n})\n```",
           "description": "Starts advertising a local service on the network.\nIf `domain` is omitted or not a string, it defaults to `\"local.\"`.\nIf the 4th argument is a function, it is used as the callback and domain\ndefaults to `\"local.\"`.",
           "params": [
             {
               "name": "name",
               "type": "String",
               "description": "human-readable name shown to browsers (e.g. `\"My Web Server\"`)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "type",
               "type": "String",
               "description": "service type in `\"_proto._tcp.\"` or `\"_proto._udp.\"` form",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "port",
               "type": "Int32",
               "description": "port number the service listens on",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "domain",
-              "type": "JSValue",
-              "description": "mDNS domain; defaults to `\"local.\"` if omitted",
-              "optional": false
+              "type": "String",
+              "description": "mDNS domain; defaults to `\"local.\"` if an empty string is passed",
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callback",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "optional `function(event, data?)` called on status changes",
-              "optional": false
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": null,
           "examples": [
             {
               "lang": "js",
-              "code": "hs.bonjour.advertise('My Server', '_http._tcp.', 8080, ev => {\n    if (ev === 'published') console.log('Now advertising!')\n})"
+              "code": "hs.bonjour.advertise('My Server', '_http._tcp.', 8080, '', ev => {\n    if (ev === 'published') console.log('Now advertising!')\n})"
             }
           ],
           "source": "swift",
@@ -2710,13 +2761,15 @@
               "name": "name",
               "type": "String",
               "description": "the name passed to `advertise()`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "type",
               "type": "String",
               "description": "the type passed to `advertise()`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -2741,7 +2794,8 @@
               "name": "timeout",
               "type": "Double",
               "description": "maximum seconds to wait (pass `0` to use the default 5 s)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -2786,7 +2840,7 @@
           "methods": [
             {
               "name": "findServices",
-              "signature": "func findServices(_ type: String, _ domain: String, _ callback: JSValue) -> HSBonjourSearch",
+              "signature": "func findServices(_ type: String, _ domain: String, _ callback: JSFunction) -> HSBonjourSearch",
               "isStatic": false,
               "rawDocumentation": "Searches for services of the given type in the given domain.\n\nIf a service search is already active it is stopped before starting the\nnew one. Domain searches are unaffected. The callback receives\n`(event, service, moreComing)` — see the type documentation for the\ncomplete event table.\n- Parameter type: service type string, e.g. `\"_http._tcp.\"` or `\"_ssh._tcp.\"`\n- Parameter domain: mDNS domain; `\"local.\"` for the local link, `\"\"` for all domains\n- Parameter callback: `function(event, service, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
               "description": "Searches for services of the given type in the given domain.\nIf a service search is already active it is stopped before starting the\nnew one. Domain searches are unaffected. The callback receives\n`(event, service, moreComing)` — see the type documentation for the\ncomplete event table.",
@@ -2795,19 +2849,22 @@
                   "name": "type",
                   "type": "String",
                   "description": "service type string, e.g. `\"_http._tcp.\"` or `\"_ssh._tcp.\"`",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 },
                 {
                   "name": "domain",
                   "type": "String",
                   "description": "mDNS domain; `\"local.\"` for the local link, `\"\"` for all domains",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 },
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "`function(event, service, moreComing)` called for each result",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2826,16 +2883,17 @@
             },
             {
               "name": "findBrowsableDomains",
-              "signature": "func findBrowsableDomains(_ callback: JSValue) -> HSBonjourSearch",
+              "signature": "func findBrowsableDomains(_ callback: JSFunction) -> HSBonjourSearch",
               "isStatic": false,
               "rawDocumentation": "Searches for domains visible to this machine (browsable domains).\n\nIf a browsable-domain search is already active it is stopped before\nstarting the new one. Service and registration-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findBrowsableDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Domain:', domain)\n})\n```",
               "description": "Searches for domains visible to this machine (browsable domains).\nIf a browsable-domain search is already active it is stopped before\nstarting the new one. Service and registration-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.",
               "params": [
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "`function(event, domain, moreComing)` called for each result",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2854,16 +2912,17 @@
             },
             {
               "name": "findRegistrationDomains",
-              "signature": "func findRegistrationDomains(_ callback: JSValue) -> HSBonjourSearch",
+              "signature": "func findRegistrationDomains(_ callback: JSFunction) -> HSBonjourSearch",
               "isStatic": false,
               "rawDocumentation": "Searches for domains on which this machine can register services.\n\nIf a registration-domain search is already active it is stopped before\nstarting the new one. Service and browsable-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findRegistrationDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Can register in:', domain)\n})\n```",
               "description": "Searches for domains on which this machine can register services.\nIf a registration-domain search is already active it is stopped before\nstarting the new one. Service and browsable-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.",
               "params": [
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "`function(event, domain, moreComing)` called for each result",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2943,7 +3002,7 @@
           "methods": [
             {
               "name": "resolve",
-              "signature": "func resolve(_ timeout: Double, _ callback: JSValue) -> HSBonjourService",
+              "signature": "func resolve(_ timeout: Double, _ callback: JSFunction) -> HSBonjourService",
               "isStatic": false,
               "rawDocumentation": "Resolves the hostname, port, addresses, and TXT record of this service.\n\nThe callback is called with `(event)` or `(event, errorMessage)`:\n- `\"resolved\"` — resolution complete; read `hostname`, `port`, `addresses`, `txtRecord`\n- `\"stopped\"` — resolution stopped before completing\n- `\"error\"` — resolution failed; error message in second argument\n- Parameter timeout: seconds before giving up; pass `0` for no timeout\n- Parameter callback: `function(event, data?)` called on status changes\n- Returns: self, for chaining\n- Example:\n```js\nservice.resolve(5, (ev, err) => {\n    if (ev === 'resolved') console.log(service.hostname, service.port)\n    else console.error('Resolve failed:', err)\n})\n```",
               "description": "Resolves the hostname, port, addresses, and TXT record of this service.",
@@ -2952,13 +3011,15 @@
                   "name": "timeout",
                   "type": "Double",
                   "description": "seconds before giving up; pass `0` for no timeout",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 },
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "`function(event, data?)` called on status changes",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -2977,16 +3038,17 @@
             },
             {
               "name": "monitor",
-              "signature": "func monitor(_ callback: JSValue) -> HSBonjourService",
+              "signature": "func monitor(_ callback: JSFunction) -> HSBonjourService",
               "isStatic": false,
               "rawDocumentation": "Starts monitoring the TXT record for changes. The callback fires whenever\nthe TXT record is updated.\n\nCall `stopMonitoring()` to unsubscribe.\n- Parameter callback: `function(txtRecord)` called when TXT data changes\n- Returns: self, for chaining\n- Example:\n```js\nservice.monitor(txt => console.log('TXT updated:', txt))\n```",
               "description": "Starts monitoring the TXT record for changes. The callback fires whenever\nthe TXT record is updated.\nCall `stopMonitoring()` to unsubscribe.",
               "params": [
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "`function(txtRecord)` called when TXT data changes",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -3223,7 +3285,8 @@
               "name": "name",
               "type": "String",
               "description": "The device name to search for (exact match)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -3251,7 +3314,8 @@
               "name": "uid",
               "type": "String",
               "description": "The device UID to search for",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -3270,16 +3334,17 @@
         },
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ listener: JSValue)",
+          "signature": "func addWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Register a listener for camera device connect/disconnect events.\n\nThe listener is called with two arguments:\n- `event` — either `\"connected\"` or `\"disconnected\"`\n- `camera` — an `HSCamera` representing the affected device\n\n- Parameter listener: A JavaScript function receiving `(event: string, camera: HSCamera)`\n- Example:\n```js\nhs.camera.addWatcher((event, camera) => {\n    console.log(event + \": \" + camera.name)\n})\n```",
           "description": "Register a listener for camera device connect/disconnect events.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function receiving `(event: string, camera: HSCamera)`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -3295,16 +3360,17 @@
         },
         {
           "name": "removeWatcher",
-          "signature": "func removeWatcher(_ listener: JSValue)",
+          "signature": "func removeWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Remove a previously registered module-level event listener.\n- Parameter listener: The function originally passed to ``addWatcher(_:)``\n- Example:\n```js\nhs.camera.removeWatcher(myHandler)\n```",
           "description": "Remove a previously registered module-level event listener.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "The function originally passed to ``addWatcher(_:)``",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -3340,16 +3406,17 @@
           "methods": [
             {
               "name": "addWatcher",
-              "signature": "func addWatcher(_ listener: JSValue)",
+              "signature": "func addWatcher(_ listener: JSFunction)",
               "isStatic": false,
               "rawDocumentation": "Register a listener that fires whenever this camera's in-use state changes.\n\nThe listener receives one argument: a boolean that is `true` when the camera\nstarts being used and `false` when it is released.\n\n- Parameter listener: A JavaScript function receiving `(isInUse: boolean)`\n- Example:\n```js\nconst cam = hs.camera.all()[0]\ncam.addWatcher((inUse) => {\n    console.log(cam.name + \" is \" + (inUse ? \"now in use\" : \"no longer in use\"))\n})\n```",
               "description": "Register a listener that fires whenever this camera's in-use state changes.\nThe listener receives one argument: a boolean that is `true` when the camera\nstarts being used and `false` when it is released.",
               "params": [
                 {
                   "name": "listener",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "A JavaScript function receiving `(isInUse: boolean)`",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -3365,16 +3432,17 @@
             },
             {
               "name": "removeWatcher",
-              "signature": "func removeWatcher(_ listener: JSValue)",
+              "signature": "func removeWatcher(_ listener: JSFunction)",
               "isStatic": false,
               "rawDocumentation": "Remove a previously registered per-camera in-use listener.\n- Parameter listener: The function originally passed to ``addWatcher(_:)``\n- Example:\n```js\ncam.removeWatcher(myHandler)\n```",
               "description": "Remove a previously registered per-camera in-use listener.",
               "params": [
                 {
                   "name": "listener",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "The function originally passed to ``addWatcher(_:)``",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -3480,7 +3548,7 @@
           "name": "create",
           "signature": "func create() -> HSChooser",
           "isStatic": false,
-          "rawDocumentation": "Create a new chooser.\n- Returns: A new `HSChooser` object ready for configuration\n- Example:\n```js\nconst c = hs.chooser.create()\nc.setChoices([{text: \"Hello\"}]).onSelect = item => console.log(item.text)\nc.show()\n```",
+          "rawDocumentation": "Create a new chooser.\n- Returns: A new `HSChooser` object ready for configuration\n- Example:\n```js\nconst c = hs.chooser.create()\nc.setStaticChoices([{text: \"Hello\"}]).onSelect = item => console.log(item.text)\nc.show()\n```",
           "description": "Create a new chooser.",
           "params": [],
           "returns": {
@@ -3490,7 +3558,7 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const c = hs.chooser.create()\nc.setChoices([{text: \"Hello\"}]).onSelect = item => console.log(item.text)\nc.show()"
+              "code": "const c = hs.chooser.create()\nc.setStaticChoices([{text: \"Hello\"}]).onSelect = item => console.log(item.text)\nc.show()"
             }
           ],
           "source": "swift",
@@ -3507,17 +3575,18 @@
           "description": "A keyboard-driven floating chooser panel.\nCreate via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.\n## Choice format\nEach choice is a plain object with required `text` and optional `subText`, `image`, `valid`,\nand `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.\nThe `contextMenu` array defines per-row right-click menu entries. Each entry is either\n```javascript\n{\n  text: \"Open Safari\", subText: \"com.apple.Safari\",\n  image: HSImage.fromAppBundle(\"com.apple.Safari\"), valid: true, myData: 42,\n  contextMenu: [\n    { title: \"Open\", action: () => hs.urlevent.openURL(\"https://apple.com\") },\n    { type: \"divider\" },\n    { title: \"Copy bundle ID\", action: () => hs.pasteboard.writeString(\"com.apple.Safari\") }\n  ]\n}\n```\n## Keyboard shortcuts",
           "methods": [
             {
-              "name": "setChoices",
-              "signature": "func setChoices(_ choices: JSValue) -> HSChooser",
+              "name": "setStaticChoices",
+              "signature": "func setStaticChoices(_ choices: [Any]) -> HSChooser",
               "isStatic": false,
-              "rawDocumentation": "Set the choices list. Pass a static array or a function:\n\n- **Array** — the chooser filters it automatically as the user types.\n- **Function** — called with the current query string on every `refreshChoices()` and\n  on show. The function is responsible for filtering; the chooser displays all items it returns.\n\n- Parameter choices: An array of choice objects, or a function `(query) => [...]`\n- Returns: Self for chaining\n- Example:\n```js\n// Static\nchooser.setChoices([{text: \"Foo\"}, {text: \"Bar\"}])\n\n// Dynamic\nchooser.setChoices(q => items.filter(i => i.text.toLowerCase().includes(q.toLowerCase())))\n```",
-              "description": "on show. The function is responsible for filtering; the chooser displays all items it returns.",
+              "rawDocumentation": "Set choices from a static array of choice objects.\n\nThe chooser automatically filters the array as the user types.\n\n- Parameter choices: An array of choice objects, each with `text`, optional `subText`, `image`, `valid`, and custom fields\n- Returns: Self for chaining\n- Example:\n```js\nchooser.setStaticChoices([{text: \"Foo\"}, {text: \"Bar\"}])\n```",
+              "description": "Set choices from a static array of choice objects.\nThe chooser automatically filters the array as the user types.",
               "params": [
                 {
                   "name": "choices",
-                  "type": "JSValue",
-                  "description": "An array of choice objects, or a function `(query) => [...]`",
-                  "optional": false
+                  "type": "[Any]",
+                  "description": "An array of choice objects, each with `text`, optional `subText`, `image`, `valid`, and custom fields",
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -3527,12 +3596,41 @@
               "examples": [
                 {
                   "lang": "js",
-                  "code": "// Static\nchooser.setChoices([{text: \"Foo\"}, {text: \"Bar\"}])\n\n// Dynamic\nchooser.setChoices(q => items.filter(i => i.text.toLowerCase().includes(q.toLowerCase())))"
+                  "code": "chooser.setStaticChoices([{text: \"Foo\"}, {text: \"Bar\"}])"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 99
+              "lineNumber": 93
+            },
+            {
+              "name": "setChoicesCallback",
+              "signature": "func setChoicesCallback(_ fn: JSFunction) -> HSChooser",
+              "isStatic": false,
+              "rawDocumentation": "Set choices from a function called with the current query on each `refreshChoices()` and on show.\n\nThe function is responsible for filtering; the chooser displays all items it returns.\n\n- Parameter fn: {(query: string) => object[]} A function called with the current query string that returns choice objects\n- Returns: Self for chaining\n- Example:\n```js\nchooser.setChoicesCallback(q => items.filter(i => i.text.toLowerCase().includes(q.toLowerCase())))\n```",
+              "description": "Set choices from a function called with the current query on each `refreshChoices()` and on show.\nThe function is responsible for filtering; the chooser displays all items it returns.",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSFunction",
+                  "description": "A function called with the current query string that returns choice objects",
+                  "optional": false,
+                  "tsType": "(query: string) => object[]"
+                }
+              ],
+              "returns": {
+                "type": "HSChooser",
+                "description": "Self for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "chooser.setChoicesCallback(q => items.filter(i => i.text.toLowerCase().includes(q.toLowerCase())))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
+              "lineNumber": 105
             },
             {
               "name": "refreshChoices",
@@ -3553,7 +3651,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 108
+              "lineNumber": 114
             },
             {
               "name": "show",
@@ -3574,7 +3672,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 143
+              "lineNumber": 149
             },
             {
               "name": "hide",
@@ -3595,20 +3693,21 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 151
+              "lineNumber": 157
             },
             {
-              "name": "select",
-              "signature": "func select(_ row: JSValue) -> HSChooser",
+              "name": "selectRow",
+              "signature": "func selectRow(_ index: Int) -> HSChooser",
               "isStatic": false,
-              "rawDocumentation": "Programmatically confirm a selection.\n\nOmit `row` to confirm the currently highlighted row. Fires `onSelect` (or `onInvalid`\nfor rows with `valid: false`) and hides the chooser.\n\n- Parameter row: Zero-based row index, or omit to use the current selection.\n- Returns: Self for chaining\n- Example:\n```js\nchooser.select()     // confirm highlighted row\nchooser.select(2)    // confirm row at index 2\n```",
-              "description": "Programmatically confirm a selection.\nOmit `row` to confirm the currently highlighted row. Fires `onSelect` (or `onInvalid`\nfor rows with `valid: false`) and hides the chooser.",
+              "rawDocumentation": "Programmatically confirm the selection at a specific row index.\n\nFires `onSelect` (or `onInvalid` for rows with `valid: false`) and hides the chooser.\n\n- Parameter index: Zero-based row index to select\n- Returns: Self for chaining\n- Example:\n```js\nchooser.selectRow(2)\n```",
+              "description": "Programmatically confirm the selection at a specific row index.\nFires `onSelect` (or `onInvalid` for rows with `valid: false`) and hides the chooser.",
               "params": [
                 {
-                  "name": "row",
-                  "type": "JSValue",
-                  "description": "Zero-based row index, or omit to use the current selection.",
-                  "optional": false
+                  "name": "index",
+                  "type": "Int",
+                  "description": "Zero-based row index to select",
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -3618,25 +3717,47 @@
               "examples": [
                 {
                   "lang": "js",
-                  "code": "chooser.select()     // confirm highlighted row\nchooser.select(2)    // confirm row at index 2"
+                  "code": "chooser.selectRow(2)"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 224
+              "lineNumber": 228
             },
             {
-              "name": "selectedRowContents",
-              "signature": "func selectedRowContents(_ row: JSValue) -> NSDictionary?",
+              "name": "selectCurrentRow",
+              "signature": "func selectCurrentRow() -> HSChooser",
               "isStatic": false,
-              "rawDocumentation": "Returns the dict for the highlighted row, or for a specific row by index.\nReturns `null` if the index is out of range or no choices are set.\n\n- Parameter row: Zero-based row index, or omit to query the highlighted row.\n- Returns: The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.\n- Example:\n```js\nconst item = chooser.selectedRowContents()\nconst item = chooser.selectedRowContents(2)\n```",
-              "description": "Returns the dict for the highlighted row, or for a specific row by index.\nReturns `null` if the index is out of range or no choices are set.",
+              "rawDocumentation": "Programmatically confirm the currently highlighted row.\n\nFires `onSelect` (or `onInvalid` for rows with `valid: false`) and hides the chooser.\n\n- Returns: Self for chaining\n- Example:\n```js\nchooser.selectCurrentRow()\n```",
+              "description": "Programmatically confirm the currently highlighted row.\nFires `onSelect` (or `onInvalid` for rows with `valid: false`) and hides the chooser.",
+              "params": [],
+              "returns": {
+                "type": "HSChooser",
+                "description": "Self for chaining"
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "chooser.selectCurrentRow()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
+              "lineNumber": 239
+            },
+            {
+              "name": "rowContents",
+              "signature": "func rowContents(_ index: Int) -> NSDictionary?",
+              "isStatic": false,
+              "rawDocumentation": "Returns the dict for a specific row by index.\nReturns `null` if the index is out of range or no choices are set.\n\n- Parameter index: Zero-based row index\n- Returns: The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.\n- Example:\n```js\nconst item = chooser.rowContents(2)\n```",
+              "description": "Returns the dict for a specific row by index.\nReturns `null` if the index is out of range or no choices are set.",
               "params": [
                 {
-                  "name": "row",
-                  "type": "JSValue",
-                  "description": "Zero-based row index, or omit to query the highlighted row.",
-                  "optional": false
+                  "name": "index",
+                  "type": "Int",
+                  "description": "Zero-based row index",
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -3646,12 +3767,33 @@
               "examples": [
                 {
                   "lang": "js",
-                  "code": "const item = chooser.selectedRowContents()\nconst item = chooser.selectedRowContents(2)"
+                  "code": "const item = chooser.rowContents(2)"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 236
+              "lineNumber": 250
+            },
+            {
+              "name": "currentRowContents",
+              "signature": "func currentRowContents() -> NSDictionary?",
+              "isStatic": false,
+              "rawDocumentation": "Returns the dict for the currently highlighted row.\nReturns `null` if no choices are set or the chooser is empty.\n\n- Returns: The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.\n- Example:\n```js\nconst item = chooser.currentRowContents()\n```",
+              "description": "Returns the dict for the currently highlighted row.\nReturns `null` if no choices are set or the chooser is empty.",
+              "params": [],
+              "returns": {
+                "type": "NSDictionary?",
+                "description": "The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const item = chooser.currentRowContents()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
+              "lineNumber": 260
             }
           ],
           "properties": [
@@ -3748,7 +3890,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 117
+              "lineNumber": 123
             },
             {
               "name": "width",
@@ -3763,7 +3905,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 126
+              "lineNumber": 132
             },
             {
               "name": "visibleRows",
@@ -3778,7 +3920,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 133
+              "lineNumber": 139
             },
             {
               "name": "isVisible",
@@ -3793,11 +3935,11 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 158
+              "lineNumber": 164
             },
             {
               "name": "onSelect",
-              "signature": "var onSelect: JSValue? { get set }",
+              "signature": "var onSelect: JSFunction? { get set }",
               "rawDocumentation": "Called when the user confirms a selection.\n\nThe argument is the chosen row object (the original dict you passed to `setChoices`,\nwith `text`, `subText`, `image`, `valid`, and any custom fields intact).\nThe argument is `null` when dismissed (Escape).\n\n- Example:\n```js\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text)\n    else console.log(\"Dismissed\")\n}\n```",
               "description": "Called when the user confirms a selection.\nThe argument is the chosen row object (the original dict you passed to `setChoices`,\nwith `text`, `subText`, `image`, `valid`, and any custom fields intact).\nThe argument is `null` when dismissed (Escape).",
               "examples": [
@@ -3808,11 +3950,11 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 175
+              "lineNumber": 181
             },
             {
               "name": "onQueryChange",
-              "signature": "var onQueryChange: JSValue? { get set }",
+              "signature": "var onQueryChange: JSFunction? { get set }",
               "rawDocumentation": "Called on every keystroke with the new query string.\n\nUse this to debounce expensive searches or trigger async data fetching.\n\n- Example:\n```js\nchooser.onQueryChange = (q) => {\n    hs.timer.doAfter(0.05, () => { fetchResults(q).then(r => { cache = r; chooser.refreshChoices() }) })\n}\n```",
               "description": "Called on every keystroke with the new query string.\nUse this to debounce expensive searches or trigger async data fetching.",
               "examples": [
@@ -3823,11 +3965,11 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 187
+              "lineNumber": 193
             },
             {
               "name": "onShow",
-              "signature": "var onShow: JSValue? { get set }",
+              "signature": "var onShow: JSFunction? { get set }",
               "rawDocumentation": "Called after the panel becomes visible.\n- Example:\n```js\nchooser.onShow = () => console.log(\"Chooser appeared\")\n```",
               "description": "Called after the panel becomes visible.",
               "examples": [
@@ -3838,11 +3980,11 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 194
+              "lineNumber": 200
             },
             {
               "name": "onHide",
-              "signature": "var onHide: JSValue? { get set }",
+              "signature": "var onHide: JSFunction? { get set }",
               "rawDocumentation": "Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).\n- Example:\n```js\nchooser.onHide = () => console.log(\"Chooser hidden\")\n```",
               "description": "Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).",
               "examples": [
@@ -3853,11 +3995,11 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 201
+              "lineNumber": 207
             },
             {
               "name": "onInvalid",
-              "signature": "var onInvalid: JSValue? { get set }",
+              "signature": "var onInvalid: JSFunction? { get set }",
               "rawDocumentation": "Called when the user activates a row whose `valid` field is `false`.\nThe chooser stays open; the argument is the row dict (same shape as `onSelect`).\nIf unset, activating an invalid row is silently ignored.\n- Example:\n```js\nchooser.onInvalid = (item) => console.log(\"Tapped invalid row: \" + item.text)\n```",
               "description": "Called when the user activates a row whose `valid` field is `false`.\nThe chooser stays open; the argument is the row dict (same shape as `onSelect`).\nIf unset, activating an invalid row is silently ignored.",
               "examples": [
@@ -3868,13 +4010,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 210
+              "lineNumber": 216
             }
           ]
         }
       ],
-      "description": "# hs.chooser\n**A Spotlight-style chooser for presenting options to the user**\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n## Quick Start\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n## Dynamic Choices\n```javascript\nconst allApps = hs.application.runningApplications()\n\nchooser.setChoices((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.title.toLowerCase().includes(q))\n        .map(a => ({ text: a.title, subText: a.bundleID }))\n})\n```\n## Async Choices (with debounce)\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoices(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```",
-      "rawDocumentation": "# hs.chooser\n\n**A Spotlight-style chooser for presenting options to the user**\n\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n\n## Quick Start\n\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n\n## Dynamic Choices\n\nFor search-as-you-type filtering powered by your own data:\n\n```javascript\nconst allApps = hs.application.runningApplications()\n\nchooser.setChoices((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.title.toLowerCase().includes(q))\n        .map(a => ({ text: a.title, subText: a.bundleID }))\n})\n```\n\n## Async Choices (with debounce)\n\nFor results fetched from an external source:\n\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoices(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```"
+      "description": "# hs.chooser\n**A Spotlight-style chooser for presenting options to the user**\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n## Quick Start\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setStaticChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n## Dynamic Choices\n```javascript\nconst allApps = hs.application.runningApplications()\n\nchooser.setChoicesCallback((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.title.toLowerCase().includes(q))\n        .map(a => ({ text: a.title, subText: a.bundleID }))\n})\n```\n## Async Choices (with debounce)\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoicesCallback(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```",
+      "rawDocumentation": "# hs.chooser\n\n**A Spotlight-style chooser for presenting options to the user**\n\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n\n## Quick Start\n\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setStaticChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n\n## Dynamic Choices\n\nFor search-as-you-type filtering powered by your own data:\n\n```javascript\nconst allApps = hs.application.runningApplications()\n\nchooser.setChoicesCallback((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.title.toLowerCase().includes(q))\n        .map(a => ({ text: a.title, subText: a.bundleID }))\n})\n```\n\n## Async Choices (with debounce)\n\nFor results fetched from an external source:\n\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoicesCallback(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```"
     },
     {
       "name": "hs.console",
@@ -3944,7 +4086,8 @@
               "name": "message",
               "type": "String",
               "description": "The message to print",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -3969,7 +4112,8 @@
               "name": "message",
               "type": "String",
               "description": "The message to print",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -3994,7 +4138,8 @@
               "name": "message",
               "type": "String",
               "description": "The message to print",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -4019,7 +4164,8 @@
               "name": "message",
               "type": "String",
               "description": "The message to print",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -4044,7 +4190,8 @@
               "name": "message",
               "type": "String",
               "description": "The message to print",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -4078,19 +4225,22 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "offset",
               "type": "Int",
               "description": "Byte offset to start reading from. Pass `0` (or omit) to read from the beginning.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "length",
               "type": "Int",
               "description": "Maximum number of bytes to read. Pass `0` (or omit) to read to the end of the file.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4109,7 +4259,7 @@
         },
         {
           "name": "readLines",
-          "signature": "func readLines(_ path: String, _ callback: JSValue) -> Bool",
+          "signature": "func readLines(_ path: String, _ callback: JSFunction) -> Bool",
           "isStatic": false,
           "rawDocumentation": "Read a file line-by-line, invoking a callback for each line.\n\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n` line endings are handled.\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - callback: Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.\n- Returns: `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.\n- Example:\n```js\nhs.fs.readLines(\"/etc/hosts\", (line) => {\n    if (line.startsWith(\"#\")) return true\n    console.log(line)\n    return true\n})\n```",
           "description": "Read a file line-by-line, invoking a callback for each line.\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n` line endings are handled.",
@@ -4118,13 +4268,15 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callback",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4152,19 +4304,22 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "content",
               "type": "String",
               "description": "String to write.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "inPlace",
               "type": "Bool",
               "description": "Whether to write the file in-place or atomically. Defaults to atomically (false).",
-              "optional": true
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4192,13 +4347,15 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "content",
               "type": "String",
               "description": "String to append.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4226,7 +4383,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to check. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4254,7 +4412,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to check. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4282,7 +4441,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to check. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4310,7 +4470,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to check. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4338,7 +4499,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to check. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4366,7 +4528,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to check. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4394,13 +4557,15 @@
               "name": "source",
               "type": "String",
               "description": "Path to the existing file or directory. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "destination",
               "type": "String",
               "description": "Path for the copy. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4428,13 +4593,15 @@
               "name": "source",
               "type": "String",
               "description": "Path to the existing file or directory. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "destination",
               "type": "String",
               "description": "New path. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4462,7 +4629,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to delete. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4490,7 +4658,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the directory. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4518,7 +4687,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the root directory. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4546,7 +4716,8 @@
               "name": "path",
               "type": "String",
               "description": "Path of the directory to create. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4574,7 +4745,8 @@
               "name": "path",
               "type": "String",
               "description": "Path of the directory to remove. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4623,7 +4795,8 @@
               "name": "path",
               "type": "String",
               "description": "New working directory path. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4651,7 +4824,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to resolve.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4679,7 +4853,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file or directory. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4749,7 +4924,8 @@
               "name": "path",
               "type": "String",
               "description": "Filesystem path. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4777,7 +4953,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to inspect. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4805,7 +4982,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4833,13 +5011,15 @@
               "name": "source",
               "type": "String",
               "description": "Path of the existing file.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "destination",
               "type": "String",
               "description": "Path for the new hard link.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4867,13 +5047,15 @@
               "name": "source",
               "type": "String",
               "description": "The path the symlink will point to.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "destination",
               "type": "String",
               "description": "The path where the symlink will be created.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4901,7 +5083,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the symbolic link.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4929,7 +5112,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file or directory. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4957,7 +5141,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4997,7 +5182,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file or directory. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5025,7 +5211,8 @@
               "name": "data",
               "type": "String",
               "description": "Base64-encoded bookmark string produced by `pathToBookmark`.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5062,7 +5249,8 @@
               "name": "data",
               "type": "String",
               "description": "The string to encode",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5090,7 +5278,8 @@
               "name": "data",
               "type": "String",
               "description": "The base64 string to decode",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5118,7 +5307,8 @@
               "name": "data",
               "type": "String",
               "description": "The string to hash",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5146,7 +5336,8 @@
               "name": "data",
               "type": "String",
               "description": "The string to hash",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5174,7 +5365,8 @@
               "name": "data",
               "type": "String",
               "description": "The string to hash",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5202,7 +5394,8 @@
               "name": "data",
               "type": "String",
               "description": "The string to hash",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5230,13 +5423,15 @@
               "name": "key",
               "type": "String",
               "description": "The secret key",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "data",
               "type": "String",
               "description": "The data to authenticate",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5264,13 +5459,15 @@
               "name": "key",
               "type": "String",
               "description": "The secret key",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "data",
               "type": "String",
               "description": "The data to authenticate",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5298,13 +5495,15 @@
               "name": "key",
               "type": "String",
               "description": "The secret key",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "data",
               "type": "String",
               "description": "The data to authenticate",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5332,13 +5531,15 @@
               "name": "key",
               "type": "String",
               "description": "The secret key",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "data",
               "type": "String",
               "description": "The data to authenticate",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5366,7 +5567,7 @@
       "methods": [
         {
           "name": "bind",
-          "signature": "func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkey?",
+          "signature": "func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
           "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"])\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\")\n  - callbackPressed: A JavaScript function to call when the hotkey is pressed\n  - callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\n```",
           "description": "Bind a hotkey",
@@ -5375,25 +5576,29 @@
               "name": "mods",
               "type": "JSValue",
               "description": "An array of modifier key strings (e.g., [\"cmd\", \"shift\"])",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "key",
               "type": "String",
               "description": "The key name or character (e.g., \"a\", \"space\", \"return\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callbackPressed",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function to call when the hotkey is pressed",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callbackReleased",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function to call when the hotkey is released",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5412,7 +5617,7 @@
         },
         {
           "name": "bindSpec",
-          "signature": "func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSValue, _ callbackReleased: JSValue) -> HSHotkey?",
+          "signature": "func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
           "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n  - message: A description of what this hotkey does (currently unused, for future features)\n  - callbackPressed: A JavaScript function to call when the hotkey is pressed\n  - callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bindSpec([\"cmd\"], \"space\", \"Spotlight-like\", () => {\n    console.log(\"pressed\")\n}, null)\n```",
           "description": "Bind a hotkey with a message description",
@@ -5421,31 +5626,36 @@
               "name": "mods",
               "type": "JSValue",
               "description": "An array of modifier key strings",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "key",
               "type": "String",
               "description": "The key name or character",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "message",
               "type": "String?",
               "description": "A description of what this hotkey does (currently unused, for future features)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callbackPressed",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function to call when the hotkey is pressed",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callbackReleased",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function to call when the hotkey is released",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5577,7 +5787,7 @@
           "properties": [
             {
               "name": "callbackPressed",
-              "signature": "var callbackPressed: JSValue? { get set }",
+              "signature": "var callbackPressed: JSFunction? { get set }",
               "rawDocumentation": "The callback function to be called when the hotkey is pressed\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.callbackPressed = () => console.log(\"new handler\")\n```",
               "description": "The callback function to be called when the hotkey is pressed",
               "examples": [
@@ -5592,7 +5802,7 @@
             },
             {
               "name": "callbackReleased",
-              "signature": "var callbackReleased: JSValue? { get set }",
+              "signature": "var callbackReleased: JSFunction? { get set }",
               "rawDocumentation": "The callback function to be called when the hotkey is released\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.callbackReleased = () => console.log(\"released\")\n```",
               "description": "The callback function to be called when the hotkey is released",
               "examples": [
@@ -5625,7 +5835,8 @@
               "name": "address",
               "type": "String",
               "description": "a free-form address string in any locale",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5654,7 +5865,8 @@
               "name": "locationTable",
               "type": "JSValue",
               "description": "an object with at least `latitude` and `longitude`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5746,13 +5958,15 @@
               "name": "from",
               "type": "JSValue",
               "description": "locationTable with at least `latitude` and `longitude`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "to",
               "type": "JSValue",
               "description": "locationTable with at least `latitude` and `longitude`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5780,19 +5994,22 @@
               "name": "latitude",
               "type": "Double",
               "description": "degrees north (positive) or south (negative)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "longitude",
               "type": "Double",
               "description": "degrees east (positive) or west (negative)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "date",
               "type": "JSValue",
               "description": "optional JS `Date`; defaults to today",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5820,19 +6037,22 @@
               "name": "latitude",
               "type": "Double",
               "description": "degrees north (positive) or south (negative)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "longitude",
               "type": "Double",
               "description": "degrees east (positive) or west (negative)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "date",
               "type": "JSValue",
               "description": "optional JS `Date`; defaults to today",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -5881,7 +6101,8 @@
               "name": "watcher",
               "type": "HSLocationWatcher",
               "description": "the watcher returned by `addWatcher()`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -5964,16 +6185,17 @@
             },
             {
               "name": "setCallback",
-              "signature": "func setCallback(_ fn: JSValue) -> HSLocationWatcher",
+              "signature": "func setCallback(_ fn: JSFunction) -> HSLocationWatcher",
               "isStatic": false,
               "rawDocumentation": "Sets the callback function invoked when location events occur.\n- Parameter fn: `function(event, data)` — see type documentation for event names\n- Returns: self, for chaining\n- Example:\n```js\nw.setCallback((event, data) => {\n    if (event === 'location') console.log(data.latitude, data.longitude)\n})\n```",
               "description": "Sets the callback function invoked when location events occur.",
               "params": [
                 {
                   "name": "fn",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "`function(event, data)` — see type documentation for event names",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -6063,7 +6285,8 @@
               "name": "hidden",
               "type": "Bool",
               "description": "Pass true to create the item hidden (not shown in the menu bar). Defaults to false (immediately visible).",
-              "optional": true
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6100,7 +6323,8 @@
                   "name": "title",
                   "type": "JSValue",
                   "description": "Text to display, or null to remove the title",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -6125,7 +6349,8 @@
                   "name": "image",
                   "type": "JSValue",
                   "description": "An HSImage object, or null to remove the icon",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -6150,7 +6375,8 @@
                   "name": "tooltip",
                   "type": "JSValue",
                   "description": "Tooltip text, or null to remove the tooltip",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -6166,16 +6392,17 @@
             },
             {
               "name": "setClickCallback",
-              "signature": "func setClickCallback(_ fn: JSValue)",
+              "signature": "func setClickCallback(_ fn: JSFunction)",
               "isStatic": false,
               "rawDocumentation": "Set a callback invoked when the item is clicked (only fires when no menu is set)\n- Parameter fn: A function to call on click, or null to remove the callback\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.setTitle(\"Click me\")\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```",
               "description": "Set a callback invoked when the item is clicked (only fires when no menu is set)",
               "params": [
                 {
                   "name": "fn",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "A function to call on click, or null to remove the callback",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -6200,7 +6427,8 @@
                   "name": "menuOrFn",
                   "type": "JSValue",
                   "description": "Array of menu item objects, a function returning such an array, or null to remove the menu",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -6299,7 +6527,7 @@
       "methods": [
         {
           "name": "show",
-          "signature": "func show(_ title: String, _ body: String, _ callback: JSValue)",
+          "signature": "func show(_ title: String, _ body: String, _ callback: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Display a notification immediately.\n\n- Parameters:\n  - title: The notification title\n  - body: The notification body text\n  - callback: Optional function called when the user taps the notification.\n    Receives a response object (see module docs for shape).\n- Example:\n```js\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n```",
           "description": "Display a notification immediately.\nReceives a response object (see module docs for shape).",
@@ -6308,19 +6536,22 @@
               "name": "title",
               "type": "String",
               "description": "The notification title",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "body",
               "type": "String",
               "description": "The notification body text",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callback",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "Optional function called when the user taps the notification.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -6345,7 +6576,8 @@
               "name": "options",
               "type": "JSValue",
               "description": "A JavaScript object — see module documentation for supported keys.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6483,13 +6715,15 @@
               "name": "path",
               "type": "String",
               "description": "Absolute path to the image file.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "options",
               "type": "JSValue?",
               "description": "Optional configuration object (see description).",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6676,7 +6910,8 @@
               "name": "source",
               "type": "String",
               "description": "The AppleScript source code to compile and execute.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6704,7 +6939,8 @@
               "name": "source",
               "type": "String",
               "description": "The OSA JavaScript source code to compile and execute.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6732,7 +6968,8 @@
               "name": "path",
               "type": "String",
               "description": "Absolute path to the AppleScript source file.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6760,7 +6997,8 @@
               "name": "path",
               "type": "String",
               "description": "Absolute path to the OSA JavaScript source file.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6788,13 +7026,15 @@
               "name": "source",
               "type": "String",
               "description": "The script source code.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "language",
               "type": "String",
               "description": "The OSA language name — must be `\"AppleScript\"` or `\"JavaScript\"`.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6822,7 +7062,8 @@
               "name": "source",
               "type": "String",
               "description": "The AppleScript source code to compile and execute.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6850,7 +7091,8 @@
               "name": "source",
               "type": "String",
               "description": "The OSA JavaScript source code to compile and execute.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6878,7 +7120,8 @@
               "name": "path",
               "type": "String",
               "description": "Absolute path to the AppleScript source file.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6906,7 +7149,8 @@
               "name": "path",
               "type": "String",
               "description": "Absolute path to the OSA JavaScript source file.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -6934,13 +7178,15 @@
               "name": "source",
               "type": "String",
               "description": "The script source code.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "language",
               "type": "String",
               "description": "The OSA language name — must be `\"AppleScript\"` or `\"JavaScript\"`.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7082,7 +7328,8 @@
               "name": "uti",
               "type": "String",
               "description": "A UTI type string (e.g. \"com.adobe.pdf\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7110,7 +7357,8 @@
               "name": "str",
               "type": "String",
               "description": "The text string to write",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7138,7 +7386,8 @@
               "name": "html",
               "type": "String",
               "description": "The HTML string to write",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7166,7 +7415,8 @@
               "name": "rtf",
               "type": "String",
               "description": "The RTF string to write",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7194,7 +7444,8 @@
               "name": "url",
               "type": "String",
               "description": "The URL string to write",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7222,7 +7473,8 @@
               "name": "image",
               "type": "HSImage",
               "description": "An HSImage to write",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7250,13 +7502,15 @@
               "name": "base64",
               "type": "String",
               "description": "The data encoded as a base64 string",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "uti",
               "type": "String",
               "description": "A UTI type string (e.g. \"com.adobe.pdf\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7284,7 +7538,8 @@
               "name": "representations",
               "type": "JSValue",
               "description": "A JavaScript object whose keys are UTI strings and values are strings",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7333,7 +7588,8 @@
               "name": "uti",
               "type": "String",
               "description": "A UTI type string to check for",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7370,16 +7626,17 @@
         },
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ listener: JSValue)",
+          "signature": "func addWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Add a watcher that is called whenever the pasteboard contents change.\nMultiple watchers may be registered; they are each called independently.\nBecause macOS provides no pasteboard change notification API, this is implemented\nby polling `changeCount` at the interval specified by `watcherInterval`.\n- Parameter listener: A function called with one argument: the new `changeCount` integer\n- Example:\n```js\nhs.pasteboard.addWatcher((count) => {\n    console.log(\"Pasteboard changed:\", count)\n})\n```",
           "description": "Add a watcher that is called whenever the pasteboard contents change.\nMultiple watchers may be registered; they are each called independently.\nBecause macOS provides no pasteboard change notification API, this is implemented\nby polling `changeCount` at the interval specified by `watcherInterval`.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A function called with one argument: the new `changeCount` integer",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -7395,16 +7652,17 @@
         },
         {
           "name": "removeWatcher",
-          "signature": "func removeWatcher(_ listener: JSValue)",
+          "signature": "func removeWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Remove a previously registered pasteboard watcher\n- Parameter listener: The function previously passed to `addWatcher`\n- Example:\n```js\nhs.pasteboard.removeWatcher(myHandler)\n```",
           "description": "Remove a previously registered pasteboard watcher",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "The function previously passed to `addWatcher`",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -7728,7 +7986,8 @@
               "name": "type",
               "type": "String",
               "description": "The sleep type to prevent. One of: `\"display\"` (prevent display",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7756,7 +8015,8 @@
               "name": "type",
               "type": "String",
               "description": "The sleep type to allow again. One of: `\"display\"`, `\"systemIdle\"`, `\"system\"`.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7784,7 +8044,8 @@
               "name": "type",
               "type": "String",
               "description": "The sleep type to check. One of: `\"display\"`, `\"systemIdle\"`, `\"system\"`.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -7917,16 +8178,17 @@
         },
         {
           "name": "addEventWatcher",
-          "signature": "func addEventWatcher(_ listener: JSValue)",
+          "signature": "func addEventWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Registers a listener that fires when system power events occur.\n\nThe listener receives a single string identifying the event. Possible values:\n`\"screensDidSleep\"`, `\"screensDidWake\"`, `\"screensDidLock\"`, `\"screensDidUnlock\"`,\n`\"screensaverDidStart\"`, `\"screensaverDidStop\"`, `\"screensaverWillStop\"`,\n`\"systemWillSleep\"`, `\"systemDidWake\"`, `\"systemWillPowerOff\"`,\n`\"sessionDidBecomeActive\"`, `\"sessionDidResignActive\"`.\n\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.\n- Parameter listener: A function receiving `(eventName: string)`.\n- Example:\n  ```js\n  hs.power.addEventWatcher(event => console.log(\"Power event: \" + event))\n  ```",
           "description": "Registers a listener that fires when system power events occur.\n`\"screensDidSleep\"`, `\"screensDidWake\"`, `\"screensDidLock\"`, `\"screensDidUnlock\"`,\n`\"screensaverDidStart\"`, `\"screensaverDidStop\"`, `\"screensaverWillStop\"`,\n`\"systemWillSleep\"`, `\"systemDidWake\"`, `\"systemWillPowerOff\"`,\n`\"sessionDidBecomeActive\"`, `\"sessionDidResignActive\"`.\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A function receiving `(eventName: string)`.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -7942,16 +8204,17 @@
         },
         {
           "name": "removeEventWatcher",
-          "signature": "func removeEventWatcher(_ listener: JSValue)",
+          "signature": "func removeEventWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Removes a previously registered power event listener.\n\n- Parameter listener: The function originally passed to `addEventWatcher`.\n- Example:\n  ```js\n  const handler = event => console.log(event)\n  hs.power.addEventWatcher(handler)\n  hs.power.removeEventWatcher(handler)\n  ```",
           "description": "Removes a previously registered power event listener.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "The function originally passed to `addEventWatcher`.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -7967,16 +8230,17 @@
         },
         {
           "name": "addBatteryWatcher",
-          "signature": "func addBatteryWatcher(_ listener: JSValue)",
+          "signature": "func addBatteryWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Registers a listener that fires whenever battery state changes.\n\nThe listener receives no arguments; call `batteryInfo()` or read individual\nproperties inside the callback to determine what changed.\n\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.\n- Parameter listener: A function called with no arguments on battery state change.\n- Example:\n  ```js\n  hs.power.addBatteryWatcher(() => {\n      console.log(\"Battery now: \" + hs.power.percentage + \"%\")\n  })\n  ```",
           "description": "Registers a listener that fires whenever battery state changes.\nThe listener receives no arguments; call `batteryInfo()` or read individual\nproperties inside the callback to determine what changed.\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A function called with no arguments on battery state change.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -7992,16 +8256,17 @@
         },
         {
           "name": "removeBatteryWatcher",
-          "signature": "func removeBatteryWatcher(_ listener: JSValue)",
+          "signature": "func removeBatteryWatcher(_ listener: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Removes a previously registered battery change listener.\n\n- Parameter listener: The function originally passed to `addBatteryWatcher`.\n- Example:\n  ```js\n  const handler = () => console.log(\"battery changed\")\n  hs.power.addBatteryWatcher(handler)\n  hs.power.removeBatteryWatcher(handler)\n  ```",
           "description": "Removes a previously registered battery change listener.",
           "params": [
             {
               "name": "listener",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "The function originally passed to `addBatteryWatcher`.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -8183,25 +8448,29 @@
                   "name": "width",
                   "type": "Int",
                   "description": "Horizontal resolution in pixels.",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 },
                 {
                   "name": "height",
                   "type": "Int",
                   "description": "Vertical resolution in pixels.",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 },
                 {
                   "name": "scale",
                   "type": "Double",
                   "description": "Backing scale factor (e.g. `2` for HiDPI, `1` for non-HiDPI). Pass `0` to ignore.",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 },
                 {
                   "name": "frequency",
                   "type": "Double",
                   "description": "Refresh rate in Hz. Pass `0` to ignore.",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -8377,13 +8646,15 @@
                   "name": "x",
                   "type": "Double",
                   "description": "The X coordinate to move to",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 },
                 {
                   "name": "y",
                   "type": "Double",
                   "description": "The Y coordinate to move to",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -8432,7 +8703,8 @@
                   "name": "screen",
                   "type": "HSScreen",
                   "description": "The screen to mirror.",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -8481,7 +8753,8 @@
                   "name": "rect",
                   "type": "JSValue",
                   "description": "An `HSRect` in global Hammerspoon coordinates.",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -8509,7 +8782,8 @@
                   "name": "rect",
                   "type": "JSValue",
                   "description": "An `HSRect` relative to this screen's top-left corner.",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -8710,7 +8984,7 @@
         },
         {
           "name": "search",
-          "signature": "func search(_ predicate: String, _ callback: JSValue) -> HSSpotlightQuery",
+          "signature": "func search(_ predicate: String, _ callback: JSFunction) -> HSSpotlightQuery",
           "isStatic": false,
           "rawDocumentation": "Convenience helper that creates, configures, and starts a query in one call.\n\nEquivalent to `create().setQuery(predicate).setCallback(callback).start()`.\nCall `q.stop()` from inside `callback` (when `event === 'didFinish'`) to end\nthe search once you have what you need.\n- Parameters:\n  - predicate: An NSPredicate-format query string\n  - callback: A function called with `(event, update?)` lifecycle events\n- Returns: The `HSSpotlightQuery` object (use to stop the search early)\n- Example:\n```js\nconst q = hs.spotlight.search(\n    \"kMDItemDisplayName BEGINSWITH 'Report'\",\n    (event) => {\n        if (event === 'didFinish') {\n            console.log('Found ' + q.count + ' reports')\n            q.stop()\n        }\n    }\n)\n```",
           "description": "Convenience helper that creates, configures, and starts a query in one call.\nEquivalent to `create().setQuery(predicate).setCallback(callback).start()`.\nCall `q.stop()` from inside `callback` (when `event === 'didFinish'`) to end\nthe search once you have what you need.",
@@ -8719,13 +8993,15 @@
               "name": "predicate",
               "type": "String",
               "description": "An NSPredicate-format query string",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callback",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A function called with `(event, update?)` lifecycle events",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -8927,7 +9203,8 @@
                   "name": "key",
                   "type": "String",
                   "description": "An attribute key such as `\"kMDItemPath\"` or `hs.spotlight.attribute.path`",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -8975,7 +9252,8 @@
                   "name": "predicate",
                   "type": "String",
                   "description": "An NSPredicate-format query string",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -9003,7 +9281,8 @@
                   "name": "scopes",
                   "type": "JSValue",
                   "description": "An array of scope-constant strings or absolute directory paths",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -9031,7 +9310,8 @@
                   "name": "descriptors",
                   "type": "JSValue",
                   "description": "An array of sort descriptor objects",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -9059,7 +9339,8 @@
                   "name": "attrs",
                   "type": "JSValue",
                   "description": "An array of attribute name strings",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -9087,7 +9368,8 @@
                   "name": "attrs",
                   "type": "JSValue",
                   "description": "An array of attribute name strings",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -9106,16 +9388,17 @@
             },
             {
               "name": "setCallback",
-              "signature": "func setCallback(_ fn: JSValue) -> HSSpotlightQuery",
+              "signature": "func setCallback(_ fn: JSFunction) -> HSSpotlightQuery",
               "isStatic": false,
               "rawDocumentation": "Registers a callback that receives query lifecycle events.\n\nThe callback is called with:\n- `event` (string): one of `\"didStart\"`, `\"inProgress\"`, `\"didFinish\"`, `\"didUpdate\"`\n- `update` (object, `\"didUpdate\"` only): `{ added, changed, removed }` — each an array\n  of `HSSpotlightItem` objects describing what changed in this update cycle\n\n- Parameter fn: A JavaScript function `(event, update?) => void`\n- Returns: this query, for chaining\n- Example:\n```js\nq.setCallback((event, update) => {\n    if (event === 'didFinish') {\n        console.log('Initial gather complete — ' + q.count + ' results')\n    } else if (event === 'didUpdate') {\n        const added = update ? update.added.length : 0\n        console.log(added + ' items added in this update')\n    }\n})\n```",
               "description": "Registers a callback that receives query lifecycle events.\nof `HSSpotlightItem` objects describing what changed in this update cycle",
               "params": [
                 {
                   "name": "fn",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "A JavaScript function `(event, update?) => void`",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -9305,7 +9588,7 @@
       "methods": [
         {
           "name": "create",
-          "signature": "func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSValue?, _ environment: JSValue?, _ streamingCallback: JSValue?) -> HSTask",
+          "signature": "func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSFunction?, _ environment: JSValue?, _ streamingCallback: JSFunction?) -> HSTask",
           "isStatic": false,
           "rawDocumentation": "Create a new task\n- Parameters:\n  - launchPath: The full path to the executable to run\n  - arguments: An array of arguments to pass to the executable\n  - completionCallback: Optional callback function called when the task terminates\n  - environment: Optional dictionary of environment variables for the task\n  - streamingCallback: Optional callback function called when the task produces output\n- Returns: A task object. Call start() to begin execution.\n- Example:\n```js\nconst task = hs.task.create(\"/usr/bin/env\", [\"printenv\", \"PATH\"], (code, reason) => {\n    console.log(\"exited\", code)\n})\ntask.start()\n```",
           "description": "Create a new task",
@@ -9314,31 +9597,36 @@
               "name": "launchPath",
               "type": "String",
               "description": "The full path to the executable to run",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "arguments",
               "type": "[String]",
               "description": "An array of arguments to pass to the executable",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "completionCallback",
-              "type": "JSValue?",
+              "type": "JSFunction?",
               "description": "Optional callback function called when the task terminates",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "environment",
               "type": "JSValue?",
               "description": "Optional dictionary of environment variables for the task",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "streamingCallback",
-              "type": "JSValue?",
+              "type": "JSFunction?",
               "description": "Optional callback function called when the task produces output",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -9475,7 +9763,7 @@
       "properties": [
         {
           "name": "runAsync",
-          "signature": "var runAsync: JSValue? { get set }",
+          "signature": "var runAsync: JSFunction? { get set }",
           "rawDocumentation": "Run a task, returning a Promise. Swift-retained storage for the JS implementation.\n- Example:\n```js\nhs.task.runAsync(\"/bin/echo\", [\"hi\"]).then(r => console.log(r.stdout))\n```",
           "description": "Run a task, returning a Promise. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -9490,7 +9778,7 @@
         },
         {
           "name": "shell",
-          "signature": "var shell: JSValue? { get set }",
+          "signature": "var shell: JSFunction? { get set }",
           "rawDocumentation": "Run a shell command. Swift-retained storage for the JS implementation.\n- Example:\n```js\nhs.task.shell(\"ls -la /tmp\").then(r => console.log(r.stdout))\n```",
           "description": "Run a shell command. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -9505,7 +9793,7 @@
         },
         {
           "name": "parallel",
-          "signature": "var parallel: JSValue? { get set }",
+          "signature": "var parallel: JSFunction? { get set }",
           "rawDocumentation": "Run multiple tasks in parallel. Swift-retained storage for the JS implementation.\n- Example:\n```js\nhs.task.parallel([\n    [\"/bin/echo\", [\"one\"]],\n    [\"/bin/echo\", [\"two\"]]\n]).then(results => console.log(results))\n```",
           "description": "Run multiple tasks in parallel. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -9520,7 +9808,7 @@
         },
         {
           "name": "sequence",
-          "signature": "var sequence: JSValue? { get set }",
+          "signature": "var sequence: JSFunction? { get set }",
           "rawDocumentation": "Run multiple tasks in sequence. Swift-retained storage for the JS implementation.\n- Example:\n```js\nhs.task.sequence([\n    [\"/bin/echo\", [\"one\"]],\n    [\"/bin/echo\", [\"two\"]]\n]).then(results => console.log(results))\n```",
           "description": "Run multiple tasks in sequence. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -9535,7 +9823,7 @@
         },
         {
           "name": "builder",
-          "signature": "var builder: JSValue? { get set }",
+          "signature": "var builder: JSFunction? { get set }",
           "rawDocumentation": "Create a task builder. Swift-retained storage for the JS implementation.\n- Example:\n```js\nconst b = hs.task.builder().launchPath(\"/bin/echo\").arguments([\"hi\"])\nb.build().start()\n```",
           "description": "Create a task builder. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -9550,7 +9838,7 @@
         },
         {
           "name": "TaskBuilder",
-          "signature": "var TaskBuilder: JSValue? { get set }",
+          "signature": "var TaskBuilder: JSFunction? { get set }",
           "rawDocumentation": "TaskBuilder class. Swift-retained storage for the JS implementation.\n- Example:\n```js\nconst b = new hs.task.TaskBuilder().launchPath(\"/bin/echo\")\n```",
           "description": "TaskBuilder class. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -9711,7 +9999,8 @@
                   "name": "data",
                   "type": "String",
                   "description": "The string data to write",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -9846,7 +10135,7 @@
       "methods": [
         {
           "name": "create",
-          "signature": "func create(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer",
+          "signature": "func create(_ interval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool) -> HSTimer",
           "isStatic": false,
           "rawDocumentation": "Create a new timer\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: A JavaScript function to call when the timer fires\n  - continueOnError?: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object. Call start() to begin the timer.\n- Example:\n```js\nconst t = hs.timer.create(5, () => console.log(\"tick\"), false)\nt.start()\n```",
           "description": "Create a new timer",
@@ -9855,19 +10144,22 @@
               "name": "interval",
               "type": "TimeInterval",
               "description": "The interval in seconds at which the timer should fire",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callback",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function to call when the timer fires",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "continueOnError",
               "type": "Bool",
               "description": "If true, the timer will continue running even if the callback throws an error",
-              "optional": true
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
@@ -9886,7 +10178,7 @@
         },
         {
           "name": "doAfter",
-          "signature": "func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer",
+          "signature": "func doAfter(_ seconds: TimeInterval, _ callback: JSFunction) -> HSTimer",
           "isStatic": false,
           "rawDocumentation": "Create and start a one-shot timer\n- Parameters:\n  - seconds: Number of seconds to wait before firing\n  - callback: A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)\n- Example:\n```js\nhs.timer.doAfter(5, () => console.log(\"fired\"))\n```",
           "description": "Create and start a one-shot timer",
@@ -9895,13 +10187,15 @@
               "name": "seconds",
               "type": "TimeInterval",
               "description": "Number of seconds to wait before firing",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callback",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function to call when the timer fires",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -9920,7 +10214,7 @@
         },
         {
           "name": "doEvery",
-          "signature": "func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimer",
+          "signature": "func doEvery(_ interval: TimeInterval, _ callback: JSFunction) -> HSTimer",
           "isStatic": false,
           "rawDocumentation": "Create and start a repeating timer\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)\n- Example:\n```js\nhs.timer.doEvery(60, () => console.log(\"every minute\"))\n```",
           "description": "Create and start a repeating timer",
@@ -9929,13 +10223,15 @@
               "name": "interval",
               "type": "TimeInterval",
               "description": "The interval in seconds at which the timer should fire",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callback",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function to call when the timer fires",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -9954,7 +10250,7 @@
         },
         {
           "name": "doAt",
-          "signature": "func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer",
+          "signature": "func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool) -> HSTimer",
           "isStatic": false,
           "rawDocumentation": "Create and start a timer that fires at a specific time\n- Parameters:\n  - time: Seconds since midnight (local time) when the timer should first fire\n  - repeatInterval: If provided, the timer will repeat at this interval. Pass 0 for one-shot.\n  - callback: A JavaScript function to call when the timer fires\n  - continueOnError?: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object (already started)\n- Example:\n```js\n// Fire at 9am every day\nhs.timer.doAt(9 * 3600, 86400, () => console.log(\"morning\"), false)\n```",
           "description": "Create and start a timer that fires at a specific time",
@@ -9963,25 +10259,29 @@
               "name": "time",
               "type": "TimeInterval",
               "description": "Seconds since midnight (local time) when the timer should first fire",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "repeatInterval",
               "type": "TimeInterval",
               "description": "If provided, the timer will repeat at this interval. Pass 0 for one-shot.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "callback",
-              "type": "JSValue",
+              "type": "JSFunction",
               "description": "A JavaScript function to call when the timer fires",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "continueOnError",
               "type": "Bool",
               "description": "If true, the timer will continue running even if the callback throws an error",
-              "optional": true
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10009,7 +10309,8 @@
               "name": "microseconds",
               "type": "UInt32",
               "description": "Number of microseconds to sleep",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -10097,7 +10398,8 @@
               "name": "n",
               "type": "Double",
               "description": "A number of minutes",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10125,7 +10427,8 @@
               "name": "n",
               "type": "Double",
               "description": "A number of hours",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10153,7 +10456,8 @@
               "name": "n",
               "type": "Double",
               "description": "A number of days",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10181,7 +10485,8 @@
               "name": "n",
               "type": "Double",
               "description": "A number of weeks",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10322,7 +10627,7 @@
       "properties": [
         {
           "name": "doUntil",
-          "signature": "var doUntil: JSValue? { get set }",
+          "signature": "var doUntil: JSFunction? { get set }",
           "rawDocumentation": "Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.\n- Example:\n```js\nlet count = 0\nhs.timer.doUntil(() => count >= 3, () => { count++; console.log(count) }, 1)\n```",
           "description": "Repeat a function until a predicate returns true. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -10337,7 +10642,7 @@
         },
         {
           "name": "doWhile",
-          "signature": "var doWhile: JSValue? { get set }",
+          "signature": "var doWhile: JSFunction? { get set }",
           "rawDocumentation": "Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.\n- Example:\n```js\nlet count = 0\nhs.timer.doWhile(() => count < 3, () => { count++; console.log(count) }, 1)\n```",
           "description": "Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -10352,7 +10657,7 @@
         },
         {
           "name": "waitUntil",
-          "signature": "var waitUntil: JSValue? { get set }",
+          "signature": "var waitUntil: JSFunction? { get set }",
           "rawDocumentation": "Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.\n- Example:\n```js\nhs.timer.waitUntil(() => someCondition, () => console.log(\"ready\"), 0.5)\n```",
           "description": "Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -10367,7 +10672,7 @@
         },
         {
           "name": "waitWhile",
-          "signature": "var waitWhile: JSValue? { get set }",
+          "signature": "var waitWhile: JSFunction? { get set }",
           "rawDocumentation": "Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.\n- Example:\n```js\nhs.timer.waitWhile(() => stillLoading, () => console.log(\"done\"), 0.5)\n```",
           "description": "Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.",
           "examples": [
@@ -10495,7 +10800,8 @@
                   "name": "seconds",
                   "type": "TimeInterval",
                   "description": "Number of seconds from now when the timer should fire",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": null,
@@ -10583,13 +10889,15 @@
               "name": "sourceLanguage",
               "type": "String",
               "description": "BCP-47 code of the source language (e.g. `\"en\"`).",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "targetLanguage",
               "type": "String",
               "description": "BCP-47 code of the target language (e.g. `\"fr\"`).",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10618,13 +10926,15 @@
               "name": "sourceLanguage",
               "type": "String",
               "description": "BCP-47 code of the source language (e.g. `\"en\"`).",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "targetLanguage",
               "type": "String",
               "description": "BCP-47 code of the target language (e.g. `\"fr\"`).",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10661,7 +10971,8 @@
                   "name": "text",
                   "type": "String",
                   "description": "The text to translate.",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -10746,7 +11057,8 @@
               "name": "dict",
               "type": "[String: Any]",
               "description": "Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10774,7 +11086,8 @@
               "name": "message",
               "type": "String",
               "description": "The message text to display",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10802,7 +11115,8 @@
               "name": "message",
               "type": "String",
               "description": "The main message text",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10830,7 +11144,8 @@
               "name": "message",
               "type": "String",
               "description": "The prompt message",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10858,7 +11173,8 @@
               "name": "initialValue",
               "type": "String",
               "description": "The starting string value",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -10958,7 +11274,8 @@
                   "name": "colorValue",
                   "type": "JSValue",
                   "description": "Color as hex string (e.g., \"#FF0000\") or HSColor object",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11013,7 +11330,8 @@
                   "name": "content",
                   "type": "JSValue",
                   "description": "The text to display — a plain JS string for static text,",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11036,7 +11354,8 @@
                   "name": "imageValue",
                   "type": "JSValue",
                   "description": "Image as HSImage object or file path string",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11059,7 +11378,8 @@
                   "name": "label",
                   "type": "JSValue",
                   "description": "The button label — a plain JS string for static text,",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11162,7 +11482,8 @@
                   "name": "colorValue",
                   "type": "JSValue",
                   "description": "Color as hex string or HSColor",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11185,7 +11506,8 @@
                   "name": "colorValue",
                   "type": "JSValue",
                   "description": "Color as hex string or HSColor",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11208,7 +11530,8 @@
                   "name": "width",
                   "type": "Double",
                   "description": "Width in points",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11231,7 +11554,8 @@
                   "name": "radius",
                   "type": "Double",
                   "description": "Corner radius in points",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11254,7 +11578,8 @@
                   "name": "dict",
                   "type": "[String: Any]",
                   "description": "Dictionary with `w` and/or `h` (can be numbers or percentage strings like \"50%\")",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11277,7 +11602,8 @@
                   "name": "value",
                   "type": "Double",
                   "description": "Opacity from 0.0 (transparent) to 1.0 (opaque)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11300,7 +11626,8 @@
                   "name": "font",
                   "type": "HSFont",
                   "description": "An HSFont object (e.g., `HSFont.title()`)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11323,7 +11650,8 @@
                   "name": "colorValue",
                   "type": "JSValue",
                   "description": "Color as hex string or HSColor",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11362,7 +11690,8 @@
                   "name": "mode",
                   "type": "String",
                   "description": "\"fit\" (scales to fit within frame) or \"fill\" (scales to fill frame)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11385,7 +11714,8 @@
                   "name": "value",
                   "type": "Double",
                   "description": "Padding in points",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11408,7 +11738,8 @@
                   "name": "value",
                   "type": "Double",
                   "description": "Spacing in points",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11422,16 +11753,17 @@
             },
             {
               "name": "onClick",
-              "signature": "func onClick(_ callback: JSValue) -> HSUIWindow",
+              "signature": "func onClick(_ callback: JSFunction) -> HSUIWindow",
               "isStatic": false,
               "rawDocumentation": "Set a callback to fire when the element is clicked\n- Parameter callback: A JavaScript function to call on click\n- Returns: Self for chaining",
               "description": "Set a callback to fire when the element is clicked",
               "params": [
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "A JavaScript function to call on click",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11445,16 +11777,17 @@
             },
             {
               "name": "onHover",
-              "signature": "func onHover(_ callback: JSValue) -> HSUIWindow",
+              "signature": "func onHover(_ callback: JSFunction) -> HSUIWindow",
               "isStatic": false,
               "rawDocumentation": "Set a callback to fire when the cursor enters or leaves the element\n- Parameter callback: A JavaScript function called with a boolean: true when entering, false when leaving\n- Returns: Self for chaining",
               "description": "Set a callback to fire when the cursor enters or leaves the element",
               "params": [
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "A JavaScript function called with a boolean: true when entering, false when leaving",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11486,7 +11819,8 @@
                   "name": "font",
                   "type": "HSFont",
                   "description": "An HSFont object (e.g., `HSFont.headline()`)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11514,7 +11848,8 @@
                   "name": "seconds",
                   "type": "Double",
                   "description": "Duration in seconds (default: 5.0)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11542,7 +11877,8 @@
                   "name": "points",
                   "type": "Double",
                   "description": "Padding in points (default: 20)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11570,7 +11906,8 @@
                   "name": "dict",
                   "type": "[String: Any]",
                   "description": "Dictionary with `x` and `y` coordinates",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11646,7 +11983,8 @@
                   "name": "text",
                   "type": "String",
                   "description": "The informative text",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11674,7 +12012,8 @@
                   "name": "labels",
                   "type": "[String]",
                   "description": "Array of button labels (default: [\"OK\"])",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11702,7 +12041,8 @@
                   "name": "style",
                   "type": "String",
                   "description": "Style name (e.g., \"informational\", \"warning\", \"critical\")",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11721,16 +12061,17 @@
             },
             {
               "name": "onButton",
-              "signature": "func onButton(_ callback: JSValue) -> HSUIDialog",
+              "signature": "func onButton(_ callback: JSFunction) -> HSUIDialog",
               "isStatic": false,
               "rawDocumentation": "Set the callback for button presses\n- Parameter callback: Function receiving button index (0-based)\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.dialog(\"Confirm?\")\n    .onButton((i) => console.log(\"button\", i))\n    .show()\n```",
               "description": "Set the callback for button presses",
               "params": [
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "Function receiving button index (0-based)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11806,7 +12147,8 @@
                   "name": "text",
                   "type": "String",
                   "description": "The message text",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11834,7 +12176,8 @@
                   "name": "path",
                   "type": "String",
                   "description": "Path to directory (supports `~` for home)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11862,7 +12205,8 @@
                   "name": "value",
                   "type": "Bool",
                   "description": "true to allow file selection (default: true)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11890,7 +12234,8 @@
                   "name": "value",
                   "type": "Bool",
                   "description": "true to allow directory selection (default: false)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11918,7 +12263,8 @@
                   "name": "value",
                   "type": "Bool",
                   "description": "true to allow multiple selection (default: false)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11946,7 +12292,8 @@
                   "name": "types",
                   "type": "[String]",
                   "description": "Array of file extensions (e.g., [\"txt\", \"md\"])",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11974,7 +12321,8 @@
                   "name": "value",
                   "type": "Bool",
                   "description": "true to resolve aliases (default: true)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -11993,16 +12341,17 @@
             },
             {
               "name": "onSelection",
-              "signature": "func onSelection(_ callback: JSValue) -> HSUIFilePicker",
+              "signature": "func onSelection(_ callback: JSFunction) -> HSUIFilePicker",
               "isStatic": false,
               "rawDocumentation": "Set the callback for file selection\n- Parameter callback: Function receiving selected path(s) or null if cancelled\n  - Single selection: receives a string path or null\n  - Multiple selection: receives an array of paths or null\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.filePicker()\n    .onSelection((path) => console.log(\"picked:\", path))\n    .show()\n```",
               "description": "Set the callback for file selection",
               "params": [
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "Function receiving selected path(s) or null if cancelled",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -12057,7 +12406,8 @@
                   "name": "text",
                   "type": "String",
                   "description": "The informative text",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -12085,7 +12435,8 @@
                   "name": "text",
                   "type": "String",
                   "description": "Default text value",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -12113,7 +12464,8 @@
                   "name": "labels",
                   "type": "[String]",
                   "description": "Array of button labels (default: [\"OK\", \"Cancel\"])",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -12132,16 +12484,17 @@
             },
             {
               "name": "onButton",
-              "signature": "func onButton(_ callback: JSValue) -> HSUITextPrompt",
+              "signature": "func onButton(_ callback: JSFunction) -> HSUITextPrompt",
               "isStatic": false,
               "rawDocumentation": "Set the callback for button presses\n- Parameter callback: Function receiving (buttonIndex, inputText)\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.textPrompt(\"Name?\")\n    .onButton((idx, text) => console.log(idx, text))\n    .show()\n```",
               "description": "Set the callback for button presses",
               "params": [
                 {
                   "name": "callback",
-                  "type": "JSValue",
+                  "type": "JSFunction",
                   "description": "Function receiving (buttonIndex, inputText)",
-                  "optional": false
+                  "optional": false,
+                  "tsType": null
                 }
               ],
               "returns": {
@@ -12260,7 +12613,8 @@
               "name": "app",
               "type": "HSApplication",
               "description": "An HSApplication object",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -12288,7 +12642,8 @@
               "name": "screenIndex",
               "type": "Int",
               "description": "The screen index (0 for main screen)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -12316,7 +12671,8 @@
               "name": "point",
               "type": "HSPoint",
               "description": "An HSPoint containing the coordinates",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -12859,25 +13215,29 @@
               "name": "r",
               "type": "Double",
               "description": "Red component (0.0-1.0)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "g",
               "type": "Double",
               "description": "Green component (0.0-1.0)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "b",
               "type": "Double",
               "description": "Blue component (0.0-1.0)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "a",
               "type": "Double",
               "description": "Alpha component (0.0-1.0)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -12900,7 +13260,8 @@
               "name": "hex",
               "type": "String",
               "description": "Hex string (e.g. \"#FF0000\" or \"FF0000\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -12923,7 +13284,8 @@
               "name": "name",
               "type": "String",
               "description": "Name of the system color (e.g. \"red\", \"blue\", \"systemBlue\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -12946,7 +13308,8 @@
               "name": "color",
               "type": "HSColor",
               "description": "The HSColor to copy from",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -12971,7 +13334,8 @@
               "name": "hex",
               "type": "String",
               "description": "Hex color string (e.g. \"#FF0000\" or \"FF0000\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -13182,7 +13546,8 @@
               "name": "size",
               "type": "Double",
               "description": "The font size in points",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13205,13 +13570,15 @@
               "name": "size",
               "type": "Double",
               "description": "The font size in points",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "weight",
               "type": "String",
               "description": "The font weight as a string (e.g. \"ultralight\", \"thin\", \"light\", \"regular\", \"medium\", \"semibold\", \"bold\", \"heavy\", \"black\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13234,13 +13601,15 @@
               "name": "name",
               "type": "String",
               "description": "A string containing the name of the font to instantiate",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "size",
               "type": "Double",
               "description": "The font size in points",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13273,7 +13642,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the image file",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13301,7 +13671,8 @@
               "name": "name",
               "type": "String",
               "description": "Name of the system image (e.g., \"NSComputer\", \"NSFolder\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13329,7 +13700,8 @@
               "name": "name",
               "type": "String",
               "description": "Name of the symbol (e.g., \"hammer\", \"questionmark.circle\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13357,13 +13729,15 @@
               "name": "bundleID",
               "type": "String",
               "description": "Bundle identifier of the application",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "withFallbackSymbol",
               "type": "String",
               "description": "The name of an SF Symbol to use if no bundle image could be loaded. Defaults to questionmark.circle",
-              "optional": true
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13391,7 +13765,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the file",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13419,7 +13794,8 @@
               "name": "fileType",
               "type": "String",
               "description": "File extension or UTI (e.g., \"png\", \"public.png\")",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13447,7 +13823,8 @@
               "name": "url",
               "type": "String",
               "description": "URL string of the image",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13497,7 +13874,8 @@
               "name": "rect",
               "type": "HSRect",
               "description": "HSRect defining the crop area (x, y, w, h)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13525,7 +13903,8 @@
               "name": "path",
               "type": "String",
               "description": "Destination file path (extension determines format: png, jpg, tiff, bmp, gif)",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -13553,7 +13932,8 @@
               "name": "path",
               "type": "String",
               "description": "Path to the image file. `~` is expanded.",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -13578,7 +13958,8 @@
               "name": "image",
               "type": "HSImage",
               "description": "The HSImage whose content to copy",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -13659,13 +14040,15 @@
               "name": "x",
               "type": "Double",
               "description": "A coordinate for this point on the x-axis",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "y",
               "type": "Double",
               "description": "A coordinate for this point on the y-axis",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -13716,25 +14099,29 @@
               "name": "x",
               "type": "Double",
               "description": "The x-axis coordinate of the top-left corner",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "y",
               "type": "Double",
               "description": "The y-axis coordinate of the top-left corner",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "w",
               "type": "Double",
               "description": "The width of the rectangle",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "h",
               "type": "Double",
               "description": "The height of the rectangle",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -13825,13 +14212,15 @@
               "name": "w",
               "type": "Double",
               "description": "The width of the rectangle",
-              "optional": false
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "h",
               "type": "Double",
               "description": "The height of the rectangle",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -13882,7 +14271,8 @@
               "name": "newValue",
               "type": "String",
               "description": "The new string",
-              "optional": false
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": null,
@@ -13907,5 +14297,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-06-23T13:53:59.836Z"
+  "generatedAt": "2026-06-23T19:54:40.393Z"
 }

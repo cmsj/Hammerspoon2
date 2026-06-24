@@ -23,7 +23,7 @@ import JavaScriptCore
     /// const t = hs.timer.create(5, () => console.log("tick"), false)
     /// t.start()
     /// ```
-    @objc func create(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer
+    @objc func create(_ interval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool) -> HSTimer
 
     /// Create and start a one-shot timer
     /// - Parameters:
@@ -34,7 +34,7 @@ import JavaScriptCore
     /// ```js
     /// hs.timer.doAfter(5, () => console.log("fired"))
     /// ```
-    @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer
+    @objc func doAfter(_ seconds: TimeInterval, _ callback: JSFunction) -> HSTimer
 
     /// Create and start a repeating timer
     /// - Parameters:
@@ -45,7 +45,7 @@ import JavaScriptCore
     /// ```js
     /// hs.timer.doEvery(60, () => console.log("every minute"))
     /// ```
-    @objc func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimer
+    @objc func doEvery(_ interval: TimeInterval, _ callback: JSFunction) -> HSTimer
 
     /// Create and start a timer that fires at a specific time
     /// - Parameters:
@@ -60,7 +60,7 @@ import JavaScriptCore
     /// hs.timer.doAt(9 * 3600, 86400, () => console.log("morning"), false)
     /// ```
     @objc(doAt::::)
-    func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool) -> HSTimer
+    func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool) -> HSTimer
 
     /// Block execution for a specified number of microseconds (strongly discouraged)
     /// - Parameter microseconds: Number of microseconds to sleep
@@ -137,7 +137,7 @@ import JavaScriptCore
     /// let count = 0
     /// hs.timer.doUntil(() => count >= 3, () => { count++; console.log(count) }, 1)
     /// ```
-    @objc var doUntil: JSValue? { get set }
+    @objc var doUntil: JSFunction? { get set }
 
     /// Repeat a function while a predicate returns true. Swift-retained storage for the JS implementation.
     /// - Example:
@@ -145,21 +145,21 @@ import JavaScriptCore
     /// let count = 0
     /// hs.timer.doWhile(() => count < 3, () => { count++; console.log(count) }, 1)
     /// ```
-    @objc var doWhile: JSValue? { get set }
+    @objc var doWhile: JSFunction? { get set }
 
     /// Wait to call a function until a predicate returns true. Swift-retained storage for the JS implementation.
     /// - Example:
     /// ```js
     /// hs.timer.waitUntil(() => someCondition, () => console.log("ready"), 0.5)
     /// ```
-    @objc var waitUntil: JSValue? { get set }
+    @objc var waitUntil: JSFunction? { get set }
 
     /// Wait to call a function until a predicate returns false. Swift-retained storage for the JS implementation.
     /// - Example:
     /// ```js
     /// hs.timer.waitWhile(() => stillLoading, () => console.log("done"), 0.5)
     /// ```
-    @objc var waitWhile: JSValue? { get set }
+    @objc var waitWhile: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -197,34 +197,34 @@ import JavaScriptCore
     }
 
     // MARK: - Swift-retained storage for JS-defined functions
-    @objc var doUntil: JSValue? = nil
-    @objc var doWhile: JSValue? = nil
-    @objc var waitUntil: JSValue? = nil
-    @objc var waitWhile: JSValue? = nil
+    @objc var doUntil: JSFunction? = nil
+    @objc var doWhile: JSFunction? = nil
+    @objc var waitUntil: JSFunction? = nil
+    @objc var waitWhile: JSFunction? = nil
 
     // MARK: - Timer constructors
 
-    @objc func create(_ interval: TimeInterval, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimer {
+    @objc func create(_ interval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool = false) -> HSTimer {
         let timer = HSTimer(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError)
         timers.add(timer)
         return timer
     }
 
-    @objc func doAfter(_ seconds: TimeInterval, _ callback: JSValue) -> HSTimer {
+    @objc func doAfter(_ seconds: TimeInterval, _ callback: JSFunction) -> HSTimer {
         let timer = HSTimer(interval: seconds, repeats: false, callback: callback)
         timers.add(timer)
         timer.start()
         return timer
     }
 
-    @objc func doEvery(_ interval: TimeInterval, _ callback: JSValue) -> HSTimer {
+    @objc func doEvery(_ interval: TimeInterval, _ callback: JSFunction) -> HSTimer {
         let timer = HSTimer(interval: interval, repeats: true, callback: callback)
         timers.add(timer)
         timer.start()
         return timer
     }
 
-    @objc func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval = 0, _ callback: JSValue, _ continueOnError: Bool = false) -> HSTimer {
+    @objc func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval = 0, _ callback: JSFunction, _ continueOnError: Bool = false) -> HSTimer {
         // Calculate seconds until target time (time is seconds since midnight)
         let now = localTime()
         var secondsUntilTarget = time - now

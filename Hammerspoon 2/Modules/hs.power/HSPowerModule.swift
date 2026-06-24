@@ -214,7 +214,7 @@ import IOKit.pwr_mgt
     ///   ```js
     ///   hs.power.addEventWatcher(event => console.log("Power event: " + event))
     ///   ```
-    func addEventWatcher(_ listener: JSValue)
+    func addEventWatcher(_ listener: JSFunction)
 
     /// Removes a previously registered power event listener.
     ///
@@ -225,14 +225,14 @@ import IOKit.pwr_mgt
     ///   hs.power.addEventWatcher(handler)
     ///   hs.power.removeEventWatcher(handler)
     ///   ```
-    func removeEventWatcher(_ listener: JSValue)
+    func removeEventWatcher(_ listener: JSFunction)
 
     /// SKIP_DOCS
-    @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSValue)
+    @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSFunction)
     /// SKIP_DOCS
     @objc func _removeEventWatcher()
     /// SKIP_DOCS
-    @objc var _eventWatcherEmitter: JSValue? { get set }
+    @objc var _eventWatcherEmitter: JSFunction? { get set }
 
     // MARK: Battery Watcher (Pattern A)
 
@@ -250,7 +250,7 @@ import IOKit.pwr_mgt
     ///       console.log("Battery now: " + hs.power.percentage + "%")
     ///   })
     ///   ```
-    func addBatteryWatcher(_ listener: JSValue)
+    func addBatteryWatcher(_ listener: JSFunction)
 
     /// Removes a previously registered battery change listener.
     ///
@@ -261,14 +261,14 @@ import IOKit.pwr_mgt
     ///   hs.power.addBatteryWatcher(handler)
     ///   hs.power.removeBatteryWatcher(handler)
     ///   ```
-    func removeBatteryWatcher(_ listener: JSValue)
+    func removeBatteryWatcher(_ listener: JSFunction)
 
     /// SKIP_DOCS
-    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSValue)
+    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction)
     /// SKIP_DOCS
     @objc func _removeBatteryWatcher()
     /// SKIP_DOCS
-    @objc var _batteryWatcherEmitter: JSValue? { get set }
+    @objc var _batteryWatcherEmitter: JSFunction? { get set }
 }
 
 // MARK: - Module implementation
@@ -281,13 +281,13 @@ import IOKit.pwr_mgt
 
     private var sleepAssertions: [String: IOPMAssertionID] = [:]
 
-    @objc var _eventWatcherEmitter: JSValue? = nil
-    private var eventWatcherCallback: JSValue?
+    @objc var _eventWatcherEmitter: JSFunction? = nil
+    private var eventWatcherCallback: JSFunction?
     private var workspaceObservers: [NSObjectProtocol] = []
     private var distributedObservers: [NSObjectProtocol] = []
 
-    @objc var _batteryWatcherEmitter: JSValue? = nil
-    private var batteryWatcherCallback: JSValue?
+    @objc var _batteryWatcherEmitter: JSFunction? = nil
+    private var batteryWatcherCallback: JSFunction?
     private var batteryRunLoopSource: CFRunLoopSource?
     private var batteryContextPointer: UnsafeMutableRawPointer?
 
@@ -546,15 +546,15 @@ import IOKit.pwr_mgt
 
     // MARK: - Event Watcher (Pattern A)
 
-    func addEventWatcher(_ listener: JSValue) {
+    func addEventWatcher(_ listener: JSFunction) {
         _eventWatcherEmitter?.invokeMethod("on", withArguments: [listener])
     }
 
-    func removeEventWatcher(_ listener: JSValue) {
+    func removeEventWatcher(_ listener: JSFunction) {
         _eventWatcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
     }
 
-    @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSValue) {
+    @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSFunction) {
         guard eventWatcherCallback == nil else {
             AKWarning("hs.power._addEventWatcher: already watching — refusing second subscription")
             return
@@ -604,15 +604,15 @@ import IOKit.pwr_mgt
 
     // MARK: - Battery Watcher (Pattern A)
 
-    func addBatteryWatcher(_ listener: JSValue) {
+    func addBatteryWatcher(_ listener: JSFunction) {
         _batteryWatcherEmitter?.invokeMethod("on", withArguments: [listener])
     }
 
-    func removeBatteryWatcher(_ listener: JSValue) {
+    func removeBatteryWatcher(_ listener: JSFunction) {
         _batteryWatcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
     }
 
-    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSValue) {
+    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction) {
         guard batteryWatcherCallback == nil else {
             AKWarning("hs.power._addBatteryWatcher: already watching — refusing second subscription")
             return

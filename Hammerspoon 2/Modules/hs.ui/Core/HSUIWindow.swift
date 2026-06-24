@@ -207,12 +207,12 @@ import SwiftUI
     /// Set a callback to fire when the element is clicked
     /// - Parameter callback: A JavaScript function to call on click
     /// - Returns: Self for chaining
-    @objc func onClick(_ callback: JSValue) -> HSUIWindow
+    @objc func onClick(_ callback: JSFunction) -> HSUIWindow
 
     /// Set a callback to fire when the cursor enters or leaves the element
     /// - Parameter callback: A JavaScript function called with a boolean: true when entering, false when leaving
     /// - Returns: Self for chaining
-    @objc func onHover(_ callback: JSValue) -> HSUIWindow
+    @objc func onHover(_ callback: JSFunction) -> HSUIWindow
 }
 
 @MainActor
@@ -534,7 +534,7 @@ import SwiftUI
 
     // MARK: - Interaction Callbacks
 
-    @objc func onClick(_ callback: JSValue) -> HSUIWindow {
+    @objc func onClick(_ callback: JSFunction) -> HSUIWindow {
         if let interactive = currentElement as? any InteractiveModifiable {
             interactive.clickCallback = { callback.call(withArguments: []) }
         } else {
@@ -543,7 +543,7 @@ import SwiftUI
         return self
     }
 
-    @objc func onHover(_ callback: JSValue) -> HSUIWindow {
+    @objc func onHover(_ callback: JSFunction) -> HSUIWindow {
         if let interactive = currentElement as? any InteractiveModifiable {
             interactive.hoverCallback = { isHovered in callback.call(withArguments: [isHovered]) }
         } else {
