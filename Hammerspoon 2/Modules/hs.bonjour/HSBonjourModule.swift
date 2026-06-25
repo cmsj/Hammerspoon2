@@ -109,7 +109,7 @@ import dnssd
     ///     if (ev === 'published') console.log('Now advertising!')
     /// })
     /// ```
-    @objc func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: String, _ callback: JSFunction)
+    @objc func advertise(_ name: String, _ type: String, _ port: Int, _ domain: String, _ callback: JSFunction)
 
     /// Stops advertising a service previously started with `advertise()`.
     /// - Parameter name: the name passed to `advertise()`
@@ -210,7 +210,7 @@ import dnssd
         AKTrace("HSBonjourModule: Removed search \(search.identifier)")
     }
 
-    @objc func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: String, _ callback: JSFunction) {
+    @objc func advertise(_ name: String, _ type: String, _ port: Int, _ domain: String, _ callback: JSFunction) {
         let effectiveDomain: String
         let effectiveCallback: JSFunction?
         effectiveDomain = domain == "" ? "local." : domain
@@ -291,10 +291,10 @@ private class AdvertisedService: NSObject, NetServiceDelegate {
     private var service: NetService?
     private var callback: JSCallback?
 
-    init(name: String, type: String, port: Int32, domain: String, callback: JSFunction?) {
+    init(name: String, type: String, port: Int, domain: String, callback: JSFunction?) {
         super.init()
 
-        self.service = NetService(domain: domain, type: type, name: name, port: port)
+        self.service = NetService(domain: domain, type: type, name: name, port: Int32(port))
         unsafe self.service?.delegate = self
 
         if let callback {

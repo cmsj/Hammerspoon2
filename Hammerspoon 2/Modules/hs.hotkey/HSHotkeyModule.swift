@@ -26,7 +26,7 @@ import Carbon
     ///     console.log("Hello!")
     /// })
     /// ```
-    @objc func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?
+    @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?
 
     /// Bind a hotkey with a message description
     /// - Parameters:
@@ -43,7 +43,7 @@ import Carbon
     /// }, null)
     /// ```
     @objc(bindSpec:::::)
-    func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?
+    func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?
 
     /// Get the system-wide mapping of key names to key codes
     /// - Returns: A dictionary mapping key names to numeric key codes
@@ -94,11 +94,11 @@ import Carbon
 
     // MARK: - Hotkey binding
 
-    @objc func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey? {
+    @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey? {
         return bindSpec(mods, key, nil, callbackPressed, callbackReleased)
     }
 
-    @objc func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey? {
+    @objc func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey? {
         // Parse modifiers
         guard let modifierFlags = parseModifiers(mods) else {
             AKError("hs.hotkey.bind: Invalid modifiers")
@@ -144,22 +144,15 @@ import Carbon
         return ModifierMapper.modifierMap
     }
 
-    private func parseModifiers(_ modsValue: JSValue) -> UInt32? {
-        guard modsValue.isArray else {
-            AKError("hs.hotkey.bind(): Modifiers must be an array.")
-            return nil
-        }
-
+    private func parseModifiers(_ modsValue: [String]) -> UInt32? {
         var flags: UInt32 = 0
 
-        if let modsArray = modsValue.toArray() as? [String] {
-            for mod in modsArray {
-                guard let modFlag = ModifierMapper.modifierMap[mod.lowercased()] else {
-                    AKError("hs.hotkey: Unknown modifier '\(mod)'")
-                    return nil
-                }
-                flags |= modFlag
+        for mod in modsValue {
+            guard let modFlag = ModifierMapper.modifierMap[mod.lowercased()] else {
+                AKError("hs.hotkey: Unknown modifier '\(mod)'")
+                return nil
             }
+            flags |= modFlag
         }
 
         return flags

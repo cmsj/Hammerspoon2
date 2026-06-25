@@ -2663,7 +2663,7 @@
         },
         {
           "name": "advertise",
-          "signature": "func advertise(_ name: String, _ type: String, _ port: Int32, _ domain: String, _ callback: JSFunction)",
+          "signature": "func advertise(_ name: String, _ type: String, _ port: Int, _ domain: String, _ callback: JSFunction)",
           "isStatic": false,
           "rawDocumentation": "Starts advertising a local service on the network.\n\nThe optional callback receives `(event)` or `(event, errorMessage)`:\n- `\"published\"` — now advertising\n- `\"stopped\"` — advertisement stopped\n- `\"error\"` — publication failed; error message in second argument\n\nIf `domain` is omitted or not a string, it defaults to `\"local.\"`.\nIf the 4th argument is a function, it is used as the callback and domain\ndefaults to `\"local.\"`.\n- Parameter name: human-readable name shown to browsers (e.g. `\"My Web Server\"`)\n- Parameter type: service type in `\"_proto._tcp.\"` or `\"_proto._udp.\"` form\n- Parameter port: port number the service listens on\n- Parameter domain: mDNS domain; defaults to `\"local.\"` if an empty string is passed\n- Parameter callback?: optional `function(event, data?)` called on status changes\n- Example:\n```js\nhs.bonjour.advertise('My Server', '_http._tcp.', 8080, '', ev => {\n    if (ev === 'published') console.log('Now advertising!')\n})\n```",
           "description": "Starts advertising a local service on the network.\nIf `domain` is omitted or not a string, it defaults to `\"local.\"`.\nIf the 4th argument is a function, it is used as the callback and domain\ndefaults to `\"local.\"`.",
@@ -2684,7 +2684,7 @@
             },
             {
               "name": "port",
-              "type": "Int32",
+              "type": "number",
               "description": "port number the service listens on",
               "optional": false,
               "tsType": null
@@ -3713,7 +3713,7 @@
             },
             {
               "name": "rowContents",
-              "signature": "func rowContents(_ index: Int) -> NSDictionary?",
+              "signature": "func rowContents(_ index: Int) -> [String: Any]?",
               "isStatic": false,
               "rawDocumentation": "Returns the dict for a specific row by index.\nReturns `null` if the index is out of range or no choices are set.\n\n- Parameter index: Zero-based row index\n- Returns: The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.\n- Example:\n```js\nconst item = chooser.rowContents(2)\n```",
               "description": "Returns the dict for a specific row by index.\nReturns `null` if the index is out of range or no choices are set.",
@@ -3727,7 +3727,7 @@
                 }
               ],
               "returns": {
-                "type": "NSDictionary",
+                "type": "Object<String, Any>",
                 "description": "The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`."
               },
               "examples": [
@@ -3742,13 +3742,13 @@
             },
             {
               "name": "currentRowContents",
-              "signature": "func currentRowContents() -> NSDictionary?",
+              "signature": "func currentRowContents() -> [String: Any]?",
               "isStatic": false,
               "rawDocumentation": "Returns the dict for the currently highlighted row.\nReturns `null` if no choices are set or the chooser is empty.\n\n- Returns: The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.\n- Example:\n```js\nconst item = chooser.currentRowContents()\n```",
               "description": "Returns the dict for the currently highlighted row.\nReturns `null` if no choices are set or the chooser is empty.",
               "params": [],
               "returns": {
-                "type": "NSDictionary",
+                "type": "Object<String, Any>",
                 "description": "The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`."
               },
               "examples": [
@@ -5533,14 +5533,14 @@
       "methods": [
         {
           "name": "bind",
-          "signature": "func bind(_ mods: JSValue, _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
+          "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
           "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"])\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\")\n  - callbackPressed: A JavaScript function to call when the hotkey is pressed\n  - callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\n```",
           "description": "Bind a hotkey",
           "params": [
             {
               "name": "mods",
-              "type": "JSValue",
+              "type": "Array<String>",
               "description": "An array of modifier key strings (e.g., [\"cmd\", \"shift\"])",
               "optional": false,
               "tsType": null
@@ -5583,14 +5583,14 @@
         },
         {
           "name": "bindSpec",
-          "signature": "func bindSpec(_ mods: JSValue, _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
+          "signature": "func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
           "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n  - message: A description of what this hotkey does (currently unused, for future features)\n  - callbackPressed: A JavaScript function to call when the hotkey is pressed\n  - callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bindSpec([\"cmd\"], \"space\", \"Spotlight-like\", () => {\n    console.log(\"pressed\")\n}, null)\n```",
           "description": "Bind a hotkey with a message description",
           "params": [
             {
               "name": "mods",
-              "type": "JSValue",
+              "type": "Array<String>",
               "description": "An array of modifier key strings",
               "optional": false,
               "tsType": null
@@ -14203,5 +14203,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-24T23:22:16.345Z"
+  "generatedAt": "2026-06-25T12:23:53.206Z"
 }

@@ -247,7 +247,7 @@ import SwiftUI
     /// ```js
     /// const item = chooser.rowContents(2)
     /// ```
-    @objc func rowContents(_ index: Int) -> NSDictionary?
+    @objc func rowContents(_ index: Int) -> [String: Any]?
 
     /// Returns the dict for the currently highlighted row.
     /// Returns `null` if no choices are set or the chooser is empty.
@@ -257,7 +257,7 @@ import SwiftUI
     /// ```js
     /// const item = chooser.currentRowContents()
     /// ```
-    @objc func currentRowContents() -> NSDictionary?
+    @objc func currentRowContents() -> [String: Any]?
 }
 
 // MARK: -
@@ -454,12 +454,12 @@ import SwiftUI
         return self
     }
 
-    @objc func rowContents(_ index: Int) -> NSDictionary? {
+    @objc func rowContents(_ index: Int) -> [String: Any]? {
         guard index >= 0, index < viewModel.filteredChoices.count else { return nil }
         return buildReturnDict(for: viewModel.filteredChoices[index])
     }
 
-    @objc func currentRowContents() -> NSDictionary? {
+    @objc func currentRowContents() -> [String: Any]? {
         let index = viewModel.selectedIndex
         guard index >= 0, index < viewModel.filteredChoices.count else { return nil }
         return buildReturnDict(for: viewModel.filteredChoices[index])
@@ -659,8 +659,8 @@ import SwiftUI
         }
     }
 
-    private func buildReturnDict(for item: ChooserItem) -> NSMutableDictionary {
-        let dict = NSMutableDictionary(dictionary: item.extra)
+    private func buildReturnDict(for item: ChooserItem) -> [String: Any] {
+        var dict = item.extra
         dict["text"] = item.text
         if let subText = item.subText { dict["subText"] = subText }
         if let image = item.image { dict["image"] = HSImage(image: image) }

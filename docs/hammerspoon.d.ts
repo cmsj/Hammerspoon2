@@ -1275,7 +1275,7 @@ defaults to `"local."`.
      * @param domain mDNS domain; defaults to `"local."` if an empty string is passed
      * @param callback optional `function(event, data?)` called on status changes
      */
-    function advertise(name: string, type: string, port: Int32, domain: string, callback?: (...args: any[]) => any): void;
+    function advertise(name: string, type: string, port: number, domain: string, callback?: (...args: any[]) => any): void;
 
     /**
      * Stops advertising a service previously started with `advertise()`.
@@ -1756,14 +1756,14 @@ Returns `null` if the index is out of range or no choices are set.
      * @param index Zero-based row index
      * @returns The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.
      */
-    rowContents(index: number): NSDictionary | undefined;
+    rowContents(index: number): Record<string, any> | undefined;
 
     /**
      * Returns the dict for the currently highlighted row.
 Returns `null` if no choices are set or the chooser is empty.
      * @returns The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.
      */
-    currentRowContents(): NSDictionary | undefined;
+    currentRowContents(): Record<string, any> | undefined;
 
     /**
      * Read-only type identifier.
@@ -2305,7 +2305,7 @@ declare namespace hs.hotkey {
      * @param callbackReleased A JavaScript function to call when the hotkey is released
      * @returns A hotkey object, or nil if binding failed
      */
-    function bind(mods: JSValue, key: string, callbackPressed: (...args: any[]) => any, callbackReleased: (...args: any[]) => any): HSHotkey | undefined;
+    function bind(mods: string[], key: string, callbackPressed: (...args: any[]) => any, callbackReleased: (...args: any[]) => any): HSHotkey | undefined;
 
     /**
      * Bind a hotkey with a message description
@@ -2316,7 +2316,7 @@ declare namespace hs.hotkey {
      * @param callbackReleased A JavaScript function to call when the hotkey is released
      * @returns A hotkey object, or nil if binding failed
      */
-    function bindSpec(mods: JSValue, key: string, message: string | undefined, callbackPressed: (...args: any[]) => any, callbackReleased: (...args: any[]) => any): HSHotkey | undefined;
+    function bindSpec(mods: string[], key: string, message: string | undefined, callbackPressed: (...args: any[]) => any, callbackReleased: (...args: any[]) => any): HSHotkey | undefined;
 
     /**
      * Get the system-wide mapping of key names to key codes
