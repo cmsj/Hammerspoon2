@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     // Target modern JavaScript
-    "target": "ES2020",
+    "target": "ES2025",
     "module": "commonjs",
-    "lib": ["ES2020"],
+    "lib": ["ES2025"],
 
     // Output directory for compiled JavaScript
     "outDir": "./compiled",

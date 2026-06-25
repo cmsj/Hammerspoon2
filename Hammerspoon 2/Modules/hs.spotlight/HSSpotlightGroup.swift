@@ -33,7 +33,7 @@ import JavaScriptCore
     /// ```js
     /// q.groups().forEach(g => console.log(g.attribute + ' = ' + g.value()))
     /// ```
-    @objc func value() -> NSObject?
+    @objc func value() -> Any?
 
     /// The number of results contained in this group.
     /// - Example:
@@ -91,7 +91,7 @@ import JavaScriptCore
 
     @objc var attribute: String { group.attribute }
 
-    @objc func value() -> NSObject? {
+    @objc func value() -> Any? {
         HSSpotlightItem.bridge(group.value)
     }
 

@@ -73,8 +73,8 @@ import CoreLocation
     private let geocoder = CLGeocoder()
 
     // Convert CLPlacemark to a plain JS-compatible dictionary
-    static func placemarkTable(from pm: CLPlacemark) -> [AnyHashable: Any] {
-        var d: [AnyHashable: Any] = [:]
+    static func placemarkTable(from pm: CLPlacemark) -> [String: Any] {
+        var d: [String: Any] = [:]
         if let v = pm.name                  { d["name"]                  = v }
         if let v = pm.locality              { d["locality"]              = v }
         if let v = pm.subLocality           { d["subLocality"]           = v }

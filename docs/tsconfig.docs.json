@@ -1,5 +1,8 @@
 {
   "files": ["hammerspoon.d.ts"],
+  "compilerOptions": {
+      "lib": ["ES2025"]
+  },
   "typedocOptions": {
     "entryPoints": ["hammerspoon.d.ts"],
     "out": "html/ts"

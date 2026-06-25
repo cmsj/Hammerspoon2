@@ -44,7 +44,7 @@ import JavaScriptCore
     /// const name = item.valueForAttribute('kMDItemDisplayName')
     /// console.log(name + ' at ' + path)
     /// ```
-    @objc func valueForAttribute(_ key: String) -> NSObject?
+    @objc func valueForAttribute(_ key: String) -> Any?
 }
 
 @_documentation(visibility: private)
@@ -68,7 +68,7 @@ import JavaScriptCore
         item.attributes
     }
 
-    @objc func valueForAttribute(_ key: String) -> NSObject? {
+    @objc func valueForAttribute(_ key: String) -> Any? {
         guard let raw = item.value(forAttribute: key) else { return nil }
         return Self.bridge(raw)
     }
@@ -77,7 +77,7 @@ import JavaScriptCore
 
     /// Converts arbitrary metadata values into types that JavaScriptCore can bridge.
     /// URLs become their absolute-string form; everything else passes through as NSObject.
-    static func bridge(_ value: Any) -> NSObject? {
+    static func bridge(_ value: Any) -> Any? {
         switch value {
         case let url as URL:
             return url.absoluteString as NSString

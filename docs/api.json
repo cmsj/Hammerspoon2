@@ -4910,7 +4910,7 @@
         },
         {
           "name": "attributes",
-          "signature": "func attributes(_ path: String) -> NSDictionary?",
+          "signature": "func attributes(_ path: String) -> [String: Any]?",
           "isStatic": false,
           "rawDocumentation": "Get metadata attributes for a file or directory.\n\nDoes not follow symbolic links. Use `isSymlink` to detect links before calling this if needed.\n\nReturns an object with:\n- `size` — Size in bytes (`number`).\n- `type` — One of `\"file\"`, `\"directory\"`, `\"symlink\"`, `\"socket\"`, `\"characterSpecial\"`, `\"blockSpecial\"`, or `\"unknown\"`.\n- `permissions` — POSIX permission bits as an integer (e.g. `0o644` = `420`).\n- `ownerID` — Owner UID.\n- `groupID` — Owner GID.\n- `inode` — Inode number.\n- `creationDate` — Creation date as seconds since the Unix epoch.\n- `modificationDate` — Last modification date as seconds since the Unix epoch.\n\n- Parameter path: Path to inspect. `~` is expanded.\n- Returns: Attributes object, or `null` if the path cannot be accessed.\n- Example:\n```js\nconst info = hs.fs.attributes(\"/etc/hosts\")\nconsole.log(info.size, info.type)\n```",
           "description": "Get metadata attributes for a file or directory.\nDoes not follow symbolic links. Use `isSymlink` to detect links before calling this if needed.",
@@ -4924,7 +4924,7 @@
             }
           ],
           "returns": {
-            "type": "NSDictionary",
+            "type": "Object<String, Any>",
             "description": "Attributes object, or `null` if the path cannot be accessed."
           },
           "examples": [
@@ -5894,13 +5894,13 @@
         },
         {
           "name": "get",
-          "signature": "func get() -> [AnyHashable: Any]?",
+          "signature": "func get() -> [String: Any]?",
           "isStatic": false,
           "rawDocumentation": "Returns the most recently cached location as a locationTable, or null.\n\nActivates Location Services if not already running. The cache is updated\nperiodically while any watcher is running.\n- Returns: a locationTable, or null if no cached location is available\n- Example:\n```js\nconst loc = hs.location.get()\nif (loc) console.log(loc.latitude, loc.longitude)\n```",
           "description": "Returns the most recently cached location as a locationTable, or null.\nActivates Location Services if not already running. The cache is updated\nperiodically while any watcher is running.",
           "params": [],
           "returns": {
-            "type": "Object<AnyHashable, Any>",
+            "type": "Object<String, Any>",
             "description": "a locationTable, or null if no cached location is available"
           },
           "examples": [
@@ -6180,13 +6180,13 @@
             },
             {
               "name": "location",
-              "signature": "func location() -> [AnyHashable: Any]?",
+              "signature": "func location() -> [String: Any]?",
               "isStatic": false,
               "rawDocumentation": "Returns the most recently received location, or null if none yet.\n- Returns: a locationTable, or null\n- Example:\n```js\nconst loc = w.location()\nif (loc) console.log(`${loc.latitude}, ${loc.longitude}`)\n```",
               "description": "Returns the most recently received location, or null if none yet.",
               "params": [],
               "returns": {
-                "type": "Object<AnyHashable, Any>",
+                "type": "Object<String, Any>",
                 "description": "a locationTable, or null"
               },
               "examples": [
@@ -8097,13 +8097,13 @@
         },
         {
           "name": "batteryInfo",
-          "signature": "func batteryInfo() -> NSDictionary?",
+          "signature": "func batteryInfo() -> [String: Any]?",
           "isStatic": false,
           "rawDocumentation": "Returns a snapshot of all available battery information, or `null` if no battery is present.\n\nThe returned object contains (values may be `null` if unavailable on the current hardware):\n- `percentage` — charge level 0–100\n- `isCharging` — whether charging\n- `isCharged` — whether fully charged\n- `source` — `\"ac\"`, `\"battery\"`, `\"ups\"`, or `\"unknown\"`\n- `health` — health string, e.g. `\"Good\"`\n- `healthCondition` — health condition detail, or `null`\n- `cycleCount` — charge cycle count\n- `capacity` — current capacity in mAh\n- `maxCapacity` — current maximum capacity in mAh\n- `designCapacity` — original design capacity in mAh\n- `voltage` — voltage in millivolts\n- `amperage` — current in milliamps (negative when discharging)\n- `watts` — power in watts (negative when discharging)\n- `temperature` — temperature in °C\n- `timeRemaining` — estimated minutes remaining, or `null` if calculating\n- `timeToFullCharge` — estimated minutes to full charge, or `null` if not applicable\n- `serial` — battery serial number\n- Returns: An object with battery fields, or `null` if no battery is present.\n- Example:\n  ```js\n  const info = hs.power.batteryInfo()\n  if (info) console.log(`${info.percentage}% — ${info.timeRemaining}m remaining`)\n  ```",
           "description": "Returns a snapshot of all available battery information, or `null` if no battery is present.",
           "params": [],
           "returns": {
-            "type": "NSDictionary",
+            "type": "Object<String, Any>",
             "description": "An object with battery fields, or `null` if no battery is present."
           },
           "examples": [
@@ -8834,7 +8834,7 @@
             },
             {
               "name": "mode",
-              "signature": "var mode: NSDictionary { get }",
+              "signature": "var mode: [String: Any] { get }",
               "rawDocumentation": "The currently active display mode.\n\nAn object with keys: `width`, `height`, `scale`, `frequency`.\n- Example:\n```js\nconst s = hs.screen.primary()\nconsole.log(s.mode)\n```",
               "description": "The currently active display mode.\nAn object with keys: `width`, `height`, `scale`, `frequency`.",
               "examples": [
@@ -8849,7 +8849,7 @@
             },
             {
               "name": "availableModes",
-              "signature": "var availableModes: [NSDictionary] { get }",
+              "signature": "var availableModes: [[String: Any]] { get }",
               "rawDocumentation": "All display modes supported by this screen.\n\nEach element has keys: `width`, `height`, `scale`, `frequency`.\n- Example:\n```js\nconst s = hs.screen.primary()\nconsole.log(s.availableModes.length)\n```",
               "description": "All display modes supported by this screen.\nEach element has keys: `width`, `height`, `scale`, `frequency`.",
               "examples": [
@@ -9000,13 +9000,13 @@
           "methods": [
             {
               "name": "value",
-              "signature": "func value() -> NSObject?",
+              "signature": "func value() -> Any?",
               "isStatic": false,
               "rawDocumentation": "The shared value of the grouping attribute for all results in this group.\n\nReturns `null` only in the unlikely case that the underlying value cannot be bridged.\n- Returns: The attribute value (string, number, Date, etc.) or null\n- Example:\n```js\nq.groups().forEach(g => console.log(g.attribute + ' = ' + g.value()))\n```",
               "description": "The shared value of the grouping attribute for all results in this group.\nReturns `null` only in the unlikely case that the underlying value cannot be bridged.",
               "params": [],
               "returns": {
-                "type": "NSObject",
+                "type": "*",
                 "description": "The attribute value (string, number, Date, etc.) or null"
               },
               "examples": [
@@ -9134,7 +9134,7 @@
             },
             {
               "name": "valueForAttribute",
-              "signature": "func valueForAttribute(_ key: String) -> NSObject?",
+              "signature": "func valueForAttribute(_ key: String) -> Any?",
               "isStatic": false,
               "rawDocumentation": "Returns the value for a specific metadata attribute, or `null` if absent.\n\nThe return type depends on the attribute: common types include strings, numbers,\ndates, and arrays of strings. `NSURL`-typed values are automatically converted\nto their string representation.\n- Parameter key: An attribute key such as `\"kMDItemPath\"` or `hs.spotlight.attribute.path`\n- Returns: The attribute value, or null\n- Example:\n```js\nconst path = item.valueForAttribute(hs.spotlight.attribute.path)\nconst name = item.valueForAttribute('kMDItemDisplayName')\nconsole.log(name + ' at ' + path)\n```",
               "description": "Returns the value for a specific metadata attribute, or `null` if absent.\nThe return type depends on the attribute: common types include strings, numbers,\ndates, and arrays of strings. `NSURL`-typed values are automatically converted\nto their string representation.",
@@ -9148,7 +9148,7 @@
                 }
               ],
               "returns": {
-                "type": "NSObject",
+                "type": "*",
                 "description": "The attribute value, or null"
               },
               "examples": [
@@ -11366,15 +11366,15 @@
             },
             {
               "name": "fill",
-              "signature": "func fill(_ colorValue: JSValue) -> HSUIWindow",
+              "signature": "func fill(_ colorValue: HSColor) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Fill a shape with a color\n- Parameter colorValue: Color as hex string or HSColor\n- Returns: Self for chaining",
+              "rawDocumentation": "Fill a shape with a color\n- Parameter colorValue: Color as an HSColor\n- Returns: Self for chaining",
               "description": "Fill a shape with a color",
               "params": [
                 {
                   "name": "colorValue",
-                  "type": "JSValue",
-                  "description": "Color as hex string or HSColor",
+                  "type": "HSColor",
+                  "description": "Color as an HSColor",
                   "optional": false,
                   "tsType": null
                 }
@@ -11390,15 +11390,15 @@
             },
             {
               "name": "stroke",
-              "signature": "func stroke(_ colorValue: JSValue) -> HSUIWindow",
+              "signature": "func stroke(_ colorValue: HSColor) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Add a stroke (border) to a shape\n- Parameter colorValue: Color as hex string or HSColor\n- Returns: Self for chaining",
+              "rawDocumentation": "Add a stroke (border) to a shape\n- Parameter colorValue: Color as an HSColor\n- Returns: Self for chaining",
               "description": "Add a stroke (border) to a shape",
               "params": [
                 {
                   "name": "colorValue",
-                  "type": "JSValue",
-                  "description": "Color as hex string or HSColor",
+                  "type": "HSColor",
+                  "description": "Color as an HSColor",
                   "optional": false,
                   "tsType": null
                 }
@@ -14203,5 +14203,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-25T12:23:53.206Z"
+  "generatedAt": "2026-06-25T21:37:55.106Z"
 }

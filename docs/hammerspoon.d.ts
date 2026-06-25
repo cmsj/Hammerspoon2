@@ -2144,7 +2144,7 @@ Does not follow symbolic links. Use `isSymlink` to detect links before calling t
      * @param path Path to inspect. `~` is expanded.
      * @returns Attributes object, or `null` if the path cannot be accessed.
      */
-    function attributes(path: string): NSDictionary | undefined;
+    function attributes(path: string): Record<string, any> | undefined;
 
     /**
      * Update the modification timestamp of a file to the current time.
@@ -2421,7 +2421,7 @@ Activates Location Services if not already running. The cache is updated
 periodically while any watcher is running.
      * @returns a locationTable, or null if no cached location is available
      */
-    function get(): Record<AnyHashable, any> | undefined;
+    function get(): Record<string, any> | undefined;
 
     /**
      * Calculates the straight-line distance in metres between two locationTables.
@@ -2509,7 +2509,7 @@ declare class HSLocationWatcher {
      * Returns the most recently received location, or null if none yet.
      * @returns a locationTable, or null
      */
-    location(): Record<AnyHashable, any> | undefined;
+    location(): Record<string, any> | undefined;
 
     /**
      * The unique identifier assigned to this watcher.
@@ -3402,7 +3402,7 @@ Requires the Automation permission for System Events.
      * Returns a snapshot of all available battery information, or `null` if no battery is present.
      * @returns An object with battery fields, or `null` if no battery is present.
      */
-    function batteryInfo(): NSDictionary | undefined;
+    function batteryInfo(): Record<string, any> | undefined;
 
     /**
      * Registers a listener that fires when system power events occur.
@@ -3666,13 +3666,13 @@ The result origin is relative to this screen's top-left corner.
      * The currently active display mode.
 An object with keys: `width`, `height`, `scale`, `frequency`.
      */
-    mode: NSDictionary;
+    mode: Record<string, any>;
 
     /**
      * All display modes supported by this screen.
 Each element has keys: `width`, `height`, `scale`, `frequency`.
      */
-    availableModes: NSDictionary[];
+    availableModes: Record<string, any>[];
 
     /**
      * The current screen rotation in degrees (0, 90, 180, or 270).
@@ -3833,7 +3833,7 @@ declare class HSSpotlightGroup {
 Returns `null` only in the unlikely case that the underlying value cannot be bridged.
      * @returns The attribute value (string, number, Date, etc.) or null
      */
-    value(): NSObject | undefined;
+    value(): any | undefined;
 
     /**
      * Returns the items contained in this group as an array of `HSSpotlightItem` objects.
@@ -3890,7 +3890,7 @@ to their string representation.
      * @param key An attribute key such as `"kMDItemPath"` or `hs.spotlight.attribute.path`
      * @returns The attribute value, or null
      */
-    valueForAttribute(key: string): NSObject | undefined;
+    valueForAttribute(key: string): any | undefined;
 
     /**
      * A unique identifier for this result object (UUID string).
@@ -4853,17 +4853,17 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text
 
     /**
      * Fill a shape with a color
-     * @param colorValue Color as hex string or HSColor
+     * @param colorValue Color as an HSColor
      * @returns Self for chaining
      */
-    fill(colorValue: JSValue): HSUIWindow;
+    fill(colorValue: HSColor): HSUIWindow;
 
     /**
      * Add a stroke (border) to a shape
-     * @param colorValue Color as hex string or HSColor
+     * @param colorValue Color as an HSColor
      * @returns Self for chaining
      */
-    stroke(colorValue: JSValue): HSUIWindow;
+    stroke(colorValue: HSColor): HSUIWindow;
 
     /**
      * Set the stroke width

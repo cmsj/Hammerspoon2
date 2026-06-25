@@ -63,7 +63,7 @@ import CoreLocation
     /// const loc = hs.location.get()
     /// if (loc) console.log(loc.latitude, loc.longitude)
     /// ```
-    @objc func get() -> [AnyHashable: Any]?
+    @objc func get() -> [String: Any]?
 
     /// Calculates the straight-line distance in metres between two locationTables.
     ///
@@ -207,7 +207,7 @@ import CoreLocation
         }
     }
 
-    func get() -> [AnyHashable: Any]? {
+    func get() -> [String: Any]? {
         if CLLocationManager.locationServicesEnabled() {
             locationManager.requestLocation()  // one-shot; result arrives in delegate
         }
@@ -244,7 +244,7 @@ import CoreLocation
 
     // MARK: - Helpers
 
-    static func locationTable(from loc: CLLocation) -> [AnyHashable: Any] {
+    static func locationTable(from loc: CLLocation) -> [String: Any] {
         [
             "latitude":           loc.coordinate.latitude,
             "longitude":          loc.coordinate.longitude,

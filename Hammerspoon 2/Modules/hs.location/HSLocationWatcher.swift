@@ -76,7 +76,7 @@ import CoreLocation
     /// const loc = w.location()
     /// if (loc) console.log(`${loc.latitude}, ${loc.longitude}`)
     /// ```
-    @objc func location() -> [AnyHashable: Any]?
+    @objc func location() -> [String: Any]?
 
     /// The minimum distance in metres the device must move before a new update
     /// is delivered. Defaults to `kCLDistanceFilterNone` (all movements reported).
@@ -137,7 +137,7 @@ import CoreLocation
         return self
     }
 
-    @objc func location() -> [AnyHashable: Any]? {
+    @objc func location() -> [String: Any]? {
         _lastLocation.map { HSLocationModule.locationTable(from: $0) }
     }
 

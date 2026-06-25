@@ -195,7 +195,7 @@ import IOKit.pwr_mgt
     ///   const info = hs.power.batteryInfo()
     ///   if (info) console.log(`${info.percentage}% — ${info.timeRemaining}m remaining`)
     ///   ```
-    func batteryInfo() -> NSDictionary?
+    func batteryInfo() -> [String: Any]?
 
     // MARK: Event Watcher (Pattern A)
 
@@ -471,7 +471,7 @@ import IOKit.pwr_mgt
         }
     }
 
-    func batteryInfo() -> NSDictionary? {
+    func batteryInfo() -> [String: Any]? {
         guard let props = batteryRegistryProperties() else { return nil }
 
         var info: [String: Any] = [:]
@@ -541,7 +541,7 @@ import IOKit.pwr_mgt
         }
 
         info["serial"] = props["Serial"] as? String ?? NSNull()
-        return info as NSDictionary
+        return info
     }
 
     // MARK: - Event Watcher (Pattern A)
