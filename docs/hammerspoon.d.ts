@@ -3621,14 +3621,14 @@ The result origin is relative to this screen's top-left corner.
      * @param rect An `HSRect` in global Hammerspoon coordinates.
      * @returns The rect offset to be relative to this screen's top-left, or `null` if the input is invalid.
      */
-    absoluteToLocal(rect: JSValue): HSRect | undefined;
+    absoluteToLocal(rect: HSRect): HSRect;
 
     /**
      * Convert a rect in local screen coordinates to global Hammerspoon coordinates.
      * @param rect An `HSRect` relative to this screen's top-left corner.
      * @returns The rect in global Hammerspoon coordinates, or `null` if the input is invalid.
      */
-    localToAbsolute(rect: JSValue): HSRect | undefined;
+    localToAbsolute(rect: HSRect): HSRect;
 
     /**
      * Unique display identifier (matches `CGDirectDisplayID`).

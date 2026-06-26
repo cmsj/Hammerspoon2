@@ -8684,14 +8684,14 @@
             },
             {
               "name": "absoluteToLocal",
-              "signature": "func absoluteToLocal(_ rect: JSValue) -> HSRect?",
+              "signature": "func absoluteToLocal(_ rect: HSRect) -> HSRect",
               "isStatic": false,
               "rawDocumentation": "Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.\n\nThe result origin is relative to this screen's top-left corner.\n\n- Parameter rect: An `HSRect` in global Hammerspoon coordinates.\n- Returns: The rect offset to be relative to this screen's top-left, or `null` if the input is invalid.\n- Example:\n```js\nconst s = hs.screen.main()\nconst local = s.absoluteToLocal({x: 1000, y: 500, w: 200, h: 100})\n```",
               "description": "Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.\nThe result origin is relative to this screen's top-left corner.",
               "params": [
                 {
                   "name": "rect",
-                  "type": "JSValue",
+                  "type": "HSRect",
                   "description": "An `HSRect` in global Hammerspoon coordinates.",
                   "optional": false,
                   "tsType": null
@@ -8713,14 +8713,14 @@
             },
             {
               "name": "localToAbsolute",
-              "signature": "func localToAbsolute(_ rect: JSValue) -> HSRect?",
+              "signature": "func localToAbsolute(_ rect: HSRect) -> HSRect",
               "isStatic": false,
               "rawDocumentation": "Convert a rect in local screen coordinates to global Hammerspoon coordinates.\n\n- Parameter rect: An `HSRect` relative to this screen's top-left corner.\n- Returns: The rect in global Hammerspoon coordinates, or `null` if the input is invalid.\n- Example:\n```js\nconst s = hs.screen.main()\nconst abs = s.localToAbsolute({x: 10, y: 10, w: 100, h: 100})\n```",
               "description": "Convert a rect in local screen coordinates to global Hammerspoon coordinates.",
               "params": [
                 {
                   "name": "rect",
-                  "type": "JSValue",
+                  "type": "HSRect",
                   "description": "An `HSRect` relative to this screen's top-left corner.",
                   "optional": false,
                   "tsType": null
@@ -14143,5 +14143,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-26T20:57:59.739Z"
+  "generatedAt": "2026-06-26T21:00:10.989Z"
 }

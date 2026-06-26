@@ -145,7 +145,7 @@ import JavaScriptCore
     /// const n = hs.notify.create({ title: "Hello", body: "World" })
     /// n.send()
     /// ```
-    @objc func create(_ options: JSValue) -> HSNotification?
+    @objc func create(_ options: [String: Any]) -> HSNotification?
 
     // MARK: Management
 
@@ -226,13 +226,8 @@ import JavaScriptCore
         }
     }
 
-    @objc func create(_ options: JSValue) -> HSNotification? {
-        guard options.isObject, let dict = options.toDictionary() else {
-            AKError("hs.notify.create(): Expected a JavaScript object with options")
-            return nil
-        }
-
-        guard let title = dict["title"] as? String, !title.isEmpty else {
+    @objc func create(_ options: [String: Any]) -> HSNotification? {
+        guard let title = options["title"] as? String, !title.isEmpty else {
             AKError("hs.notify.create(): 'title' is required and must be a non-empty string")
             return nil
         }
@@ -240,17 +235,17 @@ import JavaScriptCore
         let content = UNMutableNotificationContent()
         content.title = title
 
-        if let subtitle = dict["subtitle"] as? String         { content.subtitle = subtitle }
-        if let body = dict["body"] as? String                 { content.body = body }
-        if let threadId = dict["threadIdentifier"] as? String { content.threadIdentifier = threadId }
-        if let badge = dict["badge"] as? NSNumber             { content.badge = badge }
+        if let subtitle = options["subtitle"] as? String         { content.subtitle = subtitle }
+        if let body = options["body"] as? String                 { content.body = body }
+        if let threadId = options["threadIdentifier"] as? String { content.threadIdentifier = threadId }
+        if let badge = options["badge"] as? NSNumber             { content.badge = badge }
 
-        if let rawUserInfo = dict["userInfo"] as? [AnyHashable: Any] {
+        if let rawUserInfo = options["userInfo"] as? [AnyHashable: Any] {
             content.userInfo = rawUserInfo
         }
 
         // Sound: omitted → default, true → default, false → silent, string → named file
-        let soundVal = dict["sound"]
+        let soundVal = options["sound"]
         if let soundName = soundVal as? String {
             content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
         } else if let soundBool = soundVal as? Bool {
@@ -260,7 +255,7 @@ import JavaScriptCore
         }
 
         if #available(macOS 12.0, *) {
-            if let level = dict["interruptionLevel"] as? String {
+            if let level = options["interruptionLevel"] as? String {
                 switch level {
                 case "passive":       content.interruptionLevel = .passive
                 case "timeSensitive": content.interruptionLevel = .timeSensitive
@@ -270,12 +265,12 @@ import JavaScriptCore
         }
 
         // Parse the optional trigger.
-        let trigger = Self.buildTrigger(from: dict["trigger"] as? [AnyHashable: Any])
+        let trigger = Self.buildTrigger(from: options["trigger"] as? [AnyHashable: Any])
 
         // Build action buttons into a UNNotificationCategory.
         // The category is NOT registered here — HSNotification.send() registers it atomically
         // with the notification request to eliminate the race between registration and delivery.
-        let actionsNS = dict["actions"] as? NSArray
+        let actionsNS = options["actions"] as? NSArray
         let actionsRaw = actionsNS?.compactMap { $0 as? [AnyHashable: Any] } ?? []
         var pendingCategory: UNNotificationCategory?
         if !actionsRaw.isEmpty {
@@ -316,8 +311,7 @@ import JavaScriptCore
 
         // Extract the callback via forProperty so the JSValue function is preserved
         // (toDictionary() silently drops function values).
-        let callbackVal = options.forProperty("callback")
-        let callback: JSFunction? = (callbackVal?.isObject == true) ? callbackVal : nil
+        let callback = options["callback"] as? JSFunction
 
         let id = UUID().uuidString
         let notification = HSNotification(

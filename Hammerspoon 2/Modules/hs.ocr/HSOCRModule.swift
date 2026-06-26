@@ -82,7 +82,7 @@ import Vision
     ///     .then(result => console.log('Found ' + result.observations.length + ' regions'))
     ///     .catch(err => console.log('Error: ' + err))
     /// ```
-    @objc func recognizeText(_ path: String, _ options: JSValue?) -> JSPromise?
+    @objc func recognizeText(_ path: String, _ options: [String: Any]?) -> JSPromise?
 
     /// Returns the BCP-47 language codes supported by the Vision text recognizer
     /// on this device.
@@ -109,26 +109,20 @@ private struct OCRConfig: Sendable {
     var languages: [String] = []
     var automaticallyDetectsLanguage: Bool = false
 
-    init(from options: JSValue?) {
-        guard let options, options.isObject else { return }
+    init(from options: [String: Any]?) {
+        guard let options else { return }
 
-        if let levelVal = options.objectForKeyedSubscript("recognitionLevel"),
-           !levelVal.isUndefined,
-           let level = levelVal.toString() {
+        if let level = options["recognitionLevel"] as? String {
             recognitionLevel = (level == "fast") ? .fast : .accurate
         }
-        if let minConf = options.objectForKeyedSubscript("minimumConfidence"),
-           minConf.isNumber {
-            minimumConfidence = Float(minConf.toDouble())
+        if let minConf = options["minimumConfidence"] as? Double {
+            minimumConfidence = Float(minConf)
         }
-        if let langs = options.objectForKeyedSubscript("languages"),
-           langs.isArray,
-           let arr = langs.toArray() as? [String] {
-            languages = arr
+        if let langs = options["languages"] as? [String] {
+            languages = langs
         }
-        if let autoDetect = options.objectForKeyedSubscript("automaticallyDetectsLanguage"),
-           autoDetect.isBoolean {
-            automaticallyDetectsLanguage = autoDetect.toBool()
+        if let autoDetect = options["automaticallyDetectsLanguage"] as? Bool {
+            automaticallyDetectsLanguage = autoDetect
         }
     }
 }
@@ -162,7 +156,7 @@ private struct RawObservation: Sendable {
 
     // MARK: - HSOCRModuleAPI
 
-    @objc func recognizeText(_ path: String, _ options: JSValue?) -> JSPromise? {
+    @objc func recognizeText(_ path: String, _ options: [String: Any]?) -> JSPromise? {
         guard let context = JSContext.current() else { return nil }
         let config = OCRConfig(from: options)
         let fileURL = URL(fileURLWithPath: path)
