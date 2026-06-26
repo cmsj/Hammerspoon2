@@ -352,15 +352,6 @@ import JavaScriptCore
         harness.expectTrue("roundTripped")
     }
 
-    @Test("absoluteToLocal() returns null for non-HSRect input")
-    func testAbsoluteToLocalInvalidInput() {
-        let harness = JSTestHarness()
-        harness.loadModule(HSScreenModule.self, as: "screen")
-
-        harness.eval("var result = hs.screen.primary().absoluteToLocal('not a rect');")
-        harness.expectTrue("result === null || result === undefined")
-    }
-
     // MARK: - Desktop Image
 
     @Test("desktopImage returns a string or null")

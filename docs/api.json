@@ -8022,13 +8022,13 @@
         },
         {
           "name": "currentAssertions",
-          "signature": "func currentAssertions() -> NSArray",
+          "signature": "func currentAssertions() -> [[String: Any]]",
           "isStatic": false,
           "rawDocumentation": "Returns the active power management assertions from all processes on the system.\n\n- Returns: An array of objects with `pid` (number), `name` (string), and `type` (string) properties.\n- Example:\n  ```js\n  hs.power.currentAssertions().forEach(a => console.log(a.pid + \" \" + a.name))\n  ```",
           "description": "Returns the active power management assertions from all processes on the system.",
           "params": [],
           "returns": {
-            "type": "NSArray",
+            "type": "[[String: Any]]",
             "description": "An array of objects with `pid` (number), `name` (string), and `type` (string) properties."
           },
           "examples": [
@@ -14143,5 +14143,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-26T20:55:28.258Z"
+  "generatedAt": "2026-06-26T20:57:59.739Z"
 }

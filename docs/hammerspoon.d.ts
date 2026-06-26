@@ -3378,7 +3378,7 @@ Equivalent to moving the mouse — does not create a persistent assertion.
      * Returns the active power management assertions from all processes on the system.
      * @returns An array of objects with `pid` (number), `name` (string), and `type` (string) properties.
      */
-    function currentAssertions(): NSArray;
+    function currentAssertions(): Record<string, any>[];
 
     /**
      * Puts the system to sleep immediately.
