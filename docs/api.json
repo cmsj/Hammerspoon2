@@ -5794,7 +5794,7 @@
           "name": "lookupAddress",
           "signature": "func lookupAddress(_ address: String) -> JSPromise?",
           "isStatic": false,
-          "rawDocumentation": "Geocodes an address string into an array of placemarkTables.\n\nReturns a Promise that resolves with an array of placemarkTable objects\n(sorted by relevance) or rejects with an error message.\n- Parameter address: a free-form address string in any locale\n- Returns: {Promise<placemarkTable[]>} a Promise resolving to an array of placemarkTables\n- Example:\n```js\nhs.location.geocoder.lookupAddress(\"Apple Park, Cupertino\")\n    .then(p => console.log(p[0].locality, p[0].countryCode))\n```",
+          "rawDocumentation": "Geocodes an address string into an array of placemarkTables.\n\nReturns a Promise that resolves with an array of placemarkTable objects\n(sorted by relevance) or rejects with an error message.\n- Parameter address: a free-form address string in any locale\n- Returns: {Promise<[[String:Any]]>} a Promise resolving to an array of placemarkTables\n- Example:\n```js\nhs.location.geocoder.lookupAddress(\"Apple Park, Cupertino\")\n    .then(p => console.log(p[0].locality, p[0].countryCode))\n```",
           "description": "Geocodes an address string into an array of placemarkTables.\nReturns a Promise that resolves with an array of placemarkTable objects\n(sorted by relevance) or rejects with an error message.",
           "params": [
             {
@@ -5808,7 +5808,7 @@
           "returns": {
             "type": "JSPromise",
             "description": "a Promise resolving to an array of placemarkTables",
-            "promiseType": "placemarkTable[]"
+            "promiseType": "[[String:Any]]"
           },
           "examples": [
             {
@@ -5822,14 +5822,14 @@
         },
         {
           "name": "lookupLocation",
-          "signature": "func lookupLocation(_ locationTable: JSValue) -> JSPromise?",
+          "signature": "func lookupLocation(_ locationTable: [String: Double]) -> JSPromise?",
           "isStatic": false,
-          "rawDocumentation": "Reverse-geocodes a locationTable into an array of placemarkTables.\n\nReturns a Promise that resolves with matching placemarks or rejects with\nan error.\n- Parameter locationTable: an object with at least `latitude` and `longitude`\n- Returns: {Promise<placemarkTable[]>} a Promise resolving to an array of placemarkTables\n- Example:\n```js\nhs.location.geocoder.lookupLocation({ latitude: 37.3349, longitude: -122.0090 })\n    .then(p => console.log(p[0].name))\n```",
+          "rawDocumentation": "Reverse-geocodes a locationTable into an array of placemarkTables.\n\nReturns a Promise that resolves with matching placemarks or rejects with\nan error.\n- Parameter locationTable: an object with at least `latitude` and `longitude`\n- Returns: {Promise<[[String:Any]]>} a Promise resolving to an array of placemarkTables\n- Example:\n```js\nhs.location.geocoder.lookupLocation({ latitude: 37.3349, longitude: -122.0090 })\n    .then(p => console.log(p[0].name))\n```",
           "description": "Reverse-geocodes a locationTable into an array of placemarkTables.\nReturns a Promise that resolves with matching placemarks or rejects with\nan error.",
           "params": [
             {
               "name": "locationTable",
-              "type": "JSValue",
+              "type": "Object<String, Double>",
               "description": "an object with at least `latitude` and `longitude`",
               "optional": false,
               "tsType": null
@@ -5838,7 +5838,7 @@
           "returns": {
             "type": "JSPromise",
             "description": "a Promise resolving to an array of placemarkTables",
-            "promiseType": "placemarkTable[]"
+            "promiseType": "[[String:Any]]"
           },
           "examples": [
             {
@@ -5915,21 +5915,21 @@
         },
         {
           "name": "distance",
-          "signature": "func distance(_ from: JSValue, _ to: JSValue) -> Double",
+          "signature": "func distance(_ from: [String: Double], _ to: [String: Double]) -> Double",
           "isStatic": false,
           "rawDocumentation": "Calculates the straight-line distance in metres between two locationTables.\n\nDoes not require Location Services.\n- Parameters:\n  - from: locationTable with at least `latitude` and `longitude`\n  - to: locationTable with at least `latitude` and `longitude`\n- Returns: distance in metres, or `-1` if either table is invalid\n- Example:\n```js\nconst d = hs.location.distance(\n    { latitude: 51.5074, longitude: -0.1278 },\n    { latitude: 48.8566, longitude:  2.3522 }\n) // → ~341,000 metres\n```",
           "description": "Calculates the straight-line distance in metres between two locationTables.\nDoes not require Location Services.",
           "params": [
             {
               "name": "from",
-              "type": "JSValue",
+              "type": "Object<String, Double>",
               "description": "locationTable with at least `latitude` and `longitude`",
               "optional": false,
               "tsType": null
             },
             {
               "name": "to",
-              "type": "JSValue",
+              "type": "Object<String, Double>",
               "description": "locationTable with at least `latitude` and `longitude`",
               "optional": false,
               "tsType": null
@@ -14203,5 +14203,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-25T21:37:55.106Z"
+  "generatedAt": "2026-06-26T13:38:15.195Z"
 }

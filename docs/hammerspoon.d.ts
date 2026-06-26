@@ -2392,7 +2392,7 @@ Returns a Promise that resolves with an array of placemarkTable objects
      * @param address a free-form address string in any locale
      * @returns a Promise resolving to an array of placemarkTables
      */
-    function lookupAddress(address: string): Promise<placemarkTable[]>;
+    function lookupAddress(address: string): Promise<Record<string, any>[]>;
 
     /**
      * Reverse-geocodes a locationTable into an array of placemarkTables.
@@ -2401,7 +2401,7 @@ an error.
      * @param locationTable an object with at least `latitude` and `longitude`
      * @returns a Promise resolving to an array of placemarkTables
      */
-    function lookupLocation(locationTable: JSValue): Promise<placemarkTable[]>;
+    function lookupLocation(locationTable: Record<string, number>): Promise<Record<string, any>[]>;
 
     /**
      * Returns true if Location Services are enabled system-wide.
@@ -2430,7 +2430,7 @@ Does not require Location Services.
      * @param to locationTable with at least `latitude` and `longitude`
      * @returns distance in metres, or `-1` if either table is invalid
      */
-    function distance(from: JSValue, to: JSValue): number;
+    function distance(from: Record<string, number>, to: Record<string, number>): number;
 
     /**
      * Returns the time of sunrise for the given coordinates and date as seconds

@@ -5,8 +5,9 @@
   "private": true,
   "scripts": {
     "docs:extract": "node scripts/extract-docs.js",
-    "docs:generate": "npm run docs:extract && npm run docs:html && npm run docs:typescript",
+    "docs:generate": "npm run docs:extract && npm run docs:html && npm run docs:typescript && npm run docs:tshtml",
     "docs:html": "node scripts/generate-html.js",
+    "docs:tshtml": "npx typedoc --tsconfig docs/tsconfig.docs.json",
     "docs:typescript": "node scripts/generate-typescript.js",
     "docs:coverage": "node scripts/docs-coverage.js",
     "docs:test": "bash scripts/test-docs.sh",

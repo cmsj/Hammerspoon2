@@ -79,7 +79,7 @@ import CoreLocation
     ///     { latitude: 48.8566, longitude:  2.3522 }
     /// ) // → ~341,000 metres
     /// ```
-    @objc(distance::) func distance(_ from: JSValue, _ to: JSValue) -> Double
+    @objc(distance::) func distance(_ from: [String: Double], _ to: [String: Double]) -> Double
 
     /// Returns the time of sunrise for the given coordinates and date as seconds
     /// since the Unix epoch, or null if the sun does not rise on that date (polar
@@ -215,7 +215,7 @@ import CoreLocation
         return HSLocationModule.locationTable(from: loc)
     }
 
-    @objc(distance::) func distance(_ from: JSValue, _ to: JSValue) -> Double {
+    @objc(distance::) func distance(_ from: [String: Double], _ to: [String: Double]) -> Double {
         guard let fromLoc = Self.clLocation(from: from),
               let toLoc   = Self.clLocation(from: to) else { return -1 }
         return fromLoc.distance(from: toLoc)
@@ -257,11 +257,9 @@ import CoreLocation
         ]
     }
 
-    static func clLocation(from val: JSValue) -> CLLocation? {
-        guard val.isObject,
-              let dict = val.toDictionary(),
-              let lat  = dict["latitude"]  as? Double,
-              let lon  = dict["longitude"] as? Double else { return nil }
+    static func clLocation(from val: [String: Double]) -> CLLocation? {
+        guard let lat  = val["latitude"],
+              let lon  = val["longitude"] else { return nil }
         return CLLocation(latitude: lat, longitude: lon)
     }
 
