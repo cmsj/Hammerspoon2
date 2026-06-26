@@ -244,7 +244,7 @@ import AppKit
     ///     "public.html":            "<b>Hello</b>"
     /// })
     /// ```
-    @objc func writeObjects(_ representations: JSValue) -> Bool
+    @objc func writeObjects(_ representations: [String: Any]) -> Bool
 
     // MARK: Introspection
 
@@ -424,17 +424,15 @@ import AppKit
         return NSPasteboard.general.setData(data, forType: NSPasteboard.PasteboardType(uti))
     }
 
-    @objc func writeObjects(_ representations: JSValue) -> Bool {
-        guard representations.isObject, let rawDict = representations.toDictionary() else {
-            AKError("hs.pasteboard.writeObjects(): Expected a JavaScript object with UTI string keys and string values")
-            return false
-        }
+    @objc func writeObjects(_ representations: [String: Any]) -> Bool {
+        let rawDict = representations
 
         let item = NSPasteboardItem()
         var wroteAtLeastOne = false
 
         for (key, value) in rawDict {
-            guard let uti = key as? String, let str = value as? String else { continue }
+            let uti = key
+            guard let str = value as? String else { continue }
             item.setString(str, forType: NSPasteboard.PasteboardType(uti))
             wroteAtLeastOne = true
         }
