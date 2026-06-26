@@ -4043,13 +4043,10 @@ declare namespace hs.task {
      * @param launchPath - Full path to the executable
      * @param args - Array of arguments
      * @param options - Options object or legacy callback
-     * @param options .environment - Environment variables (optional)
-     * @param options .workingDirectory - Working directory (optional)
-     * @param options .onOutput - Callback for streaming output: (stream, data) => {} (optional)
      * @param legacyStreamCallback - Legacy streaming callback (optional)
      * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
      */
-    function runAsync(launchPath: string, args: string[], options: Object|Function, options: Object, options: string, options: Function, legacyStreamCallback: Function): any;
+    function runAsync(launchPath: string, args: string[], options: Object|Function, legacyStreamCallback: Function): any;
 
     /**
      * Run a shell command asynchronously

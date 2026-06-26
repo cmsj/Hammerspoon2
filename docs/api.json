@@ -9604,21 +9604,6 @@
               "description": "- Options object or legacy callback"
             },
             {
-              "name": "options",
-              "type": "Object",
-              "description": ".environment - Environment variables (optional)"
-            },
-            {
-              "name": "options",
-              "type": "string",
-              "description": ".workingDirectory - Working directory (optional)"
-            },
-            {
-              "name": "options",
-              "type": "Function",
-              "description": ".onOutput - Callback for streaming output: (stream, data) => {} (optional)"
-            },
-            {
               "name": "legacyStreamCallback",
               "type": "Function",
               "description": "- Legacy streaming callback (optional)"
@@ -14158,5 +14143,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-26T14:04:15.021Z"
+  "generatedAt": "2026-06-26T14:09:13.923Z"
 }

@@ -777,8 +777,11 @@ function parseJSDoc(docText) {
     for (const line of lines) {
         if (line.startsWith('@param')) {
             currentSection = 'param';
-            const paramMatch = line.match(/@param\s+(?:\{([^}]+)\}\s+)?(\w+)\s*(.*)/);
-            if (paramMatch) {
+            // Use [\w.]+ to capture dotted names like options.environment (JSDoc property paths)
+            const paramMatch = line.match(/@param\s+(?:\{([^}]+)\}\s+)?([\w.]+)\s*(.*)/);
+            if (paramMatch && !paramMatch[2].includes('.')) {
+                // Skip property-path docs (e.g. @param options.foo) — they document sub-fields of an
+                // existing param and must not appear as separate parameters in the TypeScript output.
                 doc.params.push({
                     name: paramMatch[2],
                     type: paramMatch[1] || 'any',
