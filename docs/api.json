@@ -9212,14 +9212,14 @@
             },
             {
               "name": "setScopes",
-              "signature": "func setScopes(_ scopes: JSValue) -> HSSpotlightQuery",
+              "signature": "func setScopes(_ scopes: [String]) -> HSSpotlightQuery",
               "isStatic": false,
               "rawDocumentation": "Sets the search scopes that restrict where Spotlight looks.\n\nPass an array of predefined scope strings from `hs.spotlight.scope`, absolute\ndirectory paths, or a mix of both. Paths beginning with `~` are expanded to the\nuser's home directory.\n\nWhen not set, the query defaults to `hs.spotlight.scope.computer`.\n- Parameter scopes: An array of scope-constant strings or absolute directory paths\n- Returns: this query, for chaining\n- Example:\n```js\n// Home directory only\nq.setScopes([hs.spotlight.scope.home])\n\n// Specific folder\nq.setScopes(['/Users/alice/Documents'])\n\n// Mix of predefined scope and a folder\nq.setScopes([hs.spotlight.scope.home, '/Volumes/ExternalDrive/Projects'])\n```",
               "description": "Sets the search scopes that restrict where Spotlight looks.\nPass an array of predefined scope strings from `hs.spotlight.scope`, absolute\ndirectory paths, or a mix of both. Paths beginning with `~` are expanded to the\nuser's home directory.\nWhen not set, the query defaults to `hs.spotlight.scope.computer`.",
               "params": [
                 {
                   "name": "scopes",
-                  "type": "JSValue",
+                  "type": "Array<String>",
                   "description": "An array of scope-constant strings or absolute directory paths",
                   "optional": false,
                   "tsType": null
@@ -9241,14 +9241,14 @@
             },
             {
               "name": "setSortDescriptors",
-              "signature": "func setSortDescriptors(_ descriptors: JSValue) -> HSSpotlightQuery",
+              "signature": "func setSortDescriptors(_ descriptors: [[String: Any]]) -> HSSpotlightQuery",
               "isStatic": false,
               "rawDocumentation": "Sets sort descriptors that control the order of results.\n\nPass an array of objects, each with:\n- `attribute` (string): a `kMDItem*` key to sort on\n- `ascending` (boolean): `true` for ascending order (optional, defaults to `true`)\n\n- Parameter descriptors: An array of sort descriptor objects\n- Returns: this query, for chaining\n- Example:\n```js\nq.setSortDescriptors([\n    { attribute: hs.spotlight.attribute.fsName, ascending: true },\n    { attribute: hs.spotlight.attribute.fileSize, ascending: false }\n])\n```",
               "description": "Sets sort descriptors that control the order of results.",
               "params": [
                 {
                   "name": "descriptors",
-                  "type": "JSValue",
+                  "type": "[[String: Any]]",
                   "description": "An array of sort descriptor objects",
                   "optional": false,
                   "tsType": null
@@ -9270,14 +9270,14 @@
             },
             {
               "name": "setGroupingAttributes",
-              "signature": "func setGroupingAttributes(_ attrs: JSValue) -> HSSpotlightQuery",
+              "signature": "func setGroupingAttributes(_ attrs: [String]) -> HSSpotlightQuery",
               "isStatic": false,
               "rawDocumentation": "Sets the attributes by which results will be grouped.\n\nWhen grouping attributes are set, use `groups()` to retrieve results organised into\n`HSSpotlightGroup` objects. Specifying multiple attributes creates nested subgroups\naccessible via `group.subgroups()`.\n- Parameter attrs: An array of attribute name strings\n- Returns: this query, for chaining\n- Example:\n```js\n// Group image results by content type\nq.setQuery(\"kMDItemContentTypeTree == 'public.image'\")\n .setGroupingAttributes([hs.spotlight.attribute.contentType])\n .setCallback((event) => {\n     if (event === 'didFinish') {\n         q.groups().forEach(g =>\n             console.log(g.value() + ': ' + g.count + ' images')\n         )\n     }\n })\n .start()\n```",
               "description": "Sets the attributes by which results will be grouped.\nWhen grouping attributes are set, use `groups()` to retrieve results organised into\n`HSSpotlightGroup` objects. Specifying multiple attributes creates nested subgroups\naccessible via `group.subgroups()`.",
               "params": [
                 {
                   "name": "attrs",
-                  "type": "JSValue",
+                  "type": "Array<String>",
                   "description": "An array of attribute name strings",
                   "optional": false,
                   "tsType": null
@@ -9299,14 +9299,14 @@
             },
             {
               "name": "setValueListAttributes",
-              "signature": "func setValueListAttributes(_ attrs: JSValue) -> HSSpotlightQuery",
+              "signature": "func setValueListAttributes(_ attrs: [String]) -> HSSpotlightQuery",
               "isStatic": false,
               "rawDocumentation": "Sets the attributes for which aggregate value-list summaries are computed.\n\nAfter the query finishes, `valueLists()` returns aggregate data for each specified\nattribute: distinct values and the number of results carrying each value.\n- Parameter attrs: An array of attribute name strings\n- Returns: this query, for chaining\n- Example:\n```js\nq.setValueListAttributes([hs.spotlight.attribute.kind])\n .setCallback((event) => {\n     if (event === 'didFinish') {\n         q.valueLists().forEach(vl => {\n             console.log('=== ' + vl.attribute + ' ===')\n             vl.values.forEach(v =>\n                 console.log('  ' + v.value + ': ' + v.count + ' items')\n             )\n         })\n     }\n })\n .start()\n```",
               "description": "Sets the attributes for which aggregate value-list summaries are computed.\nAfter the query finishes, `valueLists()` returns aggregate data for each specified\nattribute: distinct values and the number of results carrying each value.",
               "params": [
                 {
                   "name": "attrs",
-                  "type": "JSValue",
+                  "type": "Array<String>",
                   "description": "An array of attribute name strings",
                   "optional": false,
                   "tsType": null
@@ -14136,5 +14136,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-29T20:02:26.722Z"
+  "generatedAt": "2026-06-29T21:26:13.087Z"
 }

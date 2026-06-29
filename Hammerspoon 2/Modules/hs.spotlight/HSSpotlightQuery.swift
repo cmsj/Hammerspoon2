@@ -101,7 +101,7 @@ import JavaScriptCore
     /// // Mix of predefined scope and a folder
     /// q.setScopes([hs.spotlight.scope.home, '/Volumes/ExternalDrive/Projects'])
     /// ```
-    @objc @discardableResult func setScopes(_ scopes: JSValue) -> HSSpotlightQuery
+    @objc @discardableResult func setScopes(_ scopes: [String]) -> HSSpotlightQuery
 
     /// Sets sort descriptors that control the order of results.
     ///
@@ -118,7 +118,7 @@ import JavaScriptCore
     ///     { attribute: hs.spotlight.attribute.fileSize, ascending: false }
     /// ])
     /// ```
-    @objc @discardableResult func setSortDescriptors(_ descriptors: JSValue) -> HSSpotlightQuery
+    @objc @discardableResult func setSortDescriptors(_ descriptors: [[String: Any]]) -> HSSpotlightQuery
 
     /// Sets the attributes by which results will be grouped.
     ///
@@ -141,7 +141,7 @@ import JavaScriptCore
     ///  })
     ///  .start()
     /// ```
-    @objc @discardableResult func setGroupingAttributes(_ attrs: JSValue) -> HSSpotlightQuery
+    @objc @discardableResult func setGroupingAttributes(_ attrs: [String]) -> HSSpotlightQuery
 
     /// Sets the attributes for which aggregate value-list summaries are computed.
     ///
@@ -164,7 +164,7 @@ import JavaScriptCore
     ///  })
     ///  .start()
     /// ```
-    @objc @discardableResult func setValueListAttributes(_ attrs: JSValue) -> HSSpotlightQuery
+    @objc @discardableResult func setValueListAttributes(_ attrs: [String]) -> HSSpotlightQuery
 
     /// Registers a callback that receives query lifecycle events.
     ///
@@ -348,12 +348,8 @@ import JavaScriptCore
         return self
     }
 
-    @objc @discardableResult func setScopes(_ scopes: JSValue) -> HSSpotlightQuery {
-        guard scopes.isArray, let arr = scopes.toArray() as? [String] else {
-            AKWarning("hs.spotlight.setScopes(): expected an array of strings")
-            return self
-        }
-        query.searchScopes = arr.map { scope -> Any in
+    @objc @discardableResult func setScopes(_ scopes: [String]) -> HSSpotlightQuery {
+        query.searchScopes = scopes.map { scope -> Any in
             if scope.hasPrefix("/") || scope.hasPrefix("~") {
                 return URL(fileURLWithPath: (scope as NSString).expandingTildeInPath)
             }
@@ -362,35 +358,22 @@ import JavaScriptCore
         return self
     }
 
-    @objc @discardableResult func setSortDescriptors(_ descriptors: JSValue) -> HSSpotlightQuery {
-        guard descriptors.isArray, let arr = descriptors.toArray() else {
-            AKWarning("hs.spotlight.setSortDescriptors(): expected an array")
-            return self
-        }
-        query.sortDescriptors = arr.compactMap { item -> NSSortDescriptor? in
-            guard let dict = item as? [String: Any],
-                  let attr = dict["attribute"] as? String else { return nil }
-            let ascending = dict["ascending"] as? Bool ?? true
+    @objc @discardableResult func setSortDescriptors(_ descriptors: [[String: Any]]) -> HSSpotlightQuery {
+        query.sortDescriptors = descriptors.compactMap { item -> NSSortDescriptor? in
+            guard let attr = item["attribute"] as? String else { return nil }
+            let ascending = item["ascending"] as? Bool ?? true
             return NSSortDescriptor(key: attr, ascending: ascending)
         }
         return self
     }
 
-    @objc @discardableResult func setGroupingAttributes(_ attrs: JSValue) -> HSSpotlightQuery {
-        guard attrs.isArray, let arr = attrs.toArray() as? [String] else {
-            AKWarning("hs.spotlight.setGroupingAttributes(): expected an array of strings")
-            return self
-        }
-        query.groupingAttributes = arr
+    @objc @discardableResult func setGroupingAttributes(_ attrs: [String]) -> HSSpotlightQuery {
+        query.groupingAttributes = attrs
         return self
     }
 
-    @objc @discardableResult func setValueListAttributes(_ attrs: JSValue) -> HSSpotlightQuery {
-        guard attrs.isArray, let arr = attrs.toArray() as? [String] else {
-            AKWarning("hs.spotlight.setValueListAttributes(): expected an array of strings")
-            return self
-        }
-        query.valueListAttributes = arr
+    @objc @discardableResult func setValueListAttributes(_ attrs: [String]) -> HSSpotlightQuery {
+        query.valueListAttributes = attrs
         return self
     }
 

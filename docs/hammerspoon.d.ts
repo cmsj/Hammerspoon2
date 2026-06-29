@@ -3926,14 +3926,14 @@ When not set, the query defaults to `hs.spotlight.scope.computer`.
      * @param scopes An array of scope-constant strings or absolute directory paths
      * @returns this query, for chaining
      */
-    setScopes(scopes: JSValue): HSSpotlightQuery;
+    setScopes(scopes: string[]): HSSpotlightQuery;
 
     /**
      * Sets sort descriptors that control the order of results.
      * @param descriptors An array of sort descriptor objects
      * @returns this query, for chaining
      */
-    setSortDescriptors(descriptors: JSValue): HSSpotlightQuery;
+    setSortDescriptors(descriptors: Record<string, any>[]): HSSpotlightQuery;
 
     /**
      * Sets the attributes by which results will be grouped.
@@ -3943,7 +3943,7 @@ accessible via `group.subgroups()`.
      * @param attrs An array of attribute name strings
      * @returns this query, for chaining
      */
-    setGroupingAttributes(attrs: JSValue): HSSpotlightQuery;
+    setGroupingAttributes(attrs: string[]): HSSpotlightQuery;
 
     /**
      * Sets the attributes for which aggregate value-list summaries are computed.
@@ -3952,7 +3952,7 @@ attribute: distinct values and the number of results carrying each value.
      * @param attrs An array of attribute name strings
      * @returns this query, for chaining
      */
-    setValueListAttributes(attrs: JSValue): HSSpotlightQuery;
+    setValueListAttributes(attrs: string[]): HSSpotlightQuery;
 
     /**
      * Registers a callback that receives query lifecycle events.
