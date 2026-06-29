@@ -134,6 +134,9 @@
     /**
      * Create a task builder for fluent API
      * @param {string} launchPath - Full path to the executable
+     * @example
+     *  const b = hs.task.builder().launchPath("/bin/echo").arguments(["hi"])
+     *  b.build().start()
      * @returns {TaskBuilder}
      */
     hs.task.builder = function(launchPath) {

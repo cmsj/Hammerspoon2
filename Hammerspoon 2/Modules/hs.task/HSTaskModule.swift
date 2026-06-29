@@ -50,12 +50,7 @@ import JavaScriptCoreExtras
     /// ```
     @objc var sequence: JSFunction? { get set }
 
-    /// Create a task builder. Swift-retained storage for the JS implementation.
-    /// - Example:
-    /// ```js
-    /// const b = hs.task.builder().launchPath("/bin/echo").arguments(["hi"])
-    /// b.build().start()
-    /// ```
+    /// SKIP_DOCS
     @objc var builder: JSFunction? { get set }
 
     /// TaskBuilder class. Swift-retained storage for the JS implementation.

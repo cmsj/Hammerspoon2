@@ -4075,11 +4075,6 @@ declare namespace hs.task {
     const sequence: ((...args: any[]) => any) | undefined;
 
     /**
-     * Create a task builder. Swift-retained storage for the JS implementation.
-     */
-    const builder: ((...args: any[]) => any) | undefined;
-
-    /**
      * TaskBuilder class. Swift-retained storage for the JS implementation.
      */
     const TaskBuilder: ((...args: any[]) => any) | undefined;

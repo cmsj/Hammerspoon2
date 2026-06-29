@@ -9659,7 +9659,7 @@
         },
         {
           "name": "builder",
-          "rawDocumentation": "* Create a task builder for fluent API\n     * @param {string} launchPath - Full path to the executable\n     * @returns {TaskBuilder}",
+          "rawDocumentation": "* Create a task builder for fluent API\n     * @param {string} launchPath - Full path to the executable\n     * @example\n     *  const b = hs.task.builder().launchPath(\"/bin/echo\").arguments([\"hi\"])\n     *  b.build().start()\n     * @returns {TaskBuilder}",
           "description": "Create a task builder for fluent API",
           "params": [
             {
@@ -9695,21 +9695,6 @@
           "lineNumber": 51
         },
         {
-          "name": "builder",
-          "signature": "var builder: JSFunction? { get set }",
-          "rawDocumentation": "Create a task builder. Swift-retained storage for the JS implementation.\n- Example:\n```js\nconst b = hs.task.builder().launchPath(\"/bin/echo\").arguments([\"hi\"])\nb.build().start()\n```",
-          "description": "Create a task builder. Swift-retained storage for the JS implementation.",
-          "examples": [
-            {
-              "lang": "js",
-              "code": "const b = hs.task.builder().launchPath(\"/bin/echo\").arguments([\"hi\"])\nb.build().start()"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
-          "lineNumber": 59
-        },
-        {
           "name": "TaskBuilder",
           "signature": "var TaskBuilder: JSFunction? { get set }",
           "rawDocumentation": "TaskBuilder class. Swift-retained storage for the JS implementation.\n- Example:\n```js\nconst b = new hs.task.TaskBuilder().launchPath(\"/bin/echo\")\n```",
@@ -9722,7 +9707,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.task/HSTaskModule.swift",
-          "lineNumber": 66
+          "lineNumber": 61
         }
       ],
       "types": [
@@ -14136,5 +14121,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-29T21:26:13.087Z"
+  "generatedAt": "2026-06-29T21:31:22.369Z"
 }
