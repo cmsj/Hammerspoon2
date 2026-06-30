@@ -13099,56 +13099,30 @@
           "lineNumber": 36
         },
         {
-          "name": "replaceWithColor",
-          "signature": "func replaceWithColor(_ color: HSColor)",
+          "name": "set",
+          "signature": "func set(_ value: JSValue)",
           "isStatic": false,
-          "rawDocumentation": "Replace this color's value with another HSColor.\n\nIf this color is bound to a UI element, the canvas re-renders automatically.\n- Parameter color: The HSColor to copy from\n- Example:\n```js\nconst reactive = HSColor.hex(\"#4A90E2\")\nreactive.replaceWithColor(HSColor.named(\"red\"))\n```",
-          "description": "Replace this color's value with another HSColor.\nIf this color is bound to a UI element, the canvas re-renders automatically.",
+          "rawDocumentation": "Update this color's value.\n\nIf this color is bound to a UI element, the canvas re-renders automatically.\n- Parameter value: {string | HSColor} A hex color string (e.g. \"#FF0000\") or another HSColor object\n- Example:\n```js\nconst reactive = HSColor.hex(\"#4A90E2\")\nreactive.set(\"#E24A4A\")\nreactive.set(HSColor.named(\"red\"))\n```",
+          "description": "Update this color's value.\nIf this color is bound to a UI element, the canvas re-renders automatically.",
           "params": [
             {
-              "name": "color",
-              "type": "HSColor",
-              "description": "The HSColor to copy from",
+              "name": "value",
+              "type": "JSValue",
+              "description": "A hex color string (e.g. \"#FF0000\") or another HSColor object",
               "optional": false,
-              "tsType": null
+              "tsType": "string | HSColor"
             }
           ],
           "returns": null,
           "examples": [
             {
               "lang": "js",
-              "code": "const reactive = HSColor.hex(\"#4A90E2\")\nreactive.replaceWithColor(HSColor.named(\"red\"))"
+              "code": "const reactive = HSColor.hex(\"#4A90E2\")\nreactive.set(\"#E24A4A\")\nreactive.set(HSColor.named(\"red\"))"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
-          "lineNumber": 47
-        },
-        {
-          "name": "replaceWithHex",
-          "signature": "func replaceWithHex(_ hex: String)",
-          "isStatic": false,
-          "rawDocumentation": "Replace this color's value from a hex string.\n\nIf this color is bound to a UI element, the canvas re-renders automatically.\n- Parameter hex: Hex color string (e.g. \"#FF0000\" or \"FF0000\")\n- Example:\n```js\nconst reactive = HSColor.hex(\"#4A90E2\")\nreactive.replaceWithHex(\"#E24A4A\")\n```",
-          "description": "Replace this color's value from a hex string.\nIf this color is bound to a UI element, the canvas re-renders automatically.",
-          "params": [
-            {
-              "name": "hex",
-              "type": "string",
-              "description": "Hex color string (e.g. \"#FF0000\" or \"FF0000\")",
-              "optional": false,
-              "tsType": null
-            }
-          ],
-          "returns": null,
-          "examples": [
-            {
-              "lang": "js",
-              "code": "const reactive = HSColor.hex(\"#4A90E2\")\nreactive.replaceWithHex(\"#E24A4A\")"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Engine/Types/HSColor.swift",
-          "lineNumber": 58
+          "lineNumber": 48
         }
       ],
       "properties": [],
@@ -13725,56 +13699,30 @@
           "lineNumber": 180
         },
         {
-          "name": "replaceFromFile",
-          "signature": "func replaceFromFile(_ path: String)",
+          "name": "set",
+          "signature": "func set(_ value: JSValue)",
           "isStatic": false,
-          "rawDocumentation": "Replace this image's content by loading a new image from a file path.\n\nIf this image is bound to a UI element, the canvas re-renders automatically.\n- Parameter path: Path to the image file. `~` is expanded.\n- Example:\n```js\nconst reactive = HSImage.fromPath(\"/path/to/initial.png\")\n// ...later...\nreactive.replaceFromFile(\"/path/to/updated.png\")\n```",
-          "description": "Replace this image's content by loading a new image from a file path.\nIf this image is bound to a UI element, the canvas re-renders automatically.",
+          "rawDocumentation": "Replace this image's content.\n\nIf this image is bound to a UI element, the canvas re-renders automatically.\n- Parameter value: {string | HSImage} A file path string (`~` is expanded) or another HSImage object\n- Example:\n```js\nconst reactive = HSImage.fromName(\"NSStatusAvailable\")\nreactive.set(\"/path/to/image.png\")\nreactive.set(HSImage.fromName(\"NSStatusUnavailable\"))\n```",
+          "description": "Replace this image's content.\nIf this image is bound to a UI element, the canvas re-renders automatically.",
           "params": [
             {
-              "name": "path",
-              "type": "string",
-              "description": "Path to the image file. `~` is expanded.",
+              "name": "value",
+              "type": "JSValue",
+              "description": "A file path string (`~` is expanded) or another HSImage object",
               "optional": false,
-              "tsType": null
+              "tsType": "string | HSImage"
             }
           ],
           "returns": null,
           "examples": [
             {
               "lang": "js",
-              "code": "const reactive = HSImage.fromPath(\"/path/to/initial.png\")\n// ...later...\nreactive.replaceFromFile(\"/path/to/updated.png\")"
+              "code": "const reactive = HSImage.fromName(\"NSStatusAvailable\")\nreactive.set(\"/path/to/image.png\")\nreactive.set(HSImage.fromName(\"NSStatusUnavailable\"))"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
           "lineNumber": 192
-        },
-        {
-          "name": "replaceWithImage",
-          "signature": "func replaceWithImage(_ image: HSImage)",
-          "isStatic": false,
-          "rawDocumentation": "Replace this image's content with that of another HSImage.\n\nIf this image is bound to a UI element, the canvas re-renders automatically.\n- Parameter image: The HSImage whose content to copy\n- Example:\n```js\nconst reactive = HSImage.fromName(\"NSStatusAvailable\")\n// ...later...\nreactive.replaceWithImage(HSImage.fromName(\"NSStatusUnavailable\"))\n```",
-          "description": "Replace this image's content with that of another HSImage.\nIf this image is bound to a UI element, the canvas re-renders automatically.",
-          "params": [
-            {
-              "name": "image",
-              "type": "HSImage",
-              "description": "The HSImage whose content to copy",
-              "optional": false,
-              "tsType": null
-            }
-          ],
-          "returns": null,
-          "examples": [
-            {
-              "lang": "js",
-              "code": "const reactive = HSImage.fromName(\"NSStatusAvailable\")\n// ...later...\nreactive.replaceWithImage(HSImage.fromName(\"NSStatusUnavailable\"))"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Engine/Types/HSImage.swift",
-          "lineNumber": 204
         }
       ],
       "properties": [
@@ -14105,5 +14053,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-30T08:04:06.693Z"
+  "generatedAt": "2026-06-30T08:55:57.634Z"
 }

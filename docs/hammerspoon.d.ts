@@ -35,18 +35,11 @@ declare class HSColor {
     static named(name: string): HSColor;
 
     /**
-     * Replace this color's value with another HSColor.
+     * Update this color's value.
 If this color is bound to a UI element, the canvas re-renders automatically.
-     * @param color The HSColor to copy from
+     * @param value A hex color string (e.g. "#FF0000") or another HSColor object
      */
-    replaceWithColor(color: HSColor): void;
-
-    /**
-     * Replace this color's value from a hex string.
-If this color is bound to a UI element, the canvas re-renders automatically.
-     * @param hex Hex color string (e.g. "#FF0000" or "FF0000")
-     */
-    replaceWithHex(hex: string): void;
+    set(value: string | HSColor): void;
 
 }
 
@@ -257,18 +250,11 @@ declare class HSImage {
     saveToFile(path: string): boolean;
 
     /**
-     * Replace this image's content by loading a new image from a file path.
+     * Replace this image's content.
 If this image is bound to a UI element, the canvas re-renders automatically.
-     * @param path Path to the image file. `~` is expanded.
+     * @param value A file path string (`~` is expanded) or another HSImage object
      */
-    replaceFromFile(path: string): void;
-
-    /**
-     * Replace this image's content with that of another HSImage.
-If this image is bound to a UI element, the canvas re-renders automatically.
-     * @param image The HSImage whose content to copy
-     */
-    replaceWithImage(image: HSImage): void;
+    set(value: string | HSImage): void;
 
     /**
      * The size of the image. Setting this resizes the image in place to the exact dimensions.

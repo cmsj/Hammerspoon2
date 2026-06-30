@@ -179,29 +179,17 @@ import Observation
     /// ```
     @objc func saveToFile(_ path: String) -> Bool
 
-    /// Replace this image's content by loading a new image from a file path.
+    /// Replace this image's content.
     ///
     /// If this image is bound to a UI element, the canvas re-renders automatically.
-    /// - Parameter path: Path to the image file. `~` is expanded.
-    /// - Example:
-    /// ```js
-    /// const reactive = HSImage.fromPath("/path/to/initial.png")
-    /// // ...later...
-    /// reactive.replaceFromFile("/path/to/updated.png")
-    /// ```
-    @objc func replaceFromFile(_ path: String)
-
-    /// Replace this image's content with that of another HSImage.
-    ///
-    /// If this image is bound to a UI element, the canvas re-renders automatically.
-    /// - Parameter image: The HSImage whose content to copy
+    /// - Parameter value: {string | HSImage} A file path string (`~` is expanded) or another HSImage object
     /// - Example:
     /// ```js
     /// const reactive = HSImage.fromName("NSStatusAvailable")
-    /// // ...later...
-    /// reactive.replaceWithImage(HSImage.fromName("NSStatusUnavailable"))
+    /// reactive.set("/path/to/image.png")
+    /// reactive.set(HSImage.fromName("NSStatusUnavailable"))
     /// ```
-    @objc func replaceWithImage(_ image: HSImage)
+    @objc func set(_ value: JSValue)
 }
 
 @Observable
@@ -355,17 +343,10 @@ import Observation
 
     // MARK: - Reactive Mutation
 
-    @objc func replaceFromFile(_ path: String) {
-        let expandedPath = NSString(string: path).expandingTildeInPath
-        guard let newImage = NSImage(contentsOfFile: expandedPath) else {
-            AKError("HSImage: Failed to load image from path: \(path)")
-            return
+    @objc func set(_ value: JSValue) {
+        if let newImage = HSImage.fromJSValue(value) {
+            image = newImage.image
         }
-        image = newImage
-    }
-
-    @objc func replaceWithImage(_ other: HSImage) {
-        image = other.image
     }
 
     // MARK: - Internal Helpers
