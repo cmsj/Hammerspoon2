@@ -53,6 +53,11 @@ env.addFilter('formatReturnType', function(returns) {
     return formatType(returns.type, returns.promiseType);
 });
 
+env.addFilter('resolveParamType', function(param) {
+    if (param.tsType) return param.tsType;
+    return formatType(param.type);
+});
+
 env.addFilter('extractPropertyType', function(signature) {
     const typeMatch = signature.match(/var\s+\w+\s*:\s*([^{]+)/);
     return typeMatch ? typeMatch[1].trim() : 'any';

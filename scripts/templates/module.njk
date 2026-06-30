@@ -73,7 +73,7 @@
                 {% for param in method.params %}
                 <tr>
                     <td class="param-name">{{ param.name }}</td>
-                    <td class="param-type">{{ param.type | formatType }}</td>
+                    <td class="param-type">{{ param | resolveParamType }}</td>
                     <td class="param-desc">{{ param.description }}</td>
                 </tr>
                 {% endfor %}
