@@ -152,15 +152,19 @@ struct HSLocationCalculationTests {
         #expect(!harness.hasException)
     }
 
-    @Test("sunrise() returns a number for London on 2024-01-01")
+    @Test("sunrise() returns a date for London on 2024-01-01")
     func testSunriseLondon() {
         let harness = makeHarness()
         harness.eval("""
             var rise = hs.location.sunrise(51.5074, -0.1278, new Date('2024-01-01T12:00:00Z'));
         """)
-        harness.expectTrue("typeof rise === 'number'")
-        // Known: 1 Jan 2024 sunrise London ≈ 08:06 UTC → unix ≈ 1704096360
-        harness.expectTrue("Math.abs(rise - 1704096360) < 300")
+        harness.expectTrue("typeof rise === 'object'")
+        // Known: 1 Jan 2024 sunrise London ≈ 08:06 UTC
+        harness.expectTrue("rise.getFullYear() === 2024")
+        harness.expectTrue("rise.getMonth() === 0")
+        harness.expectTrue("rise.getDate() === 1")
+        harness.expectTrue("rise.getHours() === 8")
+        harness.expectTrue("rise.getMinutes() === 6")
         #expect(!harness.hasException)
     }
 
