@@ -174,9 +174,13 @@ struct HSLocationCalculationTests {
         harness.eval("""
             var set = hs.location.sunset(51.5074, -0.1278, new Date('2024-01-01T12:00:00Z'));
         """)
-        harness.expectTrue("typeof set === 'number'")
-        // 1 Jan 2024 sunset London ≈ 16:01 UTC → unix ≈ 1704124800 (accept wider band)
-        harness.expectTrue("Math.abs(set - 1704124800) < 600")
+        harness.expectTrue("typeof set === 'object'")
+        // 1 Jan 2024 sunset London ≈ 16:01 UTC
+        harness.expectTrue("set.getFullYear() === 2024")
+        harness.expectTrue("set.getMonth() === 0")
+        harness.expectTrue("set.getDate() === 1")
+        harness.expectTrue("set.getHours() === 16")
+        harness.expectTrue("set.getMinutes() === 1")
         #expect(!harness.hasException)
     }
 
@@ -207,7 +211,7 @@ struct HSLocationCalculationTests {
             var rise = hs.location.sunrise(51.5074, -0.1278);
         """)
         // Should still return a number for London (sun rises every day)
-        harness.expectTrue("typeof rise === 'number'")
+        harness.expectTrue("typeof rise === 'object'")
         #expect(!harness.hasException)
     }
 
@@ -217,7 +221,7 @@ struct HSLocationCalculationTests {
         harness.eval("""
             var rise = hs.location.sunrise(51.5074, -0.1278, null);
         """)
-        harness.expectTrue("typeof rise === 'number'")
+        harness.expectTrue("typeof rise === 'object'")
         #expect(!harness.hasException)
     }
 
