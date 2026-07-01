@@ -52,13 +52,11 @@ struct HSNotifyStructureTests {
         #expect(!harness.hasException)
     }
 
-    @Test("new() returns null when passed a non-object")
+    @Test("new() throws when passed a non-object")
     func testCreateWithNonObjectReturnsNull() {
         let harness = makeHarness()
-        harness.expectTrue(
-            "(function() { var n = hs.notify.create('oops'); return n === null || n === undefined; })()"
-        )
-        #expect(!harness.hasException)
+        harness.eval("hs.notify.create('oops')")
+        #expect(harness.hasException)
     }
 
     @Test("new() returns an object when given a valid title")
