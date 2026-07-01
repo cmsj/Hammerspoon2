@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.power - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.power</span>
+</nav>
+<div class="page-header">
+    <h1>hs.power</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Monitor and control system power: prevent sleep, read battery state, respond to
+power events, and lock or sleep the machine.</p>
+<h2>Preventing sleep</h2>
+<pre><code class="language-js">// Prevent the display from sleeping while a task runs
+hs.power.preventSleep(&quot;display&quot;)
+// ... do work ...
+hs.power.allowSleep(&quot;display&quot;)
+</code></pre>
+<h2>Watching for system events</h2>
+<pre><code class="language-js">hs.power.addEventWatcher(event =&gt; {
+    if (event === &quot;screensDidLock&quot;) console.log(&quot;Screen locked!&quot;)
+})
+</code></pre>
+<h2>Reading battery state</h2>
+<pre><code class="language-js">const info = hs.power.batteryInfo()
+if (info) {
+    console.log(`Battery: ${info.percentage}%, ${info.timeRemaining} minutes remaining`)
+}
+</code></pre>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="percentage">
+        <h3><a href="#percentage">hs.power.percentage</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The current battery charge percentage (0–100), or `-1` if no battery is present.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L134" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:134</a>
+        </div>
+    </div>
+    <div class="property" id="isCharging">
+        <h3><a href="#isCharging">hs.power.isCharging</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the battery is currently charging.
+Returns `false` when no battery is present.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L143" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:143</a>
+        </div>
+    </div>
+    <div class="property" id="powerSource">
+        <h3><a href="#powerSource">hs.power.powerSource</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The current power source.
+Returns `&quot;ac&quot;` when plugged in, `&quot;battery&quot;` when on battery power, `&quot;ups&quot;` when
+powered by a UPS, or `&quot;unknown&quot;` if the source cannot be determined.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L153" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:153</a>
+        </div>
+    </div>
+    <div class="property" id="isLowPowerMode">
+        <h3><a href="#isLowPowerMode">hs.power.isLowPowerMode</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether Low Power Mode is currently active.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L161" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:161</a>
+        </div>
+    </div>
+    <div class="property" id="thermalState">
+        <h3><a href="#thermalState">hs.power.thermalState</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The current thermal state of the system.
+Returns one of: `&quot;nominal&quot;`, `&quot;fair&quot;`, `&quot;serious&quot;`, `&quot;critical&quot;`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L170" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:170</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="preventSleep">
+        <h3><a href="#preventSleep">hs.power.preventSleep(type) -> boolean</a></h3>
+
+        <div class="description">Prevents the specified type of system sleep.
+Creates an IOKit power assertion that stops macOS from allowing the specified
+type of sleep. Call `allowSleep` with the same type to release the assertion.
+idle sleep), `&quot;systemIdle&quot;` (prevent system idle sleep), `&quot;system&quot;` (prevent
+all system sleep, including from power button or lid close).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.preventSleep(type) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">type</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The sleep type to prevent. One of: `&quot;display&quot;` (prevent display</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the assertion was created successfully.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.preventSleep(&quot;display&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L59" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:59</a>
+        </div>
+    </div>
+    <div class="method" id="allowSleep">
+        <h3><a href="#allowSleep">hs.power.allowSleep(type) -> boolean</a></h3>
+
+        <div class="description">Releases a previously created sleep prevention assertion.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.allowSleep(type) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">type</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The sleep type to allow again. One of: `&quot;display&quot;`, `&quot;systemIdle&quot;`, `&quot;system&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if an assertion existed and was released, `false` if none was active.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.allowSleep(&quot;display&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:69</a>
+        </div>
+    </div>
+    <div class="method" id="isSleepPrevented">
+        <h3><a href="#isSleepPrevented">hs.power.isSleepPrevented(type) -> boolean</a></h3>
+
+        <div class="description">Returns whether Hammerspoon is currently preventing the specified type of sleep.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.isSleepPrevented(type) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">type</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The sleep type to check. One of: `&quot;display&quot;`, `&quot;systemIdle&quot;`, `&quot;system&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if this sleep type is currently being prevented.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  if (hs.power.isSleepPrevented(&quot;display&quot;)) console.log(&quot;display sleep is prevented&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:79</a>
+        </div>
+    </div>
+    <div class="method" id="declareActivity">
+        <h3><a href="#declareActivity">hs.power.declareActivity() -> None</a></h3>
+
+        <div class="description">Simulates user activity, briefly resetting the display idle timer.
+Equivalent to moving the mouse — does not create a persistent assertion.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.declareActivity() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.declareActivity()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L88" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:88</a>
+        </div>
+    </div>
+    <div class="method" id="currentAssertions">
+        <h3><a href="#currentAssertions">hs.power.currentAssertions() -> [[String: Any]]</a></h3>
+
+        <div class="description">Returns the active power management assertions from all processes on the system.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.currentAssertions() -> [[String: Any]]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[[String: Any]]</div>
+        <div class="return-desc">An array of objects with `pid` (number), `name` (string), and `type` (string) properties.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.currentAssertions().forEach(a =&gt; console.log(a.pid + &quot; &quot; + a.name))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L97" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:97</a>
+        </div>
+    </div>
+    <div class="method" id="systemSleep">
+        <h3><a href="#systemSleep">hs.power.systemSleep() -> None</a></h3>
+
+        <div class="description">Puts the system to sleep immediately.
+Requires the Automation permission for System Events.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.systemSleep() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.systemSleep()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L108" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:108</a>
+        </div>
+    </div>
+    <div class="method" id="lockScreen">
+        <h3><a href="#lockScreen">hs.power.lockScreen() -> None</a></h3>
+
+        <div class="description">Locks the screen immediately.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.lockScreen() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.lockScreen()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L116" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:116</a>
+        </div>
+    </div>
+    <div class="method" id="startScreensaver">
+        <h3><a href="#startScreensaver">hs.power.startScreensaver() -> None</a></h3>
+
+        <div class="description">Starts the screensaver immediately.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.startScreensaver() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.startScreensaver()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L124" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:124</a>
+        </div>
+    </div>
+    <div class="method" id="batteryInfo">
+        <h3><a href="#batteryInfo">hs.power.batteryInfo() -> [String: Any]</a></h3>
+
+        <div class="description">Returns a snapshot of all available battery information, or `null` if no battery is present.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.batteryInfo() -> [String: Any]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">An object with battery fields, or `null` if no battery is present.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  const info = hs.power.batteryInfo()
+  if (info) console.log(`${info.percentage}% — ${info.timeRemaining}m remaining`)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L198" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:198</a>
+        </div>
+    </div>
+    <div class="method" id="addEventWatcher">
+        <h3><a href="#addEventWatcher">hs.power.addEventWatcher(listener) -> None</a></h3>
+
+        <div class="description">Registers a listener that fires when system power events occur.
+`&quot;screensDidSleep&quot;`, `&quot;screensDidWake&quot;`, `&quot;screensDidLock&quot;`, `&quot;screensDidUnlock&quot;`,
+`&quot;screensaverDidStart&quot;`, `&quot;screensaverDidStop&quot;`, `&quot;screensaverWillStop&quot;`,
+`&quot;systemWillSleep&quot;`, `&quot;systemDidWake&quot;`, `&quot;systemWillPowerOff&quot;`,
+`&quot;sessionDidBecomeActive&quot;`, `&quot;sessionDidResignActive&quot;`.
+The OS notification subscription starts lazily on the first listener and
+is released automatically when the last listener is removed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.addEventWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">JSFunction</td>
+                    <td class="param-desc">A function receiving `(eventName: string)`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.addEventWatcher(event =&gt; console.log(&quot;Power event: &quot; + event))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L217" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:217</a>
+        </div>
+    </div>
+    <div class="method" id="removeEventWatcher">
+        <h3><a href="#removeEventWatcher">hs.power.removeEventWatcher(listener) -> None</a></h3>
+
+        <div class="description">Removes a previously registered power event listener.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.removeEventWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">JSFunction</td>
+                    <td class="param-desc">The function originally passed to `addEventWatcher`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  const handler = event =&gt; console.log(event)
+  hs.power.addEventWatcher(handler)
+  hs.power.removeEventWatcher(handler)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L228" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:228</a>
+        </div>
+    </div>
+    <div class="method" id="addBatteryWatcher">
+        <h3><a href="#addBatteryWatcher">hs.power.addBatteryWatcher(listener) -> None</a></h3>
+
+        <div class="description">Registers a listener that fires whenever battery state changes.
+The listener receives no arguments; call `batteryInfo()` or read individual
+properties inside the callback to determine what changed.
+The OS notification subscription starts lazily on the first listener and
+is released automatically when the last listener is removed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.addBatteryWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">JSFunction</td>
+                    <td class="param-desc">A function called with no arguments on battery state change.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  hs.power.addBatteryWatcher(() =&gt; {
+      console.log(&quot;Battery now: &quot; + hs.power.percentage + &quot;%&quot;)
+  })</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L253" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:253</a>
+        </div>
+    </div>
+    <div class="method" id="removeBatteryWatcher">
+        <h3><a href="#removeBatteryWatcher">hs.power.removeBatteryWatcher(listener) -> None</a></h3>
+
+        <div class="description">Removes a previously registered battery change listener.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.power.removeBatteryWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">JSFunction</td>
+                    <td class="param-desc">The function originally passed to `addBatteryWatcher`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">  const handler = () =&gt; console.log(&quot;battery changed&quot;)
+  hs.power.addBatteryWatcher(handler)
+  hs.power.removeBatteryWatcher(handler)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.power/HSPowerModule.swift#L264" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.power/HSPowerModule.swift:264</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.power');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

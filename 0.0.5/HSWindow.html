@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSWindow - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSWindow</span>
+</nav>
+<div class="page-header">
+    <h1>HSWindow</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>Object representing a window. You should not instantiate these directly, but rather, use the methods in hs.window to create them for you.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="title">
+        <h3><a href="#title">title</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The window&#39;s title</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L26" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:26</a>
+        </div>
+    </div>
+    <div class="property" id="application">
+        <h3><a href="#application">application</a></h3>
+        <div class="prop-type">HSApplication</div>
+        <div class="description">The application that owns this window</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L34" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:34</a>
+        </div>
+    </div>
+    <div class="property" id="pid">
+        <h3><a href="#pid">pid</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The process ID of the application that owns this window</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L42" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:42</a>
+        </div>
+    </div>
+    <div class="property" id="id">
+        <h3><a href="#id">id</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The window&#39;s underlying ID.
+A value of 0 or -1 likely means no window ID could be determined.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L51" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:51</a>
+        </div>
+    </div>
+    <div class="property" id="isMinimized">
+        <h3><a href="#isMinimized">isMinimized</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the window is minimized</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L61" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:61</a>
+        </div>
+    </div>
+    <div class="property" id="isVisible">
+        <h3><a href="#isVisible">isVisible</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the window is visible (not minimized or hidden)</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:69</a>
+        </div>
+    </div>
+    <div class="property" id="isFocused">
+        <h3><a href="#isFocused">isFocused</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the window is focused</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L77" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:77</a>
+        </div>
+    </div>
+    <div class="property" id="isFullscreen">
+        <h3><a href="#isFullscreen">isFullscreen</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the window is fullscreen</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L85" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:85</a>
+        </div>
+    </div>
+    <div class="property" id="isStandard">
+        <h3><a href="#isStandard">isStandard</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the window is standard (has a titlebar)</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L93" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:93</a>
+        </div>
+    </div>
+    <div class="property" id="position">
+        <h3><a href="#position">position</a></h3>
+        <div class="prop-type">HSPoint</div>
+        <div class="description">The window&#39;s position on screen {x: Int, y: Int}</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L103" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:103</a>
+        </div>
+    </div>
+    <div class="property" id="size">
+        <h3><a href="#size">size</a></h3>
+        <div class="prop-type">HSSize</div>
+        <div class="description">The window&#39;s size {w: Int, h: Int}</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L111" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:111</a>
+        </div>
+    </div>
+    <div class="property" id="frame">
+        <h3><a href="#frame">frame</a></h3>
+        <div class="prop-type">HSRect</div>
+        <div class="description">The window&#39;s frame {x: Int, y: Int, w: Int, h: Int}</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L119" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:119</a>
+        </div>
+    </div>
+    <div class="property" id="screen">
+        <h3><a href="#screen">screen</a></h3>
+        <div class="prop-type">HSScreen</div>
+        <div class="description">The screen that contains the largest portion of this window.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L127" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:127</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="focus">
+        <h3>
+<a href="#focus">focus() -> boolean</a>
+        </h3>
+
+        <div class="description">Focus this window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">focus() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if successful</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const wins = hs.window.allWindows()
+wins[0].focus()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:138</a>
+        </div>
+    </div>
+    <div class="method" id="minimize">
+        <h3>
+<a href="#minimize">minimize() -> boolean</a>
+        </h3>
+
+        <div class="description">Minimize this window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">minimize() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if successful</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const win = hs.window.focusedWindow()
+win.minimize()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L147" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:147</a>
+        </div>
+    </div>
+    <div class="method" id="unminimize">
+        <h3>
+<a href="#unminimize">unminimize() -> boolean</a>
+        </h3>
+
+        <div class="description">Unminimize this window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">unminimize() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if successful</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const win = hs.window.allWindows()[0]
+win.unminimize()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L156" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:156</a>
+        </div>
+    </div>
+    <div class="method" id="raise">
+        <h3>
+<a href="#raise">raise() -> boolean</a>
+        </h3>
+
+        <div class="description">Raise this window to the front</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">raise() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if successful</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const win = hs.window.allWindows()[0]
+win.raise()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L165" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:165</a>
+        </div>
+    </div>
+    <div class="method" id="toggleFullscreen">
+        <h3>
+<a href="#toggleFullscreen">toggleFullscreen() -> boolean</a>
+        </h3>
+
+        <div class="description">Toggle fullscreen mode</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toggleFullscreen() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if successful</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const win = hs.window.focusedWindow()
+win.toggleFullscreen()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L174" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:174</a>
+        </div>
+    </div>
+    <div class="method" id="close">
+        <h3>
+<a href="#close">close() -> boolean</a>
+        </h3>
+
+        <div class="description">Close this window</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">close() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if successful</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const win = hs.window.focusedWindow()
+win.close()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L183" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:183</a>
+        </div>
+    </div>
+    <div class="method" id="centerOnScreen">
+        <h3>
+<a href="#centerOnScreen">centerOnScreen() -> None</a>
+        </h3>
+
+        <div class="description">Center the window on the screen</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">centerOnScreen() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const win = hs.window.focusedWindow()
+win.centerOnScreen()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L192" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:192</a>
+        </div>
+    </div>
+    <div class="method" id="axElement">
+        <h3>
+<a href="#axElement">axElement() -> HSAXElement</a>
+        </h3>
+
+        <div class="description">Get the underlying AXElement</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">axElement() -> HSAXElement</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSAXElement</div>
+        <div class="return-desc">The accessibility element for this window</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const win = hs.window.focusedWindow()
+const ax = win.axElement()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.window/HSWindow.swift#L203" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.window/HSWindow.swift:203</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSWindow');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

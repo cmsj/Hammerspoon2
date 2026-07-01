@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSAudioDevice - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSAudioDevice</span>
+</nav>
+<div class="page-header">
+    <h1>HSAudioDevice</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>An audio device attached to the system.</p>
+<p>Obtain instances via <code>hs.audiodevice</code> module methods — do not instantiate directly.</p>
+<h2>Getting and setting volume</h2>
+<pre><code class="language-javascript">const dev = hs.audiodevice.defaultOutputDevice();
+if (dev) {
+    console.log(dev.volume);    // 0.0 – 1.0, or null
+    dev.volume = 0.5;
+}
+</code></pre>
+<h2>Watching for changes</h2>
+<pre><code class="language-javascript">const dev = hs.audiodevice.defaultOutputDevice();
+if (dev) {
+    var fn = function(event) { console.log(&quot;Device event:&quot;, event); };
+    dev.addWatcher(fn);
+    // later…
+    dev.removeWatcher(fn);
+}
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="id">
+        <h3><a href="#id">id</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The CoreAudio object ID of this device.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:210</a>
+        </div>
+    </div>
+    <div class="property" id="name">
+        <h3><a href="#name">name</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The human-readable name of this device (e.g. `&quot;Built-in Output&quot;`).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L218" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:218</a>
+        </div>
+    </div>
+    <div class="property" id="uid">
+        <h3><a href="#uid">uid</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The persistent unique identifier for this device.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L226" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:226</a>
+        </div>
+    </div>
+    <div class="property" id="isOutput">
+        <h3><a href="#isOutput">isOutput</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether this device has output streams (can play audio).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L236" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:236</a>
+        </div>
+    </div>
+    <div class="property" id="isInput">
+        <h3><a href="#isInput">isInput</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether this device has input streams (can record audio).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L244" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:244</a>
+        </div>
+    </div>
+    <div class="property" id="transportType">
+        <h3><a href="#transportType">transportType</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The transport mechanism: `&quot;built-in&quot;`, `&quot;usb&quot;`, `&quot;bluetooth&quot;`, `&quot;bluetooth-le&quot;`,
+`&quot;hdmi&quot;`, `&quot;display-port&quot;`, `&quot;firewire&quot;`, `&quot;airplay&quot;`, `&quot;avb&quot;`,
+`&quot;thunderbolt&quot;`, `&quot;virtual&quot;`, `&quot;aggregate&quot;`, `&quot;pci&quot;`, or `&quot;unknown&quot;`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L254" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:254</a>
+        </div>
+    </div>
+    <div class="property" id="outputChannels">
+        <h3><a href="#outputChannels">outputChannels</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">Number of output channels, or 0 if the device has no output.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L264" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:264</a>
+        </div>
+    </div>
+    <div class="property" id="inputChannels">
+        <h3><a href="#inputChannels">inputChannels</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">Number of input channels, or 0 if the device has no input.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L272" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:272</a>
+        </div>
+    </div>
+    <div class="property" id="volume">
+        <h3><a href="#volume">volume</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description">Output volume scalar in the range `0.0`–`1.0`, or `null` if the device has
+no controllable output volume. Setting `null` is a no-op.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L283" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:283</a>
+        </div>
+    </div>
+    <div class="property" id="muted">
+        <h3><a href="#muted">muted</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether output is muted. Always `false` if the device has no mutable output.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L291" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:291</a>
+        </div>
+    </div>
+    <div class="property" id="balance">
+        <h3><a href="#balance">balance</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description">Output stereo balance in the range `0.0` (full left)–`1.0` (full right),
+or `null` if balance control is not available.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L300" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:300</a>
+        </div>
+    </div>
+    <div class="property" id="inputVolume">
+        <h3><a href="#inputVolume">inputVolume</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description">Input (microphone) volume scalar in the range `0.0`–`1.0`, or `null` if
+the device has no controllable input volume.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L311" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:311</a>
+        </div>
+    </div>
+    <div class="property" id="inputMuted">
+        <h3><a href="#inputMuted">inputMuted</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether input is muted. Always `false` if the device has no mutable input.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L319" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:319</a>
+        </div>
+    </div>
+    <div class="property" id="sampleRate">
+        <h3><a href="#sampleRate">sampleRate</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description">The current nominal sample rate in Hz (e.g. `44100`), or `null` if unknown.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L329" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:329</a>
+        </div>
+    </div>
+    <div class="property" id="availableSampleRates">
+        <h3><a href="#availableSampleRates">availableSampleRates</a></h3>
+        <div class="prop-type">NSNumber[]</div>
+        <div class="description">All sample rates (in Hz) that this device supports.
+For devices that support a range, both the minimum and maximum are included.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L338" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:338</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="currentOutputDataSource">
+        <h3>
+<a href="#currentOutputDataSource">currentOutputDataSource() -> [String: Any]</a>
+        </h3>
+
+        <div class="description">The current output data source as `{ id, name }`, or `null` if unavailable.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">currentOutputDataSource() -> [String: Any]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">A dictionary containing the id and name of the current output data source</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const dev = hs.audiodevice.defaultOutputDevice()
+console.log(dev.currentOutputDataSource())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L349" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:349</a>
+        </div>
+    </div>
+    <div class="method" id="currentInputDataSource">
+        <h3>
+<a href="#currentInputDataSource">currentInputDataSource() -> [String: Any]</a>
+        </h3>
+
+        <div class="description">The current input data source as `{ id, name }`, or `null` if unavailable.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">currentInputDataSource() -> [String: Any]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">A dictionary containing the id and name of the current input data source</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const mic = hs.audiodevice.defaultInputDevice()
+console.log(mic.currentInputDataSource())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L358" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:358</a>
+        </div>
+    </div>
+    <div class="method" id="outputDataSources">
+        <h3>
+<a href="#outputDataSources">outputDataSources() -> [[String: Any]]</a>
+        </h3>
+
+        <div class="description">All available output data sources as an array of `{ id, name }` objects.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">outputDataSources() -> [[String: Any]]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[[String: Any]]</div>
+        <div class="return-desc">A dictionary containing the ids and names of all available output data sources</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const dev = hs.audiodevice.defaultOutputDevice()
+console.log(dev.outputDataSources())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L367" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:367</a>
+        </div>
+    </div>
+    <div class="method" id="inputDataSources">
+        <h3>
+<a href="#inputDataSources">inputDataSources() -> [[String: Any]]</a>
+        </h3>
+
+        <div class="description">All available input data sources as an array of `{ id, name }` objects.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">inputDataSources() -> [[String: Any]]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[[String: Any]]</div>
+        <div class="return-desc">A dictionary containing the ids and names of all available input data sources</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const mic = hs.audiodevice.defaultInputDevice()
+console.log(mic.inputDataSources())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L376" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:376</a>
+        </div>
+    </div>
+    <div class="method" id="setCurrentOutputDataSource">
+        <h3>
+<a href="#setCurrentOutputDataSource">setCurrentOutputDataSource(sourceID) -> boolean</a>
+        </h3>
+
+        <div class="description">Select an output data source by its numeric ID.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCurrentOutputDataSource(sourceID) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">sourceID</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The `id` value from ``outputDataSources()``</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const dev = hs.audiodevice.defaultOutputDevice()
+const sources = dev.outputDataSources()
+dev.setCurrentOutputDataSource(sources[0].id)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L387" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:387</a>
+        </div>
+    </div>
+    <div class="method" id="setCurrentInputDataSource">
+        <h3>
+<a href="#setCurrentInputDataSource">setCurrentInputDataSource(sourceID) -> boolean</a>
+        </h3>
+
+        <div class="description">Select an input data source by its numeric ID.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCurrentInputDataSource(sourceID) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">sourceID</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The `id` value from ``inputDataSources()``</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const mic = hs.audiodevice.defaultInputDevice()
+const sources = mic.inputDataSources()
+mic.setCurrentInputDataSource(sources[0].id)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L398" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:398</a>
+        </div>
+    </div>
+    <div class="method" id="setDefaultOutputDevice">
+        <h3>
+<a href="#setDefaultOutputDevice">setDefaultOutputDevice() -> boolean</a>
+        </h3>
+
+        <div class="description">Make this device the system default output device.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setDefaultOutputDevice() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const usb = hs.audiodevice.findDeviceByName(&quot;USB Audio CODEC&quot;)
+usb.setDefaultOutputDevice()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L409" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:409</a>
+        </div>
+    </div>
+    <div class="method" id="setDefaultInputDevice">
+        <h3>
+<a href="#setDefaultInputDevice">setDefaultInputDevice() -> boolean</a>
+        </h3>
+
+        <div class="description">Make this device the system default input device.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setDefaultInputDevice() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const mic = hs.audiodevice.findDeviceByName(&quot;External Mic&quot;)
+mic.setDefaultInputDevice()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L418" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:418</a>
+        </div>
+    </div>
+    <div class="method" id="setDefaultEffectDevice">
+        <h3>
+<a href="#setDefaultEffectDevice">setDefaultEffectDevice() -> boolean</a>
+        </h3>
+
+        <div class="description">Make this device the system alert sound (effect) device.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setDefaultEffectDevice() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const dev = hs.audiodevice.defaultOutputDevice()
+dev.setDefaultEffectDevice()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L427" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:427</a>
+        </div>
+    </div>
+    <div class="method" id="addWatcher">
+        <h3>
+<a href="#addWatcher">addWatcher(listener) -> None</a>
+        </h3>
+
+        <div class="description">Register a listener for a per-device property-change event.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">addWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">JSFunction</td>
+                    <td class="param-desc">A JavaScript function that receives an event name string</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const dev = hs.audiodevice.defaultOutputDevice()
+dev.addWatcher((event) =&gt; console.log(&quot;Event:&quot;, event))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L448" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:448</a>
+        </div>
+    </div>
+    <div class="method" id="removeWatcher">
+        <h3>
+<a href="#removeWatcher">removeWatcher(listener) -> None</a>
+        </h3>
+
+        <div class="description">Remove a previously registered per-device listener.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">removeWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">JSFunction</td>
+                    <td class="param-desc">The JavaScript function that was passed to ``addWatcher(_:)``</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const dev = hs.audiodevice.defaultOutputDevice()
+dev.removeWatcher(myHandler)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.audiodevice/HSAudioDevice.swift#L458" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift:458</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSAudioDevice');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
