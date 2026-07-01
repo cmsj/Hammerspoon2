@@ -245,7 +245,12 @@ import JavaScriptCore
 
         let currentTime = mach_absolute_time()
         let nanos = currentTime * UInt64(info.numer) / UInt64(info.denom)
-        return Int(nanos)
+
+        // We are checking if nanos exceeds the largest possible Int, to ensure we don't trip
+        // Swift's internal arithmetic checking. Please not that this is exceedingly unlikely
+        // to ever actually matter, because Int.max nanoseconds would be ~292 years, which would
+        // be an extremely impressive uptime.
+        return nanos > UInt64(Int.max) ? Int.max : Int(nanos)
     }
 
     @objc func localTime() -> TimeInterval {
