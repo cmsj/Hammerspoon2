@@ -6428,7 +6428,7 @@
             {
               "name": "title",
               "signature": "var title: String? { get set }",
-              "rawDocumentation": "Get or set the menu item's title.\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.title = \"Hello\"\nconsole.log(item.title)\n```\n```",
+              "rawDocumentation": "Get or set the menu item's title.\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.title = \"Hello\"\nconsole.log(item.title)\n```",
               "description": "Get or set the menu item's title.",
               "examples": [
                 {
@@ -6438,7 +6438,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
-              "lineNumber": 100
+              "lineNumber": 98
             }
           ]
         }
@@ -14053,5 +14053,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-06-30T08:59:38.787Z"
+  "generatedAt": "2026-07-01T12:08:28.107Z"
 }
