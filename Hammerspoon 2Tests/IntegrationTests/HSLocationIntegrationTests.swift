@@ -168,7 +168,7 @@ struct HSLocationCalculationTests {
         #expect(!harness.hasException)
     }
 
-    @Test("sunset() returns a number for London on 2024-01-01")
+    @Test("sunset() returns a date for London on 2024-01-01")
     func testSunsetLondon() {
         let harness = makeHarness()
         harness.eval("""

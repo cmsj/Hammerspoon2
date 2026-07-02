@@ -81,8 +81,7 @@ import CoreLocation
     /// ```
     @objc(distance::) func distance(_ from: [String: Double], _ to: [String: Double]) -> Double
 
-    /// Returns the time of sunrise for the given coordinates and date as seconds
-    /// since the Unix epoch, or null if the sun does not rise on that date (polar night).
+    /// Returns the time of sunrise for the given coordinates and date, or null if the sun does not rise on that date (polar night).
     /// - Parameters:
     ///   - latitude: degrees north (positive) or south (negative)
     ///   - longitude: degrees east (positive) or west (negative)
@@ -91,12 +90,11 @@ import CoreLocation
     /// - Example:
     /// ```js
     /// const rise = hs.location.sunrise(51.5, -0.1)
-    /// console.log(new Date(rise * 1000).toTimeString())
+    /// console.log(rise.toTimeString())
     /// ```
-    @objc(sunrise:::) func sunrise(_ latitude: Double, _ longitude: Double, _ date: NSDate?) -> NSDate?
+    @objc(sunrise:::) func sunrise(_ latitude: Double, _ longitude: Double, _ date: Date?) -> Date?
 
-    /// Returns the time of sunset for the given coordinates and date as seconds
-    /// since the Unix epoch, or null if the sun does not set on that date (midnight sun).
+    /// Returns the time of sunset for the given coordinates and date, or null if the sun does not set on that date (midnight sun).
     /// - Parameters:
     ///   - latitude: degrees north (positive) or south (negative)
     ///   - longitude: degrees east (positive) or west (negative)
@@ -105,9 +103,9 @@ import CoreLocation
     /// - Example:
     /// ```js
     /// const set = hs.location.sunset(51.5, -0.1)
-    /// console.log(new Date(set * 1000).toTimeString())
+    /// console.log(set.toTimeString())
     /// ```
-    @objc(sunset:::) func sunset(_ latitude: Double, _ longitude: Double, _ date: NSDate?) -> NSDate?
+    @objc(sunset:::) func sunset(_ latitude: Double, _ longitude: Double, _ date: Date?) -> Date?
 
     /// Creates a new location watcher object. Call `.start()` on it to begin
     /// receiving updates. The watcher is automatically stopped when the module
@@ -213,14 +211,14 @@ import CoreLocation
         return fromLoc.distance(from: toLoc)
     }
 
-    @objc(sunrise:::) func sunrise(_ latitude: Double, _ longitude: Double, _ date: NSDate?) -> NSDate? {
+    @objc(sunrise:::) func sunrise(_ latitude: Double, _ longitude: Double, _ date: Date?) -> Date? {
         let d = (date as Date?) ?? Date()
-        return Self.sunTime(latitude: latitude, longitude: longitude, date: d, isSunrise: true) as? NSDate
+        return Self.sunTime(latitude: latitude, longitude: longitude, date: d, isSunrise: true)
     }
 
-    @objc(sunset:::) func sunset(_ latitude: Double, _ longitude: Double, _ date: NSDate?) -> NSDate? {
+    @objc(sunset:::) func sunset(_ latitude: Double, _ longitude: Double, _ date: Date?) -> Date? {
         let d = (date as Date?) ?? Date()
-        return Self.sunTime(latitude: latitude, longitude: longitude, date: d, isSunrise: false) as? NSDate
+        return Self.sunTime(latitude: latitude, longitude: longitude, date: d, isSunrise: false)
     }
 
     func addWatcher() -> HSLocationWatcher {

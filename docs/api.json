@@ -5880,10 +5880,10 @@
         },
         {
           "name": "sunrise",
-          "signature": "func sunrise(_ latitude: Double, _ longitude: Double, _ date: NSDate?) -> number?",
+          "signature": "func sunrise(_ latitude: Double, _ longitude: Double, _ date: Date?) -> Date?",
           "isStatic": false,
-          "rawDocumentation": "Returns the time of sunrise for the given coordinates and date as seconds\nsince the Unix epoch, or null if the sun does not rise on that date (polar night).\n- Parameters:\n  - latitude: degrees north (positive) or south (negative)\n  - longitude: degrees east (positive) or west (negative)\n  - date: the date to calculate for; pass null or omit to use today\n- Returns: seconds since epoch of sunrise, or null\n- Example:\n```js\nconst rise = hs.location.sunrise(51.5, -0.1)\nconsole.log(new Date(rise * 1000).toTimeString())\n```",
-          "description": "Returns the time of sunrise for the given coordinates and date as seconds\nsince the Unix epoch, or null if the sun does not rise on that date (polar night).",
+          "rawDocumentation": "Returns the time of sunrise for the given coordinates and date, or null if the sun does not rise on that date (polar night).\n- Parameters:\n  - latitude: degrees north (positive) or south (negative)\n  - longitude: degrees east (positive) or west (negative)\n  - date: the date to calculate for; pass null or omit to use today\n- Returns: A Date object representing the time of sunrise, or null\n- Example:\n```js\nconst rise = hs.location.sunrise(51.5, -0.1)\nconsole.log(rise.toTimeString())\n```",
+          "description": "Returns the time of sunrise for the given coordinates and date, or null if the sun does not rise on that date (polar night).",
           "params": [
             {
               "name": "latitude",
@@ -5908,25 +5908,25 @@
             }
           ],
           "returns": {
-            "type": "number",
-            "description": "seconds since epoch of sunrise, or null"
+            "type": "Date",
+            "description": "A Date object representing the time of sunrise, or null"
           },
           "examples": [
             {
               "lang": "js",
-              "code": "const rise = hs.location.sunrise(51.5, -0.1)\nconsole.log(new Date(rise * 1000).toTimeString())"
+              "code": "const rise = hs.location.sunrise(51.5, -0.1)\nconsole.log(rise.toTimeString())"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
-          "lineNumber": 96
+          "lineNumber": 95
         },
         {
           "name": "sunset",
-          "signature": "func sunset(_ latitude: Double, _ longitude: Double, _ date: NSDate?) -> number?",
+          "signature": "func sunset(_ latitude: Double, _ longitude: Double, _ date: Date?) -> Date?",
           "isStatic": false,
-          "rawDocumentation": "Returns the time of sunset for the given coordinates and date as seconds\nsince the Unix epoch, or null if the sun does not set on that date (midnight sun).\n- Parameters:\n  - latitude: degrees north (positive) or south (negative)\n  - longitude: degrees east (positive) or west (negative)\n  - date: the date to calculate for; pass null or omit to use today\n- Returns: seconds since epoch of sunset, or null\n- Example:\n```js\nconst set = hs.location.sunset(51.5, -0.1)\nconsole.log(new Date(set * 1000).toTimeString())\n```",
-          "description": "Returns the time of sunset for the given coordinates and date as seconds\nsince the Unix epoch, or null if the sun does not set on that date (midnight sun).",
+          "rawDocumentation": "Returns the time of sunset for the given coordinates and date, or null if the sun does not set on that date (midnight sun).\n- Parameters:\n  - latitude: degrees north (positive) or south (negative)\n  - longitude: degrees east (positive) or west (negative)\n  - date: the date to calculate for; pass null or omit to use today\n- Returns: A Date object representing the time of sunset, or null\n- Example:\n```js\nconst set = hs.location.sunset(51.5, -0.1)\nconsole.log(set.toTimeString())\n```",
+          "description": "Returns the time of sunset for the given coordinates and date, or null if the sun does not set on that date (midnight sun).",
           "params": [
             {
               "name": "latitude",
@@ -5951,18 +5951,18 @@
             }
           ],
           "returns": {
-            "type": "number",
-            "description": "seconds since epoch of sunset, or null"
+            "type": "Date",
+            "description": "A Date object representing the time of sunset, or null"
           },
           "examples": [
             {
               "lang": "js",
-              "code": "const set = hs.location.sunset(51.5, -0.1)\nconsole.log(new Date(set * 1000).toTimeString())"
+              "code": "const set = hs.location.sunset(51.5, -0.1)\nconsole.log(set.toTimeString())"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
-          "lineNumber": 110
+          "lineNumber": 108
         },
         {
           "name": "addWatcher",
@@ -5983,7 +5983,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
-          "lineNumber": 122
+          "lineNumber": 120
         },
         {
           "name": "removeWatcher",
@@ -6009,7 +6009,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationModule.swift",
-          "lineNumber": 132
+          "lineNumber": 130
         }
       ],
       "properties": [],
@@ -13982,5 +13982,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-01T19:54:23.767Z"
+  "generatedAt": "2026-07-02T11:56:22.547Z"
 }
