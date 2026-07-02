@@ -90,6 +90,20 @@ struct HSAppInfoData {
     /// console.log(hs.appinfo.resourcePath)
     /// ```
     @objc var resourcePath: String { get }
+
+    /// The filesystem path to the main Hammerspoon 2 configuration file
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.configPath)
+    /// ```
+    @objc var configPath: String { get }
+
+    /// The filesystem path to the directory Hammerspoon 2 loaded its config from
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.configDir)
+    /// ```
+    @objc var configDir: String { get }
 }
 
 // MARK: - Implementation
@@ -149,4 +163,8 @@ struct HSAppInfoData {
     @objc var bundleIdentifier: String { _bundleIdentifier }
     @objc var bundlePath: String { _bundlePath }
     @objc var resourcePath: String { _resourcePath }
+    @objc var configPath: String { SettingsManager.shared.configLocation.path }
+    @objc var configDir: String {
+        "/\(SettingsManager.shared.configLocation.pathComponents.dropFirst().dropLast().joined(separator: "/"))"
+    }
 }
