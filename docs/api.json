@@ -115,6 +115,50 @@
       "rawDocumentation": "These functions are provided to maintain convenience with the console.log() function present in many JavaScript instances."
     },
     {
+      "name": "hs",
+      "description": "Root Hammerspoon namespace",
+      "methods": [
+        {
+          "name": "reload",
+          "signature": "func reload()",
+          "isStatic": false,
+          "rawDocumentation": "Destroy the current JavaScript runtime and start a new one, loading all configuration from disk again\n- Example:\n```js\nhs.reload()\n```",
+          "description": "Destroy the current JavaScript runtime and start a new one, loading all configuration from disk again",
+          "params": [],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.reload()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
+          "lineNumber": 20
+        },
+        {
+          "name": "collectGarbage",
+          "signature": "func collectGarbage()",
+          "isStatic": false,
+          "rawDocumentation": "Force garbage collection of JavaScript objects that no longer have any references\n- Example:\n```js\nhs.collectGarbage()\n```",
+          "description": "Force garbage collection of JavaScript objects that no longer have any references",
+          "params": [],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.collectGarbage()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
+          "lineNumber": 26
+        }
+      ],
+      "properties": [],
+      "types": []
+    },
+    {
       "name": "hs.appinfo",
       "methods": [],
       "properties": [
@@ -13982,5 +14026,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-02T11:56:22.547Z"
+  "generatedAt": "2026-07-02T12:59:55.476Z"
 }

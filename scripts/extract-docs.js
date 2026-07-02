@@ -951,6 +951,35 @@ function processModule(moduleName, modulePath) {
 }
 
 /**
+ * Process ModuleRoot.swift to extract root-level hs.* methods (reload, collectGarbage, etc.)
+ */
+function processModuleRoot() {
+    const moduleRootPath = path.join(REPO_ROOT, 'Hammerspoon 2', 'Engine', 'ModuleRoot.swift');
+    const { protocols } = parseSwiftFile(moduleRootPath, REPO_ROOT);
+
+    const moduleData = {
+        name: 'hs',
+        description: 'Root Hammerspoon namespace',
+        methods: [],
+        properties: [],
+        types: []
+    };
+
+    for (const protocol of protocols) {
+        if (protocol.name === 'ModuleRootAPI') {
+            // Only include methods that have documentation; the module-accessor
+            // var declarations (appinfo, audiodevice, …) carry no doc comments
+            // and are intentionally excluded here.
+            moduleData.methods.push(
+                ...protocol.methods.filter(m => m.rawDocumentation.trim())
+            );
+        }
+    }
+
+    return moduleData;
+}
+
+/**
  * Process the Engine/Types directory
  */
 function processTypes(typesPath) {
@@ -1243,12 +1272,26 @@ function main() {
         fs.mkdirSync(OUTPUT_COMBINED_DIR, { recursive: true });
     }
 
+    // Process ModuleRoot.swift first so "hs" appears at the top of the module list
+    console.log('Processing root hs namespace (ModuleRoot.swift)...');
+    const moduleRootData = processModuleRoot();
+
+    const moduleRootJsonPath = path.join(OUTPUT_JSON_DIR, 'hs.json');
+    fs.writeFileSync(moduleRootJsonPath, JSON.stringify(moduleRootData, null, 2));
+    console.log(`  ✓ Saved JSON: ${moduleRootJsonPath}`);
+
+    const moduleRootCombinedJSDoc = generateCombinedJSDoc(moduleRootData);
+    const moduleRootCombinedPath = path.join(OUTPUT_COMBINED_DIR, 'hs.js');
+    fs.writeFileSync(moduleRootCombinedPath, moduleRootCombinedJSDoc);
+    console.log(`  ✓ Saved combined: ${moduleRootCombinedPath}`);
+
     // Find all module directories
     const moduleDirs = fs.readdirSync(MODULES_DIR)
         .filter(name => fs.statSync(path.join(MODULES_DIR, name)).isDirectory());
 
     const allModules = [];
 
+    console.log('\nProcessing modules...');
     for (const dirName of moduleDirs) {
         const modulePath = path.join(MODULES_DIR, dirName);
         // Apply any directory-name → public-module-name override.
@@ -1268,6 +1311,10 @@ function main() {
         fs.writeFileSync(combinedPath, combinedJSDoc);
         console.log(`  ✓ Saved combined: ${combinedPath}`);
     }
+
+    // Insert hs after console so it appears second in the sidebar
+    const consoleIdx = allModules.findIndex(m => m.name === 'console');
+    allModules.splice(consoleIdx >= 0 ? consoleIdx + 1 : 0, 0, moduleRootData);
 
     // Process Engine/Types directory if it exists
     let typesData = null;

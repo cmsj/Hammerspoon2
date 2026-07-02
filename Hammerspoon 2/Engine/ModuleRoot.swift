@@ -13,8 +13,16 @@ import JavaScriptCoreExtras
 @objc protocol ModuleRootAPI: JSExport {
     // Core
     /// Destroy the current JavaScript runtime and start a new one, loading all configuration from disk again
+    /// - Example:
+    /// ```js
+    /// hs.reload()
+    /// ```
     @objc func reload()
     /// Force garbage collection of JavaScript objects that no longer have any references
+    /// - Example:
+    /// ```js
+    /// hs.collectGarbage()
+    /// ```
     @objc func collectGarbage()
 
     // Modules

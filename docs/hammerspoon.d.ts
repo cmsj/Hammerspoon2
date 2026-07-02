@@ -424,6 +424,22 @@ declare namespace console {
 }
 
 /**
+ * Root Hammerspoon namespace
+ */
+declare namespace hs {
+    /**
+     * Destroy the current JavaScript runtime and start a new one, loading all configuration from disk again
+     */
+    function reload(): void;
+
+    /**
+     * Force garbage collection of JavaScript objects that no longer have any references
+     */
+    function collectGarbage(): void;
+
+}
+
+/**
  * Module for accessing information about the Hammerspoon application itself
  */
 declare namespace hs.appinfo {
