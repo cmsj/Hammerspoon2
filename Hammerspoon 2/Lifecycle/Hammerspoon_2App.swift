@@ -51,6 +51,7 @@ struct Hammerspoon_2App: App {
             Divider()
 
             Button("Settings") {
+                NSApplication.shared.activate(ignoringOtherApps: true)
                 openSettings()
             }
 
