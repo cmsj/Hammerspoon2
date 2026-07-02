@@ -33,59 +33,63 @@ final class SettingsManager {
         }
     }
 
+    var configLocation: URL {
+        didSet { UserDefaults.standard.set(configLocation, forKey: Keys.configLocation.rawValue) }
+    }
+    var consoleHistoryLength: Int {
+        didSet { UserDefaults.standard.set(consoleHistoryLength, forKey: Keys.consoleHistoryLength.rawValue) }
+    }
+    var relaunchOnReload: Bool {
+        didSet { UserDefaults.standard.set(relaunchOnReload, forKey: Keys.relaunchOnReload.rawValue) }
+    }
+
+    @ObservationIgnored
+    private var defaultsObserver: (any NSObjectProtocol)?
+
     init() {
         UserDefaults.standard.register(defaults: [
-            Keys.configLocation.rawValue: Keys.configLocation.defaultValue
+            Keys.configLocation.rawValue: Keys.configLocation.defaultValue,
+            Keys.consoleHistoryLength.rawValue: Keys.consoleHistoryLength.defaultValue,
+            Keys.relaunchOnReload.rawValue: Keys.relaunchOnReload.defaultValue
         ])
+        configLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
+            ?? (Keys.configLocation.defaultValue as! URL)
+        consoleHistoryLength = UserDefaults.standard.integer(forKey: Keys.consoleHistoryLength.rawValue)
+        relaunchOnReload = UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
+
+        defaultsObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: UserDefaults.standard,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.syncFromUserDefaults() }
+        }
+    }
+
+    isolated deinit {
+        if let defaultsObserver {
+            NotificationCenter.default.removeObserver(defaultsObserver)
+        }
+    }
+
+    private func syncFromUserDefaults() {
+        let newConfigLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
+            ?? (Keys.configLocation.defaultValue as! URL)
+        if newConfigLocation != configLocation { configLocation = newConfigLocation }
+
+        let newConsoleHistoryLength = UserDefaults.standard.integer(forKey: Keys.consoleHistoryLength.rawValue)
+        if newConsoleHistoryLength != consoleHistoryLength { consoleHistoryLength = newConsoleHistoryLength }
+
+        let newRelaunchOnReload = UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
+        if newRelaunchOnReload != relaunchOnReload { relaunchOnReload = newRelaunchOnReload }
     }
 }
 
 // MARK: - SettingsManagerProtocol Conformance
 extension SettingsManager: SettingsManagerProtocol {
-    // All required methods are already implemented in the class
-    @ObservationIgnored
-    var configLocation: URL {
-        get {
-            access(keyPath: \.configLocation)
-            return UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
-                ?? (Keys.configLocation.defaultValue as! URL)
-        }
-        set {
-            withMutation(keyPath: \.configLocation) {
-                UserDefaults.standard.set(newValue, forKey: Keys.configLocation.rawValue)
-            }
-        }
-    }
-
-    @ObservationIgnored
-    var consoleHistoryLength: Int {
-        get {
-            access(keyPath: \.consoleHistoryLength)
-            return UserDefaults.standard.integer(forKey: Keys.consoleHistoryLength.rawValue)
-        }
-        set {
-            withMutation(keyPath: \.consoleHistoryLength) {
-                UserDefaults.standard.set(newValue, forKey: Keys.consoleHistoryLength.rawValue)
-            }
-        }
-    }
-
-    @ObservationIgnored
-    var relaunchOnReload: Bool {
-        get {
-            access(keyPath: \.relaunchOnReload)
-            return UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
-        }
-        set {
-            withMutation(keyPath: \.relaunchOnReload) {
-                UserDefaults.standard.set(newValue, forKey: Keys.relaunchOnReload.rawValue)
-            }
-        }
-    }
-
     func resetToDefaults() {
-        UserDefaults.standard.removeObject(forKey: Keys.configLocation.rawValue)
-        UserDefaults.standard.removeObject(forKey: Keys.consoleHistoryLength.rawValue)
-        UserDefaults.standard.removeObject(forKey: Keys.relaunchOnReload.rawValue)
+        configLocation = Keys.configLocation.defaultValue as! URL
+        consoleHistoryLength = Keys.consoleHistoryLength.defaultValue as! Int
+        relaunchOnReload = Keys.relaunchOnReload.defaultValue as! Bool
     }
 }
