@@ -71,8 +71,8 @@ final class HammerspoonLog: Sendable {
 
     func log(_ level: HammerspoonLogType, _ msg: String) {
         entries.append(HammerspoonLogEntry(logType: level, msg: msg))
-        // FIXME: Make the 100 here, configurable
-        if entries.count > 100 {
+
+        if entries.count > SettingsManager.shared.consoleHistoryLength {
             entries.removeFirst()
         }
     }
