@@ -205,12 +205,12 @@ import SwiftUI
     // MARK: Interaction Callbacks
 
     /// Set a callback to fire when the element is clicked
-    /// - Parameter callback: A JavaScript function to call on click
+    /// - Parameter callback: {() => void} A JavaScript function to call on click
     /// - Returns: Self for chaining
     @objc func onClick(_ callback: JSFunction) -> HSUIWindow
 
     /// Set a callback to fire when the cursor enters or leaves the element
-    /// - Parameter callback: A JavaScript function called with a boolean: true when entering, false when leaving
+    /// - Parameter callback: {(isHovering: boolean) => void} A JavaScript function called with `true` when the cursor enters and `false` when it leaves
     /// - Returns: Self for chaining
     @objc func onHover(_ callback: JSFunction) -> HSUIWindow
 }

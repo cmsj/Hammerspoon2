@@ -17,8 +17,8 @@ import Carbon
     /// - Parameters:
     ///   - mods: An array of modifier key strings (e.g., ["cmd", "shift"])
     ///   - key: The key name or character (e.g., "a", "space", "return")
-    ///   - callbackPressed: A JavaScript function to call when the hotkey is pressed
-    ///   - callbackReleased: A JavaScript function to call when the hotkey is released
+    ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
+    ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
     /// - Returns: A hotkey object, or nil if binding failed
     /// - Example:
     /// ```js
@@ -33,8 +33,8 @@ import Carbon
     ///   - mods: An array of modifier key strings
     ///   - key: The key name or character
     ///   - message: A description of what this hotkey does (currently unused, for future features)
-    ///   - callbackPressed: A JavaScript function to call when the hotkey is pressed
-    ///   - callbackReleased: A JavaScript function to call when the hotkey is released
+    ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
+    ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
     /// - Returns: A hotkey object, or nil if binding failed
     /// - Example:
     /// ```js

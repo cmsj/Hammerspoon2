@@ -173,7 +173,7 @@ import JavaScriptCore
     /// - `update` (object, `"didUpdate"` only): `{ added, changed, removed }` — each an array
     ///   of `HSSpotlightItem` objects describing what changed in this update cycle
     ///
-    /// - Parameter fn: A JavaScript function `(event, update?) => void`
+    /// - Parameter fn: {(event: string, update?: Record<string, any>) => void} Called with lifecycle event name and optional update data containing added/changed/removed item arrays
     /// - Returns: this query, for chaining
     /// - Example:
     /// ```js

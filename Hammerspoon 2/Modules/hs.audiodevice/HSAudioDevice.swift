@@ -439,7 +439,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// - `"dsout"` — output data source changed
     /// - `"dsin"` — input data source changed
     ///
-    /// - Parameter listener: A JavaScript function that receives an event name string
+    /// - Parameter listener: {(event: string) => void} A JavaScript function that receives an event name string
     /// - Example:
     /// ```js
     /// const dev = hs.audiodevice.defaultOutputDevice()

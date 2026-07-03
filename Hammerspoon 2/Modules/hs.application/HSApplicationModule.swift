@@ -121,11 +121,11 @@ import UniformTypeIdentifiers
 
     /// Create a watcher for application events
     /// - Parameters:
-    ///    - listener: A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
+    ///    - listener: {(event: string, app: HSApplication | null) => void} A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
     /// - Example:
     /// ```js
     /// hs.application.addWatcher((event, app) => {
-    ///     console.log(event, app && app.title)
+    ///     console.log(event + app && app.title)
     /// })
     /// ```
     @objc func addWatcher(_ listener: JSFunction)

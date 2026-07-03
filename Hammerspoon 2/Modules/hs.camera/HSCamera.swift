@@ -114,7 +114,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     /// The listener receives one argument: a boolean that is `true` when the camera
     /// starts being used and `false` when it is released.
     ///
-    /// - Parameter listener: A JavaScript function receiving `(isInUse: boolean)`
+    /// - Parameter listener: {(isInUse: boolean) => void} A JavaScript function called with `true` when the camera starts being used and `false` when released
     /// - Example:
     /// ```js
     /// const cam = hs.camera.all()[0]

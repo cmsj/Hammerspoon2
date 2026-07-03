@@ -59,7 +59,7 @@ import CoreLocation
     @objc @discardableResult func stop() -> HSLocationWatcher
 
     /// Sets the callback function invoked when location events occur.
-    /// - Parameter fn: `function(event, data)` — see type documentation for event names
+    /// - Parameter fn: {(event: string, data: Record<string, any>) => void} Called with the event name and associated data; see type documentation for event names
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js

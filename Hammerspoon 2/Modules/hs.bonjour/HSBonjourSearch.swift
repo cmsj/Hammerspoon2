@@ -71,7 +71,7 @@ import JavaScriptCore
     /// complete event table.
     /// - Parameter type: service type string, e.g. `"_http._tcp."` or `"_ssh._tcp."`
     /// - Parameter domain: mDNS domain; `"local."` for the local link, `""` for all domains
-    /// - Parameter callback: `function(event, service, moreComing)` called for each result
+    /// - Parameter callback: {(event: string, service: HSBonjourService, moreComing: boolean) => void} Called for each result with event name, service object, and whether more results are expected
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
@@ -86,7 +86,7 @@ import JavaScriptCore
     /// If a browsable-domain search is already active it is stopped before
     /// starting the new one. Service and registration-domain searches are
     /// unaffected. The callback receives `(event, domain, moreComing)`.
-    /// - Parameter callback: `function(event, domain, moreComing)` called for each result
+    /// - Parameter callback: {(event: string, domain: string, moreComing: boolean) => void} Called for each result with event name, domain string, and whether more results are expected
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
@@ -101,7 +101,7 @@ import JavaScriptCore
     /// If a registration-domain search is already active it is stopped before
     /// starting the new one. Service and browsable-domain searches are
     /// unaffected. The callback receives `(event, domain, moreComing)`.
-    /// - Parameter callback: `function(event, domain, moreComing)` called for each result
+    /// - Parameter callback: {(event: string, domain: string, moreComing: boolean) => void} Called for each result with event name, domain string, and whether more results are expected
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js

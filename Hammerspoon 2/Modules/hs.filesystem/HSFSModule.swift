@@ -85,7 +85,7 @@ import UniformTypeIdentifiers
     ///
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
-    ///   - callback: Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.
+    ///   - callback: {(line: string) => boolean} Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.
     /// - Returns: `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.
     /// - Example:
     /// ```js

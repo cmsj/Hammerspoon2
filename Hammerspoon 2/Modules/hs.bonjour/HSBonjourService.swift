@@ -101,7 +101,7 @@ import Darwin
     /// - `"stopped"` — resolution stopped before completing
     /// - `"error"` — resolution failed; error message in second argument
     /// - Parameter timeout: seconds before giving up; pass `0` for no timeout
-    /// - Parameter callback: `function(event, data?)` called on status changes
+    /// - Parameter callback: {(event: string, error?: string) => void} Called on status changes with event name and optional error message
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
@@ -116,7 +116,7 @@ import Darwin
     /// the TXT record is updated.
     ///
     /// Call `stopMonitoring()` to unsubscribe.
-    /// - Parameter callback: `function(txtRecord)` called when TXT data changes
+    /// - Parameter callback: {(txtRecord: Record<string, string>) => void} Called when TXT data changes with the updated record
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js

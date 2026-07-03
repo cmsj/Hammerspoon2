@@ -91,7 +91,7 @@ import AVFoundation
     /// - `event` — either `"connected"` or `"disconnected"`
     /// - `camera` — an `HSCamera` representing the affected device
     ///
-    /// - Parameter listener: A JavaScript function receiving `(event: string, camera: HSCamera)`
+    /// - Parameter listener: {(event: string, camera: HSCamera) => void} A JavaScript function called with the event name (`"connected"` or `"disconnected"`) and the affected camera
     /// - Example:
     /// ```js
     /// hs.camera.addWatcher((event, camera) => {

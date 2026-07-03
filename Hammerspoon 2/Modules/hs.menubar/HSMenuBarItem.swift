@@ -31,7 +31,7 @@ import JavaScriptCore
     @objc func setTooltip(_ tooltip: String?)
 
     /// Set a callback invoked when the item is clicked (only fires when no menu is set)
-    /// - Parameter fn: A function to call on click, or null to remove the callback
+    /// - Parameter fn: {(() => void) | null} A function to call on click, or null to remove the callback
     /// - Example:
     /// ```js
     /// const item = hs.menubar.create()

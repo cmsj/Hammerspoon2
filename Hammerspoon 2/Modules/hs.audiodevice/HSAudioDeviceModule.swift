@@ -115,7 +115,7 @@ import JavaScriptCore
     /// - `"dev+"` — an audio device was added
     /// - `"dev-"` — an audio device was removed
     ///
-    /// - Parameter listener: A JavaScript function that receives the event name string
+    /// - Parameter listener: {(event: string) => void} A JavaScript function that receives the event name string
     /// - Example:
     /// ```js
     /// hs.audiodevice.addWatcher((event) => {

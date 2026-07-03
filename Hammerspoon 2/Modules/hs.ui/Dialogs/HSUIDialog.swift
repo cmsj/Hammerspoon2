@@ -61,7 +61,7 @@ import SwiftUI
     @objc func style(_ style: String) -> HSUIDialog
 
     /// Set the callback for button presses
-    /// - Parameter callback: Function receiving button index (0-based)
+    /// - Parameter callback: {(buttonIndex: number) => void} Function receiving the 0-based index of the button the user pressed
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js

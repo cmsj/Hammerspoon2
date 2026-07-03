@@ -37,7 +37,7 @@ import Carbon
     /// ```
     @objc func isEnabled() -> Bool
 
-    /// The callback function to be called when the hotkey is pressed
+    /// {(() => void) | null} The callback function to be called when the hotkey is pressed, or null to remove it
     /// - Example:
     /// ```js
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
@@ -45,7 +45,7 @@ import Carbon
     /// ```
     @objc var callbackPressed: JSFunction? { get set }
 
-    /// The callback function to be called when the hotkey is released
+    /// {(() => void) | null} The callback function to be called when the hotkey is released, or null to remove it
     /// - Example:
     /// ```js
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})

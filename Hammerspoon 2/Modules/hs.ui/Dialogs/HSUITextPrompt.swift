@@ -59,7 +59,7 @@ import AppKit
     @objc func buttons(_ labels: [String]) -> HSUITextPrompt
 
     /// Set the callback for button presses
-    /// - Parameter callback: Function receiving (buttonIndex, inputText)
+    /// - Parameter callback: {(buttonIndex: number, inputText: string) => void} Function receiving the 0-based button index and the text the user entered
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js

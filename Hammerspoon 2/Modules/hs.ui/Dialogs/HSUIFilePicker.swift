@@ -113,9 +113,7 @@ import UniformTypeIdentifiers
     @objc func resolvesAliases(_ value: Bool) -> HSUIFilePicker
 
     /// Set the callback for file selection
-    /// - Parameter callback: Function receiving selected path(s) or null if cancelled
-    ///   - Single selection: receives a string path or null
-    ///   - Multiple selection: receives an array of paths or null
+    /// - Parameter callback: {(paths: string | string[] | null) => void} Function receiving the selected path(s) or null if cancelled. Single selection receives a string; multiple selection receives an array of strings.
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js

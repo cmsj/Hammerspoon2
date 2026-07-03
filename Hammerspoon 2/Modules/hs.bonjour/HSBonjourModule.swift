@@ -102,7 +102,7 @@ import dnssd
     /// - Parameter type: service type in `"_proto._tcp."` or `"_proto._udp."` form
     /// - Parameter port: port number the service listens on
     /// - Parameter domain: mDNS domain; defaults to `"local."` if an empty string is passed
-    /// - Parameter callback?: optional `function(event, data?)` called on status changes
+    /// - Parameter callback?: {((event: string, error?: string) => void) | null} Optional function called on status changes with event name and optional error message
     /// - Example:
     /// ```js
     /// hs.bonjour.advertise('My Server', '_http._tcp.', 8080, '', ev => {

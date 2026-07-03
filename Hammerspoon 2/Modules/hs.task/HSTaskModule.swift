@@ -17,9 +17,9 @@ import JavaScriptCoreExtras
     /// - Parameters:
     ///   - launchPath: The full path to the executable to run
     ///   - arguments: An array of arguments to pass to the executable
-    ///   - completionCallback: Optional callback function called when the task terminates
+    ///   - completionCallback: {((exitCode: number, exitReason: string) => void) | null} Optional callback called when the task terminates with exit code and reason
     ///   - environment: Optional dictionary of environment variables for the task
-    ///   - streamingCallback: Optional callback function called when the task produces output
+    ///   - streamingCallback: {((stream: string, data: string) => void) | null} Optional callback called when the task produces output; stream is "stdout" or "stderr"
     /// - Returns: A task object. Call start() to begin execution.
     /// - Example:
     /// ```js

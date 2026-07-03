@@ -108,7 +108,7 @@ import JavaScriptCore
     /// the search once you have what you need.
     /// - Parameters:
     ///   - predicate: An NSPredicate-format query string
-    ///   - callback: A function called with `(event, update?)` lifecycle events
+    ///   - callback: {(event: string, update?: Record<string, any>) => void} A function called with lifecycle event name and optional update data
     /// - Returns: The `HSSpotlightQuery` object (use to stop the search early)
     /// - Example:
     /// ```js

@@ -582,7 +582,7 @@ declare namespace hs.application {
      * Create a watcher for application events
      * @param listener A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
      */
-    function addWatcher(listener: (...args: any[]) => any): void;
+    function addWatcher(listener: (event: string, app: HSApplication | null) => void): void;
 
     /**
      * Remove a watcher for application events
@@ -819,7 +819,7 @@ declare namespace hs.audiodevice {
      * Register a listener for all system-level audio configuration events.
      * @param listener A JavaScript function that receives the event name string
      */
-    function addWatcher(listener: (...args: any[]) => any): void;
+    function addWatcher(listener: (event: string) => void): void;
 
     /**
      * Remove a previously registered system-level listener.
@@ -917,7 +917,7 @@ declare class HSAudioDevice {
      * Register a listener for a per-device property-change event.
      * @param listener A JavaScript function that receives an event name string
      */
-    addWatcher(listener: (...args: any[]) => any): void;
+    addWatcher(listener: (event: string) => void): void;
 
     /**
      * Remove a previously registered per-device listener.
@@ -1056,9 +1056,9 @@ declare namespace hs.ax {
      * Add a watcher for application AX events
      * @param application An HSApplication object
      * @param notification An event name
-     * @param listener A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to
+     * @param listener A function called with the notification name and the accessibility element it applies to
      */
-    function addWatcher(application: HSApplication, notification: string, listener: (...args: any[]) => any): void;
+    function addWatcher(application: HSApplication, notification: string, listener: (notification: string, element: HSAXElement) => void): void;
 
     /**
      * Remove a watcher for application AX events
@@ -1285,9 +1285,9 @@ defaults to `"local."`.
      * @param type service type in `"_proto._tcp."` or `"_proto._udp."` form
      * @param port port number the service listens on
      * @param domain mDNS domain; defaults to `"local."` if an empty string is passed
-     * @param callback optional `function(event, data?)` called on status changes
+     * @param callback Optional function called on status changes with event name and optional error message
      */
-    function advertise(name: string, type: string, port: number, domain: string, callback?: (...args: any[]) => any): void;
+    function advertise(name: string, type: string, port: number, domain: string, callback?: ((event: string, error?: string) => void) | null): void;
 
     /**
      * Stops advertising a service previously started with `advertise()`.
@@ -1343,30 +1343,30 @@ new one. Domain searches are unaffected. The callback receives
 complete event table.
      * @param type service type string, e.g. `"_http._tcp."` or `"_ssh._tcp."`
      * @param domain mDNS domain; `"local."` for the local link, `""` for all domains
-     * @param callback `function(event, service, moreComing)` called for each result
+     * @param callback Called for each result with event name, service object, and whether more results are expected
      * @returns self, for chaining
      */
-    findServices(type: string, domain: string, callback: (...args: any[]) => any): HSBonjourSearch;
+    findServices(type: string, domain: string, callback: (event: string, service: HSBonjourService, moreComing: boolean) => void): HSBonjourSearch;
 
     /**
      * Searches for domains visible to this machine (browsable domains).
 If a browsable-domain search is already active it is stopped before
 starting the new one. Service and registration-domain searches are
 unaffected. The callback receives `(event, domain, moreComing)`.
-     * @param callback `function(event, domain, moreComing)` called for each result
+     * @param callback Called for each result with event name, domain string, and whether more results are expected
      * @returns self, for chaining
      */
-    findBrowsableDomains(callback: (...args: any[]) => any): HSBonjourSearch;
+    findBrowsableDomains(callback: (event: string, domain: string, moreComing: boolean) => void): HSBonjourSearch;
 
     /**
      * Searches for domains on which this machine can register services.
 If a registration-domain search is already active it is stopped before
 starting the new one. Service and browsable-domain searches are
 unaffected. The callback receives `(event, domain, moreComing)`.
-     * @param callback `function(event, domain, moreComing)` called for each result
+     * @param callback Called for each result with event name, domain string, and whether more results are expected
      * @returns self, for chaining
      */
-    findRegistrationDomains(callback: (...args: any[]) => any): HSBonjourSearch;
+    findRegistrationDomains(callback: (event: string, domain: string, moreComing: boolean) => void): HSBonjourSearch;
 
     /**
      * Stops all active searches. Safe to call when no search is active.
@@ -1405,19 +1405,19 @@ declare class HSBonjourService {
     /**
      * Resolves the hostname, port, addresses, and TXT record of this service.
      * @param timeout seconds before giving up; pass `0` for no timeout
-     * @param callback `function(event, data?)` called on status changes
+     * @param callback Called on status changes with event name and optional error message
      * @returns self, for chaining
      */
-    resolve(timeout: number, callback: (...args: any[]) => any): HSBonjourService;
+    resolve(timeout: number, callback: (event: string, error?: string) => void): HSBonjourService;
 
     /**
      * Starts monitoring the TXT record for changes. The callback fires whenever
 the TXT record is updated.
 Call `stopMonitoring()` to unsubscribe.
-     * @param callback `function(txtRecord)` called when TXT data changes
+     * @param callback Called when TXT data changes with the updated record
      * @returns self, for chaining
      */
-    monitor(callback: (...args: any[]) => any): HSBonjourService;
+    monitor(callback: (txtRecord: Record<string, string>) => void): HSBonjourService;
 
     /**
      * Stops any active resolution.
@@ -1542,9 +1542,9 @@ declare namespace hs.camera {
 
     /**
      * Register a listener for camera device connect/disconnect events.
-     * @param listener A JavaScript function receiving `(event: string, camera: HSCamera)`
+     * @param listener A JavaScript function called with the event name (`"connected"` or `"disconnected"`) and the affected camera
      */
-    function addWatcher(listener: (...args: any[]) => any): void;
+    function addWatcher(listener: (event: string, camera: HSCamera) => void): void;
 
     /**
      * Remove a previously registered module-level event listener.
@@ -1590,9 +1590,9 @@ declare class HSCamera {
      * Register a listener that fires whenever this camera's in-use state changes.
 The listener receives one argument: a boolean that is `true` when the camera
 starts being used and `false` when it is released.
-     * @param listener A JavaScript function receiving `(isInUse: boolean)`
+     * @param listener A JavaScript function called with `true` when the camera starts being used and `false` when released
      */
-    addWatcher(listener: (...args: any[]) => any): void;
+    addWatcher(listener: (isInUse: boolean) => void): void;
 
     /**
      * Remove a previously registered per-camera in-use listener.
@@ -1809,35 +1809,35 @@ is called with `{ text: <query> }` instead of `null` (default: `false`).
     readonly isVisible: boolean;
 
     /**
-     * Called when the user confirms a selection.
+     * Called when the user confirms a selection, or null to remove the handler.
 The argument is the chosen row object (the original dict you passed to `setChoices`,
 with `text`, `subText`, `image`, `valid`, and any custom fields intact).
 The argument is `null` when dismissed (Escape).
      */
-    onSelect: ((...args: any[]) => any) | null;
+    onSelect: ((item: Record<string, any> | null) => void) | null;
 
     /**
-     * Called on every keystroke with the new query string.
+     * Called on every keystroke with the new query string, or null to remove the handler.
 Use this to debounce expensive searches or trigger async data fetching.
      */
-    onQueryChange: ((...args: any[]) => any) | null;
+    onQueryChange: ((query: string) => void) | null;
 
     /**
-     * Called after the panel becomes visible.
+     * Called after the panel becomes visible, or null to remove the handler.
      */
-    onShow: ((...args: any[]) => any) | null;
+    onShow: (() => void) | null;
 
     /**
-     * Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).
+     * Called after the panel is hidden (for any reason: selection, Escape, or `hide()`), or null to remove the handler.
      */
-    onHide: ((...args: any[]) => any) | null;
+    onHide: (() => void) | null;
 
     /**
-     * Called when the user activates a row whose `valid` field is `false`.
+     * Called when the user activates a row whose `valid` field is `false`, or null to remove the handler.
 The chooser stays open; the argument is the row dict (same shape as `onSelect`).
 If unset, activating an invalid row is silently ignored.
      */
-    onInvalid: ((...args: any[]) => any) | null;
+    onInvalid: ((item: Record<string, any>) => void) | null;
 
 }
 
@@ -1921,7 +1921,7 @@ Lines are delivered with newline characters stripped. Both `\n` and `\r\n` line 
      * @param callback Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.
      * @returns `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.
      */
-    function readLines(path: string, callback: (...args: any[]) => any): boolean;
+    function readLines(path: string, callback: (line: string) => boolean): boolean;
 
     /**
      * Write a UTF-8 string to a file, creating it or overwriting any existing content.
@@ -2261,22 +2261,22 @@ declare namespace hs.hotkey {
      * Bind a hotkey
      * @param mods An array of modifier key strings (e.g., ["cmd", "shift"])
      * @param key The key name or character (e.g., "a", "space", "return")
-     * @param callbackPressed A JavaScript function to call when the hotkey is pressed
-     * @param callbackReleased A JavaScript function to call when the hotkey is released
+     * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
+     * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
      * @returns A hotkey object, or nil if binding failed
      */
-    function bind(mods: string[], key: string, callbackPressed: (...args: any[]) => any, callbackReleased: (...args: any[]) => any): HSHotkey | undefined;
+    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | undefined;
 
     /**
      * Bind a hotkey with a message description
      * @param mods An array of modifier key strings
      * @param key The key name or character
      * @param message A description of what this hotkey does (currently unused, for future features)
-     * @param callbackPressed A JavaScript function to call when the hotkey is pressed
-     * @param callbackReleased A JavaScript function to call when the hotkey is released
+     * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
+     * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
      * @returns A hotkey object, or nil if binding failed
      */
-    function bindSpec(mods: string[], key: string, message: string | undefined, callbackPressed: (...args: any[]) => any, callbackReleased: (...args: any[]) => any): HSHotkey | undefined;
+    function bindSpec(mods: string[], key: string, message: string | undefined, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | undefined;
 
     /**
      * Get the system-wide mapping of key names to key codes
@@ -2314,14 +2314,14 @@ declare class HSHotkey {
     isEnabled(): boolean;
 
     /**
-     * The callback function to be called when the hotkey is pressed
+     * The callback function to be called when the hotkey is pressed, or null to remove it
      */
-    callbackPressed: ((...args: any[]) => any) | null;
+    callbackPressed: (() => void) | null;
 
     /**
-     * The callback function to be called when the hotkey is released
+     * The callback function to be called when the hotkey is released, or null to remove it
      */
-    callbackReleased: ((...args: any[]) => any) | null;
+    callbackReleased: (() => void) | null;
 
 }
 
@@ -2451,10 +2451,10 @@ declare class HSLocationWatcher {
 
     /**
      * Sets the callback function invoked when location events occur.
-     * @param fn `function(event, data)` — see type documentation for event names
+     * @param fn Called with the event name and associated data; see type documentation for event names
      * @returns self, for chaining
      */
-    setCallback(fn: (...args: any[]) => any): HSLocationWatcher;
+    setCallback(fn: (event: string, data: Record<string, any>) => void): HSLocationWatcher;
 
     /**
      * Returns the most recently received location, or null if none yet.
@@ -2538,7 +2538,7 @@ declare class HSMenuBarItem {
      * Set a callback invoked when the item is clicked (only fires when no menu is set)
      * @param fn A function to call on click, or null to remove the callback
      */
-    setClickCallback(fn: (...args: any[]) => any): void;
+    setClickCallback(fn: (() => void) | null): void;
 
     /**
      * Set the menu for this item. Pass an array of menu item objects for a static menu,
@@ -2661,12 +2661,11 @@ Supported component keys: `year`, `month`, `day`, `hour`, `minute`, `second`, `w
 declare namespace hs.notify {
     /**
      * Display a notification immediately.
-Receives a response object (see module docs for shape).
      * @param title The notification title
      * @param body The notification body text
-     * @param callback Optional function called when the user taps the notification.
+     * @param callback Optional function called when the user taps the notification. Receives a response object (see module docs for shape).
      */
-    function show(title: string, body: string, callback: (...args: any[]) => any): void;
+    function show(title: string, body: string, callback: (response: Record<string, any>) => void): void;
 
     /**
      * Create a richly configured notification without sending it yet.
@@ -3166,9 +3165,9 @@ fallback and a richer representation (such as HTML) in a single clipboard operat
 Multiple watchers may be registered; they are each called independently.
 Because macOS provides no pasteboard change notification API, this is implemented
 by polling `changeCount` at the interval specified by `watcherInterval`.
-     * @param listener A function called with one argument: the new `changeCount` integer
+     * @param listener A function called with the new `changeCount` integer whenever the pasteboard changes
      */
-    function addWatcher(listener: (...args: any[]) => any): void;
+    function addWatcher(listener: (changeCount: number) => void): void;
 
     /**
      * Remove a previously registered pasteboard watcher
@@ -3363,9 +3362,9 @@ Requires the Automation permission for System Events.
 `"sessionDidBecomeActive"`, `"sessionDidResignActive"`.
 The OS notification subscription starts lazily on the first listener and
 is released automatically when the last listener is removed.
-     * @param listener A function receiving `(eventName: string)`.
+     * @param listener A function called with the power event name string.
      */
-    function addEventWatcher(listener: (...args: any[]) => any): void;
+    function addEventWatcher(listener: (eventName: string) => void): void;
 
     /**
      * Removes a previously registered power event listener.
@@ -3381,7 +3380,7 @@ The OS notification subscription starts lazily on the first listener and
 is released automatically when the last listener is removed.
      * @param listener A function called with no arguments on battery state change.
      */
-    function addBatteryWatcher(listener: (...args: any[]) => any): void;
+    function addBatteryWatcher(listener: () => void): void;
 
     /**
      * Removes a previously registered battery change listener.
@@ -3722,10 +3721,10 @@ Equivalent to `create().setQuery(predicate).setCallback(callback).start()`.
 Call `q.stop()` from inside `callback` (when `event === 'didFinish'`) to end
 the search once you have what you need.
      * @param predicate An NSPredicate-format query string
-     * @param callback A function called with `(event, update?)` lifecycle events
+     * @param callback A function called with lifecycle event name and optional update data
      * @returns The `HSSpotlightQuery` object (use to stop the search early)
      */
-    function search(predicate: string, callback: (...args: any[]) => any): HSSpotlightQuery;
+    function search(predicate: string, callback: (event: string, update?: Record<string, any>) => void): HSSpotlightQuery;
 
     /**
      * Predefined search scope constants for use with `HSSpotlightQuery.setScopes()`.
@@ -3910,10 +3909,10 @@ attribute: distinct values and the number of results carrying each value.
     /**
      * Registers a callback that receives query lifecycle events.
 of `HSSpotlightItem` objects describing what changed in this update cycle
-     * @param fn A JavaScript function `(event, update?) => void`
+     * @param fn Called with lifecycle event name and optional update data containing added/changed/removed item arrays
      * @returns this query, for chaining
      */
-    setCallback(fn: (...args: any[]) => any): HSSpotlightQuery;
+    setCallback(fn: (event: string, update?: Record<string, any>) => void): HSSpotlightQuery;
 
     /**
      * Starts the query.
@@ -3984,12 +3983,12 @@ declare namespace hs.task {
      * Create a new task
      * @param launchPath The full path to the executable to run
      * @param arguments An array of arguments to pass to the executable
-     * @param completionCallback Optional callback function called when the task terminates
+     * @param completionCallback Optional callback called when the task terminates with exit code and reason
      * @param environment Optional dictionary of environment variables for the task
-     * @param streamingCallback Optional callback function called when the task produces output
+     * @param streamingCallback Optional callback called when the task produces output; stream is "stdout" or "stderr"
      * @returns A task object. Call start() to begin execution.
      */
-    function create(launchPath: string, arguments: string[], completionCallback: ((...args: any[]) => any) | null, environment: Record<string, string> | undefined, streamingCallback: ((...args: any[]) => any) | null): HSTask;
+    function create(launchPath: string, arguments: string[], completionCallback: ((exitCode: number, exitReason: string) => void) | null, environment: Record<string, string> | undefined, streamingCallback: ((stream: string, data: string) => void) | null): HSTask;
 
     /**
      * Create and run a task asynchronously
@@ -4128,7 +4127,7 @@ declare namespace hs.timer {
      * @param continueOnError If true, the timer will continue running even if the callback throws an error
      * @returns A timer object. Call start() to begin the timer.
      */
-    function create(interval: number, callback: (...args: any[]) => any, continueOnError?: boolean): HSTimer;
+    function create(interval: number, callback: () => void, continueOnError?: boolean): HSTimer;
 
     /**
      * Create and start a one-shot timer
@@ -4136,7 +4135,7 @@ declare namespace hs.timer {
      * @param callback A JavaScript function to call when the timer fires
      * @returns A timer object (already started)
      */
-    function doAfter(seconds: number, callback: (...args: any[]) => any): HSTimer;
+    function doAfter(seconds: number, callback: () => void): HSTimer;
 
     /**
      * Create and start a repeating timer
@@ -4144,7 +4143,7 @@ declare namespace hs.timer {
      * @param callback A JavaScript function to call when the timer fires
      * @returns A timer object (already started)
      */
-    function doEvery(interval: number, callback: (...args: any[]) => any): HSTimer;
+    function doEvery(interval: number, callback: () => void): HSTimer;
 
     /**
      * Create and start a timer that fires at a specific time
@@ -4154,7 +4153,7 @@ declare namespace hs.timer {
      * @param continueOnError If true, the timer will continue running even if the callback throws an error
      * @returns A timer object (already started)
      */
-    function doAt(time: number, repeatInterval: number, callback: (...args: any[]) => any, continueOnError?: boolean): HSTimer;
+    function doAt(time: number, repeatInterval: number, callback: () => void, continueOnError?: boolean): HSTimer;
 
     /**
      * Block execution for a specified number of microseconds (strongly discouraged)
@@ -4866,14 +4865,14 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text
      * @param callback A JavaScript function to call on click
      * @returns Self for chaining
      */
-    onClick(callback: (...args: any[]) => any): HSUIWindow;
+    onClick(callback: () => void): HSUIWindow;
 
     /**
      * Set a callback to fire when the cursor enters or leaves the element
-     * @param callback A JavaScript function called with a boolean: true when entering, false when leaving
+     * @param callback A JavaScript function called with `true` when the cursor enters and `false` when it leaves
      * @returns Self for chaining
      */
-    onHover(callback: (...args: any[]) => any): HSUIWindow;
+    onHover(callback: (isHovering: boolean) => void): HSUIWindow;
 
 }
 
@@ -4977,10 +4976,10 @@ declare class HSUIDialog {
 
     /**
      * Set the callback for button presses
-     * @param callback Function receiving button index (0-based)
+     * @param callback Function receiving the 0-based index of the button the user pressed
      * @returns Self for chaining
      */
-    onButton(callback: (...args: any[]) => any): HSUIDialog;
+    onButton(callback: (buttonIndex: number) => void): HSUIDialog;
 
     /**
      * Show the dialog
@@ -5082,10 +5081,10 @@ declare class HSUIFilePicker {
 
     /**
      * Set the callback for file selection
-     * @param callback Function receiving selected path(s) or null if cancelled
+     * @param callback Function receiving the selected path(s) or null if cancelled. Single selection receives a string; multiple selection receives an array of strings.
      * @returns Self for chaining
      */
-    onSelection(callback: (...args: any[]) => any): HSUIFilePicker;
+    onSelection(callback: (paths: string | string[] | null) => void): HSUIFilePicker;
 
     /**
      * Show the file picker dialog
@@ -5137,10 +5136,10 @@ declare class HSUITextPrompt {
 
     /**
      * Set the callback for button presses
-     * @param callback Function receiving (buttonIndex, inputText)
+     * @param callback Function receiving the 0-based button index and the text the user entered
      * @returns Self for chaining
      */
-    onButton(callback: (...args: any[]) => any): HSUITextPrompt;
+    onButton(callback: (buttonIndex: number, inputText: string) => void): HSUITextPrompt;
 
     /**
      * Show the prompt dialog

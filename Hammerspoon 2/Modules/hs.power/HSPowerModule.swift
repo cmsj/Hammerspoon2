@@ -209,7 +209,7 @@ import IOKit.pwr_mgt
     ///
     /// The OS notification subscription starts lazily on the first listener and
     /// is released automatically when the last listener is removed.
-    /// - Parameter listener: A function receiving `(eventName: string)`.
+    /// - Parameter listener: {(eventName: string) => void} A function called with the power event name string.
     /// - Example:
     ///   ```js
     ///   hs.power.addEventWatcher(event => console.log("Power event: " + event))
@@ -243,7 +243,7 @@ import IOKit.pwr_mgt
     ///
     /// The OS notification subscription starts lazily on the first listener and
     /// is released automatically when the last listener is removed.
-    /// - Parameter listener: A function called with no arguments on battery state change.
+    /// - Parameter listener: {() => void} A function called with no arguments on battery state change.
     /// - Example:
     ///   ```js
     ///   hs.power.addBatteryWatcher(() => {

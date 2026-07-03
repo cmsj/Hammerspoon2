@@ -159,7 +159,7 @@ import SwiftUI
 
     // MARK: Callbacks
 
-    /// Called when the user confirms a selection.
+    /// {((item: Record<string, any> | null) => void) | null} Called when the user confirms a selection, or null to remove the handler.
     ///
     /// The argument is the chosen row object (the original dict you passed to `setChoices`,
     /// with `text`, `subText`, `image`, `valid`, and any custom fields intact).
@@ -174,7 +174,7 @@ import SwiftUI
     /// ```
     @objc var onSelect: JSFunction? { get set }
 
-    /// Called on every keystroke with the new query string.
+    /// {((query: string) => void) | null} Called on every keystroke with the new query string, or null to remove the handler.
     ///
     /// Use this to debounce expensive searches or trigger async data fetching.
     ///
@@ -186,21 +186,21 @@ import SwiftUI
     /// ```
     @objc var onQueryChange: JSFunction? { get set }
 
-    /// Called after the panel becomes visible.
+    /// {(() => void) | null} Called after the panel becomes visible, or null to remove the handler.
     /// - Example:
     /// ```js
     /// chooser.onShow = () => console.log("Chooser appeared")
     /// ```
     @objc var onShow: JSFunction? { get set }
 
-    /// Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).
+    /// {(() => void) | null} Called after the panel is hidden (for any reason: selection, Escape, or `hide()`), or null to remove the handler.
     /// - Example:
     /// ```js
     /// chooser.onHide = () => console.log("Chooser hidden")
     /// ```
     @objc var onHide: JSFunction? { get set }
 
-    /// Called when the user activates a row whose `valid` field is `false`.
+    /// {((item: Record<string, any>) => void) | null} Called when the user activates a row whose `valid` field is `false`, or null to remove the handler.
     /// The chooser stays open; the argument is the row dict (same shape as `onSelect`).
     /// If unset, activating an invalid row is silently ignored.
     /// - Example:

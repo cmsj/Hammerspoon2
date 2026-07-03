@@ -85,7 +85,7 @@ import AXSwift
     /// - Parameters:
     ///   - application: An HSApplication object
     ///   - notification: An event name
-    ///   - listener: A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to
+    ///   - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()

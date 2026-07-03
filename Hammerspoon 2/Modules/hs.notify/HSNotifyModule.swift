@@ -126,8 +126,7 @@ import JavaScriptCore
     /// - Parameters:
     ///   - title: The notification title
     ///   - body: The notification body text
-    ///   - callback: Optional function called when the user taps the notification.
-    ///     Receives a response object (see module docs for shape).
+    ///   - callback: {(response: Record<string, any>) => void} Optional function called when the user taps the notification. Receives a response object (see module docs for shape).
     /// - Example:
     /// ```js
     /// hs.notify.show("Build complete", "Your project compiled successfully.")

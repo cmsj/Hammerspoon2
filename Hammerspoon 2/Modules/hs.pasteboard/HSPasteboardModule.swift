@@ -296,7 +296,7 @@ import AppKit
     /// Multiple watchers may be registered; they are each called independently.
     /// Because macOS provides no pasteboard change notification API, this is implemented
     /// by polling `changeCount` at the interval specified by `watcherInterval`.
-    /// - Parameter listener: A function called with one argument: the new `changeCount` integer
+    /// - Parameter listener: {(changeCount: number) => void} A function called with the new `changeCount` integer whenever the pasteboard changes
     /// - Example:
     /// ```js
     /// hs.pasteboard.addWatcher((count) => {

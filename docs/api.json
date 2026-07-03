@@ -646,7 +646,7 @@
           "name": "addWatcher",
           "signature": "func addWatcher(_ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Create a watcher for application events\n- Parameters:\n   - listener: A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object\n- Example:\n```js\nhs.application.addWatcher((event, app) => {\n    console.log(event, app && app.title)\n})\n```",
+          "rawDocumentation": "Create a watcher for application events\n- Parameters:\n   - listener: {(event: string, app: HSApplication | null) => void} A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object\n- Example:\n```js\nhs.application.addWatcher((event, app) => {\n    console.log(event + app && app.title)\n})\n```",
           "description": "Create a watcher for application events",
           "params": [
             {
@@ -654,14 +654,14 @@
               "type": "JSFunction",
               "description": "A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object",
               "optional": false,
-              "tsType": null
+              "tsType": "(event: string, app: HSApplication | null) => void"
             }
           ],
           "returns": null,
           "examples": [
             {
               "lang": "js",
-              "code": "hs.application.addWatcher((event, app) => {\n    console.log(event, app && app.title)\n})"
+              "code": "hs.application.addWatcher((event, app) => {\n    console.log(event + app && app.title)\n})"
             }
           ],
           "source": "swift",
@@ -1414,7 +1414,7 @@
           "name": "addWatcher",
           "signature": "func addWatcher(_ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Register a listener for all system-level audio configuration events.\n\nThe listener receives one of the following event name strings:\n- `\"dOut\"` — the default output device changed\n- `\"dIn\"` — the default input device changed\n- `\"dSErr\"` — the default alert sound device changed\n- `\"dev+\"` — an audio device was added\n- `\"dev-\"` — an audio device was removed\n\n- Parameter listener: A JavaScript function that receives the event name string\n- Example:\n```js\nhs.audiodevice.addWatcher((event) => {\n    if (event === \"dOut\") console.log(\"Default output changed\")\n})\n```",
+          "rawDocumentation": "Register a listener for all system-level audio configuration events.\n\nThe listener receives one of the following event name strings:\n- `\"dOut\"` — the default output device changed\n- `\"dIn\"` — the default input device changed\n- `\"dSErr\"` — the default alert sound device changed\n- `\"dev+\"` — an audio device was added\n- `\"dev-\"` — an audio device was removed\n\n- Parameter listener: {(event: string) => void} A JavaScript function that receives the event name string\n- Example:\n```js\nhs.audiodevice.addWatcher((event) => {\n    if (event === \"dOut\") console.log(\"Default output changed\")\n})\n```",
           "description": "Register a listener for all system-level audio configuration events.",
           "params": [
             {
@@ -1422,7 +1422,7 @@
               "type": "JSFunction",
               "description": "A JavaScript function that receives the event name string",
               "optional": false,
-              "tsType": null
+              "tsType": "(event: string) => void"
             }
           ],
           "returns": null,
@@ -1692,7 +1692,7 @@
               "name": "addWatcher",
               "signature": "func addWatcher(_ listener: JSFunction)",
               "isStatic": false,
-              "rawDocumentation": "Register a listener for a per-device property-change event.\n\nThe callback receives one of these event strings:\n- `\"vmout\"` — output volume changed\n- `\"vmin\"` — input volume changed\n- `\"mout\"` — output mute state changed\n- `\"min\"` — input mute state changed\n- `\"rate\"` — sample rate changed\n- `\"dsout\"` — output data source changed\n- `\"dsin\"` — input data source changed\n\n- Parameter listener: A JavaScript function that receives an event name string\n- Example:\n```js\nconst dev = hs.audiodevice.defaultOutputDevice()\ndev.addWatcher((event) => console.log(\"Event:\", event))\n```",
+              "rawDocumentation": "Register a listener for a per-device property-change event.\n\nThe callback receives one of these event strings:\n- `\"vmout\"` — output volume changed\n- `\"vmin\"` — input volume changed\n- `\"mout\"` — output mute state changed\n- `\"min\"` — input mute state changed\n- `\"rate\"` — sample rate changed\n- `\"dsout\"` — output data source changed\n- `\"dsin\"` — input data source changed\n\n- Parameter listener: {(event: string) => void} A JavaScript function that receives an event name string\n- Example:\n```js\nconst dev = hs.audiodevice.defaultOutputDevice()\ndev.addWatcher((event) => console.log(\"Event:\", event))\n```",
               "description": "Register a listener for a per-device property-change event.",
               "params": [
                 {
@@ -1700,7 +1700,7 @@
                   "type": "JSFunction",
                   "description": "A JavaScript function that receives an event name string",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(event: string) => void"
                 }
               ],
               "returns": null,
@@ -2103,7 +2103,7 @@
           "name": "addWatcher",
           "signature": "func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Add a watcher for application AX events\n- Parameters:\n  - application: An HSApplication object\n  - notification: An event name\n  - listener: A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n```",
+          "rawDocumentation": "Add a watcher for application AX events\n- Parameters:\n  - application: An HSApplication object\n  - notification: An event name\n  - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n```",
           "description": "Add a watcher for application AX events",
           "params": [
             {
@@ -2123,9 +2123,9 @@
             {
               "name": "listener",
               "type": "JSFunction",
-              "description": "A function/lambda to be called when the event is fired. The function/lambda will be called with two arguments: the name of the event, and the element it applies to",
+              "description": "A function called with the notification name and the accessibility element it applies to",
               "optional": false,
-              "tsType": null
+              "tsType": "(notification: string, element: HSAXElement) => void"
             }
           ],
           "returns": null,
@@ -2790,7 +2790,7 @@
           "name": "advertise",
           "signature": "func advertise(_ name: String, _ type: String, _ port: Int, _ domain: String, _ callback: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Starts advertising a local service on the network.\n\nThe optional callback receives `(event)` or `(event, errorMessage)`:\n- `\"published\"` — now advertising\n- `\"stopped\"` — advertisement stopped\n- `\"error\"` — publication failed; error message in second argument\n\nIf `domain` is omitted or not a string, it defaults to `\"local.\"`.\nIf the 4th argument is a function, it is used as the callback and domain\ndefaults to `\"local.\"`.\n- Parameter name: human-readable name shown to browsers (e.g. `\"My Web Server\"`)\n- Parameter type: service type in `\"_proto._tcp.\"` or `\"_proto._udp.\"` form\n- Parameter port: port number the service listens on\n- Parameter domain: mDNS domain; defaults to `\"local.\"` if an empty string is passed\n- Parameter callback?: optional `function(event, data?)` called on status changes\n- Example:\n```js\nhs.bonjour.advertise('My Server', '_http._tcp.', 8080, '', ev => {\n    if (ev === 'published') console.log('Now advertising!')\n})\n```",
+          "rawDocumentation": "Starts advertising a local service on the network.\n\nThe optional callback receives `(event)` or `(event, errorMessage)`:\n- `\"published\"` — now advertising\n- `\"stopped\"` — advertisement stopped\n- `\"error\"` — publication failed; error message in second argument\n\nIf `domain` is omitted or not a string, it defaults to `\"local.\"`.\nIf the 4th argument is a function, it is used as the callback and domain\ndefaults to `\"local.\"`.\n- Parameter name: human-readable name shown to browsers (e.g. `\"My Web Server\"`)\n- Parameter type: service type in `\"_proto._tcp.\"` or `\"_proto._udp.\"` form\n- Parameter port: port number the service listens on\n- Parameter domain: mDNS domain; defaults to `\"local.\"` if an empty string is passed\n- Parameter callback?: {((event: string, error?: string) => void) | null} Optional function called on status changes with event name and optional error message\n- Example:\n```js\nhs.bonjour.advertise('My Server', '_http._tcp.', 8080, '', ev => {\n    if (ev === 'published') console.log('Now advertising!')\n})\n```",
           "description": "Starts advertising a local service on the network.\nIf `domain` is omitted or not a string, it defaults to `\"local.\"`.\nIf the 4th argument is a function, it is used as the callback and domain\ndefaults to `\"local.\"`.",
           "params": [
             {
@@ -2824,9 +2824,9 @@
             {
               "name": "callback",
               "type": "JSFunction",
-              "description": "optional `function(event, data?)` called on status changes",
+              "description": "Optional function called on status changes with event name and optional error message",
               "optional": true,
-              "tsType": null
+              "tsType": "((event: string, error?: string) => void) | null"
             }
           ],
           "returns": null,
@@ -2933,7 +2933,7 @@
               "name": "findServices",
               "signature": "func findServices(_ type: String, _ domain: String, _ callback: JSFunction) -> HSBonjourSearch",
               "isStatic": false,
-              "rawDocumentation": "Searches for services of the given type in the given domain.\n\nIf a service search is already active it is stopped before starting the\nnew one. Domain searches are unaffected. The callback receives\n`(event, service, moreComing)` — see the type documentation for the\ncomplete event table.\n- Parameter type: service type string, e.g. `\"_http._tcp.\"` or `\"_ssh._tcp.\"`\n- Parameter domain: mDNS domain; `\"local.\"` for the local link, `\"\"` for all domains\n- Parameter callback: `function(event, service, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
+              "rawDocumentation": "Searches for services of the given type in the given domain.\n\nIf a service search is already active it is stopped before starting the\nnew one. Domain searches are unaffected. The callback receives\n`(event, service, moreComing)` — see the type documentation for the\ncomplete event table.\n- Parameter type: service type string, e.g. `\"_http._tcp.\"` or `\"_ssh._tcp.\"`\n- Parameter domain: mDNS domain; `\"local.\"` for the local link, `\"\"` for all domains\n- Parameter callback: {(event: string, service: HSBonjourService, moreComing: boolean) => void} Called for each result with event name, service object, and whether more results are expected\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findServices('_http._tcp.', 'local.', (ev, svc, more) => {\n    if (ev === 'serviceFound') console.log('Found:', svc.name)\n})\n```",
               "description": "Searches for services of the given type in the given domain.\nIf a service search is already active it is stopped before starting the\nnew one. Domain searches are unaffected. The callback receives\n`(event, service, moreComing)` — see the type documentation for the\ncomplete event table.",
               "params": [
                 {
@@ -2953,9 +2953,9 @@
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "`function(event, service, moreComing)` called for each result",
+                  "description": "Called for each result with event name, service object, and whether more results are expected",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(event: string, service: HSBonjourService, moreComing: boolean) => void"
                 }
               ],
               "returns": {
@@ -2976,15 +2976,15 @@
               "name": "findBrowsableDomains",
               "signature": "func findBrowsableDomains(_ callback: JSFunction) -> HSBonjourSearch",
               "isStatic": false,
-              "rawDocumentation": "Searches for domains visible to this machine (browsable domains).\n\nIf a browsable-domain search is already active it is stopped before\nstarting the new one. Service and registration-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findBrowsableDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Domain:', domain)\n})\n```",
+              "rawDocumentation": "Searches for domains visible to this machine (browsable domains).\n\nIf a browsable-domain search is already active it is stopped before\nstarting the new one. Service and registration-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.\n- Parameter callback: {(event: string, domain: string, moreComing: boolean) => void} Called for each result with event name, domain string, and whether more results are expected\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findBrowsableDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Domain:', domain)\n})\n```",
               "description": "Searches for domains visible to this machine (browsable domains).\nIf a browsable-domain search is already active it is stopped before\nstarting the new one. Service and registration-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.",
               "params": [
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "`function(event, domain, moreComing)` called for each result",
+                  "description": "Called for each result with event name, domain string, and whether more results are expected",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(event: string, domain: string, moreComing: boolean) => void"
                 }
               ],
               "returns": {
@@ -3005,15 +3005,15 @@
               "name": "findRegistrationDomains",
               "signature": "func findRegistrationDomains(_ callback: JSFunction) -> HSBonjourSearch",
               "isStatic": false,
-              "rawDocumentation": "Searches for domains on which this machine can register services.\n\nIf a registration-domain search is already active it is stopped before\nstarting the new one. Service and browsable-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.\n- Parameter callback: `function(event, domain, moreComing)` called for each result\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findRegistrationDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Can register in:', domain)\n})\n```",
+              "rawDocumentation": "Searches for domains on which this machine can register services.\n\nIf a registration-domain search is already active it is stopped before\nstarting the new one. Service and browsable-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.\n- Parameter callback: {(event: string, domain: string, moreComing: boolean) => void} Called for each result with event name, domain string, and whether more results are expected\n- Returns: self, for chaining\n- Example:\n```js\nsearch.findRegistrationDomains((ev, domain, more) => {\n    if (ev === 'domainFound') console.log('Can register in:', domain)\n})\n```",
               "description": "Searches for domains on which this machine can register services.\nIf a registration-domain search is already active it is stopped before\nstarting the new one. Service and browsable-domain searches are\nunaffected. The callback receives `(event, domain, moreComing)`.",
               "params": [
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "`function(event, domain, moreComing)` called for each result",
+                  "description": "Called for each result with event name, domain string, and whether more results are expected",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(event: string, domain: string, moreComing: boolean) => void"
                 }
               ],
               "returns": {
@@ -3097,7 +3097,7 @@
               "name": "resolve",
               "signature": "func resolve(_ timeout: Double, _ callback: JSFunction) -> HSBonjourService",
               "isStatic": false,
-              "rawDocumentation": "Resolves the hostname, port, addresses, and TXT record of this service.\n\nThe callback is called with `(event)` or `(event, errorMessage)`:\n- `\"resolved\"` — resolution complete; read `hostname`, `port`, `addresses`, `txtRecord`\n- `\"stopped\"` — resolution stopped before completing\n- `\"error\"` — resolution failed; error message in second argument\n- Parameter timeout: seconds before giving up; pass `0` for no timeout\n- Parameter callback: `function(event, data?)` called on status changes\n- Returns: self, for chaining\n- Example:\n```js\nservice.resolve(5, (ev, err) => {\n    if (ev === 'resolved') console.log(service.hostname, service.port)\n    else console.error('Resolve failed:', err)\n})\n```",
+              "rawDocumentation": "Resolves the hostname, port, addresses, and TXT record of this service.\n\nThe callback is called with `(event)` or `(event, errorMessage)`:\n- `\"resolved\"` — resolution complete; read `hostname`, `port`, `addresses`, `txtRecord`\n- `\"stopped\"` — resolution stopped before completing\n- `\"error\"` — resolution failed; error message in second argument\n- Parameter timeout: seconds before giving up; pass `0` for no timeout\n- Parameter callback: {(event: string, error?: string) => void} Called on status changes with event name and optional error message\n- Returns: self, for chaining\n- Example:\n```js\nservice.resolve(5, (ev, err) => {\n    if (ev === 'resolved') console.log(service.hostname, service.port)\n    else console.error('Resolve failed:', err)\n})\n```",
               "description": "Resolves the hostname, port, addresses, and TXT record of this service.",
               "params": [
                 {
@@ -3110,9 +3110,9 @@
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "`function(event, data?)` called on status changes",
+                  "description": "Called on status changes with event name and optional error message",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(event: string, error?: string) => void"
                 }
               ],
               "returns": {
@@ -3133,15 +3133,15 @@
               "name": "monitor",
               "signature": "func monitor(_ callback: JSFunction) -> HSBonjourService",
               "isStatic": false,
-              "rawDocumentation": "Starts monitoring the TXT record for changes. The callback fires whenever\nthe TXT record is updated.\n\nCall `stopMonitoring()` to unsubscribe.\n- Parameter callback: `function(txtRecord)` called when TXT data changes\n- Returns: self, for chaining\n- Example:\n```js\nservice.monitor(txt => console.log('TXT updated:', txt))\n```",
+              "rawDocumentation": "Starts monitoring the TXT record for changes. The callback fires whenever\nthe TXT record is updated.\n\nCall `stopMonitoring()` to unsubscribe.\n- Parameter callback: {(txtRecord: Record<string, string>) => void} Called when TXT data changes with the updated record\n- Returns: self, for chaining\n- Example:\n```js\nservice.monitor(txt => console.log('TXT updated:', txt))\n```",
               "description": "Starts monitoring the TXT record for changes. The callback fires whenever\nthe TXT record is updated.\nCall `stopMonitoring()` to unsubscribe.",
               "params": [
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "`function(txtRecord)` called when TXT data changes",
+                  "description": "Called when TXT data changes with the updated record",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(txtRecord: Record<string, string>) => void"
                 }
               ],
               "returns": {
@@ -3438,15 +3438,15 @@
           "name": "addWatcher",
           "signature": "func addWatcher(_ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Register a listener for camera device connect/disconnect events.\n\nThe listener is called with two arguments:\n- `event` — either `\"connected\"` or `\"disconnected\"`\n- `camera` — an `HSCamera` representing the affected device\n\n- Parameter listener: A JavaScript function receiving `(event: string, camera: HSCamera)`\n- Example:\n```js\nhs.camera.addWatcher((event, camera) => {\n    console.log(event + \": \" + camera.name)\n})\n```",
+          "rawDocumentation": "Register a listener for camera device connect/disconnect events.\n\nThe listener is called with two arguments:\n- `event` — either `\"connected\"` or `\"disconnected\"`\n- `camera` — an `HSCamera` representing the affected device\n\n- Parameter listener: {(event: string, camera: HSCamera) => void} A JavaScript function called with the event name (`\"connected\"` or `\"disconnected\"`) and the affected camera\n- Example:\n```js\nhs.camera.addWatcher((event, camera) => {\n    console.log(event + \": \" + camera.name)\n})\n```",
           "description": "Register a listener for camera device connect/disconnect events.",
           "params": [
             {
               "name": "listener",
               "type": "JSFunction",
-              "description": "A JavaScript function receiving `(event: string, camera: HSCamera)`",
+              "description": "A JavaScript function called with the event name (`\"connected\"` or `\"disconnected\"`) and the affected camera",
               "optional": false,
-              "tsType": null
+              "tsType": "(event: string, camera: HSCamera) => void"
             }
           ],
           "returns": null,
@@ -3511,15 +3511,15 @@
               "name": "addWatcher",
               "signature": "func addWatcher(_ listener: JSFunction)",
               "isStatic": false,
-              "rawDocumentation": "Register a listener that fires whenever this camera's in-use state changes.\n\nThe listener receives one argument: a boolean that is `true` when the camera\nstarts being used and `false` when it is released.\n\n- Parameter listener: A JavaScript function receiving `(isInUse: boolean)`\n- Example:\n```js\nconst cam = hs.camera.all()[0]\ncam.addWatcher((inUse) => {\n    console.log(cam.name + \" is \" + (inUse ? \"now in use\" : \"no longer in use\"))\n})\n```",
+              "rawDocumentation": "Register a listener that fires whenever this camera's in-use state changes.\n\nThe listener receives one argument: a boolean that is `true` when the camera\nstarts being used and `false` when it is released.\n\n- Parameter listener: {(isInUse: boolean) => void} A JavaScript function called with `true` when the camera starts being used and `false` when released\n- Example:\n```js\nconst cam = hs.camera.all()[0]\ncam.addWatcher((inUse) => {\n    console.log(cam.name + \" is \" + (inUse ? \"now in use\" : \"no longer in use\"))\n})\n```",
               "description": "Register a listener that fires whenever this camera's in-use state changes.\nThe listener receives one argument: a boolean that is `true` when the camera\nstarts being used and `false` when it is released.",
               "params": [
                 {
                   "name": "listener",
                   "type": "JSFunction",
-                  "description": "A JavaScript function receiving `(isInUse: boolean)`",
+                  "description": "A JavaScript function called with `true` when the camera starts being used and `false` when released",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(isInUse: boolean) => void"
                 }
               ],
               "returns": null,
@@ -3986,9 +3986,9 @@
             {
               "name": "onSelect",
               "signature": "var onSelect: JSFunction? { get set }",
-              "rawDocumentation": "Called when the user confirms a selection.\n\nThe argument is the chosen row object (the original dict you passed to `setChoices`,\nwith `text`, `subText`, `image`, `valid`, and any custom fields intact).\nThe argument is `null` when dismissed (Escape).\n\n- Example:\n```js\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text)\n    else console.log(\"Dismissed\")\n}\n```",
-              "description": "Called when the user confirms a selection.\nThe argument is the chosen row object (the original dict you passed to `setChoices`,\nwith `text`, `subText`, `image`, `valid`, and any custom fields intact).\nThe argument is `null` when dismissed (Escape).",
-              "tsType": null,
+              "rawDocumentation": "Called when the user confirms a selection, or null to remove the handler.\n\nThe argument is the chosen row object (the original dict you passed to `setChoices`,\nwith `text`, `subText`, `image`, `valid`, and any custom fields intact).\nThe argument is `null` when dismissed (Escape).\n\n- Example:\n```js\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text)\n    else console.log(\"Dismissed\")\n}\n```",
+              "description": "Called when the user confirms a selection, or null to remove the handler.\nThe argument is the chosen row object (the original dict you passed to `setChoices`,\nwith `text`, `subText`, `image`, `valid`, and any custom fields intact).\nThe argument is `null` when dismissed (Escape).",
+              "tsType": "((item: Record<string, any> | null) => void) | null",
               "examples": [
                 {
                   "lang": "js",
@@ -4002,9 +4002,9 @@
             {
               "name": "onQueryChange",
               "signature": "var onQueryChange: JSFunction? { get set }",
-              "rawDocumentation": "Called on every keystroke with the new query string.\n\nUse this to debounce expensive searches or trigger async data fetching.\n\n- Example:\n```js\nchooser.onQueryChange = (q) => {\n    hs.timer.doAfter(0.05, () => { fetchResults(q).then(r => { cache = r; chooser.refreshChoices() }) })\n}\n```",
-              "description": "Called on every keystroke with the new query string.\nUse this to debounce expensive searches or trigger async data fetching.",
-              "tsType": null,
+              "rawDocumentation": "Called on every keystroke with the new query string, or null to remove the handler.\n\nUse this to debounce expensive searches or trigger async data fetching.\n\n- Example:\n```js\nchooser.onQueryChange = (q) => {\n    hs.timer.doAfter(0.05, () => { fetchResults(q).then(r => { cache = r; chooser.refreshChoices() }) })\n}\n```",
+              "description": "Called on every keystroke with the new query string, or null to remove the handler.\nUse this to debounce expensive searches or trigger async data fetching.",
+              "tsType": "((query: string) => void) | null",
               "examples": [
                 {
                   "lang": "js",
@@ -4018,9 +4018,9 @@
             {
               "name": "onShow",
               "signature": "var onShow: JSFunction? { get set }",
-              "rawDocumentation": "Called after the panel becomes visible.\n- Example:\n```js\nchooser.onShow = () => console.log(\"Chooser appeared\")\n```",
-              "description": "Called after the panel becomes visible.",
-              "tsType": null,
+              "rawDocumentation": "Called after the panel becomes visible, or null to remove the handler.\n- Example:\n```js\nchooser.onShow = () => console.log(\"Chooser appeared\")\n```",
+              "description": "Called after the panel becomes visible, or null to remove the handler.",
+              "tsType": "(() => void) | null",
               "examples": [
                 {
                   "lang": "js",
@@ -4034,9 +4034,9 @@
             {
               "name": "onHide",
               "signature": "var onHide: JSFunction? { get set }",
-              "rawDocumentation": "Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).\n- Example:\n```js\nchooser.onHide = () => console.log(\"Chooser hidden\")\n```",
-              "description": "Called after the panel is hidden (for any reason: selection, Escape, or `hide()`).",
-              "tsType": null,
+              "rawDocumentation": "Called after the panel is hidden (for any reason: selection, Escape, or `hide()`), or null to remove the handler.\n- Example:\n```js\nchooser.onHide = () => console.log(\"Chooser hidden\")\n```",
+              "description": "Called after the panel is hidden (for any reason: selection, Escape, or `hide()`), or null to remove the handler.",
+              "tsType": "(() => void) | null",
               "examples": [
                 {
                   "lang": "js",
@@ -4050,9 +4050,9 @@
             {
               "name": "onInvalid",
               "signature": "var onInvalid: JSFunction? { get set }",
-              "rawDocumentation": "Called when the user activates a row whose `valid` field is `false`.\nThe chooser stays open; the argument is the row dict (same shape as `onSelect`).\nIf unset, activating an invalid row is silently ignored.\n- Example:\n```js\nchooser.onInvalid = (item) => console.log(\"Tapped invalid row: \" + item.text)\n```",
-              "description": "Called when the user activates a row whose `valid` field is `false`.\nThe chooser stays open; the argument is the row dict (same shape as `onSelect`).\nIf unset, activating an invalid row is silently ignored.",
-              "tsType": null,
+              "rawDocumentation": "Called when the user activates a row whose `valid` field is `false`, or null to remove the handler.\nThe chooser stays open; the argument is the row dict (same shape as `onSelect`).\nIf unset, activating an invalid row is silently ignored.\n- Example:\n```js\nchooser.onInvalid = (item) => console.log(\"Tapped invalid row: \" + item.text)\n```",
+              "description": "Called when the user activates a row whose `valid` field is `false`, or null to remove the handler.\nThe chooser stays open; the argument is the row dict (same shape as `onSelect`).\nIf unset, activating an invalid row is silently ignored.",
+              "tsType": "((item: Record<string, any>) => void) | null",
               "examples": [
                 {
                   "lang": "js",
@@ -4182,7 +4182,7 @@
           "name": "readLines",
           "signature": "func readLines(_ path: String, _ callback: JSFunction) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Read a file line-by-line, invoking a callback for each line.\n\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n` line endings are handled.\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - callback: Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.\n- Returns: `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.\n- Example:\n```js\nhs.fs.readLines(\"/etc/hosts\", (line) => {\n    if (line.startsWith(\"#\")) return true\n    console.log(line)\n    return true\n})\n```",
+          "rawDocumentation": "Read a file line-by-line, invoking a callback for each line.\n\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n` line endings are handled.\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - callback: {(line: string) => boolean} Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.\n- Returns: `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.\n- Example:\n```js\nhs.fs.readLines(\"/etc/hosts\", (line) => {\n    if (line.startsWith(\"#\")) return true\n    console.log(line)\n    return true\n})\n```",
           "description": "Read a file line-by-line, invoking a callback for each line.\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n` line endings are handled.",
           "params": [
             {
@@ -4197,7 +4197,7 @@
               "type": "JSFunction",
               "description": "Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.",
               "optional": false,
-              "tsType": null
+              "tsType": "(line: string) => boolean"
             }
           ],
           "returns": {
@@ -5490,7 +5490,7 @@
           "name": "bind",
           "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"])\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\")\n  - callbackPressed: A JavaScript function to call when the hotkey is pressed\n  - callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\n```",
+          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"])\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\n```",
           "description": "Bind a hotkey",
           "params": [
             {
@@ -5510,16 +5510,16 @@
             {
               "name": "callbackPressed",
               "type": "JSFunction",
-              "description": "A JavaScript function to call when the hotkey is pressed",
+              "description": "A JavaScript function to call when the hotkey is pressed, or null for no callback",
               "optional": false,
-              "tsType": null
+              "tsType": "(() => void) | null"
             },
             {
               "name": "callbackReleased",
               "type": "JSFunction",
-              "description": "A JavaScript function to call when the hotkey is released",
+              "description": "A JavaScript function to call when the hotkey is released, or null for no callback",
               "optional": false,
-              "tsType": null
+              "tsType": "(() => void) | null"
             }
           ],
           "returns": {
@@ -5540,7 +5540,7 @@
           "name": "bindSpec",
           "signature": "func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n  - message: A description of what this hotkey does (currently unused, for future features)\n  - callbackPressed: A JavaScript function to call when the hotkey is pressed\n  - callbackReleased: A JavaScript function to call when the hotkey is released\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bindSpec([\"cmd\"], \"space\", \"Spotlight-like\", () => {\n    console.log(\"pressed\")\n}, null)\n```",
+          "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n  - message: A description of what this hotkey does (currently unused, for future features)\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bindSpec([\"cmd\"], \"space\", \"Spotlight-like\", () => {\n    console.log(\"pressed\")\n}, null)\n```",
           "description": "Bind a hotkey with a message description",
           "params": [
             {
@@ -5567,16 +5567,16 @@
             {
               "name": "callbackPressed",
               "type": "JSFunction",
-              "description": "A JavaScript function to call when the hotkey is pressed",
+              "description": "A JavaScript function to call when the hotkey is pressed, or null for no callback",
               "optional": false,
-              "tsType": null
+              "tsType": "(() => void) | null"
             },
             {
               "name": "callbackReleased",
               "type": "JSFunction",
-              "description": "A JavaScript function to call when the hotkey is released",
+              "description": "A JavaScript function to call when the hotkey is released, or null for no callback",
               "optional": false,
-              "tsType": null
+              "tsType": "(() => void) | null"
             }
           ],
           "returns": {
@@ -5709,9 +5709,9 @@
             {
               "name": "callbackPressed",
               "signature": "var callbackPressed: JSFunction? { get set }",
-              "rawDocumentation": "The callback function to be called when the hotkey is pressed\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.callbackPressed = () => console.log(\"new handler\")\n```",
-              "description": "The callback function to be called when the hotkey is pressed",
-              "tsType": null,
+              "rawDocumentation": "The callback function to be called when the hotkey is pressed, or null to remove it\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.callbackPressed = () => console.log(\"new handler\")\n```",
+              "description": "The callback function to be called when the hotkey is pressed, or null to remove it",
+              "tsType": "(() => void) | null",
               "examples": [
                 {
                   "lang": "js",
@@ -5725,9 +5725,9 @@
             {
               "name": "callbackReleased",
               "signature": "var callbackReleased: JSFunction? { get set }",
-              "rawDocumentation": "The callback function to be called when the hotkey is released\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.callbackReleased = () => console.log(\"released\")\n```",
-              "description": "The callback function to be called when the hotkey is released",
-              "tsType": null,
+              "rawDocumentation": "The callback function to be called when the hotkey is released, or null to remove it\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.callbackReleased = () => console.log(\"released\")\n```",
+              "description": "The callback function to be called when the hotkey is released, or null to remove it",
+              "tsType": "(() => void) | null",
               "examples": [
                 {
                   "lang": "js",
@@ -6094,15 +6094,15 @@
               "name": "setCallback",
               "signature": "func setCallback(_ fn: JSFunction) -> HSLocationWatcher",
               "isStatic": false,
-              "rawDocumentation": "Sets the callback function invoked when location events occur.\n- Parameter fn: `function(event, data)` — see type documentation for event names\n- Returns: self, for chaining\n- Example:\n```js\nw.setCallback((event, data) => {\n    if (event === 'location') console.log(data.latitude, data.longitude)\n})\n```",
+              "rawDocumentation": "Sets the callback function invoked when location events occur.\n- Parameter fn: {(event: string, data: Record<string, any>) => void} Called with the event name and associated data; see type documentation for event names\n- Returns: self, for chaining\n- Example:\n```js\nw.setCallback((event, data) => {\n    if (event === 'location') console.log(data.latitude, data.longitude)\n})\n```",
               "description": "Sets the callback function invoked when location events occur.",
               "params": [
                 {
                   "name": "fn",
                   "type": "JSFunction",
-                  "description": "`function(event, data)` — see type documentation for event names",
+                  "description": "Called with the event name and associated data; see type documentation for event names",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(event: string, data: Record<string, any>) => void"
                 }
               ],
               "returns": {
@@ -6277,7 +6277,7 @@
               "name": "setClickCallback",
               "signature": "func setClickCallback(_ fn: JSFunction)",
               "isStatic": false,
-              "rawDocumentation": "Set a callback invoked when the item is clicked (only fires when no menu is set)\n- Parameter fn: A function to call on click, or null to remove the callback\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.title = \"Click me\"\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```",
+              "rawDocumentation": "Set a callback invoked when the item is clicked (only fires when no menu is set)\n- Parameter fn: {(() => void) | null} A function to call on click, or null to remove the callback\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.title = \"Click me\"\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```",
               "description": "Set a callback invoked when the item is clicked (only fires when no menu is set)",
               "params": [
                 {
@@ -6285,7 +6285,7 @@
                   "type": "JSFunction",
                   "description": "A function to call on click, or null to remove the callback",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(() => void) | null"
                 }
               ],
               "returns": null,
@@ -6413,8 +6413,8 @@
           "name": "show",
           "signature": "func show(_ title: String, _ body: String, _ callback: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Display a notification immediately.\n\n- Parameters:\n  - title: The notification title\n  - body: The notification body text\n  - callback: Optional function called when the user taps the notification.\n    Receives a response object (see module docs for shape).\n- Example:\n```js\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n```",
-          "description": "Display a notification immediately.\nReceives a response object (see module docs for shape).",
+          "rawDocumentation": "Display a notification immediately.\n\n- Parameters:\n  - title: The notification title\n  - body: The notification body text\n  - callback: {(response: Record<string, any>) => void} Optional function called when the user taps the notification. Receives a response object (see module docs for shape).\n- Example:\n```js\nhs.notify.show(\"Build complete\", \"Your project compiled successfully.\")\n```",
+          "description": "Display a notification immediately.",
           "params": [
             {
               "name": "title",
@@ -6433,9 +6433,9 @@
             {
               "name": "callback",
               "type": "JSFunction",
-              "description": "Optional function called when the user taps the notification.",
+              "description": "Optional function called when the user taps the notification. Receives a response object (see module docs for shape).",
               "optional": false,
-              "tsType": null
+              "tsType": "(response: Record<string, any>) => void"
             }
           ],
           "returns": null,
@@ -6447,7 +6447,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
-          "lineNumber": 135
+          "lineNumber": 134
         },
         {
           "name": "create",
@@ -6476,7 +6476,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
-          "lineNumber": 148
+          "lineNumber": 147
         },
         {
           "name": "removeAllDelivered",
@@ -6494,7 +6494,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
-          "lineNumber": 157
+          "lineNumber": 156
         },
         {
           "name": "removeAllPending",
@@ -6512,7 +6512,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.notify/HSNotifyModule.swift",
-          "lineNumber": 164
+          "lineNumber": 163
         }
       ],
       "properties": [],
@@ -7520,15 +7520,15 @@
           "name": "addWatcher",
           "signature": "func addWatcher(_ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Add a watcher that is called whenever the pasteboard contents change.\nMultiple watchers may be registered; they are each called independently.\nBecause macOS provides no pasteboard change notification API, this is implemented\nby polling `changeCount` at the interval specified by `watcherInterval`.\n- Parameter listener: A function called with one argument: the new `changeCount` integer\n- Example:\n```js\nhs.pasteboard.addWatcher((count) => {\n    console.log(\"Pasteboard changed:\", count)\n})\n```",
+          "rawDocumentation": "Add a watcher that is called whenever the pasteboard contents change.\nMultiple watchers may be registered; they are each called independently.\nBecause macOS provides no pasteboard change notification API, this is implemented\nby polling `changeCount` at the interval specified by `watcherInterval`.\n- Parameter listener: {(changeCount: number) => void} A function called with the new `changeCount` integer whenever the pasteboard changes\n- Example:\n```js\nhs.pasteboard.addWatcher((count) => {\n    console.log(\"Pasteboard changed:\", count)\n})\n```",
           "description": "Add a watcher that is called whenever the pasteboard contents change.\nMultiple watchers may be registered; they are each called independently.\nBecause macOS provides no pasteboard change notification API, this is implemented\nby polling `changeCount` at the interval specified by `watcherInterval`.",
           "params": [
             {
               "name": "listener",
               "type": "JSFunction",
-              "description": "A function called with one argument: the new `changeCount` integer",
+              "description": "A function called with the new `changeCount` integer whenever the pasteboard changes",
               "optional": false,
-              "tsType": null
+              "tsType": "(changeCount: number) => void"
             }
           ],
           "returns": null,
@@ -8074,15 +8074,15 @@
           "name": "addEventWatcher",
           "signature": "func addEventWatcher(_ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Registers a listener that fires when system power events occur.\n\nThe listener receives a single string identifying the event. Possible values:\n`\"screensDidSleep\"`, `\"screensDidWake\"`, `\"screensDidLock\"`, `\"screensDidUnlock\"`,\n`\"screensaverDidStart\"`, `\"screensaverDidStop\"`, `\"screensaverWillStop\"`,\n`\"systemWillSleep\"`, `\"systemDidWake\"`, `\"systemWillPowerOff\"`,\n`\"sessionDidBecomeActive\"`, `\"sessionDidResignActive\"`.\n\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.\n- Parameter listener: A function receiving `(eventName: string)`.\n- Example:\n  ```js\n  hs.power.addEventWatcher(event => console.log(\"Power event: \" + event))\n  ```",
+          "rawDocumentation": "Registers a listener that fires when system power events occur.\n\nThe listener receives a single string identifying the event. Possible values:\n`\"screensDidSleep\"`, `\"screensDidWake\"`, `\"screensDidLock\"`, `\"screensDidUnlock\"`,\n`\"screensaverDidStart\"`, `\"screensaverDidStop\"`, `\"screensaverWillStop\"`,\n`\"systemWillSleep\"`, `\"systemDidWake\"`, `\"systemWillPowerOff\"`,\n`\"sessionDidBecomeActive\"`, `\"sessionDidResignActive\"`.\n\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.\n- Parameter listener: {(eventName: string) => void} A function called with the power event name string.\n- Example:\n  ```js\n  hs.power.addEventWatcher(event => console.log(\"Power event: \" + event))\n  ```",
           "description": "Registers a listener that fires when system power events occur.\n`\"screensDidSleep\"`, `\"screensDidWake\"`, `\"screensDidLock\"`, `\"screensDidUnlock\"`,\n`\"screensaverDidStart\"`, `\"screensaverDidStop\"`, `\"screensaverWillStop\"`,\n`\"systemWillSleep\"`, `\"systemDidWake\"`, `\"systemWillPowerOff\"`,\n`\"sessionDidBecomeActive\"`, `\"sessionDidResignActive\"`.\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.",
           "params": [
             {
               "name": "listener",
               "type": "JSFunction",
-              "description": "A function receiving `(eventName: string)`.",
+              "description": "A function called with the power event name string.",
               "optional": false,
-              "tsType": null
+              "tsType": "(eventName: string) => void"
             }
           ],
           "returns": null,
@@ -8126,7 +8126,7 @@
           "name": "addBatteryWatcher",
           "signature": "func addBatteryWatcher(_ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Registers a listener that fires whenever battery state changes.\n\nThe listener receives no arguments; call `batteryInfo()` or read individual\nproperties inside the callback to determine what changed.\n\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.\n- Parameter listener: A function called with no arguments on battery state change.\n- Example:\n  ```js\n  hs.power.addBatteryWatcher(() => {\n      console.log(\"Battery now: \" + hs.power.percentage + \"%\")\n  })\n  ```",
+          "rawDocumentation": "Registers a listener that fires whenever battery state changes.\n\nThe listener receives no arguments; call `batteryInfo()` or read individual\nproperties inside the callback to determine what changed.\n\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.\n- Parameter listener: {() => void} A function called with no arguments on battery state change.\n- Example:\n  ```js\n  hs.power.addBatteryWatcher(() => {\n      console.log(\"Battery now: \" + hs.power.percentage + \"%\")\n  })\n  ```",
           "description": "Registers a listener that fires whenever battery state changes.\nThe listener receives no arguments; call `batteryInfo()` or read individual\nproperties inside the callback to determine what changed.\nThe OS notification subscription starts lazily on the first listener and\nis released automatically when the last listener is removed.",
           "params": [
             {
@@ -8134,7 +8134,7 @@
               "type": "JSFunction",
               "description": "A function called with no arguments on battery state change.",
               "optional": false,
-              "tsType": null
+              "tsType": "() => void"
             }
           ],
           "returns": null,
@@ -8895,7 +8895,7 @@
           "name": "search",
           "signature": "func search(_ predicate: String, _ callback: JSFunction) -> HSSpotlightQuery",
           "isStatic": false,
-          "rawDocumentation": "Convenience helper that creates, configures, and starts a query in one call.\n\nEquivalent to `create().setQuery(predicate).setCallback(callback).start()`.\nCall `q.stop()` from inside `callback` (when `event === 'didFinish'`) to end\nthe search once you have what you need.\n- Parameters:\n  - predicate: An NSPredicate-format query string\n  - callback: A function called with `(event, update?)` lifecycle events\n- Returns: The `HSSpotlightQuery` object (use to stop the search early)\n- Example:\n```js\nconst q = hs.spotlight.search(\n    \"kMDItemDisplayName BEGINSWITH 'Report'\",\n    (event) => {\n        if (event === 'didFinish') {\n            console.log('Found ' + q.count + ' reports')\n            q.stop()\n        }\n    }\n)\n```",
+          "rawDocumentation": "Convenience helper that creates, configures, and starts a query in one call.\n\nEquivalent to `create().setQuery(predicate).setCallback(callback).start()`.\nCall `q.stop()` from inside `callback` (when `event === 'didFinish'`) to end\nthe search once you have what you need.\n- Parameters:\n  - predicate: An NSPredicate-format query string\n  - callback: {(event: string, update?: Record<string, any>) => void} A function called with lifecycle event name and optional update data\n- Returns: The `HSSpotlightQuery` object (use to stop the search early)\n- Example:\n```js\nconst q = hs.spotlight.search(\n    \"kMDItemDisplayName BEGINSWITH 'Report'\",\n    (event) => {\n        if (event === 'didFinish') {\n            console.log('Found ' + q.count + ' reports')\n            q.stop()\n        }\n    }\n)\n```",
           "description": "Convenience helper that creates, configures, and starts a query in one call.\nEquivalent to `create().setQuery(predicate).setCallback(callback).start()`.\nCall `q.stop()` from inside `callback` (when `event === 'didFinish'`) to end\nthe search once you have what you need.",
           "params": [
             {
@@ -8908,9 +8908,9 @@
             {
               "name": "callback",
               "type": "JSFunction",
-              "description": "A function called with `(event, update?)` lifecycle events",
+              "description": "A function called with lifecycle event name and optional update data",
               "optional": false,
-              "tsType": null
+              "tsType": "(event: string, update?: Record<string, any>) => void"
             }
           ],
           "returns": {
@@ -9305,15 +9305,15 @@
               "name": "setCallback",
               "signature": "func setCallback(_ fn: JSFunction) -> HSSpotlightQuery",
               "isStatic": false,
-              "rawDocumentation": "Registers a callback that receives query lifecycle events.\n\nThe callback is called with:\n- `event` (string): one of `\"didStart\"`, `\"inProgress\"`, `\"didFinish\"`, `\"didUpdate\"`\n- `update` (object, `\"didUpdate\"` only): `{ added, changed, removed }` — each an array\n  of `HSSpotlightItem` objects describing what changed in this update cycle\n\n- Parameter fn: A JavaScript function `(event, update?) => void`\n- Returns: this query, for chaining\n- Example:\n```js\nq.setCallback((event, update) => {\n    if (event === 'didFinish') {\n        console.log('Initial gather complete — ' + q.count + ' results')\n    } else if (event === 'didUpdate') {\n        const added = update ? update.added.length : 0\n        console.log(added + ' items added in this update')\n    }\n})\n```",
+              "rawDocumentation": "Registers a callback that receives query lifecycle events.\n\nThe callback is called with:\n- `event` (string): one of `\"didStart\"`, `\"inProgress\"`, `\"didFinish\"`, `\"didUpdate\"`\n- `update` (object, `\"didUpdate\"` only): `{ added, changed, removed }` — each an array\n  of `HSSpotlightItem` objects describing what changed in this update cycle\n\n- Parameter fn: {(event: string, update?: Record<string, any>) => void} Called with lifecycle event name and optional update data containing added/changed/removed item arrays\n- Returns: this query, for chaining\n- Example:\n```js\nq.setCallback((event, update) => {\n    if (event === 'didFinish') {\n        console.log('Initial gather complete — ' + q.count + ' results')\n    } else if (event === 'didUpdate') {\n        const added = update ? update.added.length : 0\n        console.log(added + ' items added in this update')\n    }\n})\n```",
               "description": "Registers a callback that receives query lifecycle events.\nof `HSSpotlightItem` objects describing what changed in this update cycle",
               "params": [
                 {
                   "name": "fn",
                   "type": "JSFunction",
-                  "description": "A JavaScript function `(event, update?) => void`",
+                  "description": "Called with lifecycle event name and optional update data containing added/changed/removed item arrays",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(event: string, update?: Record<string, any>) => void"
                 }
               ],
               "returns": {
@@ -9509,7 +9509,7 @@
           "name": "create",
           "signature": "func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSFunction?, _ environment: [String: String]?, _ streamingCallback: JSFunction?) -> HSTask",
           "isStatic": false,
-          "rawDocumentation": "Create a new task\n- Parameters:\n  - launchPath: The full path to the executable to run\n  - arguments: An array of arguments to pass to the executable\n  - completionCallback: Optional callback function called when the task terminates\n  - environment: Optional dictionary of environment variables for the task\n  - streamingCallback: Optional callback function called when the task produces output\n- Returns: A task object. Call start() to begin execution.\n- Example:\n```js\nconst task = hs.task.create(\"/usr/bin/env\", [\"printenv\", \"PATH\"], (code, reason) => {\n    console.log(\"exited\", code)\n})\ntask.start()\n```",
+          "rawDocumentation": "Create a new task\n- Parameters:\n  - launchPath: The full path to the executable to run\n  - arguments: An array of arguments to pass to the executable\n  - completionCallback: {((exitCode: number, exitReason: string) => void) | null} Optional callback called when the task terminates with exit code and reason\n  - environment: Optional dictionary of environment variables for the task\n  - streamingCallback: {((stream: string, data: string) => void) | null} Optional callback called when the task produces output; stream is \"stdout\" or \"stderr\"\n- Returns: A task object. Call start() to begin execution.\n- Example:\n```js\nconst task = hs.task.create(\"/usr/bin/env\", [\"printenv\", \"PATH\"], (code, reason) => {\n    console.log(\"exited\", code)\n})\ntask.start()\n```",
           "description": "Create a new task",
           "params": [
             {
@@ -9529,9 +9529,9 @@
             {
               "name": "completionCallback",
               "type": "JSFunction",
-              "description": "Optional callback function called when the task terminates",
+              "description": "Optional callback called when the task terminates with exit code and reason",
               "optional": false,
-              "tsType": null
+              "tsType": "((exitCode: number, exitReason: string) => void) | null"
             },
             {
               "name": "environment",
@@ -9543,9 +9543,9 @@
             {
               "name": "streamingCallback",
               "type": "JSFunction",
-              "description": "Optional callback function called when the task produces output",
+              "description": "Optional callback called when the task produces output; stream is \"stdout\" or \"stderr\"",
               "optional": false,
-              "tsType": null
+              "tsType": "((stream: string, data: string) => void) | null"
             }
           ],
           "returns": {
@@ -9982,7 +9982,7 @@
           "name": "create",
           "signature": "func create(_ interval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool) -> HSTimer",
           "isStatic": false,
-          "rawDocumentation": "Create a new timer\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: A JavaScript function to call when the timer fires\n  - continueOnError?: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object. Call start() to begin the timer.\n- Example:\n```js\nconst t = hs.timer.create(5, () => console.log(\"tick\"), false)\nt.start()\n```",
+          "rawDocumentation": "Create a new timer\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: {() => void} A JavaScript function to call when the timer fires\n  - continueOnError?: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object. Call start() to begin the timer.\n- Example:\n```js\nconst t = hs.timer.create(5, () => console.log(\"tick\"), false)\nt.start()\n```",
           "description": "Create a new timer",
           "params": [
             {
@@ -9997,7 +9997,7 @@
               "type": "JSFunction",
               "description": "A JavaScript function to call when the timer fires",
               "optional": false,
-              "tsType": null
+              "tsType": "() => void"
             },
             {
               "name": "continueOnError",
@@ -10025,7 +10025,7 @@
           "name": "doAfter",
           "signature": "func doAfter(_ seconds: TimeInterval, _ callback: JSFunction) -> HSTimer",
           "isStatic": false,
-          "rawDocumentation": "Create and start a one-shot timer\n- Parameters:\n  - seconds: Number of seconds to wait before firing\n  - callback: A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)\n- Example:\n```js\nhs.timer.doAfter(5, () => console.log(\"fired\"))\n```",
+          "rawDocumentation": "Create and start a one-shot timer\n- Parameters:\n  - seconds: Number of seconds to wait before firing\n  - callback: {() => void} A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)\n- Example:\n```js\nhs.timer.doAfter(5, () => console.log(\"fired\"))\n```",
           "description": "Create and start a one-shot timer",
           "params": [
             {
@@ -10040,7 +10040,7 @@
               "type": "JSFunction",
               "description": "A JavaScript function to call when the timer fires",
               "optional": false,
-              "tsType": null
+              "tsType": "() => void"
             }
           ],
           "returns": {
@@ -10061,7 +10061,7 @@
           "name": "doEvery",
           "signature": "func doEvery(_ interval: TimeInterval, _ callback: JSFunction) -> HSTimer",
           "isStatic": false,
-          "rawDocumentation": "Create and start a repeating timer\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)\n- Example:\n```js\nhs.timer.doEvery(60, () => console.log(\"every minute\"))\n```",
+          "rawDocumentation": "Create and start a repeating timer\n- Parameters:\n  - interval: The interval in seconds at which the timer should fire\n  - callback: {() => void} A JavaScript function to call when the timer fires\n- Returns: A timer object (already started)\n- Example:\n```js\nhs.timer.doEvery(60, () => console.log(\"every minute\"))\n```",
           "description": "Create and start a repeating timer",
           "params": [
             {
@@ -10076,7 +10076,7 @@
               "type": "JSFunction",
               "description": "A JavaScript function to call when the timer fires",
               "optional": false,
-              "tsType": null
+              "tsType": "() => void"
             }
           ],
           "returns": {
@@ -10097,7 +10097,7 @@
           "name": "doAt",
           "signature": "func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool) -> HSTimer",
           "isStatic": false,
-          "rawDocumentation": "Create and start a timer that fires at a specific time\n- Parameters:\n  - time: Seconds since midnight (local time) when the timer should first fire\n  - repeatInterval: If provided, the timer will repeat at this interval. Pass 0 for one-shot.\n  - callback: A JavaScript function to call when the timer fires\n  - continueOnError?: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object (already started)\n- Example:\n```js\n// Fire at 9am every day\nhs.timer.doAt(9 * 3600, 86400, () => console.log(\"morning\"), false)\n```",
+          "rawDocumentation": "Create and start a timer that fires at a specific time\n- Parameters:\n  - time: Seconds since midnight (local time) when the timer should first fire\n  - repeatInterval: If provided, the timer will repeat at this interval. Pass 0 for one-shot.\n  - callback: {() => void} A JavaScript function to call when the timer fires\n  - continueOnError?: If true, the timer will continue running even if the callback throws an error\n- Returns: A timer object (already started)\n- Example:\n```js\n// Fire at 9am every day\nhs.timer.doAt(9 * 3600, 86400, () => console.log(\"morning\"), false)\n```",
           "description": "Create and start a timer that fires at a specific time",
           "params": [
             {
@@ -10119,7 +10119,7 @@
               "type": "JSFunction",
               "description": "A JavaScript function to call when the timer fires",
               "optional": false,
-              "tsType": null
+              "tsType": "() => void"
             },
             {
               "name": "continueOnError",
@@ -11558,7 +11558,7 @@
               "name": "onClick",
               "signature": "func onClick(_ callback: JSFunction) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Set a callback to fire when the element is clicked\n- Parameter callback: A JavaScript function to call on click\n- Returns: Self for chaining",
+              "rawDocumentation": "Set a callback to fire when the element is clicked\n- Parameter callback: {() => void} A JavaScript function to call on click\n- Returns: Self for chaining",
               "description": "Set a callback to fire when the element is clicked",
               "params": [
                 {
@@ -11566,7 +11566,7 @@
                   "type": "JSFunction",
                   "description": "A JavaScript function to call on click",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "() => void"
                 }
               ],
               "returns": {
@@ -11582,15 +11582,15 @@
               "name": "onHover",
               "signature": "func onHover(_ callback: JSFunction) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Set a callback to fire when the cursor enters or leaves the element\n- Parameter callback: A JavaScript function called with a boolean: true when entering, false when leaving\n- Returns: Self for chaining",
+              "rawDocumentation": "Set a callback to fire when the cursor enters or leaves the element\n- Parameter callback: {(isHovering: boolean) => void} A JavaScript function called with `true` when the cursor enters and `false` when it leaves\n- Returns: Self for chaining",
               "description": "Set a callback to fire when the cursor enters or leaves the element",
               "params": [
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "A JavaScript function called with a boolean: true when entering, false when leaving",
+                  "description": "A JavaScript function called with `true` when the cursor enters and `false` when it leaves",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(isHovering: boolean) => void"
                 }
               ],
               "returns": {
@@ -11866,15 +11866,15 @@
               "name": "onButton",
               "signature": "func onButton(_ callback: JSFunction) -> HSUIDialog",
               "isStatic": false,
-              "rawDocumentation": "Set the callback for button presses\n- Parameter callback: Function receiving button index (0-based)\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.dialog(\"Confirm?\")\n    .onButton((i) => console.log(\"button\", i))\n    .show()\n```",
+              "rawDocumentation": "Set the callback for button presses\n- Parameter callback: {(buttonIndex: number) => void} Function receiving the 0-based index of the button the user pressed\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.dialog(\"Confirm?\")\n    .onButton((i) => console.log(\"button\", i))\n    .show()\n```",
               "description": "Set the callback for button presses",
               "params": [
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "Function receiving button index (0-based)",
+                  "description": "Function receiving the 0-based index of the button the user pressed",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(buttonIndex: number) => void"
                 }
               ],
               "returns": {
@@ -12146,15 +12146,15 @@
               "name": "onSelection",
               "signature": "func onSelection(_ callback: JSFunction) -> HSUIFilePicker",
               "isStatic": false,
-              "rawDocumentation": "Set the callback for file selection\n- Parameter callback: Function receiving selected path(s) or null if cancelled\n  - Single selection: receives a string path or null\n  - Multiple selection: receives an array of paths or null\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.filePicker()\n    .onSelection((path) => console.log(\"picked:\", path))\n    .show()\n```",
+              "rawDocumentation": "Set the callback for file selection\n- Parameter callback: {(paths: string | string[] | null) => void} Function receiving the selected path(s) or null if cancelled. Single selection receives a string; multiple selection receives an array of strings.\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.filePicker()\n    .onSelection((path) => console.log(\"picked:\", path))\n    .show()\n```",
               "description": "Set the callback for file selection",
               "params": [
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "Function receiving selected path(s) or null if cancelled",
+                  "description": "Function receiving the selected path(s) or null if cancelled. Single selection receives a string; multiple selection receives an array of strings.",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(paths: string | string[] | null) => void"
                 }
               ],
               "returns": {
@@ -12169,7 +12169,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
-              "lineNumber": 126
+              "lineNumber": 124
             },
             {
               "name": "show",
@@ -12187,7 +12187,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIFilePicker.swift",
-              "lineNumber": 133
+              "lineNumber": 131
             }
           ],
           "properties": []
@@ -12289,15 +12289,15 @@
               "name": "onButton",
               "signature": "func onButton(_ callback: JSFunction) -> HSUITextPrompt",
               "isStatic": false,
-              "rawDocumentation": "Set the callback for button presses\n- Parameter callback: Function receiving (buttonIndex, inputText)\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.textPrompt(\"Name?\")\n    .onButton((idx, text) => console.log(idx, text))\n    .show()\n```",
+              "rawDocumentation": "Set the callback for button presses\n- Parameter callback: {(buttonIndex: number, inputText: string) => void} Function receiving the 0-based button index and the text the user entered\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.textPrompt(\"Name?\")\n    .onButton((idx, text) => console.log(idx, text))\n    .show()\n```",
               "description": "Set the callback for button presses",
               "params": [
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "Function receiving (buttonIndex, inputText)",
+                  "description": "Function receiving the 0-based button index and the text the user entered",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "(buttonIndex: number, inputText: string) => void"
                 }
               ],
               "returns": {
@@ -14322,5 +14322,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-03T11:03:27.950Z"
+  "generatedAt": "2026-07-03T13:33:26.773Z"
 }
