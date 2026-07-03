@@ -225,7 +225,7 @@ import JavaScriptCoreExtras
                 AKWarning("hs.urlevent: No callback bound for event '\(eventName)' (URL: \(fullURL))")
             }
 
-        case "http", "https", "file":
+        case "http", "https":
             if let cb = _httpCallback {
                 _ = cb.call(withArguments: [scheme, url.host ?? "", params, fullURL, senderPID])
             } else {
@@ -260,7 +260,9 @@ import JavaScriptCoreExtras
 
     @objc func bind(_ eventName: String, _ callback: JSFunction) {
         bindings[eventName]?.detach(from: self)
-        bindings[eventName] = JSCallback(value: callback, owner: self)
+        if callback.isFunction {
+            bindings[eventName] = JSCallback(value: callback, owner: self)
+        }
     }
 
     @objc var httpCallback: JSValue? {
@@ -316,6 +318,7 @@ import JavaScriptCoreExtras
         return (cfArray as NSArray).compactMap { $0 as? String }
     }
 
+    @diagnose(DeprecatedDeclaration, as: ignored, reason: "No suitable non-deprecated alternative exists")
     @objc func setDefaultHandler(_ scheme: String, _ bundleID: String) -> Bool {
         // LSSetDefaultHandlerForURLScheme is deprecated in macOS 12 but has no modern replacement.
         return LSSetDefaultHandlerForURLScheme(scheme as CFString, bundleID as CFString) == noErr

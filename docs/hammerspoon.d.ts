@@ -5195,7 +5195,7 @@ or `null` to remove any existing binding.
      * @param eventName The URL host component identifying the event.
      * @param callback A function receiving `(eventName, params, senderPID, fullURL)`,
      */
-    function bind(eventName: string, callback: (...args: any[]) => any): void;
+    function bind(eventName: string, callback: ((...args: any[]) => any) | undefined): void;
 
     /**
      * Open a URL using the system default application for its scheme.

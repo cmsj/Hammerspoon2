@@ -12209,7 +12209,7 @@
       "methods": [
         {
           "name": "bind",
-          "signature": "func bind(_ eventName: String, _ callback: JSFunction)",
+          "signature": "func bind(_ eventName: String, _ callback: JSFunction?)",
           "isStatic": false,
           "rawDocumentation": "Register or remove a callback for a named `hammerspoon2://` URL event.\n\nThe URL format is `hammerspoon2://eventName?key=value`. The host\ncomponent (`eventName`) selects the callback to invoke.\n\n- Parameters:\n  - eventName: The URL host component identifying the event.\n  - callback: A function receiving `(eventName, params, senderPID, fullURL)`,\n    or `null` to remove any existing binding.\n- Example:\n```js\nhs.urlevent.bind(\"myEvent\", (name, params, pid, url) => {\n    console.log(\"myEvent — foo=\" + params[\"foo\"])\n})\n// Remove:\nhs.urlevent.bind(\"myEvent\", null)\n```",
           "description": "Register or remove a callback for a named `hammerspoon2://` URL event.\nThe URL format is `hammerspoon2://eventName?key=value`. The host\ncomponent (`eventName`) selects the callback to invoke.\nor `null` to remove any existing binding.",
@@ -14158,5 +14158,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-03T10:32:32.341Z"
+  "generatedAt": "2026-07-03T10:43:17.585Z"
 }
