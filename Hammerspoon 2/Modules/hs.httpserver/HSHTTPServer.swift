@@ -796,14 +796,17 @@ struct ParsedHTTPRequest {
             return
         }
         let base = requestPath.hasSuffix("/") ? requestPath : requestPath + "/"
-        var html = "<html><head><title>Index of \(requestPath)</title></head><body>"
-        html += "<h1>Index of \(requestPath)</h1><ul>"
+        let escapedPath = Self.htmlEscape(requestPath)
+        let escapedBase = Self.htmlEscape(base)
+        var html = "<html><head><title>Index of \(escapedPath)</title></head><body>"
+        html += "<h1>Index of \(escapedPath)</h1><ul>"
         if requestPath != "/" { html += "<li><a href=\"../\">..</a></li>" }
         for entry in entries.sorted() {
             var entryIsDir: ObjCBool = false
             unsafe fm.fileExists(atPath: (path as NSString).appendingPathComponent(entry), isDirectory: &entryIsDir)
             let display = entryIsDir.boolValue ? "\(entry)/" : entry
-            html += "<li><a href=\"\(base)\(display)\">\(display)</a></li>"
+            let escapedDisplay = Self.htmlEscape(display)
+            html += "<li><a href=\"\(escapedBase)\(escapedDisplay)\">\(escapedDisplay)</a></li>"
         }
         html += "</ul></body></html>"
         sendResponse(on: connection, status: 200, body: html,
@@ -870,6 +873,14 @@ struct ParsedHTTPRequest {
     }
 
     // MARK: - Helpers
+
+    private static func htmlEscape(_ string: String) -> String {
+        string
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+    }
 
     private func mimeType(forExtension ext: String) -> String {
         if let utType = UTType(filenameExtension: ext),
