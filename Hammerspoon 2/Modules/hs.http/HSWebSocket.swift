@@ -212,7 +212,7 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
                     // destroy()); let didCloseWith / explicit state changes handle the close.
                     let nsError = error as NSError
                     if nsError.code == NSURLErrorCancelled { return }
-                    guard self._readyState == 1 else { return }
+                    guard self._readyState < 3 else { return }
                     self._readyState = 3
                     _ = self._errorCallback?.value?.call(withArguments: [error.localizedDescription])
                     self.session?.invalidateAndCancel()
