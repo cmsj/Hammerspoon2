@@ -32,24 +32,34 @@ Add other framework imports only as needed (e.g. `import AppKit`, `import CoreAu
 
 ## Test structure
 
-Tests are **structs**, not classes. Use `@Suite` with a descriptive name whenever a
-file contains more than one distinct group of tests.
+Tests are **structs**, not classes. Each module's test file must have a **top-level wrapper suite** that encloses all of that module's inner suites:
 
 ```swift
-@Suite("hs.foo API structure tests")
-struct HSFooStructureTests {
-    private func makeHarness() -> JSTestHarness {
-        let harness = JSTestHarness()
-        harness.loadModule(HSFooModule.self, as: "foo")
-        return harness
+@Suite("hs.foo tests")
+struct HSFooTests {
+
+    @Suite("hs.foo API structure tests")
+    struct HSFooStructureTests {
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSFooModule.self, as: "foo")
+            return harness
+        }
+
+        @Test("someMethod is a function")
+        func testSomeMethodIsFunction() {
+            makeHarness().expectTrue("typeof hs.foo.someMethod === 'function'")
+        }
     }
 
-    @Test("someMethod is a function")
-    func testSomeMethodIsFunction() {
-        makeHarness().expectTrue("typeof hs.foo.someMethod === 'function'")
+    @Suite("hs.foo calculations")
+    struct HSFooCalculationTests {
+        // ...
     }
 }
 ```
+
+The top-level suite name is always `"hs.foo tests"` (matching the module name) and the struct is named `HSFooTests`. All inner suites (`HSFooStructureTests`, `HSFooCalculationTests`, etc.) are nested inside it.
 
 The private `makeHarness()` factory avoids repeating setup in every test. Each test
 should create its own harness (they share no state).
@@ -129,7 +139,8 @@ harness.expectException()
 
 ## Standard test suites for a new module
 
-Every new module should have **at minimum** two suites in its test file.
+Every new module should have **at minimum** two suites in its test file, both nested
+inside a top-level wrapper suite (see **Test structure** above).
 
 ### Suite 1: API structure (mandatory, runs everywhere)
 
@@ -137,49 +148,90 @@ One test per public protocol member, verifying it exists with the right JS type.
 These tests never touch real OS state and run in any environment.
 
 ```swift
-@Suite("hs.foo API structure tests")
-struct HSFooStructureTests {
+@Suite("hs.foo tests")
+struct HSFooTests {
 
-    private func makeHarness() -> JSTestHarness { ... }
+    @Suite("hs.foo API structure tests")
+    struct HSFooStructureTests {
 
-    // Functions
-    @Test("doThing is a function")
-    func testDoThingIsFunction() {
-        makeHarness().expectTrue("typeof hs.foo.doThing === 'function'")
+        private func makeHarness() -> JSTestHarness { ... }
+
+        // Functions
+        @Test("doThing is a function")
+        func testDoThingIsFunction() {
+            makeHarness().expectTrue("typeof hs.foo.doThing === 'function'")
+        }
+
+        // Properties (numbers, booleans, strings, objects)
+        @Test("count is a number")
+        func testCountIsNumber() {
+            makeHarness().expectTrue("typeof hs.foo.count === 'number'")
+        }
+
+        @Test("isEnabled defaults to true")
+        func testIsEnabledDefault() {
+            makeHarness().expectTrue("hs.foo.isEnabled === true")
+        }
+
+        // Sub-objects
+        @Test("geocoder is an object")
+        func testGeocoderIsObject() {
+            makeHarness().expectTrue("typeof hs.foo.geocoder === 'object'")
+        }
+
+        // Watcher emitter (if the module uses the EventEmitter watcher pattern)
+        @Test("_watcherEmitter is initialized by hs.foo.js")
+        func testWatcherEmitterInitialized() {
+            makeHarness().expectTrue(
+                "hs.foo._watcherEmitter !== null && hs.foo._watcherEmitter !== undefined"
+            )
+        }
+
+        // Input validation (methods should fail gracefully, not throw)
+        @Test("doThing() with null input returns null without throwing")
+        func testDoThingNullInput() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.foo.doThing(null)")
+            harness.expectTrue("r === null || r === undefined")
+            #expect(!harness.hasException)
+        }
     }
 
-    // Properties (numbers, booleans, strings, objects)
-    @Test("count is a number")
-    func testCountIsNumber() {
-        makeHarness().expectTrue("typeof hs.foo.count === 'number'")
-    }
+    // MARK: - Suite 2
 
-    @Test("isEnabled defaults to true")
-    func testIsEnabledDefault() {
-        makeHarness().expectTrue("hs.foo.isEnabled === true")
-    }
+    @Suite("hs.foo calculations")
+    struct HSFooCalculationTests {
 
-    // Sub-objects
-    @Test("geocoder is an object")
-    func testGeocoderIsObject() {
-        makeHarness().expectTrue("typeof hs.foo.geocoder === 'object'")
-    }
+        private func makeHarness() -> JSTestHarness { ... }
 
-    // Watcher emitter (if the module uses the EventEmitter watcher pattern)
-    @Test("_watcherEmitter is initialized by hs.foo.js")
-    func testWatcherEmitterInitialized() {
-        makeHarness().expectTrue(
-            "hs.foo._watcherEmitter !== null && hs.foo._watcherEmitter !== undefined"
-        )
-    }
+        @Test("distance between London and Paris is ~341km")
+        func testDistance() {
+            let harness = makeHarness()
+            harness.eval("var d = hs.foo.distance(51.5074, -0.1278, 48.8566, 2.3522)")
+            harness.expectTrue("Math.abs(d - 341402) < 5000")
+            #expect(!harness.hasException)
+        }
 
-    // Input validation (methods should fail gracefully, not throw)
-    @Test("doThing() with null input returns null without throwing")
-    func testDoThingNullInput() {
-        let harness = makeHarness()
-        harness.eval("var r = hs.foo.doThing(null)")
-        harness.expectTrue("r === null || r === undefined")
-        #expect(!harness.hasException)
+        @Test("returned object has expected type and properties")
+        func testReturnedObject() {
+            let harness = makeHarness()
+            harness.eval("var obj = hs.foo.create({ title: 'Test' })")
+            harness.expectTrue("typeof obj === 'object'")
+            harness.expectTrue("typeof obj.identifier === 'string'")
+            harness.expectTrue("obj.identifier.length > 0")
+        }
+
+        @Test("two created objects have different identifiers")
+        func testUniqueIdentifiers() {
+            let harness = makeHarness()
+            harness.expectTrue("""
+                (function() {
+                    var a = hs.foo.create({ title: 'A' });
+                    var b = hs.foo.create({ title: 'B' });
+                    return a.identifier !== b.identifier;
+                })()
+            """)
+        }
     }
 }
 ```
@@ -188,62 +240,30 @@ struct HSFooStructureTests {
 
 Test that methods return correct values for deterministic inputs — pure
 calculations, round-trips, invariants. No OS permissions or hardware required.
-
-```swift
-@Suite("hs.foo calculations")
-struct HSFooCalculationTests {
-
-    private func makeHarness() -> JSTestHarness { ... }
-
-    @Test("distance between London and Paris is ~341km")
-    func testDistance() {
-        let harness = makeHarness()
-        harness.eval("var d = hs.foo.distance(51.5074, -0.1278, 48.8566, 2.3522)")
-        harness.expectTrue("Math.abs(d - 341402) < 5000")
-        #expect(!harness.hasException)
-    }
-
-    @Test("returned object has expected type and properties")
-    func testReturnedObject() {
-        let harness = makeHarness()
-        harness.eval("var obj = hs.foo.create({ title: 'Test' })")
-        harness.expectTrue("typeof obj === 'object'")
-        harness.expectTrue("typeof obj.identifier === 'string'")
-        harness.expectTrue("obj.identifier.length > 0")
-    }
-
-    @Test("two created objects have different identifiers")
-    func testUniqueIdentifiers() {
-        let harness = makeHarness()
-        harness.expectTrue("""
-            (function() {
-                var a = hs.foo.create({ title: 'A' });
-                var b = hs.foo.create({ title: 'B' });
-                return a.identifier !== b.identifier;
-            })()
-        """)
-    }
-}
-```
+(See example above.)
 
 ### Suite 3 (optional): Permission/hardware-gated tests
 
 Tests that require real OS state (accessibility, microphone, audio hardware, etc.)
 must be guarded with `.disabled(if:)` so they skip gracefully in environments
-where the permission or hardware is absent.
+where the permission or hardware is absent. These also nest inside the top-level
+`HSFooTests` wrapper.
 
 ```swift
 private nonisolated func isAccessibilityEnabled() -> Bool {
     AXIsProcessTrusted()
 }
 
-private nonisolated func hasAudioDevices() -> Bool { ... }
+@Suite("hs.foo tests")
+struct HSFooTests {
+    // ...
 
-@Suite("hs.foo real-hardware tests",
-       .serialized,
-       .disabled(if: !isAccessibilityEnabled(), "Accessibility not granted"))
-struct HSFooHardwareTests {
-    // Tests that call real OS APIs
+    @Suite("hs.foo real-hardware tests",
+           .serialized,
+           .disabled(if: !isAccessibilityEnabled(), "Accessibility not granted"))
+    struct HSFooHardwareTests {
+        // Tests that call real OS APIs
+    }
 }
 ```
 
@@ -447,6 +467,7 @@ and record all call arguments so tests can assert on them.
 - [ ] File is in the correct `*Tests/` subdirectory
 - [ ] Filename matches `HSFooIntegrationTests.swift` pattern
 - [ ] Imports are `Testing`, `JavaScriptCore`, `@testable import Hammerspoon_2`
+- [ ] All inner suites are nested inside a top-level `@Suite("hs.foo tests") struct HSFooTests {}`
 - [ ] Tests are structs with `@Test("description")` on each function
 - [ ] A `makeHarness()` factory avoids repeated boilerplate
 - [ ] Suite 1 covers every public protocol member (type + existence)

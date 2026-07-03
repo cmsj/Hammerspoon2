@@ -45,14 +45,14 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
             self.engineID = engineID
             // ... any pre-super initialisation ...
             super.init()
-            AKTrace("Init of \(name): \(engineID)")
+            AKDebug("Init of \(name): \(engineID)")
         }
         ```
       * A `shutdown()` method called by the core engine when tearing down the JS environment
  * The HSFooModule class should be annotated with: `@_documentation(visibility: private)`
- * HSFooModule should always have an `isolated deinit` that calls `AKTrace("Deinit of \(name): \(engineID)")`.
+ * HSFooModule should always have an `isolated deinit` that calls `AKDebug("Deinit of \(name): \(engineID)")`.
  * If the module allocates/retains any data (e.g. watchers, instance children, etc) then it should store weak references to them and be sure to clean them up in its shutdown() method.
- * Any instance child classes should always have an "isolated deinit" method that uses AKTrace() to announce their deinitialisation.
+ * Any instance child classes should always have an "isolated deinit" method that uses `AKDebug()` to announce their deinitialisation.
  * NEVER choose method names that start with "new", "alloc" or "copy" since these can fall foul of ObjC's implicit ARC rules and the objects those methods create will have one un-balanced retains.
  * NEVER name a method "delete" since this is a reserved keyword in JavaScript and cannot be called as a method (e.g. `obj.delete()` is a syntax error). Use a descriptive alternative such as `deletePath()`, `destroy()`, or `remove()` instead.
 
@@ -100,7 +100,7 @@ Both `isolated deinit` and the hosting module's `shutdown()` must call `destroy(
 
     isolated deinit {
         destroy()
-        AKTrace("deinit of HSChild")
+        AKDebug("deinit of HSChild")
     }
 }
 ```
@@ -530,7 +530,7 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
 
       isolated deinit {
           destroy()
-          AKTrace("deinit of HSXxxWatcher(\(identifier))")
+          AKDebug("deinit of HSXxxWatcher(\(identifier))")
       }
 
       func destroy() {
@@ -637,18 +637,20 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   The section covers both patterns (module-level EventEmitter and object-level watcher), the JS emitter template, the composite-key variant from hs.ax, and all the subtle rules around lazy start, `[weak self]`,
   `assumeIsolated`, discarding `JSValue?`, and the `_watcherEmitter` GC anchor.
 
-## Docstrings convensions
+## Docstrings conventions
 
   - Every method/property in the HSFooModuleAPI protocol needs a /// docstring that describes the item, and in the case of methods, also documents each parameter and any return value
   - Every docstring should have a - Example: section with a fenced ```js block
   - Private/internal protocol members (the _addWatcher, _watcherEmitter underbelly) use /// SKIP_DOCS to be omitted from generated HTML
   - Async methods annotate their return: /// - Returns: {Promise<boolean>} A Promise resolving to...
+  - Optional parameters (Swift type `Foo?`) must have `?` appended to the parameter name in the docstring to signal optionality to the docs pipeline: `/// - Parameter headers?: Optional dictionary of request headers.`
 
 ## Logging
 
 Hammerspoon 2 provides several convenience functions that handle logging per the user's configuration:
  * AKInfo - useful information for the user
- * AKTrace — debug events (module loaded, timer fired, etc.)
+ * AKDebug — Messages that are only useful during development, in DEBUG builds, such as object lifecycle events. These messages are ignored in Release builds.
+ * AKTrace — debug events (watcher started/stopped, timer fired, etc.)
  * AKWarning — recoverable bad states (invalid input, refused duplicate)
  * AKError — unrecoverable failures (OS call failed, nil context)
 

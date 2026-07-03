@@ -418,6 +418,10 @@ extension JSTestHarness {
                 loadModule(HSSpotlightModule.self, as: name)
             case "menubar":
                 loadModule(HSMenuBarModule.self, as: name)
+            case "http":
+                loadModule(HSHTTPModule.self, as: name)
+            case "httpserver":
+                loadModule(HSHTTPServerModule.self, as: name)
             case "urlevent":
                 loadModule(HSURLEventModule.self, as: name)
             default:

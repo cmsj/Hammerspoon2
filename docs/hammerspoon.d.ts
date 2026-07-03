@@ -2326,6 +2326,409 @@ declare class HSHotkey {
 }
 
 /**
+ * HTTP client module for making network requests from JavaScript.
+All request methods return Promises that resolve with a result object containing
+`status` (number), `body` (string), and `headers` (object). On network failure,
+`status` is -1 and `body` is an empty string.
+## Quick start
+```js
+hs.http.get("https://api.example.com/data").then(r => {
+    if (r.status === 200) {
+        console.log("Got: " + r.body)
+    }
+})
+```
+ */
+declare namespace hs.http {
+    /**
+     * Perform an HTTP GET request.
+     * @param url The URL to request.
+     * @param headers Optional dictionary of request headers.
+     * @returns {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
+     */
+    function get(url: string, headers?: Record<string, string> | undefined): Promise<any>;
+
+    /**
+     * Perform an HTTP POST request.
+     * @param url The URL to request.
+     * @param body Optional request body string.
+     * @param headers Optional dictionary of request headers.
+     * @returns {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
+     */
+    function post(url: string, body?: string | undefined, headers?: Record<string, string> | undefined): Promise<any>;
+
+    /**
+     * Perform an HTTP PUT request.
+     * @param url The URL to request.
+     * @param body Optional request body string.
+     * @param headers Optional dictionary of request headers.
+     * @returns {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
+     */
+    function put(url: string, body?: string | undefined, headers?: Record<string, string> | undefined): Promise<any>;
+
+    /**
+     * Perform an HTTP request with any method (GET, POST, PUT, DELETE, PATCH, etc.).
+Use this for methods not covered by the convenience helpers, such as DELETE or PATCH.
+     * @param url The URL to request.
+     * @param method The HTTP method string (e.g. "DELETE", "PATCH", "HEAD").
+     * @param body Optional request body string.
+     * @param headers Optional dictionary of request headers.
+     * @returns {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
+     */
+    function doRequest(url: string, method: string, body?: string | undefined, headers?: Record<string, string> | undefined): Promise<any>;
+
+    /**
+     * URL-encode a string for use as a query parameter value.
+Encodes characters that are illegal in a URL query string (including `?`, `=`, `+`, `&`, `#`)
+using percent-encoding.
+     * @param string The string to encode.
+     * @returns The percent-encoded string.
+     */
+    function encodeForQuery(string: string): string;
+
+    /**
+     * Parse a URL into its component parts.
+Returns an object containing only the fields present in the URL. The `queryItems` field
+is an array of `{name, value}` objects from the query string.
+     * @param url The URL string to parse.
+     * @returns An object with any of the fields: `scheme`, `host`, `port`, `user`, `password`, `path`, `query`, `fragment`, `queryItems`. Returns `null` if the URL is unparseable.
+     */
+    function urlParts(url: string): Record<string, any> | undefined;
+
+    /**
+     * Convert HTML entities in a string to their UTF-8 character equivalents.
+Handles named entities (e.g. `&amp;`, `&lt;`, `&copy;`), decimal numeric references
+(`&#38;`), and hexadecimal numeric references (`&#x26;`).
+     * @param string The string containing HTML entities.
+     * @returns The string with HTML entities replaced by their UTF-8 characters.
+     */
+    function convertHtmlEntities(string: string): string;
+
+    /**
+     * Open a WebSocket connection to the given URL.
+The connection begins immediately. Use the returned object's chainable setter methods to
+register event callbacks. The connection is automatically closed when `hs.reload()` is
+called or the engine shuts down.
+     * @param url The WebSocket URL (`ws://` or `wss://`).
+     * @returns An `HSWebSocket` object, or `null` if the URL is invalid.
+     */
+    function openWebSocket(url: string): HSWebSocket | undefined;
+
+}
+
+/**
+ * A WebSocket client connection created by `hs.http.openWebSocket()`.
+The connection opens immediately when returned. Use the chainable setter methods to register
+event callbacks, then call `send()` to transmit messages.
+Do not instantiate `HSWebSocket` directly — use `hs.http.openWebSocket()`.
+ */
+declare class HSWebSocket {
+    /**
+     * Set the callback invoked when the connection is established.
+     * @param callback Called when the connection opens.
+     * @returns This WebSocket, for chaining.
+     */
+    setOpenCallback(callback: () => void): HSWebSocket;
+
+    /**
+     * Set the callback invoked when a text message is received from the server.
+     * @param callback Called with each received message.
+     * @returns This WebSocket, for chaining.
+     */
+    setMessageCallback(callback: (message: string) => void): HSWebSocket;
+
+    /**
+     * Set the callback invoked when the connection is closed by the remote end.
+     * @param callback Called with the WebSocket close code and reason.
+     * @returns This WebSocket, for chaining.
+     */
+    setCloseCallback(callback: (code: number, reason: string) => void): HSWebSocket;
+
+    /**
+     * Set the callback invoked when a connection or protocol error occurs.
+     * @param callback Called with the error description.
+     * @returns This WebSocket, for chaining.
+     */
+    setErrorCallback(callback: (error: string) => void): HSWebSocket;
+
+    /**
+     * Send a text message to the server.
+The connection must be open (`readyState === 1`).
+     * @param message The text message to send.
+     * @returns This WebSocket, for chaining.
+     */
+    send(message: string): HSWebSocket;
+
+    /**
+     * Close the WebSocket connection with a normal closure code (1000).
+If a close callback is registered, it is invoked synchronously.
+     */
+    close(): void;
+
+    /**
+     * Destroy this WebSocket, releasing all resources without invoking callbacks.
+Called automatically by `hs.http.shutdown()`. After `destroy()`, do not use this object.
+     */
+    destroy(): void;
+
+    /**
+     * A unique identifier for this connection (UUID string).
+     */
+    readonly identifier: string;
+
+    /**
+     * The current connection state.
+     */
+    readonly readyState: number;
+
+}
+
+/**
+ * Module for creating and managing HTTP servers.
+Create a server with `hs.httpserver.create()`, configure it with chainable setters,
+then call `start()`. The server accepts both synchronous and async (Promise-returning)
+request handler callbacks.
+## Quick start
+```js
+const server = hs.httpserver.create()
+    .setPort(8080)
+    .setCallback((method, path, headers, body) => {
+        return {body: "<h1>Hello from Hammerspoon!</h1>", status: 200, headers: {"Content-Type": "text/html"}}
+    })
+    .start()
+console.log("Listening on port " + server.getPort())
+```
+## Async callback
+```js
+server.setCallback(async (method, path, headers, body) => {
+    const data = await hs.http.get("https://api.example.com/data")
+    return {body: data.body, status: 200, headers: {"Content-Type": "application/json"}}
+})
+```
+## Static file serving
+```js
+const server = hs.httpserver.create()
+    .setPort(8080)
+    .setDocumentRoot("/Users/me/Sites")
+    .start()
+```
+## TLS (HTTPS)
+```bash
+openssl genrsa -out key.pem 2048
+openssl req -new -x509 -key key.pem -out cert.pem -days 365
+openssl pkcs12 -export -out identity.p12 -inkey key.pem -in cert.pem
+```
+```js
+const server = hs.httpserver.create()
+    .setPort(8443)
+    .setTLSFromPKCS12("/path/to/identity.p12", "passphrase")
+    .setCallback(handler)
+    .start()
+```
+ */
+declare namespace hs.httpserver {
+    /**
+     * Create a new HTTP server instance.
+The server is not running until you call `start()` on the returned object.
+     * @returns A new `HSHTTPServer` instance.
+     */
+    function create(): HSHTTPServer;
+
+}
+
+/**
+ * An HTTP server instance created by `hs.httpserver.create()`.
+Configure with chainable setter methods, then call `start()` to begin accepting connections.
+The server supports synchronous and async (Promise-returning) request callbacks, optional
+static file serving, HTTP Basic authentication, Bonjour advertisement, and TLS via PKCS#12.
+Do not instantiate `HSHTTPServer` directly — use `hs.httpserver.create()`.
+ */
+declare class HSHTTPServer {
+    /**
+     * Set the TCP port to listen on. Must be called before `start()`.
+Pass 0 to let the OS assign an available port (use `getPort()` after `start()` to discover it).
+     * @param port TCP port number (0–65535).
+     * @returns This server, for chaining.
+     */
+    setPort(port: number): HSHTTPServer;
+
+    /**
+     * Set the network interface to listen on.
+Pass `null` to listen on all interfaces (the default). Pass `"localhost"` or `"loopback"`
+to restrict to the loopback interface only.
+     * @param iface Interface name or IP address string, or `null` for all interfaces.
+     * @returns This server, for chaining.
+     */
+    setInterface(iface: string | undefined): HSHTTPServer;
+
+    /**
+     * Set a password required for Basic authentication.
+When set, every request must supply an `Authorization: Basic` header with any
+username and the configured password. Pass `null` to disable authentication.
+     * @param password The required password, or `null` to remove authentication.
+     * @returns This server, for chaining.
+     */
+    setPassword(password: string | undefined): HSHTTPServer;
+
+    /**
+     * Set the maximum allowed incoming request body size in bytes.
+Requests with a body exceeding this limit receive a 413 response. Defaults to 10 MB.
+     * @param size Maximum body size in bytes.
+     * @returns This server, for chaining.
+     */
+    setMaxBodySize(size: number): HSHTTPServer;
+
+    /**
+     * Set the Bonjour service name advertised on the local network.
+Only used when Bonjour is enabled via `setBonjour(true)`.
+     * @param name The Bonjour service name.
+     * @returns This server, for chaining.
+     */
+    setName(name: string): HSHTTPServer;
+
+    /**
+     * Enable or disable Bonjour advertisement of this server on the local network.
+     * @param enable `true` to advertise via Bonjour, `false` to disable (default).
+     * @returns This server, for chaining.
+     */
+    setBonjour(enable: boolean): HSHTTPServer;
+
+    /**
+     * Set the request handler callback.
+If the callback returns `null` or `undefined`, the server falls through to static file serving
+(if a document root is set), or responds with 404.
+     * @param callback The request handler, or `null` to clear.
+     * @returns This server, for chaining.
+     */
+    setCallback(callback: ((method: string, path: string, headers: object, body: string) => ({body: string, status: number, headers: object} | Promise<{body: string, status: number, headers: object}>)) | null): HSHTTPServer;
+
+    /**
+     * Set the filesystem path to serve static files from.
+When a document root is set, requests not handled by the callback are served as
+static files from this directory. Pass `null` to disable static file serving.
+     * @param path Absolute path to a directory, or `null` to disable.
+     * @returns This server, for chaining.
+     */
+    setDocumentRoot(path: string | undefined): HSHTTPServer;
+
+    /**
+     * Set the list of index filenames checked when a directory is requested.
+Defaults to `["index.html", "index.htm"]`. Files are checked in order.
+     * @param files Array of filename strings.
+     * @returns This server, for chaining.
+     */
+    setDirectoryIndex(files: string[]): HSHTTPServer;
+
+    /**
+     * Enable or disable directory listing for requests that map to a directory with no index file.
+When disabled (the default), directory requests without an index file return 403.
+     * @param allow `true` to serve directory listings, `false` to return 403 (default).
+     * @returns This server, for chaining.
+     */
+    setAllowDirectoryListing(allow: boolean): HSHTTPServer;
+
+    /**
+     * Configure TLS using a PKCS#12 (.p12) identity file.
+When TLS is configured, the server accepts HTTPS connections. The `.p12` file must
+contain both the certificate and the private key.
+     * @param path Absolute path to the `.p12` file.
+     * @param password The password protecting the `.p12` file.
+     * @returns This server, for chaining.
+     */
+    setTLSFromPKCS12(path: string, password: string): HSHTTPServer;
+
+    /**
+     * Start the server and begin accepting connections.
+The server must be configured before calling `start()`. To restart the server with new
+settings, call `stop()` followed by `start()`.
+     * @returns This server, for chaining.
+     */
+    start(): HSHTTPServer;
+
+    /**
+     * Stop the server and close all connections.
+     * @returns This server, for chaining.
+     */
+    stop(): HSHTTPServer;
+
+    /**
+     * Destroy this server, releasing all resources.
+After calling `destroy()`, the server object should not be used.
+     */
+    destroy(): void;
+
+    /**
+     * Get the TCP port the server is currently listening on.
+Returns 0 if the server is not running.
+     * @returns The TCP port number.
+     */
+    getPort(): number;
+
+    /**
+     * Get the configured Bonjour service name.
+     * @returns The Bonjour service name.
+     */
+    getName(): string;
+
+    /**
+     * Get the configured network interface, or `null` if listening on all interfaces.
+     * @returns The interface name or IP address string, or `null`.
+     */
+    getInterface(): string | undefined;
+
+    /**
+     * Register a WebSocket handler for a URL path.
+When a client connects and performs a WebSocket upgrade handshake on `path`, the callback
+is invoked with three arguments: `event` (string), `connection` (HSWebSocketConnection),
+and `message` (string).
+**Events:**
+Pass `null` to remove the WebSocket handler for the path.
+     * @param path The URL path to handle WebSocket connections on (e.g. `"/ws"`).
+     * @param callback The event handler, or `null` to remove.
+     * @returns This server, for chaining.
+     */
+    setWebSocketCallback(path: string, callback: ((event: string, connection: HSWebSocketConnection, message: string) => void) | null): HSHTTPServer;
+
+    /**
+     * A unique identifier for this server instance (UUID string).
+     */
+    readonly identifier: string;
+
+}
+
+/**
+ * A WebSocket connection to a single client, passed to the callback registered with
+`server.setWebSocketCallback()`.
+Use `send()` to push messages to the connected client and `close()` to end the connection.
+Do not instantiate `HSWebSocketConnection` directly — it is created by the server when a
+client performs a WebSocket upgrade.
+ */
+declare class HSWebSocketConnection {
+    /**
+     * Send a text message to the connected WebSocket client.
+     * @param message The text message to send.
+     */
+    send(message: string): void;
+
+    /**
+     * Close the WebSocket connection to the client.
+Sends a WebSocket close frame and cancels the underlying TCP connection.
+     */
+    close(): void;
+
+    /**
+     * Destroy this connection object, releasing all resources.
+     */
+    destroy(): void;
+
+    /**
+     * A unique identifier for this connection (UUID string).
+     */
+    readonly identifier: string;
+
+}
+
+/**
  * Determine the Mac's location via macOS Location Services.
 Location data is obtained through WiFi network scanning and, where available, GPS
 hardware. User permission is required — call `hs.permissions.requestLocation()`
