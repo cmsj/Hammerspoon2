@@ -881,7 +881,11 @@ struct ParsedHTTPRequest {
             AKError("HSHTTPServer: PKCS12 import failed (status \(status))")
             return nil
         }
-        return (identity as! SecIdentity)
+        guard CFGetTypeID(identity as CFTypeRef) == SecIdentityGetTypeID() else {
+            AKError("HSHTTPServer: PKCS12 identity value is not a SecIdentity")
+            return nil
+        }
+        return unsafe (identity as! SecIdentity)
     }
 
     // MARK: - Helpers
