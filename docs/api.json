@@ -5745,6 +5745,1137 @@
       "rawDocumentation": "Module for creating and managing system-wide hotkeys"
     },
     {
+      "name": "hs.http",
+      "methods": [
+        {
+          "name": "get",
+          "signature": "func get(_ url: String, _ headers: [String: String]?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Perform an HTTP GET request.\n- Parameter url: The URL to request.\n- Parameter headers?: Optional dictionary of request headers.\n- Returns: {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.\n- Example:\n```js\nhs.http.get(\"https://httpbin.org/get\").then(r => console.log(r.status))\n```",
+          "description": "Perform an HTTP GET request.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The URL to request.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "headers",
+              "type": "Object<String, String>",
+              "description": "Optional dictionary of request headers.",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "{Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.http.get(\"https://httpbin.org/get\").then(r => console.log(r.status))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.http/HSHTTPModule.swift",
+          "lineNumber": 33
+        },
+        {
+          "name": "post",
+          "signature": "func post(_ url: String, _ body: String?, _ headers: [String: String]?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Perform an HTTP POST request.\n- Parameter url: The URL to request.\n- Parameter body?: Optional request body string.\n- Parameter headers?: Optional dictionary of request headers.\n- Returns: {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.\n- Example:\n```js\nhs.http.post(\"https://httpbin.org/post\", '{\"key\":\"val\"}', {\"Content-Type\": \"application/json\"}).then(r => console.log(r.status))\n```",
+          "description": "Perform an HTTP POST request.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The URL to request.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "body",
+              "type": "string",
+              "description": "Optional request body string.",
+              "optional": true,
+              "tsType": null
+            },
+            {
+              "name": "headers",
+              "type": "Object<String, String>",
+              "description": "Optional dictionary of request headers.",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "{Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.http.post(\"https://httpbin.org/post\", '{\"key\":\"val\"}', {\"Content-Type\": \"application/json\"}).then(r => console.log(r.status))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.http/HSHTTPModule.swift",
+          "lineNumber": 44
+        },
+        {
+          "name": "put",
+          "signature": "func put(_ url: String, _ body: String?, _ headers: [String: String]?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Perform an HTTP PUT request.\n- Parameter url: The URL to request.\n- Parameter body?: Optional request body string.\n- Parameter headers?: Optional dictionary of request headers.\n- Returns: {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.\n- Example:\n```js\nhs.http.put(\"https://httpbin.org/put\", \"updated data\", null).then(r => console.log(r.status))\n```",
+          "description": "Perform an HTTP PUT request.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The URL to request.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "body",
+              "type": "string",
+              "description": "Optional request body string.",
+              "optional": true,
+              "tsType": null
+            },
+            {
+              "name": "headers",
+              "type": "Object<String, String>",
+              "description": "Optional dictionary of request headers.",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "{Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.http.put(\"https://httpbin.org/put\", \"updated data\", null).then(r => console.log(r.status))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.http/HSHTTPModule.swift",
+          "lineNumber": 55
+        },
+        {
+          "name": "doRequest",
+          "signature": "func doRequest(_ url: String, _ method: String, _ body: String?, _ headers: [String: String]?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Perform an HTTP request with any method (GET, POST, PUT, DELETE, PATCH, etc.).\n\nUse this for methods not covered by the convenience helpers, such as DELETE or PATCH.\n\n- Parameter url: The URL to request.\n- Parameter method: The HTTP method string (e.g. \"DELETE\", \"PATCH\", \"HEAD\").\n- Parameter body?: Optional request body string.\n- Parameter headers?: Optional dictionary of request headers.\n- Returns: {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.\n- Example:\n```js\nhs.http.doRequest(\"https://httpbin.org/delete\", \"DELETE\", null, null).then(r => console.log(r.status))\n```",
+          "description": "Perform an HTTP request with any method (GET, POST, PUT, DELETE, PATCH, etc.).\nUse this for methods not covered by the convenience helpers, such as DELETE or PATCH.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The URL to request.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "method",
+              "type": "string",
+              "description": "The HTTP method string (e.g. \"DELETE\", \"PATCH\", \"HEAD\").",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "body",
+              "type": "string",
+              "description": "Optional request body string.",
+              "optional": true,
+              "tsType": null
+            },
+            {
+              "name": "headers",
+              "type": "Object<String, String>",
+              "description": "Optional dictionary of request headers.",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "{Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.http.doRequest(\"https://httpbin.org/delete\", \"DELETE\", null, null).then(r => console.log(r.status))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.http/HSHTTPModule.swift",
+          "lineNumber": 70
+        },
+        {
+          "name": "encodeForQuery",
+          "signature": "func encodeForQuery(_ string: String) -> String",
+          "isStatic": false,
+          "rawDocumentation": "URL-encode a string for use as a query parameter value.\n\nEncodes characters that are illegal in a URL query string (including `?`, `=`, `+`, `&`, `#`)\nusing percent-encoding.\n\n- Parameter string: The string to encode.\n- Returns: The percent-encoded string.\n- Example:\n```js\nconsole.log(hs.http.encodeForQuery(\"hello world & more=stuff\"))\n// \"hello%20world%20%26%20more%3Dstuff\"\n```",
+          "description": "URL-encode a string for use as a query parameter value.\nEncodes characters that are illegal in a URL query string (including `?`, `=`, `+`, `&`, `#`)\nusing percent-encoding.",
+          "params": [
+            {
+              "name": "string",
+              "type": "string",
+              "description": "The string to encode.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "The percent-encoded string."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.http.encodeForQuery(\"hello world & more=stuff\"))\n// \"hello%20world%20%26%20more%3Dstuff\""
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.http/HSHTTPModule.swift",
+          "lineNumber": 84
+        },
+        {
+          "name": "urlParts",
+          "signature": "func urlParts(_ url: String) -> [String: Any]?",
+          "isStatic": false,
+          "rawDocumentation": "Parse a URL into its component parts.\n\nReturns an object containing only the fields present in the URL. The `queryItems` field\nis an array of `{name, value}` objects from the query string.\n\n- Parameter url: The URL string to parse.\n- Returns: An object with any of the fields: `scheme`, `host`, `port`, `user`, `password`, `path`, `query`, `fragment`, `queryItems`. Returns `null` if the URL is unparseable.\n- Example:\n```js\nconst parts = hs.http.urlParts(\"https://user:pass@example.com:8080/path?key=val#frag\")\nconsole.log(parts.host)  // \"example.com\"\nconsole.log(parts.port)  // 8080\n```",
+          "description": "Parse a URL into its component parts.\nReturns an object containing only the fields present in the URL. The `queryItems` field\nis an array of `{name, value}` objects from the query string.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The URL string to parse.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "Object<String, Any>",
+            "description": "An object with any of the fields: `scheme`, `host`, `port`, `user`, `password`, `path`, `query`, `fragment`, `queryItems`. Returns `null` if the URL is unparseable."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const parts = hs.http.urlParts(\"https://user:pass@example.com:8080/path?key=val#frag\")\nconsole.log(parts.host)  // \"example.com\"\nconsole.log(parts.port)  // 8080"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.http/HSHTTPModule.swift",
+          "lineNumber": 99
+        },
+        {
+          "name": "convertHtmlEntities",
+          "signature": "func convertHtmlEntities(_ string: String) -> String",
+          "isStatic": false,
+          "rawDocumentation": "Convert HTML entities in a string to their UTF-8 character equivalents.\n\nHandles named entities (e.g. `&amp;`, `&lt;`, `&copy;`), decimal numeric references\n(`&#38;`), and hexadecimal numeric references (`&#x26;`).\n\n- Parameter string: The string containing HTML entities.\n- Returns: The string with HTML entities replaced by their UTF-8 characters.\n- Example:\n```js\nconsole.log(hs.http.convertHtmlEntities(\"&lt;div&gt;Hello &amp; World&lt;/div&gt;\"))\n// \"<div>Hello & World</div>\"\n```",
+          "description": "Convert HTML entities in a string to their UTF-8 character equivalents.\nHandles named entities (e.g. `&amp;`, `&lt;`, `&copy;`), decimal numeric references\n(`&#38;`), and hexadecimal numeric references (`&#x26;`).",
+          "params": [
+            {
+              "name": "string",
+              "type": "string",
+              "description": "The string containing HTML entities.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "The string with HTML entities replaced by their UTF-8 characters."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.http.convertHtmlEntities(\"&lt;div&gt;Hello &amp; World&lt;/div&gt;\"))\n// \"<div>Hello & World</div>\""
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.http/HSHTTPModule.swift",
+          "lineNumber": 113
+        },
+        {
+          "name": "openWebSocket",
+          "signature": "func openWebSocket(_ url: String) -> HSWebSocket?",
+          "isStatic": false,
+          "rawDocumentation": "Open a WebSocket connection to the given URL.\n\nThe connection begins immediately. Use the returned object's chainable setter methods to\nregister event callbacks. The connection is automatically closed when `hs.reload()` is\ncalled or the engine shuts down.\n\n- Parameter url: The WebSocket URL (`ws://` or `wss://`).\n- Returns: An `HSWebSocket` object, or `null` if the URL is invalid.\n- Example:\n```js\nconst ws = hs.http.openWebSocket(\"ws://localhost:8080/ws\")\n    .setOpenCallback(() => ws.send(\"Hello!\"))\n    .setMessageCallback(msg => console.log(\"Got: \" + msg))\n    .setCloseCallback((code, reason) => console.log(\"Closed: \" + code))\n```",
+          "description": "Open a WebSocket connection to the given URL.\nThe connection begins immediately. Use the returned object's chainable setter methods to\nregister event callbacks. The connection is automatically closed when `hs.reload()` is\ncalled or the engine shuts down.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The WebSocket URL (`ws://` or `wss://`).",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSWebSocket",
+            "description": "An `HSWebSocket` object, or `null` if the URL is invalid."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const ws = hs.http.openWebSocket(\"ws://localhost:8080/ws\")\n    .setOpenCallback(() => ws.send(\"Hello!\"))\n    .setMessageCallback(msg => console.log(\"Got: \" + msg))\n    .setCloseCallback((code, reason) => console.log(\"Closed: \" + code))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.http/HSHTTPModule.swift",
+          "lineNumber": 130
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSWebSocketAPI",
+          "type": "typedef",
+          "rawDocumentation": "A WebSocket client connection created by `hs.http.openWebSocket()`.\n\nThe connection opens immediately when returned. Use the chainable setter methods to register\nevent callbacks, then call `send()` to transmit messages.\n\nDo not instantiate `HSWebSocket` directly — use `hs.http.openWebSocket()`.",
+          "description": "A WebSocket client connection created by `hs.http.openWebSocket()`.\nThe connection opens immediately when returned. Use the chainable setter methods to register\nevent callbacks, then call `send()` to transmit messages.\nDo not instantiate `HSWebSocket` directly — use `hs.http.openWebSocket()`.",
+          "methods": [
+            {
+              "name": "setOpenCallback",
+              "signature": "func setOpenCallback(_ callback: JSFunction?) -> HSWebSocket",
+              "isStatic": false,
+              "rawDocumentation": "Set the callback invoked when the connection is established.\n\n- Parameter callback: {() => void} Called when the connection opens.\n- Returns: This WebSocket, for chaining.\n- Example:\n```js\nws.setOpenCallback(() => console.log(\"Connected!\"))\n```",
+              "description": "Set the callback invoked when the connection is established.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "Called when the connection opens.",
+                  "optional": false,
+                  "tsType": "() => void"
+                }
+              ],
+              "returns": {
+                "type": "HSWebSocket",
+                "description": "This WebSocket, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "ws.setOpenCallback(() => console.log(\"Connected!\"))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 37
+            },
+            {
+              "name": "setMessageCallback",
+              "signature": "func setMessageCallback(_ callback: JSFunction?) -> HSWebSocket",
+              "isStatic": false,
+              "rawDocumentation": "Set the callback invoked when a text message is received from the server.\n\n- Parameter callback: {(message: string) => void} Called with each received message.\n- Returns: This WebSocket, for chaining.\n- Example:\n```js\nws.setMessageCallback(msg => console.log(\"Got: \" + msg))\n```",
+              "description": "Set the callback invoked when a text message is received from the server.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "Called with each received message.",
+                  "optional": false,
+                  "tsType": "(message: string) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSWebSocket",
+                "description": "This WebSocket, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "ws.setMessageCallback(msg => console.log(\"Got: \" + msg))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 47
+            },
+            {
+              "name": "setCloseCallback",
+              "signature": "func setCloseCallback(_ callback: JSFunction?) -> HSWebSocket",
+              "isStatic": false,
+              "rawDocumentation": "Set the callback invoked when the connection is closed by the remote end.\n\n- Parameter callback: {(code: number, reason: string) => void} Called with the WebSocket close code and reason.\n- Returns: This WebSocket, for chaining.\n- Example:\n```js\nws.setCloseCallback((code, reason) => console.log(\"Closed: \" + code))\n```",
+              "description": "Set the callback invoked when the connection is closed by the remote end.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "Called with the WebSocket close code and reason.",
+                  "optional": false,
+                  "tsType": "(code: number, reason: string) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSWebSocket",
+                "description": "This WebSocket, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "ws.setCloseCallback((code, reason) => console.log(\"Closed: \" + code))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 57
+            },
+            {
+              "name": "setErrorCallback",
+              "signature": "func setErrorCallback(_ callback: JSFunction?) -> HSWebSocket",
+              "isStatic": false,
+              "rawDocumentation": "Set the callback invoked when a connection or protocol error occurs.\n\n- Parameter callback: {(error: string) => void} Called with the error description.\n- Returns: This WebSocket, for chaining.\n- Example:\n```js\nws.setErrorCallback(err => console.log(\"Error: \" + err))\n```",
+              "description": "Set the callback invoked when a connection or protocol error occurs.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "Called with the error description.",
+                  "optional": false,
+                  "tsType": "(error: string) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSWebSocket",
+                "description": "This WebSocket, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "ws.setErrorCallback(err => console.log(\"Error: \" + err))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 67
+            },
+            {
+              "name": "send",
+              "signature": "func send(_ message: String) -> HSWebSocket",
+              "isStatic": false,
+              "rawDocumentation": "Send a text message to the server.\n\nThe connection must be open (`readyState === 1`).\n\n- Parameter message: The text message to send.\n- Returns: This WebSocket, for chaining.\n- Example:\n```js\nws.send(\"Hello, server!\")\n```",
+              "description": "Send a text message to the server.\nThe connection must be open (`readyState === 1`).",
+              "params": [
+                {
+                  "name": "message",
+                  "type": "string",
+                  "description": "The text message to send.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSWebSocket",
+                "description": "This WebSocket, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "ws.send(\"Hello, server!\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 79
+            },
+            {
+              "name": "close",
+              "signature": "func close()",
+              "isStatic": false,
+              "rawDocumentation": "Close the WebSocket connection with a normal closure code (1000).\n\nIf a close callback is registered, it is invoked synchronously.\n\n- Example:\n```js\nws.close()\n```",
+              "description": "Close the WebSocket connection with a normal closure code (1000).\nIf a close callback is registered, it is invoked synchronously.",
+              "params": [],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "ws.close()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 89
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Destroy this WebSocket, releasing all resources without invoking callbacks.\n\nCalled automatically by `hs.http.shutdown()`. After `destroy()`, do not use this object.\n\n- Example:\n```js\nws.destroy()\n```",
+              "description": "Destroy this WebSocket, releasing all resources without invoking callbacks.\nCalled automatically by `hs.http.shutdown()`. After `destroy()`, do not use this object.",
+              "params": [],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "ws.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 99
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier for this connection (UUID string).",
+              "description": "A unique identifier for this connection (UUID string).",
+              "tsType": null,
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 19
+            },
+            {
+              "name": "readyState",
+              "signature": "var readyState: Int { get }",
+              "rawDocumentation": "The current connection state.\n\n- `0` = Connecting\n- `1` = Open\n- `2` = Closing\n- `3` = Closed",
+              "description": "The current connection state.",
+              "tsType": null,
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.http/HSWebSocket.swift",
+              "lineNumber": 27
+            }
+          ]
+        }
+      ],
+      "description": "HTTP client module for making network requests from JavaScript.\nAll request methods return Promises that resolve with a result object containing\n`status` (number), `body` (string), and `headers` (object). On network failure,\n`status` is -1 and `body` is an empty string.\n## Quick start\n```js\nhs.http.get(\"https://api.example.com/data\").then(r => {\n    if (r.status === 200) {\n        console.log(\"Got: \" + r.body)\n    }\n})\n```",
+      "rawDocumentation": "HTTP client module for making network requests from JavaScript.\n\nAll request methods return Promises that resolve with a result object containing\n`status` (number), `body` (string), and `headers` (object). On network failure,\n`status` is -1 and `body` is an empty string.\n\n## Quick start\n\n```js\nhs.http.get(\"https://api.example.com/data\").then(r => {\n    if (r.status === 200) {\n        console.log(\"Got: \" + r.body)\n    }\n})\n```"
+    },
+    {
+      "name": "hs.httpserver",
+      "methods": [
+        {
+          "name": "create",
+          "signature": "func create() -> HSHTTPServer",
+          "isStatic": false,
+          "rawDocumentation": "Create a new HTTP server instance.\n\nThe server is not running until you call `start()` on the returned object.\n\n- Returns: A new `HSHTTPServer` instance.\n- Example:\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setCallback((method, path, headers, body) => {\n        return {body: \"Hello!\", status: 200, headers: {}}\n    })\n    .start()\nconsole.log(\"Running on port \" + server.getPort())\n```",
+          "description": "Create a new HTTP server instance.\nThe server is not running until you call `start()` on the returned object.",
+          "params": [],
+          "returns": {
+            "type": "HSHTTPServer",
+            "description": "A new `HSHTTPServer` instance."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const server = hs.httpserver.create()\n    .setPort(8080)\n    .setCallback((method, path, headers, body) => {\n        return {body: \"Hello!\", status: 200, headers: {}}\n    })\n    .start()\nconsole.log(\"Running on port \" + server.getPort())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServerModule.swift",
+          "lineNumber": 77
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSHTTPServerAPI",
+          "type": "typedef",
+          "rawDocumentation": "An HTTP server instance created by `hs.httpserver.create()`.\n\nConfigure with chainable setter methods, then call `start()` to begin accepting connections.\nThe server supports synchronous and async (Promise-returning) request callbacks, optional\nstatic file serving, HTTP Basic authentication, Bonjour advertisement, and TLS via PKCS#12.\n\nDo not instantiate `HSHTTPServer` directly — use `hs.httpserver.create()`.",
+          "description": "An HTTP server instance created by `hs.httpserver.create()`.\nConfigure with chainable setter methods, then call `start()` to begin accepting connections.\nThe server supports synchronous and async (Promise-returning) request callbacks, optional\nstatic file serving, HTTP Basic authentication, Bonjour advertisement, and TLS via PKCS#12.\nDo not instantiate `HSHTTPServer` directly — use `hs.httpserver.create()`.",
+          "methods": [
+            {
+              "name": "setPort",
+              "signature": "func setPort(_ port: Int) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Set the TCP port to listen on. Must be called before `start()`.\n\nPass 0 to let the OS assign an available port (use `getPort()` after `start()` to discover it).\n\n- Parameter port: TCP port number (0–65535).\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setPort(8080)\n```",
+              "description": "Set the TCP port to listen on. Must be called before `start()`.\nPass 0 to let the OS assign an available port (use `getPort()` after `start()` to discover it).",
+              "params": [
+                {
+                  "name": "port",
+                  "type": "number",
+                  "description": "TCP port number (0–65535).",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setPort(8080)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 35
+            },
+            {
+              "name": "setInterface",
+              "signature": "func setInterface(_ iface: String?) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Set the network interface to listen on.\n\nPass `null` to listen on all interfaces (the default). Pass `\"localhost\"` or `\"loopback\"`\nto restrict to the loopback interface only.\n\n- Parameter iface: Interface name or IP address string, or `null` for all interfaces.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setInterface(\"localhost\")  // loopback only\nserver.setInterface(null)         // all interfaces\n```",
+              "description": "Set the network interface to listen on.\nPass `null` to listen on all interfaces (the default). Pass `\"localhost\"` or `\"loopback\"`\nto restrict to the loopback interface only.",
+              "params": [
+                {
+                  "name": "iface",
+                  "type": "string",
+                  "description": "Interface name or IP address string, or `null` for all interfaces.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setInterface(\"localhost\")  // loopback only\nserver.setInterface(null)         // all interfaces"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 49
+            },
+            {
+              "name": "setPassword",
+              "signature": "func setPassword(_ password: String?) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Set a password required for Basic authentication.\n\nWhen set, every request must supply an `Authorization: Basic` header with any\nusername and the configured password. Pass `null` to disable authentication.\n\n- Parameter password: The required password, or `null` to remove authentication.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setPassword(\"s3cr3t\")\n```",
+              "description": "Set a password required for Basic authentication.\nWhen set, every request must supply an `Authorization: Basic` header with any\nusername and the configured password. Pass `null` to disable authentication.",
+              "params": [
+                {
+                  "name": "password",
+                  "type": "string",
+                  "description": "The required password, or `null` to remove authentication.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setPassword(\"s3cr3t\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 62
+            },
+            {
+              "name": "setMaxBodySize",
+              "signature": "func setMaxBodySize(_ size: Int) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Set the maximum allowed incoming request body size in bytes.\n\nRequests with a body exceeding this limit receive a 413 response. Defaults to 10 MB.\n\n- Parameter size: Maximum body size in bytes.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setMaxBodySize(1024 * 1024)  // 1 MB\n```",
+              "description": "Set the maximum allowed incoming request body size in bytes.\nRequests with a body exceeding this limit receive a 413 response. Defaults to 10 MB.",
+              "params": [
+                {
+                  "name": "size",
+                  "type": "number",
+                  "description": "Maximum body size in bytes.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setMaxBodySize(1024 * 1024)  // 1 MB"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 74
+            },
+            {
+              "name": "setName",
+              "signature": "func setName(_ name: String) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Set the Bonjour service name advertised on the local network.\n\nOnly used when Bonjour is enabled via `setBonjour(true)`.\n\n- Parameter name: The Bonjour service name.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setName(\"My Hammerspoon Server\")\n```",
+              "description": "Set the Bonjour service name advertised on the local network.\nOnly used when Bonjour is enabled via `setBonjour(true)`.",
+              "params": [
+                {
+                  "name": "name",
+                  "type": "string",
+                  "description": "The Bonjour service name.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setName(\"My Hammerspoon Server\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 86
+            },
+            {
+              "name": "setBonjour",
+              "signature": "func setBonjour(_ enable: Bool) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Enable or disable Bonjour advertisement of this server on the local network.\n\n- Parameter enable: `true` to advertise via Bonjour, `false` to disable (default).\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setBonjour(true)\n```",
+              "description": "Enable or disable Bonjour advertisement of this server on the local network.",
+              "params": [
+                {
+                  "name": "enable",
+                  "type": "boolean",
+                  "description": "`true` to advertise via Bonjour, `false` to disable (default).",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setBonjour(true)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 96
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ callback: JSFunction?) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Set the request handler callback.\n\nThe callback receives `(method, path, headers, body)` and must return either:\n- A plain object `{body, status, headers}` for a synchronous response.\n- A Promise resolving to `{body, status, headers}` for an async response.\n\nIf the callback returns `null` or `undefined`, the server falls through to static file serving\n(if a document root is set), or responds with 404.\n\n- Parameter callback: {((method: string, path: string, headers: object, body: string) => ({body: string, status: number, headers: object} | Promise<{body: string, status: number, headers: object}>)) | null} The request handler, or `null` to clear.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setCallback((method, path, headers, body) => {\n    return {body: \"<h1>Hello!</h1>\", status: 200, headers: {\"Content-Type\": \"text/html\"}}\n})\n```",
+              "description": "Set the request handler callback.\nIf the callback returns `null` or `undefined`, the server falls through to static file serving\n(if a document root is set), or responds with 404.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "The request handler, or `null` to clear.",
+                  "optional": false,
+                  "tsType": "((method: string, path: string, headers: object, body: string) => ({body: string, status: number, headers: object} | Promise<{body: string, status: number, headers: object}>)) | null"
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setCallback((method, path, headers, body) => {\n    return {body: \"<h1>Hello!</h1>\", status: 200, headers: {\"Content-Type\": \"text/html\"}}\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 115
+            },
+            {
+              "name": "setDocumentRoot",
+              "signature": "func setDocumentRoot(_ path: String?) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Set the filesystem path to serve static files from.\n\nWhen a document root is set, requests not handled by the callback are served as\nstatic files from this directory. Pass `null` to disable static file serving.\n\n- Parameter path: Absolute path to a directory, or `null` to disable.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setDocumentRoot(\"/Users/me/Sites\")\n```",
+              "description": "Set the filesystem path to serve static files from.\nWhen a document root is set, requests not handled by the callback are served as\nstatic files from this directory. Pass `null` to disable static file serving.",
+              "params": [
+                {
+                  "name": "path",
+                  "type": "string",
+                  "description": "Absolute path to a directory, or `null` to disable.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setDocumentRoot(\"/Users/me/Sites\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 128
+            },
+            {
+              "name": "setDirectoryIndex",
+              "signature": "func setDirectoryIndex(_ files: [String]) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Set the list of index filenames checked when a directory is requested.\n\nDefaults to `[\"index.html\", \"index.htm\"]`. Files are checked in order.\n\n- Parameter files: Array of filename strings.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setDirectoryIndex([\"index.html\", \"default.html\"])\n```",
+              "description": "Set the list of index filenames checked when a directory is requested.\nDefaults to `[\"index.html\", \"index.htm\"]`. Files are checked in order.",
+              "params": [
+                {
+                  "name": "files",
+                  "type": "Array<String>",
+                  "description": "Array of filename strings.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setDirectoryIndex([\"index.html\", \"default.html\"])"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 140
+            },
+            {
+              "name": "setAllowDirectoryListing",
+              "signature": "func setAllowDirectoryListing(_ allow: Bool) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Enable or disable directory listing for requests that map to a directory with no index file.\n\nWhen disabled (the default), directory requests without an index file return 403.\n\n- Parameter allow: `true` to serve directory listings, `false` to return 403 (default).\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setAllowDirectoryListing(true)\n```",
+              "description": "Enable or disable directory listing for requests that map to a directory with no index file.\nWhen disabled (the default), directory requests without an index file return 403.",
+              "params": [
+                {
+                  "name": "allow",
+                  "type": "boolean",
+                  "description": "`true` to serve directory listings, `false` to return 403 (default).",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setAllowDirectoryListing(true)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 152
+            },
+            {
+              "name": "setTLSFromPKCS12",
+              "signature": "func setTLSFromPKCS12(_ path: String, _ password: String) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Configure TLS using a PKCS#12 (.p12) identity file.\n\nWhen TLS is configured, the server accepts HTTPS connections. The `.p12` file must\ncontain both the certificate and the private key.\n\n- Parameter path: Absolute path to the `.p12` file.\n- Parameter password: The password protecting the `.p12` file.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setTLSFromPKCS12(\"/path/to/identity.p12\", \"passphrase\").start()\n```",
+              "description": "Configure TLS using a PKCS#12 (.p12) identity file.\nWhen TLS is configured, the server accepts HTTPS connections. The `.p12` file must\ncontain both the certificate and the private key.",
+              "params": [
+                {
+                  "name": "path",
+                  "type": "string",
+                  "description": "Absolute path to the `.p12` file.",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "password",
+                  "type": "string",
+                  "description": "The password protecting the `.p12` file.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setTLSFromPKCS12(\"/path/to/identity.p12\", \"passphrase\").start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 166
+            },
+            {
+              "name": "start",
+              "signature": "func start() -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Start the server and begin accepting connections.\n\nThe server must be configured before calling `start()`. To restart the server with new\nsettings, call `stop()` followed by `start()`.\n\n- Returns: This server, for chaining.\n- Example:\n```js\nconst server = hs.httpserver.create().setPort(8080).setCallback(handler).start()\n```",
+              "description": "Start the server and begin accepting connections.\nThe server must be configured before calling `start()`. To restart the server with new\nsettings, call `stop()` followed by `start()`.",
+              "params": [],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const server = hs.httpserver.create().setPort(8080).setCallback(handler).start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 178
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Stop the server and close all connections.\n\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.stop()\n```",
+              "description": "Stop the server and close all connections.",
+              "params": [],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 187
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Destroy this server, releasing all resources.\n\nAfter calling `destroy()`, the server object should not be used.\n\n- Example:\n```js\nserver.destroy()\n```",
+              "description": "Destroy this server, releasing all resources.\nAfter calling `destroy()`, the server object should not be used.",
+              "params": [],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 197
+            },
+            {
+              "name": "getPort",
+              "signature": "func getPort() -> Int",
+              "isStatic": false,
+              "rawDocumentation": "Get the TCP port the server is currently listening on.\n\nReturns 0 if the server is not running.\n\n- Returns: The TCP port number.\n- Example:\n```js\nconsole.log(\"Listening on port \" + server.getPort())\n```",
+              "description": "Get the TCP port the server is currently listening on.\nReturns 0 if the server is not running.",
+              "params": [],
+              "returns": {
+                "type": "number",
+                "description": "The TCP port number."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(\"Listening on port \" + server.getPort())"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 208
+            },
+            {
+              "name": "getName",
+              "signature": "func getName() -> String",
+              "isStatic": false,
+              "rawDocumentation": "Get the configured Bonjour service name.\n\n- Returns: The Bonjour service name.\n- Example:\n```js\nconsole.log(server.getName())\n```",
+              "description": "Get the configured Bonjour service name.",
+              "params": [],
+              "returns": {
+                "type": "string",
+                "description": "The Bonjour service name."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(server.getName())"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 217
+            },
+            {
+              "name": "getInterface",
+              "signature": "func getInterface() -> String?",
+              "isStatic": false,
+              "rawDocumentation": "Get the configured network interface, or `null` if listening on all interfaces.\n\n- Returns: The interface name or IP address string, or `null`.\n- Example:\n```js\nconsole.log(server.getInterface())\n```",
+              "description": "Get the configured network interface, or `null` if listening on all interfaces.",
+              "params": [],
+              "returns": {
+                "type": "string",
+                "description": "The interface name or IP address string, or `null`."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(server.getInterface())"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 226
+            },
+            {
+              "name": "setWebSocketCallback",
+              "signature": "func setWebSocketCallback(_ path: String, _ callback: JSFunction?) -> HSHTTPServer",
+              "isStatic": false,
+              "rawDocumentation": "Register a WebSocket handler for a URL path.\n\nWhen a client connects and performs a WebSocket upgrade handshake on `path`, the callback\nis invoked with three arguments: `event` (string), `connection` (HSWebSocketConnection),\nand `message` (string).\n\n**Events:**\n- `\"connected\"` — a new client connected; `message` is `\"\"`.\n- `\"message\"` — the client sent a text frame; `message` contains the text.\n- `\"closed\"` — the client disconnected; `message` is `\"\"`.\n\nPass `null` to remove the WebSocket handler for the path.\n\n- Parameter path: The URL path to handle WebSocket connections on (e.g. `\"/ws\"`).\n- Parameter callback: {((event: string, connection: HSWebSocketConnection, message: string) => void) | null} The event handler, or `null` to remove.\n- Returns: This server, for chaining.\n- Example:\n```js\nserver.setWebSocketCallback('/ws', (event, conn, msg) => {\n    if (event === 'connected') conn.send('Welcome!')\n    else if (event === 'message') conn.send('Echo: ' + msg)\n})\n```",
+              "description": "Register a WebSocket handler for a URL path.\nWhen a client connects and performs a WebSocket upgrade handshake on `path`, the callback\nis invoked with three arguments: `event` (string), `connection` (HSWebSocketConnection),\nand `message` (string).\n**Events:**\nPass `null` to remove the WebSocket handler for the path.",
+              "params": [
+                {
+                  "name": "path",
+                  "type": "string",
+                  "description": "The URL path to handle WebSocket connections on (e.g. `\"/ws\"`).",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "The event handler, or `null` to remove.",
+                  "optional": false,
+                  "tsType": "((event: string, connection: HSWebSocketConnection, message: string) => void) | null"
+                }
+              ],
+              "returns": {
+                "type": "HSHTTPServer",
+                "description": "This server, for chaining."
+              },
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setWebSocketCallback('/ws', (event, conn, msg) => {\n    if (event === 'connected') conn.send('Welcome!')\n    else if (event === 'message') conn.send('Echo: ' + msg)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 251
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier for this server instance (UUID string).",
+              "description": "A unique identifier for this server instance (UUID string).",
+              "tsType": null,
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSHTTPServer.swift",
+              "lineNumber": 23
+            }
+          ]
+        },
+        {
+          "name": "HSWebSocketConnectionAPI",
+          "type": "typedef",
+          "rawDocumentation": "A WebSocket connection to a single client, passed to the callback registered with\n`server.setWebSocketCallback()`.\n\nUse `send()` to push messages to the connected client and `close()` to end the connection.\n\nDo not instantiate `HSWebSocketConnection` directly — it is created by the server when a\nclient performs a WebSocket upgrade.",
+          "description": "A WebSocket connection to a single client, passed to the callback registered with\n`server.setWebSocketCallback()`.\nUse `send()` to push messages to the connected client and `close()` to end the connection.\nDo not instantiate `HSWebSocketConnection` directly — it is created by the server when a\nclient performs a WebSocket upgrade.",
+          "methods": [
+            {
+              "name": "send",
+              "signature": "func send(_ message: String)",
+              "isStatic": false,
+              "rawDocumentation": "Send a text message to the connected WebSocket client.\n\n- Parameter message: The text message to send.\n- Example:\n```js\nserver.setWebSocketCallback('/ws', (event, conn, msg) => {\n    if (event === 'message') conn.send('Echo: ' + msg)\n})\n```",
+              "description": "Send a text message to the connected WebSocket client.",
+              "params": [
+                {
+                  "name": "message",
+                  "type": "string",
+                  "description": "The text message to send.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "server.setWebSocketCallback('/ws', (event, conn, msg) => {\n    if (event === 'message') conn.send('Echo: ' + msg)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSWebSocketConnection.swift",
+              "lineNumber": 41
+            },
+            {
+              "name": "close",
+              "signature": "func close()",
+              "isStatic": false,
+              "rawDocumentation": "Close the WebSocket connection to the client.\n\nSends a WebSocket close frame and cancels the underlying TCP connection.\n\n- Example:\n```js\nconn.close()\n```",
+              "description": "Close the WebSocket connection to the client.\nSends a WebSocket close frame and cancels the underlying TCP connection.",
+              "params": [],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "conn.close()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSWebSocketConnection.swift",
+              "lineNumber": 51
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Destroy this connection object, releasing all resources.\n\n- Example:\n```js\nconn.destroy()\n```",
+              "description": "Destroy this connection object, releasing all resources.",
+              "params": [],
+              "returns": null,
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "conn.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSWebSocketConnection.swift",
+              "lineNumber": 59
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier for this connection (UUID string).",
+              "description": "A unique identifier for this connection (UUID string).",
+              "tsType": null,
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.httpserver/HSWebSocketConnection.swift",
+              "lineNumber": 30
+            }
+          ]
+        }
+      ],
+      "description": "Module for creating and managing HTTP servers.\nCreate a server with `hs.httpserver.create()`, configure it with chainable setters,\nthen call `start()`. The server accepts both synchronous and async (Promise-returning)\nrequest handler callbacks.\n## Quick start\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setCallback((method, path, headers, body) => {\n        return {body: \"<h1>Hello from Hammerspoon!</h1>\", status: 200, headers: {\"Content-Type\": \"text/html\"}}\n    })\n    .start()\nconsole.log(\"Listening on port \" + server.getPort())\n```\n## Async callback\n```js\nserver.setCallback(async (method, path, headers, body) => {\n    const data = await hs.http.get(\"https://api.example.com/data\")\n    return {body: data.body, status: 200, headers: {\"Content-Type\": \"application/json\"}}\n})\n```\n## Static file serving\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setDocumentRoot(\"/Users/me/Sites\")\n    .start()\n```\n## TLS (HTTPS)\n```bash\nopenssl genrsa -out key.pem 2048\nopenssl req -new -x509 -key key.pem -out cert.pem -days 365\nopenssl pkcs12 -export -out identity.p12 -inkey key.pem -in cert.pem\n```\n```js\nconst server = hs.httpserver.create()\n    .setPort(8443)\n    .setTLSFromPKCS12(\"/path/to/identity.p12\", \"passphrase\")\n    .setCallback(handler)\n    .start()\n```",
+      "rawDocumentation": "Module for creating and managing HTTP servers.\n\nCreate a server with `hs.httpserver.create()`, configure it with chainable setters,\nthen call `start()`. The server accepts both synchronous and async (Promise-returning)\nrequest handler callbacks.\n\n## Quick start\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setCallback((method, path, headers, body) => {\n        return {body: \"<h1>Hello from Hammerspoon!</h1>\", status: 200, headers: {\"Content-Type\": \"text/html\"}}\n    })\n    .start()\nconsole.log(\"Listening on port \" + server.getPort())\n```\n\n## Async callback\n\n```js\nserver.setCallback(async (method, path, headers, body) => {\n    const data = await hs.http.get(\"https://api.example.com/data\")\n    return {body: data.body, status: 200, headers: {\"Content-Type\": \"application/json\"}}\n})\n```\n\n## Static file serving\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setDocumentRoot(\"/Users/me/Sites\")\n    .start()\n```\n\n## TLS (HTTPS)\n\nHammerspoon 2 cannot generate TLS certificates itself, you will need to supply a p12 file, which you can generate with:\n```bash\nopenssl genrsa -out key.pem 2048\nopenssl req -new -x509 -key key.pem -out cert.pem -days 365\nopenssl pkcs12 -export -out identity.p12 -inkey key.pem -in cert.pem\n```\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8443)\n    .setTLSFromPKCS12(\"/path/to/identity.p12\", \"passphrase\")\n    .setCallback(handler)\n    .start()\n```"
+    },
+    {
       "name": "hs.location",
       "methods": [
         {
@@ -14322,5 +15453,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-03T13:33:26.773Z"
+  "generatedAt": "2026-07-04T00:14:19.744Z"
 }
