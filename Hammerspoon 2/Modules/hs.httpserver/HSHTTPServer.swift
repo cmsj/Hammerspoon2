@@ -330,7 +330,7 @@ struct ParsedHTTPRequest {
     }
 
     @objc @discardableResult func setMaxBodySize(_ size: Int) -> HSHTTPServer {
-        maxBodySize = max(1024, size)
+        maxBodySize = max(1, size)
         return self
     }
 

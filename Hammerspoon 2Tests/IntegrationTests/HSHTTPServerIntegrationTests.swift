@@ -11,7 +11,7 @@ import JavaScriptCore
 import Network
 @testable import Hammerspoon_2
 
-@Suite("hs.http/hs.httpserver tests")
+@Suite("hs.http/hs.httpserver tests", .serialized)
 struct HSHTTPTests {
 
     // MARK: - API structure
