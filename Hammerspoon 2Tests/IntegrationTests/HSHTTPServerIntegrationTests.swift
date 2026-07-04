@@ -700,6 +700,141 @@ struct HSHTTPTests {
         #expect(ok, "Server should reassemble two fragments into 'Hello, World!'")
     }
 
+    @Test("oversized single WebSocket frame closes connection with 1009")
+    func testWebSocketFrameBufferLimitClosesWith1009() async {
+        let h = makeHarness()
+
+        // maxBodySize=64; a 100-byte-payload frame is ~106 bytes on the wire, exceeding the limit.
+        h.eval("""
+            var server = hs.httpserver.create()
+                .setPort(0)
+                .setMaxBodySize(64)
+                .setWebSocketCallback('/ws', (event, conn, msg) => {})
+                .start()
+        """)
+
+        let portReady = await h.waitForAsync(timeout: 2.0) {
+            (h.eval("server.getPort()") as? Int ?? 0) > 0
+        }
+        guard portReady else { h.eval("server.stop()"); return }
+        let port = h.eval("server.getPort()") as? Int ?? 0
+
+        let endpoint = NWEndpoint.hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: UInt16(port))!)
+        let conn = NWConnection(to: endpoint, using: .tcp)
+        var connState: NWConnection.State = .setup
+        conn.stateUpdateHandler = { state in MainActor.assumeIsolated { connState = state } }
+        conn.start(queue: .main)
+        let tcpReady = await h.waitForAsync(timeout: 2.0) {
+            if case .ready = connState { return true }; return false
+        }
+        guard tcpReady else { conn.cancel(); h.eval("server.stop()"); return }
+
+        let upgradeRequest = "GET /ws HTTP/1.1\r\nHost: 127.0.0.1:\(port)\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGVzdGtleWhlcmU=\r\nSec-WebSocket-Version: 13\r\n\r\n"
+        var httpResponse = Data()
+        conn.receive(minimumIncompleteLength: 1, maximumLength: 1024) { data, _, _, _ in
+            MainActor.assumeIsolated { if let data { httpResponse.append(data) } }
+        }
+        conn.send(content: Data(upgradeRequest.utf8), completion: .idempotent)
+        let got101 = await h.waitForAsync(timeout: 2.0) {
+            String(data: httpResponse, encoding: .utf8)?.contains("101") == true
+        }
+        guard got101 else { conn.cancel(); h.eval("server.stop()"); return }
+
+        // Build and send a masked frame with a 100-byte payload (well over maxBodySize 64).
+        let mask: [UInt8] = [0x11, 0x22, 0x33, 0x44]
+        var frame = Data([0x81, UInt8(0x80 | 100)])  // FIN=1, text, MASK=1, length=100
+        frame.append(contentsOf: mask)
+        frame.append(contentsOf: (0..<100).map { UInt8(0x41) ^ mask[$0 % 4] })
+
+        var serverResponse = Data()
+        conn.receive(minimumIncompleteLength: 1, maximumLength: 64) { data, _, _, _ in
+            MainActor.assumeIsolated { if let data { serverResponse.append(data) } }
+        }
+        conn.send(content: frame, completion: .idempotent)
+
+        let ok = await h.waitForAsync(timeout: 3.0) {
+            serverResponse.count >= 4 &&
+            serverResponse[0] == 0x88 && serverResponse[1] == 0x02 &&
+            serverResponse[2] == 0x03 && serverResponse[3] == 0xF1
+        }
+        conn.cancel()
+        h.eval("server.stop()")
+        #expect(ok, "Server should close with code 1009 when frame buffer exceeds maxBodySize")
+    }
+
+    @Test("oversized fragmented WebSocket message closes connection with 1009")
+    func testWebSocketFragmentBufferLimitClosesWith1009() async {
+        let h = makeHarness()
+
+        // maxBodySize=200; each individual frame is ~156 or ~106 bytes (both under the limit),
+        // but their combined payload (250 bytes) exceeds it, triggering the fragmentBuffer check.
+        h.eval("""
+            var server = hs.httpserver.create()
+                .setPort(0)
+                .setMaxBodySize(200)
+                .setWebSocketCallback('/ws', (event, conn, msg) => {})
+                .start()
+        """)
+
+        let portReady = await h.waitForAsync(timeout: 2.0) {
+            (h.eval("server.getPort()") as? Int ?? 0) > 0
+        }
+        guard portReady else { h.eval("server.stop()"); return }
+        let port = h.eval("server.getPort()") as? Int ?? 0
+
+        let endpoint = NWEndpoint.hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: UInt16(port))!)
+        let conn = NWConnection(to: endpoint, using: .tcp)
+        var connState: NWConnection.State = .setup
+        conn.stateUpdateHandler = { state in MainActor.assumeIsolated { connState = state } }
+        conn.start(queue: .main)
+        let tcpReady = await h.waitForAsync(timeout: 2.0) {
+            if case .ready = connState { return true }; return false
+        }
+        guard tcpReady else { conn.cancel(); h.eval("server.stop()"); return }
+
+        let upgradeRequest = "GET /ws HTTP/1.1\r\nHost: 127.0.0.1:\(port)\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGVzdGtleWhlcmU=\r\nSec-WebSocket-Version: 13\r\n\r\n"
+        var httpResponse = Data()
+        conn.receive(minimumIncompleteLength: 1, maximumLength: 1024) { data, _, _, _ in
+            MainActor.assumeIsolated { if let data { httpResponse.append(data) } }
+        }
+        conn.send(content: Data(upgradeRequest.utf8), completion: .idempotent)
+        let got101 = await h.waitForAsync(timeout: 2.0) {
+            String(data: httpResponse, encoding: .utf8)?.contains("101") == true
+        }
+        guard got101 else { conn.cancel(); h.eval("server.stop()"); return }
+
+        // Build two masked frames: FIN=0 with 150-byte payload, then FIN=0 continuation with
+        // 100-byte payload. Each frame is under maxBodySize (200) individually, but the combined
+        // fragment payload (250) exceeds it. Sent via .contentProcessed to ensure they arrive
+        // in separate TCP receives so the fragmentBuffer check fires rather than the buf check.
+        func maskedFrame(opcode: UInt8, fin: Bool, size: Int) -> Data {
+            let mask: [UInt8] = [0x37, 0xFA, 0x21, 0x3D]
+            var f = Data([UInt8((fin ? 0x80 : 0x00) | Int(opcode & 0x0F)), UInt8(0x80 | size)])
+            f.append(contentsOf: mask)
+            f.append(contentsOf: (0..<size).map { UInt8(0x41) ^ mask[$0 % 4] })
+            return f
+        }
+        let frame1 = maskedFrame(opcode: 0x01, fin: false, size: 150)
+        let frame2 = maskedFrame(opcode: 0x00, fin: false, size: 100)
+
+        var serverResponse = Data()
+        conn.receive(minimumIncompleteLength: 1, maximumLength: 64) { data, _, _, _ in
+            MainActor.assumeIsolated { if let data { serverResponse.append(data) } }
+        }
+        conn.send(content: frame1, completion: .contentProcessed { _ in
+            conn.send(content: frame2, completion: .idempotent)
+        })
+
+        let ok = await h.waitForAsync(timeout: 3.0) {
+            serverResponse.count >= 4 &&
+            serverResponse[0] == 0x88 && serverResponse[1] == 0x02 &&
+            serverResponse[2] == 0x03 && serverResponse[3] == 0xF1
+        }
+        conn.cancel()
+        h.eval("server.stop()")
+        #expect(ok, "Server should close with code 1009 when fragment buffer exceeds maxBodySize")
+    }
+
     @Test("WebSocket server fires connected and closed events")
         func testWebSocketConnectedClosedEvents() async {
             let h = makeHarness()
