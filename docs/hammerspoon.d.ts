@@ -2729,6 +2729,117 @@ Sends a WebSocket close frame and cancels the underlying TCP connection.
 }
 
 /**
+ * Access information about the current keyboard layout and input sources, and respond to changes.
+## Reading the current layout
+```js
+console.log("Layout: " + hs.keycodes.currentLayout())
+console.log("Source ID: " + hs.keycodes.currentSourceID())
+```
+## Key code mapping
+```js
+// Look up a keycode by name
+const code = hs.keycodes.map["a"]    // e.g. 0 on ANSI US
+// Look up a name by keycode
+const name = hs.keycodes.map["0"]   // e.g. "a"
+```
+## Switching layouts
+```js
+hs.keycodes.setLayout("British")
+```
+## Watching for input source changes
+```js
+hs.keycodes.addWatcher(() => {
+    console.log("Switched to: " + hs.keycodes.currentLayout())
+})
+```
+ */
+declare namespace hs.keycodes {
+    /**
+     * Returns the localized name of the current keyboard layout.
+Uses the base keyboard layout, which is the underlying layout even when an input
+method (such as a CJK input method) is also active.
+     * @returns The display name of the active layout (e.g. `"U.S."`, `"British"`), or `null`.
+     */
+    function currentLayout(): string | undefined;
+
+    /**
+     * Returns the localized name of the active input method, or `null` if none is active.
+Input methods are distinct from keyboard layouts. They provide complex character
+composition such as CJK input. Returns `null` when using a plain keyboard layout
+with no input method overlay.
+     * @returns The display name of the active input method (e.g. `"Hiragana"`), or `null`.
+     */
+    function currentMethod(): string | undefined;
+
+    /**
+     * Returns the reverse-DNS identifier of the currently selected keyboard input source.
+     * @returns A string such as `"com.apple.keylayout.US"`, or `null` if unavailable.
+     */
+    function currentSourceID(): string | undefined;
+
+    /**
+     * Returns the localized names of all currently enabled keyboard layouts.
+     * @returns An array of layout name strings (e.g. `["U.S.", "British", "French"]`).
+     */
+    function layouts(): string[];
+
+    /**
+     * Returns the localized names of all currently enabled input methods.
+     * @returns An array of input method name strings. May be empty if none are enabled.
+     */
+    function methods(): string[];
+
+    /**
+     * Switches the active keyboard layout to the one with the given localized name.
+Use `layouts()` to enumerate valid names.
+     * @param layoutName The localized name of the layout to activate (e.g. `"U.S."`).
+     * @returns `true` if the layout was found and selected, `false` otherwise.
+     */
+    function setLayout(layoutName: string): boolean;
+
+    /**
+     * Switches the active input method to the one with the given localized name.
+Use `methods()` to enumerate valid names.
+     * @param methodName The localized name of the input method to activate.
+     * @returns `true` if the method was found and selected, `false` otherwise.
+     */
+    function setMethod(methodName: string): boolean;
+
+    /**
+     * Switches the active input source to the one with the given reverse-DNS identifier.
+Use `currentSourceID()` to see the current value.
+     * @param sourceID The input source ID to activate (e.g. `"com.apple.keylayout.British"`).
+     * @returns `true` if the source was found and selected, `false` otherwise.
+     */
+    function setSourceID(sourceID: string): boolean;
+
+    /**
+     * Registers a listener that fires whenever the keyboard input source changes.
+The listener is called with no arguments. Read `currentLayout()`, `currentSourceID()`,
+or `map` inside the callback to inspect the new state.
+The OS subscription starts lazily on the first listener and is released automatically
+when the last listener is removed via `removeWatcher`.
+     * @param listener A function called when the input source changes.
+     */
+    function addWatcher(listener: () => void): void;
+
+    /**
+     * Removes a previously registered input source change listener.
+     * @param listener The function originally passed to `addWatcher`.
+     */
+    function removeWatcher(listener: (...args: any[]) => any): void;
+
+    /**
+     * A bidirectional mapping between key names and their macOS virtual key codes.
+Entries exist for both directions: look up a name to get its integer keycode, or look
+up a keycode (as a string) to get the key name. The map is rebuilt automatically
+whenever the keyboard input source changes.
+     */
+    const map: Record<string, any>;
+
+}
+
+/**
  * Determine the Mac's location via macOS Location Services.
 Location data is obtained through WiFi network scanning and, where available, GPS
 hardware. User permission is required — call `hs.permissions.requestLocation()`

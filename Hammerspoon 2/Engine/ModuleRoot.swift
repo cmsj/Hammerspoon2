@@ -37,6 +37,7 @@ import JavaScriptCoreExtras
     @objc var fs: HSFSModule { get }
     @objc var hashing: HSHashModule { get }
     @objc var hotkey: HSHotkeyModule { get }
+    @objc var keycodes: HSKeycodesModule { get }
     @objc var http: HSHTTPModule { get }
     @objc var httpserver: HSHTTPServerModule { get }
     @objc var location: HSLocationModule { get }
@@ -121,6 +122,7 @@ import JavaScriptCoreExtras
     @objc var fs: HSFSModule { get { getOrCreate(name: "fs", type: HSFSModule.self)}}
     @objc var hashing: HSHashModule { get { getOrCreate(name: "hashing", type: HSHashModule.self)}}
     @objc var hotkey: HSHotkeyModule { get { getOrCreate(name: "hotkey", type: HSHotkeyModule.self)}}
+    @objc var keycodes: HSKeycodesModule { get { getOrCreate(name: "keycodes", type: HSKeycodesModule.self)}}
     @objc var http: HSHTTPModule { get { getOrCreate(name: "http", type: HSHTTPModule.self)}}
     @objc var httpserver: HSHTTPServerModule { get { getOrCreate(name: "httpserver", type: HSHTTPServerModule.self)}}
     @objc var location: HSLocationModule { get { getOrCreate(name: "location", type: HSLocationModule.self)}}

@@ -6876,6 +6876,276 @@
       "rawDocumentation": "Module for creating and managing HTTP servers.\n\nCreate a server with `hs.httpserver.create()`, configure it with chainable setters,\nthen call `start()`. The server accepts both synchronous and async (Promise-returning)\nrequest handler callbacks.\n\n## Quick start\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setCallback((method, path, headers, body) => {\n        return {body: \"<h1>Hello from Hammerspoon!</h1>\", status: 200, headers: {\"Content-Type\": \"text/html\"}}\n    })\n    .start()\nconsole.log(\"Listening on port \" + server.getPort())\n```\n\n## Async callback\n\n```js\nserver.setCallback(async (method, path, headers, body) => {\n    const data = await hs.http.get(\"https://api.example.com/data\")\n    return {body: data.body, status: 200, headers: {\"Content-Type\": \"application/json\"}}\n})\n```\n\n## Static file serving\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setDocumentRoot(\"/Users/me/Sites\")\n    .start()\n```\n\n## TLS (HTTPS)\n\nHammerspoon 2 cannot generate TLS certificates itself, you will need to supply a p12 file, which you can generate with:\n```bash\nopenssl genrsa -out key.pem 2048\nopenssl req -new -x509 -key key.pem -out cert.pem -days 365\nopenssl pkcs12 -export -out identity.p12 -inkey key.pem -in cert.pem\n```\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8443)\n    .setTLSFromPKCS12(\"/path/to/identity.p12\", \"passphrase\")\n    .setCallback(handler)\n    .start()\n```"
     },
     {
+      "name": "hs.keycodes",
+      "methods": [
+        {
+          "name": "currentLayout",
+          "signature": "func currentLayout() -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Returns the localized name of the current keyboard layout.\n\nUses the base keyboard layout, which is the underlying layout even when an input\nmethod (such as a CJK input method) is also active.\n- Returns: The display name of the active layout (e.g. `\"U.S.\"`, `\"British\"`), or `null`.\n- Example:\n```js\nconsole.log(\"Layout: \" + hs.keycodes.currentLayout())\n```",
+          "description": "Returns the localized name of the current keyboard layout.\nUses the base keyboard layout, which is the underlying layout even when an input\nmethod (such as a CJK input method) is also active.",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "The display name of the active layout (e.g. `\"U.S.\"`, `\"British\"`), or `null`."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(\"Layout: \" + hs.keycodes.currentLayout())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 81
+        },
+        {
+          "name": "currentMethod",
+          "signature": "func currentMethod() -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Returns the localized name of the active input method, or `null` if none is active.\n\nInput methods are distinct from keyboard layouts. They provide complex character\ncomposition such as CJK input. Returns `null` when using a plain keyboard layout\nwith no input method overlay.\n- Returns: The display name of the active input method (e.g. `\"Hiragana\"`), or `null`.\n- Example:\n```js\nconst m = hs.keycodes.currentMethod()\nif (m) console.log(\"Input method: \" + m)\n```",
+          "description": "Returns the localized name of the active input method, or `null` if none is active.\nInput methods are distinct from keyboard layouts. They provide complex character\ncomposition such as CJK input. Returns `null` when using a plain keyboard layout\nwith no input method overlay.",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "The display name of the active input method (e.g. `\"Hiragana\"`), or `null`."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const m = hs.keycodes.currentMethod()\nif (m) console.log(\"Input method: \" + m)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 94
+        },
+        {
+          "name": "currentSourceID",
+          "signature": "func currentSourceID() -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Returns the reverse-DNS identifier of the currently selected keyboard input source.\n\n- Returns: A string such as `\"com.apple.keylayout.US\"`, or `null` if unavailable.\n- Example:\n```js\nconsole.log(\"Source ID: \" + hs.keycodes.currentSourceID())\n```",
+          "description": "Returns the reverse-DNS identifier of the currently selected keyboard input source.",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "A string such as `\"com.apple.keylayout.US\"`, or `null` if unavailable."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(\"Source ID: \" + hs.keycodes.currentSourceID())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 103
+        },
+        {
+          "name": "layouts",
+          "signature": "func layouts() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the localized names of all currently enabled keyboard layouts.\n\n- Returns: An array of layout name strings (e.g. `[\"U.S.\", \"British\", \"French\"]`).\n- Example:\n```js\nhs.keycodes.layouts().forEach(l => console.log(l))\n```",
+          "description": "Returns the localized names of all currently enabled keyboard layouts.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of layout name strings (e.g. `[\"U.S.\", \"British\", \"French\"]`)."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keycodes.layouts().forEach(l => console.log(l))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 114
+        },
+        {
+          "name": "methods",
+          "signature": "func methods() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the localized names of all currently enabled input methods.\n\n- Returns: An array of input method name strings. May be empty if none are enabled.\n- Example:\n```js\nhs.keycodes.methods().forEach(m => console.log(m))\n```",
+          "description": "Returns the localized names of all currently enabled input methods.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of input method name strings. May be empty if none are enabled."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keycodes.methods().forEach(m => console.log(m))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 123
+        },
+        {
+          "name": "setLayout",
+          "signature": "func setLayout(_ layoutName: String) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Switches the active keyboard layout to the one with the given localized name.\n\n- Parameter layoutName: The localized name of the layout to activate (e.g. `\"U.S.\"`).\n  Use `layouts()` to enumerate valid names.\n- Returns: `true` if the layout was found and selected, `false` otherwise.\n- Example:\n```js\nif (!hs.keycodes.setLayout(\"U.S.\")) console.log(\"Layout not found\")\n```",
+          "description": "Switches the active keyboard layout to the one with the given localized name.\nUse `layouts()` to enumerate valid names.",
+          "params": [
+            {
+              "name": "layoutName",
+              "type": "string",
+              "description": "The localized name of the layout to activate (e.g. `\"U.S.\"`).",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if the layout was found and selected, `false` otherwise."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "if (!hs.keycodes.setLayout(\"U.S.\")) console.log(\"Layout not found\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 136
+        },
+        {
+          "name": "setMethod",
+          "signature": "func setMethod(_ methodName: String) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Switches the active input method to the one with the given localized name.\n\n- Parameter methodName: The localized name of the input method to activate.\n  Use `methods()` to enumerate valid names.\n- Returns: `true` if the method was found and selected, `false` otherwise.\n- Example:\n```js\nhs.keycodes.setMethod(\"Hiragana\")\n```",
+          "description": "Switches the active input method to the one with the given localized name.\nUse `methods()` to enumerate valid names.",
+          "params": [
+            {
+              "name": "methodName",
+              "type": "string",
+              "description": "The localized name of the input method to activate.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if the method was found and selected, `false` otherwise."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keycodes.setMethod(\"Hiragana\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 147
+        },
+        {
+          "name": "setSourceID",
+          "signature": "func setSourceID(_ sourceID: String) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Switches the active input source to the one with the given reverse-DNS identifier.\n\n- Parameter sourceID: The input source ID to activate (e.g. `\"com.apple.keylayout.British\"`).\n  Use `currentSourceID()` to see the current value.\n- Returns: `true` if the source was found and selected, `false` otherwise.\n- Example:\n```js\nhs.keycodes.setSourceID(\"com.apple.keylayout.British\")\n```",
+          "description": "Switches the active input source to the one with the given reverse-DNS identifier.\nUse `currentSourceID()` to see the current value.",
+          "params": [
+            {
+              "name": "sourceID",
+              "type": "string",
+              "description": "The input source ID to activate (e.g. `\"com.apple.keylayout.British\"`).",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if the source was found and selected, `false` otherwise."
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keycodes.setSourceID(\"com.apple.keylayout.British\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 158
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Registers a listener that fires whenever the keyboard input source changes.\n\nThe listener is called with no arguments. Read `currentLayout()`, `currentSourceID()`,\nor `map` inside the callback to inspect the new state.\n\nThe OS subscription starts lazily on the first listener and is released automatically\nwhen the last listener is removed via `removeWatcher`.\n- Parameter listener: {() => void} A function called when the input source changes.\n- Example:\n```js\nhs.keycodes.addWatcher(() => {\n    console.log(\"Now using: \" + hs.keycodes.currentLayout())\n})\n```",
+          "description": "Registers a listener that fires whenever the keyboard input source changes.\nThe listener is called with no arguments. Read `currentLayout()`, `currentSourceID()`,\nor `map` inside the callback to inspect the new state.\nThe OS subscription starts lazily on the first listener and is released automatically\nwhen the last listener is removed via `removeWatcher`.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "A function called when the input source changes.",
+              "optional": false,
+              "tsType": "() => void"
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keycodes.addWatcher(() => {\n    console.log(\"Now using: \" + hs.keycodes.currentLayout())\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 176
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Removes a previously registered input source change listener.\n\n- Parameter listener: The function originally passed to `addWatcher`.\n- Example:\n```js\nconst handler = () => console.log(\"changed\")\nhs.keycodes.addWatcher(handler)\nhs.keycodes.removeWatcher(handler)\n```",
+          "description": "Removes a previously registered input source change listener.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "The function originally passed to `addWatcher`.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const handler = () => console.log(\"changed\")\nhs.keycodes.addWatcher(handler)\nhs.keycodes.removeWatcher(handler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 187
+        }
+      ],
+      "properties": [
+        {
+          "name": "map",
+          "signature": "var map: [String: Any] { get }",
+          "rawDocumentation": "A bidirectional mapping between key names and their macOS virtual key codes.\n\nEntries exist for both directions: look up a name to get its integer keycode, or look\nup a keycode (as a string) to get the key name. The map is rebuilt automatically\nwhenever the keyboard input source changes.\n\nNamed keys include:\n- **Characters**: derived from the active keyboard layout via `UCKeyTranslate` (falls back to ANSI US)\n- **Function keys**: `f1`–`f20`\n- **Navigation**: `home`, `end`, `pageup`, `pagedown`, `left`, `right`, `up`, `down`\n- **Numpad**: `pad0`–`pad9`, `pad.`, `pad+`, `pad-`, `pad*`, `pad/`, `pad=`, `padenter`, `padclear`\n- **Modifiers**: `cmd`, `shift`, `ctrl`, `alt`, `rightshift`, `rightalt`, `rightctrl`, `fn`, `capslock`\n- **Control**: `return`, `tab`, `space`, `delete`, `forwarddelete`, `escape`, `help`\n- **Media**: `volup`, `voldown`, `mute`\n- Example:\n```js\nconst code = hs.keycodes.map[\"return\"]  // 36\nconst name = hs.keycodes.map[\"36\"]      // \"return\"\nconst aCode = hs.keycodes.map[\"a\"]      // keycode for 'a' in current layout\n```",
+          "description": "A bidirectional mapping between key names and their macOS virtual key codes.\nEntries exist for both directions: look up a name to get its integer keycode, or look\nup a keycode (as a string) to get the key name. The map is rebuilt automatically\nwhenever the keyboard input source changes.",
+          "tsType": null,
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const code = hs.keycodes.map[\"return\"]  // 36\nconst name = hs.keycodes.map[\"36\"]      // \"return\"\nconst aCode = hs.keycodes.map[\"a\"]      // keycode for 'a' in current layout"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keycodes/HSKeycodesModule.swift",
+          "lineNumber": 68
+        }
+      ],
+      "types": [],
+      "description": "Access information about the current keyboard layout and input sources, and respond to changes.\n## Reading the current layout\n```js\nconsole.log(\"Layout: \" + hs.keycodes.currentLayout())\nconsole.log(\"Source ID: \" + hs.keycodes.currentSourceID())\n```\n## Key code mapping\n```js\n// Look up a keycode by name\nconst code = hs.keycodes.map[\"a\"]    // e.g. 0 on ANSI US\n// Look up a name by keycode\nconst name = hs.keycodes.map[\"0\"]   // e.g. \"a\"\n```\n## Switching layouts\n```js\nhs.keycodes.setLayout(\"British\")\n```\n## Watching for input source changes\n```js\nhs.keycodes.addWatcher(() => {\n    console.log(\"Switched to: \" + hs.keycodes.currentLayout())\n})\n```",
+      "rawDocumentation": "Access information about the current keyboard layout and input sources, and respond to changes.\n\n## Reading the current layout\n\n```js\nconsole.log(\"Layout: \" + hs.keycodes.currentLayout())\nconsole.log(\"Source ID: \" + hs.keycodes.currentSourceID())\n```\n\n## Key code mapping\n\n```js\n// Look up a keycode by name\nconst code = hs.keycodes.map[\"a\"]    // e.g. 0 on ANSI US\n// Look up a name by keycode\nconst name = hs.keycodes.map[\"0\"]   // e.g. \"a\"\n```\n\n## Switching layouts\n\n```js\nhs.keycodes.setLayout(\"British\")\n```\n\n## Watching for input source changes\n\n```js\nhs.keycodes.addWatcher(() => {\n    console.log(\"Switched to: \" + hs.keycodes.currentLayout())\n})\n```"
+    },
+    {
       "name": "hs.location",
       "methods": [
         {
@@ -15453,5 +15723,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-04T00:14:19.744Z"
+  "generatedAt": "2026-07-05T23:19:01.292Z"
 }

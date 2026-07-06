@@ -909,7 +909,7 @@ struct ParsedHTTPRequest {
             AKError("HSHTTPServer: PKCS12 identity value is not a SecIdentity")
             return nil
         }
-        return unsafe (identity as! SecIdentity)
+        return (identity as! SecIdentity)
     }
 
     // MARK: - Helpers

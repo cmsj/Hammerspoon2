@@ -424,6 +424,8 @@ extension JSTestHarness {
                 loadModule(HSHTTPServerModule.self, as: name)
             case "urlevent":
                 loadModule(HSURLEventModule.self, as: name)
+            case "keycodes":
+                loadModule(HSKeycodesModule.self, as: name)
             default:
                 print("⚠️ Unknown module: \(name)")
             }
