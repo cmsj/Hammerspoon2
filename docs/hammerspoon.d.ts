@@ -184,21 +184,21 @@ declare class HSImage {
      * @param path Path to the image file
      * @returns An HSImage object, or null if the file couldn't be loaded
      */
-    static fromPath(path: string): HSImage | undefined;
+    static fromPath(path: string): HSImage | null;
 
     /**
      * Load a system image by name
      * @param name Name of the system image (e.g., "NSComputer", "NSFolder")
      * @returns An HSImage object, or null if the image couldn't be found
      */
-    static fromName(name: string): HSImage | undefined;
+    static fromName(name: string): HSImage | null;
 
     /**
      * Load a system symbol by name
      * @param name Name of the symbol (e.g., "hammer", "questionmark.circle")
      * @returns An HSImage object, or null if the symbol couldn't be found
      */
-    static fromSymbol(name: string): HSImage | undefined;
+    static fromSymbol(name: string): HSImage | null;
 
     /**
      * Load an app's icon by bundle identifier
@@ -206,21 +206,21 @@ declare class HSImage {
      * @param withFallbackSymbol The name of an SF Symbol to use if no bundle image could be loaded. Defaults to questionmark.circle
      * @returns An HSImage object, or null if the app couldn't be found
      */
-    static fromAppBundle(bundleID: string, withFallbackSymbol?: string): HSImage | undefined;
+    static fromAppBundle(bundleID: string, withFallbackSymbol?: string): HSImage | null;
 
     /**
      * Get the icon for a file
      * @param path Path to the file
      * @returns An HSImage object representing the file's icon
      */
-    static iconForFile(path: string): HSImage | undefined;
+    static iconForFile(path: string): HSImage | null;
 
     /**
      * Get the icon for a file type
      * @param fileType File extension or UTI (e.g., "png", "public.png")
      * @returns An HSImage object representing the file type's icon
      */
-    static iconForFileType(fileType: string): HSImage | undefined;
+    static iconForFileType(fileType: string): HSImage | null;
 
     /**
      * Load an image from a URL (asynchronous)
@@ -233,14 +233,14 @@ declare class HSImage {
      * Create a copy of the image
      * @returns A new HSImage copy
      */
-    copyImage(): HSImage | undefined;
+    copyImage(): HSImage | null;
 
     /**
      * Create a cropped copy of the image
      * @param rect HSRect defining the crop area (x, y, w, h)
      * @returns A new cropped HSImage, or null if the rect falls outside the image bounds
      */
-    croppedCopy(rect: HSRect): HSImage | undefined;
+    croppedCopy(rect: HSRect): HSImage | null;
 
     /**
      * Save the image to a file
@@ -264,7 +264,7 @@ If this image is bound to a UI element, the canvas re-renders automatically.
     /**
      * The name of the image, or null if not set.
      */
-    name: string | undefined;
+    name: string | null;
 
     /**
      * Whether the image is a template image.
@@ -515,40 +515,40 @@ declare namespace hs.application {
      * @param name The applicaiton name to search for
      * @returns The first matching application, or nil if none matched
      */
-    function matchingName(name: string): HSApplication | undefined;
+    function matchingName(name: string): HSApplication | null;
 
     /**
      * Fetch the first running application that matches a Bundle ID
      * @param bundleID The identifier to search for
      * @returns The first matching application, or nil if none matched
      */
-    function matchingBundleID(bundleID: string): HSApplication | undefined;
+    function matchingBundleID(bundleID: string): HSApplication | null;
 
     /**
      * Fetch the running application that matches a POSIX PID
      * @param pid The PID to search for
      * @returns The matching application, or nil if none matched
      */
-    function fromPID(pid: number): HSApplication | undefined;
+    function fromPID(pid: number): HSApplication | null;
 
     /**
      * Fetch the currently focused application
      * @returns The matching application, or nil if none matched
      */
-    function frontmost(): HSApplication | undefined;
+    function frontmost(): HSApplication | null;
 
     /**
      * Fetch the application which currently owns the menu bar
      * @returns The matching application, or nil if none matched
      */
-    function menuBarOwner(): HSApplication | undefined;
+    function menuBarOwner(): HSApplication | null;
 
     /**
      * Fetch the filesystem path for an application
      * @param bundleID The application bundle identifier to search for (e.g. "com.apple.Safari")
      * @returns The application's filesystem path, or nil if it was not found
      */
-    function pathForBundleID(bundleID: string): string | undefined;
+    function pathForBundleID(bundleID: string): string | null;
 
     /**
      * Fetch filesystem paths for an application
@@ -562,7 +562,7 @@ declare namespace hs.application {
      * @param fileType The file type to search for. This can be a UTType identifier, a MIME type, or a filename extension
      * @returns The path to an application for the given filetype, or il if none were found
      */
-    function pathForFileType(fileType: string): string | undefined;
+    function pathForFileType(fileType: string): string | null;
 
     /**
      * Fetch filesystem paths for applications able to open a given file type
@@ -612,7 +612,7 @@ declare class HSApplication {
      * The application's HSAXElement object, for use with the hs.ax APIs
      * @returns An HSAXElement object, or nil if it could not be obtained
      */
-    axElement(): HSAXElement | undefined;
+    axElement(): HSAXElement | null;
 
     /**
      * Bring this application to the foreground
@@ -634,21 +634,21 @@ declare class HSApplication {
      * Get the full menu structure of this application
      * @returns An array of top-level menu objects, each with title and items keys, or null if unavailable
      */
-    getMenuItems(): Record<string, any>[] | undefined;
+    getMenuItems(): Record<string, any>[] | null;
 
     /**
      * Find a menu item by searching all menus for a matching title (case-insensitive)
      * @param name The menu item title to search for
      * @returns An object with title and enabled keys, or null if not found
      */
-    findMenuItemByName(name: string): Record<string, any> | undefined;
+    findMenuItemByName(name: string): Record<string, any> | null;
 
     /**
      * Find a menu item by following a hierarchical path of titles
      * @param path An array of menu titles forming a path from the top-level menu to the item, e.g. ["Edit", "Select All"]
      * @returns An object with title and enabled keys, or null if not found
      */
-    findMenuItemByPath(path: string[]): Record<string, any> | undefined;
+    findMenuItemByPath(path: string[]): Record<string, any> | null;
 
     /**
      * Click a menu item found by searching all menus for a matching title (case-insensitive)
@@ -676,7 +676,7 @@ declare class HSApplication {
      * @param title The exact window title to search for
      * @returns The matching HSWindow, or null if not found
      */
-    getWindow(title: string): HSWindow | undefined;
+    getWindow(title: string): HSWindow | null;
 
     /**
      * POSIX Process Identifier
@@ -686,17 +686,17 @@ declare class HSApplication {
     /**
      * Bundle Identifier (e.g. com.apple.Safari)
      */
-    readonly bundleID: string | undefined;
+    readonly bundleID: string | null;
 
     /**
      * The application's title
      */
-    readonly title: string | undefined;
+    readonly title: string | null;
 
     /**
      * Location of the application on disk
      */
-    readonly bundlePath: string | undefined;
+    readonly bundlePath: string | null;
 
     /**
      * Is the application hidden
@@ -711,12 +711,12 @@ declare class HSApplication {
     /**
      * The main window of this application, or nil if there is no main window
      */
-    readonly mainWindow: HSWindow | undefined;
+    readonly mainWindow: HSWindow | null;
 
     /**
      * The focused window of this application, or nil if there is no focused window
      */
-    readonly focusedWindow: HSWindow | undefined;
+    readonly focusedWindow: HSWindow | null;
 
     /**
      * All windows of this application
@@ -787,33 +787,33 @@ declare namespace hs.audiodevice {
      * The current system default output device.
      * @returns An HSAudioDevice, or null if none is set
      */
-    function defaultOutputDevice(): HSAudioDevice | undefined;
+    function defaultOutputDevice(): HSAudioDevice | null;
 
     /**
      * The current system default input device.
      * @returns An HSAudioDevice, or null if none is set
      */
-    function defaultInputDevice(): HSAudioDevice | undefined;
+    function defaultInputDevice(): HSAudioDevice | null;
 
     /**
      * The current system alert sound device.
      * @returns An HSAudioDevice, or null if none is set
      */
-    function defaultEffectDevice(): HSAudioDevice | undefined;
+    function defaultEffectDevice(): HSAudioDevice | null;
 
     /**
      * Find the first audio device whose name matches the given string.
      * @param name The device name to search for
      * @returns An HSAudioDevice if found, null otherwise
      */
-    function findDeviceByName(name: string): HSAudioDevice | undefined;
+    function findDeviceByName(name: string): HSAudioDevice | null;
 
     /**
      * Find the audio device with the given unique identifier.
      * @param uid The device UID to search for
      * @returns An HSAudioDevice if found, null otherwise
      */
-    function findDeviceByUID(uid: string): HSAudioDevice | undefined;
+    function findDeviceByUID(uid: string): HSAudioDevice | null;
 
     /**
      * Register a listener for all system-level audio configuration events.
@@ -861,13 +861,13 @@ declare class HSAudioDevice {
      * The current output data source as `{ id, name }`, or `null` if unavailable.
      * @returns A dictionary containing the id and name of the current output data source
      */
-    currentOutputDataSource(): Record<string, any> | undefined;
+    currentOutputDataSource(): Record<string, any> | null;
 
     /**
      * The current input data source as `{ id, name }`, or `null` if unavailable.
      * @returns A dictionary containing the id and name of the current input data source
      */
-    currentInputDataSource(): Record<string, any> | undefined;
+    currentInputDataSource(): Record<string, any> | null;
 
     /**
      * All available output data sources as an array of `{ id, name }` objects.
@@ -971,7 +971,7 @@ declare class HSAudioDevice {
      * Output volume scalar in the range `0.0`–`1.0`, or `null` if the device has
 no controllable output volume. Setting `null` is a no-op.
      */
-    volume: number | undefined;
+    volume: number | null;
 
     /**
      * Whether output is muted. Always `false` if the device has no mutable output.
@@ -982,13 +982,13 @@ no controllable output volume. Setting `null` is a no-op.
      * Output stereo balance in the range `0.0` (full left)–`1.0` (full right),
 or `null` if balance control is not available.
      */
-    balance: number | undefined;
+    balance: number | null;
 
     /**
      * Input (microphone) volume scalar in the range `0.0`–`1.0`, or `null` if
 the device has no controllable input volume.
      */
-    inputVolume: number | undefined;
+    inputVolume: number | null;
 
     /**
      * Whether input is muted. Always `false` if the device has no mutable input.
@@ -998,7 +998,7 @@ the device has no controllable input volume.
     /**
      * The current nominal sample rate in Hz (e.g. `44100`), or `null` if unknown.
      */
-    sampleRate: number | undefined;
+    sampleRate: number | null;
 
     /**
      * All sample rates (in Hz) that this device supports.
@@ -1029,28 +1029,28 @@ declare namespace hs.ax {
      * Get the system-wide accessibility element
      * @returns The system-wide AXElement, or nil if accessibility is not available
      */
-    function systemWideElement(): HSAXElement | undefined;
+    function systemWideElement(): HSAXElement | null;
 
     /**
      * Get the accessibility element for an application
      * @param element An HSApplication object
      * @returns The AXElement for the application, or nil if accessibility is not available
      */
-    function applicationElement(element: HSApplication): HSAXElement | undefined;
+    function applicationElement(element: HSApplication): HSAXElement | null;
 
     /**
      * Get the accessibility element for a window
      * @param window An HSWindow  object
      * @returns The AXElement for the window, or nil if accessibility is not available
      */
-    function windowElement(window: HSWindow): HSAXElement | undefined;
+    function windowElement(window: HSWindow): HSAXElement | null;
 
     /**
      * Get the accessibility element at the specific screen position
      * @param point An HSPoint object containing screen coordinates
      * @returns The AXElement at that position, or nil if none found
      */
-    function elementAtPoint(point: HSPoint): HSAXElement | undefined;
+    function elementAtPoint(point: HSPoint): HSAXElement | null;
 
     /**
      * Add a watcher for application AX events
@@ -1119,7 +1119,7 @@ declare class HSAXElement {
      * @param index The index to fetch
      * @returns An HSAXElement object, if a child exists at the given index
      */
-    childAtIndex(index: number): HSAXElement | undefined;
+    childAtIndex(index: number): HSAXElement | null;
 
     /**
      * Get all available attribute names
@@ -1132,7 +1132,7 @@ declare class HSAXElement {
      * @param attribute The attribute name to fetch the value for
      * @returns The requested value, or nil if none was found
      */
-    attributeValue(attribute: string): any | undefined;
+    attributeValue(attribute: string): any | null;
 
     /**
      * Set the value of a specific attribute
@@ -1165,27 +1165,27 @@ declare class HSAXElement {
     /**
      * The element's role (e.g., "AXWindow", "AXButton")
      */
-    readonly role: string | undefined;
+    readonly role: string | null;
 
     /**
      * The element's subrole
      */
-    readonly subrole: string | undefined;
+    readonly subrole: string | null;
 
     /**
      * The element's title
      */
-    readonly title: string | undefined;
+    readonly title: string | null;
 
     /**
      * The element's value
      */
-    readonly value: any | undefined;
+    readonly value: any | null;
 
     /**
      * The element's description
      */
-    readonly elementDescription: string | undefined;
+    readonly elementDescription: string | null;
 
     /**
      * Whether the element is enabled
@@ -1200,22 +1200,22 @@ declare class HSAXElement {
     /**
      * The element's position on screen
      */
-    position: HSPoint | undefined;
+    position: HSPoint | null;
 
     /**
      * The element's size
      */
-    size: HSSize | undefined;
+    size: HSSize | null;
 
     /**
      * The element's frame (position and size combined)
      */
-    frame: HSRect | undefined;
+    frame: HSRect | null;
 
     /**
      * The element's parent
      */
-    readonly parent: HSAXElement | undefined;
+    readonly parent: HSAXElement | null;
 
     /**
      * Get the process ID of the application that owns this element
@@ -1454,7 +1454,7 @@ Call `stopMonitoring()` to unsubscribe.
     /**
      * The resolved hostname, or `null` before `resolve()` completes.
      */
-    readonly hostname: string | undefined;
+    readonly hostname: string | null;
 
     /**
      * The service port. `-1` until `resolve()` completes.
@@ -1470,7 +1470,7 @@ Call `stopMonitoring()` to unsubscribe.
      * The TXT record as a `{key: value}` object, or `null` if none is available.
 Populated after `resolve()` completes or when updated via `monitor()`.
      */
-    readonly txtRecord: Record<string, string> | undefined;
+    readonly txtRecord: Record<string, string> | null;
 
     /**
      * Whether peer-to-peer Bluetooth/Wi-Fi is included in resolution.
@@ -1531,14 +1531,14 @@ declare namespace hs.camera {
      * @param name The device name to search for (exact match)
      * @returns An `HSCamera` if found, `null` otherwise
      */
-    function findByName(name: string): HSCamera | undefined;
+    function findByName(name: string): HSCamera | null;
 
     /**
      * Find the camera with the given unique identifier.
      * @param uid The device UID to search for
      * @returns An `HSCamera` if found, `null` otherwise
      */
-    function findByUID(uid: string): HSCamera | undefined;
+    function findByUID(uid: string): HSCamera | null;
 
     /**
      * Register a listener for camera device connect/disconnect events.
@@ -1753,7 +1753,7 @@ Returns `null` if the index is out of range or no choices are set.
      * @param row Zero-based row index, or omit to query the highlighted row.
      * @returns The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.
      */
-    selectedRowContents(row: number | null): Record<string, any> | undefined;
+    selectedRowContents(row: number | null): Record<string, any> | null;
 
     /**
      * Read-only type identifier.
@@ -1912,7 +1912,7 @@ declare namespace hs.fs {
      * @param length Maximum number of bytes to read. Pass `0` (or omit) to read to the end of the file.
      * @returns The file contents as a UTF-8 string, or `null` if the file cannot be read.
      */
-    function read(path: string, offset: number, length: number): string | undefined;
+    function read(path: string, offset: number, length: number): string | null;
 
     /**
      * Read a file line-by-line, invoking a callback for each line.
@@ -2021,7 +2021,7 @@ The `.` and `..` entries are never included.
      * @param path Path to the directory. `~` is expanded.
      * @returns Sorted array of filenames, or `null` if the path cannot be read.
      */
-    function list(path: string): string[] | undefined;
+    function list(path: string): string[] | null;
 
     /**
      * Recursively list all entries under a directory.
@@ -2029,7 +2029,7 @@ Returns paths relative to `path`, sorted alphabetically.
      * @param path Path to the root directory. `~` is expanded.
      * @returns Sorted array of relative paths, or `null` if the path cannot be read.
      */
-    function listRecursive(path: string): string[] | undefined;
+    function listRecursive(path: string): string[] | null;
 
     /**
      * Create a directory, including all necessary intermediate directories.
@@ -2052,7 +2052,7 @@ directory recursively.
      * Returns the current working directory of the process.
      * @returns Current directory path, or `null` on error.
      */
-    function currentDir(): string | undefined;
+    function currentDir(): string | null;
 
     /**
      * Change the current working directory of the process.
@@ -2068,7 +2068,7 @@ Returns `null` if any component of the path does not exist.
      * @param path Path to resolve.
      * @returns Absolute canonical path, or `null` if it cannot be resolved.
      */
-    function pathToAbsolute(path: string): string | undefined;
+    function pathToAbsolute(path: string): string | null;
 
     /**
      * Return the localised display name for a file or directory as shown by Finder.
@@ -2077,7 +2077,7 @@ on-disk name is the same.
      * @param path Path to the file or directory. `~` is expanded.
      * @returns Display name string, or `null` if the path does not exist.
      */
-    function displayName(path: string): string | undefined;
+    function displayName(path: string): string | null;
 
     /**
      * Returns the temporary directory for the current user.
@@ -2104,7 +2104,7 @@ Does not follow symbolic links. Use `isSymlink` to detect links before calling t
      * @param path Path to inspect. `~` is expanded.
      * @returns Attributes object, or `null` if the path cannot be accessed.
      */
-    function attributes(path: string): Record<string, any> | undefined;
+    function attributes(path: string): Record<string, any> | null;
 
     /**
      * Update the modification timestamp of a file to the current time.
@@ -2138,14 +2138,14 @@ point to paths that do not yet exist.
      * @param path Path to the symbolic link.
      * @returns The raw path the link points to, or `null` if the path is not a symlink.
      */
-    function readlink(path: string): string | undefined;
+    function readlink(path: string): string | null;
 
     /**
      * Get the Finder tags assigned to a file or directory.
      * @param path Path to the file or directory. `~` is expanded.
      * @returns Array of tag name strings, or `null` if no tags are set.
      */
-    function tags(path: string): string[] | undefined;
+    function tags(path: string): string[] | null;
 
     /**
      * Replace all Finder tags on a file or directory.
@@ -2153,7 +2153,7 @@ This function is only available on macOS Tahoe (26) or later.
      * @param path Path to the file.
      * @returns `true` on success, `false` on failure.
      */
-    function fileUTI(path: string): string | undefined;
+    function fileUTI(path: string): string | null;
 
     /**
      * Encode a file path as a persistent bookmark that survives file moves and renames.
@@ -2162,14 +2162,14 @@ later resolved with `pathFromBookmark`.
      * @param path Path to the file or directory. `~` is expanded.
      * @returns Base64-encoded bookmark string, or `null` on failure.
      */
-    function pathToBookmark(path: string): string | undefined;
+    function pathToBookmark(path: string): string | null;
 
     /**
      * Resolve a base64-encoded bookmark back to a file path.
      * @param data Base64-encoded bookmark string produced by `pathToBookmark`.
      * @returns The current file path, or `null` if the bookmark cannot be resolved.
      */
-    function pathFromBookmark(data: string): string | undefined;
+    function pathFromBookmark(data: string): string | null;
 
 }
 
@@ -2189,7 +2189,7 @@ declare namespace hs.hash {
      * @param data The base64 string to decode
      * @returns Decoded string, or nil if the input is invalid
      */
-    function base64Decode(data: string): string | undefined;
+    function base64Decode(data: string): string | null;
 
     /**
      * Generate MD5 hash of a string
@@ -2265,7 +2265,7 @@ declare namespace hs.hotkey {
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
      * @returns A hotkey object, or nil if binding failed
      */
-    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | undefined;
+    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
 
     /**
      * Bind a hotkey with a message description
@@ -2276,7 +2276,7 @@ declare namespace hs.hotkey {
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
      * @returns A hotkey object, or nil if binding failed
      */
-    function bindSpec(mods: string[], key: string, message: string | undefined, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | undefined;
+    function bindSpec(mods: string[], key: string, message: string | null, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
 
     /**
      * Get the system-wide mapping of key names to key codes
@@ -2346,7 +2346,7 @@ declare namespace hs.http {
      * @param headers Optional dictionary of request headers.
      * @returns {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
      */
-    function get(url: string, headers?: Record<string, string> | undefined): Promise<any>;
+    function get(url: string, headers?: Record<string, string> | null): Promise<any>;
 
     /**
      * Perform an HTTP POST request.
@@ -2355,7 +2355,7 @@ declare namespace hs.http {
      * @param headers Optional dictionary of request headers.
      * @returns {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
      */
-    function post(url: string, body?: string | undefined, headers?: Record<string, string> | undefined): Promise<any>;
+    function post(url: string, body?: string | null, headers?: Record<string, string> | null): Promise<any>;
 
     /**
      * Perform an HTTP PUT request.
@@ -2364,7 +2364,7 @@ declare namespace hs.http {
      * @param headers Optional dictionary of request headers.
      * @returns {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
      */
-    function put(url: string, body?: string | undefined, headers?: Record<string, string> | undefined): Promise<any>;
+    function put(url: string, body?: string | null, headers?: Record<string, string> | null): Promise<any>;
 
     /**
      * Perform an HTTP request with any method (GET, POST, PUT, DELETE, PATCH, etc.).
@@ -2375,7 +2375,7 @@ Use this for methods not covered by the convenience helpers, such as DELETE or P
      * @param headers Optional dictionary of request headers.
      * @returns {Promise<{status: number, body: string, headers: object}>} Resolves with the HTTP response.
      */
-    function doRequest(url: string, method: string, body?: string | undefined, headers?: Record<string, string> | undefined): Promise<any>;
+    function doRequest(url: string, method: string, body?: string | null, headers?: Record<string, string> | null): Promise<any>;
 
     /**
      * URL-encode a string for use as a query parameter value.
@@ -2393,7 +2393,7 @@ is an array of `{name, value}` objects from the query string.
      * @param url The URL string to parse.
      * @returns An object with any of the fields: `scheme`, `host`, `port`, `user`, `password`, `path`, `query`, `fragment`, `queryItems`. Returns `null` if the URL is unparseable.
      */
-    function urlParts(url: string): Record<string, any> | undefined;
+    function urlParts(url: string): Record<string, any> | null;
 
     /**
      * Convert HTML entities in a string to their UTF-8 character equivalents.
@@ -2412,7 +2412,7 @@ called or the engine shuts down.
      * @param url The WebSocket URL (`ws://` or `wss://`).
      * @returns An `HSWebSocket` object, or `null` if the URL is invalid.
      */
-    function openWebSocket(url: string): HSWebSocket | undefined;
+    function openWebSocket(url: string): HSWebSocket | null;
 
 }
 
@@ -2559,7 +2559,7 @@ to restrict to the loopback interface only.
      * @param iface Interface name or IP address string, or `null` for all interfaces.
      * @returns This server, for chaining.
      */
-    setInterface(iface: string | undefined): HSHTTPServer;
+    setInterface(iface: string | null): HSHTTPServer;
 
     /**
      * Set a password required for Basic authentication.
@@ -2568,7 +2568,7 @@ username and the configured password. Pass `null` to disable authentication.
      * @param password The required password, or `null` to remove authentication.
      * @returns This server, for chaining.
      */
-    setPassword(password: string | undefined): HSHTTPServer;
+    setPassword(password: string | null): HSHTTPServer;
 
     /**
      * Set the maximum allowed incoming request body size in bytes.
@@ -2609,7 +2609,7 @@ static files from this directory. Pass `null` to disable static file serving.
      * @param path Absolute path to a directory, or `null` to disable.
      * @returns This server, for chaining.
      */
-    setDocumentRoot(path: string | undefined): HSHTTPServer;
+    setDocumentRoot(path: string | null): HSHTTPServer;
 
     /**
      * Set the list of index filenames checked when a directory is requested.
@@ -2674,7 +2674,7 @@ Returns 0 if the server is not running.
      * Get the configured network interface, or `null` if listening on all interfaces.
      * @returns The interface name or IP address string, or `null`.
      */
-    getInterface(): string | undefined;
+    getInterface(): string | null;
 
     /**
      * Register a WebSocket handler for a URL path.
@@ -2760,7 +2760,7 @@ Uses the base keyboard layout, which is the underlying layout even when an input
 method (such as a CJK input method) is also active.
      * @returns The display name of the active layout (e.g. `"U.S."`, `"British"`), or `null`.
      */
-    function currentLayout(): string | undefined;
+    function currentLayout(): string | null;
 
     /**
      * Returns the localized name of the active input method, or `null` if none is active.
@@ -2769,13 +2769,13 @@ composition such as CJK input. Returns `null` when using a plain keyboard layout
 with no input method overlay.
      * @returns The display name of the active input method (e.g. `"Hiragana"`), or `null`.
      */
-    function currentMethod(): string | undefined;
+    function currentMethod(): string | null;
 
     /**
      * Returns the reverse-DNS identifier of the currently selected keyboard input source.
      * @returns A string such as `"com.apple.keylayout.US"`, or `null` if unavailable.
      */
-    function currentSourceID(): string | undefined;
+    function currentSourceID(): string | null;
 
     /**
      * Returns the localized names of all currently enabled keyboard layouts.
@@ -2895,7 +2895,7 @@ Activates Location Services if not already running. The cache is updated
 periodically while any watcher is running.
      * @returns a locationTable, or null if no cached location is available
      */
-    function get(): Record<string, any> | undefined;
+    function get(): Record<string, any> | null;
 
     /**
      * Calculates the straight-line distance in metres between two locationTables.
@@ -2913,7 +2913,7 @@ Does not require Location Services.
      * @param date the date to calculate for; pass null or omit to use today
      * @returns A Date object representing the time of sunrise, or null
      */
-    function sunrise(latitude: number, longitude: number, date: Date | undefined): Date | undefined;
+    function sunrise(latitude: number, longitude: number, date: Date | null): Date | null;
 
     /**
      * Returns the time of sunset for the given coordinates and date, or null if the sun does not set on that date (midnight sun).
@@ -2922,7 +2922,7 @@ Does not require Location Services.
      * @param date the date to calculate for; pass null or omit to use today
      * @returns A Date object representing the time of sunset, or null
      */
-    function sunset(latitude: number, longitude: number, date: Date | undefined): Date | undefined;
+    function sunset(latitude: number, longitude: number, date: Date | null): Date | null;
 
     /**
      * Creates a new location watcher object. Call `.start()` on it to begin
@@ -2974,7 +2974,7 @@ declare class HSLocationWatcher {
      * Returns the most recently received location, or null if none yet.
      * @returns a locationTable, or null
      */
-    location(): Record<string, any> | undefined;
+    location(): Record<string, any> | null;
 
     /**
      * The unique identifier assigned to this watcher.
@@ -3040,13 +3040,13 @@ declare class HSMenuBarItem {
      * Set the icon displayed in the menu bar
      * @param image An HSImage object, or null to remove the icon
      */
-    setIcon(image: HSImage | undefined): void;
+    setIcon(image: HSImage | null): void;
 
     /**
      * Set the tooltip shown when hovering over the menu bar item
      * @param tooltip Tooltip text, or null to remove the tooltip
      */
-    setTooltip(tooltip: string | undefined): void;
+    setTooltip(tooltip: string | null): void;
 
     /**
      * Set a callback invoked when the item is clicked (only fires when no menu is set)
@@ -3080,7 +3080,7 @@ or a function that returns an array for a dynamic menu populated each time it op
     /**
      * Get or set the menu item's title.
      */
-    title: string | undefined;
+    title: string | null;
 
 }
 
@@ -3186,7 +3186,7 @@ declare namespace hs.notify {
      * @param options A JavaScript object — see module documentation for supported keys.
      * @returns An `HSNotification` object. Call `.send()` on it to deliver the notification.
      */
-    function create(options: Record<string, any>): HSNotification | undefined;
+    function create(options: Record<string, any>): HSNotification | null;
 
     /**
      * Remove all delivered Hammerspoon notifications from Notification Center.
@@ -3253,7 +3253,7 @@ Overrides `languages` when set.
      * @param options Optional configuration object (see description).
      * @returns Resolves with the recognition result.
      */
-    function recognizeText(path: string, options: Record<string, any> | undefined): Promise<HSOCRResult>;
+    function recognizeText(path: string, options: Record<string, any> | null): Promise<HSOCRResult>;
 
     /**
      * Returns the BCP-47 language codes supported by the Vision text recognizer
@@ -3443,7 +3443,7 @@ Blocks the JS thread until the script completes.
      * @param source The AppleScript source code to compile and execute.
      * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
      */
-    function applescriptSync(source: string): Record<string, any> | undefined;
+    function applescriptSync(source: string): Record<string, any> | null;
 
     /**
      * Run an OSA JavaScript source string synchronously.
@@ -3451,21 +3451,21 @@ Blocks the JS thread until the script completes.
      * @param source The OSA JavaScript source code to compile and execute.
      * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
      */
-    function javascriptSync(source: string): Record<string, any> | undefined;
+    function javascriptSync(source: string): Record<string, any> | null;
 
     /**
      * Read a file from disk and execute its contents as AppleScript synchronously.
      * @param path Absolute path to the AppleScript source file.
      * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
      */
-    function applescriptSyncFromFile(path: string): Record<string, any> | undefined;
+    function applescriptSyncFromFile(path: string): Record<string, any> | null;
 
     /**
      * Read a file from disk and execute its contents as OSA JavaScript synchronously.
      * @param path Absolute path to the OSA JavaScript source file.
      * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
      */
-    function javascriptSyncFromFile(path: string): Record<string, any> | undefined;
+    function javascriptSyncFromFile(path: string): Record<string, any> | null;
 
     /**
      * Low-level synchronous execution entry point.
@@ -3474,7 +3474,7 @@ Prefer `applescriptSync()` or `javascriptSync()` over calling this directly.
      * @param language The OSA language name — must be `"AppleScript"` or `"JavaScript"`.
      * @returns An object `{ success, result, raw }`, or `null` on XPC failure.
      */
-    function _executeSync(source: string, language: string): Record<string, any> | undefined;
+    function _executeSync(source: string, language: string): Record<string, any> | null;
 
 }
 
@@ -3569,31 +3569,31 @@ declare namespace hs.pasteboard {
      * Read plain text from the pasteboard
      * @returns The plain text string, or null if not available
      */
-    function readString(): string | undefined;
+    function readString(): string | null;
 
     /**
      * Read HTML from the pasteboard
      * @returns The HTML string, or null if not available
      */
-    function readHTML(): string | undefined;
+    function readHTML(): string | null;
 
     /**
      * Read RTF from the pasteboard
      * @returns The RTF string, or null if not available
      */
-    function readRTF(): string | undefined;
+    function readRTF(): string | null;
 
     /**
      * Read a URL from the pasteboard
      * @returns The URL as a string, or null if not available
      */
-    function readURL(): string | undefined;
+    function readURL(): string | null;
 
     /**
      * Read an image from the pasteboard
      * @returns An HSImage, or null if not available
      */
-    function readImage(): HSImage | undefined;
+    function readImage(): HSImage | null;
 
     /**
      * Read raw data for a specific UTI type, returned as a base64-encoded string.
@@ -3601,7 +3601,7 @@ Use this for types not covered by the convenience read methods.
      * @param uti A UTI type string (e.g. "com.adobe.pdf")
      * @returns A base64-encoded string, or null if the type is not available
      */
-    function readData(uti: string): string | undefined;
+    function readData(uti: string): string | null;
 
     /**
      * Write plain text to the pasteboard, replacing all current contents
@@ -3866,7 +3866,7 @@ Requires the Automation permission for System Events.
      * Returns a snapshot of all available battery information, or `null` if no battery is present.
      * @returns An object with battery fields, or `null` if no battery is present.
      */
-    function batteryInfo(): Record<string, any> | undefined;
+    function batteryInfo(): Record<string, any> | null;
 
     /**
      * Registers a listener that fires when system power events occur.
@@ -3972,13 +3972,13 @@ declare namespace hs.screen {
 with the keyboard focus if no window is focused.
      * @returns An HSScreen object or `null` if no main screen can be determined.
      */
-    function main(): HSScreen | undefined;
+    function main(): HSScreen | null;
 
     /**
      * The primary display — the one that contains the global menu bar.
      * @returns An HSScreen object or `null` if no primary screen can be determined.
      */
-    function primary(): HSScreen | undefined;
+    function primary(): HSScreen | null;
 
 }
 
@@ -4034,25 +4034,25 @@ Requires **Screen Recording** permission.
      * The nearest screen whose left edge is at or beyond this screen's right edge, or `null`.
      * @returns An HSScreen object
      */
-    toEast(): HSScreen | undefined;
+    toEast(): HSScreen | null;
 
     /**
      * The nearest screen whose right edge is at or before this screen's left edge, or `null`.
      * @returns An HSScreen object
      */
-    toWest(): HSScreen | undefined;
+    toWest(): HSScreen | null;
 
     /**
      * The nearest screen that is physically above this screen, or `null`.
      * @returns An HSScreen object
      */
-    toNorth(): HSScreen | undefined;
+    toNorth(): HSScreen | null;
 
     /**
      * The nearest screen that is physically below this screen, or `null`.
      * @returns An HSScreen object
      */
-    toSouth(): HSScreen | undefined;
+    toSouth(): HSScreen | null;
 
     /**
      * Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.
@@ -4148,7 +4148,7 @@ Assign one of `0`, `90`, `180`, or `270` to rotate the display.
      * The URL string of the current desktop background image for this screen, or `null`.
 Assign a new absolute file path or `file://` URL string to change the wallpaper.
      */
-    desktopImage: string | undefined;
+    desktopImage: string | null;
 
 }
 
@@ -4297,7 +4297,7 @@ declare class HSSpotlightGroup {
 Returns `null` only in the unlikely case that the underlying value cannot be bridged.
      * @returns The attribute value (string, number, Date, etc.) or null
      */
-    value(): any | undefined;
+    value(): any | null;
 
     /**
      * Returns the items contained in this group as an array of `HSSpotlightItem` objects.
@@ -4354,7 +4354,7 @@ to their string representation.
      * @param key An attribute key such as `"kMDItemPath"` or `hs.spotlight.attribute.path`
      * @returns The attribute value, or null
      */
-    valueForAttribute(key: string): any | undefined;
+    valueForAttribute(key: string): any | null;
 
     /**
      * A unique identifier for this result object (UUID string).
@@ -4502,7 +4502,7 @@ declare namespace hs.task {
      * @param streamingCallback Optional callback called when the task produces output; stream is "stdout" or "stderr"
      * @returns A task object. Call start() to begin execution.
      */
-    function create(launchPath: string, arguments: string[], completionCallback: ((exitCode: number, exitReason: string) => void) | null, environment: Record<string, string> | undefined, streamingCallback: ((stream: string, data: string) => void) | null): HSTask;
+    function create(launchPath: string, arguments: string[], completionCallback: ((exitCode: number, exitReason: string) => void) | null, environment: Record<string, string> | null, streamingCallback: ((stream: string, data: string) => void) | null): HSTask;
 
     /**
      * Create and run a task asynchronously
@@ -4616,17 +4616,17 @@ declare class HSTask {
     /**
      * The working directory for the task
      */
-    workingDirectory: string | undefined;
+    workingDirectory: string | null;
 
     /**
      * The termination status of the task
      */
-    readonly terminationStatus: number | undefined;
+    readonly terminationStatus: number | null;
 
     /**
      * The termination reason
      */
-    readonly terminationReason: string | undefined;
+    readonly terminationReason: string | null;
 
 }
 
@@ -4853,7 +4853,7 @@ older than 26.0.
      * @param targetLanguage BCP-47 code of the target language (e.g. `"fr"`).
      * @returns An `HSTranslationSession`, or `null` on unsupported versions of macOS.
      */
-    function session(sourceLanguage: string, targetLanguage: string): HSTranslationSession | undefined;
+    function session(sourceLanguage: string, targetLanguage: string): HSTranslationSession | null;
 
 }
 
@@ -5729,7 +5729,7 @@ component (`eventName`) selects the callback to invoke.
      * @param scheme The scheme to query, without `://` (e.g. `"https"`, `"mailto"`).
      * @returns The bundle identifier string, or `null` if none is registered.
      */
-    function getDefaultHandler(scheme: string): string | undefined;
+    function getDefaultHandler(scheme: string): string | null;
 
     /**
      * Returns all bundle identifiers capable of handling a URL scheme.
@@ -5772,7 +5772,7 @@ declare namespace hs.window {
      * Get the currently focused window
      * @returns The focused window, or nil if none
      */
-    function focusedWindow(): HSWindow | undefined;
+    function focusedWindow(): HSWindow | null;
 
     /**
      * Get all windows from all applications
@@ -5805,7 +5805,7 @@ declare namespace hs.window {
      * @param point An HSPoint containing the coordinates
      * @returns The topmost window at that position, or nil if none
      */
-    function windowAtPoint(point: HSPoint): HSWindow | undefined;
+    function windowAtPoint(point: HSPoint): HSWindow | null;
 
     /**
      * Get ordered windows (front to back)
@@ -5912,12 +5912,12 @@ declare class HSWindow {
     /**
      * The window's title
      */
-    readonly title: string | undefined;
+    readonly title: string | null;
 
     /**
      * The application that owns this window
      */
-    readonly application: HSApplication | undefined;
+    readonly application: HSApplication | null;
 
     /**
      * The process ID of the application that owns this window
@@ -5958,22 +5958,22 @@ A value of 0 or -1 likely means no window ID could be determined.
     /**
      * The window's position on screen {x: Int, y: Int}
      */
-    position: HSPoint | undefined;
+    position: HSPoint | null;
 
     /**
      * The window's size {w: Int, h: Int}
      */
-    size: HSSize | undefined;
+    size: HSSize | null;
 
     /**
      * The window's frame {x: Int, y: Int, w: Int, h: Int}
      */
-    frame: HSRect | undefined;
+    frame: HSRect | null;
 
     /**
      * The screen that contains the largest portion of this window.
      */
-    readonly screen: HSScreen | undefined;
+    readonly screen: HSScreen | null;
 
 }
 

@@ -54,10 +54,9 @@ function swiftTypeToTS(swiftType, promiseType = null) {
     };
 
     // Handle JSFunction - convert to a callable type.
-    // JSFunction? uses | null (not | undefined) because optional JS callbacks are
-    // explicitly cleared with `= null`, not left unset. The generic ?-stripper would
-    // also produce wrong precedence: "(...args: any[]) => any | undefined" is parsed
-    // by TS as a function returning "any | undefined". We parenthesise to fix that.
+    // JSFunction? must be handled before the generic ?-stripper to fix precedence:
+    // "(...args: any[]) => any | null" would be parsed by TS as a function returning
+    // "any | null" rather than an optional function. We parenthesise to fix that.
     if (s === 'JSFunction?' || s === 'JSFunction') {
         const fnType = '(...args: any[]) => any';
         return s.endsWith('?') ? `(${fnType}) | null` : fnType;
@@ -70,9 +69,10 @@ function swiftTypeToTS(swiftType, promiseType = null) {
         return `Promise<${innerType}>`;
     }
 
-    // Handle optionals — strip trailing ? and recurse
+    // Handle optionals — strip trailing ? and recurse.
+    // Swift nil bridges to JS null (not undefined), so all optional types use | null.
     if (s.endsWith('?')) {
-        return `${swiftTypeToTS(s.slice(0, -1))} | undefined`;
+        return `${swiftTypeToTS(s.slice(0, -1))} | null`;
     }
 
     // Handle [T] arrays and [K: V] dictionaries.
