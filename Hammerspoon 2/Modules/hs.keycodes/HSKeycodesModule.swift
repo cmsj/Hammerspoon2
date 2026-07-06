@@ -220,11 +220,23 @@ import AppKit
         self.engineID = engineID
         super.init()
         _cachedMap = buildKeyMap()
+        let notificationName = Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
+        sourceChangeObserver = DistributedNotificationCenter.default().addObserver(
+            forName: notificationName,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.inputSourceDidChange() }
+        }
         AKDebug("Init of \(name): \(engineID)")
     }
 
     func shutdown() {
-        _removeWatcher()
+        if let obs = sourceChangeObserver {
+            DistributedNotificationCenter.default().removeObserver(obs)
+            sourceChangeObserver = nil
+        }
+        watcherCallback = nil
         _watcherEmitter = nil
     }
 
@@ -400,28 +412,11 @@ import AppKit
             return
         }
         watcherCallback = callback
-
-        let notificationName = Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
-        sourceChangeObserver = DistributedNotificationCenter.default().addObserver(
-            forName: notificationName,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.inputSourceDidChange() }
-        }
-
         AKTrace("hs.keycodes._addWatcher: started")
     }
 
     @objc func _removeWatcher() {
-        guard watcherCallback != nil else { return }
-
-        if let obs = sourceChangeObserver {
-            DistributedNotificationCenter.default().removeObserver(obs)
-            sourceChangeObserver = nil
-        }
         watcherCallback = nil
-
         AKTrace("hs.keycodes._removeWatcher: stopped")
     }
 
