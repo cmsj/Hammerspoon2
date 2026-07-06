@@ -434,6 +434,7 @@ declare namespace hs {
 
     /**
      * Force garbage collection of JavaScript objects that no longer have any references
+     * @remarks This uses private macOS API
      */
     function collectGarbage(): void;
 
@@ -632,6 +633,7 @@ declare class HSApplication {
 
     /**
      * Get the full menu structure of this application
+     * @remarks This traverses the accessibility hierarchy and may be slow for apps with large menus.
      * @returns An array of top-level menu objects, each with title and items keys, or null if unavailable
      */
     getMenuItems(): Record<string, any>[] | null;
@@ -3726,6 +3728,7 @@ declare namespace hs.permissions {
 
     /**
      * Request Screen Recording permission
+     * @remarks This will trigger a screen capture which prompts the system dialog
      */
     function requestScreenRecording(): void;
 
@@ -4091,6 +4094,7 @@ The result origin is relative to this screen's top-left corner.
 
     /**
      * Convert a rect in local screen coordinates to global Hammerspoon coordinates.
+     * @remarks This uses private macOS APIs to set rotation.
      * @param rect An `HSRect` relative to this screen's top-left corner.
      * @returns The rect in global Hammerspoon coordinates, or `null` if the input is invalid.
      */
@@ -4600,31 +4604,37 @@ declare class HSTask {
 
     /**
      * Check if the task is currently running
+     * @remarks true if the task is running, false otherwise
      */
     readonly isRunning: boolean;
 
     /**
      * The process ID of the running task
+     * @remarks The value will be -1 if the task is not running
      */
     readonly pid: number;
 
     /**
      * The environment variables for the task
+     * @remarks Can only be modified before calling start()
      */
     environment: Record<string, string>;
 
     /**
      * The working directory for the task
+     * @remarks Can only be modified before calling start()
      */
     workingDirectory: string | null;
 
     /**
      * The termination status of the task
+     * @remarks Returns the exit code, or nil if the task hasn't terminated
      */
     readonly terminationStatus: number | null;
 
     /**
      * The termination reason
+     * @remarks Returns a string describing why the task terminated, or nil if still running
      */
     readonly terminationReason: string | null;
 
@@ -4671,6 +4681,7 @@ declare namespace hs.timer {
 
     /**
      * Block execution for a specified number of microseconds (strongly discouraged)
+     * @remarks This blocks the entire application and should be avoided. Use timers instead.
      * @param microseconds Number of microseconds to sleep
      */
     function usleep(microseconds: number): void;
@@ -5860,6 +5871,7 @@ Parameter win: An HSWindow object
 
 /**
  * Object representing a window. You should not instantiate these directly, but rather, use the methods in hs.window to create them for you.
+Note that this type uses private macOS APIs
  */
 declare class HSWindow {
     /**

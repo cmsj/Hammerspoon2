@@ -19,6 +19,7 @@ import JavaScriptCoreExtras
     /// ```
     @objc func reload()
     /// Force garbage collection of JavaScript objects that no longer have any references
+    /// - Note: This uses private macOS API
     /// - Example:
     /// ```js
     /// hs.collectGarbage()

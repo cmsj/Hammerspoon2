@@ -14,6 +14,7 @@ import AXSwift
 let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "_AXUIElementGetWindow"), to: (@convention(c) (AXUIElement, UnsafeMutablePointer<CGWindowID>) -> AXError)?.self)
 
 /// Object representing a window. You should not instantiate these directly, but rather, use the methods in hs.window to create them for you.
+/// Note that this type uses private macOS APIs
 @objc protocol HSWindowAPI: HSTypeAPI, JSExport {
     // MARK: - Basic Properties
 

@@ -144,6 +144,9 @@ function generateModuleDefinitions(moduleData) {
         if (method.description) {
             output += `     * ${escapeDocComment(method.description)}\n`;
         }
+        if (method.notes && method.notes.length > 0) {
+            output += `     * @remarks ${method.notes.map(escapeDocComment).join(' ')}\n`;
+        }
         if (method.params && method.params.length > 0) {
             for (const param of method.params) {
                 const desc = param.description ? ` ${escapeDocComment(param.description)}` : '';
@@ -172,6 +175,9 @@ function generateModuleDefinitions(moduleData) {
         output += `    /**\n`;
         if (prop.description) {
             output += `     * ${escapeDocComment(prop.description)}\n`;
+        }
+        if (prop.notes && prop.notes.length > 0) {
+            output += `     * @remarks ${prop.notes.map(escapeDocComment).join(' ')}\n`;
         }
         output += `     */\n`;
 
@@ -235,6 +241,9 @@ function generateTypeDefinition(protocol) {
             if (method.description) {
                 output += `     * ${escapeDocComment(method.description)}\n`;
             }
+            if (method.notes && method.notes.length > 0) {
+                output += `     * @remarks ${method.notes.map(escapeDocComment).join(' ')}\n`;
+            }
             for (const param of method.params || []) {
                 const desc = param.description ? ` ${escapeDocComment(param.description)}` : '';
                 output += `     * @param ${param.name}${desc}\n`;
@@ -259,6 +268,9 @@ function generateTypeDefinition(protocol) {
             output += `    /**\n`;
             if (prop.description) {
                 output += `     * ${escapeDocComment(prop.description)}\n`;
+            }
+            if (prop.notes && prop.notes.length > 0) {
+                output += `     * @remarks ${prop.notes.map(escapeDocComment).join(' ')}\n`;
             }
             output += `     */\n`;
             const propType = prop.tsType || swiftTypeToTS(extractPropertyType(prop.signature));
@@ -297,6 +309,9 @@ function generateTypeDefinition(protocol) {
             if (prop.description) {
                 output += `     * ${escapeDocComment(prop.description)}\n`;
             }
+            if (prop.notes && prop.notes.length > 0) {
+                output += `     * @remarks ${prop.notes.map(escapeDocComment).join(' ')}\n`;
+            }
             output += `     */\n`;
             const propType = prop.tsType || swiftTypeToTS(extractPropertyType(prop.signature));
             const readonlyPrefix = isWritableProperty(prop.signature) ? '' : 'readonly ';
@@ -310,6 +325,9 @@ function generateTypeDefinition(protocol) {
             output += `    /**\n`;
             if (method.description) {
                 output += `     * ${escapeDocComment(method.description)}\n`;
+            }
+            if (method.notes && method.notes.length > 0) {
+                output += `     * @remarks ${method.notes.map(escapeDocComment).join(' ')}\n`;
             }
             for (const param of method.params || []) {
                 const desc = param.description ? ` ${escapeDocComment(param.description)}` : '';

@@ -756,6 +756,17 @@ pre code {
     line-height: 1.5;
 }
 
+.note {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--accent);
+    background: var(--bg-card);
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 0.5rem;
+}
+
 /* ============================================================
    Source link (bottom of card)
    ============================================================ */

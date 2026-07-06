@@ -89,6 +89,13 @@
         <div class="return-desc" style="color: var(--text-muted);">None</div>
         {% endif %}
 
+        {% if method.notes and method.notes.length > 0 %}
+        <div class="card-section-label">Notes</div>
+        {% for note in method.notes %}
+        <div class="note">{{ note }}</div>
+        {% endfor %}
+        {% endif %}
+
         {% if method.examples and method.examples.length > 0 %}
         <div class="card-section-label">Example</div>
         {% for example in method.examples %}

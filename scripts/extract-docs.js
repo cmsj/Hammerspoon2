@@ -266,6 +266,7 @@ function parseSwiftFile(filePath, repoRoot) {
                             description: formatDocCToJSDoc(rawDoc),
                             params: extractParams(fullSignature, currentDoc),
                             returns: extractReturns(fullSignature, currentDoc),
+                            notes: extractNotes(currentDoc),
                             examples: extractExamples(currentDoc),
                             source: 'swift',
                             filePath: relativePath,
@@ -302,6 +303,7 @@ function parseSwiftFile(filePath, repoRoot) {
                             rawDocumentation: rawDoc,
                             description: formatDocCToJSDoc(rawDoc),
                             tsType: propTsType,
+                            notes: extractNotes(propCurrentDoc),
                             examples: extractExamples(propCurrentDoc),
                             source: 'swift',
                             filePath: relativePath,
@@ -557,6 +559,19 @@ function extractReturns(signature, docLines) {
         return result;
     }
     return null;
+}
+
+/**
+ * Extract `- Note:` lines from Swift doc comments.
+ * Returns an array of note strings (one per `- Note:` tag).
+ */
+function extractNotes(docLines) {
+    const notes = [];
+    for (const line of docLines) {
+        const noteMatch = line.trim().match(/^-\s*Note:\s*(.+)$/);
+        if (noteMatch) notes.push(noteMatch[1].trim());
+    }
+    return notes;
 }
 
 /**
@@ -1137,6 +1152,11 @@ function generateCombinedJSDoc(moduleData) {
             const returnType = method.source === 'swift' ? swiftTypeToJSDoc(method.returns.type) : method.returns.type;
             const desc = method.returns.description ? ' ' + method.returns.description : '';
             output += ` * @returns {${returnType}}${desc}\n`;
+        }
+        if (method.notes && method.notes.length > 0) {
+            for (const note of method.notes) {
+                output += ` * @note ${note}\n`;
+            }
         }
         output += ` */\n`;
 

@@ -262,6 +262,7 @@ import ScreenCaptureKit
     ///
     /// - Parameter rect: An `HSRect` relative to this screen's top-left corner.
     /// - Returns: The rect in global Hammerspoon coordinates, or `null` if the input is invalid.
+    /// - Note: This uses private macOS APIs to set rotation.
     /// - Example:
     /// ```js
     /// const s = hs.screen.main()
