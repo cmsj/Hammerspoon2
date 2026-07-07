@@ -5695,14 +5695,25 @@ macOS 26.0 or later. The `hs.ui.webview2()` factory returns `null` on older syst
 ## Basic Example
 ```javascript
 hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
-    .toolbar(true)
+    .toolbar(["back", "forward", "reload", "url"])
+    .loadURL("https://apple.com")
+    .show();
+```
+## Custom Toolbar Example
+```javascript
+const browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
+    .toolbar([
+        "back", "forward", "reload", "url",
+        {title: "Home", systemImage: "house", callback: () => browser.loadURL("https://apple.com")},
+        {title: "Reload HS",  callback: () => hs.reload()}
+    ])
     .loadURL("https://apple.com")
     .show();
 ```
 ## Full Example
 ```javascript
 const browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
-    .toolbar(true)
+    .toolbar(["back", "forward", "reload", "url"])
     .inspectable(true)
     .onNavigate((url) => console.log("Navigated to: " + url))
     .onTitleChange((title) => console.log("Title: " + title))
@@ -5720,7 +5731,7 @@ browser.reload();
 ## Navigation Policy Example
 ```javascript
 hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
-    .toolbar(true)
+    .toolbar(["back", "forward", "reload", "url"])
     .onNavigationDecision((url) => {
         return !url.includes("evil.com")
     })
@@ -5815,12 +5826,14 @@ When enabled, the web view appears in Safari → Develop menu.
     inspectable(value: boolean): HSUIWebView;
 
     /**
-     * Show or hide the navigation toolbar (back, forward, reload, URL bar)
-The toolbar is hidden by default. Pass `true` to show it.
-     * @param show Pass `true` to show the toolbar
+     * Configure the window toolbar with a list of standard and custom items
+Each element of the array is either a string naming a standard control or a dictionary
+describing a custom button. An empty array (or omitting this call) hides the toolbar.
+Standard string items: `"back"`, `"forward"`, `"reload"`, `"url"`, `"spacer"`.
+     * @param items Toolbar items in display order
      * @returns Self for chaining
      */
-    toolbar(show: boolean): HSUIWebView;
+    toolbar(items: Array<string | {title?: string, systemImage?: string, callback: () => void}>): HSUIWebView;
 
     /**
      * Enable or disable the macOS back/forward trackpad swipe gestures

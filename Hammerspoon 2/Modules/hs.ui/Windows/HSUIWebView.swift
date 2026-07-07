@@ -43,6 +43,42 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
     }
 }
 
+// MARK: - Toolbar Entry Model
+
+/// A single configured toolbar item produced by parsing the JS `toolbar([...])` call.
+/// Not exported to JavaScript — internal rendering model for `UIWebViewContainer`.
+@available(macOS 26.0, *)
+@MainActor
+final class HSUIWebViewToolbarEntry: Identifiable {
+    let id = UUID()
+
+    enum Kind {
+        case back
+        case forward
+        case reload
+        case url
+        case flexibleSpacer
+        case custom
+    }
+
+    let kind: Kind
+    let label: String?
+    let systemImage: String?
+    private(set) var callback: JSCallback?
+
+    init(kind: Kind, label: String? = nil, systemImage: String? = nil, callback: JSCallback? = nil) {
+        self.kind = kind
+        self.label = label
+        self.systemImage = systemImage
+        self.callback = callback
+    }
+
+    func detachCallback(from owner: AnyObject) {
+        callback?.detach(from: owner)
+        callback = nil
+    }
+}
+
 // MARK: - JavaScript API Protocol
 
 /// # hs.ui.webview2
@@ -61,7 +97,20 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
 ///
 /// ```javascript
 /// hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
-///     .toolbar(true)
+///     .toolbar(["back", "forward", "reload", "url"])
+///     .loadURL("https://apple.com")
+///     .show();
+/// ```
+///
+/// ## Custom Toolbar Example
+///
+/// ```javascript
+/// const browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
+///     .toolbar([
+///         "back", "forward", "reload", "url",
+///         {title: "Home", systemImage: "house", callback: () => browser.loadURL("https://apple.com")},
+///         {title: "Reload HS",  callback: () => hs.reload()}
+///     ])
 ///     .loadURL("https://apple.com")
 ///     .show();
 /// ```
@@ -70,7 +119,7 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
 ///
 /// ```javascript
 /// const browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
-///     .toolbar(true)
+///     .toolbar(["back", "forward", "reload", "url"])
 ///     .inspectable(true)
 ///     .onNavigate((url) => console.log("Navigated to: " + url))
 ///     .onTitleChange((title) => console.log("Title: " + title))
@@ -90,7 +139,7 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
 ///
 /// ```javascript
 /// hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
-///     .toolbar(true)
+///     .toolbar(["back", "forward", "reload", "url"])
 ///     .onNavigationDecision((url) => {
 ///         return !url.includes("evil.com")
 ///     })
@@ -229,20 +278,29 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
     /// ```
     @objc func inspectable(_ value: Bool) -> HSUIWebView
 
-    /// Show or hide the navigation toolbar (back, forward, reload, URL bar)
+    /// Configure the window toolbar with a list of standard and custom items
     ///
-    /// The toolbar is hidden by default. Pass `true` to show it.
+    /// Each element of the array is either a string naming a standard control or a dictionary
+    /// describing a custom button. An empty array (or omitting this call) hides the toolbar.
     ///
-    /// - Parameter show: Pass `true` to show the toolbar
+    /// Standard string items: `"back"`, `"forward"`, `"reload"`, `"url"`, `"spacer"`.
+    ///
+    /// Custom button dictionaries accept:
+    /// - `title` (string, optional) — button label
+    /// - `systemImage` (string, optional) — SF Symbol name (e.g. `"house"`)
+    /// - `callback` (function, required) — called when the button is clicked
+    ///
+    /// - Parameter items: {Array<string | {title?: string, systemImage?: string, callback: () => void}>} Toolbar items in display order
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js
     /// hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})
-    ///     .toolbar(true)
+    ///     .toolbar(["back", "forward", "reload", "url",
+    ///               {title: "Home", systemImage: "house", callback: () => browser.loadURL("https://apple.com")}])
     ///     .loadURL("https://apple.com")
     ///     .show()
     /// ```
-    @objc func toolbar(_ show: Bool) -> HSUIWebView
+    @objc func toolbar(_ items: [Any]) -> HSUIWebView
 
     /// Enable or disable the macOS back/forward trackpad swipe gestures
     ///
@@ -437,7 +495,7 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
     // Configuration
     private var customUserAgentString: String?
     private var isInspectableValue: Bool = false
-    private var showsToolbar: Bool = false
+    private var toolbarEntries: [HSUIWebViewToolbarEntry] = []
     private var allowsBackForwardGesturesValue: Bool = true
     private var allowsMagnificationGesturesValue: Bool = true
     private var allowsLinkPreviewsValue: Bool = true
@@ -500,7 +558,7 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
         window.delegate = self
 
         let config = UIWebViewConfiguration(
-            showToolbar: showsToolbar,
+            toolbarEntries: toolbarEntries,
             allowsBackForwardGestures: allowsBackForwardGesturesValue,
             allowsMagnificationGestures: allowsMagnificationGesturesValue,
             allowsLinkPreviews: allowsLinkPreviewsValue,
@@ -540,6 +598,8 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
         onTitleChangeCallback = nil
         navigationDecisionCallback?.detach(from: self)
         navigationDecisionCallback = nil
+        for entry in toolbarEntries { entry.detachCallback(from: self) }
+        toolbarEntries.removeAll()
 
         module?.unregister(webview: windowID)
 
@@ -688,8 +748,37 @@ private final class HSUIWebViewNavigationDecider: WebPage.NavigationDeciding {
         return self
     }
 
-    @objc func toolbar(_ show: Bool) -> HSUIWebView {
-        showsToolbar = show
+    @objc func toolbar(_ items: [Any]) -> HSUIWebView {
+        for entry in toolbarEntries { entry.detachCallback(from: self) }
+        toolbarEntries = items.compactMap { item in
+            if let str = item as? String {
+                switch str {
+                case "back":    return HSUIWebViewToolbarEntry(kind: .back)
+                case "forward": return HSUIWebViewToolbarEntry(kind: .forward)
+                case "reload":  return HSUIWebViewToolbarEntry(kind: .reload)
+                case "url":     return HSUIWebViewToolbarEntry(kind: .url)
+                case "spacer", "flexibleSpacer":
+                    return HSUIWebViewToolbarEntry(kind: .flexibleSpacer)
+                default:
+                    AKWarning("hs.ui.webview2.toolbar: unknown standard item '\(str)'")
+                    return nil
+                }
+            } else if let dict = item as? [String: Any] {
+                guard let cbValue = dict["callback"] as? JSFunction else {
+                    AKWarning("hs.ui.webview2.toolbar: custom button dict missing 'callback' key")
+                    return nil
+                }
+                let cb = JSCallback(value: cbValue, owner: self)
+                return HSUIWebViewToolbarEntry(
+                    kind: .custom,
+                    label: dict["title"] as? String,
+                    systemImage: dict["systemImage"] as? String,
+                    callback: cb
+                )
+            }
+            AKWarning("hs.ui.webview2.toolbar: unrecognised item type \(type(of: item))")
+            return nil
+        }
         return self
     }
 

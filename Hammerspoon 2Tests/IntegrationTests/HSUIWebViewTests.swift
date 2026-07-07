@@ -242,11 +242,25 @@ struct HSUIWebViewTests {
             harness.expectTrue("b.inspectable(true) === b")
         }
 
-        @Test("toolbar returns self")
-        func testToolbarReturnsSelf() {
+        @Test("toolbar returns self — empty array")
+        func testToolbarReturnsSelfEmpty() {
             let harness = makeHarness()
             harness.eval("var b = hs.ui.webview2({})")
-            harness.expectTrue("b.toolbar(true) === b")
+            harness.expectTrue("b.toolbar([]) === b")
+        }
+
+        @Test("toolbar returns self — standard items")
+        func testToolbarReturnsSelfStandard() {
+            let harness = makeHarness()
+            harness.eval("var b = hs.ui.webview2({})")
+            harness.expectTrue("b.toolbar(['back', 'forward', 'reload', 'url']) === b")
+        }
+
+        @Test("toolbar returns self — with custom button")
+        func testToolbarReturnsSelfCustomButton() {
+            let harness = makeHarness()
+            harness.eval("var b = hs.ui.webview2({})")
+            harness.expectTrue("b.toolbar(['back', 'url', {title: 'Home', callback: () => {}}]) === b")
         }
 
         @Test("backForwardGestures returns self")
@@ -354,12 +368,34 @@ struct HSUIWebViewTests {
             harness.expectTrue("b.evalJSResult('1', () => {}) === b")
         }
 
+        @Test("toolbar with systemImage-only custom button")
+        func testToolbarSystemImageOnlyCustomButton() {
+            let harness = makeHarness()
+            harness.eval("var b = hs.ui.webview2({})")
+            harness.expectTrue("b.toolbar(['url', {systemImage: 'house', callback: () => {}}]) === b")
+            #expect(!harness.hasException)
+        }
+
+        @Test("toolbar with mixed standard and custom items")
+        func testToolbarMixedItems() {
+            let harness = makeHarness()
+            harness.eval("""
+                var b = hs.ui.webview2({})
+                b.toolbar([
+                    'back', 'forward', 'reload', 'url', 'spacer',
+                    {title: 'A', callback: () => {}},
+                    {title: 'B', systemImage: 'star', callback: () => {}}
+                ])
+            """)
+            #expect(!harness.hasException)
+        }
+
         @Test("full builder chain produces no exception")
         func testFullChainNoException() {
             let harness = makeHarness()
             harness.eval("""
                 var b = hs.ui.webview2({x: 100, y: 100, w: 800, h: 600})
-                    .toolbar(true)
+                    .toolbar(['back', 'forward', 'reload', 'url'])
                     .inspectable(false)
                     .backForwardGestures(true)
                     .magnificationGestures(true)

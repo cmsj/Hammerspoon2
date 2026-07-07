@@ -14337,8 +14337,8 @@
         {
           "name": "HSUIWebViewAPI",
           "type": "typedef",
-          "rawDocumentation": "# hs.ui.webview2\n\n**Create native web browser windows powered by WebPage and WebView**\n\nAvailable on macOS 26.0 or later, `hs.ui.webview2` creates standard macOS windows hosting a\nnative SwiftUI `WebView` backed by a `WebPage` instance. It supports navigation, an optional\ntoolbar, JavaScript evaluation, and callbacks for loading, navigation, and title changes.\n\n## Requirements\n\nmacOS 26.0 or later. The `hs.ui.webview2()` factory returns `null` on older systems.\n\n## Basic Example\n\n```javascript\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar(true)\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n\n## Full Example\n\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar(true)\n    .inspectable(true)\n    .onNavigate((url) => console.log(\"Navigated to: \" + url))\n    .onTitleChange((title) => console.log(\"Title: \" + title))\n    .onLoadChange((loading, url, title, progress) => {\n        if (!loading) console.log(\"Page ready: \" + url)\n    })\n    .loadURL(\"https://apple.com\")\n    .show();\n\n// Navigate programmatically\nbrowser.loadURL(\"https://google.com\");\nbrowser.goBack();\nbrowser.reload();\n```\n\n## Navigation Policy Example\n\n```javascript\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar(true)\n    .onNavigationDecision((url) => {\n        return !url.includes(\"evil.com\")\n    })\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n\n## JavaScript Evaluation Example\n\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .loadURL(\"https://apple.com\")\n    .show();\n\n// Fire and forget\nbrowser.execJS(\"document.body.style.backgroundColor = 'lightyellow'\");\n\n// With result (note the JS method name is evalJSResult)\nbrowser.evalJSResult(\"document.title\", (result, error) => {\n    if (error) { console.log(\"Error: \" + error) }\n    else { console.log(\"Title: \" + result) }\n});\n```",
-          "description": "# hs.ui.webview2\n**Create native web browser windows powered by WebPage and WebView**\nAvailable on macOS 26.0 or later, `hs.ui.webview2` creates standard macOS windows hosting a\nnative SwiftUI `WebView` backed by a `WebPage` instance. It supports navigation, an optional\ntoolbar, JavaScript evaluation, and callbacks for loading, navigation, and title changes.\n## Requirements\nmacOS 26.0 or later. The `hs.ui.webview2()` factory returns `null` on older systems.\n## Basic Example\n```javascript\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar(true)\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n## Full Example\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar(true)\n    .inspectable(true)\n    .onNavigate((url) => console.log(\"Navigated to: \" + url))\n    .onTitleChange((title) => console.log(\"Title: \" + title))\n    .onLoadChange((loading, url, title, progress) => {\n        if (!loading) console.log(\"Page ready: \" + url)\n    })\n    .loadURL(\"https://apple.com\")\n    .show();\n\n// Navigate programmatically\nbrowser.loadURL(\"https://google.com\");\nbrowser.goBack();\nbrowser.reload();\n```\n## Navigation Policy Example\n```javascript\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar(true)\n    .onNavigationDecision((url) => {\n        return !url.includes(\"evil.com\")\n    })\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n## JavaScript Evaluation Example\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .loadURL(\"https://apple.com\")\n    .show();\n\n// Fire and forget\nbrowser.execJS(\"document.body.style.backgroundColor = 'lightyellow'\");\n\n// With result (note the JS method name is evalJSResult)\nbrowser.evalJSResult(\"document.title\", (result, error) => {\n    if (error) { console.log(\"Error: \" + error) }\n    else { console.log(\"Title: \" + result) }\n});\n```",
+          "rawDocumentation": "# hs.ui.webview2\n\n**Create native web browser windows powered by WebPage and WebView**\n\nAvailable on macOS 26.0 or later, `hs.ui.webview2` creates standard macOS windows hosting a\nnative SwiftUI `WebView` backed by a `WebPage` instance. It supports navigation, an optional\ntoolbar, JavaScript evaluation, and callbacks for loading, navigation, and title changes.\n\n## Requirements\n\nmacOS 26.0 or later. The `hs.ui.webview2()` factory returns `null` on older systems.\n\n## Basic Example\n\n```javascript\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\"])\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n\n## Custom Toolbar Example\n\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\n        \"back\", \"forward\", \"reload\", \"url\",\n        {title: \"Home\", systemImage: \"house\", callback: () => browser.loadURL(\"https://apple.com\")},\n        {title: \"Reload HS\",  callback: () => hs.reload()}\n    ])\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n\n## Full Example\n\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\"])\n    .inspectable(true)\n    .onNavigate((url) => console.log(\"Navigated to: \" + url))\n    .onTitleChange((title) => console.log(\"Title: \" + title))\n    .onLoadChange((loading, url, title, progress) => {\n        if (!loading) console.log(\"Page ready: \" + url)\n    })\n    .loadURL(\"https://apple.com\")\n    .show();\n\n// Navigate programmatically\nbrowser.loadURL(\"https://google.com\");\nbrowser.goBack();\nbrowser.reload();\n```\n\n## Navigation Policy Example\n\n```javascript\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\"])\n    .onNavigationDecision((url) => {\n        return !url.includes(\"evil.com\")\n    })\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n\n## JavaScript Evaluation Example\n\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .loadURL(\"https://apple.com\")\n    .show();\n\n// Fire and forget\nbrowser.execJS(\"document.body.style.backgroundColor = 'lightyellow'\");\n\n// With result (note the JS method name is evalJSResult)\nbrowser.evalJSResult(\"document.title\", (result, error) => {\n    if (error) { console.log(\"Error: \" + error) }\n    else { console.log(\"Title: \" + result) }\n});\n```",
+          "description": "# hs.ui.webview2\n**Create native web browser windows powered by WebPage and WebView**\nAvailable on macOS 26.0 or later, `hs.ui.webview2` creates standard macOS windows hosting a\nnative SwiftUI `WebView` backed by a `WebPage` instance. It supports navigation, an optional\ntoolbar, JavaScript evaluation, and callbacks for loading, navigation, and title changes.\n## Requirements\nmacOS 26.0 or later. The `hs.ui.webview2()` factory returns `null` on older systems.\n## Basic Example\n```javascript\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\"])\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n## Custom Toolbar Example\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\n        \"back\", \"forward\", \"reload\", \"url\",\n        {title: \"Home\", systemImage: \"house\", callback: () => browser.loadURL(\"https://apple.com\")},\n        {title: \"Reload HS\",  callback: () => hs.reload()}\n    ])\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n## Full Example\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\"])\n    .inspectable(true)\n    .onNavigate((url) => console.log(\"Navigated to: \" + url))\n    .onTitleChange((title) => console.log(\"Title: \" + title))\n    .onLoadChange((loading, url, title, progress) => {\n        if (!loading) console.log(\"Page ready: \" + url)\n    })\n    .loadURL(\"https://apple.com\")\n    .show();\n\n// Navigate programmatically\nbrowser.loadURL(\"https://google.com\");\nbrowser.goBack();\nbrowser.reload();\n```\n## Navigation Policy Example\n```javascript\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\"])\n    .onNavigationDecision((url) => {\n        return !url.includes(\"evil.com\")\n    })\n    .loadURL(\"https://apple.com\")\n    .show();\n```\n## JavaScript Evaluation Example\n```javascript\nconst browser = hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .loadURL(\"https://apple.com\")\n    .show();\n\n// Fire and forget\nbrowser.execJS(\"document.body.style.backgroundColor = 'lightyellow'\");\n\n// With result (note the JS method name is evalJSResult)\nbrowser.evalJSResult(\"document.title\", (result, error) => {\n    if (error) { console.log(\"Error: \" + error) }\n    else { console.log(\"Title: \" + result) }\n});\n```",
           "methods": [
             {
               "name": "show",
@@ -14360,7 +14360,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 128
+              "lineNumber": 177
             },
             {
               "name": "hide",
@@ -14379,7 +14379,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 136
+              "lineNumber": 185
             },
             {
               "name": "close",
@@ -14398,7 +14398,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 144
+              "lineNumber": 193
             },
             {
               "name": "loadURL",
@@ -14428,7 +14428,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 155
+              "lineNumber": 204
             },
             {
               "name": "loadHTML",
@@ -14458,7 +14458,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 166
+              "lineNumber": 215
             },
             {
               "name": "goBack",
@@ -14480,7 +14480,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 174
+              "lineNumber": 223
             },
             {
               "name": "goForward",
@@ -14502,7 +14502,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 182
+              "lineNumber": 231
             },
             {
               "name": "reload",
@@ -14524,7 +14524,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 190
+              "lineNumber": 239
             },
             {
               "name": "stopLoading",
@@ -14546,7 +14546,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 198
+              "lineNumber": 247
             },
             {
               "name": "userAgent",
@@ -14576,7 +14576,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 215
+              "lineNumber": 264
             },
             {
               "name": "inspectable",
@@ -14606,21 +14606,21 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 230
+              "lineNumber": 279
             },
             {
               "name": "toolbar",
-              "signature": "func toolbar(_ show: Bool) -> HSUIWebView",
+              "signature": "func toolbar(_ items: [Any]) -> HSUIWebView",
               "isStatic": false,
-              "rawDocumentation": "Show or hide the navigation toolbar (back, forward, reload, URL bar)\n\nThe toolbar is hidden by default. Pass `true` to show it.\n\n- Parameter show: Pass `true` to show the toolbar\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar(true)\n    .loadURL(\"https://apple.com\")\n    .show()\n```",
-              "description": "Show or hide the navigation toolbar (back, forward, reload, URL bar)\nThe toolbar is hidden by default. Pass `true` to show it.",
+              "rawDocumentation": "Configure the window toolbar with a list of standard and custom items\n\nEach element of the array is either a string naming a standard control or a dictionary\ndescribing a custom button. An empty array (or omitting this call) hides the toolbar.\n\nStandard string items: `\"back\"`, `\"forward\"`, `\"reload\"`, `\"url\"`, `\"spacer\"`.\n\nCustom button dictionaries accept:\n- `title` (string, optional) — button label\n- `systemImage` (string, optional) — SF Symbol name (e.g. `\"house\"`)\n- `callback` (function, required) — called when the button is clicked\n\n- Parameter items: {Array<string | {title?: string, systemImage?: string, callback: () => void}>} Toolbar items in display order\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\",\n              {title: \"Home\", systemImage: \"house\", callback: () => browser.loadURL(\"https://apple.com\")}])\n    .loadURL(\"https://apple.com\")\n    .show()\n```",
+              "description": "Configure the window toolbar with a list of standard and custom items\nEach element of the array is either a string naming a standard control or a dictionary\ndescribing a custom button. An empty array (or omitting this call) hides the toolbar.\nStandard string items: `\"back\"`, `\"forward\"`, `\"reload\"`, `\"url\"`, `\"spacer\"`.",
               "params": [
                 {
-                  "name": "show",
-                  "type": "boolean",
-                  "description": "Pass `true` to show the toolbar",
+                  "name": "items",
+                  "type": "Array<Any>",
+                  "description": "Toolbar items in display order",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "Array<string | {title?: string, systemImage?: string, callback: () => void}>"
                 }
               ],
               "returns": {
@@ -14631,12 +14631,12 @@
               "examples": [
                 {
                   "lang": "js",
-                  "code": "hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar(true)\n    .loadURL(\"https://apple.com\")\n    .show()"
+                  "code": "hs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\",\n              {title: \"Home\", systemImage: \"house\", callback: () => browser.loadURL(\"https://apple.com\")}])\n    .loadURL(\"https://apple.com\")\n    .show()"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 245
+              "lineNumber": 303
             },
             {
               "name": "backForwardGestures",
@@ -14666,7 +14666,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 257
+              "lineNumber": 315
             },
             {
               "name": "magnificationGestures",
@@ -14696,7 +14696,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 269
+              "lineNumber": 327
             },
             {
               "name": "linkPreviews",
@@ -14726,7 +14726,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 281
+              "lineNumber": 339
             },
             {
               "name": "contentBackground",
@@ -14756,7 +14756,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 294
+              "lineNumber": 352
             },
             {
               "name": "onLoadChange",
@@ -14786,7 +14786,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 354
+              "lineNumber": 412
             },
             {
               "name": "onNavigate",
@@ -14816,7 +14816,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 364
+              "lineNumber": 422
             },
             {
               "name": "onTitleChange",
@@ -14846,7 +14846,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 374
+              "lineNumber": 432
             },
             {
               "name": "onNavigationDecision",
@@ -14876,7 +14876,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 388
+              "lineNumber": 446
             },
             {
               "name": "execJS",
@@ -14906,7 +14906,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 399
+              "lineNumber": 457
             },
             {
               "name": "evalJSResult",
@@ -14943,7 +14943,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 417
+              "lineNumber": 475
             }
           ],
           "properties": [
@@ -14962,7 +14962,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 303
+              "lineNumber": 361
             },
             {
               "name": "title",
@@ -14979,7 +14979,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 310
+              "lineNumber": 368
             },
             {
               "name": "isLoading",
@@ -14996,7 +14996,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 317
+              "lineNumber": 375
             },
             {
               "name": "estimatedProgress",
@@ -15013,7 +15013,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 324
+              "lineNumber": 382
             },
             {
               "name": "canGoBack",
@@ -15030,7 +15030,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 331
+              "lineNumber": 389
             },
             {
               "name": "canGoForward",
@@ -15047,7 +15047,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Windows/HSUIWebView.swift",
-              "lineNumber": 338
+              "lineNumber": 396
             }
           ]
         }
@@ -17121,5 +17121,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-07T11:09:33.487Z"
+  "generatedAt": "2026-07-07T11:39:09.872Z"
 }
