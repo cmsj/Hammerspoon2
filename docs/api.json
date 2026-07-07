@@ -14610,14 +14610,14 @@
             },
             {
               "name": "toolbar",
-              "signature": "func toolbar(_ items: [Any]) -> HSUIWebView",
+              "signature": "func toolbar(_ items: JSValue) -> HSUIWebView",
               "isStatic": false,
               "rawDocumentation": "Configure the window toolbar with a list of standard and custom items\n\nEach element of the array is either a string naming a standard control or a dictionary\ndescribing a custom button. An empty array (or omitting this call) hides the toolbar.\n\nStandard string items: `\"back\"`, `\"forward\"`, `\"reload\"`, `\"url\"`, `\"spacer\"`.\n\nCustom button dictionaries accept:\n- `title` (string, optional) — button label\n- `systemImage` (string, optional) — SF Symbol name (e.g. `\"house\"`)\n- `callback` (function, required) — called when the button is clicked\n\n- Parameter items: {Array<string | {title?: string, systemImage?: string, callback: () => void}>} Toolbar items in display order\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.webview2({x: 100, y: 100, w: 900, h: 650})\n    .toolbar([\"back\", \"forward\", \"reload\", \"url\",\n              {title: \"Home\", systemImage: \"house\", callback: () => browser.loadURL(\"https://apple.com\")}])\n    .loadURL(\"https://apple.com\")\n    .show()\n```",
               "description": "Configure the window toolbar with a list of standard and custom items\nEach element of the array is either a string naming a standard control or a dictionary\ndescribing a custom button. An empty array (or omitting this call) hides the toolbar.\nStandard string items: `\"back\"`, `\"forward\"`, `\"reload\"`, `\"url\"`, `\"spacer\"`.",
               "params": [
                 {
                   "name": "items",
-                  "type": "Array<Any>",
+                  "type": "JSValue",
                   "description": "Toolbar items in display order",
                   "optional": false,
                   "tsType": "Array<string | {title?: string, systemImage?: string, callback: () => void}>"
@@ -17121,5 +17121,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-07T11:39:09.872Z"
+  "generatedAt": "2026-07-07T12:25:02.023Z"
 }

@@ -300,7 +300,7 @@ final class HSUIWebViewToolbarEntry: Identifiable {
     ///     .loadURL("https://apple.com")
     ///     .show()
     /// ```
-    @objc func toolbar(_ items: [Any]) -> HSUIWebView
+    @objc func toolbar(_ items: JSValue) -> HSUIWebView
 
     /// Enable or disable the macOS back/forward trackpad swipe gestures
     ///
@@ -748,36 +748,47 @@ final class HSUIWebViewToolbarEntry: Identifiable {
         return self
     }
 
-    @objc func toolbar(_ items: [Any]) -> HSUIWebView {
+    @objc func toolbar(_ items: JSValue) -> HSUIWebView {
         for entry in toolbarEntries { entry.detachCallback(from: self) }
-        toolbarEntries = items.compactMap { item in
-            if let str = item as? String {
+        toolbarEntries.removeAll()
+
+        guard items.isArray else {
+            AKError("hs.ui.webview2.toolbar: expected an array")
+            return self
+        }
+
+        let count = items.objectForKeyedSubscript("length").toInt32()
+        for i in 0..<count {
+            guard let item = items.atIndex(Int(i)) else { continue }
+            if item.isString, let str = item.toString() {
                 switch str {
-                case "back":    return HSUIWebViewToolbarEntry(kind: .back)
-                case "forward": return HSUIWebViewToolbarEntry(kind: .forward)
-                case "reload":  return HSUIWebViewToolbarEntry(kind: .reload)
-                case "url":     return HSUIWebViewToolbarEntry(kind: .url)
+                case "back":    toolbarEntries.append(HSUIWebViewToolbarEntry(kind: .back))
+                case "forward": toolbarEntries.append(HSUIWebViewToolbarEntry(kind: .forward))
+                case "reload":  toolbarEntries.append(HSUIWebViewToolbarEntry(kind: .reload))
+                case "url":     toolbarEntries.append(HSUIWebViewToolbarEntry(kind: .url))
                 case "spacer", "flexibleSpacer":
-                    return HSUIWebViewToolbarEntry(kind: .flexibleSpacer)
+                    toolbarEntries.append(HSUIWebViewToolbarEntry(kind: .flexibleSpacer))
                 default:
                     AKWarning("hs.ui.webview2.toolbar: unknown standard item '\(str)'")
-                    return nil
                 }
-            } else if let dict = item as? [String: Any] {
-                guard let cbValue = dict["callback"] as? JSFunction else {
-                    AKWarning("hs.ui.webview2.toolbar: custom button dict missing 'callback' key")
-                    return nil
+            } else if item.isObject {
+                let cbValue = item.objectForKeyedSubscript("callback")
+                guard let cbValue, !cbValue.isUndefined, !cbValue.isNull, cbValue.isObject else {
+                    AKWarning("hs.ui.webview2.toolbar: custom button missing 'callback' function")
+                    continue
                 }
                 let cb = JSCallback(value: cbValue, owner: self)
-                return HSUIWebViewToolbarEntry(
+                let titleVal = item.objectForKeyedSubscript("title")
+                let sysImgVal = item.objectForKeyedSubscript("systemImage")
+                toolbarEntries.append(HSUIWebViewToolbarEntry(
                     kind: .custom,
-                    label: dict["title"] as? String,
-                    systemImage: dict["systemImage"] as? String,
+                    label: (titleVal?.isString == true) ? titleVal?.toString() : nil,
+                    systemImage: (sysImgVal?.isString == true) ? sysImgVal?.toString() : nil,
                     callback: cb
-                )
+                ))
+            } else {
+                AKWarning("hs.ui.webview2.toolbar: unrecognised item type, skipping")
             }
-            AKWarning("hs.ui.webview2.toolbar: unrecognised item type \(type(of: item))")
-            return nil
         }
         return self
     }
