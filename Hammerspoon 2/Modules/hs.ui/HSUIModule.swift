@@ -364,6 +364,29 @@ import AppKit
     ///     .show()
     /// ```
     @objc func filePicker() -> HSUIFilePicker
+
+    /// Create a web browser element for embedding in `hs.ui.window` (macOS 26+)
+    ///
+    /// Returns a `UIWebView` element that you configure and then embed in any `hs.ui.window`
+    /// via `.webview(element)`. The element fills the available space inside the window layout.
+    /// Keep a reference to call navigation methods after the window is shown.
+    ///
+    /// - Returns: A `UIWebView` element for configuration and embedding
+    /// - Example:
+    /// ```js
+    /// const wv = hs.ui.webview()
+    ///     .toolbar(["back", "forward", "reload", "url"])
+    ///     .loadURL("https://apple.com")
+    ///
+    /// hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    ///     .webview(wv)
+    ///     .show()
+    ///
+    /// // Navigate later:
+    /// wv.loadURL("https://google.com")
+    /// ```
+    @available(macOS 26.0, *)
+    @objc func webview() -> UIWebView
 }
 
 // MARK: - Implementation
@@ -479,6 +502,13 @@ import AppKit
         return MainActor.assumeIsolated {
             let picker = HSUIFilePicker(module: self)
             return picker
+        }
+    }
+
+    @available(macOS 26.0, *)
+    @objc func webview() -> UIWebView {
+        return MainActor.assumeIsolated {
+            UIWebView()
         }
     }
 }

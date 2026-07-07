@@ -5172,12 +5172,21 @@ directories, or both, with support for file type filtering and multiple selectio
      */
     function filePicker(): HSUIFilePicker;
 
+    /**
+     * Create a web browser element for embedding in `hs.ui.window` (macOS 26+)
+Returns a `UIWebView` element that you configure and then embed in any `hs.ui.window`
+via `.webview(element)`. The element fills the available space inside the window layout.
+Keep a reference to call navigation methods after the window is shown.
+     * @returns A `UIWebView` element for configuration and embedding
+     */
+    function webview(): UIWebView;
+
 }
 
 /**
  * # HSUIWindow
 **A custom window with declarative UI building**
-`HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like
+`HSUIWindow` allows you to create custom windows with a SwiftUI-like
 declarative syntax. Build interfaces using shapes, text, images, and layout containers.
 ## Building UI Elements
 ## Modifying Elements
@@ -5229,6 +5238,56 @@ declare class HSUIWindow {
      * Close and destroy the window
      */
     close(): void;
+
+    /**
+     * Show or hide the window's title bar
+By default windows have a title bar. Pass `false` to create a borderless window.
+`.closable()`, `.miniaturizable()`, and `.allowResize()` only take visual effect
+when the window is titled.
+     * @param show Pass `false` to make the window borderless
+     * @returns Self for chaining
+     */
+    titled(show: boolean): HSUIWindow;
+
+    /**
+     * Show or hide the close button on the window
+Requires `.titled(true)` to be visible. Enabled by default.
+     * @param show Pass `false` to hide the close button
+     * @returns Self for chaining
+     */
+    closable(show: boolean): HSUIWindow;
+
+    /**
+     * Show or hide the miniaturize (yellow) button on the window
+Requires `.titled(true)` to be visible. Enabled by default.
+     * @param show Pass `false` to hide the miniaturize button
+     * @returns Self for chaining
+     */
+    miniaturizable(show: boolean): HSUIWindow;
+
+    /**
+     * Allow or prevent the user from resizing the window
+Enabled by default. Only has a visual effect when `.titled(true)` is also set.
+     * @param enable Pass `false` to prevent the user from resizing the window
+     * @returns Self for chaining
+     */
+    allowResize(enable: boolean): HSUIWindow;
+
+    /**
+     * Set the text shown in the window's title bar
+Only visible when `.titled(true)` is set (the default).
+     * @param text The title bar text
+     * @returns Self for chaining
+     */
+    windowTitle(text: string): HSUIWindow;
+
+    /**
+     * Set the window stacking level
+Controls where this window sits in the macOS window hierarchy.
+     * @param name The level name
+     * @returns Self for chaining
+     */
+    level(name: '"normal"' | '"floating"' | '"screenSaver"' | '"dock"' | '"status"' | '"popUpMenu"'): HSUIWindow;
 
     /**
      * Set the window's background color
@@ -5295,6 +5354,15 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text
      * @returns Self for chaining
      */
     spacer(): HSUIWindow;
+
+    /**
+     * Embed a web browser element created with `hs.ui.webview()` (macOS 26+)
+The element fills the available space in the window layout.
+Keep a reference to the element to call navigation methods after the window is shown.
+     * @param element A `UIWebView` created via `hs.ui.webview()`
+     * @returns Self for chaining
+     */
+    webview(element: UIWebView): HSUIWindow;
 
     /**
      * End the current layout container
@@ -5670,6 +5738,266 @@ declare class HSUITextPrompt {
      * Show the prompt dialog
      */
     show(): void;
+
+}
+
+/**
+ * # hs.ui.webview
+**A web browser element for embedding in `hs.ui.window` layouts**
+Available on macOS 26.0 or later, `hs.ui.webview()` creates a web browser element backed
+by a SwiftUI `WebView` and `WebPage`. Embed it in any `hs.ui.window` using
+`.webview(element)` — it fills the available space and can sit alongside other elements in
+stacks.
+```javascript
+const wv = hs.ui.webview()
+    .toolbar(["back", "forward", "reload", "url"])
+    .loadURL("https://apple.com")
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .titled(true)
+    .closable(true)
+    .allowResize(true)
+    .level("normal")
+    .webview(wv)
+    .show()
+```
+Because `wv` is a regular JavaScript object you can keep a reference and call navigation
+```javascript
+wv.loadURL("https://google.com")
+wv.goBack()
+```
+## Custom Toolbar Example
+```javascript
+const wv = hs.ui.webview()
+    .toolbar([
+        "back", "forward", "reload", "url",
+        {title: "Home", systemImage: "house", callback: () => wv.loadURL("https://apple.com")},
+        {title: "Reload HS", callback: () => hs.reload()}
+    ])
+    .loadURL("https://apple.com")
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .webview(wv)
+    .show()
+```
+## Full Example with Callbacks
+```javascript
+const wv = hs.ui.webview()
+    .toolbar(["back", "forward", "reload", "url"])
+    .inspectable(true)
+    .onNavigate((url) => console.log("Navigated to: " + url))
+    .onTitleChange((title) => console.log("Title: " + title))
+    .onLoadChange((loading, url, title, progress) => {
+        if (!loading) console.log("Page ready: " + url)
+    })
+    .loadURL("https://apple.com")
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .webview(wv)
+    .show()
+```
+## Navigation Policy Example
+```javascript
+const wv = hs.ui.webview()
+    .toolbar(["back", "forward", "reload", "url"])
+    .onNavigationDecision((url) => {
+        return !url.includes("evil.com")
+    })
+    .loadURL("https://apple.com")
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .webview(wv)
+    .show()
+```
+## JavaScript Evaluation Example
+```javascript
+const wv = hs.ui.webview().loadURL("https://apple.com")
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768}).webview(wv).show()
+
+// Fire and forget
+wv.execJS("document.body.style.backgroundColor = 'lightyellow'")
+
+// With result (note the JS method name is evalJSResult)
+wv.evalJSResult("document.title", (result, error) => {
+    if (error) { console.log("Error: " + error) }
+    else { console.log("Title: " + result) }
+})
+```
+ */
+declare class UIWebView {
+    /**
+     * Load a URL in the web view
+     * @param urlString The URL to load (e.g. "https://apple.com")
+     * @returns Self for chaining
+     */
+    loadURL(urlString: string): UIWebView;
+
+    /**
+     * Load an HTML string directly into the web view
+     * @param html The HTML content to display
+     * @returns Self for chaining
+     */
+    loadHTML(html: string): UIWebView;
+
+    /**
+     * Navigate back in the browser history
+     * @returns Self for chaining
+     */
+    goBack(): UIWebView;
+
+    /**
+     * Navigate forward in the browser history
+     * @returns Self for chaining
+     */
+    goForward(): UIWebView;
+
+    /**
+     * Reload the current page
+     * @returns Self for chaining
+     */
+    reload(): UIWebView;
+
+    /**
+     * Stop loading the current page
+     * @returns Self for chaining
+     */
+    stopLoading(): UIWebView;
+
+    /**
+     * Set a custom User-Agent string for HTTP requests
+     * @param ua The User-Agent string
+     * @returns Self for chaining
+     */
+    userAgent(ua: string): UIWebView;
+
+    /**
+     * Enable or disable the Safari Web Inspector for this web view
+When enabled, the web view appears in Safari → Develop menu.
+     * @param value Pass `true` to enable the Web Inspector
+     * @returns Self for chaining
+     */
+    inspectable(value: boolean): UIWebView;
+
+    /**
+     * Configure the toolbar with a list of standard and custom items
+The toolbar renders above the web view. Each element of the array is either a string
+naming a standard control or a dictionary describing a custom button.
+An empty array (or omitting this call) hides the toolbar.
+Standard string items: `"back"`, `"forward"`, `"reload"`, `"url"`, `"spacer"`.
+     * @remarks The toolbar will not be shown if the web view is in a borderless window
+     * @param items Toolbar items in display order
+     * @returns Self for chaining
+     */
+    toolbar(items: Array<string | {title?: string, systemImage?: string, callback: () => void}>): UIWebView;
+
+    /**
+     * Enable or disable the macOS back/forward trackpad swipe gestures
+Gestures are enabled by default. Pass `false` to disable them.
+     * @param enabled Pass `false` to disable back/forward swipe gestures
+     * @returns Self for chaining
+     */
+    backForwardGestures(enabled: boolean): UIWebView;
+
+    /**
+     * Enable or disable the trackpad pinch-to-zoom magnification gesture
+The gesture is enabled by default. Pass `false` to disable it.
+     * @param enabled Pass `false` to disable pinch-to-zoom
+     * @returns Self for chaining
+     */
+    magnificationGestures(enabled: boolean): UIWebView;
+
+    /**
+     * Enable or disable link preview popovers shown on force-click
+Link previews are enabled by default. Pass `false` to disable them.
+     * @param enabled Pass `false` to disable link previews
+     * @returns Self for chaining
+     */
+    linkPreviews(enabled: boolean): UIWebView;
+
+    /**
+     * Control whether the web page background is visible
+Pass `false` to make the web view background transparent. Enabled (visible) by default.
+     * @param visible Pass `false` to hide the web content background
+     * @returns Self for chaining
+     */
+    contentBackground(visible: boolean): UIWebView;
+
+    /**
+     * Register a callback that fires when loading state or progress changes
+Called whenever `isLoading`, `url`, `title`, or `estimatedProgress` changes.
+     * @param callback Called with current loading state
+     * @returns Self for chaining
+     */
+    onLoadChange(callback: (isLoading: boolean, url: string | null, title: string, progress: number) => void): UIWebView;
+
+    /**
+     * Register a callback that fires when navigation to a new page completes
+     * @param callback Called with the final URL
+     * @returns Self for chaining
+     */
+    onNavigate(callback: (url: string) => void): UIWebView;
+
+    /**
+     * Register a callback that fires when the page title changes
+     * @param callback Called with the new title
+     * @returns Self for chaining
+     */
+    onTitleChange(callback: (title: string) => void): UIWebView;
+
+    /**
+     * Register a callback that controls whether navigation is allowed
+Called before each navigation. Return `true` to allow or `false` to block.
+     * @param callback Return `true` to allow, `false` to block
+     * @returns Self for chaining
+     */
+    onNavigationDecision(callback: (url: string) => boolean): UIWebView;
+
+    /**
+     * Execute JavaScript in the web page without capturing the result
+     * @param script The JavaScript code to execute
+     * @returns Self for chaining
+     */
+    execJS(script: string): UIWebView;
+
+    /**
+     * Execute JavaScript in the web page and deliver the result to a callback
+The JavaScript method name is `evalJSResult` — it derives from the internal
+Objective-C selector `evalJS:result:`.
+     * @param script The JavaScript expression to evaluate
+     * @param callback Called with the result or an error message
+     * @returns Self for chaining
+     */
+    evalJSResult(script: string, callback: (result: any, error: string | null) => void): UIWebView;
+
+    /**
+     * The URL of the current page, or `null` if no page is loaded
+     */
+    readonly url: string | null;
+
+    /**
+     * The title of the current page
+     */
+    readonly title: string;
+
+    /**
+     * Whether the web view is currently loading a page
+     */
+    readonly isLoading: boolean;
+
+    /**
+     * The estimated loading progress from 0.0 to 1.0
+     */
+    readonly estimatedProgress: number;
+
+    /**
+     * Whether the web view can navigate back in history
+     */
+    readonly canGoBack: boolean;
+
+    /**
+     * Whether the web view can navigate forward in history
+     */
+    readonly canGoForward: boolean;
 
 }
 

@@ -14,7 +14,7 @@ import SwiftUI
 ///
 /// **A custom window with declarative UI building**
 ///
-/// `HSUIWindow` allows you to create custom borderless windows with a SwiftUI-like
+/// `HSUIWindow` allows you to create custom windows with a SwiftUI-like
 /// declarative syntax. Build interfaces using shapes, text, images, and layout containers.
 ///
 /// ## Building UI Elements
@@ -80,6 +80,96 @@ import SwiftUI
 
     // MARK: Window Styling
 
+    /// Show or hide the window's title bar
+    ///
+    /// By default windows have a title bar. Pass `false` to create a borderless window.
+    /// `.closable()`, `.miniaturizable()`, and `.allowResize()` only take visual effect
+    /// when the window is titled.
+    ///
+    /// - Parameter show: Pass `false` to make the window borderless
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// // Borderless floating overlay
+    /// hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+    ///     .titled(false)
+    ///     .level("floating")
+    ///     .show()
+    /// ```
+    @objc func titled(_ show: Bool) -> HSUIWindow
+
+    /// Show or hide the close button on the window
+    ///
+    /// Requires `.titled(true)` to be visible. Enabled by default.
+    ///
+    /// - Parameter show: Pass `false` to hide the close button
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    ///     .closable(false).show()
+    /// ```
+    @objc func closable(_ show: Bool) -> HSUIWindow
+
+    /// Show or hide the miniaturize (yellow) button on the window
+    ///
+    /// Requires `.titled(true)` to be visible. Enabled by default.
+    ///
+    /// - Parameter show: Pass `false` to hide the miniaturize button
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    ///     .miniaturizable(false).show()
+    /// ```
+    @objc func miniaturizable(_ show: Bool) -> HSUIWindow
+
+    /// Allow or prevent the user from resizing the window
+    ///
+    /// Enabled by default. Only has a visual effect when `.titled(true)` is also set.
+    ///
+    /// - Parameter enable: Pass `false` to prevent the user from resizing the window
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    ///     .allowResize(false).show()
+    /// ```
+    @objc func allowResize(_ enable: Bool) -> HSUIWindow
+
+    /// Set the text shown in the window's title bar
+    ///
+    /// Only visible when `.titled(true)` is set (the default).
+    ///
+    /// - Parameter text: The title bar text
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    ///     .windowTitle("My Browser").show()
+    /// ```
+    @objc func windowTitle(_ text: String) -> HSUIWindow
+
+    /// Set the window stacking level
+    ///
+    /// Controls where this window sits in the macOS window hierarchy.
+    /// Supported values:
+    /// - `"normal"` — regular app window, sits with other app windows (default)
+    /// - `"floating"` — floats above all normal windows
+    /// - `"screenSaver"` — above the screen saver layer
+    /// - `"dock"` — same level as the Dock
+    /// - `"status"` — status bar level
+    /// - `"popUpMenu"` — pop-up menu level
+    ///
+    /// - Parameter name: {'"normal"' | '"floating"' | '"screenSaver"' | '"dock"' | '"status"' | '"popUpMenu"'} The level name
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// hs.ui.window({x: 100, y: 100, w: 800, h: 600})
+    ///     .level("floating").show()
+    /// ```
+    @objc func level(_ name: String) -> HSUIWindow
+
     /// Set the window's background color
     /// - Parameter colorValue: Color as an HSColor object
     /// - Returns: Self for chaining
@@ -130,6 +220,26 @@ import SwiftUI
     /// Add flexible spacing that expands to fill available space
     /// - Returns: Self for chaining
     @objc func spacer() -> HSUIWindow
+
+    /// Embed a web browser element created with `hs.ui.webview()` (macOS 26+)
+    ///
+    /// The element fills the available space in the window layout.
+    /// Keep a reference to the element to call navigation methods after the window is shown.
+    ///
+    /// - Parameter element: A `UIWebView` created via `hs.ui.webview()`
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// const wv = hs.ui.webview()
+    ///     .toolbar(["back", "forward", "reload", "url"])
+    ///     .loadURL("https://apple.com")
+    ///
+    /// hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    ///     .webview(wv)
+    ///     .show()
+    /// ```
+    @available(macOS 26.0, *)
+    @objc func webview(_ element: UIWebView) -> HSUIWindow
 
     /// End the current layout container
     /// - Returns: Self for chaining
@@ -226,10 +336,21 @@ import SwiftUI
     private let windowID: UUID = UUID()
     private weak var module: HSUIModule?
 
+    // Style configuration
+    private var isTitled: Bool = true
+    private var isClosable: Bool = true
+    private var isMiniaturizable: Bool = true
+    private var isResizable: Bool = true
+    private var windowTitleText: String = ""
+    private var windowLevelName: String = "normal"
+
     // Element tree
     private var rootElement: (any HSUIElement)?
     private var currentElement: (any HSUIElement)?
     private var containerStack: [any UIContainer] = []
+
+    // Type-erased refs to UIWebView elements (macOS 26+) for eager resource cleanup on close.
+    private var embeddedWebViews: [AnyObject] = []
 
     // Initialization
     init(frame: CGRect, module: HSUIModule) {
@@ -262,7 +383,7 @@ import SwiftUI
 
         let window = NSWindow(
             contentRect: windowFrame,
-            styleMask: [.borderless],
+            styleMask: resolvedStyleMask(),
             backing: .buffered,
             defer: false
         )
@@ -275,9 +396,12 @@ import SwiftUI
         window.contentView = NSHostingView(rootView: contentView)
         window.isOpaque = false
         window.backgroundColor = NSColor(windowBackgroundColor)
-        window.level = .floating
+        window.level = resolvedLevel()
         window.isReleasedWhenClosed = false
         window.delegate = self
+        if !windowTitleText.isEmpty {
+            window.title = windowTitleText
+        }
 
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
@@ -297,10 +421,15 @@ import SwiftUI
     @objc func close() {
         guard nsWindow != nil || rootElement != nil else { return } // Already closed
 
-        // Release the element tree. Each element may hold closures that captured JSValue
-        // callbacks (from onClick/onHover), which would otherwise hold the old JSContext
-        // alive until the entire context is torn down. Clearing these now breaks the
-        // closure → JSValue → JSContext chain so the context can be freed promptly.
+        // Destroy embedded web views first to release their JS callbacks before the element
+        // tree is released. This breaks JSValue → JSContext chains so the context can be freed.
+        if #available(macOS 26.0, *) {
+            for obj in embeddedWebViews { (obj as? UIWebView)?.destroy() }
+        }
+        embeddedWebViews.removeAll()
+
+        // Release the element tree. Elements may hold closures that captured JSValue
+        // callbacks (onClick/onHover) which would hold the old JSContext alive otherwise.
         rootElement = nil
         currentElement = nil
         containerStack.removeAll()
@@ -318,6 +447,38 @@ import SwiftUI
         // Window is being closed (by user or system)
         Task { @MainActor in
             self.close()
+        }
+    }
+
+    // MARK: - Window Styling
+
+    @objc func titled(_ show: Bool) -> HSUIWindow { isTitled = show; return self }
+    @objc func closable(_ show: Bool) -> HSUIWindow { isClosable = show; return self }
+    @objc func miniaturizable(_ show: Bool) -> HSUIWindow { isMiniaturizable = show; return self }
+    @objc func allowResize(_ enable: Bool) -> HSUIWindow { isResizable = enable; return self }
+    @objc func windowTitle(_ text: String) -> HSUIWindow { windowTitleText = text; return self }
+    @objc func level(_ name: String) -> HSUIWindow { windowLevelName = name; return self }
+
+    private func resolvedStyleMask() -> NSWindow.StyleMask {
+        guard isTitled else { return [.borderless] }
+        var mask: NSWindow.StyleMask = [.titled]
+        if isClosable { mask.insert(.closable) }
+        if isMiniaturizable { mask.insert(.miniaturizable) }
+        if isResizable { mask.insert(.resizable) }
+        return mask
+    }
+
+    private func resolvedLevel() -> NSWindow.Level {
+        switch windowLevelName {
+        case "normal":      return .normal
+        case "floating":    return .floating
+        case "screenSaver": return .screenSaver
+        case "dock":        return NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.dockWindow)))
+        case "status":      return .statusBar
+        case "popUpMenu":   return .popUpMenu
+        default:
+            AKWarning("hs.ui.window: Unknown level '\(windowLevelName)', using 'floating'")
+            return .floating
         }
     }
 
@@ -543,6 +704,16 @@ import SwiftUI
         } else {
             AKWarning("hs.ui: onHover() called on an element that does not support interactions")
         }
+        return self
+    }
+
+    // MARK: - Web View Element
+
+    @available(macOS 26.0, *)
+    @objc func webview(_ element: UIWebView) -> HSUIWindow {
+        addToCurrentContainer(element)
+        currentElement = element
+        embeddedWebViews.append(element)
         return self
     }
 

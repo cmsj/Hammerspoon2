@@ -80,15 +80,20 @@ function parseSwiftFile(filePath, repoRoot) {
         const beforeLines = beforeProtocol.split('\n');
         const protocolDoc = [];
 
-        // Walk backwards from the protocol definition to collect /// comments
+        // Walk backwards from the protocol definition to collect /// comments.
+        // Skip over Swift attribute lines (@available, @MainActor, etc.) that
+        // may appear between the doc comments and the protocol declaration.
         for (let i = beforeLines.length - 1; i >= 0; i--) {
             const line = beforeLines[i];
             const trimmed = line.trim();
             if (trimmed.startsWith('///')) {
                 // Remove /// and exactly one space (if present), but preserve any additional indentation
                 protocolDoc.unshift(line.replace(/^[^\S\r\n]*\/\/\/\s?/, ''));
+            } else if (trimmed.startsWith('@')) {
+                // Skip Swift attribute lines (@available, @MainActor, @objc, etc.)
+                continue;
             } else if (trimmed && !trimmed.startsWith('//')) {
-                // Stop if we hit a non-comment, non-empty line
+                // Stop if we hit a non-comment, non-empty, non-attribute line
                 break;
             }
         }
