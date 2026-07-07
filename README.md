@@ -24,7 +24,7 @@ From a future pre-release onwards, builds will require at least macOS 26, and on
 
 ### Building
 
-This is an Xcode project. Open `Hammerspoon 2.xcodeproj` in Xcode to build.
+This is an Xcode project. Open `Hammerspoon 2.xcodeproj` in Xcode to build. To generate doc artifacts, run `npm install` in the top level of the repository.
 
 ## License
 
