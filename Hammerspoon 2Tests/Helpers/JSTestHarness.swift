@@ -428,6 +428,8 @@ extension JSTestHarness {
                 loadModule(HSKeycodesModule.self, as: name)
             case "ui":
                 loadModule(HSUIModule.self, as: name)
+            case "docs":
+                loadModule(HSDocsModule.self, as: name)
             default:
                 print("⚠️ Unknown module: \(name)")
             }

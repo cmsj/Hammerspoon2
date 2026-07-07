@@ -4318,6 +4318,145 @@
       "rawDocumentation": "Module for controlling the Hammerspoon console"
     },
     {
+      "name": "hs.docs",
+      "methods": [
+        {
+          "name": "show",
+          "signature": "func show(_ moduleName: String?, _ showTS: Bool)",
+          "isStatic": false,
+          "rawDocumentation": "Open the Hammerspoon 2 API documentation in a new window\n- Parameter moduleName?: Optional module to navigate to directly (e.g. `\"hs.application\"`). Omit to open the index page.\n- Parameter showTS?: Pass `true` to show TypeScript docs instead of JS docs\n- Example:\n```js\nhs.docs.show()\nhs.docs.show(\"hs.application\")\nhs.docs.show(\"hs.application\", true)\n```",
+          "description": "Open the Hammerspoon 2 API documentation in a new window",
+          "params": [
+            {
+              "name": "moduleName",
+              "type": "string",
+              "description": "Optional module to navigate to directly (e.g. `\"hs.application\"`). Omit to open the index page.",
+              "optional": true,
+              "tsType": null
+            },
+            {
+              "name": "showTS",
+              "type": "boolean",
+              "description": "Pass `true` to show TypeScript docs instead of JS docs",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.docs.show()\nhs.docs.show(\"hs.application\")\nhs.docs.show(\"hs.application\", true)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.docs/HSDocsModule.swift",
+          "lineNumber": 29
+        },
+        {
+          "name": "get",
+          "signature": "func get(_ identifier: String) -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Return documentation for a module, method, or property\n- Parameter identifier: Dot-separated path such as `\"hs.camera\"` or `\"hs.camera.all\"`\n- Returns: A plain-text summary of the item, or `null` if not found\n- Example:\n```js\nconsole.log(hs.docs.get(\"hs.application\"))\nconsole.log(hs.docs.get(\"hs.camera.all\"))\n```",
+          "description": "Return documentation for a module, method, or property",
+          "params": [
+            {
+              "name": "identifier",
+              "type": "string",
+              "description": "Dot-separated path such as `\"hs.camera\"` or `\"hs.camera.all\"`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "A plain-text summary of the item, or `null` if not found"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.docs.get(\"hs.application\"))\nconsole.log(hs.docs.get(\"hs.camera.all\"))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.docs/HSDocsModule.swift",
+          "lineNumber": 39
+        },
+        {
+          "name": "jsDocsPath",
+          "signature": "func jsDocsPath() -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Return the filesystem path to the bundled JS documentation directory\n- Returns: Absolute path to the JS docs folder inside the app bundle, or `null`\n- Example:\n```js\nconsole.log(hs.docs.jsDocsPath())\n```",
+          "description": "Return the filesystem path to the bundled JS documentation directory",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "Absolute path to the JS docs folder inside the app bundle, or `null`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.docs.jsDocsPath())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.docs/HSDocsModule.swift",
+          "lineNumber": 47
+        },
+        {
+          "name": "tsDocsPath",
+          "signature": "func tsDocsPath() -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Return the filesystem path to the bundled TypeScript documentation directory\n- Returns: Absolute path to the TS docs folder inside the app bundle, or `null`\n- Example:\n```js\nconsole.log(hs.docs.tsDocsPath())\n```",
+          "description": "Return the filesystem path to the bundled TypeScript documentation directory",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "Absolute path to the TS docs folder inside the app bundle, or `null`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.docs.tsDocsPath())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.docs/HSDocsModule.swift",
+          "lineNumber": 55
+        },
+        {
+          "name": "apiJSON",
+          "signature": "func apiJSON() -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Return the contents of the bundled `api.json` file\n- Returns: JSON string containing the full API specification, or `null`\n- Example:\n```js\nconst data = JSON.parse(hs.docs.apiJSON())\nconsole.log(data.modules.length)\n```",
+          "description": "Return the contents of the bundled `api.json` file",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "JSON string containing the full API specification, or `null`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const data = JSON.parse(hs.docs.apiJSON())\nconsole.log(data.modules.length)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.docs/HSDocsModule.swift",
+          "lineNumber": 64
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "# hs.docs\n**Offline API documentation browser**\nBrowse and query the Hammerspoon 2 API documentation from within the app.\n`hs.docs.show()` opens an `hs.ui.webview` window with the JS or TypeScript docs.\n`hs.docs.get()` returns formatted plain-text documentation from the bundled `api.json`.",
+      "rawDocumentation": "# hs.docs\n\n**Offline API documentation browser**\n\nBrowse and query the Hammerspoon 2 API documentation from within the app.\n\n`hs.docs.show()` opens an `hs.ui.webview` window with the JS or TypeScript docs.\n`hs.docs.get()` returns formatted plain-text documentation from the bundled `api.json`."
+    },
+    {
       "name": "hs.fs",
       "methods": [
         {
@@ -17265,5 +17404,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-07T15:49:07.916Z"
+  "generatedAt": "2026-07-07T21:11:11.027Z"
 }

@@ -11,6 +11,8 @@
 		4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4F488B2F2E97E79800A2B5F4 /* Sparkle */; };
 		4F59E3502EFC986100954462 /* hammerspoon.d.ts in Resources */ = {isa = PBXBuildFile; fileRef = 4F59E34F2EFC985500954462 /* hammerspoon.d.ts */; };
 		4F59E3512EFC986100954462 /* api.json in Resources */ = {isa = PBXBuildFile; fileRef = 4F59E34E2EFC984900954462 /* api.json */; };
+		4F59E3522EFC986200954462 /* js in Resources */ = {isa = PBXBuildFile; fileRef = 4F59E3532EFC986200954462 /* js */; };
+		4F59E3542EFC986200954462 /* ts in Resources */ = {isa = PBXBuildFile; fileRef = 4F59E3552EFC986200954462 /* ts */; };
 		4F947D922F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F947DA62F56404F00DD814E /* OSAKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F947DA52F56404F00DD814E /* OSAKit.framework */; };
 		4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 4FACE0032F12345678900000 /* JavaScriptCoreExtras */; };
@@ -53,6 +55,8 @@
 		4F59E34E2EFC984900954462 /* api.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = api.json; path = docs/api.json; sourceTree = "<group>"; };
 		4F59E34F2EFC985500954462 /* hammerspoon.d.ts */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.typescript; name = hammerspoon.d.ts; path = docs/hammerspoon.d.ts; sourceTree = "<group>"; };
 		4F59E3522EFDEC7200954462 /* generate-typescript.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "generate-typescript.js"; sourceTree = "<group>"; };
+		4F59E3532EFC986200954462 /* js */ = {isa = PBXFileReference; lastKnownFileType = folder; name = js; path = docs/js; sourceTree = "<group>"; };
+		4F59E3552EFC986200954462 /* ts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ts; path = docs/ts; sourceTree = "<group>"; };
 		4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = HammerspoonOSAScriptHelper.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F947DA52F56404F00DD814E /* OSAKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OSAKit.framework; path = System/Library/Frameworks/OSAKit.framework; sourceTree = SDKROOT; };
 		4F973B072EF89EE6006A6709 /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
@@ -163,6 +167,8 @@
 			children = (
 				4F59E34F2EFC985500954462 /* hammerspoon.d.ts */,
 				4F59E34E2EFC984900954462 /* api.json */,
+				4F59E3532EFC986200954462 /* js */,
+				4F59E3552EFC986200954462 /* ts */,
 			);
 			name = "Docs Artifacts";
 			sourceTree = "<group>";
@@ -331,6 +337,8 @@
 			files = (
 				4F59E3502EFC986100954462 /* hammerspoon.d.ts in Resources */,
 				4F59E3512EFC986100954462 /* api.json in Resources */,
+				4F59E3522EFC986200954462 /* js in Resources */,
+				4F59E3542EFC986200954462 /* ts in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

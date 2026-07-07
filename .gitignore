@@ -35,12 +35,9 @@ Hammerspoon\ 2.xcodeproj/xcshareddata/xcodecloud
 # Node.js
 node_modules/
 
-# Documentation artifacts (keep the generated docs for now, but they could be regenerated)
-# Uncomment these if you want to exclude generated docs from git:
+# Documentation artifacts
 docs/api/
 docs/json/**
-docs/js/**
-docs/ts/**
 
 # Claude
 .claude/settings.local.json

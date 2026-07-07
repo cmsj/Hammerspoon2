@@ -1865,6 +1865,48 @@ declare namespace hs.console {
 }
 
 /**
+ * # hs.docs
+**Offline API documentation browser**
+Browse and query the Hammerspoon 2 API documentation from within the app.
+`hs.docs.show()` opens an `hs.ui.webview` window with the JS or TypeScript docs.
+`hs.docs.get()` returns formatted plain-text documentation from the bundled `api.json`.
+ */
+declare namespace hs.docs {
+    /**
+     * Open the Hammerspoon 2 API documentation in a new window
+     * @param moduleName Optional module to navigate to directly (e.g. `"hs.application"`). Omit to open the index page.
+     * @param showTS Pass `true` to show TypeScript docs instead of JS docs
+     */
+    function show(moduleName?: string | null, showTS?: boolean): void;
+
+    /**
+     * Return documentation for a module, method, or property
+     * @param identifier Dot-separated path such as `"hs.camera"` or `"hs.camera.all"`
+     * @returns A plain-text summary of the item, or `null` if not found
+     */
+    function get(identifier: string): string | null;
+
+    /**
+     * Return the filesystem path to the bundled JS documentation directory
+     * @returns Absolute path to the JS docs folder inside the app bundle, or `null`
+     */
+    function jsDocsPath(): string | null;
+
+    /**
+     * Return the filesystem path to the bundled TypeScript documentation directory
+     * @returns Absolute path to the TS docs folder inside the app bundle, or `null`
+     */
+    function tsDocsPath(): string | null;
+
+    /**
+     * Return the contents of the bundled `api.json` file
+     * @returns JSON string containing the full API specification, or `null`
+     */
+    function apiJSON(): string | null;
+
+}
+
+/**
  * Module for filesystem operations.
 `hs.fs` provides a comprehensive set of filesystem operations covering file
 I/O, directory management, path manipulation, metadata access, symbolic
