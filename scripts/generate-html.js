@@ -15,7 +15,7 @@ const { marked } = require('marked');
 const hljs = require('highlight.js');
 
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
-const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'html');
+const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'js', 'html');
 const COMBINED_DIR = path.join(JSON_DIR, 'combined');
 const TEMPLATES_DIR = path.join(__dirname, 'templates');
 
@@ -446,7 +446,7 @@ function main() {
 
     console.log(`\n✅ HTML documentation generated successfully!`);
     console.log(`   Output directory: ${OUTPUT_DIR}`);
-    console.log(`   Open docs/html/index.html in your browser`);
+    console.log(`   Open docs/js/html/index.html in your browser`);
 }
 
 main();

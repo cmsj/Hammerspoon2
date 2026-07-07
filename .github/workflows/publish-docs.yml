@@ -82,11 +82,11 @@ jobs:
       - name: Generate documentation
         run: npm run docs:generate
 
-      - name: Copy TypeScript files to HTML output
+      - name: Copy TypeScript files to JS HTML output
         run: |
-          cp docs/hammerspoon.d.ts docs/html/
-          cp docs/tsconfig.example.json docs/html/
-          cp docs/TYPESCRIPT.md docs/html/
+          cp docs/hammerspoon.d.ts docs/js/html/
+          cp docs/tsconfig.example.json docs/js/html/
+          cp docs/TYPESCRIPT.md docs/js/html/
 
       - name: Fetch existing versioned site
         env:
@@ -111,7 +111,9 @@ jobs:
           VERSION="${{ steps.version.outputs.name }}"
           echo "Publishing docs as: $VERSION"
           rm -rf "site/$VERSION"
-          cp -r docs/html "site/$VERSION"
+          mkdir -p "site/$VERSION"
+          cp -r docs/js/html "site/$VERSION/js"
+          cp -r docs/ts/html "site/$VERSION/ts"
 
       - name: Generate root version index
         run: node scripts/generate-versions-index.js site

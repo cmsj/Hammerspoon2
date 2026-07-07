@@ -11,7 +11,7 @@
     "docs:typescript": "node scripts/generate-typescript.js",
     "docs:coverage": "node scripts/docs-coverage.js",
     "docs:test": "bash scripts/test-docs.sh",
-    "docs:clean": "rm -rf docs/json docs/html docs/api.json docs/hammerspoon.d.ts"
+    "docs:clean": "rm -rf docs/json docs/js docs/ts docs/api.json docs/hammerspoon.d.ts"
   },
   "keywords": [
     "hammerspoon",

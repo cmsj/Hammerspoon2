@@ -39,7 +39,8 @@ node_modules/
 # Uncomment these if you want to exclude generated docs from git:
 docs/api/
 docs/json/**
-docs/html/**
+docs/js/**
+docs/ts/**
 
 # Claude
 .claude/settings.local.json

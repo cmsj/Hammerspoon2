@@ -59,7 +59,15 @@ const listItems = versions.map(v => {
         : v === 'main'
             ? ' <span class="badge dev">dev</span>'
             : '';
-    return `            <li><a href="${v}/">${v}${badge}</a></li>`;
+    return `            <li>
+                <div class="version-row">
+                    <span class="version-name">${v}${badge}</span>
+                    <div class="version-links">
+                        <a href="${v}/js/">JavaScript API</a>
+                        <a href="${v}/ts/">TypeScript</a>
+                    </div>
+                </div>
+            </li>`;
 }).join('\n');
 
 const html = `<!DOCTYPE html>
@@ -110,22 +118,42 @@ const html = `<!DOCTYPE html>
             flex-direction: column;
             gap: 0.5rem;
         }
-        .version-list li a {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+        .version-list li {
             padding: 0.75rem 1rem;
             background: #161b22;
             border: 1px solid #30363d;
             border-radius: 8px;
-            color: #58a6ff;
-            text-decoration: none;
+        }
+        .version-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .version-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
             font-size: 0.9375rem;
+            color: #e6edf3;
+        }
+        .version-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .version-links a {
+            padding: 0.25rem 0.625rem;
+            background: rgba(31, 111, 235, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.25);
+            border-radius: 5px;
+            color: #58a6ff;
+            text-decoration: none;
+            font-size: 0.8125rem;
             transition: border-color 0.15s, background 0.15s;
         }
-        .version-list li a:hover {
-            background: #1c2128;
+        .version-links a:hover {
+            background: rgba(31, 111, 235, 0.2);
             border-color: #58a6ff;
         }
         .badge {
