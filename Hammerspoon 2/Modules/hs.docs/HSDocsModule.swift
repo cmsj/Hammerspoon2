@@ -124,16 +124,17 @@ import JavaScriptCore
 
         // api.json names modules without "hs." prefix (e.g. "camera", not "hs.camera")
         let normalized = identifier.hasPrefix("hs.") ? String(identifier.dropFirst(3)) : identifier
+        let parts = normalized.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
 
-        if let dotIdx = normalized.firstIndex(of: ".") {
-            let moduleName = String(normalized[normalized.startIndex..<dotIdx])
-            let memberName = String(normalized[normalized.index(after: dotIdx)...])
-            guard let mod = modules.first(where: { $0["name"] as? String == moduleName }) else { return nil }
-            return formatMember(memberName, in: mod, moduleName: moduleName)
-        } else {
-            guard let mod = modules.first(where: { $0["name"] as? String == normalized }) else { return nil }
-            return formatModule(mod)
+        // Walk longest-prefix-first so "ui.webview.toolbar" matches module "ui.webview"
+        // before falling back to module "ui" with member "webview.toolbar".
+        for splitAt in stride(from: parts.count, through: 1, by: -1) {
+            let modName = parts[0..<splitAt].joined(separator: ".")
+            guard let mod = modules.first(where: { $0["name"] as? String == modName }) else { continue }
+            if splitAt == parts.count { return formatModule(mod) }
+            return formatMember(parts[splitAt...].joined(separator: "."), in: mod, moduleName: modName)
         }
+        return nil
     }
 
     @objc func jsDocsPath() -> String? {
