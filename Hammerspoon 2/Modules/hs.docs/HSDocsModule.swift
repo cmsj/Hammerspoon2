@@ -114,6 +114,9 @@ import JavaScriptCore
             })(__hsDsUrl);
         """)
         context.setObject(NSNull(), forKeyedSubscript: "__hsDsUrl" as NSString)
+        if let exception = context.exception {
+            AKError("hs.docs.show: JS exception: \(exception)")
+        }
     }
 
     @objc func get(_ identifier: String) -> String? {
