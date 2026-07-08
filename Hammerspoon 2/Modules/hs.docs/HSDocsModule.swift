@@ -98,18 +98,22 @@ import JavaScriptCore
             return
         }
         let htmlFile = moduleName.flatMap { ["undefined", "null", ""].contains($0) ? nil : "\($0).html" } ?? "index.html"
-        // basePath comes from Bundle.main — safe to interpolate directly
-        let fileURL = "file://\(basePath)/\(htmlFile)"
+        // Percent-encode the filename to handle any special characters in moduleName,
+        // then pass via a JS variable to avoid string-literal injection entirely.
+        let encodedFile = htmlFile.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? "index.html"
+        let fileURL = "file://\(basePath)/\(encodedFile)"
+        context.setObject(fileURL, forKeyedSubscript: "__hsDsUrl" as NSString)
         context.evaluateScript("""
-            (function() {
+            (function(url) {
                 const wv = hs.ui.webview()
                     .toolbar(["back", "forward", "reload", "url"])
-                    .loadURL("\(fileURL)");
+                    .loadURL(url);
                 hs.ui.window({x: 100, y: 100, w: 1200, h: 800})
                     .titled(true).closable(true).allowResize(true)
                     .level("normal").webview(wv).show();
-            })();
+            })(__hsDsUrl);
         """)
+        context.setObject(NSNull(), forKeyedSubscript: "__hsDsUrl" as NSString)
     }
 
     @objc func get(_ identifier: String) -> String? {
