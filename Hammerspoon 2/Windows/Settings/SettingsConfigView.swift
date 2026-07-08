@@ -55,7 +55,7 @@ struct SettingsConfigView: View {
             VStack {
                 Grid {
                     GridRow {
-                        Text("Run at startup:")
+                        Text("Configuration:")
                             .gridColumnAlignment(.trailing)
                         Picker("", selection: $configFilePicker) {
                             HStack {
@@ -74,6 +74,16 @@ struct SettingsConfigView: View {
                         .onChange(of: configFilePicker, initial: true) {
                             handleConfigFilePickerChange()
                         }
+                    }
+                    GridRow {
+                        Text("Show in:")
+                            .gridColumnAlignment(.trailing)
+                        Picker("", selection: $settingsManager.dockMenuBehaviour) {
+                            ForEach(DockMenubarType.allCases) { someType in
+                                Text("\(someType.displayName)")
+                            }
+                        }
+                        .labelsHidden()
                     }
                 }
                 Spacer()
