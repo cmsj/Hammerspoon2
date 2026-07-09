@@ -140,7 +140,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
-          "lineNumber": 20
+          "lineNumber": 21
         },
         {
           "name": "collectGarbage",
@@ -161,7 +161,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
-          "lineNumber": 27
+          "lineNumber": 29
         }
       ],
       "properties": [],
@@ -4250,72 +4250,6 @@
       ],
       "description": "# hs.chooser\n**A Spotlight-style chooser for presenting options to the user**\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n## Quick Start\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n## Dynamic Choices\n```javascript\nconst allApps = hs.application.runningApplications()\n\nchooser.setChoices((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.title.toLowerCase().includes(q))\n        .map(a => ({ text: a.title, subText: a.bundleID }))\n})\n```\n## Async Choices (with debounce)\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoices(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```",
       "rawDocumentation": "# hs.chooser\n\n**A Spotlight-style chooser for presenting options to the user**\n\n`hs.chooser` lets you show a floating search panel that users can type into to filter and\nselect from a list of items. It's ideal for launchers, emoji pickers, command palettes, and\nany interface where you want fast, keyboard-driven selection.\n\n## Quick Start\n\n```javascript\nconst chooser = hs.chooser.create()\n\nchooser.setChoices([\n    { text: \"Open Safari\", subText: \"Web browser\", action: \"safari\" },\n    { text: \"Open Terminal\", subText: \"Command line\", action: \"terminal\" }\n])\n\nchooser.onSelect = (item) => {\n    if (item) console.log(\"Selected: \" + item.text + \" (\" + item.action + \")\")\n}\n\nchooser.show()\n```\n\n## Dynamic Choices\n\nFor search-as-you-type filtering powered by your own data:\n\n```javascript\nconst allApps = hs.application.runningApplications()\n\nchooser.setChoices((query) => {\n    const q = query.toLowerCase()\n    return allApps\n        .filter(a => a.title.toLowerCase().includes(q))\n        .map(a => ({ text: a.title, subText: a.bundleID }))\n})\n```\n\n## Async Choices (with debounce)\n\nFor results fetched from an external source:\n\n```javascript\nlet debounceTimer = null\nlet cachedResults = []\n\nchooser.setChoices(() => cachedResults)\n\nchooser.onQueryChange = (query) => {\n    if (debounceTimer) debounceTimer.invalidate()\n    debounceTimer = hs.timer.doAfter(0.05, () => {\n        fetchFromAPI(query).then(results => {\n            cachedResults = results\n            chooser.refreshChoices()\n        })\n    })\n}\n```"
-    },
-    {
-      "name": "hs.console",
-      "methods": [
-        {
-          "name": "open",
-          "signature": "func open()",
-          "isStatic": false,
-          "rawDocumentation": "Open the console window\n- Example:\n```js\nhs.console.open()\n```",
-          "description": "Open the console window",
-          "params": [],
-          "returns": null,
-          "notes": [],
-          "examples": [
-            {
-              "lang": "js",
-              "code": "hs.console.open()"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 23
-        },
-        {
-          "name": "close",
-          "signature": "func close()",
-          "isStatic": false,
-          "rawDocumentation": "Close the console window\n- Example:\n```js\nhs.console.close()\n```",
-          "description": "Close the console window",
-          "params": [],
-          "returns": null,
-          "notes": [],
-          "examples": [
-            {
-              "lang": "js",
-              "code": "hs.console.close()"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 30
-        },
-        {
-          "name": "clear",
-          "signature": "func clear()",
-          "isStatic": false,
-          "rawDocumentation": "Clear all console output\n- Example:\n```js\nhs.console.clear()\n```",
-          "description": "Clear all console output",
-          "params": [],
-          "returns": null,
-          "notes": [],
-          "examples": [
-            {
-              "lang": "js",
-              "code": "hs.console.clear()"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.console/HSConsoleModule.swift",
-          "lineNumber": 37
-        }
-      ],
-      "properties": [],
-      "types": [],
-      "description": "Module for controlling the Hammerspoon console",
-      "rawDocumentation": "Module for controlling the Hammerspoon console"
     },
     {
       "name": "hs.docs",
@@ -17404,5 +17338,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-07T21:11:11.027Z"
+  "generatedAt": "2026-07-09T16:59:26.256Z"
 }

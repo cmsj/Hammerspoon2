@@ -1844,27 +1844,6 @@ If unset, activating an invalid row is silently ignored.
 }
 
 /**
- * Module for controlling the Hammerspoon console
- */
-declare namespace hs.console {
-    /**
-     * Open the console window
-     */
-    function open(): void;
-
-    /**
-     * Close the console window
-     */
-    function close(): void;
-
-    /**
-     * Clear all console output
-     */
-    function clear(): void;
-
-}
-
-/**
  * # hs.docs
 **Offline API documentation browser**
 Browse and query the Hammerspoon 2 API documentation from within the app.

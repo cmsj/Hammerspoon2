@@ -408,7 +408,6 @@ As of 2025-11-06:
 ### Modules Still Needing Tests
 
 - hs.appinfo - Application metadata
-- hs.console - Console window control
 - hs.permissions - System permission management
 - hs.ax - Low-level Accessibility API
 - hs.window - High-level window management

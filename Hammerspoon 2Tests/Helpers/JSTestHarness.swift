@@ -384,8 +384,6 @@ extension JSTestHarness {
                 loadModule(HSTimerModule.self, as: name)
             case "application":
                 loadModule(HSApplicationModule.self, as: name)
-            case "console":
-                loadModule(HSConsoleModule.self, as: name)
             case "appinfo":
                 loadModule(HSAppInfoModule.self, as: name)
             case "permissions":
