@@ -45,15 +45,28 @@ enum DockMenubarType: String, CaseIterable, Identifiable {
             }
         }
         set {
-            guard newValue == false else { return }
-
-            switch self {
-            case .both, .menuBar:
-                self = .dock
-            default:
-                // We should never hit this because how could the menubar item have been
-                // removed if it wasn't configured to be there.
-                return
+            if newValue == true {
+                // We should never actually take this branch, because there should be no way
+                // for SwiftUI/macOS to initiate us being in the menubar. This branch is
+                // included here only for completeness sake.
+                switch self {
+                case .dock:
+                    self = .both
+                default:
+                    // We're already intending to be in the menubar, so no action required
+                    return
+                }
+            } else {
+                // This is the branch that actually matters, because the user manually removed
+                // our menubar item from the menubar.
+                switch self {
+                case .both, .menuBar:
+                    self = .dock
+                default:
+                    // We should never hit this because how could the menubar item have been
+                    // removed if it wasn't configured to be there.
+                    return
+                }
             }
         }
     }
@@ -164,7 +177,7 @@ final class SettingsManager {
         relaunchOnReload = UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
-        dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? Keys.dockMenuBehaviour.defaultValue as! DockMenubarType
+        dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
 
         defaultsObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
