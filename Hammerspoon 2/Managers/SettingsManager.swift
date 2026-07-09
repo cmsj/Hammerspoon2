@@ -39,11 +39,27 @@ enum DockMenubarType: String, CaseIterable, Identifiable {
     }
 
     var showMenuItem: Bool {
-        switch self {
-        case .menuBar, .both:
-            return true
-        default:
-            return false
+        get {
+            switch self {
+            case .menuBar, .both:
+                return true
+            default:
+                return false
+            }
+        }
+        set {
+            guard newValue == false else { return }
+
+            switch self {
+            case .both:
+                self = .dock
+            case .menuBar:
+                self = .none
+            default:
+                // We should never hit this because how could the menubar item have been
+                // removed if it wasn't configured to be there.
+                return
+            }
         }
     }
 }

@@ -40,6 +40,8 @@ struct Hammerspoon_2App: App {
     @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
 
+    @State private var settingsManager = SettingsManager.shared
+
     private let updaterController: SPUStandardUpdaterController
 
     init() {
@@ -47,7 +49,7 @@ struct Hammerspoon_2App: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("Hammerspoon 2", systemImage: "hammer") { // FIXME: Use the real logo here
+        MenuBarExtra("Hammerspoon 2", systemImage: "hammer", isInserted: $settingsManager.dockMenuBehaviour.showMenuItem) { // FIXME: Use the real logo here
             let managerManager = ManagerManager.shared
 
             Button("Reload Config") {
