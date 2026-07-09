@@ -81,6 +81,10 @@ final class SettingsManager {
         delegates.removeValue(forKey: ObjectIdentifier(delegate))
     }
 
+    func removeAllDelegates() {
+        delegates.removeAll()
+    }
+
     private func notifyDelegates() {
         delegates = delegates.filter { $0.value.isAlive }
         delegates.values.forEach { $0.notify() }

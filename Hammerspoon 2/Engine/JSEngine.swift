@@ -75,6 +75,8 @@ class JSEngine {
     private func deleteContext() {
         AKTrace("Destroying JavaScript context: \(id)")
 
+        SettingsManager.shared.removeAllDelegates()
+
         if let hs = self["hs"] as? JSValue, let moduleRoot = hs.toObjectOf(ModuleRoot.self) as? ModuleRoot {
             moduleRoot.shutdown()
             self["hs"] = nil
