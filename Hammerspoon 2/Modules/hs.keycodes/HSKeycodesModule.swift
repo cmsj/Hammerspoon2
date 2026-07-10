@@ -547,6 +547,19 @@ extension HSKeycodesModule {
         ("pad7",     kVK_ANSI_Keypad7),        // 89
         ("pad8",     kVK_ANSI_Keypad8),        // 91
         ("pad9",     kVK_ANSI_Keypad9),        // 92
+
+        // Symbol word aliases (convenient alternatives to the character forms in ansiUSCharacterMap)
+        ("minus",        kVK_ANSI_Minus),         // same as "-"
+        ("equal",        kVK_ANSI_Equal),          // same as "="
+        ("leftbracket",  kVK_ANSI_LeftBracket),   // same as "["
+        ("rightbracket", kVK_ANSI_RightBracket),  // same as "]"
+        ("backslash",    kVK_ANSI_Backslash),      // same as "\\"
+        ("semicolon",    kVK_ANSI_Semicolon),      // same as ";"
+        ("quote",        kVK_ANSI_Quote),           // same as "'"
+        ("comma",        kVK_ANSI_Comma),           // same as ","
+        ("period",       kVK_ANSI_Period),          // same as "."
+        ("slash",        kVK_ANSI_Slash),           // same as "/"
+        ("grave",        kVK_ANSI_Grave),           // same as "`"
     ]
 
     // ANSI US fallback for character keys when the layout provides no UCHR data.

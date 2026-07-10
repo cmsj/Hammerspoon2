@@ -4391,6 +4391,1049 @@
       "rawDocumentation": "# hs.docs\n\n**Offline API documentation browser**\n\nBrowse and query the Hammerspoon 2 API documentation from within the app.\n\n`hs.docs.show()` opens an `hs.ui.webview` window with the JS or TypeScript docs.\n`hs.docs.get()` returns formatted plain-text documentation from the bundled `api.json`."
     },
     {
+      "name": "hs.eventtap",
+      "methods": [
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ types: [Int], _ callback: JSFunction) -> HSEventTap?",
+          "isStatic": false,
+          "rawDocumentation": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\n\nThe callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress\nthe event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.\n\n- Parameters:\n  - types: An array of event type integers from `hs.eventtap.eventTypes`\n  - callback: {(event: HSEventTapEvent) => boolean} Function called for each matching event\n- Returns: An HSEventTap watcher, or null if the tap could not be created\n- Example:\n```js\nconst tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key: \" + event.keyCode)\n        return hs.eventtap.emit\n    }\n)\ntap.start()\n```",
+          "description": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\nThe callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress\nthe event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.",
+          "params": [
+            {
+              "name": "types",
+              "type": "Array<Int>",
+              "description": "An array of event type integers from `hs.eventtap.eventTypes`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "callback",
+              "type": "JSFunction",
+              "description": "Function called for each matching event",
+              "optional": false,
+              "tsType": "(event: HSEventTapEvent) => boolean"
+            }
+          ],
+          "returns": {
+            "type": "HSEventTap",
+            "description": "An HSEventTap watcher, or null if the tap could not be created"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key: \" + event.keyCode)\n        return hs.eventtap.emit\n    }\n)\ntap.start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 120
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ tap: HSEventTap)",
+          "isStatic": false,
+          "rawDocumentation": "Stop and remove a previously created watcher\n- Parameter tap: The HSEventTap returned by `addWatcher`\n- Example:\n```js\nhs.eventtap.removeWatcher(tap)\n```",
+          "description": "Stop and remove a previously created watcher",
+          "params": [
+            {
+              "name": "tap",
+              "type": "HSEventTap",
+              "description": "The HSEventTap returned by `addWatcher`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.removeWatcher(tap)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 128
+        },
+        {
+          "name": "makeKeyEvent",
+          "signature": "func makeKeyEvent(_ key: String, _ isDown: Bool) -> HSEventTapEvent?",
+          "isStatic": false,
+          "rawDocumentation": "Create a keyboard event\n- Parameters:\n  - key: A key name (e.g. \"a\", \"space\", \"return\", \"f1\") or numeric key code string\n  - isDown: true for key down, false for key up\n- Returns: An HSEventTapEvent, or null if the key name is unknown\n- Example:\n```js\nconst evt = hs.eventtap.makeKeyEvent(\"a\", true)\nevt.rawFlags = hs.eventtap.modifierFlags.cmd\nevt.post()\n```",
+          "description": "Create a keyboard event",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "A key name (e.g. \"a\", \"space\", \"return\", \"f1\") or numeric key code string",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "isDown",
+              "type": "boolean",
+              "description": "true for key down, false for key up",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSEventTapEvent",
+            "description": "An HSEventTapEvent, or null if the key name is unknown"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const evt = hs.eventtap.makeKeyEvent(\"a\", true)\nevt.rawFlags = hs.eventtap.modifierFlags.cmd\nevt.post()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 143
+        },
+        {
+          "name": "makeKeyEventWithCode",
+          "signature": "func makeKeyEventWithCode(_ keyCode: Int, _ isDown: Bool) -> HSEventTapEvent?",
+          "isStatic": false,
+          "rawDocumentation": "Create a keyboard event using a raw key code\n- Parameters:\n  - keyCode: A numeric virtual key code\n  - isDown: true for key down, false for key up\n- Returns: An HSEventTapEvent\n- Example:\n```js\nconst evt = hs.eventtap.makeKeyEventWithCode(0, true)  // key code 0 = \"a\"\nevt.post()\n```",
+          "description": "Create a keyboard event using a raw key code",
+          "params": [
+            {
+              "name": "keyCode",
+              "type": "number",
+              "description": "A numeric virtual key code",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "isDown",
+              "type": "boolean",
+              "description": "true for key down, false for key up",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSEventTapEvent",
+            "description": "An HSEventTapEvent"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const evt = hs.eventtap.makeKeyEventWithCode(0, true)  // key code 0 = \"a\"\nevt.post()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 155
+        },
+        {
+          "name": "makeMouseEvent",
+          "signature": "func makeMouseEvent(_ type: Int, _ x: Double, _ y: Double, _ button: Int) -> HSEventTapEvent?",
+          "isStatic": false,
+          "rawDocumentation": "Create a mouse event at the given position.\n\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin of the primary\ndisplay, y increases downward), matching the values returned by `hs.screen`.\n\n- Parameters:\n  - type: An event type integer from hs.eventtap.eventTypes (e.g. leftMouseDown)\n  - x: Horizontal position in Hammerspoon screen coordinates\n  - y: Vertical position in Hammerspoon screen coordinates\n  - button: Mouse button number (0=left, 1=right, 2=middle)\n- Returns: An HSEventTapEvent, or null if the event could not be created\n- Example:\n```js\nconst s = hs.screen.primary()\n// Click at the centre of the primary screen:\nconst cx = s.frame.x + s.frame.w / 2\nconst cy = s.frame.y + s.frame.h / 2\nconst evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.leftMouseDown, cx, cy, 0)\nevt.post()\n```",
+          "description": "Create a mouse event at the given position.\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin of the primary\ndisplay, y increases downward), matching the values returned by `hs.screen`.",
+          "params": [
+            {
+              "name": "type",
+              "type": "number",
+              "description": "An event type integer from hs.eventtap.eventTypes (e.g. leftMouseDown)",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "button",
+              "type": "number",
+              "description": "Mouse button number (0=left, 1=right, 2=middle)",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSEventTapEvent",
+            "description": "An HSEventTapEvent, or null if the event could not be created"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const s = hs.screen.primary()\n// Click at the centre of the primary screen:\nconst cx = s.frame.x + s.frame.w / 2\nconst cy = s.frame.y + s.frame.h / 2\nconst evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.leftMouseDown, cx, cy, 0)\nevt.post()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 177
+        },
+        {
+          "name": "makeScrollWheelEvent",
+          "signature": "func makeScrollWheelEvent(_ deltaX: Double, _ deltaY: Double, _ x: Double, _ y: Double) -> HSEventTapEvent?",
+          "isStatic": false,
+          "rawDocumentation": "Create a scroll wheel event at the given position.\n\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).\n\n- Parameters:\n  - deltaX: Horizontal scroll amount in lines (positive = right)\n  - deltaY: Vertical scroll amount in lines (positive = down)\n  - x: Horizontal position in Hammerspoon screen coordinates\n  - y: Vertical position in Hammerspoon screen coordinates\n- Returns: An HSEventTapEvent, or null if the event could not be created\n- Example:\n```js\nconst evt = hs.eventtap.makeScrollWheelEvent(0, 3, 500, 400)\nevt.post()\n```",
+          "description": "Create a scroll wheel event at the given position.\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).",
+          "params": [
+            {
+              "name": "deltaX",
+              "type": "number",
+              "description": "Horizontal scroll amount in lines (positive = right)",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "deltaY",
+              "type": "number",
+              "description": "Vertical scroll amount in lines (positive = down)",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSEventTapEvent",
+            "description": "An HSEventTapEvent, or null if the event could not be created"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const evt = hs.eventtap.makeScrollWheelEvent(0, 3, 500, 400)\nevt.post()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 194
+        },
+        {
+          "name": "keyStroke",
+          "signature": "func keyStroke(_ mods: [String], _ key: String)",
+          "isStatic": false,
+          "rawDocumentation": "Send a key down and key up event with optional modifier keys.\n\nA 50 ms pause is inserted between the key-down and key-up events to improve\ncompatibility with applications that miss very fast synthetic keystrokes.\n\n- Parameters:\n  - mods: An array of modifier names (e.g. [\"cmd\", \"shift\"])\n  - key: A key name or single character (e.g. \"a\", \"space\", \"return\")\n- Example:\n```js\nhs.eventtap.keyStroke([\"cmd\"], \"c\")      // Copy\nhs.eventtap.keyStroke([\"cmd\", \"shift\"], \"4\")  // Screenshot selection\n```",
+          "description": "Send a key down and key up event with optional modifier keys.\nA 50 ms pause is inserted between the key-down and key-up events to improve\ncompatibility with applications that miss very fast synthetic keystrokes.",
+          "params": [
+            {
+              "name": "mods",
+              "type": "Array<String>",
+              "description": "An array of modifier names (e.g. [\"cmd\", \"shift\"])",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": "A key name or single character (e.g. \"a\", \"space\", \"return\")",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.keyStroke([\"cmd\"], \"c\")      // Copy\nhs.eventtap.keyStroke([\"cmd\", \"shift\"], \"4\")  // Screenshot selection"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 211
+        },
+        {
+          "name": "keyStrokes",
+          "signature": "func keyStrokes(_ text: String)",
+          "isStatic": false,
+          "rawDocumentation": "Type a string of characters as individual key events.\n\nA 50 ms pause is inserted between each key-down and key-up event.\n\n- Parameter text: The string to type\n- Example:\n```js\nhs.eventtap.keyStrokes(\"Hello, World!\")\n```",
+          "description": "Type a string of characters as individual key events.\nA 50 ms pause is inserted between each key-down and key-up event.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string",
+              "description": "The string to type",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.keyStrokes(\"Hello, World!\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 222
+        },
+        {
+          "name": "leftClick",
+          "signature": "func leftClick(_ x: Double, _ y: Double)",
+          "isStatic": false,
+          "rawDocumentation": "Post a left mouse button click at the given position.\n\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).\n\n- Parameters:\n  - x: Horizontal position in Hammerspoon screen coordinates\n  - y: Vertical position in Hammerspoon screen coordinates\n- Example:\n```js\nhs.eventtap.leftClick(400, 300)\n```",
+          "description": "Post a left mouse button click at the given position.\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.leftClick(400, 300)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 235
+        },
+        {
+          "name": "rightClick",
+          "signature": "func rightClick(_ x: Double, _ y: Double)",
+          "isStatic": false,
+          "rawDocumentation": "Post a right mouse button click at the given position.\n\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).\n\n- Parameters:\n  - x: Horizontal position in Hammerspoon screen coordinates\n  - y: Vertical position in Hammerspoon screen coordinates\n- Example:\n```js\nhs.eventtap.rightClick(400, 300)\n```",
+          "description": "Post a right mouse button click at the given position.\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.rightClick(400, 300)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 248
+        },
+        {
+          "name": "doubleLeftClick",
+          "signature": "func doubleLeftClick(_ x: Double, _ y: Double)",
+          "isStatic": false,
+          "rawDocumentation": "Post a left mouse button double-click at the given position.\n\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).\n\n- Parameters:\n  - x: Horizontal position in Hammerspoon screen coordinates\n  - y: Vertical position in Hammerspoon screen coordinates\n- Example:\n```js\nhs.eventtap.doubleLeftClick(400, 300)\n```",
+          "description": "Post a left mouse button double-click at the given position.\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.doubleLeftClick(400, 300)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 261
+        },
+        {
+          "name": "middleClick",
+          "signature": "func middleClick(_ x: Double, _ y: Double)",
+          "isStatic": false,
+          "rawDocumentation": "Post a middle mouse button click at the given position.\n\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).\n\n- Parameters:\n  - x: Horizontal position in Hammerspoon screen coordinates\n  - y: Vertical position in Hammerspoon screen coordinates\n- Example:\n```js\nhs.eventtap.middleClick(400, 300)\n```",
+          "description": "Post a middle mouse button click at the given position.\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.middleClick(400, 300)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 274
+        },
+        {
+          "name": "scrollWheel",
+          "signature": "func scrollWheel(_ deltaX: Double, _ deltaY: Double, _ x: Double, _ y: Double)",
+          "isStatic": false,
+          "rawDocumentation": "Post a scroll wheel event at the given position.\n\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).\n\n- Parameters:\n  - deltaX: Horizontal scroll amount in lines (positive = right)\n  - deltaY: Vertical scroll amount in lines (positive = down)\n  - x: Horizontal position in Hammerspoon screen coordinates\n  - y: Vertical position in Hammerspoon screen coordinates\n- Example:\n```js\nhs.eventtap.scrollWheel(0, 3, 500, 400)  // Scroll down 3 lines\n```",
+          "description": "Post a scroll wheel event at the given position.\nCoordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).",
+          "params": [
+            {
+              "name": "deltaX",
+              "type": "number",
+              "description": "Horizontal scroll amount in lines (positive = right)",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "deltaY",
+              "type": "number",
+              "description": "Vertical scroll amount in lines (positive = down)",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical position in Hammerspoon screen coordinates",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.scrollWheel(0, 3, 500, 400)  // Scroll down 3 lines"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 289
+        },
+        {
+          "name": "currentModifiers",
+          "signature": "func currentModifiers() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the currently held modifier keys\n- Returns: An array of modifier key names such as [\"cmd\", \"shift\"]\n- Example:\n```js\nconst mods = hs.eventtap.currentModifiers()\nif (mods.includes(\"cmd\")) console.log(\"Cmd is held\")\n```",
+          "description": "Returns the currently held modifier keys",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of modifier key names such as [\"cmd\", \"shift\"]"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const mods = hs.eventtap.currentModifiers()\nif (mods.includes(\"cmd\")) console.log(\"Cmd is held\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 300
+        },
+        {
+          "name": "checkMouseButtons",
+          "signature": "func checkMouseButtons() -> [String: Bool]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the currently pressed mouse buttons\n- Returns: A dictionary with keys \"left\", \"right\", \"middle\" mapping to booleans\n- Example:\n```js\nconst buttons = hs.eventtap.checkMouseButtons()\nif (buttons.left) console.log(\"Left button held\")\n```",
+          "description": "Returns the currently pressed mouse buttons",
+          "params": [],
+          "returns": {
+            "type": "Object<String, Bool>",
+            "description": "A dictionary with keys \"left\", \"right\", \"middle\" mapping to booleans"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const buttons = hs.eventtap.checkMouseButtons()\nif (buttons.left) console.log(\"Left button held\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 309
+        },
+        {
+          "name": "mouseLocation",
+          "signature": "func mouseLocation() -> [String: Double]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the current mouse cursor position in Hammerspoon screen coordinates\n(top-left origin of primary display, y increases downward, matching hs.screen).\n- Returns: A dictionary with \"x\" and \"y\" keys\n- Example:\n```js\nconst pos = hs.eventtap.mouseLocation()\nconsole.log(\"Mouse at \" + pos.x + \", \" + pos.y)\n```",
+          "description": "Returns the current mouse cursor position in Hammerspoon screen coordinates\n(top-left origin of primary display, y increases downward, matching hs.screen).",
+          "params": [],
+          "returns": {
+            "type": "Object<String, Double>",
+            "description": "A dictionary with \"x\" and \"y\" keys"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const pos = hs.eventtap.mouseLocation()\nconsole.log(\"Mouse at \" + pos.x + \", \" + pos.y)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 319
+        },
+        {
+          "name": "doubleClickInterval",
+          "signature": "func doubleClickInterval() -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Returns the system double-click interval in seconds\n- Returns: The maximum time between clicks that counts as a double-click\n- Example:\n```js\nconsole.log(\"Double-click interval: \" + hs.eventtap.doubleClickInterval())\n```",
+          "description": "Returns the system double-click interval in seconds",
+          "params": [],
+          "returns": {
+            "type": "number",
+            "description": "The maximum time between clicks that counts as a double-click"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(\"Double-click interval: \" + hs.eventtap.doubleClickInterval())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 327
+        },
+        {
+          "name": "keyRepeatDelay",
+          "signature": "func keyRepeatDelay() -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Returns the system key repeat delay in seconds\n- Returns: The delay before key repeat begins\n- Example:\n```js\nconsole.log(\"Key repeat delay: \" + hs.eventtap.keyRepeatDelay())\n```",
+          "description": "Returns the system key repeat delay in seconds",
+          "params": [],
+          "returns": {
+            "type": "number",
+            "description": "The delay before key repeat begins"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(\"Key repeat delay: \" + hs.eventtap.keyRepeatDelay())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 335
+        },
+        {
+          "name": "keyRepeatInterval",
+          "signature": "func keyRepeatInterval() -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Returns the system key repeat interval in seconds\n- Returns: The interval between repeated key events\n- Example:\n```js\nconsole.log(\"Key repeat interval: \" + hs.eventtap.keyRepeatInterval())\n```",
+          "description": "Returns the system key repeat interval in seconds",
+          "params": [],
+          "returns": {
+            "type": "number",
+            "description": "The interval between repeated key events"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(\"Key repeat interval: \" + hs.eventtap.keyRepeatInterval())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 343
+        }
+      ],
+      "properties": [
+        {
+          "name": "eventTypes",
+          "signature": "var eventTypes: [String: Int] { get }",
+          "rawDocumentation": "A dictionary mapping event type names to their numeric values.\n\nPass values from this dictionary to `addWatcher()` to specify which events to monitor.\n- Example:\n```js\nconst types = hs.eventtap.eventTypes\nconst tap = hs.eventtap.addWatcher([types.keyDown, types.keyUp], (event) => {\n    return hs.eventtap.emit\n})\n```",
+          "description": "A dictionary mapping event type names to their numeric values.\nPass values from this dictionary to `addWatcher()` to specify which events to monitor.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const types = hs.eventtap.eventTypes\nconst tap = hs.eventtap.addWatcher([types.keyDown, types.keyUp], (event) => {\n    return hs.eventtap.emit\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 64
+        },
+        {
+          "name": "modifierFlags",
+          "signature": "var modifierFlags: [String: Int] { get }",
+          "rawDocumentation": "A dictionary mapping modifier key names to their bitmask values for use with `rawFlags`.\n\nIncludes generic names (`cmd`, `shift`, `alt`, `ctrl`) and side-specific names\n(`leftCmd`, `rightCmd`, `leftShift`, `rightShift`, `leftAlt`, `rightAlt`,\n`leftCtrl`, `rightCtrl`) for distinguishing physical keys.\n- Example:\n```js\nconst evt = hs.eventtap.makeKeyEvent(\"a\", true)\nevt.rawFlags = hs.eventtap.modifierFlags.cmd | hs.eventtap.modifierFlags.shift\nevt.post()\n```",
+          "description": "A dictionary mapping modifier key names to their bitmask values for use with `rawFlags`.\nIncludes generic names (`cmd`, `shift`, `alt`, `ctrl`) and side-specific names\n(`leftCmd`, `rightCmd`, `leftShift`, `rightShift`, `leftAlt`, `rightAlt`,\n`leftCtrl`, `rightCtrl`) for distinguishing physical keys.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const evt = hs.eventtap.makeKeyEvent(\"a\", true)\nevt.rawFlags = hs.eventtap.modifierFlags.cmd | hs.eventtap.modifierFlags.shift\nevt.post()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 77
+        },
+        {
+          "name": "consume",
+          "signature": "var consume: Bool { get }",
+          "rawDocumentation": "Return this from an event tap callback to suppress the event (prevent other apps from receiving it).\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    return hs.eventtap.consume   // block the key from reaching any app\n}).start()\n```",
+          "description": "Return this from an event tap callback to suppress the event (prevent other apps from receiving it).",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    return hs.eventtap.consume   // block the key from reaching any app\n}).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 86
+        },
+        {
+          "name": "emit",
+          "signature": "var emit: Bool { get }",
+          "rawDocumentation": "Return this from an event tap callback to allow the event to pass through to other applications.\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Key: \" + event.keyCode)\n    return hs.eventtap.emit   // let the key reach its destination\n}).start()\n```",
+          "description": "Return this from an event tap callback to allow the event to pass through to other applications.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Key: \" + event.keyCode)\n    return hs.eventtap.emit   // let the key reach its destination\n}).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 96
+        }
+      ],
+      "types": [
+        {
+          "name": "HSEventTapAPI",
+          "type": "typedef",
+          "rawDocumentation": "An event tap watcher that intercepts input events from the system.\n\nObtain instances via `hs.eventtap.addWatcher()` — do not instantiate directly.\n\n## Monitoring keyboard events\n\n```js\nconst tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Key pressed: \" + event.keyCode)\n})\n```",
+          "description": "An event tap watcher that intercepts input events from the system.\nObtain instances via `hs.eventtap.addWatcher()` — do not instantiate directly.\n## Monitoring keyboard events\n```js\nconst tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Key pressed: \" + event.keyCode)\n})\n```",
+          "methods": [
+            {
+              "name": "start",
+              "signature": "func start() -> HSEventTap",
+              "isStatic": false,
+              "rawDocumentation": "Start receiving events. Requires Accessibility permission.\n- Returns: This tap, for chaining\n- Example:\n```js\nconst tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Key: \" + event.keyCode)\n})\ntap.start()\n```",
+              "description": "Start receiving events. Requires Accessibility permission.",
+              "params": [],
+              "returns": {
+                "type": "HSEventTap",
+                "description": "This tap, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Key: \" + event.keyCode)\n})\ntap.start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
+              "lineNumber": 41
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSEventTap",
+              "isStatic": false,
+              "rawDocumentation": "Stop receiving events\n- Returns: This tap, for chaining\n- Example:\n```js\ntap.stop()\n```",
+              "description": "Stop receiving events",
+              "params": [],
+              "returns": {
+                "type": "HSEventTap",
+                "description": "This tap, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "tap.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
+              "lineNumber": 49
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ callback: JSFunction) -> HSEventTap",
+              "isStatic": false,
+              "rawDocumentation": "Replace the callback function\n- Parameter callback: {(event: HSEventTapEvent) => boolean | undefined} A function called for each matching event. Return false to consume (suppress) the event; return anything else to pass it through.\n- Returns: This tap, for chaining\n- Example:\n```js\ntap.setCallback((event) => {\n    console.log(\"Key: \" + event.keyCode)\n    return false  // consume the event\n})\n```",
+              "description": "Replace the callback function",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "A function called for each matching event. Return false to consume (suppress) the event; return anything else to pass it through.",
+                  "optional": false,
+                  "tsType": "(event: HSEventTapEvent) => boolean | undefined"
+                }
+              ],
+              "returns": {
+                "type": "HSEventTap",
+                "description": "This tap, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "tap.setCallback((event) => {\n    console.log(\"Key: \" + event.keyCode)\n    return false  // consume the event\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
+              "lineNumber": 61
+            },
+            {
+              "name": "isEnabled",
+              "signature": "func isEnabled() -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Whether this tap is currently active\n- Returns: True if the tap is running\n- Example:\n```js\nconsole.log(\"Running: \" + tap.isEnabled())\n```",
+              "description": "Whether this tap is currently active",
+              "params": [],
+              "returns": {
+                "type": "boolean",
+                "description": "True if the tap is running"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(\"Running: \" + tap.isEnabled())"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
+              "lineNumber": 69
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier for this tap\n- Example:\n```js\nconst tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {})\nconsole.log(tap.identifier)\n```",
+              "description": "A unique identifier for this tap",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {})\nconsole.log(tap.identifier)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
+              "lineNumber": 30
+            }
+          ]
+        },
+        {
+          "name": "HSEventTapEventAPI",
+          "type": "typedef",
+          "rawDocumentation": "An input event captured or constructed by hs.eventtap.\n\nObjects of this type are passed to event tap callbacks and can also be created directly\nvia the factory methods on hs.eventtap. Properties can be inspected and modified before\nthe event is passed through or posted back to the system.",
+          "description": "An input event captured or constructed by hs.eventtap.\nObjects of this type are passed to event tap callbacks and can also be created directly\nvia the factory methods on hs.eventtap. Properties can be inspected and modified before\nthe event is passed through or posted back to the system.",
+          "methods": [
+            {
+              "name": "duplicate",
+              "signature": "func duplicate() -> HSEventTapEvent?",
+              "isStatic": false,
+              "rawDocumentation": "Create an independent copy of this event\n- Returns: A new HSEventTapEvent with the same properties, or null if the copy failed\n- Example:\n```js\nconst copy = event.duplicate()\ncopy.keyCode = 0  // modify the copy\ncopy.post()\n```",
+              "description": "Create an independent copy of this event",
+              "params": [],
+              "returns": {
+                "type": "HSEventTapEvent",
+                "description": "A new HSEventTapEvent with the same properties, or null if the copy failed"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const copy = event.duplicate()\ncopy.keyCode = 0  // modify the copy\ncopy.post()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 115
+            },
+            {
+              "name": "post",
+              "signature": "func post(_ app: HSApplication?)",
+              "isStatic": false,
+              "rawDocumentation": "Post this event to the HID event stream, optionally targeting a specific application.\n\nWhen `app` is omitted or `null`, the event is posted to the global HID stream and\ndelivered by the OS as if a real input device generated it. When an application is\nprovided, the event is delivered directly to that process by PID.\n\n- Parameter app: {HSApplication | null} The application to target, or null/omit to post globally\n- Example:\n```js\nconst evt = hs.eventtap.makeKeyEvent(\"a\", true)\nevt.post()                              // post globally\n\nconst safari = hs.application.find(\"Safari\")\nif (safari) evt.post(safari)            // post directly to Safari\n```",
+              "description": "Post this event to the HID event stream, optionally targeting a specific application.\nWhen `app` is omitted or `null`, the event is posted to the global HID stream and\ndelivered by the OS as if a real input device generated it. When an application is\nprovided, the event is delivered directly to that process by PID.",
+              "params": [
+                {
+                  "name": "app",
+                  "type": "HSApplication",
+                  "description": "The application to target, or null/omit to post globally",
+                  "optional": false,
+                  "tsType": "HSApplication | null"
+                }
+              ],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const evt = hs.eventtap.makeKeyEvent(\"a\", true)\nevt.post()                              // post globally\n\nconst safari = hs.application.find(\"Safari\")\nif (safari) evt.post(safari)            // post directly to Safari"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 132
+            }
+          ],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "Type name for introspection",
+              "description": "Type name for introspection",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 19
+            },
+            {
+              "name": "type",
+              "signature": "var type: Int { get }",
+              "rawDocumentation": "The numeric event type, matching a value in hs.eventtap.eventTypes\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Event type: \" + event.type)\n})\n```",
+              "description": "The numeric event type, matching a value in hs.eventtap.eventTypes",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Event type: \" + event.type)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 28
+            },
+            {
+              "name": "keyCode",
+              "signature": "var keyCode: Int { get set }",
+              "rawDocumentation": "The virtual key code for keyboard events (get/set)\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Key code: \" + event.keyCode)\n})\n```",
+              "description": "The virtual key code for keyboard events (get/set)",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Key code: \" + event.keyCode)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 37
+            },
+            {
+              "name": "rawFlags",
+              "signature": "var rawFlags: Int { get set }",
+              "rawDocumentation": "The raw modifier flags bitmask (get/set). Use values from hs.eventtap.modifierFlags.\n- Example:\n```js\nconst evt = hs.eventtap.makeKeyEvent(\"a\", true)\nevt.rawFlags = hs.eventtap.modifierFlags.cmd\nevt.post()\n```",
+              "description": "The raw modifier flags bitmask (get/set). Use values from hs.eventtap.modifierFlags.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const evt = hs.eventtap.makeKeyEvent(\"a\", true)\nevt.rawFlags = hs.eventtap.modifierFlags.cmd\nevt.post()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 46
+            },
+            {
+              "name": "flags",
+              "signature": "var flags: [String] { get }",
+              "rawDocumentation": "An array of active modifier key names (e.g. [\"cmd\", \"shift\"]).\n\nWhen a device-specific modifier is detected, both the generic and side-specific\nnames are included — e.g. pressing the left Command key yields [\"cmd\", \"leftCmd\"].\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    if (event.flags.includes(\"rightCmd\")) console.log(\"Right Cmd held\")\n})\n```",
+              "description": "An array of active modifier key names (e.g. [\"cmd\", \"shift\"]).\nWhen a device-specific modifier is detected, both the generic and side-specific\nnames are included — e.g. pressing the left Command key yields [\"cmd\", \"leftCmd\"].",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    if (event.flags.includes(\"rightCmd\")) console.log(\"Right Cmd held\")\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 58
+            },
+            {
+              "name": "location",
+              "signature": "var location: [String: Double] { get set }",
+              "rawDocumentation": "The event's screen position as {x, y} in Hammerspoon screen coordinates\n(top-left origin of primary display, y increases downward, matching hs.screen).\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.mouseMoved], (event) => {\n    const loc = event.location\n    console.log(\"Mouse at \" + loc.x + \", \" + loc.y)\n})\n```",
+              "description": "The event's screen position as {x, y} in Hammerspoon screen coordinates\n(top-left origin of primary display, y increases downward, matching hs.screen).",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.mouseMoved], (event) => {\n    const loc = event.location\n    console.log(\"Mouse at \" + loc.x + \", \" + loc.y)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 69
+            },
+            {
+              "name": "buttonNumber",
+              "signature": "var buttonNumber: Int { get set }",
+              "rawDocumentation": "The mouse button number for mouse events (0=left, 1=right, 2=middle)\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.otherMouseDown], (event) => {\n    console.log(\"Button: \" + event.buttonNumber)\n})\n```",
+              "description": "The mouse button number for mouse events (0=left, 1=right, 2=middle)",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.otherMouseDown], (event) => {\n    console.log(\"Button: \" + event.buttonNumber)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 78
+            },
+            {
+              "name": "scrollingDeltaX",
+              "signature": "var scrollingDeltaX: Double { get }",
+              "rawDocumentation": "The horizontal scroll delta for scroll wheel events\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.scrollWheel], (event) => {\n    console.log(\"Scroll X: \" + event.scrollingDeltaX)\n})\n```",
+              "description": "The horizontal scroll delta for scroll wheel events",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.scrollWheel], (event) => {\n    console.log(\"Scroll X: \" + event.scrollingDeltaX)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 87
+            },
+            {
+              "name": "scrollingDeltaY",
+              "signature": "var scrollingDeltaY: Double { get }",
+              "rawDocumentation": "The vertical scroll delta for scroll wheel events\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.scrollWheel], (event) => {\n    console.log(\"Scroll Y: \" + event.scrollingDeltaY)\n})\n```",
+              "description": "The vertical scroll delta for scroll wheel events",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.scrollWheel], (event) => {\n    console.log(\"Scroll Y: \" + event.scrollingDeltaY)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 96
+            },
+            {
+              "name": "characters",
+              "signature": "var characters: String? { get }",
+              "rawDocumentation": "The Unicode characters produced by this keyboard event, or null for non-keyboard events\n- Example:\n```js\nhs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Typed: \" + event.characters)\n})\n```",
+              "description": "The Unicode characters produced by this keyboard event, or null for non-keyboard events",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {\n    console.log(\"Typed: \" + event.characters)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapEvent.swift",
+              "lineNumber": 105
+            }
+          ]
+        }
+      ],
+      "description": "Monitor and synthesise macOS input events: keyboard, mouse, and scroll wheel.\nAll coordinate parameters use **Hammerspoon screen coordinates**: the origin `(0, 0)`\nis at the top-left of the primary display and `y` increases downward, matching `hs.screen`.\n## Tapping events\n```js\nconst tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key pressed: \" + event.keyCode)\n        return hs.eventtap.emit   // pass the event through\n    }\n)\ntap.start()\n```\n## Suppressing events\nReturning `hs.eventtap.consume` from the callback prevents the event from reaching\n```js\nconst blocker = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.leftMouseDown],\n    (event) => hs.eventtap.consume\n)\nblocker.start()\n```\n## Sending events\n```js\nhs.eventtap.keyStroke([\"cmd\"], \"c\")\nhs.eventtap.leftClick(500, 300)\n```",
+      "rawDocumentation": "Monitor and synthesise macOS input events: keyboard, mouse, and scroll wheel.\n\nAll coordinate parameters use **Hammerspoon screen coordinates**: the origin `(0, 0)`\nis at the top-left of the primary display and `y` increases downward, matching `hs.screen`.\n\n## Tapping events\n\n```js\nconst tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key pressed: \" + event.keyCode)\n        return hs.eventtap.emit   // pass the event through\n    }\n)\ntap.start()\n```\n\n## Suppressing events\n\nReturning `hs.eventtap.consume` from the callback prevents the event from reaching\nother applications:\n\n```js\nconst blocker = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.leftMouseDown],\n    (event) => hs.eventtap.consume\n)\nblocker.start()\n```\n\n## Sending events\n\n```js\nhs.eventtap.keyStroke([\"cmd\"], \"c\")\nhs.eventtap.leftClick(500, 300)\n```"
+    },
+    {
       "name": "hs.fs",
       "methods": [
         {
@@ -17338,5 +18381,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-09T16:59:26.256Z"
+  "generatedAt": "2026-07-10T21:58:43.742Z"
 }

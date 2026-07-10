@@ -1886,6 +1886,333 @@ declare namespace hs.docs {
 }
 
 /**
+ * Monitor and synthesise macOS input events: keyboard, mouse, and scroll wheel.
+All coordinate parameters use **Hammerspoon screen coordinates**: the origin `(0, 0)`
+is at the top-left of the primary display and `y` increases downward, matching `hs.screen`.
+## Tapping events
+```js
+const tap = hs.eventtap.addWatcher(
+    [hs.eventtap.eventTypes.keyDown],
+    (event) => {
+        console.log("Key pressed: " + event.keyCode)
+        return hs.eventtap.emit   // pass the event through
+    }
+)
+tap.start()
+```
+## Suppressing events
+Returning `hs.eventtap.consume` from the callback prevents the event from reaching
+```js
+const blocker = hs.eventtap.addWatcher(
+    [hs.eventtap.eventTypes.leftMouseDown],
+    (event) => hs.eventtap.consume
+)
+blocker.start()
+```
+## Sending events
+```js
+hs.eventtap.keyStroke(["cmd"], "c")
+hs.eventtap.leftClick(500, 300)
+```
+ */
+declare namespace hs.eventtap {
+    /**
+     * Create an event tap that calls a function for matching events. Call `.start()` to activate it.
+The callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress
+the event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.
+     * @param types An array of event type integers from `hs.eventtap.eventTypes`
+     * @param callback Function called for each matching event
+     * @returns An HSEventTap watcher, or null if the tap could not be created
+     */
+    function addWatcher(types: number[], callback: (event: HSEventTapEvent) => boolean): HSEventTap | null;
+
+    /**
+     * Stop and remove a previously created watcher
+     * @param tap The HSEventTap returned by `addWatcher`
+     */
+    function removeWatcher(tap: HSEventTap): void;
+
+    /**
+     * Create a keyboard event
+     * @param key A key name (e.g. "a", "space", "return", "f1") or numeric key code string
+     * @param isDown true for key down, false for key up
+     * @returns An HSEventTapEvent, or null if the key name is unknown
+     */
+    function makeKeyEvent(key: string, isDown: boolean): HSEventTapEvent | null;
+
+    /**
+     * Create a keyboard event using a raw key code
+     * @param keyCode A numeric virtual key code
+     * @param isDown true for key down, false for key up
+     * @returns An HSEventTapEvent
+     */
+    function makeKeyEventWithCode(keyCode: number, isDown: boolean): HSEventTapEvent | null;
+
+    /**
+     * Create a mouse event at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin of the primary
+display, y increases downward), matching the values returned by `hs.screen`.
+     * @param type An event type integer from hs.eventtap.eventTypes (e.g. leftMouseDown)
+     * @param x Horizontal position in Hammerspoon screen coordinates
+     * @param y Vertical position in Hammerspoon screen coordinates
+     * @param button Mouse button number (0=left, 1=right, 2=middle)
+     * @returns An HSEventTapEvent, or null if the event could not be created
+     */
+    function makeMouseEvent(type: number, x: number, y: number, button: number): HSEventTapEvent | null;
+
+    /**
+     * Create a scroll wheel event at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).
+     * @param deltaX Horizontal scroll amount in lines (positive = right)
+     * @param deltaY Vertical scroll amount in lines (positive = down)
+     * @param x Horizontal position in Hammerspoon screen coordinates
+     * @param y Vertical position in Hammerspoon screen coordinates
+     * @returns An HSEventTapEvent, or null if the event could not be created
+     */
+    function makeScrollWheelEvent(deltaX: number, deltaY: number, x: number, y: number): HSEventTapEvent | null;
+
+    /**
+     * Send a key down and key up event with optional modifier keys.
+A 50 ms pause is inserted between the key-down and key-up events to improve
+compatibility with applications that miss very fast synthetic keystrokes.
+     * @param mods An array of modifier names (e.g. ["cmd", "shift"])
+     * @param key A key name or single character (e.g. "a", "space", "return")
+     */
+    function keyStroke(mods: string[], key: string): void;
+
+    /**
+     * Type a string of characters as individual key events.
+A 50 ms pause is inserted between each key-down and key-up event.
+     * @param text The string to type
+     */
+    function keyStrokes(text: string): void;
+
+    /**
+     * Post a left mouse button click at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).
+     * @param x Horizontal position in Hammerspoon screen coordinates
+     * @param y Vertical position in Hammerspoon screen coordinates
+     */
+    function leftClick(x: number, y: number): void;
+
+    /**
+     * Post a right mouse button click at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).
+     * @param x Horizontal position in Hammerspoon screen coordinates
+     * @param y Vertical position in Hammerspoon screen coordinates
+     */
+    function rightClick(x: number, y: number): void;
+
+    /**
+     * Post a left mouse button double-click at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).
+     * @param x Horizontal position in Hammerspoon screen coordinates
+     * @param y Vertical position in Hammerspoon screen coordinates
+     */
+    function doubleLeftClick(x: number, y: number): void;
+
+    /**
+     * Post a middle mouse button click at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).
+     * @param x Horizontal position in Hammerspoon screen coordinates
+     * @param y Vertical position in Hammerspoon screen coordinates
+     */
+    function middleClick(x: number, y: number): void;
+
+    /**
+     * Post a scroll wheel event at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).
+     * @param deltaX Horizontal scroll amount in lines (positive = right)
+     * @param deltaY Vertical scroll amount in lines (positive = down)
+     * @param x Horizontal position in Hammerspoon screen coordinates
+     * @param y Vertical position in Hammerspoon screen coordinates
+     */
+    function scrollWheel(deltaX: number, deltaY: number, x: number, y: number): void;
+
+    /**
+     * Returns the currently held modifier keys
+     * @returns An array of modifier key names such as ["cmd", "shift"]
+     */
+    function currentModifiers(): string[];
+
+    /**
+     * Returns the currently pressed mouse buttons
+     * @returns A dictionary with keys "left", "right", "middle" mapping to booleans
+     */
+    function checkMouseButtons(): Record<string, boolean>;
+
+    /**
+     * Returns the current mouse cursor position in Hammerspoon screen coordinates
+(top-left origin of primary display, y increases downward, matching hs.screen).
+     * @returns A dictionary with "x" and "y" keys
+     */
+    function mouseLocation(): Record<string, number>;
+
+    /**
+     * Returns the system double-click interval in seconds
+     * @returns The maximum time between clicks that counts as a double-click
+     */
+    function doubleClickInterval(): number;
+
+    /**
+     * Returns the system key repeat delay in seconds
+     * @returns The delay before key repeat begins
+     */
+    function keyRepeatDelay(): number;
+
+    /**
+     * Returns the system key repeat interval in seconds
+     * @returns The interval between repeated key events
+     */
+    function keyRepeatInterval(): number;
+
+    /**
+     * A dictionary mapping event type names to their numeric values.
+Pass values from this dictionary to `addWatcher()` to specify which events to monitor.
+     */
+    const eventTypes: Record<string, number>;
+
+    /**
+     * A dictionary mapping modifier key names to their bitmask values for use with `rawFlags`.
+Includes generic names (`cmd`, `shift`, `alt`, `ctrl`) and side-specific names
+(`leftCmd`, `rightCmd`, `leftShift`, `rightShift`, `leftAlt`, `rightAlt`,
+`leftCtrl`, `rightCtrl`) for distinguishing physical keys.
+     */
+    const modifierFlags: Record<string, number>;
+
+    /**
+     * Return this from an event tap callback to suppress the event (prevent other apps from receiving it).
+     */
+    const consume: boolean;
+
+    /**
+     * Return this from an event tap callback to allow the event to pass through to other applications.
+     */
+    const emit: boolean;
+
+}
+
+/**
+ * An event tap watcher that intercepts input events from the system.
+Obtain instances via `hs.eventtap.addWatcher()` — do not instantiate directly.
+## Monitoring keyboard events
+```js
+const tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {
+    console.log("Key pressed: " + event.keyCode)
+})
+```
+ */
+declare class HSEventTap {
+    /**
+     * Start receiving events. Requires Accessibility permission.
+     * @returns This tap, for chaining
+     */
+    start(): HSEventTap;
+
+    /**
+     * Stop receiving events
+     * @returns This tap, for chaining
+     */
+    stop(): HSEventTap;
+
+    /**
+     * Replace the callback function
+     * @param callback A function called for each matching event. Return false to consume (suppress) the event; return anything else to pass it through.
+     * @returns This tap, for chaining
+     */
+    setCallback(callback: (event: HSEventTapEvent) => boolean | undefined): HSEventTap;
+
+    /**
+     * Whether this tap is currently active
+     * @returns True if the tap is running
+     */
+    isEnabled(): boolean;
+
+    /**
+     * A unique identifier for this tap
+     */
+    readonly identifier: string;
+
+}
+
+/**
+ * An input event captured or constructed by hs.eventtap.
+Objects of this type are passed to event tap callbacks and can also be created directly
+via the factory methods on hs.eventtap. Properties can be inspected and modified before
+the event is passed through or posted back to the system.
+ */
+declare class HSEventTapEvent {
+    /**
+     * Create an independent copy of this event
+     * @returns A new HSEventTapEvent with the same properties, or null if the copy failed
+     */
+    duplicate(): HSEventTapEvent | null;
+
+    /**
+     * Post this event to the HID event stream, optionally targeting a specific application.
+When `app` is omitted or `null`, the event is posted to the global HID stream and
+delivered by the OS as if a real input device generated it. When an application is
+provided, the event is delivered directly to that process by PID.
+     * @param app The application to target, or null/omit to post globally
+     */
+    post(app: HSApplication | null): void;
+
+    /**
+     * Type name for introspection
+     */
+    readonly typeName: string;
+
+    /**
+     * The numeric event type, matching a value in hs.eventtap.eventTypes
+     */
+    readonly type: number;
+
+    /**
+     * The virtual key code for keyboard events (get/set)
+     */
+    keyCode: number;
+
+    /**
+     * The raw modifier flags bitmask (get/set). Use values from hs.eventtap.modifierFlags.
+     */
+    rawFlags: number;
+
+    /**
+     * An array of active modifier key names (e.g. ["cmd", "shift"]).
+When a device-specific modifier is detected, both the generic and side-specific
+names are included — e.g. pressing the left Command key yields ["cmd", "leftCmd"].
+     */
+    readonly flags: string[];
+
+    /**
+     * The event's screen position as {x, y} in Hammerspoon screen coordinates
+(top-left origin of primary display, y increases downward, matching hs.screen).
+     */
+    location: Record<string, number>;
+
+    /**
+     * The mouse button number for mouse events (0=left, 1=right, 2=middle)
+     */
+    buttonNumber: number;
+
+    /**
+     * The horizontal scroll delta for scroll wheel events
+     */
+    readonly scrollingDeltaX: number;
+
+    /**
+     * The vertical scroll delta for scroll wheel events
+     */
+    readonly scrollingDeltaY: number;
+
+    /**
+     * The Unicode characters produced by this keyboard event, or null for non-keyboard events
+     */
+    readonly characters: string | null;
+
+}
+
+/**
  * Module for filesystem operations.
 `hs.fs` provides a comprehensive set of filesystem operations covering file
 I/O, directory management, path manipulation, metadata access, symbolic
