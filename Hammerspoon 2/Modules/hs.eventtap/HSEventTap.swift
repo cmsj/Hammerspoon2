@@ -67,6 +67,14 @@ import CoreGraphics
     /// console.log("Running: " + tap.isEnabled())
     /// ```
     @objc func isEnabled() -> Bool
+
+    /// Whether this tap has been registered with macOS
+    /// - Returns: True if the tap has been created
+    /// - Example:
+    /// ```js
+    /// console.log("Created: " + tap.isCreated())
+    /// ```
+    @objc func isCreated() -> Bool
 }
 
 // MARK: - Implementation
@@ -178,6 +186,10 @@ import CoreGraphics
 
     @objc func isEnabled() -> Bool {
         return running
+    }
+
+    @objc func isCreated() -> Bool {
+        return unsafe tapPort != nil
     }
 
     // MARK: - C callback bridge

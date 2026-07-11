@@ -12,7 +12,7 @@ import CoreGraphics
 /// Internal protocol allowing HSHotkey to notify its owning module when started or stopped.
 @MainActor
 protocol HotkeyCoordinator: AnyObject {
-    func hotkeyDidEnable(_ hotkey: HSHotkey)
+    func hotkeyDidEnable(_ hotkey: HSHotkey) -> Bool
     func hotkeyDidDisable(_ hotkey: HSHotkey)
 }
 
@@ -139,8 +139,7 @@ protocol HotkeyCoordinator: AnyObject {
     @objc func enable() -> Bool {
         guard !_isEnabled else { return true }
         _isEnabled = true
-        coordinator?.hotkeyDidEnable(self)
-        return true
+        return coordinator?.hotkeyDidEnable(self) ?? false
     }
 
     @objc func disable() {

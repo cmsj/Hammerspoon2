@@ -107,9 +107,9 @@ import CoreGraphics
 
     // MARK: - HotkeyCoordinator
 
-    func hotkeyDidEnable(_ hotkey: HSHotkey) {
+    func hotkeyDidEnable(_ hotkey: HSHotkey) -> Bool {
         enabledHotkeys.append(hotkey)
-        startTapIfNeeded()
+        return startTapIfNeeded()
     }
 
     func hotkeyDidDisable(_ hotkey: HSHotkey) {
@@ -121,7 +121,7 @@ import CoreGraphics
 
     // MARK: - Tap lifecycle
 
-    private func startTapIfNeeded() {
+    private func startTapIfNeeded() -> Bool {
         if eventTap == nil {
             let mask: CGEventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
             let tap = HSEventTap(eventMask: mask)
@@ -134,6 +134,8 @@ import CoreGraphics
         if !eventTap!.isEnabled() {
             eventTap!.start()
         }
+
+        return eventTap?.isCreated() ?? false
     }
 
     /// Iterate enabled hotkeys, fire the first match, and consume the event. Pass through if no match.
