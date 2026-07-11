@@ -131,11 +131,17 @@ import CoreGraphics
             }
             eventTap = tap
         }
-        if !eventTap!.isEnabled() {
-            eventTap!.start()
+
+        guard let eventTap else {
+            AKError("Failed to initialise eventTap")
+            return false
         }
 
-        return eventTap?.isCreated() ?? false
+        if !eventTap.isEnabled() {
+            eventTap.start()
+        }
+
+        return eventTap.isCreated()
     }
 
     /// Iterate enabled hotkeys, fire the first match, and consume the event. Pass through if no match.
