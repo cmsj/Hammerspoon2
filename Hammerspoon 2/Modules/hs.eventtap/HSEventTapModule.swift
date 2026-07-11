@@ -487,11 +487,16 @@ import AppKit
 
     @objc func makeScrollWheelEvent(_ deltaX: Double, _ deltaY: Double, _ x: Double, _ y: Double) -> HSEventTapEvent? {
         let source = CGEventSource(stateID: .hidSystemState)
+
+        // Guard against a number arriving from JS that is larger than Int32.max
+        let w1 = Int32(max(Double(Int32.min), min(Double(Int32.max), deltaY)))
+        let w2 = Int32(max(Double(Int32.min), min(Double(Int32.max), deltaX)))
+
         guard let event = CGEvent(scrollWheelEvent2Source: source,
                                   units: .line,
                                   wheelCount: 2,
-                                  wheel1: Int32(deltaY),
-                                  wheel2: Int32(deltaX),
+                                  wheel1: w1,
+                                  wheel2: w2,
                                   wheel3: 0) else {
             AKError("hs.eventtap.makeScrollWheelEvent: Failed to create scroll event")
             return nil
@@ -580,11 +585,16 @@ import AppKit
 
     @objc func scrollWheel(_ deltaX: Double, _ deltaY: Double, _ x: Double, _ y: Double) {
         let source = CGEventSource(stateID: .hidSystemState)
+
+        // Guard against a number arriving that is larger than Int32.max
+        let w1 = Int32(max(Double(Int32.min), min(Double(Int32.max), deltaY)))
+        let w2 = Int32(max(Double(Int32.min), min(Double(Int32.max), deltaX)))
+
         guard let event = CGEvent(scrollWheelEvent2Source: source,
                                   units: .line,
                                   wheelCount: 2,
-                                  wheel1: Int32(deltaY),
-                                  wheel2: Int32(deltaX),
+                                  wheel1: w1,
+                                  wheel2: w2,
                                   wheel3: 0) else { return }
         event.location = CGPoint(x: x, y: y)
         event.post(tap: .cghidEventTap)
