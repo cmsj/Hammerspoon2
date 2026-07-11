@@ -192,7 +192,13 @@ import CoreGraphics
             callbackPressed: callbackPressed.isNull ? nil : callbackPressed,
             callbackReleased: callbackReleased.isNull ? nil : callbackReleased
         )
-        _ = hotkey.enable()
+
+        guard hotkey.enable() else {
+            AKError("hs.hotkey.bindSpec(): failed to enable hotkey")
+            hotkey.destroy()
+            return nil
+        }
+
         allHotkeys.add(hotkey)
         return hotkey
     }
