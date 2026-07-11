@@ -106,6 +106,7 @@ import AppKit
     ///   - types: An array of event type integers from `hs.eventtap.eventTypes`
     ///   - callback: {(event: HSEventTapEvent) => boolean} Function called for each matching event
     /// - Returns: An HSEventTap watcher, or null if the tap could not be created
+    /// - Note: event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.
     /// - Example:
     /// ```js
     /// const tap = hs.eventtap.addWatcher(
@@ -350,7 +351,9 @@ import AppKit
 @objc class HSEventTapModule: NSObject, HSModuleAPI, HSEventTapModuleAPI {
     var name = "hs.eventtap"
     let engineID: UUID
-    private var taps = HSWeakObjectSet<HSEventTap>()
+    // Strong references: started taps keep themselves alive via selfRetain, so weak refs
+    // would be nil'd after JS GC — shutdown() would never find them to call destroy().
+    private var taps: [HSEventTap] = []
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -359,8 +362,8 @@ import AppKit
     }
 
     func shutdown() {
-        for tap in taps.allObjects { tap.destroy() }
-        taps.removeAllObjects()
+        for tap in taps { tap.destroy() }
+        taps.removeAll()
     }
 
     isolated deinit {
@@ -430,13 +433,13 @@ import AppKit
         let mask = types.reduce(CGEventMask(0)) { $0 | (CGEventMask(1) << $1) }
         let tap = HSEventTap(eventMask: mask)
         _ = tap.setCallback(callback)
-        taps.add(tap)
+        taps.append(tap)
         return tap
     }
 
     @objc func removeWatcher(_ tap: HSEventTap) {
         tap.destroy()
-        taps.remove(tap)
+        taps.removeAll { $0 === tap }
     }
 
     // MARK: - Event constructors
