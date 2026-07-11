@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.eventtap - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.eventtap</span>
+</nav>
+<div class="page-header">
+    <h1>hs.eventtap</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Monitor and synthesise macOS input events: keyboard, mouse, and scroll wheel.</p>
+<p>All coordinate parameters use <strong>Hammerspoon screen coordinates</strong>: the origin <code>(0, 0)</code>
+is at the top-left of the primary display and <code>y</code> increases downward, matching <code>hs.screen</code>.</p>
+<h2>Tapping events</h2>
+<pre><code class="language-js">const tap = hs.eventtap.addWatcher(
+    [hs.eventtap.eventTypes.keyDown],
+    (event) =&gt; {
+        console.log(&quot;Key pressed: &quot; + event.keyCode)
+        return hs.eventtap.emit   // pass the event through
+    }
+)
+tap.start()
+</code></pre>
+<h2>Suppressing events</h2>
+<p>Returning <code>hs.eventtap.consume</code> from the callback prevents the event from reaching
+other applications:</p>
+<pre><code class="language-js">const blocker = hs.eventtap.addWatcher(
+    [hs.eventtap.eventTypes.leftMouseDown],
+    (event) =&gt; hs.eventtap.consume
+)
+blocker.start()
+</code></pre>
+<h2>Sending events</h2>
+<pre><code class="language-js">hs.eventtap.keyStroke([&quot;cmd&quot;], &quot;c&quot;)
+hs.eventtap.leftClick(500, 300)
+</code></pre>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSEventTap.html">HSEventTap</a>
+    </li>
+    <li>
+        <a href="HSEventTapEvent.html">HSEventTapEvent</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="eventTypes">
+        <h3><a href="#eventTypes">hs.eventtap.eventTypes</a></h3>
+        <div class="prop-type">{[key: string]: number}</div>
+        <div class="description">A dictionary mapping event type names to their numeric values.
+Pass values from this dictionary to `addWatcher()` to specify which events to monitor.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:64</a>
+        </div>
+    </div>
+    <div class="property" id="modifierFlags">
+        <h3><a href="#modifierFlags">hs.eventtap.modifierFlags</a></h3>
+        <div class="prop-type">{[key: string]: number}</div>
+        <div class="description">A dictionary mapping modifier key names to their bitmask values for use with `rawFlags`.
+Includes generic names (`cmd`, `shift`, `alt`, `ctrl`) and side-specific names
+(`leftCmd`, `rightCmd`, `leftShift`, `rightShift`, `leftAlt`, `rightAlt`,
+`leftCtrl`, `rightCtrl`) for distinguishing physical keys.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L77" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:77</a>
+        </div>
+    </div>
+    <div class="property" id="consume">
+        <h3><a href="#consume">hs.eventtap.consume</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Return this from an event tap callback to suppress the event (prevent other apps from receiving it).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L86" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:86</a>
+        </div>
+    </div>
+    <div class="property" id="emit">
+        <h3><a href="#emit">hs.eventtap.emit</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Return this from an event tap callback to allow the event to pass through to other applications.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L96" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:96</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="addWatcher">
+        <h3><a href="#addWatcher">hs.eventtap.addWatcher(types, callback) -> HSEventTap</a></h3>
+
+        <div class="description">Create an event tap that calls a function for matching events. Call `.start()` to activate it.
+The callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress
+the event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.addWatcher(types, callback) -> HSEventTap</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">types</td>
+                    <td class="param-type">number[]</td>
+                    <td class="param-desc">An array of event type integers from `hs.eventtap.eventTypes`</td>
+                </tr>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Function called for each matching event</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSEventTap</div>
+        <div class="return-desc">An HSEventTap watcher, or null if the tap could not be created</div>
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const tap = hs.eventtap.addWatcher(
+    [hs.eventtap.eventTypes.keyDown],
+    (event) =&gt; {
+        console.log(&quot;Key: &quot; + event.keyCode)
+        return hs.eventtap.emit
+    }
+)
+tap.start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L121" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:121</a>
+        </div>
+    </div>
+    <div class="method" id="removeWatcher">
+        <h3><a href="#removeWatcher">hs.eventtap.removeWatcher(tap) -> None</a></h3>
+
+        <div class="description">Stop and remove a previously created watcher</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.removeWatcher(tap) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">tap</td>
+                    <td class="param-type">HSEventTap</td>
+                    <td class="param-desc">The HSEventTap returned by `addWatcher`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventtap.removeWatcher(tap)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L129" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:129</a>
+        </div>
+    </div>
+    <div class="method" id="makeKeyEvent">
+        <h3><a href="#makeKeyEvent">hs.eventtap.makeKeyEvent(key, isDown) -> HSEventTapEvent</a></h3>
+
+        <div class="description">Create a keyboard event</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.makeKeyEvent(key, isDown) -> HSEventTapEvent</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">key</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A key name (e.g. &quot;a&quot;, &quot;space&quot;, &quot;return&quot;, &quot;f1&quot;) or numeric key code string</td>
+                </tr>
+                <tr>
+                    <td class="param-name">isDown</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">true for key down, false for key up</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSEventTapEvent</div>
+        <div class="return-desc">An HSEventTapEvent, or null if the key name is unknown</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const evt = hs.eventtap.makeKeyEvent(&quot;a&quot;, true)
+evt.rawFlags = hs.eventtap.modifierFlags.cmd
+evt.post()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L144" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:144</a>
+        </div>
+    </div>
+    <div class="method" id="makeKeyEventWithCode">
+        <h3><a href="#makeKeyEventWithCode">hs.eventtap.makeKeyEventWithCode(keyCode, isDown) -> HSEventTapEvent</a></h3>
+
+        <div class="description">Create a keyboard event using a raw key code</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.makeKeyEventWithCode(keyCode, isDown) -> HSEventTapEvent</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">keyCode</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A numeric virtual key code</td>
+                </tr>
+                <tr>
+                    <td class="param-name">isDown</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">true for key down, false for key up</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSEventTapEvent</div>
+        <div class="return-desc">An HSEventTapEvent</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const evt = hs.eventtap.makeKeyEventWithCode(0, true)  // key code 0 = &quot;a&quot;
+evt.post()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L156" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:156</a>
+        </div>
+    </div>
+    <div class="method" id="makeMouseEvent">
+        <h3><a href="#makeMouseEvent">hs.eventtap.makeMouseEvent(type, x, y, button) -> HSEventTapEvent</a></h3>
+
+        <div class="description">Create a mouse event at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin of the primary
+display, y increases downward), matching the values returned by `hs.screen`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.makeMouseEvent(type, x, y, button) -> HSEventTapEvent</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">type</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">An event type integer from hs.eventtap.eventTypes (e.g. leftMouseDown)</td>
+                </tr>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal position in Hammerspoon screen coordinates</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical position in Hammerspoon screen coordinates</td>
+                </tr>
+                <tr>
+                    <td class="param-name">button</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Mouse button number (0=left, 1=right, 2=middle)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSEventTapEvent</div>
+        <div class="return-desc">An HSEventTapEvent, or null if the event could not be created</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const s = hs.screen.primary()
+// Click at the centre of the primary screen:
+const cx = s.frame.x + s.frame.w / 2
+const cy = s.frame.y + s.frame.h / 2
+const evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.leftMouseDown, cx, cy, 0)
+evt.post()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L178" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:178</a>
+        </div>
+    </div>
+    <div class="method" id="makeScrollWheelEvent">
+        <h3><a href="#makeScrollWheelEvent">hs.eventtap.makeScrollWheelEvent(deltaX, deltaY, x, y) -> HSEventTapEvent</a></h3>
+
+        <div class="description">Create a scroll wheel event at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.makeScrollWheelEvent(deltaX, deltaY, x, y) -> HSEventTapEvent</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">deltaX</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal scroll amount in lines (positive = right)</td>
+                </tr>
+                <tr>
+                    <td class="param-name">deltaY</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical scroll amount in lines (positive = down)</td>
+                </tr>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal position in Hammerspoon screen coordinates</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical position in Hammerspoon screen coordinates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSEventTapEvent</div>
+        <div class="return-desc">An HSEventTapEvent, or null if the event could not be created</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const evt = hs.eventtap.makeScrollWheelEvent(0, 3, 500, 400)
+evt.post()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L195" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:195</a>
+        </div>
+    </div>
+    <div class="method" id="keyStroke">
+        <h3><a href="#keyStroke">hs.eventtap.keyStroke(mods, key) -> None</a></h3>
+
+        <div class="description">Send a key down and key up event with optional modifier keys.
+A 50 ms pause is inserted between the key-down and key-up events to improve
+compatibility with applications that miss very fast synthetic keystrokes.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.keyStroke(mods, key) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">mods</td>
+                    <td class="param-type">string[]</td>
+                    <td class="param-desc">An array of modifier names (e.g. [&quot;cmd&quot;, &quot;shift&quot;])</td>
+                </tr>
+                <tr>
+                    <td class="param-name">key</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A key name or single character (e.g. &quot;a&quot;, &quot;space&quot;, &quot;return&quot;)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventtap.keyStroke([&quot;cmd&quot;], &quot;c&quot;)      // Copy
+hs.eventtap.keyStroke([&quot;cmd&quot;, &quot;shift&quot;], &quot;4&quot;)  // Screenshot selection</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L212" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:212</a>
+        </div>
+    </div>
+    <div class="method" id="keyStrokes">
+        <h3><a href="#keyStrokes">hs.eventtap.keyStrokes(text) -> None</a></h3>
+
+        <div class="description">Type a string of characters as individual key events.
+A 50 ms pause is inserted between each key-down and key-up event.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.keyStrokes(text) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">text</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The string to type</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventtap.keyStrokes(&quot;Hello, World!&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L223" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:223</a>
+        </div>
+    </div>
+    <div class="method" id="leftClick">
+        <h3><a href="#leftClick">hs.eventtap.leftClick(x, y) -> None</a></h3>
+
+        <div class="description">Post a left mouse button click at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.leftClick(x, y) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal position in Hammerspoon screen coordinates</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical position in Hammerspoon screen coordinates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventtap.leftClick(400, 300)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L236" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:236</a>
+        </div>
+    </div>
+    <div class="method" id="rightClick">
+        <h3><a href="#rightClick">hs.eventtap.rightClick(x, y) -> None</a></h3>
+
+        <div class="description">Post a right mouse button click at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.rightClick(x, y) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal position in Hammerspoon screen coordinates</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical position in Hammerspoon screen coordinates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventtap.rightClick(400, 300)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L249" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:249</a>
+        </div>
+    </div>
+    <div class="method" id="doubleLeftClick">
+        <h3><a href="#doubleLeftClick">hs.eventtap.doubleLeftClick(x, y) -> None</a></h3>
+
+        <div class="description">Post a left mouse button double-click at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.doubleLeftClick(x, y) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal position in Hammerspoon screen coordinates</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical position in Hammerspoon screen coordinates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventtap.doubleLeftClick(400, 300)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L262" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:262</a>
+        </div>
+    </div>
+    <div class="method" id="middleClick">
+        <h3><a href="#middleClick">hs.eventtap.middleClick(x, y) -> None</a></h3>
+
+        <div class="description">Post a middle mouse button click at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.middleClick(x, y) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal position in Hammerspoon screen coordinates</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical position in Hammerspoon screen coordinates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventtap.middleClick(400, 300)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L275" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:275</a>
+        </div>
+    </div>
+    <div class="method" id="scrollWheel">
+        <h3><a href="#scrollWheel">hs.eventtap.scrollWheel(deltaX, deltaY, x, y) -> None</a></h3>
+
+        <div class="description">Post a scroll wheel event at the given position.
+Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increases downward).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.scrollWheel(deltaX, deltaY, x, y) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">deltaX</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal scroll amount in lines (positive = right)</td>
+                </tr>
+                <tr>
+                    <td class="param-name">deltaY</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical scroll amount in lines (positive = down)</td>
+                </tr>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal position in Hammerspoon screen coordinates</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical position in Hammerspoon screen coordinates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.eventtap.scrollWheel(0, 3, 500, 400)  // Scroll down 3 lines</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L290" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:290</a>
+        </div>
+    </div>
+    <div class="method" id="currentModifiers">
+        <h3><a href="#currentModifiers">hs.eventtap.currentModifiers() -> string[]</a></h3>
+
+        <div class="description">Returns the currently held modifier keys</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.currentModifiers() -> string[]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string[]</div>
+        <div class="return-desc">An array of modifier key names such as [&quot;cmd&quot;, &quot;shift&quot;]</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const mods = hs.eventtap.currentModifiers()
+if (mods.includes(&quot;cmd&quot;)) console.log(&quot;Cmd is held&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L301" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:301</a>
+        </div>
+    </div>
+    <div class="method" id="checkMouseButtons">
+        <h3><a href="#checkMouseButtons">hs.eventtap.checkMouseButtons() -> {[key: string]: boolean}</a></h3>
+
+        <div class="description">Returns the currently pressed mouse buttons</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.checkMouseButtons() -> {[key: string]: boolean}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: boolean}</div>
+        <div class="return-desc">A dictionary with keys &quot;left&quot;, &quot;right&quot;, &quot;middle&quot; mapping to booleans</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const buttons = hs.eventtap.checkMouseButtons()
+if (buttons.left) console.log(&quot;Left button held&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L310" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:310</a>
+        </div>
+    </div>
+    <div class="method" id="mouseLocation">
+        <h3><a href="#mouseLocation">hs.eventtap.mouseLocation() -> {[key: string]: number}</a></h3>
+
+        <div class="description">Returns the current mouse cursor position in Hammerspoon screen coordinates
+(top-left origin of primary display, y increases downward, matching hs.screen).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.mouseLocation() -> {[key: string]: number}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: number}</div>
+        <div class="return-desc">A dictionary with &quot;x&quot; and &quot;y&quot; keys</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const pos = hs.eventtap.mouseLocation()
+console.log(&quot;Mouse at &quot; + pos.x + &quot;, &quot; + pos.y)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L320" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:320</a>
+        </div>
+    </div>
+    <div class="method" id="doubleClickInterval">
+        <h3><a href="#doubleClickInterval">hs.eventtap.doubleClickInterval() -> number</a></h3>
+
+        <div class="description">Returns the system double-click interval in seconds</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.doubleClickInterval() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The maximum time between clicks that counts as a double-click</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(&quot;Double-click interval: &quot; + hs.eventtap.doubleClickInterval())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L328" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:328</a>
+        </div>
+    </div>
+    <div class="method" id="keyRepeatDelay">
+        <h3><a href="#keyRepeatDelay">hs.eventtap.keyRepeatDelay() -> number</a></h3>
+
+        <div class="description">Returns the system key repeat delay in seconds</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.keyRepeatDelay() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The delay before key repeat begins</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(&quot;Key repeat delay: &quot; + hs.eventtap.keyRepeatDelay())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L336" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:336</a>
+        </div>
+    </div>
+    <div class="method" id="keyRepeatInterval">
+        <h3><a href="#keyRepeatInterval">hs.eventtap.keyRepeatInterval() -> number</a></h3>
+
+        <div class="description">Returns the system key repeat interval in seconds</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.eventtap.keyRepeatInterval() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The interval between repeated key events</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(&quot;Key repeat interval: &quot; + hs.eventtap.keyRepeatInterval())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L344" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:344</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.eventtap');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
