@@ -5185,6 +5185,28 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
               "lineNumber": 69
+            },
+            {
+              "name": "isCreated",
+              "signature": "func isCreated() -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Whether this tap has been registered with macOS\n- Returns: True if the tap has been created\n- Example:\n```js\nconsole.log(\"Created: \" + tap.isCreated())\n```",
+              "description": "Whether this tap has been registered with macOS",
+              "params": [],
+              "returns": {
+                "type": "boolean",
+                "description": "True if the tap has been created"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(\"Created: \" + tap.isCreated())"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
+              "lineNumber": 77
             }
           ],
           "properties": [
@@ -18383,5 +18405,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-11T13:56:28.197Z"
+  "generatedAt": "2026-07-11T22:12:38.248Z"
 }

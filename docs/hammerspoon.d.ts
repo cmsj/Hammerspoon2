@@ -2130,6 +2130,12 @@ declare class HSEventTap {
     isEnabled(): boolean;
 
     /**
+     * Whether this tap has been registered with macOS
+     * @returns True if the tap has been created
+     */
+    isCreated(): boolean;
+
+    /**
      * A unique identifier for this tap
      */
     readonly identifier: string;
