@@ -502,32 +502,49 @@ import AppKit
             return
         }
         let flags = CGEventFlags.from(modifierNames: mods)
-        let source = CGEventSource(stateID: .hidSystemState)
 
-        if let downEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true) {
-            downEvent.flags = flags
-            downEvent.post(tap: .cghidEventTap)
-        }
-        Thread.sleep(forTimeInterval: 0.05)
-        if let upEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) {
-            upEvent.flags = flags
-            upEvent.post(tap: .cghidEventTap)
+        Task.detached(name: "keyStroke", priority: .userInitiated) {
+            let source = CGEventSource(stateID: .hidSystemState)
+
+            if let downEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true) {
+                downEvent.flags = flags
+                downEvent.post(tap: .cghidEventTap)
+            }
+
+            try? await Task.sleep(for: .milliseconds(50))
+
+            if let upEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) {
+                upEvent.flags = flags
+                upEvent.post(tap: .cghidEventTap)
+            }
         }
     }
 
     @objc func keyStrokes(_ text: String) {
         let source = CGEventSource(stateID: .hidSystemState)
+        var events: [CGEvent] = []
+
+        // Prepare an array of events we want to post
         for scalar in text.unicodeScalars {
             guard scalar.value <= 0xFFFF else { continue }
             var ch = UniChar(scalar.value)
-            if let down = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true) {
-                unsafe down.keyboardSetUnicodeString(stringLength: 1, unicodeString: &ch)
-                down.post(tap: .cghidEventTap)
+
+            // For each event we need to post both a keyDown and a keyUp version.
+            for keyPosition in [true, false] {
+                guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: keyPosition) else {
+                    AKError("Unable to construct event for \(scalar)")
+                    return
+                }
+                unsafe event.keyboardSetUnicodeString(stringLength: 1, unicodeString: &ch)
+                events.append(event)
             }
-            Thread.sleep(forTimeInterval: 0.05)
-            if let up = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) {
-                unsafe up.keyboardSetUnicodeString(stringLength: 1, unicodeString: &ch)
-                up.post(tap: .cghidEventTap)
+        }
+
+        // Post the events from a separate thread, with a brief pause between them
+        Task.detached(name: "keyStrokes", priority: .userInitiated) {
+            for event in events {
+                event.post(tap: .cghidEventTap)
+                try? await Task.sleep(for: .milliseconds(50))
             }
         }
     }

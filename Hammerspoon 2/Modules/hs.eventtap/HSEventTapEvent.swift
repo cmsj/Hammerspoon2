@@ -201,7 +201,7 @@ import CoreGraphics
         guard length > 0 else { return nil }
         var buffer = [UniChar](repeating: 0, count: length)
         unsafe cgEvent.keyboardGetUnicodeString(maxStringLength: length, actualStringLength: &length, unicodeString: &buffer)
-        return String(utf16CodeUnits: buffer, count: length)
+        return unsafe String(utf16CodeUnits: buffer, count: length)
     }
 
     @objc func duplicate() -> HSEventTapEvent? {
