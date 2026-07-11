@@ -372,52 +372,56 @@ import AppKit
 
     // MARK: - Constants
 
+    let _eventTypes: [String: Int] = [
+        "null": Int(CGEventType.null.rawValue),
+        "leftMouseDown": Int(CGEventType.leftMouseDown.rawValue),
+        "leftMouseUp": Int(CGEventType.leftMouseUp.rawValue),
+        "rightMouseDown": Int(CGEventType.rightMouseDown.rawValue),
+        "rightMouseUp": Int(CGEventType.rightMouseUp.rawValue),
+        "mouseMoved": Int(CGEventType.mouseMoved.rawValue),
+        "leftMouseDragged": Int(CGEventType.leftMouseDragged.rawValue),
+        "rightMouseDragged": Int(CGEventType.rightMouseDragged.rawValue),
+        "keyDown": Int(CGEventType.keyDown.rawValue),
+        "keyUp": Int(CGEventType.keyUp.rawValue),
+        "flagsChanged": Int(CGEventType.flagsChanged.rawValue),
+        "scrollWheel": Int(CGEventType.scrollWheel.rawValue),
+        "tabletPointer": Int(CGEventType.tabletPointer.rawValue),
+        "tabletProximity": Int(CGEventType.tabletProximity.rawValue),
+        "otherMouseDown": Int(CGEventType.otherMouseDown.rawValue),
+        "otherMouseUp": Int(CGEventType.otherMouseUp.rawValue),
+        "otherMouseDragged": Int(CGEventType.otherMouseDragged.rawValue),
+    ]
+
+    // Device-independent masks (high word of CGEventFlags.rawValue)
+    // Device-specific left/right masks (low word, NX_DEVICE*KEYMASK from IOLLEvent.h)
+    let _modifierFlags: [String: Int] = [
+        "capslock": Int(CGEventFlags.maskAlphaShift.rawValue),
+        "shift":    Int(CGEventFlags.maskShift.rawValue),
+        "ctrl":     Int(CGEventFlags.maskControl.rawValue),
+        "control":  Int(CGEventFlags.maskControl.rawValue),
+        "alt":      Int(CGEventFlags.maskAlternate.rawValue),
+        "option":   Int(CGEventFlags.maskAlternate.rawValue),
+        "cmd":      Int(CGEventFlags.maskCommand.rawValue),
+        "command":  Int(CGEventFlags.maskCommand.rawValue),
+        "fn":       Int(CGEventFlags.maskSecondaryFn.rawValue),
+        "numpad":   Int(CGEventFlags.maskNumericPad.rawValue),
+        // Side-specific modifiers (device-specific low-word bits)
+        "leftCtrl":   0x00000001,
+        "leftShift":  0x00000002,
+        "rightShift": 0x00000004,
+        "leftCmd":    0x00000008,
+        "rightCmd":   0x00000010,
+        "leftAlt":    0x00000020,
+        "rightAlt":   0x00000040,
+        "rightCtrl":  0x00002000,
+    ]
+
     @objc var eventTypes: [String: Int] {
-        return [
-            "null": Int(CGEventType.null.rawValue),
-            "leftMouseDown": Int(CGEventType.leftMouseDown.rawValue),
-            "leftMouseUp": Int(CGEventType.leftMouseUp.rawValue),
-            "rightMouseDown": Int(CGEventType.rightMouseDown.rawValue),
-            "rightMouseUp": Int(CGEventType.rightMouseUp.rawValue),
-            "mouseMoved": Int(CGEventType.mouseMoved.rawValue),
-            "leftMouseDragged": Int(CGEventType.leftMouseDragged.rawValue),
-            "rightMouseDragged": Int(CGEventType.rightMouseDragged.rawValue),
-            "keyDown": Int(CGEventType.keyDown.rawValue),
-            "keyUp": Int(CGEventType.keyUp.rawValue),
-            "flagsChanged": Int(CGEventType.flagsChanged.rawValue),
-            "scrollWheel": Int(CGEventType.scrollWheel.rawValue),
-            "tabletPointer": Int(CGEventType.tabletPointer.rawValue),
-            "tabletProximity": Int(CGEventType.tabletProximity.rawValue),
-            "otherMouseDown": Int(CGEventType.otherMouseDown.rawValue),
-            "otherMouseUp": Int(CGEventType.otherMouseUp.rawValue),
-            "otherMouseDragged": Int(CGEventType.otherMouseDragged.rawValue),
-        ]
+        return _eventTypes
     }
 
     @objc var modifierFlags: [String: Int] {
-        // Device-independent masks (high word of CGEventFlags.rawValue)
-        // Device-specific left/right masks (low word, NX_DEVICE*KEYMASK from IOLLEvent.h)
-        return [
-            "capslock": Int(CGEventFlags.maskAlphaShift.rawValue),
-            "shift":    Int(CGEventFlags.maskShift.rawValue),
-            "ctrl":     Int(CGEventFlags.maskControl.rawValue),
-            "control":  Int(CGEventFlags.maskControl.rawValue),
-            "alt":      Int(CGEventFlags.maskAlternate.rawValue),
-            "option":   Int(CGEventFlags.maskAlternate.rawValue),
-            "cmd":      Int(CGEventFlags.maskCommand.rawValue),
-            "command":  Int(CGEventFlags.maskCommand.rawValue),
-            "fn":       Int(CGEventFlags.maskSecondaryFn.rawValue),
-            "numpad":   Int(CGEventFlags.maskNumericPad.rawValue),
-            // Side-specific modifiers (device-specific low-word bits)
-            "leftCtrl":   0x00000001,
-            "leftShift":  0x00000002,
-            "rightShift": 0x00000004,
-            "leftCmd":    0x00000008,
-            "rightCmd":   0x00000010,
-            "leftAlt":    0x00000020,
-            "rightAlt":   0x00000040,
-            "rightCtrl":  0x00002000,
-        ]
+        return _modifierFlags
     }
 
     @objc var consume: Bool { false }
