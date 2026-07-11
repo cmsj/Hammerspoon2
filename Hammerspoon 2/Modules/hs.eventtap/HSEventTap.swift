@@ -150,6 +150,7 @@ import CoreGraphics
 
         if let port = unsafe tapPort {
             CGEvent.tapEnable(tap: port, enable: false)
+            CFMachPortInvalidate(port)
         }
         if let source = unsafe runLoopSource {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
