@@ -172,6 +172,8 @@ the event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibili
         <div class="return-type">HSEventTap</div>
         <div class="return-desc">An HSEventTap watcher, or null if the tap could not be created</div>
 
+        <div class="card-section-label">Notes</div>
+        <div class="note">event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.</div>
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const tap = hs.eventtap.addWatcher(
@@ -184,7 +186,7 @@ the event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibili
 tap.start()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L120" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:120</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L121" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:121</a>
         </div>
     </div>
     <div class="method" id="removeWatcher">
@@ -221,7 +223,7 @@ tap.start()</code></pre>
         <pre><code class="language-js">hs.eventtap.removeWatcher(tap)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L128" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:128</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L129" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:129</a>
         </div>
     </div>
     <div class="method" id="makeKeyEvent">
@@ -266,7 +268,7 @@ evt.rawFlags = hs.eventtap.modifierFlags.cmd
 evt.post()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L143" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:143</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L144" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:144</a>
         </div>
     </div>
     <div class="method" id="makeKeyEventWithCode">
@@ -310,7 +312,7 @@ evt.post()</code></pre>
 evt.post()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L155" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:155</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L156" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:156</a>
         </div>
     </div>
     <div class="method" id="makeMouseEvent">
@@ -370,7 +372,7 @@ const evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.leftMouseDown, cx,
 evt.post()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L177" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:177</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L178" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:178</a>
         </div>
     </div>
     <div class="method" id="makeScrollWheelEvent">
@@ -425,7 +427,7 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
 evt.post()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L194" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:194</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L195" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:195</a>
         </div>
     </div>
     <div class="method" id="keyStroke">
@@ -470,7 +472,7 @@ compatibility with applications that miss very fast synthetic keystrokes.</div>
 hs.eventtap.keyStroke([&quot;cmd&quot;, &quot;shift&quot;], &quot;4&quot;)  // Screenshot selection</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L211" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:211</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L212" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:212</a>
         </div>
     </div>
     <div class="method" id="keyStrokes">
@@ -508,7 +510,7 @@ A 50 ms pause is inserted between each key-down and key-up event.</div>
         <pre><code class="language-js">hs.eventtap.keyStrokes(&quot;Hello, World!&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L222" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:222</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L223" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:223</a>
         </div>
     </div>
     <div class="method" id="leftClick">
@@ -551,7 +553,7 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
         <pre><code class="language-js">hs.eventtap.leftClick(400, 300)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L235" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:235</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L236" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:236</a>
         </div>
     </div>
     <div class="method" id="rightClick">
@@ -594,7 +596,7 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
         <pre><code class="language-js">hs.eventtap.rightClick(400, 300)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L248" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:248</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L249" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:249</a>
         </div>
     </div>
     <div class="method" id="doubleLeftClick">
@@ -637,7 +639,7 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
         <pre><code class="language-js">hs.eventtap.doubleLeftClick(400, 300)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L261" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:261</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L262" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:262</a>
         </div>
     </div>
     <div class="method" id="middleClick">
@@ -680,7 +682,7 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
         <pre><code class="language-js">hs.eventtap.middleClick(400, 300)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L274" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:274</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L275" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:275</a>
         </div>
     </div>
     <div class="method" id="scrollWheel">
@@ -733,7 +735,7 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
         <pre><code class="language-js">hs.eventtap.scrollWheel(0, 3, 500, 400)  // Scroll down 3 lines</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L289" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:289</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L290" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:290</a>
         </div>
     </div>
     <div class="method" id="currentModifiers">
@@ -755,7 +757,7 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
 if (mods.includes(&quot;cmd&quot;)) console.log(&quot;Cmd is held&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L300" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:300</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L301" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:301</a>
         </div>
     </div>
     <div class="method" id="checkMouseButtons">
@@ -777,7 +779,7 @@ if (mods.includes(&quot;cmd&quot;)) console.log(&quot;Cmd is held&quot;)</code><
 if (buttons.left) console.log(&quot;Left button held&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L309" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:309</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L310" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:310</a>
         </div>
     </div>
     <div class="method" id="mouseLocation">
@@ -800,7 +802,7 @@ if (buttons.left) console.log(&quot;Left button held&quot;)</code></pre>
 console.log(&quot;Mouse at &quot; + pos.x + &quot;, &quot; + pos.y)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L319" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:319</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L320" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:320</a>
         </div>
     </div>
     <div class="method" id="doubleClickInterval">
@@ -821,7 +823,7 @@ console.log(&quot;Mouse at &quot; + pos.x + &quot;, &quot; + pos.y)</code></pre>
         <pre><code class="language-js">console.log(&quot;Double-click interval: &quot; + hs.eventtap.doubleClickInterval())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L327" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:327</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L328" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:328</a>
         </div>
     </div>
     <div class="method" id="keyRepeatDelay">
@@ -842,7 +844,7 @@ console.log(&quot;Mouse at &quot; + pos.x + &quot;, &quot; + pos.y)</code></pre>
         <pre><code class="language-js">console.log(&quot;Key repeat delay: &quot; + hs.eventtap.keyRepeatDelay())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L335" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:335</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L336" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:336</a>
         </div>
     </div>
     <div class="method" id="keyRepeatInterval">
@@ -863,7 +865,7 @@ console.log(&quot;Mouse at &quot; + pos.x + &quot;, &quot; + pos.y)</code></pre>
         <pre><code class="language-js">console.log(&quot;Key repeat interval: &quot; + hs.eventtap.keyRepeatInterval())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L343" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:343</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L344" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:344</a>
         </div>
     </div>
         </main>

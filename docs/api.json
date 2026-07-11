@@ -4397,7 +4397,7 @@
           "name": "addWatcher",
           "signature": "func addWatcher(_ types: [Int], _ callback: JSFunction) -> HSEventTap?",
           "isStatic": false,
-          "rawDocumentation": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\n\nThe callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress\nthe event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.\n\n- Parameters:\n  - types: An array of event type integers from `hs.eventtap.eventTypes`\n  - callback: {(event: HSEventTapEvent) => boolean} Function called for each matching event\n- Returns: An HSEventTap watcher, or null if the tap could not be created\n- Example:\n```js\nconst tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key: \" + event.keyCode)\n        return hs.eventtap.emit\n    }\n)\ntap.start()\n```",
+          "rawDocumentation": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\n\nThe callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress\nthe event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.\n\n- Parameters:\n  - types: An array of event type integers from `hs.eventtap.eventTypes`\n  - callback: {(event: HSEventTapEvent) => boolean} Function called for each matching event\n- Returns: An HSEventTap watcher, or null if the tap could not be created\n- Note: event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.\n- Example:\n```js\nconst tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key: \" + event.keyCode)\n        return hs.eventtap.emit\n    }\n)\ntap.start()\n```",
           "description": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\nThe callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress\nthe event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.",
           "params": [
             {
@@ -4419,7 +4419,9 @@
             "type": "HSEventTap",
             "description": "An HSEventTap watcher, or null if the tap could not be created"
           },
-          "notes": [],
+          "notes": [
+            "event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher."
+          ],
           "examples": [
             {
               "lang": "js",
@@ -4428,7 +4430,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 120
+          "lineNumber": 121
         },
         {
           "name": "removeWatcher",
@@ -4455,7 +4457,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 128
+          "lineNumber": 129
         },
         {
           "name": "makeKeyEvent",
@@ -4492,7 +4494,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 143
+          "lineNumber": 144
         },
         {
           "name": "makeKeyEventWithCode",
@@ -4529,7 +4531,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 155
+          "lineNumber": 156
         },
         {
           "name": "makeMouseEvent",
@@ -4580,7 +4582,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 177
+          "lineNumber": 178
         },
         {
           "name": "makeScrollWheelEvent",
@@ -4631,7 +4633,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 194
+          "lineNumber": 195
         },
         {
           "name": "keyStroke",
@@ -4665,7 +4667,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 211
+          "lineNumber": 212
         },
         {
           "name": "keyStrokes",
@@ -4692,7 +4694,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 222
+          "lineNumber": 223
         },
         {
           "name": "leftClick",
@@ -4726,7 +4728,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 235
+          "lineNumber": 236
         },
         {
           "name": "rightClick",
@@ -4760,7 +4762,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 248
+          "lineNumber": 249
         },
         {
           "name": "doubleLeftClick",
@@ -4794,7 +4796,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 261
+          "lineNumber": 262
         },
         {
           "name": "middleClick",
@@ -4828,7 +4830,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 274
+          "lineNumber": 275
         },
         {
           "name": "scrollWheel",
@@ -4876,7 +4878,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 289
+          "lineNumber": 290
         },
         {
           "name": "currentModifiers",
@@ -4898,7 +4900,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 300
+          "lineNumber": 301
         },
         {
           "name": "checkMouseButtons",
@@ -4920,7 +4922,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 309
+          "lineNumber": 310
         },
         {
           "name": "mouseLocation",
@@ -4942,7 +4944,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 319
+          "lineNumber": 320
         },
         {
           "name": "doubleClickInterval",
@@ -4964,7 +4966,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 327
+          "lineNumber": 328
         },
         {
           "name": "keyRepeatDelay",
@@ -4986,7 +4988,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 335
+          "lineNumber": 336
         },
         {
           "name": "keyRepeatInterval",
@@ -5008,7 +5010,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 343
+          "lineNumber": 344
         }
       ],
       "properties": [
@@ -18381,5 +18383,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-10T23:28:37.249Z"
+  "generatedAt": "2026-07-11T13:12:17.279Z"
 }

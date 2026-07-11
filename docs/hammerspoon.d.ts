@@ -1920,6 +1920,7 @@ declare namespace hs.eventtap {
      * Create an event tap that calls a function for matching events. Call `.start()` to activate it.
 The callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress
 the event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.
+     * @remarks event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.
      * @param types An array of event type integers from `hs.eventtap.eventTypes`
      * @param callback Function called for each matching event
      * @returns An HSEventTap watcher, or null if the tap could not be created
