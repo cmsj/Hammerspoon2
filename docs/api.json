@@ -6836,20 +6836,20 @@
           "name": "bind",
           "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"])\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\n```",
-          "description": "Bind a hotkey",
+          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"]). Supports generic names\n    (`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,\n    `leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\n```",
+          "description": "Bind a hotkey\n(`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,\n`leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).",
           "params": [
             {
               "name": "mods",
               "type": "Array<String>",
-              "description": "An array of modifier key strings (e.g., [\"cmd\", \"shift\"])",
+              "description": "An array of modifier key strings (e.g., [\"cmd\", \"shift\"]). Supports generic names",
               "optional": false,
               "tsType": null
             },
             {
               "name": "key",
               "type": "string",
-              "description": "The key name or character (e.g., \"a\", \"space\", \"return\")",
+              "description": "The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")",
               "optional": false,
               "tsType": null
             },
@@ -6870,7 +6870,7 @@
           ],
           "returns": {
             "type": "HSHotkey",
-            "description": "A hotkey object, or nil if binding failed"
+            "description": "A hotkey object, or null if binding failed"
           },
           "notes": [],
           "examples": [
@@ -6887,7 +6887,7 @@
           "name": "bindSpec",
           "signature": "func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n  - message: A description of what this hotkey does (currently unused, for future features)\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or nil if binding failed\n- Example:\n```js\nhs.hotkey.bindSpec([\"cmd\"], \"space\", \"Spotlight-like\", () => {\n    console.log(\"pressed\")\n}, null)\n```",
+          "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n  - message: A description of what this hotkey does (currently unused, for future features)\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bindSpec([\"cmd\"], \"space\", \"Spotlight-like\", () => {\n    console.log(\"pressed\")\n}, null)\n```",
           "description": "Bind a hotkey with a message description",
           "params": [
             {
@@ -6928,7 +6928,7 @@
           ],
           "returns": {
             "type": "HSHotkey",
-            "description": "A hotkey object, or nil if binding failed"
+            "description": "A hotkey object, or null if binding failed"
           },
           "notes": [],
           "examples": [
@@ -7014,7 +7014,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 21
+              "lineNumber": 30
             },
             {
               "name": "disable",
@@ -7033,7 +7033,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 29
+              "lineNumber": 38
             },
             {
               "name": "isEnabled",
@@ -7055,7 +7055,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 38
+              "lineNumber": 47
             }
           ],
           "properties": [
@@ -7074,7 +7074,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 46
+              "lineNumber": 55
             },
             {
               "name": "callbackReleased",
@@ -7091,7 +7091,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 54
+              "lineNumber": 63
             }
           ]
         }
@@ -18383,5 +18383,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-11T13:12:17.279Z"
+  "generatedAt": "2026-07-11T13:56:28.197Z"
 }

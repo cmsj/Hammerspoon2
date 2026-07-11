@@ -2610,11 +2610,13 @@ declare namespace hs.hash {
 declare namespace hs.hotkey {
     /**
      * Bind a hotkey
-     * @param mods An array of modifier key strings (e.g., ["cmd", "shift"])
-     * @param key The key name or character (e.g., "a", "space", "return")
+(`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,
+`leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
+     * @param mods An array of modifier key strings (e.g., ["cmd", "shift"]). Supports generic names
+     * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
-     * @returns A hotkey object, or nil if binding failed
+     * @returns A hotkey object, or null if binding failed
      */
     function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
 
@@ -2625,7 +2627,7 @@ declare namespace hs.hotkey {
      * @param message A description of what this hotkey does (currently unused, for future features)
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
-     * @returns A hotkey object, or nil if binding failed
+     * @returns A hotkey object, or null if binding failed
      */
     function bindSpec(mods: string[], key: string, message: string | null, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
 

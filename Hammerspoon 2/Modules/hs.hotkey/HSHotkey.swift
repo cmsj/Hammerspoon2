@@ -1,13 +1,22 @@
 //
-//  HotkeyObject.swift
+//  HSHotkey.swift
 //  Hammerspoon 2
-//
-//  Created by Chris Jones on 13/11/2025.
 //
 
 import Foundation
 import JavaScriptCore
-import Carbon
+import CoreGraphics
+
+// MARK: - Coordinator protocol
+
+/// Internal protocol allowing HSHotkey to notify its owning module when started or stopped.
+@MainActor
+protocol HotkeyCoordinator: AnyObject {
+    func hotkeyDidEnable(_ hotkey: HSHotkey)
+    func hotkeyDidDisable(_ hotkey: HSHotkey)
+}
+
+// MARK: - Protocol
 
 /// Object representing a system-wide hotkey. You should not create these objects directly, but rather, use the methods in hs.hotkey to instantiate these.
 @objc protocol HSHotkeyAPI: HSTypeAPI, JSExport {
@@ -54,12 +63,20 @@ import Carbon
     @objc var callbackReleased: JSFunction? { get set }
 }
 
+// MARK: - Implementation
+
 @_documentation(visibility: private)
 @MainActor
-@objc @safe class HSHotkey: NSObject, HSHotkeyAPI {
+@safe
+@objc class HSHotkey: NSObject, HSHotkeyAPI {
     @objc var typeName = "HSHotkey"
-    private let keyCode: UInt32
-    private let modifiers: UInt32
+
+    let keyCode: CGKeyCode
+    /// Device-independent modifier flags (maskCommand, maskShift, etc.) that must be active.
+    let requiredFlags: CGEventFlags
+    /// Side-specific NX_DEVICE*KEYMASK bits that must be set (0 if not side-specific).
+    let requiredDeviceBits: UInt64
+
     private var _callbackPressed: JSCallback?
     private var _callbackReleased: JSCallback?
     @objc var callbackPressed: JSFunction? {
@@ -76,27 +93,35 @@ import Carbon
             _callbackReleased = newValue.flatMap { JSCallback(value: $0, owner: self) }
         }
     }
-    nonisolated(unsafe) private var carbonHotKeyRef: EventHotKeyRef?
-    private var enabled = false
-    private let hotkeyID: UInt32
 
-    // Generate unique IDs for each hotkey
-    private static var nextID: UInt32 = 1
+    private var _isEnabled = false
+    weak var coordinator: HotkeyCoordinator?
 
-    init(keyCode: UInt32, modifiers: UInt32, callbackPressed: JSFunction? = nil, callbackReleased: JSFunction? = nil) {
+    // The flags we compare against: cmd, shift, alt, ctrl, fn. CapsLock and
+    // device-specific bits are handled separately so they don't break matching.
+    static let significantModifiers: CGEventFlags = [
+        .maskCommand, .maskShift, .maskAlternate, .maskControl, .maskSecondaryFn
+    ]
+
+    init(keyCode: CGKeyCode,
+         requiredFlags: CGEventFlags,
+         requiredDeviceBits: UInt64,
+         coordinator: HotkeyCoordinator? = nil,
+         callbackPressed: JSFunction? = nil,
+         callbackReleased: JSFunction? = nil) {
         self.keyCode = keyCode
-        self.modifiers = modifiers
-        self.hotkeyID = Self.nextID
-        Self.nextID += 1
+        self.requiredFlags = requiredFlags
+        self.requiredDeviceBits = requiredDeviceBits
+        self.coordinator = coordinator
         super.init()
-        // Phase 2 — JSContext.current() is valid because init is called from JS
-        self.callbackPressed = callbackPressed
-        self.callbackReleased = callbackReleased
+        // Phase 2 — JSContext.current() is valid because this init is called from a JS bridge method
+        if let cb = callbackPressed { self.callbackPressed = cb }
+        if let cb = callbackReleased { self.callbackReleased = cb }
     }
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSHotkeyObject: id=\(hotkeyID)")
+        AKDebug("deinit of HSHotkey: keyCode=\(keyCode)")
     }
 
     func destroy() {
@@ -105,181 +130,58 @@ import Carbon
         _callbackReleased?.detach(from: self)
         _callbackReleased = nil
         disable()
-        HotkeyManager.shared.unregister(hotkeyID: hotkeyID)
     }
 
     @objc func enable() -> Bool {
-        if enabled {
-            return true
+        guard !_isEnabled else { return true }
+
+        if let coordinator {
+            coordinator.hotkeyDidEnable(self)
+            _isEnabled = true
         }
 
-        // Create the EventHotKeyID
-        let hotKeyID = EventHotKeyID(signature: OSType(("HMSP" as NSString).fourCharCode),
-                                      id: hotkeyID)
-
-        // Register the hotkey with Carbon
-        let status = unsafe RegisterEventHotKey(keyCode,
-                                        modifiers,
-                                        hotKeyID,
-                                        GetEventDispatcherTarget(),
-                                        0, // options
-                                        &carbonHotKeyRef)
-
-        if status != noErr {
-            AKError("hs.hotkey: Failed to register hotkey (error \(status))")
-            return false
-        }
-
-        enabled = true
-
-        // Register with the manager so callbacks can be dispatched
-        HotkeyManager.shared.register(hotkeyID: hotkeyID, hotkey: self)
-
-        return true
+        return _isEnabled
     }
 
     @objc func disable() {
-        guard enabled, let hotKeyRef = unsafe carbonHotKeyRef else {
-            return
+        guard _isEnabled else { return }
+
+        if let coordinator {
+            coordinator.hotkeyDidDisable(self)
+            _isEnabled = false
         }
-
-        unsafe UnregisterEventHotKey(hotKeyRef)
-        unsafe carbonHotKeyRef = nil
-
-        // Unregister with the manager so we can be garbage collected if needed
-        HotkeyManager.shared.unregister(hotkeyID: hotkeyID)
-        enabled = false
     }
 
-    @objc func isEnabled() -> Bool {
-        return enabled
+    @objc func isEnabled() -> Bool { _isEnabled }
+
+    /// Returns true if this hotkey matches the given key event.
+    func matches(event: CGEvent, type: CGEventType) -> Bool {
+        guard _isEnabled else { return false }
+        guard event.getIntegerValueField(.keyboardEventKeycode) == Int64(keyCode) else { return false }
+
+        let maskedFlags = event.flags.intersection(Self.significantModifiers)
+        guard maskedFlags == requiredFlags else { return false }
+
+        if requiredDeviceBits != 0 {
+            return (event.flags.rawValue & requiredDeviceBits) == requiredDeviceBits
+        }
+        return true
     }
 
-    /// Internal method called by HotkeyManager when the hotkey is triggered
-    func trigger(eventKind: UInt32) {
+    /// Fire the appropriate JS callback for a keyDown or keyUp event.
+    func trigger(type: CGEventType) {
         let callback: JSFunction?
-
-        switch eventKind {
-        case UInt32(kEventHotKeyPressed):
-            callback = _callbackPressed?.value
-        case UInt32(kEventHotKeyReleased):
-            callback = _callbackReleased?.value
-        default:
-            AKError("Unknown hotkey event kind: \(eventKind)")
-            return
+        switch type {
+            case .keyDown: callback = _callbackPressed?.value
+            case .keyUp:   callback = _callbackReleased?.value
+            default:       return
         }
-
         guard let callback, !callback.isNull else { return }
-
         callback.call(withArguments: [])
-
         if let context = callback.context,
-           let exception = context.exception,
-           !exception.isUndefined {
-            AKError("hs.hotkey: Error in callback: \(exception.toString() ?? "unknown error")")
+           let exc = context.exception, !exc.isUndefined {
+            AKError("hs.hotkey: Error in callback: \(exc.toString() ?? "unknown")")
             context.exception = nil
         }
-    }
-}
-
-// MARK: - Hotkey Manager
-
-/// Singleton that manages the Carbon event handler and dispatches hotkey events
-@safe @MainActor
-class HotkeyManager {
-    static let shared = HotkeyManager()
-
-    private var hotkeys: [UInt32: HSHotkey] = [:]
-    nonisolated(unsafe) private var eventHandler: EventHandlerRef?
-    let context = UnsafeMutablePointer<HotkeyManager>.allocate(capacity: 1)
-
-    private init() {
-        setupEventHandler()
-    }
-
-    isolated deinit {
-        if let handler = unsafe eventHandler {
-            unsafe RemoveEventHandler(handler)
-            unsafe context.deallocate()
-        }
-    }
-
-    private func setupEventHandler() {
-        // Define the event types we want to handle
-        var eventTypes = [
-            EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
-                         eventKind: UInt32(kEventHotKeyPressed)),
-            EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
-                          eventKind: UInt32(kEventHotKeyReleased))
-        ]
-
-        // Create a context that holds a reference to self
-//        let context = UnsafeMutablePointer<HotkeyManager>.allocate(capacity: 1)
-        unsafe context.initialize(to: self)
-
-        // Install the event handler
-        let status = unsafe InstallEventHandler(
-            GetEventDispatcherTarget(),
-            { (nextHandler, theEvent, userData) -> OSStatus in
-                // Extract our manager from the context
-                guard let userData = unsafe userData else { return OSStatus(eventNotHandledErr) }
-                let manager = unsafe userData.assumingMemoryBound(to: HotkeyManager.self).pointee
-
-                // Get the hotkey ID from the event
-                var hotKeyID = EventHotKeyID()
-                let getIDStatus = unsafe GetEventParameter(
-                    theEvent,
-                    UInt32(kEventParamDirectObject),
-                    UInt32(typeEventHotKeyID),
-                    nil,
-                    MemoryLayout<EventHotKeyID>.size,
-                    nil,
-                    &hotKeyID
-                )
-
-                guard getIDStatus == noErr else {
-                    return OSStatus(eventNotHandledErr)
-                }
-
-                let eventKind = unsafe GetEventKind(theEvent)
-
-                // Dispatch to the appropriate hotkey
-                manager.dispatch(hotkeyID: hotKeyID.id, eventKind: eventKind)
-
-                return noErr
-            },
-            eventTypes.count,
-            &eventTypes,
-            context,
-            &eventHandler
-        )
-
-        if status != noErr {
-            AKError("hs.hotkey: Failed to install event handler (error \(status))")
-        }
-    }
-
-    func register(hotkeyID: UInt32, hotkey: HSHotkey) {
-        hotkeys[hotkeyID] = hotkey
-    }
-
-    func unregister(hotkeyID: UInt32) {
-        hotkeys.removeValue(forKey: hotkeyID)
-    }
-
-    private func dispatch(hotkeyID: UInt32, eventKind: UInt32) {
-        self.hotkeys[hotkeyID]?.trigger(eventKind: eventKind)
-    }
-}
-
-// Helper extension for converting strings to FourCharCode
-extension NSString {
-    var fourCharCode: FourCharCode {
-        guard self.length == 4 else { return 0 }
-        var result: FourCharCode = 0
-        for i in 0..<4 {
-            result = (result << 8) + FourCharCode(self.character(at: i))
-        }
-        return result
     }
 }

@@ -82,6 +82,11 @@ import CoreGraphics
     private var callback: JSCallback?
     private var hasWarnedAboutReturnValue = false
 
+    // Swift-only callback for internal use (e.g. HSHotkeyModule). When set, takes
+    // priority over the JS callback. Return the CGEvent to pass it through (possibly
+    // modified), or nil to consume it. Must only be set/called on the MainActor.
+    var swiftHandler: (@MainActor (CGEventType, CGEvent) -> CGEvent?)?
+
     // CFMachPort and its run loop source are C types; stored nonisolated(unsafe)
     // because they are only accessed on the MainActor (in start/stop/handleEvent)
     // and the static C callback guarantees main-thread delivery via CFRunLoopGetMain().
@@ -107,6 +112,7 @@ import CoreGraphics
         _ = stop()
         callback?.detach(from: self)
         callback = nil
+        swiftHandler = nil
     }
 
     // MARK: - HSEventTapAPI
@@ -195,6 +201,13 @@ import CoreGraphics
             }
             AKWarning("hs.eventtap: tap \(identifier) was disabled by system — re-enabled")
             return unsafe Unmanaged.passRetained(event)
+        }
+
+        if let handler = swiftHandler {
+            if let result = handler(type, event) {
+                return unsafe Unmanaged.passRetained(result)
+            }
+            return nil
         }
 
         guard let callbackFn = callback?.value, !callbackFn.isNull else {

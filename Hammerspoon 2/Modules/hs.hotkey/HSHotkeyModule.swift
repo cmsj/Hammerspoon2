@@ -1,13 +1,11 @@
 //
-//  HotkeyModule.swift
+//  HSHotkeyModule.swift
 //  Hammerspoon 2
-//
-//  Created by Chris Jones on 13/11/2025.
 //
 
 import Foundation
 import JavaScriptCore
-import Carbon
+import CoreGraphics
 
 // MARK: - Declare our JavaScript API
 
@@ -15,11 +13,13 @@ import Carbon
 @objc protocol HSHotkeyModuleAPI: JSExport {
     /// Bind a hotkey
     /// - Parameters:
-    ///   - mods: An array of modifier key strings (e.g., ["cmd", "shift"])
-    ///   - key: The key name or character (e.g., "a", "space", "return")
+    ///   - mods: An array of modifier key strings (e.g., ["cmd", "shift"]). Supports generic names
+    ///     (`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,
+    ///     `leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
+    ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
     ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
     ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
-    /// - Returns: A hotkey object, or nil if binding failed
+    /// - Returns: A hotkey object, or null if binding failed
     /// - Example:
     /// ```js
     /// hs.hotkey.bind(["cmd","shift"], "h", () => {
@@ -35,7 +35,7 @@ import Carbon
     ///   - message: A description of what this hotkey does (currently unused, for future features)
     ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
     ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
-    /// - Returns: A hotkey object, or nil if binding failed
+    /// - Returns: A hotkey object, or null if binding failed
     /// - Example:
     /// ```js
     /// hs.hotkey.bindSpec(["cmd"], "space", "Spotlight-like", () => {
@@ -65,13 +65,22 @@ import Carbon
 // MARK: - Implementation
 
 @_documentation(visibility: private)
-@objc class HSHotkeyModule: NSObject, HSModuleAPI, HSHotkeyModuleAPI {
+@MainActor
+@objc class HSHotkeyModule: NSObject, HSModuleAPI, HSHotkeyModuleAPI, HotkeyCoordinator {
     var name = "hs.hotkey"
     let engineID: UUID
 
-    // Weak refs: enabled hotkeys stay alive via HotkeyManager.shared; weak refs here
-    // allow disabled/dropped hotkeys to be GC'd while still supporting shutdown().
-    private var activeHotkeys = HSWeakObjectSet<HSHotkey>()
+    // Weak refs: disabled/dropped hotkeys can be GC'd. Enabled hotkeys are also
+    // in enabledHotkeys (strong) so their weak entries here remain valid until disabled.
+    private var allHotkeys = HSWeakObjectSet<HSHotkey>()
+
+    // Strong refs to currently-enabled hotkeys, iterated on every key event.
+    // Strong ownership here is required: the CGEventTap delivers events after a hotkey
+    // is enabled, so we must reliably find and fire every live enabled hotkey.
+    private var enabledHotkeys: [HSHotkey] = []
+
+    // Single shared CGEventTap for all hotkeys in this engine instance.
+    private var eventTap: HSEventTap?
 
     // MARK: - Module lifecycle
 
@@ -82,14 +91,60 @@ import Carbon
     }
 
     func shutdown() {
-        for hotkey in activeHotkeys.allObjects {
+        // Clear enabledHotkeys first so hotkeyDidDisable is a no-op during destroy()
+        enabledHotkeys.removeAll()
+        for hotkey in allHotkeys.allObjects {
             hotkey.destroy()
         }
-        activeHotkeys.removeAllObjects()
+        allHotkeys.removeAllObjects()
+        eventTap?.stop()
+        eventTap = nil
     }
 
     isolated deinit {
         AKDebug("Deinit of \(name): \(engineID)")
+    }
+
+    // MARK: - HotkeyCoordinator
+
+    func hotkeyDidEnable(_ hotkey: HSHotkey) {
+        enabledHotkeys.append(hotkey)
+        startTapIfNeeded()
+    }
+
+    func hotkeyDidDisable(_ hotkey: HSHotkey) {
+        enabledHotkeys.removeAll { $0 === hotkey }
+        if enabledHotkeys.isEmpty {
+            eventTap?.stop()
+        }
+    }
+
+    // MARK: - Tap lifecycle
+
+    private func startTapIfNeeded() {
+        if eventTap == nil {
+            let mask: CGEventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
+            let tap = HSEventTap(eventMask: mask)
+            tap.swiftHandler = { [weak self] type, event in
+                guard let self else { return event }
+                return self.dispatchKeyEvent(type: type, event: event)
+            }
+            eventTap = tap
+        }
+        if !eventTap!.isEnabled() {
+            eventTap!.start()
+        }
+    }
+
+    /// Iterate enabled hotkeys, fire the first match, and consume the event. Pass through if no match.
+    private func dispatchKeyEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
+        for hotkey in enabledHotkeys {
+            if hotkey.matches(event: event, type: type) {
+                hotkey.trigger(type: type)
+                return nil
+            }
+        }
+        return event
     }
 
     // MARK: - Hotkey binding
@@ -99,19 +154,14 @@ import Carbon
     }
 
     @objc func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey? {
-        // Parse modifiers
-        guard let modifierFlags = parseModifiers(mods) else {
+        guard let (flags, deviceBits) = parseModifiers(mods) else {
             AKError("hs.hotkey.bind: Invalid modifiers")
             return nil
         }
-
-        // Get key code
         guard let keyCode = keyNameToKeyCode(key) else {
             AKError("hs.hotkey.bind: Unknown key '\(key)'")
             return nil
         }
-
-        // Validate callbacks
         guard callbackPressed.isObject || callbackPressed.isNull else {
             AKError("hs.hotkey.bind: callbackPressed must be either a function or null")
             return nil
@@ -121,16 +171,16 @@ import Carbon
             return nil
         }
 
-        // Create and enable the hotkey
-        let hotkey = HSHotkey(keyCode: keyCode, modifiers: modifierFlags, callbackPressed: callbackPressed, callbackReleased: callbackReleased)
-
-        if !hotkey.enable() {
-            AKError("hs.hotkey.bind: Failed to enable hotkey")
-            return nil
-        }
-
-        activeHotkeys.add(hotkey)
-
+        let hotkey = HSHotkey(
+            keyCode: keyCode,
+            requiredFlags: flags,
+            requiredDeviceBits: deviceBits,
+            coordinator: self,
+            callbackPressed: callbackPressed.isNull ? nil : callbackPressed,
+            callbackReleased: callbackReleased.isNull ? nil : callbackReleased
+        )
+        _ = hotkey.enable()
+        allHotkeys.add(hotkey)
         return hotkey
     }
 
@@ -144,36 +194,23 @@ import Carbon
         return ModifierMapper.modifierMap
     }
 
-    private func parseModifiers(_ modsValue: [String]) -> UInt32? {
-        var flags: UInt32 = 0
-
-        for mod in modsValue {
-            guard let modFlag = ModifierMapper.modifierMap[mod.lowercased()] else {
+    private func parseModifiers(_ mods: [String]) -> (CGEventFlags, UInt64)? {
+        var flags = CGEventFlags()
+        var deviceBits: UInt64 = 0
+        for mod in mods {
+            guard let (f, d) = ModifierMapper.parse(mod) else {
                 AKError("hs.hotkey: Unknown modifier '\(mod)'")
                 return nil
             }
-            flags |= modFlag
+            flags.insert(f)
+            deviceBits |= d
         }
-
-        return flags
+        return (flags, deviceBits)
     }
 
-    private func keyNameToKeyCode(_ key: String) -> UInt32? {
-        let lowercaseKey = key.lowercased()
-
-        // Check the key map first
-        if let keyCode = KeyCodeMapper.keyMap[lowercaseKey] {
-            return keyCode
-        }
-
-        // For single characters, try to map them
-        if key.count == 1,
-           let scalar = key.unicodeScalars.first {
-            // This handles simple ASCII characters
-            // Note: For more complex mappings, we'd need a fuller implementation
-            return KeyCodeMapper.charToKeyCode(Character(scalar))
-        }
-
+    private func keyNameToKeyCode(_ key: String) -> CGKeyCode? {
+        let lower = key.lowercased()
+        if let code = KeyCodeMapper.keyMap[lower] { return CGKeyCode(code) }
         return nil
     }
 }
@@ -181,29 +218,61 @@ import Carbon
 // MARK: - Modifier Mapping
 
 private struct ModifierMapper {
-    static let modifierMap: [String: UInt32] = [
-        "cmd": UInt32(cmdKey),
-        "command": UInt32(cmdKey),
-        "⌘": UInt32(cmdKey),
+    // Device-specific left/right bits from IOKit/hidsystem/IOLLEvent.h (NX_DEVICE*KEYMASK).
+    // These live in the low word of CGEventFlags.rawValue alongside the high-word device-
+    // independent bits (maskCommand etc.) and are set in addition to them by the hardware.
+    private static let leftCtrlBit:   UInt64 = 0x00000001
+    private static let leftShiftBit:  UInt64 = 0x00000002
+    private static let rightShiftBit: UInt64 = 0x00000004
+    private static let leftCmdBit:    UInt64 = 0x00000008
+    private static let rightCmdBit:   UInt64 = 0x00000010
+    private static let leftAltBit:    UInt64 = 0x00000020
+    private static let rightAltBit:   UInt64 = 0x00000040
+    private static let rightCtrlBit:  UInt64 = 0x00002000
 
-        "ctrl": UInt32(controlKey),
-        "control": UInt32(controlKey),
-        "⌃": UInt32(controlKey),
+    /// Returns the (CGEventFlags, deviceBits) pair for a modifier name, or nil if unknown.
+    static func parse(_ name: String) -> (CGEventFlags, UInt64)? {
+        switch name.lowercased() {
+        case "cmd", "command", "⌘":      return ([.maskCommand], 0)
+        case "leftcmd", "leftcommand":   return ([.maskCommand], leftCmdBit)
+        case "rightcmd", "rightcommand": return ([.maskCommand], rightCmdBit)
+        case "ctrl", "control", "⌃":    return ([.maskControl], 0)
+        case "leftctrl", "leftcontrol":  return ([.maskControl], leftCtrlBit)
+        case "rightctrl", "rightcontrol":return ([.maskControl], rightCtrlBit)
+        case "alt", "option", "⌥":      return ([.maskAlternate], 0)
+        case "leftalt", "leftoption":    return ([.maskAlternate], leftAltBit)
+        case "rightalt", "rightoption":  return ([.maskAlternate], rightAltBit)
+        case "shift", "⇧":              return ([.maskShift], 0)
+        case "leftshift":                return ([.maskShift], leftShiftBit)
+        case "rightshift":               return ([.maskShift], rightShiftBit)
+        case "fn":                       return ([.maskSecondaryFn], 0)
+        default:                         return nil
+        }
+    }
 
-        "alt": UInt32(optionKey),
-        "option": UInt32(optionKey),
-        "⌥": UInt32(optionKey),
-
-        "shift": UInt32(shiftKey),
-        "⇧": UInt32(shiftKey),
-    ]
+    /// Informational map returned to JS via getModifierMap(). Values are CGEventFlags bits.
+    static let modifierMap: [String: UInt32] = {
+        func u32(_ f: CGEventFlags) -> UInt32 { UInt32(f.rawValue & 0xFFFFFFFF) }
+        return [
+            "cmd":     u32(.maskCommand),
+            "command": u32(.maskCommand),
+            "⌘":       u32(.maskCommand),
+            "ctrl":    u32(.maskControl),
+            "control": u32(.maskControl),
+            "⌃":       u32(.maskControl),
+            "alt":     u32(.maskAlternate),
+            "option":  u32(.maskAlternate),
+            "⌥":       u32(.maskAlternate),
+            "shift":   u32(.maskShift),
+            "⇧":       u32(.maskShift),
+            "fn":      u32(.maskSecondaryFn),
+        ]
+    }()
 }
 
 // MARK: - Key Code Mapping
 
 private struct KeyCodeMapper {
-    // Map of key names to their virtual key codes
-    // Based on Events.h from Carbon framework
     static let keyMap: [String: UInt32] = [
         // Letters
         "a": 0x00, "b": 0x0B, "c": 0x08, "d": 0x02,
@@ -246,53 +315,24 @@ private struct KeyCodeMapper {
         "up": 0x7E,
 
         // Symbols and punctuation
-        "minus": 0x1B,
-        "-": 0x1B,
-        "equal": 0x18,
-        "=": 0x18,
-        "leftbracket": 0x21,
-        "[": 0x21,
-        "rightbracket": 0x1E,
-        "]": 0x1E,
-        "backslash": 0x2A,
-        "\\": 0x2A,
-        "semicolon": 0x29,
-        ";": 0x29,
-        "quote": 0x27,
-        "'": 0x27,
-        "comma": 0x2B,
-        ",": 0x2B,
-        "period": 0x2F,
-        ".": 0x2F,
-        "slash": 0x2C,
-        "/": 0x2C,
-        "grave": 0x32,
-        "`": 0x32,
+        "minus": 0x1B, "-": 0x1B,
+        "equal": 0x18, "=": 0x18,
+        "leftbracket": 0x21, "[": 0x21,
+        "rightbracket": 0x1E, "]": 0x1E,
+        "backslash": 0x2A, "\\": 0x2A,
+        "semicolon": 0x29, ";": 0x29,
+        "quote": 0x27, "'": 0x27,
+        "comma": 0x2B, ",": 0x2B,
+        "period": 0x2F, ".": 0x2F,
+        "slash": 0x2C, "/": 0x2C,
+        "grave": 0x32, "`": 0x32,
 
         // Keypad
-        "pad0": 0x52,
-        "pad1": 0x53,
-        "pad2": 0x54,
-        "pad3": 0x55,
-        "pad4": 0x56,
-        "pad5": 0x57,
-        "pad6": 0x58,
-        "pad7": 0x59,
-        "pad8": 0x5B,
-        "pad9": 0x5C,
-        "pad*": 0x43,
-        "pad+": 0x45,
-        "pad/": 0x4B,
-        "pad-": 0x4E,
-        "pad=": 0x51,
-        "pad.": 0x41,
-        "padclear": 0x47,
-        "padenter": 0x4C,
+        "pad0": 0x52, "pad1": 0x53, "pad2": 0x54, "pad3": 0x55,
+        "pad4": 0x56, "pad5": 0x57, "pad6": 0x58, "pad7": 0x59,
+        "pad8": 0x5B, "pad9": 0x5C,
+        "pad*": 0x43, "pad+": 0x45, "pad/": 0x4B, "pad-": 0x4E,
+        "pad=": 0x51, "pad.": 0x41,
+        "padclear": 0x47, "padenter": 0x4C,
     ]
-
-    /// Convert a character to its key code (for simple ASCII characters)
-    static func charToKeyCode(_ char: Character) -> UInt32? {
-        let lowercased = String(char).lowercased()
-        return keyMap[lowercased]
-    }
 }

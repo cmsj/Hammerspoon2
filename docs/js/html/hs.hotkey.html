@@ -75,7 +75,9 @@
     <div class="method" id="bind">
         <h3><a href="#bind">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased) -> HSHotkey</a></h3>
 
-        <div class="description">Bind a hotkey</div>
+        <div class="description">Bind a hotkey
+(`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,
+`leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased) -> HSHotkey</code></pre>
@@ -93,12 +95,12 @@
                 <tr>
                     <td class="param-name">mods</td>
                     <td class="param-type">string[]</td>
-                    <td class="param-desc">An array of modifier key strings (e.g., [&quot;cmd&quot;, &quot;shift&quot;])</td>
+                    <td class="param-desc">An array of modifier key strings (e.g., [&quot;cmd&quot;, &quot;shift&quot;]). Supports generic names</td>
                 </tr>
                 <tr>
                     <td class="param-name">key</td>
                     <td class="param-type">string</td>
-                    <td class="param-desc">The key name or character (e.g., &quot;a&quot;, &quot;space&quot;, &quot;return&quot;)</td>
+                    <td class="param-desc">The key name or character (e.g., &quot;a&quot;, &quot;space&quot;, &quot;return&quot;, &quot;f1&quot;)</td>
                 </tr>
                 <tr>
                     <td class="param-name">callbackPressed</td>
@@ -115,7 +117,7 @@
 
         <div class="card-section-label">Returns</div>
         <div class="return-type">HSHotkey</div>
-        <div class="return-desc">A hotkey object, or nil if binding failed</div>
+        <div class="return-desc">A hotkey object, or null if binding failed</div>
 
 
         <div class="card-section-label">Example</div>
@@ -175,7 +177,7 @@
 
         <div class="card-section-label">Returns</div>
         <div class="return-type">HSHotkey</div>
-        <div class="return-desc">A hotkey object, or nil if binding failed</div>
+        <div class="return-desc">A hotkey object, or null if binding failed</div>
 
 
         <div class="card-section-label">Example</div>
