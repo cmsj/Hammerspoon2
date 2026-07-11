@@ -11,8 +11,9 @@ final class MockHotkeyCoordinator: HotkeyCoordinator {
     private(set) var enabledHotkeys: [HSHotkey] = []
     private(set) var disabledHotkeys: [HSHotkey] = []
 
-    func hotkeyDidEnable(_ hotkey: HSHotkey) {
+    func hotkeyDidEnable(_ hotkey: HSHotkey) -> Bool {
         enabledHotkeys.append(hotkey)
+        return true
     }
 
     func hotkeyDidDisable(_ hotkey: HSHotkey) {
