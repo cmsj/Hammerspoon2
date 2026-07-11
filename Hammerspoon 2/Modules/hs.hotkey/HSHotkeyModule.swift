@@ -137,9 +137,14 @@ import CoreGraphics
     }
 
     /// Iterate enabled hotkeys, fire the first match, and consume the event. Pass through if no match.
+    /// Pre-fetches event fields once so the per-hotkey matches() call is pure integer comparisons.
     private func dispatchKeyEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
+        let eventKeyCode  = event.getIntegerValueField(.keyboardEventKeycode)
+        let eventFlags    = event.flags
+        let maskedFlags   = eventFlags.intersection(HSHotkey.significantModifiers)
+        let rawFlagsValue = eventFlags.rawValue
         for hotkey in enabledHotkeys {
-            if hotkey.matches(event: event, type: type) {
+            if hotkey.matches(keyCode: eventKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
                 hotkey.trigger(type: type)
                 return nil
             }

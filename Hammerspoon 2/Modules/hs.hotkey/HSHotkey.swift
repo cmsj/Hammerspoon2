@@ -95,7 +95,10 @@ protocol HotkeyCoordinator: AnyObject {
     }
 
     private var _isEnabled = false
-    weak var coordinator: HotkeyCoordinator?
+    weak var coordinator: (any HotkeyCoordinator)?
+
+    // Pre-cast key code stored at init time; avoids a UInt16→Int64 conversion on every event.
+    let cachedKeyCode: Int64
 
     // The flags we compare against: cmd, shift, alt, ctrl, fn. CapsLock and
     // device-specific bits are handled separately so they don't break matching.
@@ -106,10 +109,11 @@ protocol HotkeyCoordinator: AnyObject {
     init(keyCode: CGKeyCode,
          requiredFlags: CGEventFlags,
          requiredDeviceBits: UInt64,
-         coordinator: HotkeyCoordinator? = nil,
+         coordinator: any HotkeyCoordinator,
          callbackPressed: JSFunction? = nil,
          callbackReleased: JSFunction? = nil) {
         self.keyCode = keyCode
+        self.cachedKeyCode = Int64(keyCode)
         self.requiredFlags = requiredFlags
         self.requiredDeviceBits = requiredDeviceBits
         self.coordinator = coordinator
@@ -134,38 +138,40 @@ protocol HotkeyCoordinator: AnyObject {
 
     @objc func enable() -> Bool {
         guard !_isEnabled else { return true }
-
-        if let coordinator {
-            coordinator.hotkeyDidEnable(self)
-            _isEnabled = true
-        }
-
-        return _isEnabled
+        _isEnabled = true
+        coordinator?.hotkeyDidEnable(self)
+        return true
     }
 
     @objc func disable() {
         guard _isEnabled else { return }
-
-        if let coordinator {
-            coordinator.hotkeyDidDisable(self)
-            _isEnabled = false
-        }
+        _isEnabled = false
+        coordinator?.hotkeyDidDisable(self)
     }
 
     @objc func isEnabled() -> Bool { _isEnabled }
 
-    /// Returns true if this hotkey matches the given key event.
-    func matches(event: CGEvent, type: CGEventType) -> Bool {
-        guard _isEnabled else { return false }
-        guard event.getIntegerValueField(.keyboardEventKeycode) == Int64(keyCode) else { return false }
-
-        let maskedFlags = event.flags.intersection(Self.significantModifiers)
+    /// Hot-path matcher called by dispatchKeyEvent with values pre-fetched once per event.
+    /// No _isEnabled guard — callers guarantee only enabled hotkeys are passed here.
+    @inline(__always)
+    func matches(keyCode: Int64, maskedFlags: CGEventFlags, rawFlagsValue: UInt64) -> Bool {
+        guard keyCode == cachedKeyCode else { return false }
         guard maskedFlags == requiredFlags else { return false }
-
         if requiredDeviceBits != 0 {
-            return (event.flags.rawValue & requiredDeviceBits) == requiredDeviceBits
+            return (rawFlagsValue & requiredDeviceBits) == requiredDeviceBits
         }
         return true
+    }
+
+    /// Convenience wrapper for tests and external callers. Includes an _isEnabled guard.
+    func matches(event: CGEvent, type: CGEventType) -> Bool {
+        guard _isEnabled else { return false }
+        let eventFlags = event.flags
+        return matches(
+            keyCode: event.getIntegerValueField(.keyboardEventKeycode),
+            maskedFlags: eventFlags.intersection(Self.significantModifiers),
+            rawFlagsValue: eventFlags.rawValue
+        )
     }
 
     /// Fire the appropriate JS callback for a keyDown or keyUp event.
