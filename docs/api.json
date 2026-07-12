@@ -4395,10 +4395,10 @@
       "methods": [
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ types: [Int], _ callback: JSFunction) -> HSEventTap?",
+          "signature": "func addWatcher(_ types: [Int], _ callback: JSFunction, _ listenOnly: Bool) -> HSEventTap?",
           "isStatic": false,
-          "rawDocumentation": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\n\nThe callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress\nthe event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.\n\n- Parameters:\n  - types: An array of event type integers from `hs.eventtap.eventTypes`\n  - callback: {(event: HSEventTapEvent) => boolean} Function called for each matching event\n- Returns: An HSEventTap watcher, or null if the tap could not be created\n- Note: event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.\n- Example:\n```js\nconst tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key: \" + event.keyCode)\n        return hs.eventtap.emit\n    }\n)\ntap.start()\n```",
-          "description": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\nThe callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress\nthe event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.",
+          "rawDocumentation": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\n\nThe callback receives an `HSEventTapEvent`. For modify taps (`listenOnly` omitted or false),\nreturn `hs.eventtap.consume` (false) to suppress the event or `hs.eventtap.emit` (true)\nto pass it through. For listen-only taps the callback's return value is ignored — events\nare always delivered to other applications. Requires Accessibility permission.\n\n- Parameters:\n  - types: An array of event type integers from `hs.eventtap.eventTypes`\n  - callback: {(event: HSEventTapEvent) => boolean | undefined} Function called for each matching event. The return value is only meaningful for modify taps.\n  - listenOnly: If true, the tap receives events but cannot modify or suppress them. Omit or pass false for a modify tap (the default).\n- Returns: An HSEventTap watcher, or null if the tap could not be created\n- Note: event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.\n- Example:\n```js\n// Modify tap — can suppress events\nconst tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key: \" + event.keyCode)\n        return hs.eventtap.emit\n    }\n)\ntap.start()\n\n// Listen-only tap — events always pass through\nconst listener = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => { console.log(\"Key: \" + event.keyCode) },\n    true\n)\nlistener.start()\n```",
+          "description": "Create an event tap that calls a function for matching events. Call `.start()` to activate it.\nThe callback receives an `HSEventTapEvent`. For modify taps (`listenOnly` omitted or false),\nreturn `hs.eventtap.consume` (false) to suppress the event or `hs.eventtap.emit` (true)\nto pass it through. For listen-only taps the callback's return value is ignored — events\nare always delivered to other applications. Requires Accessibility permission.",
           "params": [
             {
               "name": "types",
@@ -4410,9 +4410,16 @@
             {
               "name": "callback",
               "type": "JSFunction",
-              "description": "Function called for each matching event",
+              "description": "Function called for each matching event. The return value is only meaningful for modify taps.",
               "optional": false,
-              "tsType": "(event: HSEventTapEvent) => boolean"
+              "tsType": "(event: HSEventTapEvent) => boolean | undefined"
+            },
+            {
+              "name": "listenOnly",
+              "type": "boolean",
+              "description": "If true, the tap receives events but cannot modify or suppress them. Omit or pass false for a modify tap (the default).",
+              "optional": false,
+              "tsType": null
             }
           ],
           "returns": {
@@ -4425,12 +4432,12 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key: \" + event.keyCode)\n        return hs.eventtap.emit\n    }\n)\ntap.start()"
+              "code": "// Modify tap — can suppress events\nconst tap = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => {\n        console.log(\"Key: \" + event.keyCode)\n        return hs.eventtap.emit\n    }\n)\ntap.start()\n\n// Listen-only tap — events always pass through\nconst listener = hs.eventtap.addWatcher(\n    [hs.eventtap.eventTypes.keyDown],\n    (event) => { console.log(\"Key: \" + event.keyCode) },\n    true\n)\nlistener.start()"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 121
+          "lineNumber": 133
         },
         {
           "name": "removeWatcher",
@@ -4457,7 +4464,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 129
+          "lineNumber": 141
         },
         {
           "name": "makeKeyEvent",
@@ -4494,7 +4501,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 144
+          "lineNumber": 156
         },
         {
           "name": "makeKeyEventWithCode",
@@ -4531,7 +4538,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 156
+          "lineNumber": 168
         },
         {
           "name": "makeMouseEvent",
@@ -4582,7 +4589,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 178
+          "lineNumber": 190
         },
         {
           "name": "makeScrollWheelEvent",
@@ -4633,7 +4640,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 195
+          "lineNumber": 207
         },
         {
           "name": "keyStroke",
@@ -4667,7 +4674,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 212
+          "lineNumber": 224
         },
         {
           "name": "keyStrokes",
@@ -4694,7 +4701,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 223
+          "lineNumber": 235
         },
         {
           "name": "leftClick",
@@ -4728,7 +4735,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 236
+          "lineNumber": 248
         },
         {
           "name": "rightClick",
@@ -4762,7 +4769,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 249
+          "lineNumber": 261
         },
         {
           "name": "doubleLeftClick",
@@ -4796,7 +4803,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 262
+          "lineNumber": 274
         },
         {
           "name": "middleClick",
@@ -4830,7 +4837,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 275
+          "lineNumber": 287
         },
         {
           "name": "scrollWheel",
@@ -4878,7 +4885,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 290
+          "lineNumber": 302
         },
         {
           "name": "currentModifiers",
@@ -4900,7 +4907,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 301
+          "lineNumber": 313
         },
         {
           "name": "checkMouseButtons",
@@ -4922,7 +4929,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 310
+          "lineNumber": 322
         },
         {
           "name": "mouseLocation",
@@ -4944,7 +4951,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 320
+          "lineNumber": 332
         },
         {
           "name": "doubleClickInterval",
@@ -4966,7 +4973,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 328
+          "lineNumber": 340
         },
         {
           "name": "keyRepeatDelay",
@@ -4988,7 +4995,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 336
+          "lineNumber": 348
         },
         {
           "name": "keyRepeatInterval",
@@ -5010,7 +5017,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 344
+          "lineNumber": 356
         }
       ],
       "properties": [
@@ -5226,6 +5233,23 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
               "lineNumber": 30
+            },
+            {
+              "name": "listenOnly",
+              "signature": "var listenOnly: Bool { get }",
+              "rawDocumentation": "Whether this tap was created as listen-only (events are observed but never modified or suppressed)\n- Example:\n```js\nconst tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {}, true)\nconsole.log(tap.listenOnly)  // true\n```",
+              "description": "Whether this tap was created as listen-only (events are observed but never modified or suppressed)",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {}, true)\nconsole.log(tap.listenOnly)  // true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTap.swift",
+              "lineNumber": 85
             }
           ]
         },
@@ -6858,7 +6882,7 @@
           "name": "bind",
           "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"]). Supports generic names\n    (`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,\n    `leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\n```",
+          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., [\"cmd\", \"shift\"]). Supports generic names\n    (`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,\n    `leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\n```\n\nPlease note: Hotkeys will not be consumed when they trigger - ie they cannot be used to override hotkeys used by other applications.",
           "description": "Bind a hotkey\n(`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,\n`leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).",
           "params": [
             {
@@ -6903,7 +6927,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 29
+          "lineNumber": 31
         },
         {
           "name": "bindSpec",
@@ -6961,7 +6985,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 46
+          "lineNumber": 48
         },
         {
           "name": "getKeyCodeMap",
@@ -6983,7 +7007,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 54
+          "lineNumber": 56
         },
         {
           "name": "getModifierMap",
@@ -7005,7 +7029,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 62
+          "lineNumber": 64
         }
       ],
       "properties": [],
@@ -18405,5 +18429,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-12T01:11:47.169Z"
+  "generatedAt": "2026-07-12T18:31:47.128Z"
 }

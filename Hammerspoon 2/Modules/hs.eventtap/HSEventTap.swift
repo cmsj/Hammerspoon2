@@ -75,6 +75,14 @@ import CoreGraphics
     /// console.log("Created: " + tap.isCreated())
     /// ```
     @objc func isCreated() -> Bool
+
+    /// Whether this tap was created as listen-only (events are observed but never modified or suppressed)
+    /// - Example:
+    /// ```js
+    /// const tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {}, true)
+    /// console.log(tap.listenOnly)  // true
+    /// ```
+    @objc var listenOnly: Bool { get }
 }
 
 // MARK: - Implementation
@@ -87,6 +95,7 @@ import CoreGraphics
     @objc let identifier = UUID().uuidString
 
     private let eventMask: CGEventMask
+    @objc let listenOnly: Bool
     private var callback: JSCallback?
     private var hasWarnedAboutReturnValue = false
 
@@ -106,8 +115,9 @@ import CoreGraphics
     // Written only on the MainActor; the C callback reads it from the main run loop thread.
     nonisolated(unsafe) private var selfRetain: HSEventTap?
 
-    init(eventMask: CGEventMask) {
+    init(eventMask: CGEventMask, listenOnly: Bool = false) {
         self.eventMask = eventMask
+        self.listenOnly = listenOnly
         super.init()
     }
 
@@ -136,7 +146,7 @@ import CoreGraphics
         let port = unsafe CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
-            options: .defaultTap,
+            options: listenOnly ? .listenOnly : .defaultTap,
             eventsOfInterest: eventMask,
             callback: HSEventTap.tapCallback,
             userInfo: Unmanaged.passUnretained(self).toOpaque()
@@ -216,9 +226,11 @@ import CoreGraphics
         }
 
         if let handler = swiftHandler {
-            if let result = handler(type, event) {
-                return unsafe Unmanaged.passRetained(result)
-            }
+            let result = handler(type, event)
+            // For listen-only taps the OS ignores the return value; pass the event through
+            // explicitly for clarity. For modify taps, nil return consumes the event.
+            if listenOnly { return unsafe Unmanaged.passRetained(event) }
+            if let result { return unsafe Unmanaged.passRetained(result) }
             return nil
         }
 
@@ -234,8 +246,10 @@ import CoreGraphics
             context.exception = nil
         }
 
-        // Warn once per tap if the callback does not explicitly return hs.eventtap.consume
-        // (false) or hs.eventtap.emit (true).
+        // For listen-only taps the OS ignores the return value; always pass through.
+        if listenOnly { return unsafe Unmanaged.passRetained(event) }
+
+        // Warn once per modify tap if the callback does not explicitly return a boolean.
         if !hasWarnedAboutReturnValue, result?.isBoolean != true {
             AKWarning("hs.eventtap(\(identifier)): callback did not return hs.eventtap.consume or hs.eventtap.emit — defaulting to emit (pass-through). Return false/hs.eventtap.consume to suppress events, or true/hs.eventtap.emit to pass them through.")
             hasWarnedAboutReturnValue = true

@@ -1918,14 +1918,17 @@ hs.eventtap.leftClick(500, 300)
 declare namespace hs.eventtap {
     /**
      * Create an event tap that calls a function for matching events. Call `.start()` to activate it.
-The callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress
-the event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.
+The callback receives an `HSEventTapEvent`. For modify taps (`listenOnly` omitted or false),
+return `hs.eventtap.consume` (false) to suppress the event or `hs.eventtap.emit` (true)
+to pass it through. For listen-only taps the callback's return value is ignored — events
+are always delivered to other applications. Requires Accessibility permission.
      * @remarks event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.
      * @param types An array of event type integers from `hs.eventtap.eventTypes`
-     * @param callback Function called for each matching event
+     * @param callback Function called for each matching event. The return value is only meaningful for modify taps.
+     * @param listenOnly If true, the tap receives events but cannot modify or suppress them. Omit or pass false for a modify tap (the default).
      * @returns An HSEventTap watcher, or null if the tap could not be created
      */
-    function addWatcher(types: number[], callback: (event: HSEventTapEvent) => boolean): HSEventTap | null;
+    function addWatcher(types: number[], callback: (event: HSEventTapEvent) => boolean | undefined, listenOnly: boolean): HSEventTap | null;
 
     /**
      * Stop and remove a previously created watcher
@@ -2139,6 +2142,11 @@ declare class HSEventTap {
      * A unique identifier for this tap
      */
     readonly identifier: string;
+
+    /**
+     * Whether this tap was created as listen-only (events are observed but never modified or suppressed)
+     */
+    readonly listenOnly: boolean;
 
 }
 

@@ -26,6 +26,8 @@ import CoreGraphics
     ///     console.log("Hello!")
     /// })
     /// ```
+    ///
+    /// Please note: Hotkeys will not be consumed when they trigger - ie they cannot be used to override hotkeys used by other applications.
     @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?
 
     /// Bind a hotkey with a message description
@@ -125,10 +127,11 @@ import CoreGraphics
     private func startTapIfNeeded() -> Bool {
         if eventTap == nil {
             let mask: CGEventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
-            let tap = HSEventTap(eventMask: mask)
+            let tap = HSEventTap(eventMask: mask, listenOnly: true)
             tap.swiftHandler = { [weak self] type, event in
                 guard let self else { return event }
-                return self.dispatchKeyEvent(type: type, event: event)
+                self.dispatchKeyEvent(type: type, event: event)
+                return event
             }
             eventTap = tap
         }
@@ -145,9 +148,10 @@ import CoreGraphics
         return eventTap.isCreated()
     }
 
-    /// Iterate enabled hotkeys, fire the first match, and consume the event. Pass through if no match.
+    /// Iterate enabled hotkeys and fire the first match. The tap is listen-only so the event
+    /// always reaches other applications regardless.
     /// Pre-fetches event fields once so the per-hotkey matches() call is pure integer comparisons.
-    private func dispatchKeyEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
+    private func dispatchKeyEvent(type: CGEventType, event: CGEvent) {
         let eventKeyCode  = event.getIntegerValueField(.keyboardEventKeycode)
         let eventFlags    = event.flags
         let maskedFlags   = eventFlags.intersection(HSHotkey.significantModifiers)
@@ -155,10 +159,9 @@ import CoreGraphics
         for hotkey in enabledHotkeys {
             if hotkey.matches(keyCode: eventKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
                 hotkey.trigger(type: type)
-                return nil
+                return
             }
         }
-        return event
     }
 
     // MARK: - Hotkey binding
