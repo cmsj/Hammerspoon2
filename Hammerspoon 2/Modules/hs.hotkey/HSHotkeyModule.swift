@@ -109,7 +109,8 @@ import CoreGraphics
 
     func hotkeyDidEnable(_ hotkey: HSHotkey) -> Bool {
         enabledHotkeys.append(hotkey)
-        return startTapIfNeeded()
+        startTapIfNeeded()   // best-effort; fails silently if Accessibility permission is not yet granted
+        return true
     }
 
     func hotkeyDidDisable(_ hotkey: HSHotkey) {
