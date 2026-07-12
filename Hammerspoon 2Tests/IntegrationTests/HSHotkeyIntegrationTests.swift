@@ -48,6 +48,7 @@ struct HSHotkeyTests {
     struct HSHotkeyBehaviourTests {
         private func makeHarness() -> JSTestHarness {
             let harness = JSTestHarness()
+            harness.loadModule(HSEventTapModule.self, as: "eventtap")
             harness.loadModule(HSHotkeyModule.self, as: "hotkey")
             return harness
         }
@@ -187,7 +188,10 @@ struct HSHotkeyTests {
                 requiredDeviceBits: 0,
                 coordinator: coordinator
             )
-            _ = hotkey.enable()
+            // withExtendedLifetime guarantees coordinator is alive through enable().
+            // Without it, Swift ARC may release coordinator at its last syntactic use
+            // (the init argument), before enable() is called.
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
 
             let source = CGEventSource(stateID: .hidSystemState)
             guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x04, keyDown: true) else {
@@ -209,7 +213,7 @@ struct HSHotkeyTests {
                 requiredDeviceBits: 0,
                 coordinator: coordinator
             )
-            _ = hotkey.enable()
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
 
             let source = CGEventSource(stateID: .hidSystemState)
             guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x04, keyDown: true) else {
@@ -231,7 +235,7 @@ struct HSHotkeyTests {
                 requiredDeviceBits: 0,
                 coordinator: coordinator
             )
-            _ = hotkey.enable()
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
 
             let source = CGEventSource(stateID: .hidSystemState)
             guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x00, keyDown: true) else {

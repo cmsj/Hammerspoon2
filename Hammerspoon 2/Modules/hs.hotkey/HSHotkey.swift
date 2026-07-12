@@ -138,22 +138,14 @@ protocol HotkeyCoordinator: AnyObject {
 
     @objc func enable() -> Bool {
         guard !_isEnabled else { return true }
-        guard let coordinator else {
-            AKError("Serious internal error: HSHotkey coordinator is nil")
-            return false
-        }
         _isEnabled = true
-        return coordinator.hotkeyDidEnable(self)
+        return coordinator?.hotkeyDidEnable(self) ?? false
     }
 
     @objc func disable() {
         guard _isEnabled else { return }
-        guard let coordinator else {
-            AKError("Serious internal error: HSHotkey coordinator is nil")
-            return
-        }
         _isEnabled = false
-        coordinator.hotkeyDidDisable(self)
+        coordinator?.hotkeyDidDisable(self)
     }
 
     @objc func isEnabled() -> Bool { _isEnabled }
