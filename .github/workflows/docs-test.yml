@@ -24,9 +24,6 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: TEMPORARY TEST
-        run: echo "$SHELL"
-
       - name: Install npm dependencies
         run: npm ci
 
