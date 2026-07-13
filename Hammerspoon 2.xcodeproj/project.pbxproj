@@ -369,6 +369,7 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/package.json",
 			);
 			name = "Generate Documentation HTML";
 			outputFileListPaths = (
