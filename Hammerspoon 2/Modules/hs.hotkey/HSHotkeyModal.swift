@@ -154,6 +154,7 @@ import CoreGraphics
             return self
         }
         modalHotkeys.append(hotkey)
+        if _isActive { _ = hotkey.enable() }
         return self
     }
 

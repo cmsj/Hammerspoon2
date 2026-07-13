@@ -336,6 +336,26 @@ struct HSHotkeyModalTests {
             #expect(!harness.hasException)
         }
 
+        @Test("hotkey bound while modal is active fires without re-entering")
+        func testBindWhileActiveFires() async {
+            let harness = makeHarness()
+            var fired = false
+            harness.registerCallback("onKey") { fired = true }
+
+            harness.eval("""
+                var m = hs.hotkey.createModal([], '')
+                m.enter()
+                m.bind([], 'b', () => __test_callback('onKey'), null)
+            """)
+            harness.eval("hs.eventtap.keyStroke([], 'b')")
+
+            let ok = harness.waitFor(timeout: 1.0) { fired }
+            harness.eval("m.destroy()")
+            await harness.cleanup()
+            #expect(ok, "Hotkey bound while modal is active should fire without re-entering")
+            #expect(!harness.hasException)
+        }
+
         @Test("trigger hotkey auto-enters the modal")
         func testTriggerHotkeyAutoEnters() async {
             let harness = makeHarness()
