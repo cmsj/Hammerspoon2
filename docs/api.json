@@ -7030,6 +7030,43 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
           "lineNumber": 64
+        },
+        {
+          "name": "createModal",
+          "signature": "func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal?",
+          "isStatic": false,
+          "rawDocumentation": "Create a new modal hotkey group, optionally entered via a trigger key combination\n- Parameters:\n  - mods: Modifier keys for the trigger hotkey (e.g. `[\"cmd\", \"shift\"]`), or an empty array for no trigger\n  - key: Key name for the trigger hotkey (e.g. `\"h\"`), or an empty string for no trigger\n- Returns: A new modal object, or null if the trigger key combination was invalid\n- Example:\n```js\n// Modal with a Cmd+H trigger — pressing it calls enter() automatically\nconst m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\n\n// Modal with no trigger — enter/exit manually\nconst m2 = hs.hotkey.createModal([], '')\nm2.enter()\n```",
+          "description": "Create a new modal hotkey group, optionally entered via a trigger key combination",
+          "params": [
+            {
+              "name": "mods",
+              "type": "Array<String>",
+              "description": "Modifier keys for the trigger hotkey (e.g. `[\"cmd\", \"shift\"]`), or an empty array for no trigger",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": "Key name for the trigger hotkey (e.g. `\"h\"`), or an empty string for no trigger",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSHotkeyModal",
+            "description": "A new modal object, or null if the trigger key combination was invalid"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "// Modal with a Cmd+H trigger — pressing it calls enter() automatically\nconst m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\n\n// Modal with no trigger — enter/exit manually\nconst m2 = hs.hotkey.createModal([], '')\nm2.enter()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
+          "lineNumber": 83
         }
       ],
       "properties": [],
@@ -7138,6 +7175,181 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
               "lineNumber": 63
+            }
+          ]
+        },
+        {
+          "name": "HSHotkeyModalAPI",
+          "type": "typedef",
+          "rawDocumentation": "A group of hotkeys that are activated and deactivated together.\n\nObtain instances via `hs.hotkey.modal.create()` — do not instantiate directly.\n\n## Example\n\n```js\nconst m = hs.hotkey.modal.create(['cmd', 'shift'], 'h')\nm.bind([], 'j', () => console.log('j pressed in modal'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\n// Press Cmd+Shift+H to enter, then J triggers the modal hotkey\n```",
+          "description": "A group of hotkeys that are activated and deactivated together.\nObtain instances via `hs.hotkey.modal.create()` — do not instantiate directly.\n## Example\n```js\nconst m = hs.hotkey.modal.create(['cmd', 'shift'], 'h')\nm.bind([], 'j', () => console.log('j pressed in modal'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\n// Press Cmd+Shift+H to enter, then J triggers the modal hotkey\n```",
+          "methods": [
+            {
+              "name": "bind",
+              "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkeyModal",
+              "isStatic": false,
+              "rawDocumentation": "Add a hotkey that is active only while this modal is entered\n- Parameters:\n  - mods: Modifier keys for the hotkey\n  - key: Key name for the hotkey\n  - callbackPressed: {(() => void) | null} Called when the key is pressed, or null\n  - callbackReleased: {(() => void) | null} Called when the key is released, or null\n- Returns: This modal, for chaining\n- Example:\n```js\nm.bind(['shift'], 'a', () => console.log('shift-a'), null)\n .bind([], 'escape', () => m.exit(), null)\n```",
+              "description": "Add a hotkey that is active only while this modal is entered",
+              "params": [
+                {
+                  "name": "mods",
+                  "type": "Array<String>",
+                  "description": "Modifier keys for the hotkey",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "key",
+                  "type": "string",
+                  "description": "Key name for the hotkey",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "callbackPressed",
+                  "type": "JSFunction",
+                  "description": "Called when the key is pressed, or null",
+                  "optional": false,
+                  "tsType": "(() => void) | null"
+                },
+                {
+                  "name": "callbackReleased",
+                  "type": "JSFunction",
+                  "description": "Called when the key is released, or null",
+                  "optional": false,
+                  "tsType": "(() => void) | null"
+                }
+              ],
+              "returns": {
+                "type": "HSHotkeyModal",
+                "description": "This modal, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "m.bind(['shift'], 'a', () => console.log('shift-a'), null)\n .bind([], 'escape', () => m.exit(), null)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModal.swift",
+              "lineNumber": 38
+            },
+            {
+              "name": "enter",
+              "signature": "func enter() -> HSHotkeyModal",
+              "isStatic": false,
+              "rawDocumentation": "Activate the modal: enable its hotkeys and disable the trigger hotkey\n- Returns: This modal, for chaining\n- Example:\n```js\nm.enter()\n```",
+              "description": "Activate the modal: enable its hotkeys and disable the trigger hotkey",
+              "params": [],
+              "returns": {
+                "type": "HSHotkeyModal",
+                "description": "This modal, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "m.enter()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModal.swift",
+              "lineNumber": 46
+            },
+            {
+              "name": "exit",
+              "signature": "func exit() -> HSHotkeyModal",
+              "isStatic": false,
+              "rawDocumentation": "Deactivate the modal: disable its hotkeys and re-enable the trigger hotkey\n- Returns: This modal, for chaining\n- Example:\n```js\nm.exit()\n```",
+              "description": "Deactivate the modal: disable its hotkeys and re-enable the trigger hotkey",
+              "params": [],
+              "returns": {
+                "type": "HSHotkeyModal",
+                "description": "This modal, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "m.exit()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModal.swift",
+              "lineNumber": 54
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Destroy the modal and all its hotkeys without calling exitFn\n- Example:\n```js\nm.destroy()\n```",
+              "description": "Destroy the modal and all its hotkeys without calling exitFn",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "m.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModal.swift",
+              "lineNumber": 61
+            }
+          ],
+          "properties": [
+            {
+              "name": "enterFn",
+              "signature": "var enterFn: JSFunction? { get set }",
+              "rawDocumentation": "Called when the modal is entered\n- Example:\n```js\nm.enterFn = () => console.log('entered')\n```",
+              "description": "Called when the modal is entered",
+              "tsType": "(() => void) | null",
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "m.enterFn = () => console.log('entered')"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModal.swift",
+              "lineNumber": 68
+            },
+            {
+              "name": "exitFn",
+              "signature": "var exitFn: JSFunction? { get set }",
+              "rawDocumentation": "Called when the modal is exited\n- Example:\n```js\nm.exitFn = () => console.log('exited')\n```",
+              "description": "Called when the modal is exited",
+              "tsType": "(() => void) | null",
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "m.exitFn = () => console.log('exited')"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModal.swift",
+              "lineNumber": 75
+            },
+            {
+              "name": "isActive",
+              "signature": "var isActive: Bool { get }",
+              "rawDocumentation": "Whether the modal is currently active\n- Example:\n```js\nconsole.log(m.isActive)  // false before enter(), true after\n```",
+              "description": "Whether the modal is currently active",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(m.isActive)  // false before enter(), true after"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModal.swift",
+              "lineNumber": 82
             }
           ]
         }
@@ -18429,5 +18641,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-12T18:31:47.128Z"
+  "generatedAt": "2026-07-13T14:04:03.490Z"
 }
