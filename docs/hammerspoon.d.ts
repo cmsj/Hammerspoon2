@@ -1918,14 +1918,17 @@ hs.eventtap.leftClick(500, 300)
 declare namespace hs.eventtap {
     /**
      * Create an event tap that calls a function for matching events. Call `.start()` to activate it.
-The callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress
-the event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.
+The callback receives an `HSEventTapEvent`. For modify taps (`listenOnly` omitted or false),
+return `hs.eventtap.consume` (false) to suppress the event or `hs.eventtap.emit` (true)
+to pass it through. For listen-only taps the callback's return value is ignored — events
+are always delivered to other applications. Requires Accessibility permission.
      * @remarks event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.
      * @param types An array of event type integers from `hs.eventtap.eventTypes`
-     * @param callback Function called for each matching event
+     * @param callback Function called for each matching event. The return value is only meaningful for modify taps.
+     * @param listenOnly If true, the tap receives events but cannot modify or suppress them. Omit or pass false for a modify tap (the default).
      * @returns An HSEventTap watcher, or null if the tap could not be created
      */
-    function addWatcher(types: number[], callback: (event: HSEventTapEvent) => boolean): HSEventTap | null;
+    function addWatcher(types: number[], callback: (event: HSEventTapEvent) => boolean | undefined, listenOnly: boolean): HSEventTap | null;
 
     /**
      * Stop and remove a previously created watcher
@@ -2130,9 +2133,20 @@ declare class HSEventTap {
     isEnabled(): boolean;
 
     /**
+     * Whether this tap has been registered with macOS
+     * @returns True if the tap has been created
+     */
+    isCreated(): boolean;
+
+    /**
      * A unique identifier for this tap
      */
     readonly identifier: string;
+
+    /**
+     * Whether this tap was created as listen-only (events are observed but never modified or suppressed)
+     */
+    readonly listenOnly: boolean;
 
 }
 
@@ -2610,11 +2624,13 @@ declare namespace hs.hash {
 declare namespace hs.hotkey {
     /**
      * Bind a hotkey
-     * @param mods An array of modifier key strings (e.g., ["cmd", "shift"])
-     * @param key The key name or character (e.g., "a", "space", "return")
+(`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,
+`leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
+     * @param mods An array of modifier key strings (e.g., ["cmd", "shift"]). Supports generic names
+     * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
-     * @returns A hotkey object, or nil if binding failed
+     * @returns A hotkey object, or null if binding failed
      */
     function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
 
@@ -2625,7 +2641,7 @@ declare namespace hs.hotkey {
      * @param message A description of what this hotkey does (currently unused, for future features)
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
-     * @returns A hotkey object, or nil if binding failed
+     * @returns A hotkey object, or null if binding failed
      */
     function bindSpec(mods: string[], key: string, message: string | null, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
 

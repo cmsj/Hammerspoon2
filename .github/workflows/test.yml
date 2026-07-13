@@ -71,6 +71,7 @@ jobs:
         with:
           path: TestResults.xcresult
           show-passed-tests: false
+          show-code-coverage: false
           title: Test Results
 
       - name: Upload test results

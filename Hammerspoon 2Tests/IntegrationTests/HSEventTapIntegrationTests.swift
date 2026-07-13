@@ -553,6 +553,30 @@ struct HSEventTapTests {
             #expect(!harness.hasException)
         }
 
+        @Test("listenOnly defaults to false")
+        func testListenOnlyDefaultsFalse() {
+            let harness = makeHarness()
+            harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(evt) {})")
+            harness.expectTrue("tap.listenOnly === false")
+            #expect(!harness.hasException)
+        }
+
+        @Test("addWatcher with listenOnly true sets listenOnly property")
+        func testAddWatcherListenOnly() {
+            let harness = makeHarness()
+            harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(evt) {}, true)")
+            harness.expectTrue("tap.listenOnly === true")
+            #expect(!harness.hasException)
+        }
+
+        @Test("addWatcher with listenOnly false sets listenOnly property to false")
+        func testAddWatcherExplicitModify() {
+            let harness = makeHarness()
+            harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(evt) {}, false)")
+            harness.expectTrue("tap.listenOnly === false")
+            #expect(!harness.hasException)
+        }
+
         @Test("addWatcher with empty types returns null")
         func testAddWatcherEmptyTypes() {
             let harness = makeHarness()
@@ -647,6 +671,47 @@ struct HSEventTapTests {
             harness.expectTrue("tap.isEnabled() === true")
             harness.eval("tap.stop()")
             harness.expectTrue("tap.isEnabled() === false")
+            #expect(!harness.hasException)
+        }
+
+        @Test("listen-only tap start/stop lifecycle works")
+        func testListenOnlyWatcherStartStop() {
+            let harness = makeHarness()
+            harness.eval("""
+                var tap = hs.eventtap.addWatcher(
+                    [hs.eventtap.eventTypes.keyDown],
+                    function(evt) {},
+                    true
+                )
+                tap.start()
+            """)
+            harness.expectTrue("tap.isEnabled() === true")
+            harness.expectTrue("tap.listenOnly === true")
+            harness.eval("tap.stop()")
+            harness.expectTrue("tap.isEnabled() === false")
+            #expect(!harness.hasException)
+        }
+
+        @Test("listen-only tap callback fires when synthetic event is posted")
+        func testListenOnlyTapCallbackFires() {
+            let harness = makeHarness()
+            var fired = false
+            harness.registerCallback("onKeyDown") { fired = true }
+
+            harness.eval("""
+                var tap = hs.eventtap.addWatcher(
+                    [hs.eventtap.eventTypes.keyDown],
+                    function(evt) { __test_callback('onKeyDown') },
+                    true
+                )
+                tap.start()
+            """)
+            harness.eval("hs.eventtap.keyStroke([], 'a')")
+
+            let ok = harness.waitFor(timeout: 1.0) { fired }
+
+            harness.eval("tap.stop()")
+            #expect(ok, "Listen-only tap callback should have fired")
             #expect(!harness.hasException)
         }
 

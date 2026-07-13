@@ -430,6 +430,8 @@ extension JSTestHarness {
                 loadModule(HSDocsModule.self, as: name)
             case "eventtap":
                 loadModule(HSEventTapModule.self, as: name)
+            case "hotkey":
+                loadModule(HSHotkeyModule.self, as: name)
             default:
                 print("⚠️ Unknown module: \(name)")
             }

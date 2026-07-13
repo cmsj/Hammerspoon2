@@ -99,16 +99,20 @@ import AppKit
 
     /// Create an event tap that calls a function for matching events. Call `.start()` to activate it.
     ///
-    /// The callback receives an `HSEventTapEvent`. Return `hs.eventtap.consume` (false) to suppress
-    /// the event, or `hs.eventtap.emit` (true) to pass it through. Requires Accessibility permission.
+    /// The callback receives an `HSEventTapEvent`. For modify taps (`listenOnly` omitted or false),
+    /// return `hs.eventtap.consume` (false) to suppress the event or `hs.eventtap.emit` (true)
+    /// to pass it through. For listen-only taps the callback's return value is ignored — events
+    /// are always delivered to other applications. Requires Accessibility permission.
     ///
     /// - Parameters:
     ///   - types: An array of event type integers from `hs.eventtap.eventTypes`
-    ///   - callback: {(event: HSEventTapEvent) => boolean} Function called for each matching event
+    ///   - callback: {(event: HSEventTapEvent) => boolean | undefined} Function called for each matching event. The return value is only meaningful for modify taps.
+    ///   - listenOnly: If true, the tap receives events but cannot modify or suppress them. Omit or pass false for a modify tap (the default).
     /// - Returns: An HSEventTap watcher, or null if the tap could not be created
     /// - Note: event tap watchers will not be automatically destroyed by JavaScript garbage collection. You *MUST* call `removeWatcher()` if you want to dispose of a watcher.
     /// - Example:
     /// ```js
+    /// // Modify tap — can suppress events
     /// const tap = hs.eventtap.addWatcher(
     ///     [hs.eventtap.eventTypes.keyDown],
     ///     (event) => {
@@ -117,8 +121,16 @@ import AppKit
     ///     }
     /// )
     /// tap.start()
+    ///
+    /// // Listen-only tap — events always pass through
+    /// const listener = hs.eventtap.addWatcher(
+    ///     [hs.eventtap.eventTypes.keyDown],
+    ///     (event) => { console.log("Key: " + event.keyCode) },
+    ///     true
+    /// )
+    /// listener.start()
     /// ```
-    @objc func addWatcher(_ types: [Int], _ callback: JSFunction) -> HSEventTap?
+    @objc func addWatcher(_ types: [Int], _ callback: JSFunction, _ listenOnly: Bool) -> HSEventTap?
 
     /// Stop and remove a previously created watcher
     /// - Parameter tap: The HSEventTap returned by `addWatcher`
@@ -429,13 +441,13 @@ import AppKit
 
     // MARK: - Watcher management
 
-    @objc func addWatcher(_ types: [Int], _ callback: JSFunction) -> HSEventTap? {
+    @objc func addWatcher(_ types: [Int], _ callback: JSFunction, _ listenOnly: Bool) -> HSEventTap? {
         guard !types.isEmpty else {
             AKError("hs.eventtap.addWatcher: types array must not be empty")
             return nil
         }
         let mask = types.reduce(CGEventMask(0)) { $0 | (CGEventMask(1) << $1) }
-        let tap = HSEventTap(eventMask: mask)
+        let tap = HSEventTap(eventMask: mask, listenOnly: listenOnly)
         _ = tap.setCallback(callback)
         taps.append(tap)
         return tap

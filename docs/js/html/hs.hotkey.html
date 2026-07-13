@@ -75,7 +75,9 @@
     <div class="method" id="bind">
         <h3><a href="#bind">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased) -> HSHotkey</a></h3>
 
-        <div class="description">Bind a hotkey</div>
+        <div class="description">Bind a hotkey
+(`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,
+`leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased) -> HSHotkey</code></pre>
@@ -93,12 +95,12 @@
                 <tr>
                     <td class="param-name">mods</td>
                     <td class="param-type">string[]</td>
-                    <td class="param-desc">An array of modifier key strings (e.g., [&quot;cmd&quot;, &quot;shift&quot;])</td>
+                    <td class="param-desc">An array of modifier key strings (e.g., [&quot;cmd&quot;, &quot;shift&quot;]). Supports generic names</td>
                 </tr>
                 <tr>
                     <td class="param-name">key</td>
                     <td class="param-type">string</td>
-                    <td class="param-desc">The key name or character (e.g., &quot;a&quot;, &quot;space&quot;, &quot;return&quot;)</td>
+                    <td class="param-desc">The key name or character (e.g., &quot;a&quot;, &quot;space&quot;, &quot;return&quot;, &quot;f1&quot;)</td>
                 </tr>
                 <tr>
                     <td class="param-name">callbackPressed</td>
@@ -115,7 +117,7 @@
 
         <div class="card-section-label">Returns</div>
         <div class="return-type">HSHotkey</div>
-        <div class="return-desc">A hotkey object, or nil if binding failed</div>
+        <div class="return-desc">A hotkey object, or null if binding failed</div>
 
 
         <div class="card-section-label">Example</div>
@@ -124,7 +126,7 @@
 })</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L29" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:29</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L31" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:31</a>
         </div>
     </div>
     <div class="method" id="bindSpec">
@@ -175,7 +177,7 @@
 
         <div class="card-section-label">Returns</div>
         <div class="return-type">HSHotkey</div>
-        <div class="return-desc">A hotkey object, or nil if binding failed</div>
+        <div class="return-desc">A hotkey object, or null if binding failed</div>
 
 
         <div class="card-section-label">Example</div>
@@ -184,7 +186,7 @@
 }, null)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:46</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L48" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:48</a>
         </div>
     </div>
     <div class="method" id="getKeyCodeMap">
@@ -205,7 +207,7 @@
         <pre><code class="language-js">console.log(hs.hotkey.getKeyCodeMap())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L54" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:54</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L56" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:56</a>
         </div>
     </div>
     <div class="method" id="getModifierMap">
@@ -226,7 +228,7 @@
         <pre><code class="language-js">console.log(hs.hotkey.getModifierMap())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L62" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:62</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:64</a>
         </div>
     </div>
         </main>
