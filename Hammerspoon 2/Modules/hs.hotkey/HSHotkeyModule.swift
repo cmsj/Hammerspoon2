@@ -62,6 +62,25 @@ import CoreGraphics
     /// console.log(hs.hotkey.getModifierMap())
     /// ```
     @objc func getModifierMap() -> [String: UInt32]
+
+    /// Create a new modal hotkey group, optionally entered via a trigger key combination
+    /// - Parameters:
+    ///   - mods: Modifier keys for the trigger hotkey (e.g. `["cmd", "shift"]`), or an empty array for no trigger
+    ///   - key: Key name for the trigger hotkey (e.g. `"h"`), or an empty string for no trigger
+    /// - Returns: A new modal object. If a non-empty key is given but cannot be resolved, a warning is logged and the modal is returned without a trigger.
+    /// - Example:
+    /// ```js
+    /// // Modal with a Cmd+H trigger — pressing it calls enter() automatically
+    /// const m = hs.hotkey.createModal(['cmd'], 'h')
+    /// m.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)
+    /// m.enterFn = () => console.log('modal entered')
+    /// m.exitFn  = () => console.log('modal exited')
+    ///
+    /// // Modal with no trigger — enter/exit manually
+    /// const m2 = hs.hotkey.createModal([], '')
+    /// m2.enter()
+    /// ```
+    @objc func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal
 }
 
 // MARK: - Implementation
@@ -84,6 +103,9 @@ import CoreGraphics
     // Single shared CGEventTap for all hotkeys in this engine instance.
     private var eventTap: HSEventTap?
 
+    // Modal groups.
+    private var modals = HSWeakObjectSet<HSHotkeyModal>()
+
     // MARK: - Module lifecycle
 
     required init(engineID: UUID) {
@@ -95,6 +117,10 @@ import CoreGraphics
     func shutdown() {
         // Clear enabledHotkeys first so hotkeyDidDisable is a no-op during destroy()
         enabledHotkeys.removeAll()
+        for modal in modals.allObjects {
+            modal.destroy()
+        }
+        modals.removeAllObjects()
         for hotkey in allHotkeys.allObjects {
             hotkey.destroy()
         }
@@ -205,6 +231,30 @@ import CoreGraphics
 
         allHotkeys.add(hotkey)
         return hotkey
+    }
+
+    // MARK: - Modal creation
+
+    @objc func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal {
+        let modal = HSHotkeyModal(mods: mods, key: key, hotkeyModule: self)
+        modals.add(modal)
+        return modal
+    }
+
+    // MARK: - Internal helpers used by HSHotkeyModal
+
+    /// Create an HSHotkey without enabling it. Used by HSHotkeyModal.bind() and the trigger hotkey.
+    func makeHotkey(mods: [String], key: String, callbackPressed: JSFunction?, callbackReleased: JSFunction?) -> HSHotkey? {
+        guard let (flags, deviceBits) = parseModifiers(mods) else { return nil }
+        guard let keyCode = keyNameToKeyCode(key) else { return nil }
+        return HSHotkey(
+            keyCode: keyCode,
+            requiredFlags: flags,
+            requiredDeviceBits: deviceBits,
+            coordinator: self,
+            callbackPressed: callbackPressed,
+            callbackReleased: callbackReleased
+        )
     }
 
     // MARK: - Helper methods

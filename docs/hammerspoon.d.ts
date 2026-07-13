@@ -2657,6 +2657,14 @@ declare namespace hs.hotkey {
      */
     function getModifierMap(): Record<string, number>;
 
+    /**
+     * Create a new modal hotkey group, optionally entered via a trigger key combination
+     * @param mods Modifier keys for the trigger hotkey (e.g. `["cmd", "shift"]`), or an empty array for no trigger
+     * @param key Key name for the trigger hotkey (e.g. `"h"`), or an empty string for no trigger
+     * @returns A new modal object. If a non-empty key is given but cannot be resolved, a warning is logged and the modal is returned without a trigger.
+     */
+    function createModal(mods: string[], key: string): HSHotkeyModal;
+
 }
 
 /**
@@ -2689,6 +2697,63 @@ declare class HSHotkey {
      * The callback function to be called when the hotkey is released, or null to remove it
      */
     callbackReleased: (() => void) | null;
+
+}
+
+/**
+ * A group of hotkeys that are activated and deactivated together.
+Obtain instances via `hs.hotkey.modal.create()` — do not instantiate directly.
+## Example
+```js
+const m = hs.hotkey.modal.create(['cmd', 'shift'], 'h')
+m.bind([], 'j', () => console.log('j pressed in modal'), null)
+m.enterFn = () => console.log('modal entered')
+m.exitFn  = () => console.log('modal exited')
+// Press Cmd+Shift+H to enter, then J triggers the modal hotkey
+```
+ */
+declare class HSHotkeyModal {
+    /**
+     * Add a hotkey that is active only while this modal is entered
+     * @param mods Modifier keys for the hotkey
+     * @param key Key name for the hotkey
+     * @param callbackPressed Called when the key is pressed, or null
+     * @param callbackReleased Called when the key is released, or null
+     * @returns This modal, for chaining
+     */
+    bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkeyModal;
+
+    /**
+     * Activate the modal: enable its hotkeys and disable the trigger hotkey
+     * @returns This modal, for chaining
+     */
+    enter(): HSHotkeyModal;
+
+    /**
+     * Deactivate the modal: disable its hotkeys and re-enable the trigger hotkey
+     * @returns This modal, for chaining
+     */
+    exit(): HSHotkeyModal;
+
+    /**
+     * Destroy the modal and all its hotkeys without calling exitFn
+     */
+    destroy(): void;
+
+    /**
+     * Called when the modal is entered
+     */
+    enterFn: (() => void) | null;
+
+    /**
+     * Called when the modal is exited
+     */
+    exitFn: (() => void) | null;
+
+    /**
+     * Whether the modal is currently active
+     */
+    readonly isActive: boolean;
 
 }
 

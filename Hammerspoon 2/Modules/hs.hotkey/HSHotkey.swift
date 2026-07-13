@@ -79,6 +79,10 @@ protocol HotkeyCoordinator: AnyObject {
 
     private var _callbackPressed: JSCallback?
     private var _callbackReleased: JSCallback?
+
+    // Internal-use Swift callback fired on keyDown before the JS callback.
+    // Used by HSHotkeyModal for its trigger hotkey. Never exposed to JS.
+    var swiftCallbackPressed: (@MainActor () -> Void)?
     @objc var callbackPressed: JSFunction? {
         get { _callbackPressed?.value }
         set {
@@ -133,6 +137,7 @@ protocol HotkeyCoordinator: AnyObject {
         _callbackPressed = nil
         _callbackReleased?.detach(from: self)
         _callbackReleased = nil
+        swiftCallbackPressed = nil
         disable()
     }
 
@@ -173,8 +178,10 @@ protocol HotkeyCoordinator: AnyObject {
         )
     }
 
-    /// Fire the appropriate JS callback for a keyDown or keyUp event.
+    /// Fire the appropriate callback(s) for a keyDown or keyUp event.
     func trigger(type: CGEventType) {
+        if type == .keyDown { swiftCallbackPressed?() }
+
         let callback: JSFunction?
         switch type {
             case .keyDown: callback = _callbackPressed?.value
