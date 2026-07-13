@@ -38,6 +38,8 @@ node_modules/
 # Documentation artifacts
 docs/api/
 docs/json/**
+docs/js/html/
+docs/ts/html/
 
 # Claude
 .claude/settings.local.json
