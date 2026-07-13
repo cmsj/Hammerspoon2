@@ -372,6 +372,7 @@
 				"$(SRCROOT)/package.json",
 				"$(SRCROOT)/scripts/generate-html.js",
 				"$(SRCROOT)/docs/tsconfig.docs.json",
+				"$(SRCROOT)/node_modules",
 			);
 			name = "Generate Documentation HTML";
 			outputFileListPaths = (
