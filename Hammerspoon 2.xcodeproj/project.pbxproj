@@ -370,6 +370,8 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/package.json",
+				"$(SRCROOT)/scripts/generate-html.js",
+				"$(SRCROOT)/docs/tsconfig.docs.json",
 			);
 			name = "Generate Documentation HTML";
 			outputFileListPaths = (
