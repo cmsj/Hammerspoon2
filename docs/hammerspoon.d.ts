@@ -2661,9 +2661,9 @@ declare namespace hs.hotkey {
      * Create a new modal hotkey group, optionally entered via a trigger key combination
      * @param mods Modifier keys for the trigger hotkey (e.g. `["cmd", "shift"]`), or an empty array for no trigger
      * @param key Key name for the trigger hotkey (e.g. `"h"`), or an empty string for no trigger
-     * @returns A new modal object, or null if the trigger key combination was invalid
+     * @returns A new modal object. If a non-empty key is given but cannot be resolved, a warning is logged and the modal is returned without a trigger.
      */
-    function createModal(mods: string[], key: string): HSHotkeyModal | null;
+    function createModal(mods: string[], key: string): HSHotkeyModal;
 
 }
 

@@ -7033,9 +7033,9 @@
         },
         {
           "name": "createModal",
-          "signature": "func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal?",
+          "signature": "func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal",
           "isStatic": false,
-          "rawDocumentation": "Create a new modal hotkey group, optionally entered via a trigger key combination\n- Parameters:\n  - mods: Modifier keys for the trigger hotkey (e.g. `[\"cmd\", \"shift\"]`), or an empty array for no trigger\n  - key: Key name for the trigger hotkey (e.g. `\"h\"`), or an empty string for no trigger\n- Returns: A new modal object, or null if the trigger key combination was invalid\n- Example:\n```js\n// Modal with a Cmd+H trigger — pressing it calls enter() automatically\nconst m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\n\n// Modal with no trigger — enter/exit manually\nconst m2 = hs.hotkey.createModal([], '')\nm2.enter()\n```",
+          "rawDocumentation": "Create a new modal hotkey group, optionally entered via a trigger key combination\n- Parameters:\n  - mods: Modifier keys for the trigger hotkey (e.g. `[\"cmd\", \"shift\"]`), or an empty array for no trigger\n  - key: Key name for the trigger hotkey (e.g. `\"h\"`), or an empty string for no trigger\n- Returns: A new modal object. If a non-empty key is given but cannot be resolved, a warning is logged and the modal is returned without a trigger.\n- Example:\n```js\n// Modal with a Cmd+H trigger — pressing it calls enter() automatically\nconst m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\n\n// Modal with no trigger — enter/exit manually\nconst m2 = hs.hotkey.createModal([], '')\nm2.enter()\n```",
           "description": "Create a new modal hotkey group, optionally entered via a trigger key combination",
           "params": [
             {
@@ -7055,7 +7055,7 @@
           ],
           "returns": {
             "type": "HSHotkeyModal",
-            "description": "A new modal object, or null if the trigger key combination was invalid"
+            "description": "A new modal object. If a non-empty key is given but cannot be resolved, a warning is logged and the modal is returned without a trigger."
           },
           "notes": [],
           "examples": [
@@ -18641,5 +18641,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-13T14:04:03.490Z"
+  "generatedAt": "2026-07-13T14:20:51.525Z"
 }

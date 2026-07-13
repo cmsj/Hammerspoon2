@@ -67,7 +67,7 @@ import CoreGraphics
     /// - Parameters:
     ///   - mods: Modifier keys for the trigger hotkey (e.g. `["cmd", "shift"]`), or an empty array for no trigger
     ///   - key: Key name for the trigger hotkey (e.g. `"h"`), or an empty string for no trigger
-    /// - Returns: A new modal object, or null if the trigger key combination was invalid
+    /// - Returns: A new modal object. If a non-empty key is given but cannot be resolved, a warning is logged and the modal is returned without a trigger.
     /// - Example:
     /// ```js
     /// // Modal with a Cmd+H trigger — pressing it calls enter() automatically
@@ -80,7 +80,7 @@ import CoreGraphics
     /// const m2 = hs.hotkey.createModal([], '')
     /// m2.enter()
     /// ```
-    @objc func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal?
+    @objc func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal
 }
 
 // MARK: - Implementation
@@ -235,7 +235,7 @@ import CoreGraphics
 
     // MARK: - Modal creation
 
-    @objc func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal? {
+    @objc func createModal(_ mods: [String], _ key: String) -> HSHotkeyModal {
         let modal = HSHotkeyModal(mods: mods, key: key, hotkeyModule: self)
         modals.add(modal)
         return modal
