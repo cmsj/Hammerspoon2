@@ -2283,119 +2283,126 @@
         },
         {
           "name": "focusedElement",
-          "rawDocumentation": "Fetch the focused UI element\nReturns: An HSAXElement representing the focused UI element, or null if none was found\nExample:\n```js\nconst el = hs.ax.focusedElement()\nconsole.log(el.role, el.title)\n```",
+          "signature": "func focusedElement() -> HSAXElement?",
+          "isStatic": false,
+          "rawDocumentation": "Fetch the focused UI element\n- Returns: An HSAXElement representing the focused UI element, or nil if none was found\n- Example:\n```js\nconst el = hs.ax.focusedElement()\nconsole.log(el.role + \" \" + el.title)\n```",
           "description": "Fetch the focused UI element",
           "params": [],
           "returns": {
-            "type": "any",
-            "description": "An HSAXElement representing the focused UI element, or null if none was found"
+            "type": "HSAXElement",
+            "description": "An HSAXElement representing the focused UI element, or nil if none was found"
           },
+          "notes": [],
           "examples": [
             {
               "lang": "js",
-              "code": "const el = hs.ax.focusedElement()\nconsole.log(el.role, el.title)"
+              "code": "const el = hs.ax.focusedElement()\nconsole.log(el.role + \" \" + el.title)"
             }
           ],
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 80,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 117
         },
         {
           "name": "findByRole",
-          "rawDocumentation": "Find AX elements for a given role\nParameters:\n- role: The role name to search for\n- parent: An HSAXElement object to search. If none is supplied, the search will be conducted system-wide\nReturns: An array of found elements\nExample:\n```js\nconst app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(app, \"AXButton\")\n```",
-          "description": "Find AX elements for a given role",
+          "signature": "func findByRole(_ role: String, _ parent: HSAXElement?) -> [HSAXElement]",
+          "isStatic": false,
+          "rawDocumentation": "Find AX elements matching a given role\n- Parameters:\n  - role: The role name to search for (e.g. \"AXButton\")\n  - parent?: An HSAXElement to search within. If omitted, the search is conducted system-wide\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(\"AXButton\", hs.ax.applicationElement(app))\n```",
+          "description": "Find AX elements matching a given role",
           "params": [
             {
               "name": "role",
-              "type": "any",
-              "description": "The role name to search for",
-              "optional": false
+              "type": "string",
+              "description": "The role name to search for (e.g. \"AXButton\")",
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "parent",
-              "type": "any",
-              "description": "An HSAXElement object to search. If none is supplied, the search will be conducted system-wide",
-              "optional": false
+              "type": "HSAXElement",
+              "description": "An HSAXElement to search within. If omitted, the search is conducted system-wide",
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "An array of found elements"
+            "type": "Array<HSAXElement>",
+            "description": "An array of matching HSAXElement objects"
           },
+          "notes": [],
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(app, \"AXButton\")"
+              "code": "const app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(\"AXButton\", hs.ax.applicationElement(app))"
             }
           ],
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 113,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 129
         },
         {
           "name": "findByTitle",
-          "rawDocumentation": "Find AX elements by title\nParameters:\n- title: The name to search for\n- parent: An HSAXElement object to search. If none is supplied, the search will be conducted system-wide\nReturns: An array of found elements\nExample:\n```js\nconst app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(app, \"OK\")\n```",
-          "description": "Find AX elements by title",
+          "signature": "func findByTitle(_ title: String, _ parent: HSAXElement?) -> [HSAXElement]",
+          "isStatic": false,
+          "rawDocumentation": "Find AX elements whose title contains a given string\n- Parameters:\n  - title: The string to search for within element titles\n  - parent?: An HSAXElement to search within. If omitted, the search is conducted system-wide\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(\"OK\", hs.ax.applicationElement(app))\n```",
+          "description": "Find AX elements whose title contains a given string",
           "params": [
             {
               "name": "title",
-              "type": "any",
-              "description": "The name to search for",
-              "optional": false
+              "type": "string",
+              "description": "The string to search for within element titles",
+              "optional": false,
+              "tsType": null
             },
             {
               "name": "parent",
-              "type": "any",
-              "description": "An HSAXElement object to search. If none is supplied, the search will be conducted system-wide",
-              "optional": false
+              "type": "HSAXElement",
+              "description": "An HSAXElement to search within. If omitted, the search is conducted system-wide",
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "An array of found elements"
+            "type": "Array<HSAXElement>",
+            "description": "An array of matching HSAXElement objects"
           },
+          "notes": [],
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(app, \"OK\")"
+              "code": "const app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(\"OK\", hs.ax.applicationElement(app))"
             }
           ],
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 149,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 141
         },
         {
           "name": "printHierarchy",
-          "rawDocumentation": "Prints the hierarchy of a given element to the Console\nParameters:\n- element: An HSAXElement\n- depth: This parameter should not be supplied\nExample:\n```js\nconst app = hs.application.frontmost()\nhs.ax.printHierarchy(app)\n```",
-          "description": "Prints the hierarchy of a given element to the Console",
+          "signature": "func printHierarchy(_ element: HSAXElement?)",
+          "isStatic": false,
+          "rawDocumentation": "Print the accessibility hierarchy of an element to the Console\n- Parameters:\n  - element?: An HSAXElement to print. If omitted, the system-wide element is used\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.printHierarchy(hs.ax.applicationElement(app))\n```",
+          "description": "Print the accessibility hierarchy of an element to the Console",
           "params": [
             {
               "name": "element",
-              "type": "any",
-              "description": "An HSAXElement",
-              "optional": false
-            },
-            {
-              "name": "depth",
-              "type": "any",
-              "description": "This parameter should not be supplied",
-              "optional": false
+              "type": "HSAXElement",
+              "description": "An HSAXElement to print. If omitted, the system-wide element is used",
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": null,
+          "notes": [],
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nhs.ax.printHierarchy(app)"
+              "code": "const app = hs.application.frontmost()\nhs.ax.printHierarchy(hs.ax.applicationElement(app))"
             }
           ],
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.ax/hs.ax.js",
-          "lineNumber": 184,
-          "type": "function"
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 151
         }
       ],
       "properties": [
@@ -18641,5 +18648,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-14T09:37:52.532Z"
+  "generatedAt": "2026-07-14T11:15:51.451Z"
 }
