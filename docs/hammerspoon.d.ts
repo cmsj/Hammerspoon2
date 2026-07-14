@@ -1079,18 +1079,18 @@ declare namespace hs.ax {
     /**
      * Find AX elements matching a given role
      * @param role The role name to search for (e.g. "AXButton")
-     * @param parent An HSAXElement to search within. If omitted, the search is conducted system-wide
+     * @param parent An HSAXElement to search within
      * @returns An array of matching HSAXElement objects
      */
-    function findByRole(role: string, parent?: HSAXElement | null): HSAXElement[];
+    function findByRole(role: string, parent: HSAXElement): HSAXElement[];
 
     /**
      * Find AX elements whose title contains a given string
      * @param title The string to search for within element titles
-     * @param parent An HSAXElement to search within. If omitted, the search is conducted system-wide
+     * @param parent An HSAXElement to search within
      * @returns An array of matching HSAXElement objects
      */
-    function findByTitle(title: string, parent?: HSAXElement | null): HSAXElement[];
+    function findByTitle(title: string, parent: HSAXElement): HSAXElement[];
 
     /**
      * Print the accessibility hierarchy of an element to the Console

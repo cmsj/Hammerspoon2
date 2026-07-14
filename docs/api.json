@@ -2305,9 +2305,9 @@
         },
         {
           "name": "findByRole",
-          "signature": "func findByRole(_ role: String, _ parent: HSAXElement?) -> [HSAXElement]",
+          "signature": "func findByRole(_ role: String, _ parent: HSAXElement) -> [HSAXElement]",
           "isStatic": false,
-          "rawDocumentation": "Find AX elements matching a given role\n- Parameters:\n  - role: The role name to search for (e.g. \"AXButton\")\n  - parent?: An HSAXElement to search within. If omitted, the search is conducted system-wide\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(\"AXButton\", hs.ax.applicationElement(app))\n```",
+          "rawDocumentation": "Find AX elements matching a given role\n- Parameters:\n  - role: The role name to search for (e.g. \"AXButton\")\n  - parent: An HSAXElement to search within\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(\"AXButton\", hs.ax.applicationElement(app))\n```",
           "description": "Find AX elements matching a given role",
           "params": [
             {
@@ -2320,8 +2320,8 @@
             {
               "name": "parent",
               "type": "HSAXElement",
-              "description": "An HSAXElement to search within. If omitted, the search is conducted system-wide",
-              "optional": true,
+              "description": "An HSAXElement to search within",
+              "optional": false,
               "tsType": null
             }
           ],
@@ -2342,9 +2342,9 @@
         },
         {
           "name": "findByTitle",
-          "signature": "func findByTitle(_ title: String, _ parent: HSAXElement?) -> [HSAXElement]",
+          "signature": "func findByTitle(_ title: String, _ parent: HSAXElement) -> [HSAXElement]",
           "isStatic": false,
-          "rawDocumentation": "Find AX elements whose title contains a given string\n- Parameters:\n  - title: The string to search for within element titles\n  - parent?: An HSAXElement to search within. If omitted, the search is conducted system-wide\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(\"OK\", hs.ax.applicationElement(app))\n```",
+          "rawDocumentation": "Find AX elements whose title contains a given string\n- Parameters:\n  - title: The string to search for within element titles\n  - parent: An HSAXElement to search within\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(\"OK\", hs.ax.applicationElement(app))\n```",
           "description": "Find AX elements whose title contains a given string",
           "params": [
             {
@@ -2357,8 +2357,8 @@
             {
               "name": "parent",
               "type": "HSAXElement",
-              "description": "An HSAXElement to search within. If omitted, the search is conducted system-wide",
-              "optional": true,
+              "description": "An HSAXElement to search within",
+              "optional": false,
               "tsType": null
             }
           ],
@@ -18648,5 +18648,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-14T11:15:51.451Z"
+  "generatedAt": "2026-07-14T12:20:00.343Z"
 }

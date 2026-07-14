@@ -119,26 +119,26 @@ import AXSwift
     /// Find AX elements matching a given role
     /// - Parameters:
     ///   - role: The role name to search for (e.g. "AXButton")
-    ///   - parent?: An HSAXElement to search within. If omitted, the search is conducted system-wide
+    ///   - parent: An HSAXElement to search within
     /// - Returns: An array of matching HSAXElement objects
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
     /// const buttons = hs.ax.findByRole("AXButton", hs.ax.applicationElement(app))
     /// ```
-    @objc func findByRole(_ role: String, _ parent: HSAXElement?) -> [HSAXElement]
+    @objc func findByRole(_ role: String, _ parent: HSAXElement) -> [HSAXElement]
 
     /// Find AX elements whose title contains a given string
     /// - Parameters:
     ///   - title: The string to search for within element titles
-    ///   - parent?: An HSAXElement to search within. If omitted, the search is conducted system-wide
+    ///   - parent: An HSAXElement to search within
     /// - Returns: An array of matching HSAXElement objects
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
     /// const matches = hs.ax.findByTitle("OK", hs.ax.applicationElement(app))
     /// ```
-    @objc func findByTitle(_ title: String, _ parent: HSAXElement?) -> [HSAXElement]
+    @objc func findByTitle(_ title: String, _ parent: HSAXElement) -> [HSAXElement]
 
     /// Print the accessibility hierarchy of an element to the Console
     /// - Parameters:
@@ -431,11 +431,9 @@ import AXSwift
         return HSAXElement(element: element)
     }
 
-    @objc func findByRole(_ role: String, _ parent: HSAXElement?) -> [HSAXElement] {
-        guard let searchRoot = parent ?? systemWideElement() else { return [] }
-
+    @objc func findByRole(_ role: String, _ parent: HSAXElement) -> [HSAXElement] {
         var results: [HSAXElement] = []
-        var stack = [searchRoot]
+        var stack = [parent]
 
         while !stack.isEmpty {
             let element = stack.removeLast()
@@ -448,11 +446,9 @@ import AXSwift
         return results
     }
 
-    @objc func findByTitle(_ title: String, _ parent: HSAXElement?) -> [HSAXElement] {
-        guard let searchRoot = parent ?? systemWideElement() else { return [] }
-
+    @objc func findByTitle(_ title: String, _ parent: HSAXElement) -> [HSAXElement] {
         var results: [HSAXElement] = []
-        var stack = [searchRoot]
+        var stack = [parent]
 
         while !stack.isEmpty {
             let element = stack.removeLast()
