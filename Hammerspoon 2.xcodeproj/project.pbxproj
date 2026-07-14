@@ -214,7 +214,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4F5641A42E8333840099EB4C /* Build configuration list for PBXNativeTarget "Hammerspoon 2" */;
 			buildPhases = (
-				DBB5F783DAE7F43ECE4ECE40 /* Generate Documentation HTML */,
 				4F56417F2E8333830099EB4C /* Sources */,
 				4F5641802E8333830099EB4C /* Frameworks */,
 				4F5641812E8333830099EB4C /* Resources */,
@@ -358,29 +357,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		DBB5F783DAE7F43ECE4ECE40 /* Generate Documentation HTML */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate Documentation HTML";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -e\n\nJS_HTML=\"${SRCROOT}/docs/js/html\"\nTS_HTML=\"${SRCROOT}/docs/ts/html\"\n\nif [ -d \"$JS_HTML\" ] && [ -d \"$TS_HTML\" ]; then\n    exit 0\nfi\n\nif ! command -v node >/dev/null 2>&1; then\n    echo \"warning: node not found — skipping doc generation. docs/js/html and/or docs/ts/html will be absent from the app bundle.\"\n    exit 0\nfi\n\necho \"Generating documentation HTML...\"\ncd \"${SRCROOT}\"\nnpm run docs:html\nnpm run docs:tshtml\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4F56417F2E8333830099EB4C /* Sources */ = {
@@ -571,6 +547,7 @@
 				ENABLE_RESOURCE_ACCESS_CONTACTS = YES;
 				ENABLE_RESOURCE_ACCESS_LOCATION = YES;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_PEDANTIC = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -628,6 +605,7 @@
 				ENABLE_RESOURCE_ACCESS_CONTACTS = YES;
 				ENABLE_RESOURCE_ACCESS_LOCATION = YES;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_PEDANTIC = YES;
 				GENERATE_INFOPLIST_FILE = YES;

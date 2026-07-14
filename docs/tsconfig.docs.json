@@ -5,6 +5,7 @@
   },
   "typedocOptions": {
     "entryPoints": ["hammerspoon.d.ts"],
-    "out": "ts/html"
+    "out": "ts/html",
+    "disableSources": true
   }
 }
