@@ -143,12 +143,13 @@ import AXSwift
     /// Print the accessibility hierarchy of an element to the Console
     /// - Parameters:
     ///   - element?: An HSAXElement to print. If omitted, the system-wide element is used
+    ///   - maxDepth?: Maximum number of levels to traverse. Defaults to 5
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// hs.ax.printHierarchy(hs.ax.applicationElement(app))
+    /// hs.ax.printHierarchy(hs.ax.applicationElement(app), 3)
     /// ```
-    @objc func printHierarchy(_ element: HSAXElement?)
+    @objc func printHierarchy(_ element: HSAXElement?, _ maxDepth: Int)
 
     // NOTE: These are private API for the companion JS file only
     /// SKIP_DOCS
@@ -461,11 +462,12 @@ import AXSwift
         return results
     }
 
-    @objc func printHierarchy(_ element: HSAXElement?) {
-        _printHierarchy(element ?? systemWideElement(), depth: 0)
+    @objc func printHierarchy(_ element: HSAXElement?, _ maxDepth: Int) {
+        let cap = maxDepth > 0 ? maxDepth : 5
+        _printHierarchy(element ?? systemWideElement(), depth: 0, maxDepth: cap)
     }
 
-    private func _printHierarchy(_ element: HSAXElement?, depth: Int) {
+    private func _printHierarchy(_ element: HSAXElement?, depth: Int, maxDepth: Int) {
         guard let element else { return }
 
         let indent = String(repeating: "  ", count: depth)
@@ -473,9 +475,9 @@ import AXSwift
         let titleStr = element.title.map { " \"\($0)\"" } ?? ""
         AKTrace("\(indent)\(role)\(titleStr)")
 
-        guard depth < 5 else { return }
+        guard depth < maxDepth else { return }
         for child in element.children() {
-            _printHierarchy(child, depth: depth + 1)
+            _printHierarchy(child, depth: depth + 1, maxDepth: maxDepth)
         }
     }
 }

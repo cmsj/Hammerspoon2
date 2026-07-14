@@ -1095,8 +1095,9 @@ declare namespace hs.ax {
     /**
      * Print the accessibility hierarchy of an element to the Console
      * @param element An HSAXElement to print. If omitted, the system-wide element is used
+     * @param maxDepth Maximum number of levels to traverse. Defaults to 5
      */
-    function printHierarchy(element?: HSAXElement | null): void;
+    function printHierarchy(element?: HSAXElement | null, maxDepth?: number): void;
 
     /**
      * A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()

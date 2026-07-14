@@ -443,12 +443,12 @@ const matches = hs.ax.findByTitle(&quot;OK&quot;, hs.ax.applicationElement(app))
         </div>
     </div>
     <div class="method" id="printHierarchy">
-        <h3><a href="#printHierarchy">hs.ax.printHierarchy(element) -> None</a></h3>
+        <h3><a href="#printHierarchy">hs.ax.printHierarchy(element, maxDepth) -> None</a></h3>
 
         <div class="description">Print the accessibility hierarchy of an element to the Console</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.ax.printHierarchy(element) -> None</code></pre>
+        <pre><code class="language-javascript">hs.ax.printHierarchy(element, maxDepth) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -465,6 +465,11 @@ const matches = hs.ax.findByTitle(&quot;OK&quot;, hs.ax.applicationElement(app))
                     <td class="param-type">HSAXElement</td>
                     <td class="param-desc">An HSAXElement to print. If omitted, the system-wide element is used</td>
                 </tr>
+                <tr>
+                    <td class="param-name">maxDepth</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Maximum number of levels to traverse. Defaults to 5</td>
+                </tr>
             </tbody>
         </table>
 
@@ -474,10 +479,10 @@ const matches = hs.ax.findByTitle(&quot;OK&quot;, hs.ax.applicationElement(app))
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const app = hs.application.frontmost()
-hs.ax.printHierarchy(hs.ax.applicationElement(app))</code></pre>
+hs.ax.printHierarchy(hs.ax.applicationElement(app), 3)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L151" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:151</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L152" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:152</a>
         </div>
     </div>
         </main>

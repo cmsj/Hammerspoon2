@@ -2379,15 +2379,22 @@
         },
         {
           "name": "printHierarchy",
-          "signature": "func printHierarchy(_ element: HSAXElement?)",
+          "signature": "func printHierarchy(_ element: HSAXElement?, _ maxDepth: Int)",
           "isStatic": false,
-          "rawDocumentation": "Print the accessibility hierarchy of an element to the Console\n- Parameters:\n  - element?: An HSAXElement to print. If omitted, the system-wide element is used\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.printHierarchy(hs.ax.applicationElement(app))\n```",
+          "rawDocumentation": "Print the accessibility hierarchy of an element to the Console\n- Parameters:\n  - element?: An HSAXElement to print. If omitted, the system-wide element is used\n  - maxDepth?: Maximum number of levels to traverse. Defaults to 5\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.printHierarchy(hs.ax.applicationElement(app), 3)\n```",
           "description": "Print the accessibility hierarchy of an element to the Console",
           "params": [
             {
               "name": "element",
               "type": "HSAXElement",
               "description": "An HSAXElement to print. If omitted, the system-wide element is used",
+              "optional": true,
+              "tsType": null
+            },
+            {
+              "name": "maxDepth",
+              "type": "number",
+              "description": "Maximum number of levels to traverse. Defaults to 5",
               "optional": true,
               "tsType": null
             }
@@ -2397,12 +2404,12 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nhs.ax.printHierarchy(hs.ax.applicationElement(app))"
+              "code": "const app = hs.application.frontmost()\nhs.ax.printHierarchy(hs.ax.applicationElement(app), 3)"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 151
+          "lineNumber": 152
         }
       ],
       "properties": [
@@ -18648,5 +18655,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-14T12:20:00.343Z"
+  "generatedAt": "2026-07-14T12:25:02.212Z"
 }
