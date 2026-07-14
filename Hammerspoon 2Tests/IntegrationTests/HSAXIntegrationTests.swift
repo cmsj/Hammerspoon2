@@ -146,25 +146,25 @@ struct HSAXTests {
             harness.expectTrue("hs.ax._watcherEmitter !== null && hs.ax._watcherEmitter !== undefined")
         }
 
-        @Test("focusedElement is a function (JS enhancement)")
+        @Test("focusedElement is a function")
         func testFocusedElementIsFunction() {
             let harness = makeHarness()
             harness.expectTrue("typeof hs.ax.focusedElement === 'function'")
         }
 
-        @Test("findByRole is a function (JS enhancement)")
+        @Test("findByRole is a function")
         func testFindByRoleIsFunction() {
             let harness = makeHarness()
             harness.expectTrue("typeof hs.ax.findByRole === 'function'")
         }
 
-        @Test("findByTitle is a function (JS enhancement)")
+        @Test("findByTitle is a function")
         func testFindByTitleIsFunction() {
             let harness = makeHarness()
             harness.expectTrue("typeof hs.ax.findByTitle === 'function'")
         }
 
-        @Test("printHierarchy is a function (JS enhancement)")
+        @Test("printHierarchy is a function")
         func testPrintHierarchyIsFunction() {
             let harness = makeHarness()
             harness.expectTrue("typeof hs.ax.printHierarchy === 'function'")
@@ -674,8 +674,8 @@ struct HSAXTests {
 
     // MARK: - Suite 3: JS helper functions (requires accessibility permissions)
 
-    /// Tests for the JavaScript convenience functions defined in hs.ax.js.
-    @Suite("hs.ax JS helper function tests", .serialized, .disabled(if: !isAccessibilityEnabled(), "Accessibility permissions not available"))
+    /// Tests for the Swift convenience functions (focusedElement, findByRole, findByTitle, printHierarchy).
+    @Suite("hs.ax convenience function tests", .serialized, .disabled(if: !isAccessibilityEnabled(), "Accessibility permissions not available"))
     struct HSAXJSHelperTests {
 
         private func makeHarness() -> JSTestHarness {

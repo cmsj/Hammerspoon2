@@ -1072,32 +1072,32 @@ declare namespace hs.ax {
 
     /**
      * Fetch the focused UI element
-     * @returns An HSAXElement representing the focused UI element, or null if none was found
+     * @returns An HSAXElement representing the focused UI element, or nil if none was found
      */
-    function focusedElement(): any;
+    function focusedElement(): HSAXElement | null;
 
     /**
-     * Find AX elements for a given role
-     * @param role The role name to search for
-     * @param parent An HSAXElement object to search. If none is supplied, the search will be conducted system-wide
-     * @returns An array of found elements
+     * Find AX elements matching a given role
+     * @param role The role name to search for (e.g. "AXButton")
+     * @param parent An HSAXElement to search within
+     * @returns An array of matching HSAXElement objects
      */
-    function findByRole(role: any, parent: any): any;
+    function findByRole(role: string, parent: HSAXElement): HSAXElement[];
 
     /**
-     * Find AX elements by title
-     * @param title The name to search for
-     * @param parent An HSAXElement object to search. If none is supplied, the search will be conducted system-wide
-     * @returns An array of found elements
+     * Find AX elements whose title contains a given string
+     * @param title The string to search for within element titles
+     * @param parent An HSAXElement to search within
+     * @returns An array of matching HSAXElement objects
      */
-    function findByTitle(title: any, parent: any): any;
+    function findByTitle(title: string, parent: HSAXElement): HSAXElement[];
 
     /**
-     * Prints the hierarchy of a given element to the Console
-     * @param element An HSAXElement
-     * @param depth This parameter should not be supplied
+     * Print the accessibility hierarchy of an element to the Console
+     * @param element An HSAXElement to print. If omitted, the system-wide element is used
+     * @param maxDepth Maximum number of levels to traverse. Defaults to 5
      */
-    function printHierarchy(element: any, depth: any): void;
+    function printHierarchy(element?: HSAXElement | null, maxDepth?: number): void;
 
     /**
      * A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()

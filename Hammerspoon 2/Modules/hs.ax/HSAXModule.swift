@@ -107,7 +107,51 @@ import AXSwift
     /// ```
     @objc func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction)
 
-    // NOTE: These are private API for JavaScript code to use
+    /// Fetch the focused UI element
+    /// - Returns: An HSAXElement representing the focused UI element, or nil if none was found
+    /// - Example:
+    /// ```js
+    /// const el = hs.ax.focusedElement()
+    /// console.log(el.role + " " + el.title)
+    /// ```
+    @objc func focusedElement() -> HSAXElement?
+
+    /// Find AX elements matching a given role
+    /// - Parameters:
+    ///   - role: The role name to search for (e.g. "AXButton")
+    ///   - parent: An HSAXElement to search within
+    /// - Returns: An array of matching HSAXElement objects
+    /// - Example:
+    /// ```js
+    /// const app = hs.application.frontmost()
+    /// const buttons = hs.ax.findByRole("AXButton", hs.ax.applicationElement(app))
+    /// ```
+    @objc func findByRole(_ role: String, _ parent: HSAXElement) -> [HSAXElement]
+
+    /// Find AX elements whose title contains a given string
+    /// - Parameters:
+    ///   - title: The string to search for within element titles
+    ///   - parent: An HSAXElement to search within
+    /// - Returns: An array of matching HSAXElement objects
+    /// - Example:
+    /// ```js
+    /// const app = hs.application.frontmost()
+    /// const matches = hs.ax.findByTitle("OK", hs.ax.applicationElement(app))
+    /// ```
+    @objc func findByTitle(_ title: String, _ parent: HSAXElement) -> [HSAXElement]
+
+    /// Print the accessibility hierarchy of an element to the Console
+    /// - Parameters:
+    ///   - element?: An HSAXElement to print. If omitted, the system-wide element is used
+    ///   - maxDepth?: Maximum number of levels to traverse. Defaults to 5
+    /// - Example:
+    /// ```js
+    /// const app = hs.application.frontmost()
+    /// hs.ax.printHierarchy(hs.ax.applicationElement(app), 3)
+    /// ```
+    @objc func printHierarchy(_ element: HSAXElement?, _ maxDepth: Int)
+
+    // NOTE: These are private API for the companion JS file only
     /// SKIP_DOCS
     @objc(_addWatcher:::) func _addWatcher(_ application: HSApplication, notification: String, callback: JSFunction)
     /// SKIP_DOCS
@@ -116,18 +160,6 @@ import AXSwift
     /// Swift-retained storage for the JS AXModuleWatcherEmitter instance
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
-
-    /// SKIP_DOCS
-    @objc var focusedElement: JSFunction? { get set }
-
-    /// SKIP_DOCS
-    @objc var findByRole: JSFunction? { get set }
-
-    /// SKIP_DOCS
-    @objc var findByTitle: JSFunction? { get set }
-
-    /// SKIP_DOCS
-    @objc var printHierarchy: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -147,12 +179,8 @@ import AXSwift
     // Notification types exposed to JavaScript
     @objc var _notificationTypes: [String: String] = [:]
 
-    // Swift-retained storage for JS-defined functions
+    // Swift-retained storage for the JS watcher emitter
     @objc var _watcherEmitter: JSFunction? = nil
-    @objc var focusedElement: JSFunction? = nil
-    @objc var findByRole: JSFunction? = nil
-    @objc var findByTitle: JSFunction? = nil
-    @objc var printHierarchy: JSFunction? = nil
 
     // MARK: - Module lifecycle
 
@@ -202,10 +230,6 @@ import AXSwift
         observers.removeAll()
 
         _watcherEmitter = nil
-        focusedElement = nil
-        findByRole = nil
-        findByTitle = nil
-        printHierarchy = nil
     }
 
     isolated deinit {
@@ -390,5 +414,70 @@ import AXSwift
 
     func requestAccessibility() {
         PermissionsManager.shared.request(.accessibility)
+    }
+
+    // MARK: - Convenience API
+
+    @objc func focusedElement() -> HSAXElement? {
+        guard isAccessibilityEnabled() else {
+            AKError("hs.ax.focusedElement(): Accessibility permissions not granted")
+            return nil
+        }
+
+        let systemWide = SystemWideElement(AXUIElementCreateSystemWide())
+        let attr = UIElement.Attribute(rawValue: "AXFocusedUIElement")
+        guard let element: UIElement = try? systemWide.attribute(attr) else {
+            return nil
+        }
+        return HSAXElement(element: element)
+    }
+
+    @objc func findByRole(_ role: String, _ parent: HSAXElement) -> [HSAXElement] {
+        var results: [HSAXElement] = []
+        var stack = [parent]
+
+        while !stack.isEmpty {
+            let element = stack.removeLast()
+            if element.role == role {
+                results.append(element)
+            }
+            stack.append(contentsOf: element.children())
+        }
+
+        return results
+    }
+
+    @objc func findByTitle(_ title: String, _ parent: HSAXElement) -> [HSAXElement] {
+        var results: [HSAXElement] = []
+        var stack = [parent]
+
+        while !stack.isEmpty {
+            let element = stack.removeLast()
+            if let elementTitle = element.title, elementTitle.contains(title) {
+                results.append(element)
+            }
+            stack.append(contentsOf: element.children())
+        }
+
+        return results
+    }
+
+    @objc func printHierarchy(_ element: HSAXElement?, _ maxDepth: Int) {
+        let cap = maxDepth > 0 ? maxDepth : 5
+        _printHierarchy(element ?? systemWideElement(), depth: 0, maxDepth: cap)
+    }
+
+    private func _printHierarchy(_ element: HSAXElement?, depth: Int, maxDepth: Int) {
+        guard let element else { return }
+
+        let indent = String(repeating: "  ", count: depth)
+        let role = element.role ?? "unknown"
+        let titleStr = element.title.map { " \"\($0)\"" } ?? ""
+        AKTrace("\(indent)\(role)\(titleStr)")
+
+        guard depth < maxDepth else { return }
+        for child in element.children() {
+            _printHierarchy(child, depth: depth + 1, maxDepth: maxDepth)
+        }
     }
 }

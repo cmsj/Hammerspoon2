@@ -333,34 +333,34 @@ hs.ax.removeWatcher(app, &quot;AXWindowCreated&quot;, myHandler)</code></pre>
         </div>
     </div>
     <div class="method" id="focusedElement">
-        <h3><a href="#focusedElement">hs.ax.focusedElement() -> any</a></h3>
+        <h3><a href="#focusedElement">hs.ax.focusedElement() -> HSAXElement</a></h3>
 
         <div class="description">Fetch the focused UI element</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.ax.focusedElement() -> any</code></pre>
+        <pre><code class="language-javascript">hs.ax.focusedElement() -> HSAXElement</code></pre>
 
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">An HSAXElement representing the focused UI element, or null if none was found</div>
+        <div class="return-type">HSAXElement</div>
+        <div class="return-desc">An HSAXElement representing the focused UI element, or nil if none was found</div>
 
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const el = hs.ax.focusedElement()
-console.log(el.role, el.title)</code></pre>
+console.log(el.role + &quot; &quot; + el.title)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/hs.ax.js#L80" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/hs.ax.js:80</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:117</a>
         </div>
     </div>
     <div class="method" id="findByRole">
-        <h3><a href="#findByRole">hs.ax.findByRole(role, parent) -> any</a></h3>
+        <h3><a href="#findByRole">hs.ax.findByRole(role, parent) -> HSAXElement[]</a></h3>
 
-        <div class="description">Find AX elements for a given role</div>
+        <div class="description">Find AX elements matching a given role</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.ax.findByRole(role, parent) -> any</code></pre>
+        <pre><code class="language-javascript">hs.ax.findByRole(role, parent) -> HSAXElement[]</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -374,37 +374,37 @@ console.log(el.role, el.title)</code></pre>
             <tbody>
                 <tr>
                     <td class="param-name">role</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">The role name to search for</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The role name to search for (e.g. &quot;AXButton&quot;)</td>
                 </tr>
                 <tr>
                     <td class="param-name">parent</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">An HSAXElement object to search. If none is supplied, the search will be conducted system-wide</td>
+                    <td class="param-type">HSAXElement</td>
+                    <td class="param-desc">An HSAXElement to search within</td>
                 </tr>
             </tbody>
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">An array of found elements</div>
+        <div class="return-type">HSAXElement[]</div>
+        <div class="return-desc">An array of matching HSAXElement objects</div>
 
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const app = hs.application.frontmost()
-const buttons = hs.ax.findByRole(app, &quot;AXButton&quot;)</code></pre>
+const buttons = hs.ax.findByRole(&quot;AXButton&quot;, hs.ax.applicationElement(app))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/hs.ax.js#L113" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/hs.ax.js:113</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L129" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:129</a>
         </div>
     </div>
     <div class="method" id="findByTitle">
-        <h3><a href="#findByTitle">hs.ax.findByTitle(title, parent) -> any</a></h3>
+        <h3><a href="#findByTitle">hs.ax.findByTitle(title, parent) -> HSAXElement[]</a></h3>
 
-        <div class="description">Find AX elements by title</div>
+        <div class="description">Find AX elements whose title contains a given string</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.ax.findByTitle(title, parent) -> any</code></pre>
+        <pre><code class="language-javascript">hs.ax.findByTitle(title, parent) -> HSAXElement[]</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -418,37 +418,37 @@ const buttons = hs.ax.findByRole(app, &quot;AXButton&quot;)</code></pre>
             <tbody>
                 <tr>
                     <td class="param-name">title</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">The name to search for</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The string to search for within element titles</td>
                 </tr>
                 <tr>
                     <td class="param-name">parent</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">An HSAXElement object to search. If none is supplied, the search will be conducted system-wide</td>
+                    <td class="param-type">HSAXElement</td>
+                    <td class="param-desc">An HSAXElement to search within</td>
                 </tr>
             </tbody>
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">An array of found elements</div>
+        <div class="return-type">HSAXElement[]</div>
+        <div class="return-desc">An array of matching HSAXElement objects</div>
 
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const app = hs.application.frontmost()
-const matches = hs.ax.findByTitle(app, &quot;OK&quot;)</code></pre>
+const matches = hs.ax.findByTitle(&quot;OK&quot;, hs.ax.applicationElement(app))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/hs.ax.js#L149" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/hs.ax.js:149</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L141" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:141</a>
         </div>
     </div>
     <div class="method" id="printHierarchy">
-        <h3><a href="#printHierarchy">hs.ax.printHierarchy(element, depth) -> None</a></h3>
+        <h3><a href="#printHierarchy">hs.ax.printHierarchy(element, maxDepth) -> None</a></h3>
 
-        <div class="description">Prints the hierarchy of a given element to the Console</div>
+        <div class="description">Print the accessibility hierarchy of an element to the Console</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.ax.printHierarchy(element, depth) -> None</code></pre>
+        <pre><code class="language-javascript">hs.ax.printHierarchy(element, maxDepth) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -462,13 +462,13 @@ const matches = hs.ax.findByTitle(app, &quot;OK&quot;)</code></pre>
             <tbody>
                 <tr>
                     <td class="param-name">element</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">An HSAXElement</td>
+                    <td class="param-type">HSAXElement</td>
+                    <td class="param-desc">An HSAXElement to print. If omitted, the system-wide element is used</td>
                 </tr>
                 <tr>
-                    <td class="param-name">depth</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">This parameter should not be supplied</td>
+                    <td class="param-name">maxDepth</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Maximum number of levels to traverse. Defaults to 5</td>
                 </tr>
             </tbody>
         </table>
@@ -479,10 +479,10 @@ const matches = hs.ax.findByTitle(app, &quot;OK&quot;)</code></pre>
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const app = hs.application.frontmost()
-hs.ax.printHierarchy(app)</code></pre>
+hs.ax.printHierarchy(hs.ax.applicationElement(app), 3)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/hs.ax.js#L184" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/hs.ax.js:184</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L152" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:152</a>
         </div>
     </div>
         </main>
