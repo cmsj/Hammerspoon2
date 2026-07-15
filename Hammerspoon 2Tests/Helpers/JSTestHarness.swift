@@ -116,6 +116,9 @@ class JSTestHarness {
     func loadModule<T: HSModuleAPI>(_ moduleType: T.Type, as name: String) {
         let module = moduleType.init(engineID: UUID())
 
+        // Track for shutdownForLeakTest()
+        loadedModulesDict[name] = module
+
         // Track task module for cleanup
         if name == "task", let taskMod = module as? HSTaskModule {
             self.taskModule = taskMod
@@ -157,6 +160,26 @@ class JSTestHarness {
     func waitForTasksToComplete(timeout: TimeInterval = 5.0) async -> Bool {
         guard let module = taskModule else { return true }
         return await module.waitForAllTasksToComplete(timeout: timeout)
+    }
+
+    /// Simulate the full `hs.reload()` shutdown sequence for leak testing.
+    ///
+    /// 1. Calls `shutdown()` on every loaded module — detaches `JSCallback` managed
+    ///    references, stops timers, removes watchers, destroys child objects.
+    /// 2. Deletes the `hs` global so the JSContext holds no more roots to module proxies.
+    /// 3. Runs `JSSynchronousGarbageCollectForDebugging` while the context is still alive,
+    ///    ensuring JSC bridge finalizers (CFRelease) run synchronously before returning.
+    ///
+    /// Call this **inside** the `do {}` block that also holds your JSValue locals so
+    /// those locals go out of scope (releasing their ObjC strong refs) together with the
+    /// harness. Then call `WeakLeakTracker.assertNoLeaks()` outside the block.
+    func shutdownForLeakTest() {
+        for (_, module) in loadedModulesDict {
+            module.shutdown()
+        }
+        loadedModulesDict.removeAll()
+        context.globalObject.deleteProperty("hs")
+        unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
     }
 
     /// Load the full ModuleRoot as 'hs' (mimics real environment)

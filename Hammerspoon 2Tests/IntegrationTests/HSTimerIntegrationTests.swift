@@ -366,4 +366,46 @@ struct HSTimerIntegrationTests {
         let success = harness.waitFor(timeout: 0.2) { timeoutFired }
         #expect(success, "Timeout should fire when operation doesn't complete")
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active repeating HSTimer is released after shutdown")
+    func testTimerDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        do {
+            let harness = JSTestHarness()
+            harness.loadModule(HSTimerModule.self, as: "timer")
+            // doEvery starts a repeating timer — Foundation Timer holds a strong target ref
+            // to HSTimer. We drain the run loop so the timer actually fires, then verify
+            // shutdown() destroys it: destroy() → stop() → invalidate() releases the target ref.
+            harness.eval("var t = hs.timer.doEvery(0.05, function() {})")
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+            if let obj = harness.evalValue("t")?.toObjectOf(HSTimer.self) as? HSTimer {
+                tracker.track(obj)
+            }
+            harness.eval("t = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
+
+    @Test("Fired one-shot HSTimer is released after shutdown")
+    func testRunningTimerDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        do {
+            let harness = JSTestHarness()
+            harness.loadModule(HSTimerModule.self, as: "timer")
+            // Short interval so the one-shot timer actually fires; Foundation then
+            // auto-invalidates it (removing the run-loop target ref). We still verify
+            // HSTimer itself is freed after shutdown regardless.
+            harness.eval("var t = hs.timer.doAfter(0.05, function() {})")
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+            if let obj = harness.evalValue("t")?.toObjectOf(HSTimer.self) as? HSTimer {
+                tracker.track(obj)
+            }
+            harness.eval("t = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

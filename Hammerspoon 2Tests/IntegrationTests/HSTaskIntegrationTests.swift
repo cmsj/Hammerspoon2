@@ -1127,4 +1127,27 @@ import JavaScriptCore
         let success = await harness.waitForAsync(timeout: 1.0) { timeoutFired }
         #expect(success, "Timeout should fire and terminate task")
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Running HSTask is released after shutdown")
+    func testTaskDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        do {
+            let harness = JSTestHarness()
+            harness.loadModule(HSTaskModule.self, as: "task")
+            // start() registers the task in taskTracker (strong). We use a long-running
+            // command so the process is definitely still running when shutdown() is called.
+            // shutdown() → destroy() sends SIGTERM, then the module is freed (releasing
+            // taskTracker), which drops the last strong ref and frees HSTask.
+            harness.eval("var t = hs.task.create('/bin/sleep', ['10'], null, null, null)")
+            harness.eval("t.start()")
+            if let obj = harness.evalValue("t")?.toObjectOf(HSTask.self) as? HSTask {
+                tracker.track(obj)
+            }
+            harness.eval("t = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

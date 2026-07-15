@@ -295,4 +295,28 @@ struct HSBonjourTests {
             #expect(!harness.hasException)
         }
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSBonjourSearch is released after shutdown")
+    func testBonjourSearchDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        do {
+            let harness = JSTestHarness()
+            harness.loadModule(HSBonjourModule.self, as: "bonjour")
+            // findServices() starts an NSNetServiceBrowser, whose delegate property holds
+            // a strong ref to HSBonjourSearch. shutdown() → destroy() nils all browser
+            // delegates and stops browsing, releasing that strong ref and freeing the search.
+            harness.eval("""
+                var search = hs.bonjour.createSearch()
+                search.findServices('_http._tcp.', 'local.', function(ev, svc, more) {})
+            """)
+            if let obj = harness.evalValue("search")?.toObjectOf(HSBonjourSearch.self) as? HSBonjourSearch {
+                tracker.track(obj)
+            }
+            harness.eval("search = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

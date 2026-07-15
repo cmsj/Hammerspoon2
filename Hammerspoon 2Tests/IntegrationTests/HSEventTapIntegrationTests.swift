@@ -928,5 +928,27 @@ struct HSEventTapTests {
             harness.eval("hk.callbackPressed = () => {}")
             #expect(!harness.hasException)
         }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSEventTap is released after shutdown")
+    func testEventTapDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        do {
+            let harness = JSTestHarness()
+            harness.loadModule(HSEventTapModule.self, as: "eventtap")
+            // Create and start the tap. start() sets selfRetain=self (if Accessibility is
+            // granted, creating a real CGEventTap) or immediately clears it (if not). Either
+            // way, shutdown() → destroy() → stop() clears selfRetain and the module's strong
+            // taps array, freeing the tap regardless of whether it actually captured events.
+            harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(e) { return true }, true)")
+            harness.eval("tap.start()")
+            if let obj = harness.evalValue("tap")?.toObjectOf(HSEventTap.self) as? HSEventTap {
+                tracker.track(obj)
+            }
+            harness.eval("tap = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
     }
 }

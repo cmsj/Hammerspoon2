@@ -172,4 +172,148 @@ struct HSHotkeyTests {
             #expect(!harness.hasException)
         }
     }
+
+    // MARK: - Key matching (Swift-level tests)
+
+    @Suite("hs.hotkey Swift matching tests")
+    struct HSHotkeyMatchingTests {
+
+        @MainActor
+        @Test("matches returns true for exact key and modifier")
+        func testMatchesExactKeyAndModifier() {
+            let coordinator = MockHotkeyCoordinator()
+            let hotkey = HSHotkey(
+                keyCode: 0x04,  // h
+                requiredFlags: [.maskCommand],
+                requiredDeviceBits: 0,
+                coordinator: coordinator
+            )
+            // withExtendedLifetime guarantees coordinator is alive through enable().
+            // Without it, Swift ARC may release coordinator at its last syntactic use
+            // (the init argument), before enable() is called.
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x04, keyDown: true) else {
+                Issue.record("Could not create CGEvent")
+                return
+            }
+            event.flags = .maskCommand
+
+            #expect(hotkey.matches(event: event, type: .keyDown))
+        }
+
+        @MainActor
+        @Test("matches returns false when extra modifier is present")
+        func testMatchesReturnsFalseForExtraModifier() {
+            let coordinator = MockHotkeyCoordinator()
+            let hotkey = HSHotkey(
+                keyCode: 0x04,
+                requiredFlags: [.maskCommand],
+                requiredDeviceBits: 0,
+                coordinator: coordinator
+            )
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x04, keyDown: true) else {
+                Issue.record("Could not create CGEvent")
+                return
+            }
+            event.flags = [.maskCommand, .maskShift]  // extra shift
+
+            #expect(!hotkey.matches(event: event, type: .keyDown))
+        }
+
+        @MainActor
+        @Test("matches returns false for wrong key code")
+        func testMatchesReturnsFalseForWrongKey() {
+            let coordinator = MockHotkeyCoordinator()
+            let hotkey = HSHotkey(
+                keyCode: 0x04,  // h
+                requiredFlags: [.maskCommand],
+                requiredDeviceBits: 0,
+                coordinator: coordinator
+            )
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x00, keyDown: true) else {
+                Issue.record("Could not create CGEvent")
+                return
+            }
+            event.flags = .maskCommand
+
+            #expect(!hotkey.matches(event: event, type: .keyDown))
+        }
+
+        @MainActor
+        @Test("matches returns false when hotkey is disabled")
+        func testMatchesReturnsFalseWhenDisabled() {
+            let coordinator = MockHotkeyCoordinator()
+            let hotkey = HSHotkey(
+                keyCode: 0x04,
+                requiredFlags: [.maskCommand],
+                requiredDeviceBits: 0,
+                coordinator: coordinator
+            )
+            // Do NOT enable
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x04, keyDown: true) else {
+                Issue.record("Could not create CGEvent")
+                return
+            }
+            event.flags = .maskCommand
+
+            #expect(!hotkey.matches(event: event, type: .keyDown))
+        }
+    }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSHotkey is released after shutdown")
+    func testHotkeyDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        do {
+            let harness = JSTestHarness()
+            harness.loadModule(HSHotkeyModule.self, as: "hotkey")
+            // bind() auto-enables the hotkey (adding it to the strong enabledHotkeys array).
+            // We exercise disable/enable cycling to use the hotkey actively, then verify
+            // shutdown() clears enabledHotkeys and calls destroy() on all hotkeys.
+            harness.eval("""
+                var hk = hs.hotkey.bind(['cmd'], 'h', function() {}, function() {})
+                hk.disable()
+                hk.enable()
+            """)
+            if let obj = harness.evalValue("hk")?.toObjectOf(HSHotkey.self) as? HSHotkey {
+                tracker.track(obj)
+            }
+            harness.eval("hk = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
+
+    @Test("Active HSHotkeyModal is released after shutdown")
+    func testHotkeyModalDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        do {
+            let harness = JSTestHarness()
+            harness.loadModule(HSHotkeyModule.self, as: "hotkey")
+            // Create a modal, bind a hotkey within it, enter the modal so it's active,
+            // then verify shutdown() properly destroys the modal and all its bound hotkeys.
+            harness.eval("""
+                var modal = hs.hotkey.createModal([], '')
+                modal.bind(['shift'], 'j', function() {}, null)
+                modal.enter()
+            """)
+            if let obj = harness.evalValue("modal")?.toObjectOf(HSHotkeyModal.self) as? HSHotkeyModal {
+                tracker.track(obj)
+            }
+            harness.eval("modal = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }
