@@ -2071,6 +2071,27 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
     function keyRepeatInterval(): number;
 
     /**
+     * Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the
+`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).
+The hotkey is active immediately and consumes (suppresses) the key event by default.
+Requires Accessibility permission.
+`ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
+`leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
+     * @param mods An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,
+     * @param key The key name or character (e.g., "a", "space", "f1")
+     * @param callbackPressed Called when the key combination is pressed, or null
+     * @param callbackReleased Called when the key combination is released, or null
+     * @returns An `HSEventTapHotkey` object, or null if binding failed
+     */
+    function bindHotkey(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSEventTapHotkey | null;
+
+    /**
+     * Remove a previously bound hotkey and stop it from firing
+     * @param hotkey The HSEventTapHotkey returned by `bindHotkey`
+     */
+    function removeHotkey(hotkey: HSEventTapHotkey): void;
+
+    /**
      * A dictionary mapping event type names to their numeric values.
 Pass values from this dictionary to `addWatcher()` to specify which events to monitor.
      */
@@ -2224,6 +2245,40 @@ names are included — e.g. pressing the left Command key yields ["cmd", "leftCm
      * The Unicode characters produced by this keyboard event, or null for non-keyboard events
      */
     readonly characters: string | null;
+
+}
+
+/**
+ * A keyboard shortcut binding backed by an event tap. Supports fn modifier and left/right modifier
+key distinction. Obtain instances via `hs.eventtap.bindHotkey()` — do not instantiate directly.
+ */
+declare class HSEventTapHotkey {
+    /**
+     * Enable the hotkey
+     * @returns True if the hotkey was enabled, otherwise False
+     */
+    enable(): boolean;
+
+    /**
+     * Disable the hotkey
+     */
+    disable(): void;
+
+    /**
+     * Check if the hotkey is currently enabled
+     * @returns True if the hotkey is enabled, otherwise False
+     */
+    isEnabled(): boolean;
+
+    /**
+     * The callback function to be called when the hotkey is pressed, or null to remove it
+     */
+    callbackPressed: (() => void) | null;
+
+    /**
+     * The callback function to be called when the hotkey is released, or null to remove it
+     */
+    callbackReleased: (() => void) | null;
 
 }
 
@@ -2624,9 +2679,8 @@ declare namespace hs.hash {
 declare namespace hs.hotkey {
     /**
      * Bind a hotkey
-(`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,
-`leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
-     * @param mods An array of modifier key strings (e.g., ["cmd", "shift"]). Supports generic names
+`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.
+     * @param mods An array of modifier key strings (e.g., `["cmd", "shift"]`). Supported names:
      * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback

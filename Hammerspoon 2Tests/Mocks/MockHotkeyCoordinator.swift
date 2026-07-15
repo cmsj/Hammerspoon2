@@ -7,16 +7,16 @@ import Foundation
 @testable import Hammerspoon_2
 
 @MainActor
-final class MockHotkeyCoordinator: HotkeyCoordinator {
-    private(set) var enabledHotkeys: [HSHotkey] = []
-    private(set) var disabledHotkeys: [HSHotkey] = []
+final class MockEventTapHotkeyCoordinator: EventTapHotkeyCoordinator {
+    private(set) var enabledHotkeys: [HSEventTapHotkey] = []
+    private(set) var disabledHotkeys: [HSEventTapHotkey] = []
 
-    func hotkeyDidEnable(_ hotkey: HSHotkey) -> Bool {
+    func tapHotkeyDidEnable(_ hotkey: HSEventTapHotkey) -> Bool {
         enabledHotkeys.append(hotkey)
         return true
     }
 
-    func hotkeyDidDisable(_ hotkey: HSHotkey) {
+    func tapHotkeyDidDisable(_ hotkey: HSEventTapHotkey) {
         enabledHotkeys.removeAll { $0 === hotkey }
         disabledHotkeys.append(hotkey)
     }
