@@ -47,15 +47,20 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     /// ```
     @objc func isEnabled() -> Bool
 
-    /// {(() => void) | null} The callback function to be called when the hotkey is pressed, or null to remove it
+    /// {(() => boolean | void) | null} The callback function to be called when the hotkey is pressed, or null to remove it.
+    /// Return `false` to pass the event through to other applications; return `true` or nothing to consume it.
     /// - Example:
     /// ```js
     /// const hk = hs.eventtap.bindHotkey(["fn"], "f1", () => {}, null)
-    /// hk.callbackPressed = () => console.log("new handler")
+    /// hk.callbackPressed = () => {
+    ///     console.log("new handler")
+    ///     return false  // let the key reach other apps too
+    /// }
     /// ```
     @objc var callbackPressed: JSFunction? { get set }
 
-    /// {(() => void) | null} The callback function to be called when the hotkey is released, or null to remove it
+    /// {(() => boolean | void) | null} The callback function to be called when the hotkey is released, or null to remove it.
+    /// Return `false` to pass the event through to other applications; return `true` or nothing to consume it.
     /// - Example:
     /// ```js
     /// const hk = hs.eventtap.bindHotkey(["fn"], "f1", () => {}, null)
@@ -175,19 +180,25 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     }
 
     /// Fire the appropriate callback for a keyDown or keyUp event.
-    func trigger(type: CGEventType) {
+    /// Returns true if the event should be consumed, false to pass it through to other applications.
+    func trigger(type: CGEventType) -> Bool {
         let callback: JSFunction?
         switch type {
         case .keyDown: callback = _callbackPressed?.value
         case .keyUp:   callback = _callbackReleased?.value
-        default:       return
+        default:       return true
         }
-        guard let callback, !callback.isNull else { return }
-        callback.call(withArguments: [])
+        guard let callback, !callback.isNull else { return true }
+        let result = callback.call(withArguments: [])
         if let context = callback.context,
            let exc = context.exception, !exc.isUndefined {
             AKError("hs.eventtap.bindHotkey: Error in callback: \(exc.toString() ?? "unknown")")
             context.exception = nil
         }
+        // Explicit `false` passes the event through; anything else (true, undefined, null, …) consumes it.
+        if let result, result.isBoolean && !result.toBool() {
+            return false
+        }
+        return true
     }
 }

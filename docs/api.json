@@ -5037,8 +5037,8 @@
           "name": "bindHotkey",
           "signature": "func bindHotkey(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSEventTapHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the\n`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).\nThe hotkey is active immediately and consumes (suppresses) the key events.\n\nIt's important to note that this a much heavier-weight tool than `hs.hotkey` - every single\nkey you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys\n(where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please\nconsider this when choosing to use `hs.eventtap` for hotkeys.\n\nRequires Accessibility permission.\n\n- Parameters:\n  - mods: An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,\n    `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,\n    `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).\n  - key: The key name or character (e.g., \"a\", \"space\", \"f1\")\n  - callbackPressed: {(() => void) | null} Called when the key combination is pressed, or null\n  - callbackReleased: {(() => void) | null} Called when the key combination is released, or null\n- Returns: An `HSEventTapHotkey` object, or null if binding failed\n- Example:\n```js\n// Bind Fn+F1 — not possible with hs.hotkey\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {\n    console.log(\"Fn+F1 pressed!\")\n}, null)\n\n// Bind left-Cmd+H only (right Cmd+H passes through)\nconst hk2 = hs.eventtap.bindHotkey([\"leftCmd\"], \"h\", () => {\n    console.log(\"Left Cmd+H!\")\n}, null)\n```",
-          "description": "Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the\n`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).\nThe hotkey is active immediately and consumes (suppresses) the key events.\nIt's important to note that this a much heavier-weight tool than `hs.hotkey` - every single\nkey you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys\n(where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please\nconsider this when choosing to use `hs.eventtap` for hotkeys.\nRequires Accessibility permission.\n`ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,\n`leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).",
+          "rawDocumentation": "Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the\n`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).\nThe hotkey is active immediately.\n\nBy default the matching key events are consumed (suppressed). To let the event pass through\nto other applications, return `false` from the callback. Returning `true` or nothing consumes\nthe event as usual.\n\nIt's important to note that this a much heavier-weight tool than `hs.hotkey` - every single\nkey you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys\n(where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please\nconsider this when choosing to use `hs.eventtap` for hotkeys.\n\nRequires Accessibility permission.\n\n- Parameters:\n  - mods: An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,\n    `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,\n    `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).\n  - key: The key name or character (e.g., \"a\", \"space\", \"f1\")\n  - callbackPressed: {(() => boolean | void) | null} Called when the key combination is pressed. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.\n  - callbackReleased: {(() => boolean | void) | null} Called when the key combination is released. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.\n- Returns: An `HSEventTapHotkey` object, or null if binding failed\n- Example:\n```js\n// Bind Fn+F1 — not possible with hs.hotkey\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {\n    console.log(\"Fn+F1 pressed!\")\n}, null)\n\n// Bind left-Cmd+H only (right Cmd+H passes through)\nconst hk2 = hs.eventtap.bindHotkey([\"leftCmd\"], \"h\", () => {\n    console.log(\"Left Cmd+H!\")\n}, null)\n\n// Log the key but let other apps see it too\nconst hk3 = hs.eventtap.bindHotkey([\"cmd\"], \"h\", () => {\n    console.log(\"Cmd+H observed\")\n    return false  // pass through\n}, null)\n```",
+          "description": "Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the\n`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).\nThe hotkey is active immediately.\nBy default the matching key events are consumed (suppressed). To let the event pass through\nto other applications, return `false` from the callback. Returning `true` or nothing consumes\nthe event as usual.\nIt's important to note that this a much heavier-weight tool than `hs.hotkey` - every single\nkey you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys\n(where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please\nconsider this when choosing to use `hs.eventtap` for hotkeys.\nRequires Accessibility permission.\n`ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,\n`leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).",
           "params": [
             {
               "name": "mods",
@@ -5057,16 +5057,16 @@
             {
               "name": "callbackPressed",
               "type": "JSFunction",
-              "description": "Called when the key combination is pressed, or null",
+              "description": "Called when the key combination is pressed. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.",
               "optional": false,
-              "tsType": "(() => void) | null"
+              "tsType": "(() => boolean | void) | null"
             },
             {
               "name": "callbackReleased",
               "type": "JSFunction",
-              "description": "Called when the key combination is released, or null",
+              "description": "Called when the key combination is released. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.",
               "optional": false,
-              "tsType": "(() => void) | null"
+              "tsType": "(() => boolean | void) | null"
             }
           ],
           "returns": {
@@ -5077,12 +5077,12 @@
           "examples": [
             {
               "lang": "js",
-              "code": "// Bind Fn+F1 — not possible with hs.hotkey\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {\n    console.log(\"Fn+F1 pressed!\")\n}, null)\n\n// Bind left-Cmd+H only (right Cmd+H passes through)\nconst hk2 = hs.eventtap.bindHotkey([\"leftCmd\"], \"h\", () => {\n    console.log(\"Left Cmd+H!\")\n}, null)"
+              "code": "// Bind Fn+F1 — not possible with hs.hotkey\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {\n    console.log(\"Fn+F1 pressed!\")\n}, null)\n\n// Bind left-Cmd+H only (right Cmd+H passes through)\nconst hk2 = hs.eventtap.bindHotkey([\"leftCmd\"], \"h\", () => {\n    console.log(\"Left Cmd+H!\")\n}, null)\n\n// Log the key but let other apps see it too\nconst hk3 = hs.eventtap.bindHotkey([\"cmd\"], \"h\", () => {\n    console.log(\"Cmd+H observed\")\n    return false  // pass through\n}, null)"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 392
+          "lineNumber": 402
         },
         {
           "name": "removeHotkey",
@@ -5109,7 +5109,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 401
+          "lineNumber": 411
         }
       ],
       "properties": [
@@ -5643,26 +5643,26 @@
             {
               "name": "callbackPressed",
               "signature": "var callbackPressed: JSFunction? { get set }",
-              "rawDocumentation": "The callback function to be called when the hotkey is pressed, or null to remove it\n- Example:\n```js\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {}, null)\nhk.callbackPressed = () => console.log(\"new handler\")\n```",
-              "description": "The callback function to be called when the hotkey is pressed, or null to remove it",
-              "tsType": "(() => void) | null",
+              "rawDocumentation": "The callback function to be called when the hotkey is pressed, or null to remove it.\nReturn `false` to pass the event through to other applications; return `true` or nothing to consume it.\n- Example:\n```js\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {}, null)\nhk.callbackPressed = () => {\n    console.log(\"new handler\")\n    return false  // let the key reach other apps too\n}\n```",
+              "description": "The callback function to be called when the hotkey is pressed, or null to remove it.\nReturn `false` to pass the event through to other applications; return `true` or nothing to consume it.",
+              "tsType": "(() => boolean | void) | null",
               "notes": [],
               "examples": [
                 {
                   "lang": "js",
-                  "code": "const hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {}, null)\nhk.callbackPressed = () => console.log(\"new handler\")"
+                  "code": "const hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {}, null)\nhk.callbackPressed = () => {\n    console.log(\"new handler\")\n    return false  // let the key reach other apps too\n}"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapHotkey.swift",
-              "lineNumber": 56
+              "lineNumber": 60
             },
             {
               "name": "callbackReleased",
               "signature": "var callbackReleased: JSFunction? { get set }",
-              "rawDocumentation": "The callback function to be called when the hotkey is released, or null to remove it\n- Example:\n```js\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {}, null)\nhk.callbackReleased = () => console.log(\"released\")\n```",
-              "description": "The callback function to be called when the hotkey is released, or null to remove it",
-              "tsType": "(() => void) | null",
+              "rawDocumentation": "The callback function to be called when the hotkey is released, or null to remove it.\nReturn `false` to pass the event through to other applications; return `true` or nothing to consume it.\n- Example:\n```js\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {}, null)\nhk.callbackReleased = () => console.log(\"released\")\n```",
+              "description": "The callback function to be called when the hotkey is released, or null to remove it.\nReturn `false` to pass the event through to other applications; return `true` or nothing to consume it.",
+              "tsType": "(() => boolean | void) | null",
               "notes": [],
               "examples": [
                 {
@@ -5672,7 +5672,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapHotkey.swift",
-              "lineNumber": 64
+              "lineNumber": 69
             }
           ]
         }
@@ -18859,5 +18859,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-16T16:00:13.941Z"
+  "generatedAt": "2026-07-16T22:57:47.759Z"
 }

@@ -892,7 +892,10 @@ console.log(&quot;Mouse at &quot; + pos.x + &quot;, &quot; + pos.y)</code></pre>
 
         <div class="description">Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the
 `fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).
-The hotkey is active immediately and consumes (suppresses) the key events.
+The hotkey is active immediately.
+By default the matching key events are consumed (suppressed). To let the event pass through
+to other applications, return `false` from the callback. Returning `true` or nothing consumes
+the event as usual.
 It&#39;s important to note that this a much heavier-weight tool than `hs.hotkey` - every single
 key you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys
 (where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please
@@ -927,12 +930,12 @@ Requires Accessibility permission.
                 <tr>
                     <td class="param-name">callbackPressed</td>
                     <td class="param-type">function</td>
-                    <td class="param-desc">Called when the key combination is pressed, or null</td>
+                    <td class="param-desc">Called when the key combination is pressed. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.</td>
                 </tr>
                 <tr>
                     <td class="param-name">callbackReleased</td>
                     <td class="param-type">function</td>
-                    <td class="param-desc">Called when the key combination is released, or null</td>
+                    <td class="param-desc">Called when the key combination is released. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.</td>
                 </tr>
             </tbody>
         </table>
@@ -951,10 +954,16 @@ const hk = hs.eventtap.bindHotkey([&quot;fn&quot;], &quot;f1&quot;, () =&gt; {
 // Bind left-Cmd+H only (right Cmd+H passes through)
 const hk2 = hs.eventtap.bindHotkey([&quot;leftCmd&quot;], &quot;h&quot;, () =&gt; {
     console.log(&quot;Left Cmd+H!&quot;)
+}, null)
+
+// Log the key but let other apps see it too
+const hk3 = hs.eventtap.bindHotkey([&quot;cmd&quot;], &quot;h&quot;, () =&gt; {
+    console.log(&quot;Cmd+H observed&quot;)
+    return false  // pass through
 }, null)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L392" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:392</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L402" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:402</a>
         </div>
     </div>
     <div class="method" id="removeHotkey">
@@ -992,7 +1001,7 @@ const hk2 = hs.eventtap.bindHotkey([&quot;leftCmd&quot;], &quot;h&quot;, () =&gt
 hs.eventtap.removeHotkey(hk)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L401" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:401</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L411" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:411</a>
         </div>
     </div>
         </main>

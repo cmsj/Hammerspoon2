@@ -360,7 +360,11 @@ import AppKit
 
     /// Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the
     /// `fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).
-    /// The hotkey is active immediately and consumes (suppresses) the key events.
+    /// The hotkey is active immediately.
+    ///
+    /// By default the matching key events are consumed (suppressed). To let the event pass through
+    /// to other applications, return `false` from the callback. Returning `true` or nothing consumes
+    /// the event as usual.
     ///
     /// It's important to note that this a much heavier-weight tool than `hs.hotkey` - every single
     /// key you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys
@@ -374,8 +378,8 @@ import AppKit
     ///     `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
     ///     `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
     ///   - key: The key name or character (e.g., "a", "space", "f1")
-    ///   - callbackPressed: {(() => void) | null} Called when the key combination is pressed, or null
-    ///   - callbackReleased: {(() => void) | null} Called when the key combination is released, or null
+    ///   - callbackPressed: {(() => boolean | void) | null} Called when the key combination is pressed. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.
+    ///   - callbackReleased: {(() => boolean | void) | null} Called when the key combination is released. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.
     /// - Returns: An `HSEventTapHotkey` object, or null if binding failed
     /// - Example:
     /// ```js
@@ -387,6 +391,12 @@ import AppKit
     /// // Bind left-Cmd+H only (right Cmd+H passes through)
     /// const hk2 = hs.eventtap.bindHotkey(["leftCmd"], "h", () => {
     ///     console.log("Left Cmd+H!")
+    /// }, null)
+    ///
+    /// // Log the key but let other apps see it too
+    /// const hk3 = hs.eventtap.bindHotkey(["cmd"], "h", () => {
+    ///     console.log("Cmd+H observed")
+    ///     return false  // pass through
     /// }, null)
     /// ```
     @objc func bindHotkey(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSEventTapHotkey?
@@ -779,7 +789,7 @@ import AppKit
 
     func tapHotkeyDidEnable(_ hotkey: HSEventTapHotkey) -> Bool {
         enabledTapHotkeys.append(hotkey)
-        startDispatchTapIfNeeded()  // best-effort — fails silently without Accessibility
+        _ = startDispatchTapIfNeeded()  // best-effort — fails silently without Accessibility
         return true
     }
 
@@ -815,7 +825,7 @@ import AppKit
         return dispatchTap.isCreated()
     }
 
-    /// Iterate enabled hotkeys and fire the first match, consuming the event.
+    /// Iterate enabled hotkeys and fire the first match. Consumes the event unless the callback returns false.
     private func dispatchKeyEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
         let eventKeyCode  = event.getIntegerValueField(.keyboardEventKeycode)
         let eventFlags    = event.flags
@@ -823,8 +833,8 @@ import AppKit
         let rawFlagsValue = eventFlags.rawValue
         for hotkey in enabledTapHotkeys {
             if hotkey.matches(keyCode: eventKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
-                hotkey.trigger(type: type)
-                return nil  // consume the event
+                let consumed = hotkey.trigger(type: type)
+                return consumed ? nil : event
             }
         }
         return event  // no match — pass through

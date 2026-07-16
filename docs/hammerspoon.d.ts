@@ -2073,7 +2073,10 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
     /**
      * Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the
 `fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).
-The hotkey is active immediately and consumes (suppresses) the key events.
+The hotkey is active immediately.
+By default the matching key events are consumed (suppressed). To let the event pass through
+to other applications, return `false` from the callback. Returning `true` or nothing consumes
+the event as usual.
 It's important to note that this a much heavier-weight tool than `hs.hotkey` - every single
 key you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys
 (where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please
@@ -2083,11 +2086,11 @@ Requires Accessibility permission.
 `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
      * @param mods An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,
      * @param key The key name or character (e.g., "a", "space", "f1")
-     * @param callbackPressed Called when the key combination is pressed, or null
-     * @param callbackReleased Called when the key combination is released, or null
+     * @param callbackPressed Called when the key combination is pressed. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.
+     * @param callbackReleased Called when the key combination is released. Return `false` to pass the event through, or return `true`/nothing to consume it. Pass null for no callback.
      * @returns An `HSEventTapHotkey` object, or null if binding failed
      */
-    function bindHotkey(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSEventTapHotkey | null;
+    function bindHotkey(mods: string[], key: string, callbackPressed: (() => boolean | void) | null, callbackReleased: (() => boolean | void) | null): HSEventTapHotkey | null;
 
     /**
      * Remove a previously bound hotkey and stop it from firing
@@ -2275,14 +2278,16 @@ declare class HSEventTapHotkey {
     isEnabled(): boolean;
 
     /**
-     * The callback function to be called when the hotkey is pressed, or null to remove it
+     * The callback function to be called when the hotkey is pressed, or null to remove it.
+Return `false` to pass the event through to other applications; return `true` or nothing to consume it.
      */
-    callbackPressed: (() => void) | null;
+    callbackPressed: (() => boolean | void) | null;
 
     /**
-     * The callback function to be called when the hotkey is released, or null to remove it
+     * The callback function to be called when the hotkey is released, or null to remove it.
+Return `false` to pass the event through to other applications; return `true` or nothing to consume it.
      */
-    callbackReleased: (() => void) | null;
+    callbackReleased: (() => boolean | void) | null;
 
 }
 
