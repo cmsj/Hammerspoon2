@@ -44,9 +44,9 @@ struct HSMenuBarTests {
             makeHarness().expectEqual("hs.menubar.create(true).typeName", "HSMenuBarItem")
         }
 
-        @Test("setTitle is a function")
-        func testSetTitleIsFunction() {
-            makeHarness().expectTrue("typeof hs.menubar.create(true).setTitle === 'function'")
+        @Test("setIcon is a function")
+        func testSetIconIsFunction() {
+            makeHarness().expectTrue("typeof hs.menubar.create(true).setIcon === 'function'")
         }
 
         @Test("setClickCallback is a function")
@@ -127,7 +127,7 @@ struct HSMenuBarTests {
             // shutdown() → destroy() removes the NSStatusItem and detaches all callbacks.
             harness.eval("""
                 var item = hs.menubar.create(true)
-                item.setTitle('HS2 Leak Test')
+                item.title = 'HS2 Leak Test'
                 item.setClickCallback(function() {})
                 item.show()
             """)

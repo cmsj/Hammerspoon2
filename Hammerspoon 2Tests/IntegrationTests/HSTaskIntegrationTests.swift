@@ -169,10 +169,13 @@ import JavaScriptCore
             taskCompleted = true
         }
 
+        // Use an indefinitely-running process so there is no race between
+        // "is it running yet?" and "has it already finished?" — we kill it
+        // explicitly once we've confirmed it started.
         harness.eval("""
-        var task = hs.task.create('/bin/sleep', ['0.2'], function() {
+        var task = hs.task.create('/bin/sleep', ['9999'], function() {
             __test_callback('onComplete');
-        });
+        }, null);
         """)
 
         // Before starting
@@ -181,17 +184,22 @@ import JavaScriptCore
         // Start the task
         harness.eval("task.start()")
 
-        // Should be running now
-        try? await Task.sleep(for: .seconds(0.05))
-        harness.expectTrue("task.isRunning === true")
+        // Wait until the process is actually running
+        let started = await harness.waitForAsync(timeout: 5.0) {
+            harness.evalValue("task.isRunning")?.toBool() ?? false
+        }
+        #expect(started, "Task should start within 5 seconds")
 
-        // Wait for completion
-        let success = await harness.waitForAsync(timeout: 2.0) { taskCompleted }
-        #expect(success, "Task should complete")
+        // Now kill it explicitly and wait for the completion callback
+        harness.eval("task.terminate()")
+        let completed = await harness.waitForAsync(timeout: 5.0) { taskCompleted }
+        #expect(completed, "Task should complete after terminate()")
 
         // Should not be running anymore
-        try? await Task.sleep(for: .seconds(0.1))
-        harness.expectTrue("task.isRunning === false")
+        let stopped = await harness.waitForAsync(timeout: 5.0) {
+            !(harness.evalValue("task.isRunning")?.toBool() ?? true)
+        }
+        #expect(stopped, "Task should stop within 5 seconds after terminate()")
     }
 
     @Test("pid returns valid process ID")

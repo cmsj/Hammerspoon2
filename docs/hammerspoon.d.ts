@@ -3568,6 +3568,14 @@ or a function that returns an array for a dynamic menu populated each time it op
     isVisible(): boolean;
 
     /**
+     * Permanently remove this item from the menu bar and release all resources.
+After calling `destroy()`, the item is no longer usable.
+This is called automatically on `hs.reload()`. Use `hide()` instead
+if you only want to temporarily remove the item without freeing it.
+     */
+    destroy(): void;
+
+    /**
      * Get or set the menu item's title.
      */
     title: string | null;

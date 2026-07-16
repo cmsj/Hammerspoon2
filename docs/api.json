@@ -9670,6 +9670,25 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
               "lineNumber": 89
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Permanently remove this item from the menu bar and release all resources.\n\nAfter calling `destroy()`, the item is no longer usable.\nThis is called automatically on `hs.reload()`. Use `hide()` instead\nif you only want to temporarily remove the item without freeing it.\n\n- Example:\n```js\nconst item = hs.menubar.create()\nitem.destroy()\n```",
+              "description": "Permanently remove this item from the menu bar and release all resources.\nAfter calling `destroy()`, the item is no longer usable.\nThis is called automatically on `hs.reload()`. Use `hide()` instead\nif you only want to temporarily remove the item without freeing it.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const item = hs.menubar.create()\nitem.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.menubar/HSMenuBarItem.swift",
+              "lineNumber": 111
             }
           ],
           "properties": [
@@ -18840,5 +18859,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-16T15:59:16.454Z"
+  "generatedAt": "2026-07-16T16:00:13.941Z"
 }
