@@ -301,7 +301,7 @@ before the function returns.
 @Test("Active HSFoo is released after shutdown")
 func testFooDoesNotLeakAfterReload() {
     let tracker = WeakLeakTracker()
-    do {
+    autoreleasepool {
         let harness = JSTestHarness()
         harness.loadModule(HSFooModule.self, as: "foo")
 
@@ -321,7 +321,7 @@ func testFooDoesNotLeakAfterReload() {
         // 4. Drop the JS reference, then shut down
         harness.eval("obj = null")
         harness.shutdownForLeakTest()
-    } // harness released here; JSContext freed
+    } // autorelease pool drained here; JSValue ObjC refs released, JSContext freed
     tracker.assertNoLeaks()
 }
 ```
@@ -330,11 +330,11 @@ func testFooDoesNotLeakAfterReload() {
 
 | Rule | Reason |
 |---|---|
-| Wrap harness in a `do {}` block | Releases the `JSContext` before the weak-ref check runs |
+| Wrap harness in an `autoreleasepool {}` block | Drains ObjC autorelease pool (including `JSValue`s from `eval()`) so the `JSContext` is freed before the weak-ref check runs — a plain `do {}` block does **not** drain the pool and will silently miss leaks |
 | Track the object **before** nulling the JS var | `evalValue()` returns nil after the var is cleared |
 | Extract the Swift object with `toObjectOf(T.self)` | All child types are `@objc class` NSObject subclasses; this cast is safe |
-| Call `shutdownForLeakTest()` **inside** the `do {}` block | Sync GC must run while the context is still alive |
-| Call `assertNoLeaks()` **outside** the `do {}` block | The context (and any bridged objects) must be released first |
+| Call `shutdownForLeakTest()` **inside** the `autoreleasepool {}` block | Sync GC must run while the context is still alive |
+| Call `assertNoLeaks()` **outside** the `autoreleasepool {}` block | The context (and any bridged objects) must be released first |
 | **Start/use the object actively** — see table below | An unstarted object skips the interesting cleanup paths (selfRetain, NSNotificationCenter observers, OS browser delegates, taskTracker strong refs, etc.) |
 
 ### What "actively using" means per object type
@@ -579,4 +579,4 @@ and record all call arguments so tests can assert on them.
 - [ ] Async tests use `waitForAsync` or `waitFor` rather than `Thread.sleep` where possible
 - [ ] State-mutating tests use `.serialized` and save/restore shared state
 - [ ] Nothing triggers permission dialogs, hardware mutations, or live network calls
-- [ ] **If the module creates child JS objects**: a `testFooDoesNotLeakAfterReload()` test exists that (a) creates AND actively starts the object, (b) tracks it with `WeakLeakTracker`, (c) wraps the harness in a `do {}` block, and (d) calls `tracker.assertNoLeaks()` after the block
+- [ ] **If the module creates child JS objects**: a `testFooDoesNotLeakAfterReload()` test exists that (a) creates AND actively starts the object, (b) tracks it with `WeakLeakTracker`, (c) wraps the harness in an `autoreleasepool {}` block, and (d) calls `tracker.assertNoLeaks()` after the block
