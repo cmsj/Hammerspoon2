@@ -275,7 +275,7 @@ struct HSHotkeyTests {
     @Test("Active HSHotkey is released after shutdown")
     func testHotkeyDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSHotkeyModule.self, as: "hotkey")
             // bind() auto-enables the hotkey (adding it to the strong enabledHotkeys array).
@@ -298,7 +298,7 @@ struct HSHotkeyTests {
     @Test("Active HSHotkeyModal is released after shutdown")
     func testHotkeyModalDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSHotkeyModule.self, as: "hotkey")
             // Create a modal, bind a hotkey within it, enter the modal so it's active,

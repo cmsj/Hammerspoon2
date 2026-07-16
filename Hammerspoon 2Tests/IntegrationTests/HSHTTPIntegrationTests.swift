@@ -439,4 +439,34 @@ struct HSHTTPOtherTests {
             #expect(result?.body.count == 50)
         }
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSWebSocket is released after shutdown")
+    func testWebSocketDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSHTTPModule.self, as: "http")
+            // openWebSocket() creates the socket and begins connecting immediately.
+            // Port 1 is refused, so the connection fails fast; the HSWebSocket object
+            // is still created and all four JSCallback fields are exercised.
+            // shutdown() → destroy() cancels the URLSession task and detaches callbacks.
+            harness.eval("""
+                var ws = hs.http.openWebSocket('ws://127.0.0.1:1')
+                if (ws !== null && ws !== undefined) {
+                    ws.setOpenCallback(function() {})
+                      .setMessageCallback(function(msg) {})
+                      .setCloseCallback(function(code, reason) {})
+                      .setErrorCallback(function(err) {})
+                }
+            """)
+            if let obj = harness.evalValue("ws")?.toObjectOf(HSWebSocket.self) as? HSWebSocket {
+                tracker.track(obj)
+            }
+            harness.eval("ws = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

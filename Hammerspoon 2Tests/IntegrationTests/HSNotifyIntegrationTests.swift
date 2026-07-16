@@ -207,7 +207,7 @@ struct HSNotifyTests {
     @Test("Sent HSNotification is released after shutdown")
     func testNotificationDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSNotifyModule.self, as: "notify")
             // send() schedules the notification and exercises the JSCallback/JSManagedValue

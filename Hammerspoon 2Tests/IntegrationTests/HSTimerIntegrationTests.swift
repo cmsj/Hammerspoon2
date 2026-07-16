@@ -372,7 +372,7 @@ struct HSTimerIntegrationTests {
     @Test("Active repeating HSTimer is released after shutdown")
     func testTimerDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSTimerModule.self, as: "timer")
             // doEvery starts a repeating timer — Foundation Timer holds a strong target ref
@@ -392,7 +392,7 @@ struct HSTimerIntegrationTests {
     @Test("Fired one-shot HSTimer is released after shutdown")
     func testRunningTimerDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSTimerModule.self, as: "timer")
             // Short interval so the one-shot timer actually fires; Foundation then

@@ -273,4 +273,30 @@ struct HSTranslationTests {
             #expect(!harness.hasException)
         }
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSTranslationSession is released after shutdown")
+    func testTranslationSessionDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSTranslationModule.self, as: "translation")
+            // session() returns null on macOS < 26; on macOS 26+ it creates a session.
+            // translate() starts an async translation (exercising the active path).
+            // The tracker only records the object if it was actually created, so this
+            // test is a no-op on unsupported OS versions without marking as skipped.
+            // shutdown() calls cancel() on all live sessions, freeing them.
+            harness.eval("""
+                var s = hs.translation.session('en', 'fr')
+                if (s !== null && s !== undefined) s.translate('Hello')
+            """)
+            if let obj = harness.evalValue("s")?.toObjectOf(HSTranslationSession.self) as? HSTranslationSession {
+                tracker.track(obj)
+            }
+            harness.eval("s = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

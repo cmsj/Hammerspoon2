@@ -1133,7 +1133,7 @@ import JavaScriptCore
     @Test("Running HSTask is released after shutdown")
     func testTaskDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSTaskModule.self, as: "task")
             // start() registers the task in taskTracker (strong). We use a long-running

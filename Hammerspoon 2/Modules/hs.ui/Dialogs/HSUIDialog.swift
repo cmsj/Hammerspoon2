@@ -108,9 +108,20 @@ import SwiftUI
         super.init()
     }
 
-    isolated deinit {
-        close()
-        AKDebug("deinit of HSUIDialog: \(dialogID)")
+    deinit {
+        // In the normal shutdown path close() has already been called, so nsWindow is nil
+        // and this is a no-op. In the unexpected edge case where the object is freed without
+        // close() being called, dispatch AppKit cleanup to the main thread without retaining
+        // self (capturing only the NSWindow and UUID values).
+        guard let window = nsWindow else { return }
+        let id = dialogID
+        let capturedModule = module
+        DispatchQueue.main.async {
+            capturedModule?.unregister(dialog: id)
+            window.contentView = nil
+            window.delegate = nil
+            window.close()
+        }
     }
 
     // MARK: - Builder Methods
@@ -187,6 +198,9 @@ import SwiftUI
 
         module?.unregister(dialog: dialogID)
 
+        // Explicitly nil the contentView so UIDialogView (which holds a strong ref back
+        // to self) is released synchronously before AppKit's async window cleanup runs.
+        nsWindow?.contentView = nil
         nsWindow?.delegate = nil
         nsWindow?.orderOut(nil)
         nsWindow?.close()

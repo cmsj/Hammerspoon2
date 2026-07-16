@@ -799,7 +799,7 @@ struct HSSpotlightTests {
     @Test("Active HSSpotlightQuery is released after shutdown")
     func testSpotlightQueryDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSSpotlightModule.self, as: "spotlight")
             // Start a real Spotlight query (intentionally unmatchable predicate to avoid

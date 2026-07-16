@@ -368,9 +368,20 @@ import SwiftUI
         self.init(frame: CGRect(x: x, y: y, width: w, height: h), module: module)
     }
 
-    isolated deinit {
-        close()
-        AKDebug("deinit of HSUIWindow: \(windowID)")
+    deinit {
+        // In the normal shutdown path close() has already been called, so nsWindow and
+        // rootElement are nil and this is a no-op. In the unexpected edge case where the
+        // object is freed without close() being called, dispatch AppKit cleanup to the
+        // main thread without retaining self (capturing only the NSWindow and UUID values).
+        guard let window = nsWindow else { return }
+        let id = windowID
+        let capturedModule = module
+        DispatchQueue.main.async {
+            capturedModule?.unregister(window: id)
+            window.contentView = nil
+            window.delegate = nil
+            window.close()
+        }
     }
 
     // MARK: - Window Management
@@ -436,6 +447,9 @@ import SwiftUI
 
         module?.unregister(window: windowID)
 
+        // Explicitly nil the contentView so UICanvasView (and any element closures it
+        // holds) are released synchronously before AppKit's async window cleanup runs.
+        nsWindow?.contentView = nil
         nsWindow?.delegate = nil
         nsWindow?.close()
         nsWindow = nil

@@ -934,7 +934,7 @@ struct HSEventTapTests {
     @Test("Active HSEventTap is released after shutdown")
     func testEventTapDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSEventTapModule.self, as: "eventtap")
             // Create and start the tap. start() sets selfRetain=self (if Accessibility is

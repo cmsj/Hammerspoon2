@@ -422,4 +422,31 @@ struct HSLocationTests {
             #expect(!harness.hasException)
         }
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSLocationWatcher is released after shutdown")
+    func testLocationWatcherDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSLocationModule.self, as: "location")
+            // Set a callback (exercising JSCallback), then start() to call
+            // CLLocationManager.startUpdatingLocation(). If Location permission is not
+            // granted the manager fires didFailWithError immediately; the watcher is
+            // still active and the lifecycle is still tested. shutdown() → destroy()
+            // stops updates and detaches the callback.
+            harness.eval("""
+                var w = hs.location.addWatcher()
+                w.setCallback(function(loc) {})
+                w.start()
+            """)
+            if let obj = harness.evalValue("w")?.toObjectOf(HSLocationWatcher.self) as? HSLocationWatcher {
+                tracker.track(obj)
+            }
+            harness.eval("w = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

@@ -301,7 +301,7 @@ struct HSBonjourTests {
     @Test("Active HSBonjourSearch is released after shutdown")
     func testBonjourSearchDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
-        do {
+        autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSBonjourModule.self, as: "bonjour")
             // findServices() starts an NSNetServiceBrowser, whose delegate property holds
