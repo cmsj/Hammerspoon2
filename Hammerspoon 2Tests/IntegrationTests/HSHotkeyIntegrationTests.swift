@@ -182,7 +182,7 @@ struct HSHotkeyTests {
         @Test("matches returns true for exact key and modifier")
         func testMatchesExactKeyAndModifier() {
             let coordinator = MockHotkeyCoordinator()
-            let hotkey = HSHotkey(
+            let hotkey = HSEventTapHotkey(
                 keyCode: 0x04,  // h
                 requiredFlags: [.maskCommand],
                 requiredDeviceBits: 0,
@@ -207,7 +207,7 @@ struct HSHotkeyTests {
         @Test("matches returns false when extra modifier is present")
         func testMatchesReturnsFalseForExtraModifier() {
             let coordinator = MockHotkeyCoordinator()
-            let hotkey = HSHotkey(
+            let hotkey = HSEventTapHotkey(
                 keyCode: 0x04,
                 requiredFlags: [.maskCommand],
                 requiredDeviceBits: 0,
@@ -229,7 +229,7 @@ struct HSHotkeyTests {
         @Test("matches returns false for wrong key code")
         func testMatchesReturnsFalseForWrongKey() {
             let coordinator = MockHotkeyCoordinator()
-            let hotkey = HSHotkey(
+            let hotkey = HSEventTapHotkey(
                 keyCode: 0x04,  // h
                 requiredFlags: [.maskCommand],
                 requiredDeviceBits: 0,
@@ -251,7 +251,7 @@ struct HSHotkeyTests {
         @Test("matches returns false when hotkey is disabled")
         func testMatchesReturnsFalseWhenDisabled() {
             let coordinator = MockHotkeyCoordinator()
-            let hotkey = HSHotkey(
+            let hotkey = HSEventTapHotkey(
                 keyCode: 0x04,
                 requiredFlags: [.maskCommand],
                 requiredDeviceBits: 0,

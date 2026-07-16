@@ -40,6 +40,9 @@ class JSTestHarness {
     /// before the JS GC runs, which is non-deterministic and would otherwise leave registrations alive across tests).
     private var loadedModuleObjects: [any HSModuleAPI] = []
 
+    /// Track loaded modules by name for shutdownForLeakTest()
+    private var loadedModulesDict: [String: any HSModuleAPI] = [:]
+
     isolated deinit {
         for module in loadedModuleObjects {
             module.shutdown()

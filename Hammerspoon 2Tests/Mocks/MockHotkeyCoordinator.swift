@@ -6,6 +6,8 @@
 import Foundation
 @testable import Hammerspoon_2
 
+typealias MockHotkeyCoordinator = MockEventTapHotkeyCoordinator
+
 @MainActor
 final class MockEventTapHotkeyCoordinator: EventTapHotkeyCoordinator {
     private(set) var enabledHotkeys: [HSEventTapHotkey] = []
