@@ -36,6 +36,16 @@ class JSTestHarness {
     /// Track loaded task module for cleanup
     private var taskModule: HSTaskModule?
 
+    /// Track all loaded modules so shutdown() can be called on deinit (ensures Carbon hotkeys, etc. are cleaned up
+    /// before the JS GC runs, which is non-deterministic and would otherwise leave registrations alive across tests).
+    private var loadedModuleObjects: [any HSModuleAPI] = []
+
+    isolated deinit {
+        for module in loadedModuleObjects {
+            module.shutdown()
+        }
+    }
+
     init() {
         vm = JSVirtualMachine()
         context = JSContext(virtualMachine: vm)!
@@ -110,6 +120,8 @@ class JSTestHarness {
         if name == "task", let taskMod = module as? HSTaskModule {
             self.taskModule = taskMod
         }
+
+        loadedModuleObjects.append(module)
 
         // Get the hs object and set the module as a property
         guard let hs = context.objectForKeyedSubscript("hs") else {

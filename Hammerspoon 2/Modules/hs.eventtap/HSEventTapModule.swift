@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import CoreGraphics
 import AppKit
 
@@ -354,18 +355,69 @@ import AppKit
     /// console.log("Key repeat interval: " + hs.eventtap.keyRepeatInterval())
     /// ```
     @objc func keyRepeatInterval() -> Double
+
+    // MARK: Hotkey binding
+
+    /// Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the
+    /// `fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).
+    /// The hotkey is active immediately and consumes (suppresses) the key events.
+    ///
+    /// It's important to note that this a much heavier-weight tool than `hs.hotkey` - every single
+    /// key you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys
+    /// (where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please
+    /// consider this when choosing to use `hs.eventtap` for hotkeys.
+    ///
+    /// Requires Accessibility permission.
+    ///
+    /// - Parameters:
+    ///   - mods: An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,
+    ///     `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
+    ///     `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
+    ///   - key: The key name or character (e.g., "a", "space", "f1")
+    ///   - callbackPressed: {(() => void) | null} Called when the key combination is pressed, or null
+    ///   - callbackReleased: {(() => void) | null} Called when the key combination is released, or null
+    /// - Returns: An `HSEventTapHotkey` object, or null if binding failed
+    /// - Example:
+    /// ```js
+    /// // Bind Fn+F1 — not possible with hs.hotkey
+    /// const hk = hs.eventtap.bindHotkey(["fn"], "f1", () => {
+    ///     console.log("Fn+F1 pressed!")
+    /// }, null)
+    ///
+    /// // Bind left-Cmd+H only (right Cmd+H passes through)
+    /// const hk2 = hs.eventtap.bindHotkey(["leftCmd"], "h", () => {
+    ///     console.log("Left Cmd+H!")
+    /// }, null)
+    /// ```
+    @objc func bindHotkey(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSEventTapHotkey?
+
+    /// Remove a previously bound hotkey and stop it from firing
+    /// - Parameter hotkey: The HSEventTapHotkey returned by `bindHotkey`
+    /// - Example:
+    /// ```js
+    /// const hk = hs.eventtap.bindHotkey(["fn"], "f1", () => {}, null)
+    /// hs.eventtap.removeHotkey(hk)
+    /// ```
+    @objc func removeHotkey(_ hotkey: HSEventTapHotkey)
 }
 
 // MARK: - Implementation
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSEventTapModule: NSObject, HSModuleAPI, HSEventTapModuleAPI {
+@objc class HSEventTapModule: NSObject, HSModuleAPI, HSEventTapModuleAPI, EventTapHotkeyCoordinator {
     var name = "hs.eventtap"
     let engineID: UUID
     // Strong references: started taps keep themselves alive via selfRetain, so weak refs
     // would be nil'd after JS GC — shutdown() would never find them to call destroy().
     private var taps: [HSEventTap] = []
+
+    // Hotkey dispatch infrastructure — a single shared modify tap for all bound hotkeys.
+    // Weak refs allow disabled/dropped hotkeys to be GC'd; enabled hotkeys are also in
+    // enabledTapHotkeys (strong) so their weak entries here remain valid until disabled.
+    private var allTapHotkeys = HSWeakObjectSet<HSEventTapHotkey>()
+    private var enabledTapHotkeys: [HSEventTapHotkey] = []
+    private var dispatchTap: HSEventTap?
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -376,6 +428,13 @@ import AppKit
     func shutdown() {
         for tap in taps { tap.destroy() }
         taps.removeAll()
+
+        enabledTapHotkeys.removeAll()
+        for hotkey in allTapHotkeys.allObjects { hotkey.destroy() }
+        allTapHotkeys.removeAllObjects()
+
+        dispatchTap?.stop()
+        dispatchTap = nil
     }
 
     isolated deinit {
@@ -671,6 +730,144 @@ import AppKit
             up.setIntegerValueField(.mouseEventClickState, value: clickState)
             up.post(tap: .cghidEventTap)
         }
+    }
+
+    // MARK: - Hotkey binding
+
+    @objc func bindHotkey(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSEventTapHotkey? {
+        guard let (flags, deviceBits) = EventTapModifierMapper.parse(mods) else {
+            AKError("hs.eventtap.bindHotkey: Invalid modifiers")
+            return nil
+        }
+        guard let keyCode = KeyCodeResolver.keyCode(for: key) else {
+            AKError("hs.eventtap.bindHotkey: Unknown key '\(key)'")
+            return nil
+        }
+        guard callbackPressed.isFunction || callbackPressed.isNull else {
+            AKError("hs.eventtap.bindHotkey: callbackPressed must be a function or null")
+            return nil
+        }
+        guard callbackReleased.isFunction || callbackReleased.isNull else {
+            AKError("hs.eventtap.bindHotkey: callbackReleased must be a function or null")
+            return nil
+        }
+
+        let hotkey = HSEventTapHotkey(
+            keyCode: keyCode,
+            requiredFlags: flags,
+            requiredDeviceBits: deviceBits,
+            coordinator: self,
+            callbackPressed: callbackPressed.isNull ? nil : callbackPressed,
+            callbackReleased: callbackReleased.isNull ? nil : callbackReleased
+        )
+
+        guard hotkey.enable() else {
+            AKError("hs.eventtap.bindHotkey: failed to enable hotkey")
+            hotkey.destroy()
+            return nil
+        }
+
+        allTapHotkeys.add(hotkey)
+        return hotkey
+    }
+
+    @objc func removeHotkey(_ hotkey: HSEventTapHotkey) {
+        hotkey.destroy()
+    }
+
+    // MARK: - EventTapHotkeyCoordinator
+
+    func tapHotkeyDidEnable(_ hotkey: HSEventTapHotkey) -> Bool {
+        enabledTapHotkeys.append(hotkey)
+        return startDispatchTapIfNeeded()
+    }
+
+    func tapHotkeyDidDisable(_ hotkey: HSEventTapHotkey) {
+        enabledTapHotkeys.removeAll { $0 === hotkey }
+        if enabledTapHotkeys.isEmpty {
+            dispatchTap?.stop()
+        }
+    }
+
+    // MARK: - Dispatch tap
+
+    private func startDispatchTapIfNeeded() -> Bool {
+        if dispatchTap == nil {
+            let mask: CGEventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
+            let tap = HSEventTap(eventMask: mask, listenOnly: false)
+            tap.swiftHandler = { [weak self] type, event in
+                guard let self else { return event }
+                return self.dispatchKeyEvent(type: type, event: event)
+            }
+            dispatchTap = tap
+        }
+
+        guard let dispatchTap else {
+            AKError("hs.eventtap: Failed to initialise hotkey dispatch tap")
+            return false
+        }
+
+        if !dispatchTap.isEnabled() {
+            dispatchTap.start()
+        }
+
+        return dispatchTap.isCreated()
+    }
+
+    /// Iterate enabled hotkeys and fire the first match, consuming the event.
+    private func dispatchKeyEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
+        let eventKeyCode  = event.getIntegerValueField(.keyboardEventKeycode)
+        let eventFlags    = event.flags
+        let maskedFlags   = eventFlags.intersection(HSEventTapHotkey.significantModifiers)
+        let rawFlagsValue = eventFlags.rawValue
+        for hotkey in enabledTapHotkeys {
+            if hotkey.matches(keyCode: eventKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
+                hotkey.trigger(type: type)
+                return nil  // consume the event
+            }
+        }
+        return event  // no match — pass through
+    }
+}
+
+// MARK: - Eventtap hotkey modifier mapping
+
+private enum EventTapModifierMapper {
+    // Device-specific left/right bits from IOKit/hidsystem/IOLLEvent.h (NX_DEVICE*KEYMASK).
+    private static let leftCtrlBit:   UInt64 = 0x00000001
+    private static let leftShiftBit:  UInt64 = 0x00000002
+    private static let rightShiftBit: UInt64 = 0x00000004
+    private static let leftCmdBit:    UInt64 = 0x00000008
+    private static let rightCmdBit:   UInt64 = 0x00000010
+    private static let leftAltBit:    UInt64 = 0x00000020
+    private static let rightAltBit:   UInt64 = 0x00000040
+    private static let rightCtrlBit:  UInt64 = 0x00002000
+
+    /// Parses an array of modifier name strings into (CGEventFlags, deviceBits), or nil on error.
+    static func parse(_ mods: [String]) -> (CGEventFlags, UInt64)? {
+        var flags = CGEventFlags()
+        var deviceBits: UInt64 = 0
+        for mod in mods {
+            switch mod.lowercased() {
+            case "cmd", "command", "⌘":       flags.insert(.maskCommand)
+            case "leftcmd", "leftcommand":    flags.insert(.maskCommand);   deviceBits |= leftCmdBit
+            case "rightcmd", "rightcommand":  flags.insert(.maskCommand);   deviceBits |= rightCmdBit
+            case "ctrl", "control", "⌃":     flags.insert(.maskControl)
+            case "leftctrl", "leftcontrol":   flags.insert(.maskControl);   deviceBits |= leftCtrlBit
+            case "rightctrl", "rightcontrol": flags.insert(.maskControl);   deviceBits |= rightCtrlBit
+            case "alt", "option", "⌥":       flags.insert(.maskAlternate)
+            case "leftalt", "leftoption":     flags.insert(.maskAlternate); deviceBits |= leftAltBit
+            case "rightalt", "rightoption":   flags.insert(.maskAlternate); deviceBits |= rightAltBit
+            case "shift", "⇧":               flags.insert(.maskShift)
+            case "leftshift":                 flags.insert(.maskShift);     deviceBits |= leftShiftBit
+            case "rightshift":                flags.insert(.maskShift);     deviceBits |= rightShiftBit
+            case "fn":                        flags.insert(.maskSecondaryFn)
+            default:
+                AKError("hs.eventtap.bindHotkey: Unknown modifier '\(mod)'")
+                return nil
+            }
+        }
+        return (flags, deviceBits)
     }
 }
 

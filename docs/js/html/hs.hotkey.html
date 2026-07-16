@@ -79,8 +79,7 @@
         <h3><a href="#bind">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased) -> HSHotkey</a></h3>
 
         <div class="description">Bind a hotkey
-(`cmd`, `shift`, `alt`, `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`,
-`leftAlt`, `rightAlt`, `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).</div>
+`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased) -> HSHotkey</code></pre>
@@ -98,7 +97,7 @@
                 <tr>
                     <td class="param-name">mods</td>
                     <td class="param-type">string[]</td>
-                    <td class="param-desc">An array of modifier key strings (e.g., [&quot;cmd&quot;, &quot;shift&quot;]). Supports generic names</td>
+                    <td class="param-desc">An array of modifier key strings (e.g., `[&quot;cmd&quot;, &quot;shift&quot;]`). Supported names:</td>
                 </tr>
                 <tr>
                     <td class="param-name">key</td>
@@ -126,10 +125,10 @@
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;,&quot;shift&quot;], &quot;h&quot;, () =&gt; {
     console.log(&quot;Hello!&quot;)
-})</code></pre>
+}, null)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L31" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:31</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L29" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:29</a>
         </div>
     </div>
     <div class="method" id="bindSpec">
@@ -189,7 +188,7 @@
 }, null)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L48" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:48</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:46</a>
         </div>
     </div>
     <div class="method" id="getKeyCodeMap">
@@ -210,7 +209,7 @@
         <pre><code class="language-js">console.log(hs.hotkey.getKeyCodeMap())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L56" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:56</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L54" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:54</a>
         </div>
     </div>
     <div class="method" id="getModifierMap">
@@ -231,7 +230,7 @@
         <pre><code class="language-js">console.log(hs.hotkey.getModifierMap())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:64</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L62" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:62</a>
         </div>
     </div>
     <div class="method" id="createModal">
@@ -282,7 +281,7 @@ const m2 = hs.hotkey.createModal([], &#39;&#39;)
 m2.enter()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L83" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:83</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L81" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:81</a>
         </div>
     </div>
         </main>

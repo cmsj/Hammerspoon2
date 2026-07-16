@@ -743,4 +743,190 @@ struct HSEventTapTests {
             #expect(!harness.hasException)
         }
     }
+
+    // MARK: - Suite 4: HSEventTapHotkey matching (Swift-level)
+
+    @Suite("HSEventTapHotkey matching tests")
+    struct HSEventTapHotkeyMatchingTests {
+
+        @MainActor
+        @Test("matches returns true for exact key and modifier")
+        func testMatchesExactKeyAndModifier() {
+            let coordinator = MockEventTapHotkeyCoordinator()
+            let hotkey = HSEventTapHotkey(
+                keyCode: 0x04,  // h
+                requiredFlags: [.maskCommand],
+                requiredDeviceBits: 0,
+                coordinator: coordinator
+            )
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x04, keyDown: true) else {
+                Issue.record("Could not create CGEvent")
+                return
+            }
+            event.flags = .maskCommand
+
+            #expect(hotkey.matches(event: event, type: .keyDown))
+        }
+
+        @MainActor
+        @Test("matches returns false when extra modifier is present")
+        func testMatchesReturnsFalseForExtraModifier() {
+            let coordinator = MockEventTapHotkeyCoordinator()
+            let hotkey = HSEventTapHotkey(
+                keyCode: 0x04,
+                requiredFlags: [.maskCommand],
+                requiredDeviceBits: 0,
+                coordinator: coordinator
+            )
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x04, keyDown: true) else {
+                Issue.record("Could not create CGEvent")
+                return
+            }
+            event.flags = [.maskCommand, .maskShift]  // extra shift
+
+            #expect(!hotkey.matches(event: event, type: .keyDown))
+        }
+
+        @MainActor
+        @Test("matches returns false for wrong key code")
+        func testMatchesReturnsFalseForWrongKey() {
+            let coordinator = MockEventTapHotkeyCoordinator()
+            let hotkey = HSEventTapHotkey(
+                keyCode: 0x04,  // h
+                requiredFlags: [.maskCommand],
+                requiredDeviceBits: 0,
+                coordinator: coordinator
+            )
+            withExtendedLifetime(coordinator) { _ = hotkey.enable() }
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x00, keyDown: true) else {
+                Issue.record("Could not create CGEvent")
+                return
+            }
+            event.flags = .maskCommand
+
+            #expect(!hotkey.matches(event: event, type: .keyDown))
+        }
+
+        @MainActor
+        @Test("matches returns false when hotkey is disabled")
+        func testMatchesReturnsFalseWhenDisabled() {
+            let coordinator = MockEventTapHotkeyCoordinator()
+            let hotkey = HSEventTapHotkey(
+                keyCode: 0x04,
+                requiredFlags: [.maskCommand],
+                requiredDeviceBits: 0,
+                coordinator: coordinator
+            )
+            // Do NOT enable
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x04, keyDown: true) else {
+                Issue.record("Could not create CGEvent")
+                return
+            }
+            event.flags = .maskCommand
+
+            #expect(!hotkey.matches(event: event, type: .keyDown))
+        }
+    }
+
+    // MARK: - Suite 5: bindHotkey API structure
+
+    @Suite("hs.eventtap.bindHotkey API structure tests")
+    struct HSEventTapBindHotkeyStructureTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSEventTapModule.self, as: "eventtap")
+            return harness
+        }
+
+        @Test("bindHotkey is a function")
+        func testBindHotkeyIsFunction() {
+            makeHarness().expectTrue("typeof hs.eventtap.bindHotkey === 'function'")
+        }
+
+        @Test("removeHotkey is a function")
+        func testRemoveHotkeyIsFunction() {
+            makeHarness().expectTrue("typeof hs.eventtap.removeHotkey === 'function'")
+        }
+
+        @Test("bindHotkey with valid args returns an object")
+        func testBindHotkeyReturnsObject() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.eventtap.bindHotkey(['cmd'], 'h', () => {}, () => {})")
+            harness.expectTrue("typeof hk === 'object' && hk !== null")
+            harness.expectTrue("typeof hk.enable === 'function'")
+            harness.expectTrue("typeof hk.disable === 'function'")
+            harness.expectTrue("typeof hk.isEnabled === 'function'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bindHotkey with fn modifier returns an object")
+        func testBindHotkeyFnModifier() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.eventtap.bindHotkey(['fn'], 'f1', () => {}, () => {})")
+            harness.expectTrue("typeof hk === 'object' && hk !== null")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bindHotkey with side-specific modifier returns an object")
+        func testBindHotkeySideSpecificModifier() {
+            let harness = makeHarness()
+            for mod in ["leftCmd", "rightCmd", "leftAlt", "rightAlt", "leftCtrl", "rightCtrl", "leftShift", "rightShift"] {
+                harness.eval("var hk = hs.eventtap.bindHotkey(['\(mod)'], 'a', () => {}, () => {})")
+                harness.expectTrue("typeof hk === 'object' && hk !== null")
+                #expect(!harness.hasException, "bindHotkey with '\(mod)' should succeed")
+            }
+        }
+
+        @Test("bindHotkey with unknown key returns null")
+        func testBindHotkeyUnknownKeyReturnsNull() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.eventtap.bindHotkey(['cmd'], 'notakey', () => {}, () => {})")
+            harness.expectTrue("hk === null || hk === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bindHotkey with unknown modifier returns null")
+        func testBindHotkeyUnknownModifierReturnsNull() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.eventtap.bindHotkey(['supermod'], 'h', () => {}, () => {})")
+            harness.expectTrue("hk === null || hk === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bindHotkey auto-enables the hotkey")
+        func testBindHotkeyAutoEnables() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.eventtap.bindHotkey(['cmd'], 'h', () => {}, () => {})")
+            harness.expectTrue("hk.isEnabled() === true")
+            #expect(!harness.hasException)
+        }
+
+        @Test("disable makes isEnabled return false")
+        func testBindHotkeyDisable() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.eventtap.bindHotkey(['cmd'], 'h', () => {}, () => {})")
+            harness.eval("hk.disable()")
+            harness.expectTrue("hk.isEnabled() === false")
+            #expect(!harness.hasException)
+        }
+
+        @Test("callbackPressed is settable after bindHotkey")
+        func testBindHotkeyCallbackSettable() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.eventtap.bindHotkey(['cmd'], 'h', () => {}, () => {})")
+            harness.eval("hk.callbackPressed = () => {}")
+            #expect(!harness.hasException)
+        }
+    }
 }
