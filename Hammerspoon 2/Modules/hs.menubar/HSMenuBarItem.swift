@@ -96,6 +96,19 @@ import JavaScriptCore
     /// console.log(item.title)
     /// ```
     @objc var title: String? { get set }
+
+    /// Permanently remove this item from the menu bar and release all resources.
+    ///
+    /// After calling `destroy()`, the item is no longer usable.
+    /// This is called automatically on `hs.reload()`. Use `hide()` instead
+    /// if you only want to temporarily remove the item without freeing it.
+    ///
+    /// - Example:
+    /// ```js
+    /// const item = hs.menubar.create()
+    /// item.destroy()
+    /// ```
+    @objc func destroy()
 }
 
 // MARK: - Implementation
@@ -127,7 +140,7 @@ import JavaScriptCore
         AKDebug("deinit of HSMenuBarItem")
     }
 
-    func destroy() {
+    @objc func destroy() {
         clearMenuHandlers()
         _clickCallback?.detach(from: self)
         _clickCallback = nil

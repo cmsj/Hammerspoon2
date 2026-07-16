@@ -93,6 +93,7 @@ import SwiftUI
     private var nsWindow: NSWindow?
     private let alertID: UUID = UUID()
     private weak var module: HSUIModule?
+    private var dismissTimer: Timer?
 
     init(message: String, module: HSUIModule) {
         self.message = message
@@ -100,9 +101,20 @@ import SwiftUI
         super.init()
     }
 
-    isolated deinit {
-        close()
-        AKDebug("deinit of HSUIAlert: \(alertID)")
+    deinit {
+        // In the normal shutdown path close() has already been called, so nsWindow is nil
+        // and this is a no-op. In the unexpected edge case where the object is freed without
+        // close() being called, dispatch AppKit cleanup to the main thread without retaining
+        // self (capturing only the NSWindow and UUID values).
+        guard let window = nsWindow else { return }
+        let id = alertID
+        let capturedModule = module
+        DispatchQueue.main.async {
+            capturedModule?.unregister(alert: id)
+            window.contentView = nil
+            window.delegate = nil
+            window.close()
+        }
     }
 
     // MARK: - Builder Methods
@@ -161,10 +173,11 @@ import SwiftUI
         // Register with module to prevent premature deallocation
         module?.register(self, id: alertID)
 
-        // Auto-dismiss after duration
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(duration))
-            close()
+        // Auto-dismiss after duration. Timer uses [weak self] so it does NOT keep the
+        // alert alive — if the alert is closed early the timer fires harmlessly on nil.
+        // assumeIsolated is safe because scheduledTimer adds to RunLoop.current (main).
+        dismissTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.close() }
         }
 
         return self
@@ -173,9 +186,15 @@ import SwiftUI
     @objc func close() {
         guard nsWindow != nil else { return } // Already closed
 
+        dismissTimer?.invalidate()
+        dismissTimer = nil
+
         // Unregister from module
         module?.unregister(alert: alertID)
 
+        // Explicitly nil the contentView so UIAlertView (which holds a strong ref back
+        // to self) is released synchronously before AppKit's async window cleanup runs.
+        nsWindow?.contentView = nil
         nsWindow?.delegate = nil
         nsWindow?.orderOut(nil)
         nsWindow?.close()

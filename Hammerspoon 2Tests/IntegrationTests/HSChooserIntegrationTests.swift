@@ -426,4 +426,32 @@ struct HSChooserTests {
             #expect(!harness.hasException)
         }
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSChooser is released after shutdown")
+    func testChooserDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSChooserModule.self, as: "chooser")
+            // Set choices and callbacks to exercise the JSCallback paths for
+            // onSelect and onQueryChange, then show() to activate the panel.
+            // shutdown() calls destroy() on all tracked choosers, closing the
+            // panel and detaching all callbacks.
+            harness.eval("""
+                var c = hs.chooser.create()
+                c.setChoices([{text: 'Option A'}, {text: 'Option B'}])
+                c.onSelect = function(item) {}
+                c.onQueryChange = function(q) {}
+                c.show()
+            """)
+            if let obj = harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser {
+                tracker.track(obj)
+            }
+            harness.eval("c = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

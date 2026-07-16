@@ -201,4 +201,31 @@ struct HSNotifyTests {
             harness.expectTrue("typeof hs.permissions.checkNotifications() === 'boolean'")
         }
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Sent HSNotification is released after shutdown")
+    func testNotificationDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSNotifyModule.self, as: "notify")
+            // send() schedules the notification and exercises the JSCallback/JSManagedValue
+            // ownership path. The notification attempt may fail in test runners without
+            // notification permission; that is fine — the object is still created and used.
+            // HSNotification is purely JS-owned (no HSWeakObjectSet in the module), so after
+            // JS drops it and sync GC runs, the JSManagedValue loses its owner and the
+            // notification is freed.
+            harness.eval("""
+                var n = hs.notify.create({ title: 'Leak Test', body: 'Test', callback: function(r) {} })
+                n.send()
+            """)
+            if let obj = harness.evalValue("n")?.toObjectOf(HSNotification.self) as? HSNotification {
+                tracker.track(obj)
+            }
+            harness.eval("n = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

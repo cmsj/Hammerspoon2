@@ -793,4 +793,31 @@ struct HSSpotlightTests {
             #expect(!harness.hasException)
         }
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSSpotlightQuery is released after shutdown")
+    func testSpotlightQueryDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSSpotlightModule.self, as: "spotlight")
+            // Start a real Spotlight query (intentionally unmatchable predicate to avoid
+            // flooding results). NSNotificationCenter holds HSSpotlightQuery strongly via
+            // the observer registered in init(). shutdown() → destroy() → stop() + teardown
+            // removes the observers, releasing that strong ref and freeing the query.
+            harness.eval("""
+                var q = hs.spotlight.create()
+                q.setQuery("kMDItemFSName == 'NONEXISTENT_HS2_LEAK_TEST_FILE'")
+                 .setCallback(function(event, update) {})
+                 .start()
+            """)
+            if let obj = harness.evalValue("q")?.toObjectOf(HSSpotlightQuery.self) as? HSSpotlightQuery {
+                tracker.track(obj)
+            }
+            harness.eval("q = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }

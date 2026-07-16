@@ -140,7 +140,9 @@ harness.expectException()
 ## Standard test suites for a new module
 
 Every new module should have **at minimum** two suites in its test file, both nested
-inside a top-level wrapper suite (see **Test structure** above).
+inside a top-level wrapper suite (see **Test structure** above). If the module produces
+JS-exported child objects (factory/constructor methods that return `HSFoo` instances),
+a **memory leak test is also mandatory** — see **Memory leak tests** below.
 
 ### Suite 1: API structure (mandatory, runs everywhere)
 
@@ -269,6 +271,106 @@ struct HSFooTests {
 
 The guard function MUST be `nonisolated` so it can be called from the `.disabled`
 trait expression, which is evaluated outside any actor.
+
+---
+
+## Memory leak tests (mandatory for object-producing modules)
+
+Any module whose API lets JS create instances of a Swift class (`HSTimer`,
+`HSHotkey`, `HSBonjourSearch`, etc.) **must** have at least one leak test.
+These tests verify that after `hs.reload()` (simulated by `shutdownForLeakTest()`)
+every child object is properly freed — no strong-reference cycles, no stale
+`NSNotificationCenter` observers, no `selfRetain` left set.
+
+### Tools
+
+**`WeakLeakTracker`** — holds weak references to tracked objects without
+preventing their deallocation. Call `tracker.track(swiftObj)` while the object is
+alive, then `tracker.assertNoLeaks()` after everything is torn down.
+
+**`harness.shutdownForLeakTest()`** — calls `module.shutdown()` on every loaded
+module, removes `hs` from the JS global object, then runs
+`JSSynchronousGarbageCollectForDebugging` so ObjC bridge finalizers execute
+before the function returns.
+
+### Mandatory pattern
+
+```swift
+// MARK: - Memory Leak Tests
+
+@Test("Active HSFoo is released after shutdown")
+func testFooDoesNotLeakAfterReload() {
+    let tracker = WeakLeakTracker()
+    autoreleasepool {
+        let harness = JSTestHarness()
+        harness.loadModule(HSFooModule.self, as: "foo")
+
+        // 1. CREATE the object
+        harness.eval("var obj = hs.foo.create(…)")
+
+        // 2. ACTIVELY USE IT — call start(), send(), enter(), findServices(), etc.
+        //    Do not just create and immediately discard. The goal is to exercise
+        //    the path where the object holds OS resources when shutdown is called.
+        harness.eval("obj.start()")
+
+        // 3. TRACK the underlying Swift object while it is still alive
+        if let swift = harness.evalValue("obj")?.toObjectOf(HSFoo.self) as? HSFoo {
+            tracker.track(swift)
+        }
+
+        // 4. Drop the JS reference, then shut down
+        harness.eval("obj = null")
+        harness.shutdownForLeakTest()
+    } // autorelease pool drained here; JSValue ObjC refs released, JSContext freed
+    tracker.assertNoLeaks()
+}
+```
+
+### Rules
+
+| Rule | Reason |
+|---|---|
+| Wrap harness in an `autoreleasepool {}` block | Drains ObjC autorelease pool (including `JSValue`s from `eval()`) so the `JSContext` is freed before the weak-ref check runs — a plain `do {}` block does **not** drain the pool and will silently miss leaks |
+| Track the object **before** nulling the JS var | `evalValue()` returns nil after the var is cleared |
+| Extract the Swift object with `toObjectOf(T.self)` | All child types are `@objc class` NSObject subclasses; this cast is safe |
+| Call `shutdownForLeakTest()` **inside** the `autoreleasepool {}` block | Sync GC must run while the context is still alive |
+| Call `assertNoLeaks()` **outside** the `autoreleasepool {}` block | The context (and any bridged objects) must be released first |
+| **Start/use the object actively** — see table below | An unstarted object skips the interesting cleanup paths (selfRetain, NSNotificationCenter observers, OS browser delegates, taskTracker strong refs, etc.) |
+
+### What "actively using" means per object type
+
+| Object | How to activate |
+|---|---|
+| `HSTimer` (repeating) | `hs.timer.doEvery(0.05, fn)` + `RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))` so it fires |
+| `HSTimer` (one-shot) | `hs.timer.doAfter(0.05, fn)` + same run-loop drain |
+| `HSHotkey` | `bind()` already enables it; add `hk.disable()` + `hk.enable()` to cycle state |
+| `HSHotkeyModal` | `modal.bind(…)` to add hotkeys + `modal.enter()` to make it active |
+| `HSEventTap` | `tap.start()` — succeeds with Accessibility, fails silently without it; `destroy()` handles both |
+| `HSSpotlightQuery` | `q.setQuery("…").setCallback(fn).start()` — use an intentionally unmatchable predicate |
+| `HSNotification` | `n.send()` — display may fail without permission; the object is still used |
+| `HSBonjourSearch` | `search.findServices('_http._tcp.', 'local.', fn)` to start browsing |
+| `HSTask` | `t.start()` with a long-running command (`/bin/sleep 10`) so the process is definitely alive when `shutdown()` is called |
+
+### Why each object type needs specific handling
+
+- **Timers** — Foundation `Timer(target:selector:)` holds a strong ref to `HSTimer`
+  as its target until `invalidate()` is called. `shutdown()` → `destroy()` → `stop()`
+  → `invalidate()` is the only release path.
+- **Hotkeys** — `enabledHotkeys` is a **strong** array in `HSHotkeyModule`. Enabled
+  hotkeys are not freed until `shutdown()` clears the array.
+- **EventTaps** — `start()` sets `selfRetain = self` to keep the tap alive while
+  capturing events. `destroy()` → `stop()` clears it.
+- **SpotlightQuery / BonjourSearch** — `NSNotificationCenter` and
+  `NSNetServiceBrowser` hold strong delegate/observer refs. `destroy()` removes
+  them; without `destroy()` these objects can never be freed.
+- **Tasks** — `registerActiveTask()` stores the task in a **strong** `taskTracker`
+  inside the module. It is released only when the module itself is freed.
+
+### One test per object type is sufficient
+
+You do not need separate tests for "created but not started" and "active". A single
+test that actively uses the object is more valuable than two tests where one skips
+the interesting cleanup paths.
 
 ---
 
@@ -477,3 +579,4 @@ and record all call arguments so tests can assert on them.
 - [ ] Async tests use `waitForAsync` or `waitFor` rather than `Thread.sleep` where possible
 - [ ] State-mutating tests use `.serialized` and save/restore shared state
 - [ ] Nothing triggers permission dialogs, hardware mutations, or live network calls
+- [ ] **If the module creates child JS objects**: a `testFooDoesNotLeakAfterReload()` test exists that (a) creates AND actively starts the object, (b) tracks it with `WeakLeakTracker`, (c) wraps the harness in an `autoreleasepool {}` block, and (d) calls `tracker.assertNoLeaks()` after the block

@@ -883,4 +883,33 @@ struct HSHTTPTests {
             #expect(closed, "Server should fire closed event when client disconnects")
         }
     }
+
+    // MARK: - Memory Leak Tests
+
+    @Test("Active HSHTTPServer is released after shutdown")
+    func testHTTPServerDoesNotLeakAfterReload() {
+        let tracker = WeakLeakTracker()
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSHTTPServerModule.self, as: "httpserver")
+            // Create the server, set a request callback (exercising the JSCallback path),
+            // then start() it on port 0 (OS-assigned) so it is actively listening.
+            // shutdown() → destroy() stops the Network.framework listener and detaches
+            // all callbacks.
+            harness.eval("""
+                var server = hs.httpserver.create()
+                server.setPort(0)
+                      .setCallback(function(method, path, headers, body) {
+                          return { code: 200, body: 'ok', headers: {} }
+                      })
+                      .start()
+            """)
+            if let obj = harness.evalValue("server")?.toObjectOf(HSHTTPServer.self) as? HSHTTPServer {
+                tracker.track(obj)
+            }
+            harness.eval("server = null")
+            harness.shutdownForLeakTest()
+        }
+        tracker.assertNoLeaks()
+    }
 }
