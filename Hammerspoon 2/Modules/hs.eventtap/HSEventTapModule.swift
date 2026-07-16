@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import CoreGraphics
 import AppKit
 
@@ -742,11 +743,11 @@ import AppKit
             AKError("hs.eventtap.bindHotkey: Unknown key '\(key)'")
             return nil
         }
-        guard callbackPressed.isObject || callbackPressed.isNull else {
+        guard callbackPressed.isFunction || callbackPressed.isNull else {
             AKError("hs.eventtap.bindHotkey: callbackPressed must be a function or null")
             return nil
         }
-        guard callbackReleased.isObject || callbackReleased.isNull else {
+        guard callbackReleased.isFunction || callbackReleased.isNull else {
             AKError("hs.eventtap.bindHotkey: callbackReleased must be a function or null")
             return nil
         }
