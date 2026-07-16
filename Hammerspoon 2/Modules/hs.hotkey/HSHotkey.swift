@@ -196,6 +196,7 @@ class HotkeyManager {
         if let handler = unsafe eventHandler {
             unsafe RemoveEventHandler(handler)
         }
+        unsafe contextPtr?.deinitialize(count: 1)
         unsafe contextPtr?.deallocate()
     }
 
