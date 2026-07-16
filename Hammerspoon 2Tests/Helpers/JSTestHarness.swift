@@ -173,9 +173,10 @@ class JSTestHarness {
     /// 3. Runs `JSSynchronousGarbageCollectForDebugging` while the context is still alive,
     ///    ensuring JSC bridge finalizers (CFRelease) run synchronously before returning.
     ///
-    /// Call this **inside** the `do {}` block that also holds your JSValue locals so
-    /// those locals go out of scope (releasing their ObjC strong refs) together with the
-    /// harness. Then call `WeakLeakTracker.assertNoLeaks()` outside the block.
+    /// Call this **inside** the `autoreleasepool {}` block that also holds your `JSValue`
+    /// locals so those autoreleased values are drained (releasing the ObjC strong refs to
+    /// their `JSContext`) together with the harness. Then call
+    /// `WeakLeakTracker.assertNoLeaks()` outside the block.
     func shutdownForLeakTest() {
         for (_, module) in loadedModulesDict {
             module.shutdown()
