@@ -175,9 +175,9 @@ import SwiftUI
 
         // Auto-dismiss after duration. Timer uses [weak self] so it does NOT keep the
         // alert alive — if the alert is closed early the timer fires harmlessly on nil.
-        // Dispatch to main to satisfy actor isolation (timer fires on main RunLoop anyway).
+        // assumeIsolated is safe because scheduledTimer adds to RunLoop.current (main).
         dismissTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
-            DispatchQueue.main.async { self?.close() }
+            MainActor.assumeIsolated { self?.close() }
         }
 
         return self
