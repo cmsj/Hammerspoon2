@@ -2073,7 +2073,11 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
     /**
      * Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the
 `fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).
-The hotkey is active immediately and consumes (suppresses) the key event by default.
+The hotkey is active immediately and consumes (suppresses) the key events.
+It's important to note that this a much heavier-weight tool than `hs.hotkey` - every single
+key you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys
+(where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please
+consider this when choosing to use `hs.eventtap` for hotkeys.
 Requires Accessibility permission.
 `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
 `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).

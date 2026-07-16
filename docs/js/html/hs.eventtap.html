@@ -892,7 +892,11 @@ console.log(&quot;Mouse at &quot; + pos.x + &quot;, &quot; + pos.y)</code></pre>
 
         <div class="description">Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the
 `fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).
-The hotkey is active immediately and consumes (suppresses) the key event by default.
+The hotkey is active immediately and consumes (suppresses) the key events.
+It&#39;s important to note that this a much heavier-weight tool than `hs.hotkey` - every single
+key you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys
+(where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please
+consider this when choosing to use `hs.eventtap` for hotkeys.
 Requires Accessibility permission.
 `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
 `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).</div>
@@ -950,7 +954,7 @@ const hk2 = hs.eventtap.bindHotkey([&quot;leftCmd&quot;], &quot;h&quot;, () =&gt
 }, null)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L386" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:386</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L391" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:391</a>
         </div>
     </div>
     <div class="method" id="removeHotkey">
@@ -988,7 +992,7 @@ const hk2 = hs.eventtap.bindHotkey([&quot;leftCmd&quot;], &quot;h&quot;, () =&gt
 hs.eventtap.removeHotkey(hk)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L395" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:395</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.eventtap/HSEventTapModule.swift#L400" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift:400</a>
         </div>
     </div>
         </main>

@@ -5037,8 +5037,8 @@
           "name": "bindHotkey",
           "signature": "func bindHotkey(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSEventTapHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the\n`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).\nThe hotkey is active immediately and consumes (suppresses) the key event by default.\n\nRequires Accessibility permission.\n\n- Parameters:\n  - mods: An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,\n    `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,\n    `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).\n  - key: The key name or character (e.g., \"a\", \"space\", \"f1\")\n  - callbackPressed: {(() => void) | null} Called when the key combination is pressed, or null\n  - callbackReleased: {(() => void) | null} Called when the key combination is released, or null\n- Returns: An `HSEventTapHotkey` object, or null if binding failed\n- Example:\n```js\n// Bind Fn+F1 — not possible with hs.hotkey\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {\n    console.log(\"Fn+F1 pressed!\")\n}, null)\n\n// Bind left-Cmd+H only (right Cmd+H passes through)\nconst hk2 = hs.eventtap.bindHotkey([\"leftCmd\"], \"h\", () => {\n    console.log(\"Left Cmd+H!\")\n}, null)\n```",
-          "description": "Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the\n`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).\nThe hotkey is active immediately and consumes (suppresses) the key event by default.\nRequires Accessibility permission.\n`ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,\n`leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).",
+          "rawDocumentation": "Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the\n`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).\nThe hotkey is active immediately and consumes (suppresses) the key events.\n\nIt's important to note that this a much heavier-weight tool than `hs.hotkey` - every single\nkey you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys\n(where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please\nconsider this when choosing to use `hs.eventtap` for hotkeys.\n\nRequires Accessibility permission.\n\n- Parameters:\n  - mods: An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,\n    `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,\n    `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).\n  - key: The key name or character (e.g., \"a\", \"space\", \"f1\")\n  - callbackPressed: {(() => void) | null} Called when the key combination is pressed, or null\n  - callbackReleased: {(() => void) | null} Called when the key combination is released, or null\n- Returns: An `HSEventTapHotkey` object, or null if binding failed\n- Example:\n```js\n// Bind Fn+F1 — not possible with hs.hotkey\nconst hk = hs.eventtap.bindHotkey([\"fn\"], \"f1\", () => {\n    console.log(\"Fn+F1 pressed!\")\n}, null)\n\n// Bind left-Cmd+H only (right Cmd+H passes through)\nconst hk2 = hs.eventtap.bindHotkey([\"leftCmd\"], \"h\", () => {\n    console.log(\"Left Cmd+H!\")\n}, null)\n```",
+          "description": "Bind a keyboard shortcut using an event tap. Unlike `hs.hotkey.bind()`, this supports the\n`fn` modifier and left/right modifier key distinction (e.g. `leftCmd`, `rightAlt`).\nThe hotkey is active immediately and consumes (suppresses) the key events.\nIt's important to note that this a much heavier-weight tool than `hs.hotkey` - every single\nkey you press will be examined by Hammerspoon to see if it matches one of the EventTap hotkeys\n(where `hs.hotkey` relies on macOS to efficiently deliver only matching keypresses). Please\nconsider this when choosing to use `hs.eventtap` for hotkeys.\nRequires Accessibility permission.\n`ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,\n`leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).",
           "params": [
             {
               "name": "mods",
@@ -5082,7 +5082,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 386
+          "lineNumber": 391
         },
         {
           "name": "removeHotkey",
@@ -5109,7 +5109,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 395
+          "lineNumber": 400
         }
       ],
       "properties": [
@@ -7126,7 +7126,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 28
+          "lineNumber": 29
         },
         {
           "name": "bindSpec",
@@ -7184,7 +7184,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 45
+          "lineNumber": 46
         },
         {
           "name": "getKeyCodeMap",
@@ -7206,7 +7206,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 53
+          "lineNumber": 54
         },
         {
           "name": "getModifierMap",
@@ -7228,7 +7228,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 61
+          "lineNumber": 62
         },
         {
           "name": "createModal",
@@ -7265,7 +7265,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 80
+          "lineNumber": 81
         }
       ],
       "properties": [],
@@ -18840,5 +18840,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-15T12:33:26.520Z"
+  "generatedAt": "2026-07-16T15:12:06.389Z"
 }
