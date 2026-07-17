@@ -16,6 +16,7 @@
 		4F947D922F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F947DA62F56404F00DD814E /* OSAKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F947DA52F56404F00DD814E /* OSAKit.framework */; };
 		4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 4FACE0032F12345678900000 /* JavaScriptCoreExtras */; };
+		4FCE0A032F00000000000003 /* CommandLineKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4FCE0A022F00000000000002 /* CommandLineKit */; };
 		4FE4C00C2F0000000000000C /* hs in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FE4C0012F00000000000001 /* hs */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -165,6 +166,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FCE0A032F00000000000003 /* CommandLineKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,6 +337,7 @@
 			);
 			name = hs;
 			packageProductDependencies = (
+				4FCE0A022F00000000000002 /* CommandLineKit */,
 			);
 			productName = hs;
 			productReference = 4FE4C0012F00000000000001 /* hs */;
@@ -378,6 +381,7 @@
 				4F488B2E2E97E79800A2B5F4 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				4F463E9E2EA7A669000A2135 /* XCRemoteSwiftPackageReference "AXSwift" */,
 				4FACE0012F12345678900000 /* XCRemoteSwiftPackageReference "javascript-core-extras" */,
+				4FCE0A012F00000000000001 /* XCRemoteSwiftPackageReference "swift-commandlinekit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4F5641842E8333830099EB4C /* Products */;
@@ -970,6 +974,14 @@
 				kind = branch;
 			};
 		};
+		4FCE0A012F00000000000001 /* XCRemoteSwiftPackageReference "swift-commandlinekit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/objecthub/swift-commandlinekit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -987,6 +999,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4FACE0012F12345678900000 /* XCRemoteSwiftPackageReference "javascript-core-extras" */;
 			productName = JavaScriptCoreExtras;
+		};
+		4FCE0A022F00000000000002 /* CommandLineKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FCE0A012F00000000000001 /* XCRemoteSwiftPackageReference "swift-commandlinekit" */;
+			productName = CommandLineKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -8,24 +8,11 @@
 
 import Foundation
 import Network
+import CommandLineKit
 
 // MARK: - Constants
 
 private let defaultPort: UInt16 = 51423
-
-// MARK: - ANSI helpers
-
-// nonisolated so these constants are accessible from the actor's executor
-// (SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor would otherwise infer @MainActor here).
-private enum ANSI {
-    nonisolated static let reset  = "\u{1B}[0m"
-    nonisolated static let bold   = "\u{1B}[1m"
-    nonisolated static let red    = "\u{1B}[31m"
-    nonisolated static let yellow = "\u{1B}[33m"
-    nonisolated static let green  = "\u{1B}[32m"
-    nonisolated static let blue   = "\u{1B}[34m"
-    nonisolated static let gray   = "\u{1B}[90m"
-}
 
 // MARK: - Log levels (must match HammerspoonLogType raw values)
 
@@ -34,22 +21,22 @@ private enum LogLevel: Int, CaseIterable {
 
     nonisolated init?(string: String) {
         switch string.lowercased() {
-        case "trace", "debug":          self = .trace
-        case "info":                    self = .info
-        case "warning", "warn":         self = .warning
-        case "error":                   self = .error
+        case "trace", "debug":              self = .trace
+        case "info":                        self = .info
+        case "warning", "warn":             self = .warning
+        case "error":                       self = .error
         case "javascript", "console", "js": self = .console
         default: return nil
         }
     }
 
-    nonisolated var color: String {
+    nonisolated var textProperties: TextProperties {
         switch self {
-        case .trace:   return ANSI.gray
-        case .info:    return ANSI.blue
-        case .warning: return ANSI.yellow
-        case .error:   return ANSI.red
-        case .console: return ANSI.green
+        case .trace:   return TextProperties(.grey, nil)
+        case .info:    return TextProperties(.blue, nil, .bold)
+        case .warning: return TextProperties(.yellow, nil, .bold)
+        case .error:   return TextProperties(.red, nil, .bold)
+        case .console: return TextProperties(.green, nil, .bold)
         }
     }
 
@@ -64,44 +51,7 @@ private enum LogLevel: Int, CaseIterable {
     }
 }
 
-// MARK: - Argument parsing
-
-private struct Arguments {
-    var port: UInt16 = defaultPort
-    var minLogLevel: Int = Int.max   // Int.max → suppress all log messages
-    var showPrompt: Bool = true
-}
-
-private func parseArguments() -> Arguments {
-    var result = Arguments()
-    let argv = CommandLine.arguments
-    var idx = 1
-    while idx < argv.count {
-        switch argv[idx] {
-        case "--port", "-p":
-            idx += 1
-            if idx < argv.count, let p = UInt16(argv[idx]) { result.port = p }
-        case "--log-level", "-l":
-            idx += 1
-            if idx < argv.count {
-                if let level = LogLevel(string: argv[idx]) {
-                    result.minLogLevel = level.rawValue
-                } else if argv[idx].lowercased() == "none" {
-                    result.minLogLevel = Int.max
-                }
-            }
-        case "--no-prompt":
-            result.showPrompt = false
-        case "--help", "-h":
-            printHelp()
-            exit(0)
-        default:
-            break
-        }
-        idx += 1
-    }
-    return result
-}
+// MARK: - Helpers
 
 private func writeStderr(_ s: String) {
     if let data = s.data(using: .utf8) {
@@ -109,20 +59,22 @@ private func writeStderr(_ s: String) {
     }
 }
 
-private func printHelp() {
+// MARK: - Argument parsing
+
+private var flags = Flags()
+private let portFlag     = flags.int("p", "port",      description: "Connect to port (default: \(defaultPort))", value: Int(defaultPort))
+private let logLevelFlag = flags.string("l", "log-level", description: "Show log messages at or above this level.\nLevels: trace  info  warning  error  javascript\nDefault: none (no log messages shown)")
+private let noPromptFlag = flags.option(nil, "no-prompt",   description: "Suppress 'hs> ' prompt (useful when piping input)")
+private let helpFlag     = flags.option("h", "help",        description: "Show this help")
+
+if let failure = flags.parsingFailure() {
+    writeStderr("error: \(failure)\n")
+    exit(1)
+}
+
+if helpFlag.wasSet {
+    print(flags.usageDescription(usageName: "USAGE", synopsis: "hs [options]", optionsName: "OPTIONS"))
     print("""
-    hs — Hammerspoon 2 interactive REPL
-
-    USAGE
-      hs [options]
-
-    OPTIONS
-      -p, --port <n>          Connect to port (default: \(defaultPort))
-      -l, --log-level <lvl>   Show log messages at or above this level.
-                              Levels: trace  info  warning  error  javascript
-                              Default: none (no log messages shown)
-          --no-prompt         Suppress "hs> " prompt (useful when piping input)
-      -h, --help              Show this help
 
     SETUP
       Add to your Hammerspoon 2 config (init.js):
@@ -132,10 +84,23 @@ private func printHelp() {
     INSTALL THE BINARY
       From the Hammerspoon 2 JavaScript console:
         hs.ipc.installBinary()              // installs to /usr/local/bin/hs
-        hs.ipc.installBinary("/usr/bin")    // custom directory
-
+        hs.ipc.installBinary("/opt/homebrew/bin")
     """)
+    exit(0)
 }
+
+private let port: UInt16 = {
+    let raw = portFlag.value ?? Int(defaultPort)
+    return UInt16(clamping: max(1, min(raw, 65535)))
+}()
+
+private let showPrompt = !noPromptFlag.wasSet
+
+private let minLogLevel: Int = {
+    guard let str = logLevelFlag.value else { return Int.max }
+    if str.lowercased() == "none" { return Int.max }
+    return LogLevel(string: str)?.rawValue ?? Int.max
+}()
 
 // MARK: - IPC client
 //
@@ -272,7 +237,7 @@ private actor IPCClient {
         }
         if isComplete || error != nil {
             if let error {
-                print("\(ANSI.red)Connection lost: \(error.localizedDescription)\(ANSI.reset)")
+                print(TextProperties(.red, nil).apply(to: "Connection lost: \(error.localizedDescription)"))
             }
             if let cb = evalContinuation {
                 evalContinuation = nil
@@ -299,7 +264,7 @@ private actor IPCClient {
         switch type {
         case "connected":
             let p = (json["port"] as? Int).map { "\($0)" } ?? "\(port)"
-            print("\(ANSI.blue)Connected to Hammerspoon 2 on port \(p)\(ANSI.reset)")
+            print(TextProperties(.blue, nil).apply(to: "Connected to Hammerspoon 2 on port \(p)"))
             if showPrompt { print("Type JavaScript to evaluate. Use --help for options.") }
 
         case "result":
@@ -315,9 +280,8 @@ private actor IPCClient {
                   let message = json["message"] as? String,
                   let level = LogLevel(string: levelStr),
                   level.rawValue >= minLogLevel else { return }
-            // '\n' before the message keeps the output clean even if a prompt is showing.
-            print("\n\(level.color)\(ANSI.bold)[\(level.label)]\(ANSI.reset) \(message)")
-            if showPrompt { print("hs> ", terminator: "") }
+            // '\n' before the message keeps output clean even when a prompt is showing.
+            print("\n\(level.textProperties.apply(to: "[\(level.label)]")) \(message)")
 
         default:
             break
@@ -329,29 +293,43 @@ private actor IPCClient {
 //
 // Top-level `await` makes the program entry point async (@MainActor by default isolation).
 // The `IPCClient` actor runs on the Swift cooperative pool so NWConnection callbacks
-// and log message printing are not blocked by `readLine()` on the main thread.
+// and log message printing are not blocked by readline on the main thread.
 
-private let args = parseArguments()
-private let client = IPCClient(port: args.port, minLogLevel: args.minLogLevel, showPrompt: args.showPrompt)
+private let client = IPCClient(port: port, minLogLevel: minLogLevel, showPrompt: showPrompt)
 
 do {
     try await client.connect()
 } catch {
-    writeStderr("Error: Cannot connect to Hammerspoon 2 on port \(args.port).\n")
+    writeStderr("Error: Cannot connect to Hammerspoon 2 on port \(port).\n")
     writeStderr("Make sure Hammerspoon 2 is running and IPC is enabled:\n")
     writeStderr("  hs.ipc.start()        // default port \(defaultPort)\n")
-    writeStderr("  hs.ipc.start(\(args.port))  // this port\n")
+    writeStderr("  hs.ipc.start(\(port))  // this port\n")
     exit(1)
 }
 
-// REPL loop — readLine() blocks the main thread but the actor's cooperative-pool
-// executor is unaffected, so log messages and eval results are still delivered.
+// REPL loop — LineReader provides readline-style editing and history when stdin is a
+// terminal. For piped input or --no-prompt mode we fall back to plain readLine().
+private let lineReader = showPrompt ? LineReader() : nil
+
 while true {
-    if args.showPrompt {
-        print("hs> ", terminator: "")
+    let rawLine: String?
+
+    if let lr = lineReader {
+        do {
+            rawLine = try lr.readLine(
+                prompt: "hs> ",
+                promptProperties: TextProperties(.blue, nil, .bold)
+            )
+        } catch LineReaderError.CTRLC {
+            rawLine = nil
+        } catch {
+            rawLine = nil
+        }
+    } else {
+        rawLine = readLine(strippingNewline: true)
     }
 
-    guard let line = readLine(strippingNewline: true) else {
+    guard let line = rawLine else {
         await client.disconnect()
         break
     }
@@ -359,10 +337,12 @@ while true {
     let code = line.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !code.isEmpty else { continue }
 
+    lineReader?.addHistory(code)
+
     let (result, isError) = await client.eval(code: code)
 
     if isError {
-        print("\(ANSI.red)\(result)\(ANSI.reset)")
+        print(TextProperties(.red, nil).apply(to: result))
     } else if result != "undefined" {
         print(result)
     }
