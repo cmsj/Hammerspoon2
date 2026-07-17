@@ -64,6 +64,7 @@ import JavaScriptCoreExtras
     @objc var translation: HSTranslationModule { get }
     @objc var ui: HSUIModule { get }
     @objc var urlevent: HSURLEventModule { get }
+    @objc var usb: HSUSBModule { get }
     @objc var window: HSWindowModule { get }
 }
 
@@ -177,6 +178,7 @@ import JavaScriptCoreExtras
     @objc var translation: HSTranslationModule { get { getOrCreate(name: "translation", type: HSTranslationModule.self)}}
     @objc var ui: HSUIModule { get { getOrCreate(name: "ui", type: HSUIModule.self)}}
     @objc var urlevent: HSURLEventModule { get { getOrCreate(name: "urlevent", type: HSURLEventModule.self)}}
+    @objc var usb: HSUSBModule { get { getOrCreate(name: "usb", type: HSUSBModule.self)}}
     @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
 }
 

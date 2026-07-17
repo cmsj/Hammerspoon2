@@ -779,7 +779,7 @@ import AppKit
 
     func tapHotkeyDidEnable(_ hotkey: HSEventTapHotkey) -> Bool {
         enabledTapHotkeys.append(hotkey)
-        startDispatchTapIfNeeded()  // best-effort — fails silently without Accessibility
+        _ = startDispatchTapIfNeeded()  // best-effort — fails silently without Accessibility
         return true
     }
 

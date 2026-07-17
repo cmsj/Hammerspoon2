@@ -17036,6 +17036,91 @@
       "rawDocumentation": "Handle URL events received by Hammerspoon 2.\n\nThe module responds to `hammerspoon2://` URLs and, when Hammerspoon 2 is\nconfigured as the system default handler, also to `http://`, `https://`,\nand `mailto:` URLs.\n\n## Responding to custom hammerspoon2:// events\n\nURLs take the form `hammerspoon2://eventName?key=value&key2=value2`.\nThe host component (`eventName`) selects the registered callback.\n\n```js\nhs.urlevent.bind(\"myEvent\", (eventName, params, pid, url) => {\n    console.log(\"param foo = \" + params[\"foo\"])\n})\n\n// Remove a binding\nhs.urlevent.bind(\"myEvent\", null)\n```\n\n## Intercepting http / https / mailto URLs\n\nSet `hs.urlevent.httpCallback` (or `mailtoCallback`) to a function.\nYou must also set Hammerspoon 2 as the system default handler for the\nrelevant scheme — see `setDefaultHandler(_:_:)`.\n\n```js\nhs.urlevent.httpCallback = (scheme, host, params, fullURL, pid) => {\n    // Forward to a real browser rather than swallowing the link\n    hs.urlevent.openURLWithBundle(fullURL, \"com.apple.safari\")\n}\n```\n\n## Querying and changing default handlers\n\n```js\nconst current = hs.urlevent.getDefaultHandler(\"https\")\nconsole.log(\"Current HTTPS handler: \" + current)\n\nconst all = hs.urlevent.getAllHandlersForScheme(\"https\")\nconsole.log(\"Available: \" + all.join(\", \"))\n\nhs.urlevent.setDefaultHandler(\"https\", \"com.apple.safari\")\n```"
     },
     {
+      "name": "hs.usb",
+      "methods": [
+        {
+          "name": "attachedDevices",
+          "signature": "func attachedDevices() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns all currently attached USB devices.\n\n- Returns: An array of objects describing each attached USB device. Each object has `productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number). `serialNumber` (string) and `locationID` (number) are included when available.\n- Example:\n```js\nconst devices = hs.usb.attachedDevices()\ndevices.forEach(d => console.log(d.vendorName + \" \" + d.productName))\n```",
+          "description": "Returns all currently attached USB devices.",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of objects describing each attached USB device. Each object has `productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number). `serialNumber` (string) and `locationID` (number) are included when available."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const devices = hs.usb.attachedDevices()\ndevices.forEach(d => console.log(d.vendorName + \" \" + d.productName))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.usb/HSUSBModule.swift",
+          "lineNumber": 68
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ listener: JSValue)",
+          "isStatic": false,
+          "rawDocumentation": "Register a listener for USB device connection and disconnection events.\n\nThe listener is called with two arguments: the event type string (`\"added\"` or `\"removed\"`) and a device-info object with the same fields as `attachedDevices()`.\n- Parameter listener: {(event: string, device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void} The function to call when a USB device is added or removed\n- Example:\n```js\nhs.usb.addWatcher((event, device) => {\n  console.log(event + \": \" + device.productName + \" by \" + device.vendorName)\n})\n```",
+          "description": "Register a listener for USB device connection and disconnection events.\nThe listener is called with two arguments: the event type string (`\"added\"` or `\"removed\"`) and a device-info object with the same fields as `attachedDevices()`.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "The function to call when a USB device is added or removed",
+              "optional": false,
+              "tsType": "(event: string, device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void"
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.usb.addWatcher((event, device) => {\n  console.log(event + \": \" + device.productName + \" by \" + device.vendorName)\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.usb/HSUSBModule.swift",
+          "lineNumber": 80
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ listener: JSValue)",
+          "isStatic": false,
+          "rawDocumentation": "Remove a previously registered USB event listener.\n\n- Parameter listener: {(event: string, device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void} The function originally passed to `addWatcher`\n- Example:\n```js\nconst handler = (event, device) => console.log(event + \": \" + device.productName)\nhs.usb.addWatcher(handler)\n// later…\nhs.usb.removeWatcher(handler)\n```",
+          "description": "Remove a previously registered USB event listener.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "The function originally passed to `addWatcher`",
+              "optional": false,
+              "tsType": "(event: string, device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void"
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const handler = (event, device) => console.log(event + \": \" + device.productName)\nhs.usb.addWatcher(handler)\n// later…\nhs.usb.removeWatcher(handler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.usb/HSUSBModule.swift",
+          "lineNumber": 92
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Module for monitoring USB device connections and disconnections",
+      "rawDocumentation": "Module for monitoring USB device connections and disconnections"
+    },
+    {
       "name": "hs.window",
       "methods": [
         {
@@ -18859,5 +18944,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-16T16:00:13.941Z"
+  "generatedAt": "2026-07-17T09:05:10.994Z"
 }
