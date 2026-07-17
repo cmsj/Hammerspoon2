@@ -8781,8 +8781,8 @@
           "name": "installBinary",
           "signature": "func installBinary(_ directory: JSValue) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Install the `hs` command-line tool to the given directory.\n\nCopies the `hs` binary from the Hammerspoon 2 app bundle to the specified directory.\nAny existing `hs` file at that path is replaced. The directory must be on your `$PATH`\nfor `hs` to work without a full path.\n\n- Parameter directory: {string} Directory to install into. Defaults to `/usr/local/bin`.\n- Returns: `true` on success, `false` on error (details logged to the console).\n- Example:\n```js\nhs.ipc.installBinary()                   // install to /usr/local/bin/hs\nhs.ipc.installBinary(\"/opt/homebrew/bin\") // install to /opt/homebrew/bin/hs\n```",
-          "description": "Install the `hs` command-line tool to the given directory.\nCopies the `hs` binary from the Hammerspoon 2 app bundle to the specified directory.\nAny existing `hs` file at that path is replaced. The directory must be on your `$PATH`\nfor `hs` to work without a full path.",
+          "rawDocumentation": "Install the `hs` command-line tool to the given directory as a symlink.\n\nCreates a symlink in the target directory that points to the `hs` binary inside the\nHammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any\napp update without reinstalling. Any existing `hs` file at that path is replaced.\n\nThe directory must be on your `$PATH` for `hs` to work without a full path.\n\n**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.\nOn Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both\ndirectories require root — if this method returns `false`, run the logged command in\na terminal with `sudo`.\n\n- Parameter directory: {string} Directory to install into. Defaults to `/usr/local/bin`.\n- Returns: `true` on success, `false` on error (details logged to the console).\n- Example:\n```js\nhs.ipc.installBinary()                   // install to /usr/local/bin/hs\nhs.ipc.installBinary(\"/opt/homebrew/bin\") // install to /opt/homebrew/bin/hs\n```",
+          "description": "Install the `hs` command-line tool to the given directory as a symlink.\nCreates a symlink in the target directory that points to the `hs` binary inside the\nHammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any\napp update without reinstalling. Any existing `hs` file at that path is replaced.\nThe directory must be on your `$PATH` for `hs` to work without a full path.\n**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.\nOn Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both\ndirectories require root — if this method returns `false`, run the logged command in\na terminal with `sudo`.",
           "params": [
             {
               "name": "directory",
@@ -8805,7 +8805,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 94
+          "lineNumber": 101
         },
         {
           "name": "uninstallBinary",
@@ -8835,7 +8835,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 105
+          "lineNumber": 112
         },
         {
           "name": "isBinaryInstalled",
@@ -8865,7 +8865,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 117
+          "lineNumber": 124
         }
       ],
       "properties": [
@@ -19124,5 +19124,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-17T13:41:30.836Z"
+  "generatedAt": "2026-07-17T16:30:04.726Z"
 }

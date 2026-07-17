@@ -3257,10 +3257,15 @@ running logs a warning and does nothing.
     function stop(): void;
 
     /**
-     * Install the `hs` command-line tool to the given directory.
-Copies the `hs` binary from the Hammerspoon 2 app bundle to the specified directory.
-Any existing `hs` file at that path is replaced. The directory must be on your `$PATH`
-for `hs` to work without a full path.
+     * Install the `hs` command-line tool to the given directory as a symlink.
+Creates a symlink in the target directory that points to the `hs` binary inside the
+Hammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any
+app update without reinstalling. Any existing `hs` file at that path is replaced.
+The directory must be on your `$PATH` for `hs` to work without a full path.
+**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.
+On Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both
+directories require root — if this method returns `false`, run the logged command in
+a terminal with `sudo`.
      * @param directory Directory to install into. Defaults to `/usr/local/bin`.
      * @returns `true` on success, `false` on error (details logged to the console).
      */

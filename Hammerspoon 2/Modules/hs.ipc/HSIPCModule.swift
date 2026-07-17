@@ -78,11 +78,18 @@ import JavaScriptCore
     /// ```
     @objc func stop()
 
-    /// Install the `hs` command-line tool to the given directory.
+    /// Install the `hs` command-line tool to the given directory as a symlink.
     ///
-    /// Copies the `hs` binary from the Hammerspoon 2 app bundle to the specified directory.
-    /// Any existing `hs` file at that path is replaced. The directory must be on your `$PATH`
-    /// for `hs` to work without a full path.
+    /// Creates a symlink in the target directory that points to the `hs` binary inside the
+    /// Hammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any
+    /// app update without reinstalling. Any existing `hs` file at that path is replaced.
+    ///
+    /// The directory must be on your `$PATH` for `hs` to work without a full path.
+    ///
+    /// **Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.
+    /// On Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both
+    /// directories require root — if this method returns `false`, run the logged command in
+    /// a terminal with `sudo`.
     ///
     /// - Parameter directory: {string} Directory to install into. Defaults to `/usr/local/bin`.
     /// - Returns: `true` on success, `false` on error (details logged to the console).
@@ -180,7 +187,8 @@ import JavaScriptCore
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
         let fm = FileManager.default
 
-        if fm.fileExists(atPath: destURL.path) {
+        // Remove any existing file/symlink at the destination (replaces old copies too).
+        if fm.fileExists(atPath: destURL.path) || (try? fm.attributesOfItem(atPath: destURL.path)) != nil {
             do {
                 try fm.removeItem(at: destURL)
             } catch {
@@ -190,34 +198,39 @@ import JavaScriptCore
         }
 
         do {
-            try fm.copyItem(at: sourceURL, to: destURL)
-            try fm.setAttributes([.posixPermissions: NSNumber(value: 0o755)], ofItemAtPath: destURL.path)
+            try fm.createSymbolicLink(at: destURL, withDestinationURL: sourceURL)
         } catch {
-            AKError("hs.ipc.installBinary(): Failed to install to \(destURL.path): \(error.localizedDescription)")
+            AKError("""
+                hs.ipc.installBinary(): Failed to create symlink at \(destURL.path): \(error.localizedDescription)
+                If this is a permissions error, run the following in Terminal:
+                  sudo ln -sf "\(sourceURL.path)" "\(destURL.path)"
+                """)
             return false
         }
 
-        AKInfo("hs.ipc: Installed 'hs' binary to \(destURL.path)")
+        AKInfo("hs.ipc: Created symlink \(destURL.path) → \(sourceURL.path)")
         return true
     }
 
     @objc func uninstallBinary(_ directoryVal: JSValue) -> Bool {
         let directory = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
+        let fm = FileManager.default
 
-        guard FileManager.default.fileExists(atPath: destURL.path) else {
-            AKWarning("hs.ipc.uninstallBinary(): No 'hs' binary found at \(destURL.path)")
+        // Use attributesOfItem (doesn't follow symlinks) so we can remove broken symlinks too.
+        guard (try? fm.attributesOfItem(atPath: destURL.path)) != nil else {
+            AKWarning("hs.ipc.uninstallBinary(): Nothing found at \(destURL.path)")
             return false
         }
 
         do {
-            try FileManager.default.removeItem(at: destURL)
+            try fm.removeItem(at: destURL)
         } catch {
             AKError("hs.ipc.uninstallBinary(): Failed to remove \(destURL.path): \(error.localizedDescription)")
             return false
         }
 
-        AKInfo("hs.ipc: Removed 'hs' binary from \(destURL.path)")
+        AKInfo("hs.ipc: Removed symlink at \(destURL.path)")
         return true
     }
 

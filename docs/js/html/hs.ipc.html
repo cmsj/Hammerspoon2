@@ -163,10 +163,15 @@ hs.ipc.start(9999)    // listen on port 9999</code></pre>
     <div class="method" id="installBinary">
         <h3><a href="#installBinary">hs.ipc.installBinary(directory) -> boolean</a></h3>
 
-        <div class="description">Install the `hs` command-line tool to the given directory.
-Copies the `hs` binary from the Hammerspoon 2 app bundle to the specified directory.
-Any existing `hs` file at that path is replaced. The directory must be on your `$PATH`
-for `hs` to work without a full path.</div>
+        <div class="description">Install the `hs` command-line tool to the given directory as a symlink.
+Creates a symlink in the target directory that points to the `hs` binary inside the
+Hammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any
+app update without reinstalling. Any existing `hs` file at that path is replaced.
+The directory must be on your `$PATH` for `hs` to work without a full path.
+**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.
+On Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both
+directories require root — if this method returns `false`, run the logged command in
+a terminal with `sudo`.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.ipc.installBinary(directory) -> boolean</code></pre>
@@ -199,7 +204,7 @@ for `hs` to work without a full path.</div>
 hs.ipc.installBinary(&quot;/opt/homebrew/bin&quot;) // install to /opt/homebrew/bin/hs</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L94" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:94</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L101" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:101</a>
         </div>
     </div>
     <div class="method" id="uninstallBinary">
@@ -238,7 +243,7 @@ hs.ipc.installBinary(&quot;/opt/homebrew/bin&quot;) // install to /opt/homebrew/
 hs.ipc.uninstallBinary(&quot;/opt/homebrew/bin&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L105" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:105</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:112</a>
         </div>
     </div>
     <div class="method" id="isBinaryInstalled">
@@ -278,7 +283,7 @@ hs.ipc.uninstallBinary(&quot;/opt/homebrew/bin&quot;)</code></pre>
 }</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:117</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L124" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:124</a>
         </div>
     </div>
         </main>
