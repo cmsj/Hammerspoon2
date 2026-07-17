@@ -297,6 +297,10 @@ private actor IPCClient {
 
 private let client = IPCClient(port: port, minLogLevel: minLogLevel, showPrompt: showPrompt)
 
+// Parse api.json concurrently with the TCP connection so tab-completion is ready
+// by the time the first prompt appears.
+async let completionLoad = loadCompletions()
+
 do {
     try await client.connect()
 } catch {
@@ -307,9 +311,22 @@ do {
     exit(1)
 }
 
+let completionTable = await completionLoad
+
 // REPL loop — LineReader provides readline-style editing and history when stdin is a
 // terminal. For piped input or --no-prompt mode we fall back to plain readLine().
 private let lineReader = showPrompt ? LineReader() : nil
+
+if let lr = lineReader, let table = completionTable {
+    lr.setCompletionCallback { buffer in
+        table.complete(input: buffer)
+    }
+    lr.setHintsCallback { buffer in
+        let completions = table.complete(input: buffer)
+        guard let first = completions.first else { return nil }
+        return (String(first.dropFirst(buffer.count)), TextProperties(.grey, nil))
+    }
+}
 
 while true {
     let rawLine: String?
