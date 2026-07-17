@@ -124,7 +124,7 @@ private final class HSIPCConnection {
             var __code = __hs_ipc_eval;
             __hs_ipc_eval = undefined;
             try {
-                var result = eval(__code);
+                var result = (0, eval)(__code);
                 var str;
                 if (result === undefined) {
                     str = "undefined";
