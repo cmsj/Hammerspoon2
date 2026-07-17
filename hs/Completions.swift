@@ -55,19 +55,59 @@ nonisolated struct CompletionTable: Sendable {
 
     // MARK: - Completion
 
-    /// Returns completions for `input` as full strings prefixed by `input`.
+    /// Returns completions for the current REPL buffer as full strings.
     ///
-    /// LineReader expects: each returned string must start with the current buffer.
-    /// It then shows the common prefix and allows cycling.
-    func complete(input: String) -> [String] {
+    /// LineReader requires that every returned string starts with `buffer`.
+    /// This function strips the non-JS prefix from the buffer (e.g. `"var x = "`),
+    /// completes the trailing expression token, then re-prepends the prefix.
+    ///
+    /// `ipcEval` is an optional synchronous closure that evaluates a JS expression in
+    /// the connected Hammerspoon 2 process and returns the result string. When provided,
+    /// it is used as a fallback for expressions with no api.json entry (e.g.
+    /// `hs.screen.allScreens()[0].`). Pass `nil` to use api.json only (e.g. for hints).
+    func complete(input: String, ipcEval: (@Sendable (String) -> String?)? = nil) -> [String] {
+        let (bufferPrefix, token) = Self.splitToken(input)
+        return completeToken(token, ipcEval: ipcEval).map { bufferPrefix + $0 }
+    }
+
+    // MARK: - Private
+
+    /// Characters that end a JS expression token when scanning right-to-left.
+    /// Excludes `(`, `)`, `[`, `]` so that `hs.screen.allScreens()[0].` is one token.
+    private static let tokenStopCharacters: CharacterSet = {
+        var cs = CharacterSet.whitespaces
+        cs.insert(charactersIn: "=;,{}\"'`+-*/%!&|^~<>@\\")
+        return cs
+    }()
+
+    /// Splits `buffer` into the non-expression prefix and the JS token to complete.
+    /// Scans right-to-left, stopping at the first token-stop character.
+    ///
+    /// Examples:
+    ///   "var x = hs.app"         → ("var x = ", "hs.app")
+    ///   "hs.screen.allScreens()[0].f" → ("", "hs.screen.allScreens()[0].f")
+    ///   "hs.ipc.s"               → ("", "hs.ipc.s")
+    private static func splitToken(_ buffer: String) -> (prefix: String, token: String) {
+        var idx = buffer.endIndex
+        while idx > buffer.startIndex {
+            let prev = buffer.index(before: idx)
+            if let scalar = buffer[prev].unicodeScalars.first,
+               tokenStopCharacters.contains(scalar) { break }
+            idx = prev
+        }
+        return (String(buffer[..<idx]), String(buffer[idx...]))
+    }
+
+    /// Core completion logic that operates on the extracted JS token alone.
+    private func completeToken(_ input: String, ipcEval: (@Sendable (String) -> String?)? = nil) -> [String] {
         guard let lastDot = input.lastIndex(of: ".") else {
             // No dot — match top-level roots (e.g. "hs")
             let roots = Set(items.keys.compactMap { $0.split(separator: ".").first.map(String.init) })
             return roots.filter { $0.hasPrefix(input) }.sorted()
         }
 
-        let prefix     = String(input[input.startIndex...lastDot])   // "hs.ipc."
-        let objectExpr = String(prefix.dropLast())                   // "hs.ipc"
+        let prefix     = String(input[input.startIndex...lastDot])     // "hs.ipc."
+        let objectExpr = String(prefix.dropLast())                     // "hs.ipc"
         let stem       = String(input[input.index(after: lastDot)...]) // "s"
 
         // Try completing sub-module names: "hs." → ["hs.ipc.", "hs.screen.", …]
@@ -92,10 +132,24 @@ nonisolated struct CompletionTable: Sendable {
                 .map { prefix + $0.formatted }
         }
 
+        // IPC fallback: reflect live JS properties by walking the prototype chain.
+        // Only reached for instance-level expressions (e.g. hs.screen.allScreens()[0]).
+        if let ipcEval {
+            // Traverse the prototype chain to collect all own property names, then
+            // deduplicate and strip internal names (__xxx and constructor).
+            let js = "(function(){try{var o=(\(objectExpr)),n=[],s={};while(o&&o!==Object.prototype){Object.getOwnPropertyNames(o).forEach(function(k){if(!s[k]){s[k]=1;if(k.slice(0,2)!=='__'&&k!=='constructor')n.push(k)}});o=Object.getPrototypeOf(o);}return JSON.stringify(n)}catch(e){return JSON.stringify([])}})()"
+            if let json  = ipcEval(js),
+               let data  = json.data(using: .utf8),
+               let names = try? JSONSerialization.jsonObject(with: data) as? [String] {
+                return names
+                    .filter { stem.isEmpty || $0.hasPrefix(stem) }
+                    .sorted()
+                    .map { prefix + $0 }
+            }
+        }
+
         return []
     }
-
-    // MARK: - Private
 
     private static func isModuleLevel(_ filePath: String) -> Bool {
         let filename = URL(fileURLWithPath: filePath).lastPathComponent

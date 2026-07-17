@@ -289,6 +289,15 @@ private actor IPCClient {
     }
 }
 
+// MARK: - Completion helpers
+
+// Passes a String result from a Task.detached back to a DispatchSemaphore caller.
+// @unchecked Sendable is safe here because the semaphore provides happens-before ordering
+// between the Task write and the outer-scope read — there is no concurrent access.
+private final class ResultBox<T: Sendable>: @unchecked Sendable {
+    nonisolated(unsafe) var value: T?
+}
+
 // MARK: - Entry point
 //
 // Top-level `await` makes the program entry point async (@MainActor by default isolation).
@@ -318,9 +327,28 @@ let completionTable = await completionLoad
 private let lineReader = showPrompt ? LineReader() : nil
 
 if let lr = lineReader, let table = completionTable {
-    lr.setCompletionCallback { buffer in
-        table.complete(input: buffer)
+    // Synchronous IPC round-trip for live JS reflection (Tab-completion only).
+    //
+    // Task.detached sends the eval on the cooperative thread pool while DispatchSemaphore
+    // holds the main OS thread. IPCClient is a plain actor (not @MainActor), so its
+    // continuations resolve on the cooperative pool — the blocked main thread doesn't
+    // create a deadlock. Timeout: 300 ms (a local IPC call should never take this long).
+    let syncEval: @Sendable (String) -> String? = { [client] code in
+        let sem = DispatchSemaphore(value: 0)
+        let box = ResultBox<String>()
+        Task.detached {
+            let (r, isError) = await client.eval(code: code)
+            if !isError { box.value = r }
+            sem.signal()
+        }
+        _ = sem.wait(timeout: .now() + 0.3)
+        return box.value
     }
+
+    lr.setCompletionCallback { buffer in
+        table.complete(input: buffer, ipcEval: syncEval)
+    }
+    // Hints fire on every keypress — use api.json only to keep latency near zero.
     lr.setHintsCallback { buffer in
         let completions = table.complete(input: buffer)
         guard let first = completions.first else { return nil }
