@@ -6600,6 +6600,31 @@ Assign `null` to remove the callback.
 }
 
 /**
+ * Module for monitoring USB device connections and disconnections
+ */
+declare namespace hs.usb {
+    /**
+     * Returns all currently attached USB devices.
+     * @returns An array of objects describing each attached USB device. Each object has `productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number). `serialNumber` (string) and `locationID` (number) are included when available.
+     */
+    function attachedDevices(): Record<string, any>[];
+
+    /**
+     * Register a listener for USB device connection and disconnection events.
+The listener is called with two arguments: the event type string (`"added"` or `"removed"`) and a device-info object with the same fields as `attachedDevices()`.
+     * @param listener The function to call when a USB device is added or removed
+     */
+    function addWatcher(listener: (event: string, device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void): void;
+
+    /**
+     * Remove a previously registered USB event listener.
+     * @param listener The function originally passed to `addWatcher`
+     */
+    function removeWatcher(listener: (event: string, device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void): void;
+
+}
+
+/**
  * Module for interacting with windows
  */
 declare namespace hs.window {
