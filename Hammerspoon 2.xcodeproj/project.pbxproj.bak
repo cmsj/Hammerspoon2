@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4FE4C00C2F0000000000000C /* hs in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FE4C0012F00000000000001 /* hs */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4F463E9F2EA7A669000A2135 /* AXSwift */; };
 		4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4F488B2F2E97E79800A2B5F4 /* Sparkle */; };
 		4F59E3502EFC986100954462 /* hammerspoon.d.ts in Resources */ = {isa = PBXBuildFile; fileRef = 4F59E34F2EFC985500954462 /* hammerspoon.d.ts */; };
@@ -20,13 +19,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		4FE4C00A2F0000000000000A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4F56417B2E8333830099EB4C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 4FE4C0032F00000000000003;
-			remoteInfo = hs;
-		};
 		4F5641912E8333840099EB4C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4F56417B2E8333830099EB4C /* Project object */;
@@ -44,17 +36,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		4FE4C00D2F0000000000000D /* Embed Tools */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 6;
-			files = (
-				4FE4C00C2F0000000000000C /* hs in Embed Tools */,
-			);
-			name = "Embed Tools";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		4F947D932F563FCF00DD814E /* Embed XPC Services */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -69,7 +50,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4FE4C0012F00000000000001 /* hs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F5641832E8333830099EB4C /* Hammerspoon 2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Hammerspoon 2.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F5641902E8333840099EB4C /* Hammerspoon 2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Hammerspoon 2Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F59E34E2EFC984900954462 /* api.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = api.json; path = docs/api.json; sourceTree = "<group>"; };
@@ -109,11 +89,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4FE4C0022F00000000000002 /* hs */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = hs;
-			sourceTree = "<group>";
-		};
 		4F5641852E8333830099EB4C /* Hammerspoon 2 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Hammerspoon 2";
@@ -136,13 +111,6 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		4FE4C0052F00000000000005 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		4F5641802E8333830099EB4C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -179,7 +147,6 @@
 				4F5641852E8333830099EB4C /* Hammerspoon 2 */,
 				4F5641932E8333840099EB4C /* Hammerspoon 2Tests */,
 				4F947D882F563FCF00DD814E /* HammerspoonOSAScriptHelper */,
-				4FE4C0022F00000000000002 /* hs */,
 				4F947DA42F56404F00DD814E /* Frameworks */,
 				4F5641842E8333830099EB4C /* Products */,
 			);
@@ -191,7 +158,6 @@
 				4F5641832E8333830099EB4C /* Hammerspoon 2.app */,
 				4F5641902E8333840099EB4C /* Hammerspoon 2Tests.xctest */,
 				4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */,
-				4FE4C0012F00000000000001 /* hs */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -244,28 +210,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4FE4C0032F00000000000003 /* hs */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs" */;
-			buildPhases = (
-				4FE4C0042F00000000000004 /* Sources */,
-				4FE4C0052F00000000000005 /* Frameworks */,
-				4FE4C0062F00000000000006 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				4FE4C0022F00000000000002 /* hs */,
-			);
-			name = hs;
-			packageProductDependencies = (
-			);
-			productName = hs;
-			productReference = 4FE4C0012F00000000000001 /* hs */;
-			productType = "com.apple.product-type.tool";
-		};
 		4F5641822E8333830099EB4C /* Hammerspoon 2 */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4F5641A42E8333840099EB4C /* Build configuration list for PBXNativeTarget "Hammerspoon 2" */;
@@ -274,13 +218,11 @@
 				4F5641802E8333830099EB4C /* Frameworks */,
 				4F5641812E8333830099EB4C /* Resources */,
 				4F947D932F563FCF00DD814E /* Embed XPC Services */,
-				4FE4C00D2F0000000000000D /* Embed Tools */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				4F947D912F563FCF00DD814E /* PBXTargetDependency */,
-				4FE4C00B2F0000000000000B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				4F5641852E8333830099EB4C /* Hammerspoon 2 */,
@@ -360,9 +302,6 @@
 					4F947D862F563FCF00DD814E = {
 						CreatedOnToolsVersion = 26.0;
 					};
-					4FE4C0032F00000000000003 = {
-						CreatedOnToolsVersion = 26.0;
-					};
 				};
 			};
 			buildConfigurationList = 4F56417E2E8333830099EB4C /* Build configuration list for PBXProject "Hammerspoon 2" */;
@@ -387,19 +326,11 @@
 				4F5641822E8333830099EB4C /* Hammerspoon 2 */,
 				4F56418F2E8333840099EB4C /* Hammerspoon 2Tests */,
 				4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */,
-				4FE4C0032F00000000000003 /* hs */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		4FE4C0062F00000000000006 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		4F5641812E8333830099EB4C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -428,13 +359,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		4FE4C0042F00000000000004 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		4F56417F2E8333830099EB4C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -459,11 +383,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		4FE4C00B2F0000000000000B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 4FE4C0032F00000000000003 /* hs */;
-			targetProxy = 4FE4C00A2F0000000000000A /* PBXContainerItemProxy */;
-		};
 		4F5641922E8333840099EB4C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4F5641822E8333830099EB4C /* Hammerspoon 2 */;
@@ -477,54 +396,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		4FE4C0072F00000000000007 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = VQCYSNZB89;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_STRICT_MEMORY_SAFETY = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-			};
-			name = Debug;
-		};
-		4FE4C0082F00000000000008 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = VQCYSNZB89;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_STRICT_MEMORY_SAFETY = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-			};
-			name = Release;
-		};
 		4F5641A22E8333840099EB4C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -894,15 +765,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				4FE4C0072F00000000000007 /* Debug */,
-				4FE4C0082F00000000000008 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		4F56417E2E8333830099EB4C /* Build configuration list for PBXProject "Hammerspoon 2" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

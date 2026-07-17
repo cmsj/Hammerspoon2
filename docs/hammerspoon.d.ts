@@ -3219,6 +3219,80 @@ Sends a WebSocket close frame and cancels the underlying TCP connection.
 }
 
 /**
+ * Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.
+The IPC server must be explicitly started from your configuration — it does not run by default.
+Once started, the `hs` command-line tool connects over TCP to evaluate JavaScript interactively
+and optionally stream log messages.
+## Quick start
+```js
+// In your Hammerspoon 2 config (init.js):
+hs.ipc.start()
+```
+```js
+hs.ipc.installBinary()   // copies hs to /usr/local/bin/hs
+```
+```bash
+hs
+hs> hs.reload()
+undefined
+hs> 2 + 2
+4
+```
+```bash
+hs --log-level info
+```
+ */
+declare namespace hs.ipc {
+    /**
+     * Start the IPC server.
+Connections are only accepted from localhost (127.0.0.1). Calling `start()` when already
+running logs a warning and does nothing.
+     * @param port TCP port to listen on. Defaults to `51423` if omitted.
+     */
+    function start(port: number): void;
+
+    /**
+     * Stop the IPC server and disconnect all connected clients.
+     */
+    function stop(): void;
+
+    /**
+     * Install the `hs` command-line tool to the given directory.
+Copies the `hs` binary from the Hammerspoon 2 app bundle to the specified directory.
+Any existing `hs` file at that path is replaced. The directory must be on your `$PATH`
+for `hs` to work without a full path.
+     * @param directory Directory to install into. Defaults to `/usr/local/bin`.
+     * @returns `true` on success, `false` on error (details logged to the console).
+     */
+    function installBinary(directory: string): boolean;
+
+    /**
+     * Remove the `hs` command-line tool from the given directory.
+     * @param directory Directory to remove from. Defaults to `/usr/local/bin`.
+     * @returns `true` on success, `false` if not found or on error.
+     */
+    function uninstallBinary(directory: string): boolean;
+
+    /**
+     * Check whether the `hs` command-line tool exists at the given directory.
+     * @param directory Directory to check. Defaults to `/usr/local/bin`.
+     * @returns `true` if an `hs` binary exists at that path.
+     */
+    function isBinaryInstalled(directory: string): boolean;
+
+    /**
+     * Whether the IPC server is currently accepting connections.
+     */
+    const isListening: boolean;
+
+    /**
+     * The TCP port the IPC server is listening on. Returns `0` if not listening.
+     */
+    const port: number;
+
+}
+
+/**
  * Access information about the current keyboard layout and input sources, and respond to changes.
 ## Reading the current layout
 ```js

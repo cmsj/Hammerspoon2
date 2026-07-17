@@ -8729,6 +8729,186 @@
       "rawDocumentation": "Module for creating and managing HTTP servers.\n\nCreate a server with `hs.httpserver.create()`, configure it with chainable setters,\nthen call `start()`. The server accepts both synchronous and async (Promise-returning)\nrequest handler callbacks.\n\n## Quick start\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setCallback((method, path, headers, body) => {\n        return {body: \"<h1>Hello from Hammerspoon!</h1>\", status: 200, headers: {\"Content-Type\": \"text/html\"}}\n    })\n    .start()\nconsole.log(\"Listening on port \" + server.getPort())\n```\n\n## Async callback\n\n```js\nserver.setCallback(async (method, path, headers, body) => {\n    const data = await hs.http.get(\"https://api.example.com/data\")\n    return {body: data.body, status: 200, headers: {\"Content-Type\": \"application/json\"}}\n})\n```\n\n## Static file serving\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8080)\n    .setDocumentRoot(\"/Users/me/Sites\")\n    .start()\n```\n\n## TLS (HTTPS)\n\nHammerspoon 2 cannot generate TLS certificates itself, you will need to supply a p12 file, which you can generate with:\n```bash\nopenssl genrsa -out key.pem 2048\nopenssl req -new -x509 -key key.pem -out cert.pem -days 365\nopenssl pkcs12 -export -out identity.p12 -inkey key.pem -in cert.pem\n```\n\n```js\nconst server = hs.httpserver.create()\n    .setPort(8443)\n    .setTLSFromPKCS12(\"/path/to/identity.p12\", \"passphrase\")\n    .setCallback(handler)\n    .start()\n```"
     },
     {
+      "name": "hs.ipc",
+      "methods": [
+        {
+          "name": "start",
+          "signature": "func start(_ port: JSValue)",
+          "isStatic": false,
+          "rawDocumentation": "Start the IPC server.\n\nConnections are only accepted from localhost (127.0.0.1). Calling `start()` when already\nrunning logs a warning and does nothing.\n\n- Parameter port: {number} TCP port to listen on. Defaults to `51423` if omitted.\n- Example:\n```js\nhs.ipc.start()        // listen on default port 51423\nhs.ipc.start(9999)    // listen on port 9999\n```",
+          "description": "Start the IPC server.\nConnections are only accepted from localhost (127.0.0.1). Calling `start()` when already\nrunning logs a warning and does nothing.",
+          "params": [
+            {
+              "name": "port",
+              "type": "JSValue",
+              "description": "TCP port to listen on. Defaults to `51423` if omitted.",
+              "optional": false,
+              "tsType": "number"
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.ipc.start()        // listen on default port 51423\nhs.ipc.start(9999)    // listen on port 9999"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
+          "lineNumber": 71
+        },
+        {
+          "name": "stop",
+          "signature": "func stop()",
+          "isStatic": false,
+          "rawDocumentation": "Stop the IPC server and disconnect all connected clients.\n\n- Example:\n```js\nhs.ipc.stop()\n```",
+          "description": "Stop the IPC server and disconnect all connected clients.",
+          "params": [],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.ipc.stop()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
+          "lineNumber": 79
+        },
+        {
+          "name": "installBinary",
+          "signature": "func installBinary(_ directory: JSValue) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Install the `hs` command-line tool to the given directory.\n\nCopies the `hs` binary from the Hammerspoon 2 app bundle to the specified directory.\nAny existing `hs` file at that path is replaced. The directory must be on your `$PATH`\nfor `hs` to work without a full path.\n\n- Parameter directory: {string} Directory to install into. Defaults to `/usr/local/bin`.\n- Returns: `true` on success, `false` on error (details logged to the console).\n- Example:\n```js\nhs.ipc.installBinary()                   // install to /usr/local/bin/hs\nhs.ipc.installBinary(\"/opt/homebrew/bin\") // install to /opt/homebrew/bin/hs\n```",
+          "description": "Install the `hs` command-line tool to the given directory.\nCopies the `hs` binary from the Hammerspoon 2 app bundle to the specified directory.\nAny existing `hs` file at that path is replaced. The directory must be on your `$PATH`\nfor `hs` to work without a full path.",
+          "params": [
+            {
+              "name": "directory",
+              "type": "JSValue",
+              "description": "Directory to install into. Defaults to `/usr/local/bin`.",
+              "optional": false,
+              "tsType": "string"
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` on success, `false` on error (details logged to the console)."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.ipc.installBinary()                   // install to /usr/local/bin/hs\nhs.ipc.installBinary(\"/opt/homebrew/bin\") // install to /opt/homebrew/bin/hs"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
+          "lineNumber": 94
+        },
+        {
+          "name": "uninstallBinary",
+          "signature": "func uninstallBinary(_ directory: JSValue) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Remove the `hs` command-line tool from the given directory.\n\n- Parameter directory: {string} Directory to remove from. Defaults to `/usr/local/bin`.\n- Returns: `true` on success, `false` if not found or on error.\n- Example:\n```js\nhs.ipc.uninstallBinary()\nhs.ipc.uninstallBinary(\"/opt/homebrew/bin\")\n```",
+          "description": "Remove the `hs` command-line tool from the given directory.",
+          "params": [
+            {
+              "name": "directory",
+              "type": "JSValue",
+              "description": "Directory to remove from. Defaults to `/usr/local/bin`.",
+              "optional": false,
+              "tsType": "string"
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` on success, `false` if not found or on error."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.ipc.uninstallBinary()\nhs.ipc.uninstallBinary(\"/opt/homebrew/bin\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
+          "lineNumber": 105
+        },
+        {
+          "name": "isBinaryInstalled",
+          "signature": "func isBinaryInstalled(_ directory: JSValue) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Check whether the `hs` command-line tool exists at the given directory.\n\n- Parameter directory: {string} Directory to check. Defaults to `/usr/local/bin`.\n- Returns: `true` if an `hs` binary exists at that path.\n- Example:\n```js\nif (hs.ipc.isBinaryInstalled()) {\n    console.log(\"hs CLI is available\")\n}\n```",
+          "description": "Check whether the `hs` command-line tool exists at the given directory.",
+          "params": [
+            {
+              "name": "directory",
+              "type": "JSValue",
+              "description": "Directory to check. Defaults to `/usr/local/bin`.",
+              "optional": false,
+              "tsType": "string"
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if an `hs` binary exists at that path."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "if (hs.ipc.isBinaryInstalled()) {\n    console.log(\"hs CLI is available\")\n}"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
+          "lineNumber": 117
+        }
+      ],
+      "properties": [
+        {
+          "name": "isListening",
+          "signature": "var isListening: Bool { get }",
+          "rawDocumentation": "Whether the IPC server is currently accepting connections.\n\n- Example:\n```js\nif (hs.ipc.isListening) {\n    console.log(\"IPC ready on port \" + hs.ipc.port)\n}\n```",
+          "description": "Whether the IPC server is currently accepting connections.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "if (hs.ipc.isListening) {\n    console.log(\"IPC ready on port \" + hs.ipc.port)\n}"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
+          "lineNumber": 50
+        },
+        {
+          "name": "port",
+          "signature": "var port: Int32 { get }",
+          "rawDocumentation": "The TCP port the IPC server is listening on. Returns `0` if not listening.\n\n- Example:\n```js\nconsole.log(\"IPC port: \" + hs.ipc.port)\n```",
+          "description": "The TCP port the IPC server is listening on. Returns `0` if not listening.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(\"IPC port: \" + hs.ipc.port)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
+          "lineNumber": 58
+        }
+      ],
+      "types": [],
+      "description": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects over TCP to evaluate JavaScript interactively\nand optionally stream log messages.\n## Quick start\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n```js\nhs.ipc.installBinary()   // copies hs to /usr/local/bin/hs\n```\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n```bash\nhs --log-level info\n```",
+      "rawDocumentation": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\n\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects over TCP to evaluate JavaScript interactively\nand optionally stream log messages.\n\n## Quick start\n\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n\nInstall the CLI tool once:\n```js\nhs.ipc.installBinary()   // copies hs to /usr/local/bin/hs\n```\n\nThen in a terminal:\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n\nRun with live log output:\n```bash\nhs --log-level info\n```"
+    },
+    {
       "name": "hs.keycodes",
       "methods": [
         {
@@ -18944,5 +19124,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-17T10:41:36.190Z"
+  "generatedAt": "2026-07-17T13:41:30.836Z"
 }
