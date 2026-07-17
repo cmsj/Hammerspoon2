@@ -184,7 +184,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
         let refCon: UnsafeMutableRawPointer = unsafe selfRef!.toOpaque()
 
         // "Device added" notifications
-        unsafe IOServiceAddMatchingNotification(
+        let addedStatus = unsafe IOServiceAddMatchingNotification(
             port, kIOFirstMatchNotification, IOServiceMatching("IOUSBDevice"),
             { (refCon: UnsafeMutableRawPointer?, iterator: io_iterator_t) in
                 guard let refCon = unsafe refCon else { return }
@@ -196,9 +196,14 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
         )
         // Drain devices already present at watcher start without firing events
         _ = drainUSBIterator(addedIterator)
+        guard addedStatus == KERN_SUCCESS else {
+            AKError("hs.usb._addWatcher(): Failed to register 'added' notification (error \(addedStatus))")
+            _removeWatcher()
+            return
+        }
 
         // "Device removed" notifications
-        unsafe IOServiceAddMatchingNotification(
+        let removedStatus = unsafe IOServiceAddMatchingNotification(
             port, kIOTerminatedNotification, IOServiceMatching("IOUSBDevice"),
             { (refCon: UnsafeMutableRawPointer?, iterator: io_iterator_t) in
                 guard let refCon = unsafe refCon else { return }
@@ -209,6 +214,11 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
             refCon, &removedIterator
         )
         _ = drainUSBIterator(removedIterator)
+        guard removedStatus == KERN_SUCCESS else {
+            AKError("hs.usb._addWatcher(): Failed to register 'removed' notification (error \(removedStatus))")
+            _removeWatcher()
+            return
+        }
 
         AKTrace("hs.usb._addWatcher(): Started")
     }
