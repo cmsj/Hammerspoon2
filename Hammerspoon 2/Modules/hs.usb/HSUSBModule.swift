@@ -93,7 +93,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     @objc func removeWatcher(_ listener: JSValue)
 
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue)
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
@@ -157,10 +157,10 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
     // MARK: - Pattern A watcher internals
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) {
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) -> Bool {
         guard watcherCallback == nil else {
             AKWarning("hs.usb._addWatcher(): Already watching. Refusing to create a second.")
-            return
+            return false
         }
 
         watcherCallback = JSCallback(value: callback, owner: self)
@@ -169,7 +169,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
             AKError("hs.usb._addWatcher(): Failed to create IOKit notification port")
             watcherCallback?.detach(from: self)
             watcherCallback = nil
-            return
+            return false
         }
         unsafe notificationPort = port
 
@@ -199,7 +199,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
         guard addedStatus == KERN_SUCCESS else {
             AKError("hs.usb._addWatcher(): Failed to register 'added' notification (error \(addedStatus))")
             _removeWatcher()
-            return
+            return false
         }
 
         // "Device removed" notifications
@@ -217,10 +217,11 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
         guard removedStatus == KERN_SUCCESS else {
             AKError("hs.usb._addWatcher(): Failed to register 'removed' notification (error \(removedStatus))")
             _removeWatcher()
-            return
+            return false
         }
 
         AKTrace("hs.usb._addWatcher(): Started")
+        return true
     }
 
     @objc func _removeWatcher() {

@@ -27,9 +27,12 @@ class UsbModuleWatcherEmitter {
             return;
         }
         if (this.#listeners.length === 0) {
-            hs.usb._addWatcher((eventType, deviceInfo) => {
+            const started = hs.usb._addWatcher((eventType, deviceInfo) => {
                 this.#handleEvent(eventType, deviceInfo);
             });
+            if (!started) {
+                throw new Error("hs.usb.addWatcher(): Failed to start USB watcher");
+            }
         }
         this.#listeners.push(listener);
     }
