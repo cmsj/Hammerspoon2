@@ -301,16 +301,14 @@ import JavaScriptCoreExtras
         return true
     }
 
-    // FIXME: Re-enable this @diagnose when GitHub makes Xcode 27 available
-//    @diagnose(DeprecatedDeclaration, as: ignored, reason: "No suitable replacement exists")
+    @diagnose(DeprecatedDeclaration, as: ignored, reason: "No suitable replacement exists")
     @objc func getDefaultHandler(_ scheme: String) -> String? {
         // LSCopyDefaultHandlerForURLScheme is deprecated in macOS 12 but has no modern
         // replacement for scheme-only queries (NSWorkspace requires a full URL with host).
         return unsafe LSCopyDefaultHandlerForURLScheme(scheme as CFString)?.takeRetainedValue() as String?
     }
 
-    // FIXME: Re-enable this @diagnose when GitHub makes Xcode 27 available
-//    @diagnose(DeprecatedDeclaration, as: ignored, reason: "No suitable replacement exists")
+    @diagnose(DeprecatedDeclaration, as: ignored, reason: "No suitable replacement exists")
     @objc func getAllHandlersForScheme(_ scheme: String) -> [String] {
         // LSCopyAllHandlersForURLScheme is deprecated in macOS 12 but has no modern replacement.
         guard let cfArray = unsafe LSCopyAllHandlersForURLScheme(scheme as CFString)?.takeRetainedValue() else {

@@ -41,3 +41,5 @@ docs/json/**
 
 # Claude
 .claude/settings.local.json
+
+default.profraw

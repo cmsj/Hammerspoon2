@@ -169,6 +169,7 @@ final class HSIPCServer {
     // UUIDs of log entries we have already forwarded to clients.
     // Tracked by UUID so trim-and-add cycles in the ring buffer don't cause duplicates.
     private var broadcastedEntryIDs = Set<UUID>()
+    private var observationTask: Task<Void, Never>?
 
     // MARK: - Lifecycle
 
@@ -206,6 +207,8 @@ final class HSIPCServer {
     }
 
     func stop() {
+        observationTask?.cancel()
+        observationTask = nil
         connections.values.forEach { $0.cancel() }
         connections.removeAll()
         listener?.cancel()
@@ -244,16 +247,12 @@ final class HSIPCServer {
     private func startObservingLog() {
         // Seed with existing entries so clients only see new messages going forward.
         broadcastedEntryIDs = Set(HammerspoonLog.shared.entries.map { $0.id })
-        observeNextChange()
-    }
-
-    private func observeNextChange() {
-        withObservationTracking {
-            _ = HammerspoonLog.shared.entries.count
-        } onChange: {
-            Task { @MainActor [weak self = self] in
+        observationTask = Task { [weak self] in
+            let changes = Observations {
+                HammerspoonLog.shared.entries.count
+            }
+            for await _ in changes {
                 self?.broadcastNewEntries()
-                self?.observeNextChange()
             }
         }
     }

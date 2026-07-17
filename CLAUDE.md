@@ -56,7 +56,7 @@ Use the `/HSModule` skill when creating or reviewing modules.
 
 ### Reactive Types (`Engine/Types/`)
 
-`HSString`, `HSColor`, and `HSImage` are shared observable containers for use with `hs.ui`. They use `@Observable` (requires macOS 14+; project targets 15.6):
+`HSString`, `HSColor`, and `HSImage` are shared observable containers for use with `hs.ui`. They use `@Observable` (requires macOS 14+; project targets 26.0):
 
 - `@Observable` cannot track `@objc` stored properties, so each type uses a private backing var (`_value`) for Observable tracking and a computed `@objc var value` for the JSExport bridge.
 - In SwiftUI views, just reference these as plain `var content: HSString` — no `@ObservedObject` needed; `@Observable` handles dependency tracking automatically.
