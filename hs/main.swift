@@ -8,23 +8,23 @@
 
 import Foundation
 import Network
-import Synchronization
 
 // MARK: - Constants
 
 private let defaultPort: UInt16 = 51423
-private let evalTimeoutSeconds: Double = 30.0
 
 // MARK: - ANSI helpers
 
+// nonisolated so these constants are accessible from the actor's executor
+// (SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor would otherwise infer @MainActor here).
 private enum ANSI {
-    static let reset  = "\u{1B}[0m"
-    static let bold   = "\u{1B}[1m"
-    static let red    = "\u{1B}[31m"
-    static let yellow = "\u{1B}[33m"
-    static let green  = "\u{1B}[32m"
-    static let blue   = "\u{1B}[34m"
-    static let gray   = "\u{1B}[90m"
+    nonisolated static let reset  = "\u{1B}[0m"
+    nonisolated static let bold   = "\u{1B}[1m"
+    nonisolated static let red    = "\u{1B}[31m"
+    nonisolated static let yellow = "\u{1B}[33m"
+    nonisolated static let green  = "\u{1B}[32m"
+    nonisolated static let blue   = "\u{1B}[34m"
+    nonisolated static let gray   = "\u{1B}[90m"
 }
 
 // MARK: - Log levels (must match HammerspoonLogType raw values)
@@ -32,18 +32,18 @@ private enum ANSI {
 private enum LogLevel: Int, CaseIterable {
     case trace = 0, info = 1, warning = 2, error = 3, console = 4
 
-    init?(string: String) {
+    nonisolated init?(string: String) {
         switch string.lowercased() {
-        case "trace", "debug": self = .trace
-        case "info":           self = .info
-        case "warning", "warn": self = .warning
-        case "error":          self = .error
+        case "trace", "debug":          self = .trace
+        case "info":                    self = .info
+        case "warning", "warn":         self = .warning
+        case "error":                   self = .error
         case "javascript", "console", "js": self = .console
         default: return nil
         }
     }
 
-    var color: String {
+    nonisolated var color: String {
         switch self {
         case .trace:   return ANSI.gray
         case .info:    return ANSI.blue
@@ -53,8 +53,7 @@ private enum LogLevel: Int, CaseIterable {
         }
     }
 
-    // Fixed-width label for aligned output
-    var label: String {
+    nonisolated var label: String {
         switch self {
         case .trace:   return "DEBUG  "
         case .info:    return "INFO   "
@@ -74,25 +73,25 @@ private struct Arguments {
 }
 
 private func parseArguments() -> Arguments {
-    var args = Arguments()
+    var result = Arguments()
     let argv = CommandLine.arguments
     var idx = 1
     while idx < argv.count {
         switch argv[idx] {
         case "--port", "-p":
             idx += 1
-            if idx < argv.count, let p = UInt16(argv[idx]) { args.port = p }
+            if idx < argv.count, let p = UInt16(argv[idx]) { result.port = p }
         case "--log-level", "-l":
             idx += 1
             if idx < argv.count {
                 if let level = LogLevel(string: argv[idx]) {
-                    args.minLogLevel = level.rawValue
+                    result.minLogLevel = level.rawValue
                 } else if argv[idx].lowercased() == "none" {
-                    args.minLogLevel = Int.max
+                    result.minLogLevel = Int.max
                 }
             }
         case "--no-prompt":
-            args.showPrompt = false
+            result.showPrompt = false
         case "--help", "-h":
             printHelp()
             exit(0)
@@ -101,7 +100,7 @@ private func parseArguments() -> Arguments {
         }
         idx += 1
     }
-    return args
+    return result
 }
 
 private func writeStderr(_ s: String) {
@@ -139,8 +138,14 @@ private func printHelp() {
 }
 
 // MARK: - IPC client
+//
+// Declared as an `actor` so its mutable state is actor-isolated rather than
+// @MainActor-isolated (SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor would otherwise
+// infer @MainActor on a plain class, conflicting with the NWConnection callbacks
+// that run on networkQueue). Actors have their own executor; the module default
+// does not apply to them.
 
-private final class IPCClient {
+private actor IPCClient {
     private let port: UInt16
     private let minLogLevel: Int
     private let showPrompt: Bool
@@ -148,12 +153,12 @@ private final class IPCClient {
     private var nwConn: NWConnection?
     private var receiveBuffer = Data()
 
-    // Background queue for NWConnection callbacks
-    private let receiveQueue = DispatchQueue(label: "net.tenshu.Hammerspoon2.hs-ipc")
+    // Stored continuations — actor isolation serialises all access, no lock needed.
+    private var connectContinuation: CheckedContinuation<Void, Error>?
+    private var evalContinuation: CheckedContinuation<(String, Bool), Never>?
 
-    // Protects pendingCallback, accessed from both main thread and receiveQueue
-    private let lock = NSLock()
-    private var pendingCallback: ((String, Bool) -> Void)?
+    // NWConnection requires a DispatchQueue for its callbacks.
+    private let networkQueue = DispatchQueue(label: "net.tenshu.Hammerspoon2.hs-ipc")
 
     init(port: UInt16, minLogLevel: Int, showPrompt: Bool) {
         self.port = port
@@ -161,79 +166,90 @@ private final class IPCClient {
         self.showPrompt = showPrompt
     }
 
-    /// Connect synchronously; throws on failure.
-    func connect() throws {
-        guard let port = NWEndpoint.Port(rawValue: port) else {
+    // MARK: - Public interface
+
+    /// Connect to Hammerspoon 2; throws on failure.
+    func connect() async throws {
+        guard let nwPort = NWEndpoint.Port(rawValue: port) else {
             throw NSError(domain: "HSIPCClient", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "Unable to create NWConnection port"])
         }
 
         let conn = NWConnection(
-            to: .hostPort(host: NWEndpoint.Host("127.0.0.1"),
-                          port: port),
+            to: .hostPort(host: NWEndpoint.Host("127.0.0.1"), port: nwPort),
             using: .tcp
         )
         nwConn = conn
 
-        let sema = DispatchSemaphore(value: 0)
-        let connectError = Mutex<String?>(nil)
-
-        conn.stateUpdateHandler = { state in
-            switch state {
-            case .ready:
-                sema.signal()
-            case .failed(let e):
-                connectError.withLock { $0 = e.localizedDescription }
-                sema.signal()
-            case .cancelled:
-                connectError.withLock { $0 = "cancelled" }
-                sema.signal()
-            default:
-                break
-            }
-        }
-        conn.start(queue: receiveQueue)
-        sema.wait()
-
-        if let err = connectError.withLock({ $0 }) {
-            throw NSError(domain: "HSIPCClient", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: err])
+        // Bridge NWConnection callbacks onto the actor via Task.
+        conn.stateUpdateHandler = { [weak self] state in
+            Task { [weak self] in await self?.handleConnectionState(state) }
         }
 
-        // Announce which log levels we want
+        // Wait for TCP connection to become ready (or fail).
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            connectContinuation = continuation
+            conn.start(queue: networkQueue)
+        }
+
+        // After connect, drop the state handler so post-connect state changes
+        // (e.g. deferred .cancelled after we disconnect) don't touch the now-nil
+        // connectContinuation.
+        conn.stateUpdateHandler = nil
+
         let levelParam = minLogLevel < Int.max ? minLogLevel : -1
         sendRaw(["type": "hello", "minLogLevel": levelParam])
         scheduleReceive()
     }
 
-    /// Send a JavaScript string for evaluation; blocks until the result arrives (or times out).
-    func eval(code: String) -> (result: String, isError: Bool) {
-        let evalID = UUID().uuidString
-        let sema = DispatchSemaphore(value: 0)
-        var evalResult: (String, Bool) = ("undefined", false)
+    /// Evaluate JavaScript; suspends until the result arrives or a 30-second timeout.
+    func eval(code: String) async -> (String, Bool) {
+        sendRaw(["type": "eval", "id": UUID().uuidString, "code": code])
 
-        lock.lock()
-        pendingCallback = { result, isError in
-            evalResult = (result, isError)
-            sema.signal()
+        let timeoutTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(30))
+            await self?.timeoutCurrentEval()
         }
-        lock.unlock()
 
-        sendRaw(["type": "eval", "id": evalID, "code": code])
-        _ = sema.wait(timeout: .now() + evalTimeoutSeconds)
+        let result = await withCheckedContinuation { (continuation: CheckedContinuation<(String, Bool), Never>) in
+            evalContinuation = continuation
+        }
 
-        lock.lock()
-        pendingCallback = nil
-        lock.unlock()
-
-        return evalResult
+        timeoutTask.cancel()
+        return result
     }
 
     func disconnect() {
         nwConn?.cancel()
     }
 
-    // MARK: - Private networking
+    // MARK: - Connection state
+
+    private func handleConnectionState(_ state: NWConnection.State) {
+        guard let continuation = connectContinuation else { return }
+        switch state {
+        case .ready:
+            connectContinuation = nil
+            continuation.resume()
+        case .failed(let error):
+            connectContinuation = nil
+            continuation.resume(throwing: error)
+        case .cancelled:
+            connectContinuation = nil
+            continuation.resume(throwing: CancellationError())
+        default:
+            break
+        }
+    }
+
+    private func timeoutCurrentEval() {
+        if let cb = evalContinuation {
+            evalContinuation = nil
+            cb.resume(returning: ("Eval timed out after 30 seconds", true))
+        }
+    }
+
+    // MARK: - Networking
 
     private func sendRaw(_ dict: [String: Any]) {
         guard let data = try? JSONSerialization.data(withJSONObject: dict) else { return }
@@ -244,33 +260,35 @@ private final class IPCClient {
 
     private func scheduleReceive() {
         nwConn?.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
-            guard let self else { return }
-            if let data, !data.isEmpty {
-                self.receiveBuffer.append(data)
-                self.processBuffer()
+            // NWConnection callback runs on networkQueue; hop to the actor.
+            Task { [weak self] in await self?.handleReceive(data: data, isComplete: isComplete, error: error) }
+        }
+    }
+
+    private func handleReceive(data: Data?, isComplete: Bool, error: NWError?) {
+        if let data, !data.isEmpty {
+            receiveBuffer.append(data)
+            processBuffer()
+        }
+        if isComplete || error != nil {
+            if let error {
+                print("\(ANSI.red)Connection lost: \(error.localizedDescription)\(ANSI.reset)")
             }
-            if isComplete || error != nil {
-                if let error {
-                    self.write("\(ANSI.red)Connection lost: \(error.localizedDescription)\(ANSI.reset)\n")
-                }
-                // Unblock any in-flight eval
-                self.lock.lock()
-                let cb = self.pendingCallback
-                self.pendingCallback = nil
-                self.lock.unlock()
-                cb?("Connection lost", true)
-                exit(1)
-            } else {
-                self.scheduleReceive()
+            if let cb = evalContinuation {
+                evalContinuation = nil
+                cb.resume(returning: ("Connection lost", true))
             }
+            exit(1)
+        } else {
+            scheduleReceive()
         }
     }
 
     private func processBuffer() {
         while let nl = receiveBuffer.firstIndex(of: 0x0A) {
-            let line = Data(receiveBuffer[receiveBuffer.startIndex..<nl])
+            let lineData = Data(receiveBuffer[receiveBuffer.startIndex..<nl])
             receiveBuffer.removeSubrange(receiveBuffer.startIndex...nl)
-            if !line.isEmpty { handleMessage(line) }
+            if !lineData.isEmpty { handleMessage(lineData) }
         }
     }
 
@@ -281,44 +299,43 @@ private final class IPCClient {
         switch type {
         case "connected":
             let p = (json["port"] as? Int).map { "\($0)" } ?? "\(port)"
-            write("\(ANSI.blue)Connected to Hammerspoon 2 on port \(p)\(ANSI.reset)\n")
-            if showPrompt { write("Type JavaScript to evaluate. Use --help for options.\n") }
+            print("\(ANSI.blue)Connected to Hammerspoon 2 on port \(p)\(ANSI.reset)")
+            if showPrompt { print("Type JavaScript to evaluate. Use --help for options.") }
 
         case "result":
             let result = json["result"] as? String ?? "undefined"
             let isError = json["isError"] as? Bool ?? false
-            lock.lock()
-            let cb = pendingCallback
-            lock.unlock()
-            cb?(result, isError)
+            if let cb = evalContinuation {
+                evalContinuation = nil
+                cb.resume(returning: (result, isError))
+            }
 
         case "log":
             guard let levelStr = json["level"] as? String,
                   let message = json["message"] as? String,
                   let level = LogLevel(string: levelStr),
                   level.rawValue >= minLogLevel else { return }
-            // '\n' before the message creates a clean line even if a prompt is showing.
-            write("\n\(level.color)\(ANSI.bold)[\(level.label)]\(ANSI.reset) \(message)\n")
-            // Re-print the prompt so the user knows we're still ready.
-            if showPrompt { write("hs> ") }
+            // '\n' before the message keeps the output clean even if a prompt is showing.
+            print("\n\(level.color)\(ANSI.bold)[\(level.label)]\(ANSI.reset) \(message)")
+            if showPrompt { print("hs> ", terminator: "") }
 
         default:
             break
         }
     }
-
-    private func write(_ s: String) {
-        print(s, terminator: "")
-    }
 }
 
 // MARK: - Entry point
+//
+// Top-level `await` makes the program entry point async (@MainActor by default isolation).
+// The `IPCClient` actor runs on the Swift cooperative pool so NWConnection callbacks
+// and log message printing are not blocked by `readLine()` on the main thread.
 
 private let args = parseArguments()
 private let client = IPCClient(port: args.port, minLogLevel: args.minLogLevel, showPrompt: args.showPrompt)
 
 do {
-    try client.connect()
+    try await client.connect()
 } catch {
     writeStderr("Error: Cannot connect to Hammerspoon 2 on port \(args.port).\n")
     writeStderr("Make sure Hammerspoon 2 is running and IPC is enabled:\n")
@@ -327,22 +344,22 @@ do {
     exit(1)
 }
 
-// REPL loop — runs on the main thread; NWConnection callbacks arrive on receiveQueue.
+// REPL loop — readLine() blocks the main thread but the actor's cooperative-pool
+// executor is unaffected, so log messages and eval results are still delivered.
 while true {
     if args.showPrompt {
         print("hs> ", terminator: "")
     }
 
     guard let line = readLine(strippingNewline: true) else {
-        // EOF (Ctrl-D)
-        client.disconnect()
+        await client.disconnect()
         break
     }
 
     let code = line.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !code.isEmpty else { continue }
 
-    let (result, isError) = client.eval(code: code)
+    let (result, isError) = await client.eval(code: code)
 
     if isError {
         print("\(ANSI.red)\(result)\(ANSI.reset)")
