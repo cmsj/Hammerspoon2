@@ -226,8 +226,19 @@ import JavaScriptCore
 
     @objc func isBinaryInstalled(_ directoryVal: JSValue) -> Bool {
         let directory = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
-        let path = URL(fileURLWithPath: directory).appendingPathComponent("hs").path
-        return FileManager.default.fileExists(atPath: path)
+        let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
+        let fm = FileManager.default
+
+        guard let attrs = try? fm.attributesOfItem(atPath: destURL.path),
+              (attrs[.type] as? FileAttributeType) == .typeSymbolicLink,
+              let target = try? fm.destinationOfSymbolicLink(atPath: destURL.path),
+              let sourceURL = bundledHSBinaryURL() else { return false }
+
+        // Resolve relative to the symlink's directory so both absolute and relative
+        // symlink destinations compare correctly against the bundle path.
+        let resolvedTarget = URL(fileURLWithPath: target,
+                                 relativeTo: destURL.deletingLastPathComponent()).standardized
+        return resolvedTarget.path == sourceURL.standardized.path
     }
 
     // MARK: - Private
