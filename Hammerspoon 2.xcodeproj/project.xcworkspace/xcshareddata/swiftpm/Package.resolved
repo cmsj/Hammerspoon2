@@ -1,5 +1,5 @@
 {
-  "originHash" : "86f463abb0ebf560d7738dd4a2f83fc9a1e9ecbb1ce29fc13e4aa3d622d810af",
+  "originHash" : "8832984bc491f2f7d994ff8caf8774f38d5ee4d2796b612644f5a91df8ee2ac5",
   "pins" : [
     {
       "identity" : "axswift",
@@ -31,10 +31,10 @@
     {
       "identity" : "swift-commandlinekit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/objecthub/swift-commandlinekit",
+      "location" : "https://github.com/cmsj/swift-commandlinekit",
       "state" : {
-        "revision" : "58aa1a2285c5b8ad54e874a2bd66f790eb7e1766",
-        "version" : "1.1.1"
+        "branch" : "master",
+        "revision" : "58aa1a2285c5b8ad54e874a2bd66f790eb7e1766"
       }
     },
     {
