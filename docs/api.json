@@ -9253,7 +9253,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationGeocoder.swift",
-          "lineNumber": 50
+          "lineNumber": 45
         },
         {
           "name": "lookupLocation",
@@ -9284,7 +9284,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.location/HSLocationGeocoder.swift",
-          "lineNumber": 63
+          "lineNumber": 58
         },
         {
           "name": "servicesEnabled",
@@ -19536,5 +19536,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-18T14:56:31.475Z"
+  "generatedAt": "2026-07-18T20:31:48.981Z"
 }

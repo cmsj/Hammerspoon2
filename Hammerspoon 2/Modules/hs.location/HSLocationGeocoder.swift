@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import CoreLocation
+import MapKit
 
 // MARK: - Geocoder API protocol
 
@@ -23,17 +24,11 @@ import CoreLocation
 /// | Key | Type | Description |
 /// |-----|------|-------------|
 /// | `name` | string | Place name |
+/// | `fullAddress` | string | Full formatted address (e.g. "1 Apple Park Way, Cupertino, CA 95014, United States") |
+/// | `shortAddress` | string | Abbreviated address (e.g. "Cupertino, CA") |
 /// | `locality` | string | City |
-/// | `subLocality` | string | Neighbourhood |
-/// | `thoroughfare` | string | Street name |
-/// | `subThoroughfare` | string | Street number |
-/// | `administrativeArea` | string | State / province |
-/// | `subAdministrativeArea` | string | County |
 /// | `country` | string | Country name |
 /// | `countryCode` | string | ISO country code |
-/// | `postalCode` | string | Postal / ZIP code |
-/// | `ocean` | string | Ocean name |
-/// | `inlandWater` | string | Inland water body name |
 /// | `location` | locationTable | The locationTable for this placemark |
 @objc protocol HSLocationGeocoderAPI: JSExport {
     /// Geocodes an address string into an array of placemarkTables.
@@ -68,36 +63,34 @@ import CoreLocation
 @_documentation(visibility: private)
 @MainActor
 @objc class HSLocationGeocoder: NSObject, HSLocationGeocoderAPI {
-    // CLGeocoder deprecated in macOS 26; no non-deprecated replacement exists yet.
-    @available(macOS, deprecated: 26.0)
-    private let geocoder = CLGeocoder()
 
-    // Convert CLPlacemark to a plain JS-compatible dictionary
-    static func placemarkTable(from pm: CLPlacemark) -> [String: Any] {
+    static func placemarkTable(from item: MKMapItem) -> [String: Any] {
         var d: [String: Any] = [:]
-        if let v = pm.name                  { d["name"]                  = v }
-        if let v = pm.locality              { d["locality"]              = v }
-        if let v = pm.subLocality           { d["subLocality"]           = v }
-        if let v = pm.thoroughfare          { d["thoroughfare"]          = v }
-        if let v = pm.subThoroughfare       { d["subThoroughfare"]       = v }
-        if let v = pm.administrativeArea    { d["administrativeArea"]    = v }
-        if let v = pm.subAdministrativeArea { d["subAdministrativeArea"] = v }
-        if let v = pm.country               { d["country"]               = v }
-        if let v = pm.isoCountryCode        { d["countryCode"]           = v }
-        if let v = pm.postalCode            { d["postalCode"]            = v }
-        if let v = pm.ocean                 { d["ocean"]                 = v }
-        if let v = pm.inlandWater           { d["inlandWater"]           = v }
-        if let loc = pm.location            { d["location"]              = HSLocationModule.locationTable(from: loc) }
+        if let name = item.name                    { d["name"]         = name }
+        if let addr = item.address {
+            d["fullAddress"] = addr.fullAddress
+            if let short = addr.shortAddress       { d["shortAddress"] = short }
+        }
+        if let reps = item.addressRepresentations {
+            if let city    = reps.cityName         { d["locality"]     = city }
+            if let country = reps.regionName       { d["country"]      = country }
+            if let region  = reps.region           { d["countryCode"]  = region.identifier }
+        }
+        d["location"] = HSLocationModule.locationTable(from: item.location)
         return d
     }
 
     @objc func lookupAddress(_ address: String) -> JSPromise? {
         guard let context = JSContext.current() else { return nil }
         return wrapAsyncInJSPromise(in: context) { holder in
-            Task { @MainActor [self] in
+            Task { @MainActor in
+                guard let request = MKGeocodingRequest(addressString: address) else {
+                    holder.rejectWithMessage("Failed to create geocoding request")
+                    return
+                }
                 do {
-                    let placemarks = try await self.geocoder.geocodeAddressString(address)
-                    let tables = placemarks.map { HSLocationGeocoder.placemarkTable(from: $0) }
+                    let mapItems = try await request.mapItems
+                    let tables = mapItems.map { HSLocationGeocoder.placemarkTable(from: $0) }
                     holder.resolveWith(tables)
                 } catch {
                     holder.rejectWithMessage(error.localizedDescription)
@@ -113,10 +106,14 @@ import CoreLocation
         }
         guard let context = JSContext.current() else { return nil }
         return wrapAsyncInJSPromise(in: context) { holder in
-            Task { @MainActor [self] in
+            Task { @MainActor in
+                guard let request = MKReverseGeocodingRequest(location: loc) else {
+                    holder.rejectWithMessage("Failed to create reverse geocoding request")
+                    return
+                }
                 do {
-                    let placemarks = try await self.geocoder.reverseGeocodeLocation(loc)
-                    let tables = placemarks.map { HSLocationGeocoder.placemarkTable(from: $0) }
+                    let mapItems = try await request.mapItems
+                    let tables = mapItems.map { HSLocationGeocoder.placemarkTable(from: $0) }
                     holder.resolveWith(tables)
                 } catch {
                     holder.rejectWithMessage(error.localizedDescription)
