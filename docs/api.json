@@ -12496,6 +12496,386 @@
       "rawDocumentation": "Inspect and control the displays attached to the system.\n\n## Obtaining screens\n\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n\n## Navigation\n\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n\n## Display modes\n\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.mode);\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n\n## Screenshots\n\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```"
     },
     {
+      "name": "hs.sound",
+      "methods": [
+        {
+          "name": "fromFile",
+          "signature": "func fromFile(_ path: String) -> HSSound?",
+          "isStatic": false,
+          "rawDocumentation": "Loads an audio file from the given path and returns a sound object.\nReturns `null` if the file cannot be loaded.\n- Parameter path: The absolute path to an audio file (AIFF, WAV, MP3, CAF, etc.).\n- Returns: An `HSSound` object, or `null` on failure.\n- Example:\n```js\nconst s = hs.sound.fromFile(\"/Users/me/sounds/alert.aiff\")\nif (s) s.play()\n```",
+          "description": "Loads an audio file from the given path and returns a sound object.\nReturns `null` if the file cannot be loaded.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "The absolute path to an audio file (AIFF, WAV, MP3, CAF, etc.).",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSSound",
+            "description": "An `HSSound` object, or `null` on failure."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const s = hs.sound.fromFile(\"/Users/me/sounds/alert.aiff\")\nif (s) s.play()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.sound/HSSoundModule.swift",
+          "lineNumber": 23
+        },
+        {
+          "name": "named",
+          "signature": "func named(_ name: String) -> HSSound?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a sound object for a built-in system sound by name.\nReturns `null` if no sound with that name can be found.\nUse `hs.sound.systemSounds()` to discover available names.\n- Parameter name: The name of a system sound, e.g. `\"Basso\"` or `\"Glass\"`.\n- Returns: An `HSSound` object, or `null` on failure.\n- Example:\n```js\nhs.sound.named(\"Basso\").play()\n```",
+          "description": "Creates a sound object for a built-in system sound by name.\nReturns `null` if no sound with that name can be found.\nUse `hs.sound.systemSounds()` to discover available names.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The name of a system sound, e.g. `\"Basso\"` or `\"Glass\"`.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSSound",
+            "description": "An `HSSound` object, or `null` on failure."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.sound.named(\"Basso\").play()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.sound/HSSoundModule.swift",
+          "lineNumber": 34
+        },
+        {
+          "name": "systemSounds",
+          "signature": "func systemSounds() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns a sorted array of all available system sound names.\nThese names can be passed directly to `hs.sound.named()`.\nScans `/System/Library/Sounds`, `/Library/Sounds`, and `~/Library/Sounds`.\n- Returns: A sorted array of sound name strings.\n- Example:\n```js\nconsole.log(hs.sound.systemSounds())\n// [\"Basso\", \"Blow\", \"Bottle\", \"Frog\", \"Funk\", \"Glass\", ...]\n```",
+          "description": "Returns a sorted array of all available system sound names.\nThese names can be passed directly to `hs.sound.named()`.\nScans `/System/Library/Sounds`, `/Library/Sounds`, and `~/Library/Sounds`.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "A sorted array of sound name strings."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.sound.systemSounds())\n// [\"Basso\", \"Blow\", \"Bottle\", \"Frog\", \"Funk\", \"Glass\", ...]"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.sound/HSSoundModule.swift",
+          "lineNumber": 45
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSSoundAPI",
+          "type": "typedef",
+          "rawDocumentation": "An object representing an audio sound that can be played, paused, and stopped.\nCreate instances using `hs.sound.fromFile()` or `hs.sound.named()`.",
+          "description": "An object representing an audio sound that can be played, paused, and stopped.\nCreate instances using `hs.sound.fromFile()` or `hs.sound.named()`.",
+          "methods": [
+            {
+              "name": "play",
+              "signature": "func play() -> HSSound",
+              "isStatic": false,
+              "rawDocumentation": "Starts playback from the current position.\n- Returns: This sound object, for chaining.\n- Example:\n```js\nhs.sound.named(\"Basso\").play()\n```",
+              "description": "Starts playback from the current position.",
+              "params": [],
+              "returns": {
+                "type": "HSSound",
+                "description": "This sound object, for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.sound.named(\"Basso\").play()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 79
+            },
+            {
+              "name": "pause",
+              "signature": "func pause() -> HSSound",
+              "isStatic": false,
+              "rawDocumentation": "Pauses playback, preserving the current position.\n- Returns: This sound object, for chaining.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\ns.play()\ns.pause()\n```",
+              "description": "Pauses playback, preserving the current position.",
+              "params": [],
+              "returns": {
+                "type": "HSSound",
+                "description": "This sound object, for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\ns.play()\ns.pause()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 89
+            },
+            {
+              "name": "resume",
+              "signature": "func resume() -> HSSound",
+              "isStatic": false,
+              "rawDocumentation": "Resumes playback from a paused position.\n- Returns: This sound object, for chaining.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\ns.play()\ns.pause()\ns.resume()\n```",
+              "description": "Resumes playback from a paused position.",
+              "params": [],
+              "returns": {
+                "type": "HSSound",
+                "description": "This sound object, for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\ns.play()\ns.pause()\ns.resume()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 100
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSSound",
+              "isStatic": false,
+              "rawDocumentation": "Stops playback. The playback position is not reset.\n- Returns: This sound object, for chaining.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\ns.play()\ns.stop()\n```",
+              "description": "Stops playback. The playback position is not reset.",
+              "params": [],
+              "returns": {
+                "type": "HSSound",
+                "description": "This sound object, for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\ns.play()\ns.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 110
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ callback: JSValue) -> HSSound",
+              "isStatic": false,
+              "rawDocumentation": "Sets a function to be called when playback finishes.\nThe callback receives two arguments: the sound object and a boolean — `true` if the\nsound completed naturally, `false` if it was stopped before finishing.\n- Parameter callback: {(sound: HSSound, didFinish: boolean) => void} A function called when playback ends.\n- Returns: This sound object, for chaining.\n- Example:\n```js\nhs.sound.named(\"Basso\")\n    .setCallback((sound, didFinish) => {\n        console.log(\"Finished: \" + didFinish)\n    })\n    .play()\n```",
+              "description": "Sets a function to be called when playback finishes.\nThe callback receives two arguments: the sound object and a boolean — `true` if the\nsound completed naturally, `false` if it was stopped before finishing.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSValue",
+                  "description": "A function called when playback ends.",
+                  "optional": false,
+                  "tsType": "(sound: HSSound, didFinish: boolean) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSSound",
+                "description": "This sound object, for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.sound.named(\"Basso\")\n    .setCallback((sound, didFinish) => {\n        console.log(\"Finished: \" + didFinish)\n    })\n    .play()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 125
+            },
+            {
+              "name": "removeCallback",
+              "signature": "func removeCallback() -> HSSound",
+              "isStatic": false,
+              "rawDocumentation": "Removes the completion callback previously set with `setCallback()`.\n- Returns: This sound object, for chaining.\n- Example:\n```js\ns.removeCallback()\n```",
+              "description": "Removes the completion callback previously set with `setCallback()`.",
+              "params": [],
+              "returns": {
+                "type": "HSSound",
+                "description": "This sound object, for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "s.removeCallback()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 133
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Stops playback and releases all resources held by this sound.\nAfter calling `destroy()` the sound object should not be used.\n- Example:\n```js\ns.destroy()\n```",
+              "description": "Stops playback and releases all resources held by this sound.\nAfter calling `destroy()` the sound object should not be used.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "s.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 141
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier for this sound object.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\nconsole.log(s.identifier)\n```",
+              "description": "A unique identifier for this sound object.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\nconsole.log(s.identifier)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 19
+            },
+            {
+              "name": "name",
+              "signature": "var name: String? { get }",
+              "rawDocumentation": "The name of this sound. System sounds loaded by name return their name; file-based sounds return `null`.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\nconsole.log(s.name)  // \"Basso\"\n```",
+              "description": "The name of this sound. System sounds loaded by name return their name; file-based sounds return `null`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\nconsole.log(s.name)  // \"Basso\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 27
+            },
+            {
+              "name": "duration",
+              "signature": "var duration: Double { get }",
+              "rawDocumentation": "The total duration of the sound in seconds.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\nconsole.log(s.duration + \" seconds\")\n```",
+              "description": "The total duration of the sound in seconds.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\nconsole.log(s.duration + \" seconds\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 35
+            },
+            {
+              "name": "currentTime",
+              "signature": "var currentTime: Double { get set }",
+              "rawDocumentation": "The current playback position in seconds. Assign a value to seek to that position.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\ns.currentTime = 0.1\ns.play()\n```",
+              "description": "The current playback position in seconds. Assign a value to seek to that position.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\ns.currentTime = 0.1\ns.play()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 44
+            },
+            {
+              "name": "volume",
+              "signature": "var volume: Double { get set }",
+              "rawDocumentation": "The playback volume, from `0.0` (silent) to `1.0` (full volume).\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\ns.volume = 0.5\ns.play()\n```",
+              "description": "The playback volume, from `0.0` (silent) to `1.0` (full volume).",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\ns.volume = 0.5\ns.play()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 53
+            },
+            {
+              "name": "loops",
+              "signature": "var loops: Bool { get set }",
+              "rawDocumentation": "Whether the sound loops when it reaches the end. Defaults to `false`.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\ns.loops = true\ns.play()\n```",
+              "description": "Whether the sound loops when it reaches the end. Defaults to `false`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\ns.loops = true\ns.play()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 62
+            },
+            {
+              "name": "isPlaying",
+              "signature": "var isPlaying: Bool { get }",
+              "rawDocumentation": "Whether the sound is currently playing.\n- Example:\n```js\nconst s = hs.sound.named(\"Basso\")\ns.play()\nconsole.log(s.isPlaying)  // true\n```",
+              "description": "Whether the sound is currently playing.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const s = hs.sound.named(\"Basso\")\ns.play()\nconsole.log(s.isPlaying)  // true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sound/HSSound.swift",
+              "lineNumber": 71
+            }
+          ]
+        }
+      ],
+      "description": "Play audio from files on disk or from the system's built-in sound library.",
+      "rawDocumentation": "Play audio from files on disk or from the system's built-in sound library."
+    },
+    {
       "name": "hs.spotlight",
       "methods": [
         {
@@ -19156,5 +19536,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-18T12:53:15.460Z"
+  "generatedAt": "2026-07-18T14:56:31.475Z"
 }
