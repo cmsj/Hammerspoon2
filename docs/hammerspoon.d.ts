@@ -4744,6 +4744,124 @@ Assign a new absolute file path or `file://` URL string to change the wallpaper.
 }
 
 /**
+ * Play audio from files on disk or from the system's built-in sound library.
+ */
+declare namespace hs.sound {
+    /**
+     * Loads an audio file from the given path and returns a sound object.
+Returns `null` if the file cannot be loaded.
+     * @param path The absolute path to an audio file (AIFF, WAV, MP3, CAF, etc.).
+     * @returns An `HSSound` object, or `null` on failure.
+     */
+    function fromFile(path: string): HSSound | null;
+
+    /**
+     * Creates a sound object for a built-in system sound by name.
+Returns `null` if no sound with that name can be found.
+Use `hs.sound.systemSounds()` to discover available names.
+     * @param name The name of a system sound, e.g. `"Basso"` or `"Glass"`.
+     * @returns An `HSSound` object, or `null` on failure.
+     */
+    function named(name: string): HSSound | null;
+
+    /**
+     * Returns a sorted array of all available system sound names.
+These names can be passed directly to `hs.sound.named()`.
+Scans `/System/Library/Sounds`, `/Library/Sounds`, and `~/Library/Sounds`.
+     * @returns A sorted array of sound name strings.
+     */
+    function systemSounds(): string[];
+
+}
+
+/**
+ * An object representing an audio sound that can be played, paused, and stopped.
+Create instances using `hs.sound.fromFile()` or `hs.sound.named()`.
+ */
+declare class HSSound {
+    /**
+     * Starts playback from the current position.
+     * @returns This sound object, for chaining.
+     */
+    play(): HSSound;
+
+    /**
+     * Pauses playback, preserving the current position.
+     * @returns This sound object, for chaining.
+     */
+    pause(): HSSound;
+
+    /**
+     * Resumes playback from a paused position.
+     * @returns This sound object, for chaining.
+     */
+    resume(): HSSound;
+
+    /**
+     * Stops playback. The playback position is not reset.
+     * @returns This sound object, for chaining.
+     */
+    stop(): HSSound;
+
+    /**
+     * Sets a function to be called when playback finishes.
+The callback receives two arguments: the sound object and a boolean — `true` if the
+sound completed naturally, `false` if it was stopped before finishing.
+     * @param callback A function called when playback ends.
+     * @returns This sound object, for chaining.
+     */
+    setCallback(callback: (sound: HSSound, didFinish: boolean) => void): HSSound;
+
+    /**
+     * Removes the completion callback previously set with `setCallback()`.
+     * @returns This sound object, for chaining.
+     */
+    removeCallback(): HSSound;
+
+    /**
+     * Stops playback and releases all resources held by this sound.
+After calling `destroy()` the sound object should not be used.
+     */
+    destroy(): void;
+
+    /**
+     * A unique identifier for this sound object.
+     */
+    readonly identifier: string;
+
+    /**
+     * The name of this sound. System sounds loaded by name return their name; file-based sounds return `null`.
+     */
+    readonly name: string | null;
+
+    /**
+     * The total duration of the sound in seconds.
+     */
+    readonly duration: number;
+
+    /**
+     * The current playback position in seconds. Assign a value to seek to that position.
+     */
+    currentTime: number;
+
+    /**
+     * The playback volume, from `0.0` (silent) to `1.0` (full volume).
+     */
+    volume: number;
+
+    /**
+     * Whether the sound loops when it reaches the end. Defaults to `false`.
+     */
+    loops: boolean;
+
+    /**
+     * Whether the sound is currently playing.
+     */
+    readonly isPlaying: boolean;
+
+}
+
+/**
  * Query the macOS Spotlight metadata database.
 `hs.spotlight` wraps `NSMetadataQuery` to let you search for files and other
 metadata objects indexed by Spotlight. Queries use `NSPredicate` syntax with
