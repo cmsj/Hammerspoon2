@@ -438,6 +438,21 @@ declare namespace hs {
      */
     function collectGarbage(): void;
 
+    /**
+     * Open the Hammerspoon Console window
+     */
+    function openConsole(): void;
+
+    /**
+     * Close the Hammerspoon Console window
+     */
+    function closeConsole(): void;
+
+    /**
+     * Clear the Hammerspoon Console log
+     */
+    function clearConsole(): void;
+
 }
 
 /**

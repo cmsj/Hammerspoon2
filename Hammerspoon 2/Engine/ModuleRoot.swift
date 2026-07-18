@@ -28,10 +28,26 @@ import JavaScriptCoreExtras
     /// ```
     @objc func collectGarbage()
 
+    /// Open the Hammerspoon Console window
+    /// - Example:
+    /// ```js
+    /// hs.openConsole()
+    /// ```
     @objc func openConsole()
+
+    /// Close the Hammerspoon Console window
+    /// - Example:
+    /// ```js
+    /// hs.closeConsole()
+    /// ```
     @objc func closeConsole()
+
+    /// Clear the Hammerspoon Console log
+    /// - Example:
+    /// ```js
+    /// hs.clearConsole()
+    /// ```
     @objc func clearConsole()
-    @objc func openSettings()
 
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
@@ -137,14 +153,6 @@ import JavaScriptCoreExtras
     @objc func clearConsole() {
         Task { @MainActor in
             HammerspoonLog.shared.clearLog()
-        }
-    }
-
-    // MARK: - Settings
-
-    @objc func openSettings() {
-        if let url = URL(string:"hammerspoon2://openSettings") {
-            NSWorkspace.shared.open(url)
         }
     }
 
