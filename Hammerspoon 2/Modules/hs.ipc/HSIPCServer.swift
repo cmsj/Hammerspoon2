@@ -39,11 +39,11 @@ final class HSIPCServer: NSObject {
         let lnr = NSXPCListener(machServiceName: Self.serviceName)
         lnr.delegate = self
         #if !DEBUG
-        if let req = peerSigningRequirement() {
-            lnr.setConnectionCodeSigningRequirement(req)
-        } else {
-            AKError("hs.ipc: Cannot determine signing Team ID — connections will not be authenticated")
+        guard let req = peerSigningRequirement() else {
+            AKError("hs.ipc: Cannot determine signing Team ID — refusing to start without peer authentication")
+            return
         }
+        lnr.setConnectionCodeSigningRequirement(req)
         #else
         AKWarning("hs.ipc: DEBUG build — peer code-signing check disabled")
         #endif
