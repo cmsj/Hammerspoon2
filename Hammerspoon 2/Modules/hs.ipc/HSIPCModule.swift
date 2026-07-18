@@ -171,11 +171,15 @@ import JavaScriptCore
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
         let fm = FileManager.default
 
-        if fm.fileExists(atPath: destURL.path) || (try? fm.attributesOfItem(atPath: destURL.path)) != nil {
+        if let attrs = try? fm.attributesOfItem(atPath: destURL.path) {
+            guard (attrs[.type] as? FileAttributeType) == .typeSymbolicLink else {
+                AKError("hs.ipc.installBinary(): \(destURL.path) already exists and is not a symlink. Remove it manually before installing.")
+                return false
+            }
             do {
                 try fm.removeItem(at: destURL)
             } catch {
-                AKError("hs.ipc.installBinary(): Failed to remove existing file at \(destURL.path): \(error.localizedDescription)")
+                AKError("hs.ipc.installBinary(): Failed to remove existing symlink at \(destURL.path): \(error.localizedDescription)")
                 return false
             }
         }
