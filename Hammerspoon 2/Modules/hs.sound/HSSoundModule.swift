@@ -90,7 +90,10 @@ import AppKit
         }
         // NSSound(named:) returns a shared instance; copy it so each caller
         // gets independent volume, position, and delegate state.
-        let nssoundCopy = nsSound.copy() as! NSSound
+        guard let nssoundCopy = nsSound.copy() as? NSSound else {
+            AKError("hs.sound.named(): Unable to prepare sound")
+            return nil
+        }
         let sound = HSSound(sound: nssoundCopy, name: name)
         sounds.add(sound)
         return sound
