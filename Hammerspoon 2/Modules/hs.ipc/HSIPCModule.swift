@@ -204,8 +204,12 @@ import JavaScriptCore
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
         let fm = FileManager.default
 
-        guard (try? fm.attributesOfItem(atPath: destURL.path)) != nil else {
+        guard let attrs = try? fm.attributesOfItem(atPath: destURL.path) else {
             AKWarning("hs.ipc.uninstallBinary(): Nothing found at \(destURL.path)")
+            return false
+        }
+        guard (attrs[.type] as? FileAttributeType) == .typeSymbolicLink else {
+            AKError("hs.ipc.uninstallBinary(): \(destURL.path) exists but is not a symlink. Remove it manually.")
             return false
         }
 
