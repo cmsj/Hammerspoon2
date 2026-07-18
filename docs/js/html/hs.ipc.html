@@ -59,14 +59,16 @@
 
 <div class="module-description"><p>Module for enabling CLI access to Hammerspoon 2 via the <code>hs</code> command-line tool.</p>
 <p>The IPC server must be explicitly started from your configuration — it does not run by default.
-Once started, the <code>hs</code> command-line tool connects over TCP to evaluate JavaScript interactively
-and optionally stream log messages.</p>
+Once started, the <code>hs</code> command-line tool connects via XPC and evaluates JavaScript
+interactively, with optional live log streaming.</p>
+<p>Communication is secured with a same-team code-signing requirement in release builds,
+so only binaries signed with the same Team ID can connect.</p>
 <h2>Quick start</h2>
 <pre><code class="language-js">// In your Hammerspoon 2 config (init.js):
 hs.ipc.start()
 </code></pre>
 <p>Install the CLI tool once:</p>
-<pre><code class="language-js">hs.ipc.installBinary()   // copies hs to /usr/local/bin/hs
+<pre><code class="language-js">hs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs
 </code></pre>
 <p>Then in a terminal:</p>
 <pre><code class="language-bash">hs
@@ -87,57 +89,32 @@ hs&gt; 2 + 2
         <div class="prop-type">boolean</div>
         <div class="description">Whether the IPC server is currently accepting connections.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L50" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:50</a>
-        </div>
-    </div>
-    <div class="property" id="port">
-        <h3><a href="#port">hs.ipc.port</a></h3>
-        <div class="prop-type">Int32</div>
-        <div class="description">The TCP port the IPC server is listening on. Returns `0` if not listening.</div>
-        <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L58" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:58</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L53" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:53</a>
         </div>
     </div>
 
 <h2 class="section-heading">Methods</h2>
     <div class="method" id="start">
-        <h3><a href="#start">hs.ipc.start(port) -> None</a></h3>
+        <h3><a href="#start">hs.ipc.start() -> None</a></h3>
 
         <div class="description">Start the IPC server.
-Connections are only accepted from localhost (127.0.0.1). Calling `start()` when already
-running logs a warning and does nothing.</div>
+The server listens on a named XPC Mach service (`net.tenshu.Hammerspoon-2.ipc`).
+In release builds, only processes signed with the same Team ID can connect.
+Calling `start()` when already running logs a warning and does nothing.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.ipc.start(port) -> None</code></pre>
+        <pre><code class="language-javascript">hs.ipc.start() -> None</code></pre>
 
-        <div class="card-section-label">Parameters</div>
-        <table class="params-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="param-name">port</td>
-                    <td class="param-type">JSValue</td>
-                    <td class="param-desc">TCP port to listen on. Defaults to `51423` if omitted.</td>
-                </tr>
-            </tbody>
-        </table>
 
         <div class="card-section-label">Returns</div>
         <div class="return-desc" style="color: var(--text-muted);">None</div>
 
 
         <div class="card-section-label">Example</div>
-        <pre><code class="language-js">hs.ipc.start()        // listen on default port 51423
-hs.ipc.start(9999)    // listen on port 9999</code></pre>
+        <pre><code class="language-js">hs.ipc.start()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L71" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:71</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L65" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:65</a>
         </div>
     </div>
     <div class="method" id="stop">
@@ -157,7 +134,7 @@ hs.ipc.start(9999)    // listen on port 9999</code></pre>
         <pre><code class="language-js">hs.ipc.stop()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:79</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L73" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:73</a>
         </div>
     </div>
     <div class="method" id="installBinary">
@@ -204,7 +181,7 @@ a terminal with `sudo`.</div>
 hs.ipc.installBinary(&quot;/opt/homebrew/bin&quot;) // install to /opt/homebrew/bin/hs</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L101" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:101</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L95" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:95</a>
         </div>
     </div>
     <div class="method" id="uninstallBinary">
@@ -243,7 +220,7 @@ hs.ipc.installBinary(&quot;/opt/homebrew/bin&quot;) // install to /opt/homebrew/
 hs.ipc.uninstallBinary(&quot;/opt/homebrew/bin&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:112</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L106" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:106</a>
         </div>
     </div>
     <div class="method" id="isBinaryInstalled">
@@ -283,7 +260,7 @@ hs.ipc.uninstallBinary(&quot;/opt/homebrew/bin&quot;)</code></pre>
 }</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L124" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:124</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L118" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:118</a>
         </div>
     </div>
         </main>

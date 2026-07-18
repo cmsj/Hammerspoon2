@@ -4,120 +4,239 @@
 //
 
 import Foundation
-import Network
 import Observation
+import Security
 
-// MARK: - Helpers
-
-private func jsonLine(_ dict: [String: Any]) -> Data? {
-    guard let data = try? JSONSerialization.data(withJSONObject: dict) else { return nil }
-    var line = data
-    line.append(0x0A) // '\n'
-    return line
-}
-
-// MARK: - Single client connection
+// MARK: - Server
 
 @safe @MainActor
-private final class HSIPCConnection {
-    let id = UUID()
-    let nwConnection: NWConnection
+final class HSIPCServer: NSObject {
+    static let serviceName = "net.tenshu.Hammerspoon-2.ipc"
 
-    // Minimum log type raw value to forward; Int.max means suppress all logs.
-    var minLogLevel: Int = Int.max
+    private(set) var isListening = false
 
-    private var receiveBuffer = Data()
-    private var isActive = false
+    private var listener: NSXPCListener?
 
-    weak var server: HSIPCServer?
+    // Per-connection state, keyed by ObjectIdentifier for O(1) add/remove.
+    private var connections: [ObjectIdentifier: ConnectionEntry] = [:]
 
-    init(_ nwConn: NWConnection, server: HSIPCServer) {
-        self.nwConnection = nwConn
-        self.server = server
+    private struct ConnectionEntry {
+        let connection: NSXPCConnection
+        var minLogLevel: Int = Int.max
     }
+
+    // UUIDs of log entries already forwarded; seeded at start to skip history.
+    private var broadcastedEntryIDs = Set<UUID>()
+    private var observationTask: Task<Void, Never>?
+
+    // MARK: - Lifecycle
 
     func start() {
-        isActive = true
-        nwConnection.start(queue: .main)
-        sendRaw(["type": "connected", "port": server?.currentPort ?? 0])
-        scheduleReceive()
-        AKTrace("hs.ipc: Client \(id) connected")
+        guard !isListening else {
+            AKWarning("hs.ipc: Already listening")
+            return
+        }
+        let lnr = NSXPCListener(machServiceName: Self.serviceName)
+        lnr.delegate = self
+        lnr.resume()
+        listener = lnr
+        isListening = true
+        startObservingLog()
+        AKInfo("hs.ipc: Listening on \(Self.serviceName)")
     }
 
-    func cancel() {
-        isActive = false
-        nwConnection.cancel()
+    func stop() {
+        observationTask?.cancel()
+        observationTask = nil
+        for entry in connections.values { entry.connection.invalidate() }
+        connections.removeAll()
+        listener?.invalidate()
+        listener = nil
+        isListening = false
+        broadcastedEntryIDs.removeAll()
+        AKTrace("hs.ipc: Server stopped")
     }
 
-    func sendLogEntry(_ entry: HammerspoonLogEntry) {
-        guard entry.logType.rawValue >= minLogLevel else { return }
-        sendRaw([
-            "type": "log",
-            "level": entry.logType.asString,
-            "message": entry.msg,
-            "timestamp": entry.date.timeIntervalSince1970
-        ])
+    // MARK: - Connection management (called via Task { @MainActor } from nonisolated delegate)
+
+    fileprivate func addConnection(_ box: XPCConnectionBox) {
+        let conn = unsafe box.connection
+        connections[ObjectIdentifier(conn)] = ConnectionEntry(connection: conn)
+        AKTrace("hs.ipc: Client connected. Active: \(connections.count)")
     }
 
-    // MARK: - Private networking
-
-    private func sendRaw(_ dict: [String: Any]) {
-        guard isActive, let data = jsonLine(dict) else { return }
-        nwConnection.send(content: data, completion: .idempotent)
+    fileprivate func removeConnection(id: ObjectIdentifier) {
+        connections.removeValue(forKey: id)
+        AKTrace("hs.ipc: Client disconnected. Active: \(connections.count)")
     }
 
-    private func scheduleReceive() {
-        nwConnection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
-            MainActor.assumeIsolated {
-                guard let self, self.isActive else { return }
-                if let data, !data.isEmpty {
-                    self.receiveBuffer.append(data)
-                    self.processBuffer()
-                }
-                if isComplete || error != nil {
-                    self.isActive = false
-                    AKTrace("hs.ipc: Client \(self.id) disconnected")
-                    self.server?.connectionClosed(self)
-                } else {
-                    self.scheduleReceive()
-                }
+    fileprivate func setMinLogLevel(_ level: Int, connectionID: ObjectIdentifier) {
+        connections[connectionID]?.minLogLevel = level
+    }
+
+    // MARK: - Log broadcasting
+
+    private func startObservingLog() {
+        broadcastedEntryIDs = Set(HammerspoonLog.shared.entries.map { $0.id })
+        observationTask = Task { [weak self] in
+            let changes = Observations {
+                HammerspoonLog.shared.entries.count
+            }
+            for await _ in changes {
+                self?.broadcastNewEntries()
             }
         }
     }
 
-    private func processBuffer() {
-        while let nl = receiveBuffer.firstIndex(of: 0x0A) {
-            let lineData = Data(receiveBuffer[receiveBuffer.startIndex..<nl])
-            receiveBuffer.removeSubrange(receiveBuffer.startIndex...nl)
-            if !lineData.isEmpty { handleMessage(lineData) }
-        }
-    }
+    private func broadcastNewEntries() {
+        guard !connections.isEmpty else { return }
+        let entries = HammerspoonLog.shared.entries
+        var toSend: [HammerspoonLogEntry] = []
 
-    private func handleMessage(_ data: Data) {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let type = json["type"] as? String else { return }
-        switch type {
-        case "hello":
-            if let level = json["minLogLevel"] as? Int, level >= 0 {
-                minLogLevel = level
+        for entry in entries where !broadcastedEntryIDs.contains(entry.id) {
+            toSend.append(entry)
+            broadcastedEntryIDs.insert(entry.id)
+        }
+
+        let currentIDs = Set(entries.map { $0.id })
+        broadcastedEntryIDs = broadcastedEntryIDs.intersection(currentIDs)
+
+        for entry in toSend {
+            for connEntry in connections.values {
+                guard entry.logType.rawValue >= connEntry.minLogLevel else { continue }
+                let proxy = connEntry.connection.remoteObjectProxy as? HSIPCClientProtocol
+                proxy?.logEntry(level: entry.logType.asString, message: entry.msg)
             }
+        }
+    }
+}
 
-        case "eval":
-            guard let evalID = json["id"] as? String,
-                  let code = json["code"] as? String else { return }
-            let (result, isError) = evaluateJS(code)
-            sendRaw(["type": "result", "id": evalID, "result": result, "isError": isError])
+// MARK: - Sendable wrapper for NSXPCConnection
+//
+// NSXPCConnection is internally thread-safe but not annotated as Sendable in the
+// Swift overlay. This thin wrapper carries the @unchecked Sendable annotation so
+// that we can pass the connection from the NSXPCListenerDelegate queue to @MainActor.
 
-        default:
-            AKWarning("hs.ipc: Unknown message type '\(type)' from client \(id)")
+// A thin Sendable box around NSXPCConnection.
+// NSXPCConnection is internally thread-safe but not annotated Sendable in the SDK.
+// We use nonisolated(unsafe) so that the stored property is not @MainActor-isolated;
+// @unchecked Sendable signals that we take manual responsibility for thread safety.
+private final class XPCConnectionBox: NSObject, @unchecked Sendable {
+    nonisolated(unsafe) let connection: NSXPCConnection
+    nonisolated override init() { fatalError("use init(_:)") }
+    nonisolated init(_ conn: NSXPCConnection) {
+        unsafe connection = conn
+        super.init()
+    }
+}
+
+// MARK: - NSXPCListenerDelegate
+
+extension HSIPCServer: NSXPCListenerDelegate {
+    // Called on NSXPCListener's internal queue — must be nonisolated.
+    nonisolated func listener(_ listener: NSXPCListener,
+                               shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
+        #if !DEBUG
+        guard validatePeer(connection) else {
+            let pid = connection.processIdentifier
+            Task { @MainActor in
+                AKError("hs.ipc: Rejecting connection from non-same-team process (pid \(pid))")
+            }
+            return false
+        }
+        #endif
+
+        connection.exportedInterface = NSXPCInterface(with: HSIPCServerProtocol.self)
+        connection.remoteObjectInterface = NSXPCInterface(with: HSIPCClientProtocol.self)
+        connection.exportedObject = HSIPCConnectionHandler(server: self, connection: connection)
+
+        // Use ObjectIdentifier (value type, Sendable) to identify the connection in handlers
+        // that fire after the connection may have been released.
+        let connectionID = ObjectIdentifier(connection)
+
+        connection.invalidationHandler = { [weak self] in
+            Task { @MainActor [weak self] in self?.removeConnection(id: connectionID) }
+        }
+        connection.interruptionHandler = { [weak self] in
+            Task { @MainActor [weak self] in self?.removeConnection(id: connectionID) }
+        }
+
+        // Wrap connection in XPCConnectionBox to cross the isolation boundary safely.
+        let box = XPCConnectionBox(connection)
+        Task { @MainActor [weak self] in self?.addConnection(box) }
+
+        connection.resume()
+        return true
+    }
+
+    // Validates that the connecting process shares our Team ID.
+    nonisolated private func validatePeer(_ connection: NSXPCConnection) -> Bool {
+        var selfCode: SecCode?
+        guard unsafe SecCodeCopySelf([], &selfCode) == errSecSuccess, let selfCode else { return false }
+
+        var selfStatic: SecStaticCode?
+        guard unsafe SecCodeCopyStaticCode(selfCode, [], &selfStatic) == errSecSuccess,
+              let selfStatic else { return false }
+
+        var info: CFDictionary?
+        guard unsafe SecCodeCopySigningInformation(selfStatic, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+              let teamID = (info as? [String: Any])?[kSecCodeInfoTeamIdentifier as String] as? String,
+              !teamID.isEmpty else { return false }
+
+        let reqString = "anchor apple generic and certificate leaf[subject.OU] = \"\(teamID)\""
+        var req: SecRequirement?
+        guard unsafe SecRequirementCreateWithString(reqString as CFString, [], &req) == errSecSuccess,
+              let req else { return false }
+
+        let pidAttrs = NSMutableDictionary()
+        pidAttrs[kSecGuestAttributePid as String] = NSNumber(value: connection.processIdentifier)
+        var peerCode: SecCode?
+        guard unsafe SecCodeCopyGuestWithAttributes(nil, pidAttrs as CFDictionary, [], &peerCode) == errSecSuccess,
+              let peerCode else { return false }
+
+        return SecCodeCheckValidity(peerCode, [], req) == errSecSuccess
+    }
+}
+
+// MARK: - Per-connection handler
+
+// nonisolated so NSXPCConnection can dispatch protocol calls from its internal
+// queue without crossing into the main actor for every message.
+private nonisolated final class HSIPCConnectionHandler: NSObject, HSIPCServerProtocol {
+    // Written once at init, read-only thereafter; nonisolated(unsafe) is safe here.
+    nonisolated(unsafe) private weak var server: HSIPCServer?
+    // ObjectIdentifier is a value type and Sendable; store it directly instead of the
+    // non-Sendable NSXPCConnection so we can send it to @MainActor without a wrapper.
+    private let connectionID: ObjectIdentifier
+
+    nonisolated init(server: HSIPCServer, connection: NSXPCConnection) {
+        unsafe self.server = server
+        self.connectionID = ObjectIdentifier(connection)
+    }
+
+    func hello(minLogLevel: Int, withReply reply: @escaping (String) -> Void) {
+        let level = minLogLevel
+        let id = connectionID
+        Task { @MainActor [weak server] in server?.setMinLogLevel(level, connectionID: id) }
+        reply("connected")
+    }
+
+    func evaluate(id: String, code: String, withReply reply: @escaping (String, Bool) -> Void) {
+        // XPC reply blocks are designed to be called from any thread; wrapping as
+        // @unchecked Sendable lets us send the closure to @MainActor for JS evaluation.
+        final class ReplyBox: @unchecked Sendable {
+            let call: (String, Bool) -> Void
+            init(_ fn: @escaping (String, Bool) -> Void) { call = fn }
+        }
+        let box = ReplyBox(reply)
+        Task { @MainActor in
+            let (result, isError) = HSIPCConnectionHandler.evalJS(code)
+            box.call(result, isError)
         }
     }
 
-    // MARK: - JS evaluation
-
-    private func evaluateJS(_ code: String) -> (String, Bool) {
-        // Pass the code via a temporary JS global to avoid any string-escaping problems.
-        // The wrapper immediately captures and clears it before calling eval().
+    @MainActor
+    private static func evalJS(_ code: String) -> (String, Bool) {
         JSEngine.shared["__hs_ipc_eval"] = code
         let wrapper = """
         (function() {
@@ -153,128 +272,5 @@ private final class HSIPCConnection {
             return ("undefined", false)
         }
         return (resultStr, isError)
-    }
-}
-
-// MARK: - Listener / server
-
-@safe @MainActor
-final class HSIPCServer {
-    private(set) var isListening = false
-    private(set) var currentPort: Int32 = 0
-
-    private var listener: NWListener?
-    private var connections: [UUID: HSIPCConnection] = [:]
-
-    // UUIDs of log entries we have already forwarded to clients.
-    // Tracked by UUID so trim-and-add cycles in the ring buffer don't cause duplicates.
-    private var broadcastedEntryIDs = Set<UUID>()
-    private var observationTask: Task<Void, Never>?
-
-    // MARK: - Lifecycle
-
-    func start(port: UInt16) throws {
-        let lnr = try NWListener(using: .tcp, on: NWEndpoint.Port(rawValue: port) ?? .any)
-        listener = lnr
-
-        lnr.newConnectionHandler = { [weak self] conn in
-            MainActor.assumeIsolated { self?.accept(conn) }
-        }
-
-        lnr.stateUpdateHandler = { [weak self] state in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                switch state {
-                case .ready:
-                    if let p = self.listener?.port?.rawValue {
-                        self.currentPort = Int32(p)
-                        self.isListening = true
-                        AKInfo("hs.ipc: Listening on port \(p)")
-                        self.startObservingLog()
-                    }
-                case .failed(let error):
-                    AKError("hs.ipc: Listener failed: \(error.localizedDescription)")
-                    self.isListening = false
-                case .cancelled:
-                    self.isListening = false
-                default:
-                    break
-                }
-            }
-        }
-
-        lnr.start(queue: .main)
-    }
-
-    func stop() {
-        observationTask?.cancel()
-        observationTask = nil
-        connections.values.forEach { $0.cancel() }
-        connections.removeAll()
-        listener?.cancel()
-        listener = nil
-        isListening = false
-        currentPort = 0
-        broadcastedEntryIDs.removeAll()
-        AKTrace("hs.ipc: Server stopped")
-    }
-
-    fileprivate func connectionClosed(_ conn: HSIPCConnection) {
-        connections.removeValue(forKey: conn.id)
-        AKTrace("hs.ipc: Active connections: \(connections.count)")
-    }
-
-    // MARK: - Incoming connections
-
-    private func accept(_ nwConn: NWConnection) {
-        // Restrict to localhost for security
-        if case .hostPort(let host, _) = nwConn.endpoint {
-            let h = "\(host)"
-            guard h.hasPrefix("127.") || h == "::1" || h == "localhost" else {
-                AKWarning("hs.ipc: Rejecting non-localhost connection from \(h)")
-                nwConn.cancel()
-                return
-            }
-        }
-        let conn = HSIPCConnection(nwConn, server: self)
-        connections[conn.id] = conn
-        conn.start()
-        AKTrace("hs.ipc: Active connections: \(connections.count)")
-    }
-
-    // MARK: - Log observation
-
-    private func startObservingLog() {
-        // Seed with existing entries so clients only see new messages going forward.
-        broadcastedEntryIDs = Set(HammerspoonLog.shared.entries.map { $0.id })
-        observationTask = Task { [weak self] in
-            let changes = Observations {
-                HammerspoonLog.shared.entries.count
-            }
-            for await _ in changes {
-                self?.broadcastNewEntries()
-            }
-        }
-    }
-
-    private func broadcastNewEntries() {
-        guard !connections.isEmpty else { return }
-        let entries = HammerspoonLog.shared.entries
-        var toSend: [HammerspoonLogEntry] = []
-
-        for entry in entries where !broadcastedEntryIDs.contains(entry.id) {
-            toSend.append(entry)
-            broadcastedEntryIDs.insert(entry.id)
-        }
-
-        // Prune IDs for entries that were trimmed from the ring buffer.
-        let currentIDs = Set(entries.map { $0.id })
-        broadcastedEntryIDs = broadcastedEntryIDs.intersection(currentIDs)
-
-        for entry in toSend {
-            for conn in connections.values {
-                conn.sendLogEntry(entry)
-            }
-        }
     }
 }

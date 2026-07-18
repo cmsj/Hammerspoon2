@@ -3221,15 +3221,17 @@ Sends a WebSocket close frame and cancels the underlying TCP connection.
 /**
  * Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.
 The IPC server must be explicitly started from your configuration — it does not run by default.
-Once started, the `hs` command-line tool connects over TCP to evaluate JavaScript interactively
-and optionally stream log messages.
+Once started, the `hs` command-line tool connects via XPC and evaluates JavaScript
+interactively, with optional live log streaming.
+Communication is secured with a same-team code-signing requirement in release builds,
+so only binaries signed with the same Team ID can connect.
 ## Quick start
 ```js
 // In your Hammerspoon 2 config (init.js):
 hs.ipc.start()
 ```
 ```js
-hs.ipc.installBinary()   // copies hs to /usr/local/bin/hs
+hs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs
 ```
 ```bash
 hs
@@ -3245,11 +3247,11 @@ hs --log-level info
 declare namespace hs.ipc {
     /**
      * Start the IPC server.
-Connections are only accepted from localhost (127.0.0.1). Calling `start()` when already
-running logs a warning and does nothing.
-     * @param port TCP port to listen on. Defaults to `51423` if omitted.
+The server listens on a named XPC Mach service (`net.tenshu.Hammerspoon-2.ipc`).
+In release builds, only processes signed with the same Team ID can connect.
+Calling `start()` when already running logs a warning and does nothing.
      */
-    function start(port: number): void;
+    function start(): void;
 
     /**
      * Stop the IPC server and disconnect all connected clients.
@@ -3289,11 +3291,6 @@ a terminal with `sudo`.
      * Whether the IPC server is currently accepting connections.
      */
     const isListening: boolean;
-
-    /**
-     * The TCP port the IPC server is listening on. Returns `0` if not listening.
-     */
-    const port: number;
 
 }
 

@@ -9,8 +9,11 @@ import JavaScriptCore
 /// Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.
 ///
 /// The IPC server must be explicitly started from your configuration — it does not run by default.
-/// Once started, the `hs` command-line tool connects over TCP to evaluate JavaScript interactively
-/// and optionally stream log messages.
+/// Once started, the `hs` command-line tool connects via XPC and evaluates JavaScript
+/// interactively, with optional live log streaming.
+///
+/// Communication is secured with a same-team code-signing requirement in release builds,
+/// so only binaries signed with the same Team ID can connect.
 ///
 /// ## Quick start
 ///
@@ -21,7 +24,7 @@ import JavaScriptCore
 ///
 /// Install the CLI tool once:
 /// ```js
-/// hs.ipc.installBinary()   // copies hs to /usr/local/bin/hs
+/// hs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs
 /// ```
 ///
 /// Then in a terminal:
@@ -44,31 +47,22 @@ import JavaScriptCore
     /// - Example:
     /// ```js
     /// if (hs.ipc.isListening) {
-    ///     console.log("IPC ready on port " + hs.ipc.port)
+    ///     console.log("IPC ready")
     /// }
     /// ```
     @objc var isListening: Bool { get }
 
-    /// The TCP port the IPC server is listening on. Returns `0` if not listening.
-    ///
-    /// - Example:
-    /// ```js
-    /// console.log("IPC port: " + hs.ipc.port)
-    /// ```
-    @objc var port: Int32 { get }
-
     /// Start the IPC server.
     ///
-    /// Connections are only accepted from localhost (127.0.0.1). Calling `start()` when already
-    /// running logs a warning and does nothing.
+    /// The server listens on a named XPC Mach service (`net.tenshu.Hammerspoon-2.ipc`).
+    /// In release builds, only processes signed with the same Team ID can connect.
+    /// Calling `start()` when already running logs a warning and does nothing.
     ///
-    /// - Parameter port: {number} TCP port to listen on. Defaults to `51423` if omitted.
     /// - Example:
     /// ```js
-    /// hs.ipc.start()        // listen on default port 51423
-    /// hs.ipc.start(9999)    // listen on port 9999
+    /// hs.ipc.start()
     /// ```
-    @objc func start(_ port: JSValue)
+    @objc func start()
 
     /// Stop the IPC server and disconnect all connected clients.
     ///
@@ -154,21 +148,11 @@ import JavaScriptCore
 
     @objc var isListening: Bool { server?.isListening ?? false }
 
-    @objc var port: Int32 { server?.currentPort ?? 0 }
-
-    @objc func start(_ portVal: JSValue) {
-        guard server == nil else {
-            AKWarning("hs.ipc.start(): Already listening on port \(port)")
-            return
+    @objc func start() {
+        if server == nil {
+            server = HSIPCServer()
         }
-        let portNum: UInt16 = portVal.isNumber ? UInt16(clamping: portVal.toInt32()) : 51423
-        let newServer = HSIPCServer()
-        do {
-            try newServer.start(port: portNum)
-            server = newServer
-        } catch {
-            AKError("hs.ipc.start(): Failed to start on port \(portNum): \(error.localizedDescription)")
-        }
+        server?.start()
     }
 
     @objc func stop() {
@@ -187,7 +171,6 @@ import JavaScriptCore
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
         let fm = FileManager.default
 
-        // Remove any existing file/symlink at the destination (replaces old copies too).
         if fm.fileExists(atPath: destURL.path) || (try? fm.attributesOfItem(atPath: destURL.path)) != nil {
             do {
                 try fm.removeItem(at: destURL)
@@ -217,7 +200,6 @@ import JavaScriptCore
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
         let fm = FileManager.default
 
-        // Use attributesOfItem (doesn't follow symlinks) so we can remove broken symlinks too.
         guard (try? fm.attributesOfItem(atPath: destURL.path)) != nil else {
             AKWarning("hs.ipc.uninstallBinary(): Nothing found at \(destURL.path)")
             return false
@@ -243,11 +225,9 @@ import JavaScriptCore
     // MARK: - Private
 
     private func bundledHSBinaryURL() -> URL? {
-        // Production: embedded next to the main executable in Contents/MacOS/
         if let url = Bundle.main.url(forAuxiliaryExecutable: "hs") {
             return url
         }
-        // Development fallback: look next to the Hammerspoon 2 executable
         if let execURL = Bundle.main.executableURL {
             let devURL = execURL.deletingLastPathComponent().appendingPathComponent("hs")
             if FileManager.default.fileExists(atPath: devURL.path) {

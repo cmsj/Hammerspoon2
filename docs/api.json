@@ -8733,30 +8733,22 @@
       "methods": [
         {
           "name": "start",
-          "signature": "func start(_ port: JSValue)",
+          "signature": "func start()",
           "isStatic": false,
-          "rawDocumentation": "Start the IPC server.\n\nConnections are only accepted from localhost (127.0.0.1). Calling `start()` when already\nrunning logs a warning and does nothing.\n\n- Parameter port: {number} TCP port to listen on. Defaults to `51423` if omitted.\n- Example:\n```js\nhs.ipc.start()        // listen on default port 51423\nhs.ipc.start(9999)    // listen on port 9999\n```",
-          "description": "Start the IPC server.\nConnections are only accepted from localhost (127.0.0.1). Calling `start()` when already\nrunning logs a warning and does nothing.",
-          "params": [
-            {
-              "name": "port",
-              "type": "JSValue",
-              "description": "TCP port to listen on. Defaults to `51423` if omitted.",
-              "optional": false,
-              "tsType": "number"
-            }
-          ],
+          "rawDocumentation": "Start the IPC server.\n\nThe server listens on a named XPC Mach service (`net.tenshu.Hammerspoon-2.ipc`).\nIn release builds, only processes signed with the same Team ID can connect.\nCalling `start()` when already running logs a warning and does nothing.\n\n- Example:\n```js\nhs.ipc.start()\n```",
+          "description": "Start the IPC server.\nThe server listens on a named XPC Mach service (`net.tenshu.Hammerspoon-2.ipc`).\nIn release builds, only processes signed with the same Team ID can connect.\nCalling `start()` when already running logs a warning and does nothing.",
+          "params": [],
           "returns": null,
           "notes": [],
           "examples": [
             {
               "lang": "js",
-              "code": "hs.ipc.start()        // listen on default port 51423\nhs.ipc.start(9999)    // listen on port 9999"
+              "code": "hs.ipc.start()"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 71
+          "lineNumber": 65
         },
         {
           "name": "stop",
@@ -8775,7 +8767,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 79
+          "lineNumber": 73
         },
         {
           "name": "installBinary",
@@ -8805,7 +8797,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 101
+          "lineNumber": 95
         },
         {
           "name": "uninstallBinary",
@@ -8835,7 +8827,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 112
+          "lineNumber": 106
         },
         {
           "name": "isBinaryInstalled",
@@ -8865,48 +8857,31 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 124
+          "lineNumber": 118
         }
       ],
       "properties": [
         {
           "name": "isListening",
           "signature": "var isListening: Bool { get }",
-          "rawDocumentation": "Whether the IPC server is currently accepting connections.\n\n- Example:\n```js\nif (hs.ipc.isListening) {\n    console.log(\"IPC ready on port \" + hs.ipc.port)\n}\n```",
+          "rawDocumentation": "Whether the IPC server is currently accepting connections.\n\n- Example:\n```js\nif (hs.ipc.isListening) {\n    console.log(\"IPC ready\")\n}\n```",
           "description": "Whether the IPC server is currently accepting connections.",
           "tsType": null,
           "notes": [],
           "examples": [
             {
               "lang": "js",
-              "code": "if (hs.ipc.isListening) {\n    console.log(\"IPC ready on port \" + hs.ipc.port)\n}"
+              "code": "if (hs.ipc.isListening) {\n    console.log(\"IPC ready\")\n}"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 50
-        },
-        {
-          "name": "port",
-          "signature": "var port: Int32 { get }",
-          "rawDocumentation": "The TCP port the IPC server is listening on. Returns `0` if not listening.\n\n- Example:\n```js\nconsole.log(\"IPC port: \" + hs.ipc.port)\n```",
-          "description": "The TCP port the IPC server is listening on. Returns `0` if not listening.",
-          "tsType": null,
-          "notes": [],
-          "examples": [
-            {
-              "lang": "js",
-              "code": "console.log(\"IPC port: \" + hs.ipc.port)"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift",
-          "lineNumber": 58
+          "lineNumber": 53
         }
       ],
       "types": [],
-      "description": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects over TCP to evaluate JavaScript interactively\nand optionally stream log messages.\n## Quick start\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n```js\nhs.ipc.installBinary()   // copies hs to /usr/local/bin/hs\n```\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n```bash\nhs --log-level info\n```",
-      "rawDocumentation": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\n\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects over TCP to evaluate JavaScript interactively\nand optionally stream log messages.\n\n## Quick start\n\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n\nInstall the CLI tool once:\n```js\nhs.ipc.installBinary()   // copies hs to /usr/local/bin/hs\n```\n\nThen in a terminal:\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n\nRun with live log output:\n```bash\nhs --log-level info\n```"
+      "description": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects via XPC and evaluates JavaScript\ninteractively, with optional live log streaming.\nCommunication is secured with a same-team code-signing requirement in release builds,\nso only binaries signed with the same Team ID can connect.\n## Quick start\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n```js\nhs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs\n```\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n```bash\nhs --log-level info\n```",
+      "rawDocumentation": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\n\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects via XPC and evaluates JavaScript\ninteractively, with optional live log streaming.\n\nCommunication is secured with a same-team code-signing requirement in release builds,\nso only binaries signed with the same Team ID can connect.\n\n## Quick start\n\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n\nInstall the CLI tool once:\n```js\nhs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs\n```\n\nThen in a terminal:\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n\nRun with live log output:\n```bash\nhs --log-level info\n```"
     },
     {
       "name": "hs.keycodes",
@@ -19124,5 +19099,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-17T22:47:55.570Z"
+  "generatedAt": "2026-07-18T08:31:45.683Z"
 }
