@@ -171,17 +171,9 @@ import JavaScriptCore
         let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
         let fm = FileManager.default
 
-        if let attrs = try? fm.attributesOfItem(atPath: destURL.path) {
-            guard (attrs[.type] as? FileAttributeType) == .typeSymbolicLink else {
-                AKError("hs.ipc.installBinary(): \(destURL.path) already exists and is not a symlink. Remove it manually before installing.")
-                return false
-            }
-            do {
-                try fm.removeItem(at: destURL)
-            } catch {
-                AKError("hs.ipc.installBinary(): Failed to remove existing symlink at \(destURL.path): \(error.localizedDescription)")
-                return false
-            }
+        if (try? fm.attributesOfItem(atPath: destURL.path)) != nil {
+            AKError("hs.ipc.installBinary(): \(destURL.path) already exists. Remove it manually before installing.")
+            return false
         }
 
         do {
@@ -208,8 +200,11 @@ import JavaScriptCore
             AKWarning("hs.ipc.uninstallBinary(): Nothing found at \(destURL.path)")
             return false
         }
-        guard (attrs[.type] as? FileAttributeType) == .typeSymbolicLink else {
-            AKError("hs.ipc.uninstallBinary(): \(destURL.path) exists but is not a symlink. Remove it manually.")
+        guard (attrs[.type] as? FileAttributeType) == .typeSymbolicLink,
+              let target = try? fm.destinationOfSymbolicLink(atPath: destURL.path),
+              let sourceURL = bundledHSBinaryURL(),
+              URL(fileURLWithPath: target, relativeTo: destURL.deletingLastPathComponent()).standardized.path == sourceURL.standardized.path else {
+            AKError("hs.ipc.uninstallBinary(): \(destURL.path) is not a symlink to this Hammerspoon installation. Remove it manually.")
             return false
         }
 
