@@ -162,6 +162,63 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
           "lineNumber": 29
+        },
+        {
+          "name": "openConsole",
+          "signature": "func openConsole()",
+          "isStatic": false,
+          "rawDocumentation": "Open the Hammerspoon Console window\n- Example:\n```js\nhs.openConsole()\n```",
+          "description": "Open the Hammerspoon Console window",
+          "params": [],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.openConsole()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
+          "lineNumber": 36
+        },
+        {
+          "name": "closeConsole",
+          "signature": "func closeConsole()",
+          "isStatic": false,
+          "rawDocumentation": "Close the Hammerspoon Console window\n- Example:\n```js\nhs.closeConsole()\n```",
+          "description": "Close the Hammerspoon Console window",
+          "params": [],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.closeConsole()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
+          "lineNumber": 43
+        },
+        {
+          "name": "clearConsole",
+          "signature": "func clearConsole()",
+          "isStatic": false,
+          "rawDocumentation": "Clear the Hammerspoon Console log\n- Example:\n```js\nhs.clearConsole()\n```",
+          "description": "Clear the Hammerspoon Console log",
+          "params": [],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.clearConsole()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
+          "lineNumber": 50
         }
       ],
       "properties": [],
@@ -19099,5 +19156,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-18T12:40:04.816Z"
+  "generatedAt": "2026-07-18T12:53:15.460Z"
 }
