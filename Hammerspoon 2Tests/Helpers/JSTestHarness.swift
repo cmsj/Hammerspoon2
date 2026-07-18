@@ -473,6 +473,8 @@ extension JSTestHarness {
                 loadModule(HSHotkeyModule.self, as: name)
             case "usb":
                 loadModule(HSUSBModule.self, as: name)
+            case "ipc":
+                loadModule(HSIPCModule.self, as: name)
             default:
                 print("⚠️ Unknown module: \(name)")
             }

@@ -3219,6 +3219,82 @@ Sends a WebSocket close frame and cancels the underlying TCP connection.
 }
 
 /**
+ * Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.
+The IPC server must be explicitly started from your configuration — it does not run by default.
+Once started, the `hs` command-line tool connects via XPC and evaluates JavaScript
+interactively, with optional live log streaming.
+Communication is secured with a same-team code-signing requirement in release builds,
+so only binaries signed with the same Team ID can connect.
+## Quick start
+```js
+// In your Hammerspoon 2 config (init.js):
+hs.ipc.start()
+```
+```js
+hs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs
+```
+```bash
+hs
+hs> hs.reload()
+undefined
+hs> 2 + 2
+4
+```
+```bash
+hs --log-level info
+```
+ */
+declare namespace hs.ipc {
+    /**
+     * Start the IPC server.
+The server listens on a named XPC Mach service (`net.tenshu.Hammerspoon-2.ipc`).
+In release builds, only processes signed with the same Team ID can connect.
+Calling `start()` when already running logs a warning and does nothing.
+     */
+    function start(): void;
+
+    /**
+     * Stop the IPC server and disconnect all connected clients.
+     */
+    function stop(): void;
+
+    /**
+     * Install the `hs` command-line tool to the given directory as a symlink.
+Creates a symlink in the target directory that points to the `hs` binary inside the
+Hammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any
+app update without reinstalling. Any existing `hs` file at that path is replaced.
+The directory must be on your `$PATH` for `hs` to work without a full path.
+**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.
+On Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both
+directories require root — if this method returns `false`, run the logged command in
+a terminal with `sudo`.
+     * @param directory Directory to install into. Defaults to `/usr/local/bin`.
+     * @returns `true` on success, `false` on error (details logged to the console).
+     */
+    function installBinary(directory: string): boolean;
+
+    /**
+     * Remove the `hs` command-line tool from the given directory.
+     * @param directory Directory to remove from. Defaults to `/usr/local/bin`.
+     * @returns `true` on success, `false` if not found or on error.
+     */
+    function uninstallBinary(directory: string): boolean;
+
+    /**
+     * Check whether the `hs` command-line tool exists at the given directory.
+     * @param directory Directory to check. Defaults to `/usr/local/bin`.
+     * @returns `true` if an `hs` binary exists at that path.
+     */
+    function isBinaryInstalled(directory: string): boolean;
+
+    /**
+     * Whether the IPC server is currently accepting connections.
+     */
+    const isListening: boolean;
+
+}
+
+/**
  * Access information about the current keyboard layout and input sources, and respond to changes.
 ## Reading the current layout
 ```js
