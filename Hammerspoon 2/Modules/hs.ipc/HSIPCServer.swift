@@ -38,11 +38,38 @@ final class HSIPCServer: NSObject {
         }
         let lnr = NSXPCListener(machServiceName: Self.serviceName)
         lnr.delegate = self
+        #if !DEBUG
+        if let req = peerSigningRequirement() {
+            lnr.setConnectionCodeSigningRequirement(req)
+        } else {
+            AKError("hs.ipc: Cannot determine signing Team ID — connections will not be authenticated")
+        }
+        #else
+        AKWarning("hs.ipc: DEBUG build — peer code-signing check disabled")
+        #endif
         lnr.resume()
         listener = lnr
         isListening = true
         startObservingLog()
         AKInfo("hs.ipc: Listening on \(Self.serviceName)")
+    }
+
+    // Returns a code-signing requirement string that matches any binary signed with
+    // the same Team ID as this process. Used with setConnectionCodeSigningRequirement.
+    private func peerSigningRequirement() -> String? {
+        var selfCode: SecCode?
+        guard unsafe SecCodeCopySelf([], &selfCode) == errSecSuccess, let selfCode else { return nil }
+
+        var selfStatic: SecStaticCode?
+        guard unsafe SecCodeCopyStaticCode(selfCode, [], &selfStatic) == errSecSuccess,
+              let selfStatic else { return nil }
+
+        var info: CFDictionary?
+        guard unsafe SecCodeCopySigningInformation(selfStatic, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+              let teamID = (info as? [String: Any])?[kSecCodeInfoTeamIdentifier as String] as? String,
+              !teamID.isEmpty else { return nil }
+
+        return "anchor apple generic and certificate leaf[subject.OU] = \"\(teamID)\""
     }
 
     func stop() {
@@ -134,18 +161,9 @@ private final class XPCConnectionBox: NSObject, @unchecked Sendable {
 
 extension HSIPCServer: NSXPCListenerDelegate {
     // Called on NSXPCListener's internal queue — must be nonisolated.
+    // Peer authentication is handled by setConnectionCodeSigningRequirement in start().
     nonisolated func listener(_ listener: NSXPCListener,
                                shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-        #if !DEBUG
-        guard validatePeer(connection) else {
-            let pid = connection.processIdentifier
-            Task { @MainActor in
-                AKError("hs.ipc: Rejecting connection from non-same-team process (pid \(pid))")
-            }
-            return false
-        }
-        #endif
-
         connection.exportedInterface = NSXPCInterface(with: HSIPCServerProtocol.self)
         connection.remoteObjectInterface = NSXPCInterface(with: HSIPCClientProtocol.self)
         connection.exportedObject = HSIPCConnectionHandler(server: self, connection: connection)
@@ -169,33 +187,6 @@ extension HSIPCServer: NSXPCListenerDelegate {
         return true
     }
 
-    // Validates that the connecting process shares our Team ID.
-    nonisolated private func validatePeer(_ connection: NSXPCConnection) -> Bool {
-        var selfCode: SecCode?
-        guard unsafe SecCodeCopySelf([], &selfCode) == errSecSuccess, let selfCode else { return false }
-
-        var selfStatic: SecStaticCode?
-        guard unsafe SecCodeCopyStaticCode(selfCode, [], &selfStatic) == errSecSuccess,
-              let selfStatic else { return false }
-
-        var info: CFDictionary?
-        guard unsafe SecCodeCopySigningInformation(selfStatic, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
-              let teamID = (info as? [String: Any])?[kSecCodeInfoTeamIdentifier as String] as? String,
-              !teamID.isEmpty else { return false }
-
-        let reqString = "anchor apple generic and certificate leaf[subject.OU] = \"\(teamID)\""
-        var req: SecRequirement?
-        guard unsafe SecRequirementCreateWithString(reqString as CFString, [], &req) == errSecSuccess,
-              let req else { return false }
-
-        let pidAttrs = NSMutableDictionary()
-        pidAttrs[kSecGuestAttributePid as String] = NSNumber(value: connection.processIdentifier)
-        var peerCode: SecCode?
-        guard unsafe SecCodeCopyGuestWithAttributes(nil, pidAttrs as CFDictionary, [], &peerCode) == errSecSuccess,
-              let peerCode else { return false }
-
-        return SecCodeCheckValidity(peerCode, [], req) == errSecSuccess
-    }
 }
 
 // MARK: - Per-connection handler
@@ -217,7 +208,9 @@ private nonisolated final class HSIPCConnectionHandler: NSObject, HSIPCServerPro
     func hello(minLogLevel: Int, withReply reply: @escaping (String) -> Void) {
         let level = minLogLevel
         let id = connectionID
-        Task { @MainActor [weak server] in server?.setMinLogLevel(level, connectionID: id) }
+        unsafe Task { @MainActor [weak server] in
+            server?.setMinLogLevel(level, connectionID: id)
+        }
         reply("connected")
     }
 

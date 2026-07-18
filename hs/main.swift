@@ -211,11 +211,11 @@ if let lr = lineReader, let table = completionTable {
         let box = ResultBox<String>()
         Task.detached {
             let (r, isError) = await client.eval(code: code)
-            if !isError { box.value = r }
+            if !isError { unsafe box.value = r }
             sem.signal()
         }
         _ = sem.wait(timeout: .now() + 0.3)
-        return box.value
+        return unsafe box.value
     }
 
     lr.setCompletionCallback { buffer in
