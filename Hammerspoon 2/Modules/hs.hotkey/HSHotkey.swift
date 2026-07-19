@@ -52,6 +52,14 @@ import Carbon
     /// hk.callbackReleased = () => console.log("released")
     /// ```
     @objc var callbackReleased: JSFunction? { get set }
+
+    /// Disable and permanently remove this hotkey, releasing all associated resources
+    /// - Example:
+    /// ```js
+    /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
+    /// hk.destroy()
+    /// ```
+    @objc func destroy()
 }
 
 // MARK: - Implementation
@@ -65,10 +73,6 @@ import Carbon
     private let modifiers: UInt32
     private var _callbackPressed: JSCallback?
     private var _callbackReleased: JSCallback?
-
-    // Swift-only callback fired on keyDown before the JS callback.
-    // Used by HSHotkeyModal for its trigger hotkey. Never exposed to JS.
-    var swiftCallbackPressed: (@MainActor () -> Void)?
 
     @objc var callbackPressed: JSFunction? {
         get { _callbackPressed?.value }
@@ -105,13 +109,12 @@ import Carbon
         AKDebug("deinit of HSHotkey: id=\(hotkeyID)")
     }
 
-    func destroy() {
+    @objc func destroy() {
         disable()
         _callbackPressed?.detach(from: self)
         _callbackPressed = nil
         _callbackReleased?.detach(from: self)
         _callbackReleased = nil
-        swiftCallbackPressed = nil
     }
 
     @objc func enable() -> Bool {
@@ -147,10 +150,6 @@ import Carbon
     @objc func isEnabled() -> Bool { enabled }
 
     func trigger(eventKind: UInt32) {
-        if eventKind == UInt32(kEventHotKeyPressed) {
-            swiftCallbackPressed?()
-        }
-
         let callback: JSFunction?
         switch eventKind {
         case UInt32(kEventHotKeyPressed):

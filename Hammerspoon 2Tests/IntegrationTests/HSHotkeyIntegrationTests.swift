@@ -295,20 +295,20 @@ struct HSHotkeyTests {
         tracker.assertNoLeaks()
     }
 
-    @Test("Active HSHotkeyModal is released after shutdown")
+    @Test("Active modal hotkey is released after shutdown")
     func testHotkeyModalDoesNotLeakAfterReload() {
         let tracker = WeakLeakTracker()
         autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSHotkeyModule.self, as: "hotkey")
             // Create a modal, bind a hotkey within it, enter the modal so it's active,
-            // then verify shutdown() properly destroys the modal and all its bound hotkeys.
+            // then verify shutdown() properly destroys the hotkey and releases it.
             harness.eval("""
                 var modal = hs.hotkey.createModal([], '')
                 modal.bind(['shift'], 'j', function() {}, null)
                 modal.enter()
             """)
-            if let obj = harness.evalValue("modal")?.toObjectOf(HSHotkeyModal.self) as? HSHotkeyModal {
+            if let obj = harness.evalValue("modal._hotkeys[0]")?.toObjectOf(HSHotkey.self) as? HSHotkey {
                 tracker.track(obj)
             }
             harness.eval("modal = null")

@@ -30,6 +30,9 @@ import JavaScriptCoreExtras
     /// Log a debug message to the Hammerspoon Log Window
     /// - Parameter message: A debug message
     @objc func debug(_ message: String)
+
+    /// SKIP_DOCS
+    @objc func _internal(_ message: String)
 }
 
 @objc class ConsoleModule: NSObject, ConsoleModuleAPI {
@@ -60,6 +63,10 @@ import JavaScriptCoreExtras
 
     @objc func debug(_ message: String) {
         AKTrace(message)
+    }
+
+    @objc func _internal(_ message: String) {
+        AKDebug(message)
     }
 }
 
