@@ -3633,6 +3633,41 @@ if you only want to temporarily remove the item without freeing it.
 }
 
 /**
+ * Module for inspecting network interfaces and IP addresses
+ */
+declare namespace hs.network {
+    /**
+     * Returns all network interfaces present on this system.
+Each object contains `name` (string), `isLoopback` (boolean), `isUp` (boolean), and `isRunning` (boolean). A `displayName` string is included when the system provides a human-readable label for the interface (e.g. `"Wi-Fi"` or `"Ethernet"`).
+     * @returns An array of objects describing each network interface.
+     */
+    function interfaces(): Record<string, any>[];
+
+    /**
+     * Returns the name of the primary network interface, i.e. the one currently providing the default route.
+     * @returns The BSD interface name (e.g. `"en0"`), or `null` if no primary interface can be determined.
+     */
+    function primaryInterface(): string | null;
+
+    /**
+     * Returns all IP addresses assigned to this host.
+Each object contains `interface` (the BSD name of the interface), `address` (the address string), and `family` (`"ipv4"` or `"ipv6"`).
+     * @returns An array of address objects.
+     */
+    function addresses(): Record<string, any>[];
+
+    /**
+     * Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.
+Queries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `getaddrinfo`.
+     * @param hostname The hostname to resolve (e.g. `"example.com"` or `"localhost"`).
+     * @param family The address family to query: `"ipv4"` for A records only, `"ipv6"` for AAAA records only, or `"both"` to return all addresses. Defaults to `"both"` when omitted.
+     * @returns A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.
+     */
+    function resolve(hostname: string, family?: string | null): Promise<string[]>;
+
+}
+
+/**
  * Module for creating and displaying macOS system notifications.
 macOS notifications require user permission before they will appear. Request it once
 (typically at startup) via `hs.permissions.requestNotifications()` and it will be

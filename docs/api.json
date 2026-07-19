@@ -9819,6 +9819,119 @@
       "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.title = \"Hello\"\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.title = \"Dynamic\"\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```"
     },
     {
+      "name": "hs.network",
+      "methods": [
+        {
+          "name": "interfaces",
+          "signature": "func interfaces() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns all network interfaces present on this system.\n\nEach object contains `name` (string), `isLoopback` (boolean), `isUp` (boolean), and `isRunning` (boolean). A `displayName` string is included when the system provides a human-readable label for the interface (e.g. `\"Wi-Fi\"` or `\"Ethernet\"`).\n- Returns: An array of objects describing each network interface.\n- Example:\n```js\nconst ifaces = hs.network.interfaces()\nifaces.forEach(i => console.log(i.name + \": \" + (i.displayName || \"(no display name)\")))\n```",
+          "description": "Returns all network interfaces present on this system.\nEach object contains `name` (string), `isLoopback` (boolean), `isUp` (boolean), and `isRunning` (boolean). A `displayName` string is included when the system provides a human-readable label for the interface (e.g. `\"Wi-Fi\"` or `\"Ethernet\"`).",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of objects describing each network interface."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const ifaces = hs.network.interfaces()\nifaces.forEach(i => console.log(i.name + \": \" + (i.displayName || \"(no display name)\")))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 162
+        },
+        {
+          "name": "primaryInterface",
+          "signature": "func primaryInterface() -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Returns the name of the primary network interface, i.e. the one currently providing the default route.\n\n- Returns: The BSD interface name (e.g. `\"en0\"`), or `null` if no primary interface can be determined.\n- Example:\n```js\nconst primary = hs.network.primaryInterface()\nconsole.log(\"Primary interface: \" + primary)\n```",
+          "description": "Returns the name of the primary network interface, i.e. the one currently providing the default route.",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "The BSD interface name (e.g. `\"en0\"`), or `null` if no primary interface can be determined."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const primary = hs.network.primaryInterface()\nconsole.log(\"Primary interface: \" + primary)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 172
+        },
+        {
+          "name": "addresses",
+          "signature": "func addresses() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns all IP addresses assigned to this host.\n\nEach object contains `interface` (the BSD name of the interface), `address` (the address string), and `family` (`\"ipv4\"` or `\"ipv6\"`).\n- Returns: An array of address objects.\n- Example:\n```js\nconst addrs = hs.network.addresses()\naddrs.filter(a => a.family === 'ipv4').forEach(a => console.log(a.interface + \": \" + a.address))\n```",
+          "description": "Returns all IP addresses assigned to this host.\nEach object contains `interface` (the BSD name of the interface), `address` (the address string), and `family` (`\"ipv4\"` or `\"ipv6\"`).",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of address objects."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const addrs = hs.network.addresses()\naddrs.filter(a => a.family === 'ipv4').forEach(a => console.log(a.interface + \": \" + a.address))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 183
+        },
+        {
+          "name": "resolve",
+          "signature": "func resolve(_ hostname: String, _ family: String?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.\n\nQueries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `getaddrinfo`.\n- Parameter hostname: The hostname to resolve (e.g. `\"example.com\"` or `\"localhost\"`).\n- Parameter family?: The address family to query: `\"ipv4\"` for A records only, `\"ipv6\"` for AAAA records only, or `\"both\"` to return all addresses. Defaults to `\"both\"` when omitted.\n- Returns: {Promise<string[]>} A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.\n- Example:\n```js\nhs.network.resolve(\"example.com\").then(addrs => {\n    addrs.forEach(a => console.log(a))\n})\nhs.network.resolve(\"example.com\", \"ipv4\").then(addrs => console.log(\"IPv4: \" + addrs[0]))\n```",
+          "description": "Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.\nQueries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `getaddrinfo`.",
+          "params": [
+            {
+              "name": "hostname",
+              "type": "string",
+              "description": "The hostname to resolve (e.g. `\"example.com\"` or `\"localhost\"`).",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "family",
+              "type": "string",
+              "description": "The address family to query: `\"ipv4\"` for A records only, `\"ipv6\"` for AAAA records only, or `\"both\"` to return all addresses. Defaults to `\"both\"` when omitted.",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.",
+            "promiseType": "string[]"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.resolve(\"example.com\").then(addrs => {\n    addrs.forEach(a => console.log(a))\n})\nhs.network.resolve(\"example.com\", \"ipv4\").then(addrs => console.log(\"IPv4: \" + addrs[0]))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 198
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Module for inspecting network interfaces and IP addresses",
+      "rawDocumentation": "Module for inspecting network interfaces and IP addresses"
+    },
+    {
       "name": "hs.notify",
       "methods": [
         {
@@ -19427,5 +19540,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-20T12:27:42.931Z"
+  "generatedAt": "2026-07-20T12:27:57.078Z"
 }
