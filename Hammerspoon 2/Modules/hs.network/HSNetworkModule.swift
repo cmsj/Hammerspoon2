@@ -460,7 +460,7 @@ private func queryPrimaryInterface() -> String? {
             guard uuid == location || name == location else { continue }
             guard SCNetworkSetSetCurrent(set) else { return false }
             guard SCPreferencesCommitChanges(prefs) else { return false }
-            SCPreferencesApplyChanges(prefs)
+            guard SCPreferencesApplyChanges(prefs) else { return false }
             return true
         }
         return false
