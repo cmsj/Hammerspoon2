@@ -152,6 +152,93 @@ private func queryPrimaryInterface() -> String? {
     /// ```
     @objc func resolve(_ hostname: String, _ family: String?) -> JSPromise?
 
+    /// A dictionary of named flag constants for use with `HSNetworkReachability.status()`.
+    ///
+    /// Compare individual bits against these constants to determine which network conditions apply.
+    /// The numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.
+    ///
+    /// Keys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,
+    /// `interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.
+    /// - Returns: A dictionary mapping flag name strings to their bitmask values.
+    /// - Example:
+    /// ```js
+    /// const r = hs.network.reachabilityInternet()
+    /// const f = hs.network.reachabilityFlags
+    /// console.log("Reachable: " + ((r.status() & f.reachable) !== 0))
+    /// ```
+    @objc var reachabilityFlags: [String: Int] { get }
+
+    /// Creates a reachability monitor for a specific IP address.
+    ///
+    /// Returns `null` if `address` is not a valid IPv4 or IPv6 address literal.
+    /// Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+    /// because `NWPathMonitor` does not support per-address targeting.
+    /// - Parameter address: An IPv4 or IPv6 address string (e.g. `"192.168.1.1"` or `"::1"`).
+    /// - Returns: A new `HSNetworkReachability` monitor, or `null` if the address is invalid.
+    /// - Example:
+    /// ```js
+    /// const r = hs.network.reachabilityForAddress("8.8.8.8")
+    /// r?.setCallback((obj, flags) => console.log(obj.statusString())).start()
+    /// ```
+    @objc func reachabilityForAddress(_ address: String) -> HSNetworkReachability?
+
+    /// Creates a reachability monitor for a source/destination IP address pair.
+    ///
+    /// Returns `null` if either address is not a valid IPv4 or IPv6 address literal.
+    /// Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+    /// because `NWPathMonitor` does not support per-address targeting.
+    /// - Parameter localAddress: An IPv4 or IPv6 source address string.
+    /// - Parameter remoteAddress: An IPv4 or IPv6 destination address string.
+    /// - Returns: A new `HSNetworkReachability` monitor, or `null` if either address is invalid.
+    /// - Example:
+    /// ```js
+    /// const r = hs.network.reachabilityForAddressPair("0.0.0.0", "8.8.8.8")
+    /// r?.setCallback((obj, flags) => console.log(obj.statusString())).start()
+    /// ```
+    @objc func reachabilityForAddressPair(_ localAddress: String, _ remoteAddress: String) -> HSNetworkReachability?
+
+    /// Creates a reachability monitor for a given hostname.
+    ///
+    /// Returns `null` if `hostName` is empty.
+    /// Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+    /// because `NWPathMonitor` does not support per-hostname targeting.
+    /// - Parameter hostName: A hostname string (e.g. `"example.com"`).
+    /// - Returns: A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty.
+    /// - Example:
+    /// ```js
+    /// const r = hs.network.reachabilityForHostName("example.com")
+    /// r?.setCallback((obj, flags) => console.log(obj.statusString())).start()
+    /// ```
+    @objc func reachabilityForHostName(_ hostName: String) -> HSNetworkReachability?
+
+    /// Creates a reachability monitor for general internet connectivity.
+    ///
+    /// This is the most common factory method. Use it when you want to know whether the
+    /// device currently has a working internet connection.
+    /// - Returns: A new `HSNetworkReachability` monitor.
+    /// - Example:
+    /// ```js
+    /// hs.network.reachabilityInternet()
+    ///   .setCallback((r, flags) => console.log(r.statusString()))
+    ///   .start()
+    /// ```
+    @objc func reachabilityInternet() -> HSNetworkReachability
+
+    /// Creates a reachability monitor for link-local connectivity.
+    ///
+    /// Link-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges
+    /// used for direct device-to-device communication without a router.
+    /// Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+    /// because `NWPathMonitor` does not distinguish link-local reachability.
+    /// - Returns: A new `HSNetworkReachability` monitor.
+    /// - Example:
+    /// ```js
+    /// hs.network.reachabilityLinkLocal()
+    ///   .setCallback((r, flags) => console.log(r.statusString()))
+    ///   .start()
+    /// ```
+    @objc func reachabilityLinkLocal() -> HSNetworkReachability
+
     /// Sends ICMP Echo Requests to `server` and reports results via a callback.
     ///
     /// DNS resolution and the first ping begin immediately. The returned object can be used to
@@ -195,6 +282,7 @@ private func queryPrimaryInterface() -> String? {
     var name = "hs.network"
     let engineID: UUID
     private var pings = HSWeakObjectSet<HSNetworkPing>()
+    private var reachabilityObjects = HSWeakObjectSet<HSNetworkReachability>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -208,6 +296,10 @@ private func queryPrimaryInterface() -> String? {
             ping.cancel()
         }
         pings.removeAllObjects()
+        for obj in reachabilityObjects.allObjects {
+            obj.destroy()
+        }
+        reachabilityObjects.removeAllObjects()
     }
 
     isolated deinit {
@@ -215,6 +307,50 @@ private func queryPrimaryInterface() -> String? {
     }
 
     // MARK: - HSNetworkModuleAPI
+
+    @objc var reachabilityFlags: [String: Int] {
+        [
+            "transientConnection":  Int(kFlagTransientConnection),
+            "reachable":            Int(kFlagReachable),
+            "connectionRequired":   Int(kFlagConnectionRequired),
+            "connectionOnTraffic":  Int(kFlagConnectionOnTraffic),
+            "interventionRequired": Int(kFlagInterventionRequired),
+            "connectionOnDemand":   Int(kFlagConnectionOnDemand),
+            "isLocalAddress":       Int(kFlagIsLocalAddress),
+            "isDirect":             Int(kFlagIsDirect)
+        ]
+    }
+
+    @objc func reachabilityForAddress(_ address: String) -> HSNetworkReachability? {
+        guard isValidIPAddress(address) else {
+            AKWarning("hs.network.reachabilityForAddress(): invalid IP address '\(address)'")
+            return nil
+        }
+        return makeReachability()
+    }
+
+    @objc func reachabilityForAddressPair(_ localAddress: String, _ remoteAddress: String) -> HSNetworkReachability? {
+        guard isValidIPAddress(localAddress) && isValidIPAddress(remoteAddress) else {
+            AKWarning("hs.network.reachabilityForAddressPair(): invalid address(es)")
+            return nil
+        }
+        return makeReachability()
+    }
+
+    @objc func reachabilityForHostName(_ hostName: String) -> HSNetworkReachability? {
+        guard !hostName.isEmpty else { return nil }
+        return makeReachability()
+    }
+
+    @objc func reachabilityInternet() -> HSNetworkReachability { makeReachability() }
+
+    @objc func reachabilityLinkLocal() -> HSNetworkReachability { makeReachability() }
+
+    private func makeReachability() -> HSNetworkReachability {
+        let obj = HSNetworkReachability()
+        reachabilityObjects.add(obj)
+        return obj
+    }
 
     @objc func interfaces() -> [[String: Any]] {
         snapshotNetwork().interfaces

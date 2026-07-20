@@ -66,10 +66,24 @@
     <li>
         <a href="HSNetworkPing.html">HSNetworkPing</a>
     </li>
+    <li>
+        <a href="HSNetworkReachability.html">HSNetworkReachability</a>
+    </li>
 </ul>
 
 <h2 class="section-heading">Properties</h2>
-<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+    <div class="property" id="reachabilityFlags">
+        <h3><a href="#reachabilityFlags">hs.network.reachabilityFlags</a></h3>
+        <div class="prop-type">{[key: string]: number}</div>
+        <div class="description">A dictionary of named flag constants for use with `HSNetworkReachability.status()`.
+Compare individual bits against these constants to determine which network conditions apply.
+The numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.
+Keys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,
+`interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L169" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:169</a>
+        </div>
+    </div>
 
 <h2 class="section-heading">Methods</h2>
     <div class="method" id="interfaces">
@@ -187,6 +201,189 @@ hs.network.resolve(&quot;example.com&quot;, &quot;ipv4&quot;).then(addrs =&gt; c
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L153" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:153</a>
         </div>
     </div>
+    <div class="method" id="reachabilityForAddress">
+        <h3><a href="#reachabilityForAddress">hs.network.reachabilityForAddress(address) -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for a specific IP address.
+Returns `null` if `address` is not a valid IPv4 or IPv6 address literal.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-address targeting.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityForAddress(address) -> HSNetworkReachability</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">address</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An IPv4 or IPv6 address string (e.g. `&quot;192.168.1.1&quot;` or `&quot;::1&quot;`).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor, or `null` if the address is invalid.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.network.reachabilityForAddress(&quot;8.8.8.8&quot;)
+r?.setCallback((obj, flags) =&gt; console.log(obj.statusString())).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L183" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:183</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityForAddressPair">
+        <h3><a href="#reachabilityForAddressPair">hs.network.reachabilityForAddressPair(localAddress, remoteAddress) -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for a source/destination IP address pair.
+Returns `null` if either address is not a valid IPv4 or IPv6 address literal.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-address targeting.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityForAddressPair(localAddress, remoteAddress) -> HSNetworkReachability</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">localAddress</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An IPv4 or IPv6 source address string.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">remoteAddress</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An IPv4 or IPv6 destination address string.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor, or `null` if either address is invalid.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.network.reachabilityForAddressPair(&quot;0.0.0.0&quot;, &quot;8.8.8.8&quot;)
+r?.setCallback((obj, flags) =&gt; console.log(obj.statusString())).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L198" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:198</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityForHostName">
+        <h3><a href="#reachabilityForHostName">hs.network.reachabilityForHostName(hostName) -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for a given hostname.
+Returns `null` if `hostName` is empty.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-hostname targeting.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityForHostName(hostName) -> HSNetworkReachability</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">hostName</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A hostname string (e.g. `&quot;example.com&quot;`).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.network.reachabilityForHostName(&quot;example.com&quot;)
+r?.setCallback((obj, flags) =&gt; console.log(obj.statusString())).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L212" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:212</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityInternet">
+        <h3><a href="#reachabilityInternet">hs.network.reachabilityInternet() -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for general internet connectivity.
+This is the most common factory method. Use it when you want to know whether the
+device currently has a working internet connection.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityInternet() -> HSNetworkReachability</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.reachabilityInternet()
+  .setCallback((r, flags) =&gt; console.log(r.statusString()))
+  .start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L225" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:225</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityLinkLocal">
+        <h3><a href="#reachabilityLinkLocal">hs.network.reachabilityLinkLocal() -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for link-local connectivity.
+Link-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges
+used for direct device-to-device communication without a router.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not distinguish link-local reachability.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityLinkLocal() -> HSNetworkReachability</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.reachabilityLinkLocal()
+  .setCallback((r, flags) =&gt; console.log(r.statusString()))
+  .start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L240" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:240</a>
+        </div>
+    </div>
     <div class="method" id="ping">
         <h3><a href="#ping">hs.network.ping(server, options) -> HSNetworkPing</a></h3>
 
@@ -237,7 +434,7 @@ and `callback` (function).</div>
 })</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L187" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:187</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L274" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:274</a>
         </div>
     </div>
         </main>

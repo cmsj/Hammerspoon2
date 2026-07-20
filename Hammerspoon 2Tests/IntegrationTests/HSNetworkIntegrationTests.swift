@@ -550,4 +550,261 @@ struct HSNetworkTests {
             tracker.assertNoLeaks()
         }
     }
+
+    // MARK: - Suite 5: reachability structure
+
+    @Suite("hs.network reachability API structure tests")
+    struct HSNetworkReachabilityStructureTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSNetworkModule.self, as: "network")
+            return harness
+        }
+
+        @Test("reachabilityFlags is an object")
+        func testFlagsIsObject() {
+            makeHarness().expectTrue("typeof hs.network.reachabilityFlags === 'object'")
+        }
+
+        @Test("reachabilityForAddress is a function")
+        func testForAddressIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.reachabilityForAddress === 'function'")
+        }
+
+        @Test("reachabilityForAddressPair is a function")
+        func testForAddressPairIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.reachabilityForAddressPair === 'function'")
+        }
+
+        @Test("reachabilityForHostName is a function")
+        func testForHostNameIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.reachabilityForHostName === 'function'")
+        }
+
+        @Test("reachabilityInternet is a function")
+        func testInternetIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.reachabilityInternet === 'function'")
+        }
+
+        @Test("reachabilityLinkLocal is a function")
+        func testLinkLocalIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.reachabilityLinkLocal === 'function'")
+        }
+
+        @Test("reachabilityInternet() returns an object with expected methods")
+        func testInternetObjectShape() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityInternet()")
+            harness.expectTrue("typeof r === 'object' && r !== null")
+            harness.expectTrue("r.typeName === 'HSNetworkReachability'")
+            harness.expectTrue("typeof r.status === 'function'")
+            harness.expectTrue("typeof r.statusString === 'function'")
+            harness.expectTrue("typeof r.setCallback === 'function'")
+            harness.expectTrue("typeof r.start === 'function'")
+            harness.expectTrue("typeof r.stop === 'function'")
+            #expect(!harness.hasException)
+            harness.eval("r.stop()")
+        }
+    }
+
+    // MARK: - Suite 6: reachability behaviour
+
+    @Suite("hs.network reachability behaviour tests")
+    struct HSNetworkReachabilityBehaviourTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSNetworkModule.self, as: "network")
+            return harness
+        }
+
+        @Test("reachabilityFlags has all expected keys as numbers")
+        func testFlagsHasExpectedKeys() {
+            let harness = makeHarness()
+            harness.eval("var f = hs.network.reachabilityFlags")
+            for key in ["reachable", "connectionRequired", "transientConnection", "isDirect",
+                        "interventionRequired", "connectionOnTraffic", "connectionOnDemand", "isLocalAddress"] {
+                harness.expectTrue("typeof f.\(key) === 'number'")
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("each reachabilityFlag value is a distinct power of two")
+        func testFlagValuesAreDistinctPowersOfTwo() {
+            let harness = makeHarness()
+            harness.eval("""
+                var f = hs.network.reachabilityFlags
+                var vals = [f.transientConnection, f.reachable, f.connectionRequired,
+                            f.connectionOnTraffic, f.interventionRequired, f.connectionOnDemand,
+                            f.isLocalAddress, f.isDirect]
+                var allPow2 = vals.every(function(v) { return v > 0 && (v & (v - 1)) === 0 })
+                var allDistinct = vals.length === new Set(vals).size
+            """)
+            harness.expectTrue("allPow2")
+            harness.expectTrue("allDistinct")
+            #expect(!harness.hasException)
+        }
+
+        @Test("reachabilityInternet() status() returns a non-negative number")
+        func testStatusReturnsNonNegativeNumber() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityInternet()")
+            harness.expectTrue("typeof r.status() === 'number' && r.status() >= 0")
+            #expect(!harness.hasException)
+            harness.eval("r.stop()")
+        }
+
+        @Test("reachabilityInternet() statusString() returns an 8-character string")
+        func testStatusStringIs8Chars() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityInternet()")
+            harness.expectTrue("typeof r.statusString() === 'string' && r.statusString().length === 8")
+            #expect(!harness.hasException)
+            harness.eval("r.stop()")
+        }
+
+        @Test("reachabilityForAddress() with a valid IPv4 address returns a reachability object")
+        func testForAddressIPv4() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForAddress('8.8.8.8')")
+            harness.expectTrue("typeof r === 'object' && r !== null")
+            #expect(!harness.hasException)
+            harness.eval("r.stop()")
+        }
+
+        @Test("reachabilityForAddress() with a valid IPv6 address returns a reachability object")
+        func testForAddressIPv6() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForAddress('::1')")
+            harness.expectTrue("typeof r === 'object' && r !== null")
+            #expect(!harness.hasException)
+            harness.eval("r.stop()")
+        }
+
+        @Test("reachabilityForAddress() with an invalid string returns null")
+        func testForAddressInvalidReturnsNull() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForAddress('not-an-ip')")
+            harness.expectTrue("r === null || r === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("reachabilityForAddress() with a hostname string (not an IP) returns null")
+        func testForAddressHostnameReturnsNull() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForAddress('apple.com')")
+            harness.expectTrue("r === null || r === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("reachabilityForAddressPair() with valid addresses returns a reachability object")
+        func testForAddressPairValid() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForAddressPair('0.0.0.0', '8.8.8.8')")
+            harness.expectTrue("typeof r === 'object' && r !== null")
+            #expect(!harness.hasException)
+            harness.eval("r.stop()")
+        }
+
+        @Test("reachabilityForAddressPair() with an invalid local address returns null")
+        func testForAddressPairInvalidLocal() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForAddressPair('bad', '8.8.8.8')")
+            harness.expectTrue("r === null || r === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("reachabilityForAddressPair() with an invalid remote address returns null")
+        func testForAddressPairInvalidRemote() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForAddressPair('0.0.0.0', 'bad')")
+            harness.expectTrue("r === null || r === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("reachabilityForHostName() with a non-empty hostname returns a reachability object")
+        func testForHostNameValid() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForHostName('apple.com')")
+            harness.expectTrue("typeof r === 'object' && r !== null")
+            #expect(!harness.hasException)
+            harness.eval("r.stop()")
+        }
+
+        @Test("reachabilityForHostName() with an empty string returns null")
+        func testForHostNameEmptyReturnsNull() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityForHostName('')")
+            harness.expectTrue("r === null || r === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("reachabilityLinkLocal() returns a reachability object")
+        func testLinkLocalReturnsObject() {
+            let harness = makeHarness()
+            harness.eval("var r = hs.network.reachabilityLinkLocal()")
+            harness.expectTrue("typeof r === 'object' && r !== null")
+            #expect(!harness.hasException)
+            harness.eval("r.stop()")
+        }
+
+        @Test("start() and stop() chain fluently back to the same object")
+        func testStartStopChain() {
+            let harness = makeHarness()
+            harness.eval("""
+                var r = hs.network.reachabilityInternet()
+                var r2 = r.setCallback(function() {}).start()
+                var r3 = r2.stop()
+            """)
+            harness.expectTrue("r === r2 && r2 === r3")
+            #expect(!harness.hasException)
+        }
+
+        @Test("calling stop() before start() does not throw")
+        func testStopBeforeStartIsNoop() {
+            let harness = makeHarness()
+            harness.eval("hs.network.reachabilityInternet().stop()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("calling start() twice is idempotent")
+        func testDoubleStartIsIdempotent() {
+            let harness = makeHarness()
+            harness.eval("""
+                var r = hs.network.reachabilityInternet().setCallback(function() {})
+                r.start(); r.start()
+                r.stop()
+            """)
+            #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Reachability memory leak test
+
+    @Suite("hs.network.reachability memory tests")
+    struct HSNetworkReachabilityMemoryTests {
+
+        @Test("active HSNetworkReachability is released after module shutdown")
+        func testReachabilityDoesNotLeakAfterShutdown() {
+            let tracker = WeakLeakTracker()
+            autoreleasepool {
+                let harness = JSTestHarness()
+                harness.loadModule(HSNetworkModule.self, as: "network")
+
+                harness.eval("""
+                    var r = hs.network.reachabilityInternet()
+                    r.setCallback(function() {}).start()
+                """)
+
+                if let swift = harness.evalValue("r")?.toObjectOf(HSNetworkReachability.self) as? HSNetworkReachability {
+                    tracker.track(swift)
+                }
+
+                harness.eval("r = null")
+                harness.shutdownForLeakTest()
+            }
+            tracker.assertNoLeaks()
+        }
+    }
 }

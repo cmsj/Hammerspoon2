@@ -3666,6 +3666,55 @@ Uses CFHost, which respects the system's network configuration including VPN rou
     function resolve(hostname: string, family?: string | null): Promise<string[]>;
 
     /**
+     * Creates a reachability monitor for a specific IP address.
+Returns `null` if `address` is not a valid IPv4 or IPv6 address literal.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-address targeting.
+     * @param address An IPv4 or IPv6 address string (e.g. `"192.168.1.1"` or `"::1"`).
+     * @returns A new `HSNetworkReachability` monitor, or `null` if the address is invalid.
+     */
+    function reachabilityForAddress(address: string): HSNetworkReachability | null;
+
+    /**
+     * Creates a reachability monitor for a source/destination IP address pair.
+Returns `null` if either address is not a valid IPv4 or IPv6 address literal.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-address targeting.
+     * @param localAddress An IPv4 or IPv6 source address string.
+     * @param remoteAddress An IPv4 or IPv6 destination address string.
+     * @returns A new `HSNetworkReachability` monitor, or `null` if either address is invalid.
+     */
+    function reachabilityForAddressPair(localAddress: string, remoteAddress: string): HSNetworkReachability | null;
+
+    /**
+     * Creates a reachability monitor for a given hostname.
+Returns `null` if `hostName` is empty.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-hostname targeting.
+     * @param hostName A hostname string (e.g. `"example.com"`).
+     * @returns A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty.
+     */
+    function reachabilityForHostName(hostName: string): HSNetworkReachability | null;
+
+    /**
+     * Creates a reachability monitor for general internet connectivity.
+This is the most common factory method. Use it when you want to know whether the
+device currently has a working internet connection.
+     * @returns A new `HSNetworkReachability` monitor.
+     */
+    function reachabilityInternet(): HSNetworkReachability;
+
+    /**
+     * Creates a reachability monitor for link-local connectivity.
+Link-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges
+used for direct device-to-device communication without a router.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not distinguish link-local reachability.
+     * @returns A new `HSNetworkReachability` monitor.
+     */
+    function reachabilityLinkLocal(): HSNetworkReachability;
+
+    /**
      * Sends ICMP Echo Requests to `server` and reports results via a callback.
 DNS resolution and the first ping begin immediately. The returned object can be used to
 pause, resume, or cancel the ping, and to read statistics.
@@ -3676,6 +3725,15 @@ and `callback` (function).
      * @returns An `HSNetworkPing` object, or `null` if the arguments are invalid.
      */
     function ping(server: string, options?: ((ping: HSNetworkPing, event: string, info: any) => void) | {count?: number, interval?: number, timeout?: number, family?: string, callback?: (ping: HSNetworkPing, event: string, info: any) => void}): HSNetworkPing | null;
+
+    /**
+     * A dictionary of named flag constants for use with `HSNetworkReachability.status()`.
+Compare individual bits against these constants to determine which network conditions apply.
+The numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.
+Keys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,
+`interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.
+     */
+    const reachabilityFlags: Record<string, number>;
 
 }
 
@@ -3756,6 +3814,60 @@ provided the new value is greater than the number already sent.
      * `true` when the ping has been suspended with `pause()`.
      */
     readonly isPaused: boolean;
+
+}
+
+/**
+ * An active or inactive network reachability monitor. Create with `hs.network.reachability*()`.
+ */
+declare class HSNetworkReachability {
+    /**
+     * Returns the current reachability flags as a numeric bitmask.
+Compare against constants in `hs.network.reachabilityFlags`. Returns `0` if the
+network is currently unreachable.
+     * @returns A number representing the current reachability bitmask.
+     */
+    status(): number;
+
+    /**
+     * Returns a human-readable summary of the current reachability flags.
+The string contains 8 characters in order: `t` (transient/expensive), `R` (reachable),
+`c` (connectionRequired), `C` (connectionOnTraffic — always `-`), `i` (interventionRequired/constrained),
+`D` (connectionOnDemand — always `-`), `l` (isLocalAddress — always `-`), `d` (isDirect).
+A letter appears when that flag is set; `-` appears when it is clear.
+     * @returns An 8-character flag string such as `"-R-----d"`.
+     */
+    statusString(): string;
+
+    /**
+     * Replaces the callback invoked when reachability changes.
+The callback receives `(reachability, flags)` where `flags` is the same numeric
+bitmask as returned by `status()`. Call `start()` after `setCallback()` to begin
+monitoring.
+     * @param callback Called on each reachability status change.
+     * @returns This reachability object for chaining.
+     */
+    setCallback(callback: (reachability: HSNetworkReachability, flags: number) => void): HSNetworkReachability;
+
+    /**
+     * Starts monitoring for reachability changes.
+After calling `start()`, the callback registered with `setCallback()` is invoked
+whenever the reachability status changes.
+     * @returns This reachability object for chaining.
+     */
+    start(): HSNetworkReachability;
+
+    /**
+     * Stops monitoring for reachability changes.
+The callback will no longer be invoked. Call `start()` again to resume monitoring.
+     * @returns This reachability object for chaining.
+     */
+    stop(): HSNetworkReachability;
+
+    /**
+     * Always `"HSNetworkReachability"`.
+     */
+    readonly typeName: string;
 
 }
 

@@ -9926,6 +9926,147 @@
           "lineNumber": 153
         },
         {
+          "name": "reachabilityForAddress",
+          "signature": "func reachabilityForAddress(_ address: String) -> HSNetworkReachability?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for a specific IP address.\n\nReturns `null` if `address` is not a valid IPv4 or IPv6 address literal.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-address targeting.\n- Parameter address: An IPv4 or IPv6 address string (e.g. `\"192.168.1.1\"` or `\"::1\"`).\n- Returns: A new `HSNetworkReachability` monitor, or `null` if the address is invalid.\n- Example:\n```js\nconst r = hs.network.reachabilityForAddress(\"8.8.8.8\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()\n```",
+          "description": "Creates a reachability monitor for a specific IP address.\nReturns `null` if `address` is not a valid IPv4 or IPv6 address literal.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-address targeting.",
+          "params": [
+            {
+              "name": "address",
+              "type": "string",
+              "description": "An IPv4 or IPv6 address string (e.g. `\"192.168.1.1\"` or `\"::1\"`).",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor, or `null` if the address is invalid."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const r = hs.network.reachabilityForAddress(\"8.8.8.8\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 183
+        },
+        {
+          "name": "reachabilityForAddressPair",
+          "signature": "func reachabilityForAddressPair(_ localAddress: String, _ remoteAddress: String) -> HSNetworkReachability?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for a source/destination IP address pair.\n\nReturns `null` if either address is not a valid IPv4 or IPv6 address literal.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-address targeting.\n- Parameter localAddress: An IPv4 or IPv6 source address string.\n- Parameter remoteAddress: An IPv4 or IPv6 destination address string.\n- Returns: A new `HSNetworkReachability` monitor, or `null` if either address is invalid.\n- Example:\n```js\nconst r = hs.network.reachabilityForAddressPair(\"0.0.0.0\", \"8.8.8.8\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()\n```",
+          "description": "Creates a reachability monitor for a source/destination IP address pair.\nReturns `null` if either address is not a valid IPv4 or IPv6 address literal.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-address targeting.",
+          "params": [
+            {
+              "name": "localAddress",
+              "type": "string",
+              "description": "An IPv4 or IPv6 source address string.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "remoteAddress",
+              "type": "string",
+              "description": "An IPv4 or IPv6 destination address string.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor, or `null` if either address is invalid."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const r = hs.network.reachabilityForAddressPair(\"0.0.0.0\", \"8.8.8.8\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 198
+        },
+        {
+          "name": "reachabilityForHostName",
+          "signature": "func reachabilityForHostName(_ hostName: String) -> HSNetworkReachability?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for a given hostname.\n\nReturns `null` if `hostName` is empty.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-hostname targeting.\n- Parameter hostName: A hostname string (e.g. `\"example.com\"`).\n- Returns: A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty.\n- Example:\n```js\nconst r = hs.network.reachabilityForHostName(\"example.com\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()\n```",
+          "description": "Creates a reachability monitor for a given hostname.\nReturns `null` if `hostName` is empty.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-hostname targeting.",
+          "params": [
+            {
+              "name": "hostName",
+              "type": "string",
+              "description": "A hostname string (e.g. `\"example.com\"`).",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const r = hs.network.reachabilityForHostName(\"example.com\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 212
+        },
+        {
+          "name": "reachabilityInternet",
+          "signature": "func reachabilityInternet() -> HSNetworkReachability",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for general internet connectivity.\n\nThis is the most common factory method. Use it when you want to know whether the\ndevice currently has a working internet connection.\n- Returns: A new `HSNetworkReachability` monitor.\n- Example:\n```js\nhs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()\n```",
+          "description": "Creates a reachability monitor for general internet connectivity.\nThis is the most common factory method. Use it when you want to know whether the\ndevice currently has a working internet connection.",
+          "params": [],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 225
+        },
+        {
+          "name": "reachabilityLinkLocal",
+          "signature": "func reachabilityLinkLocal() -> HSNetworkReachability",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for link-local connectivity.\n\nLink-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges\nused for direct device-to-device communication without a router.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not distinguish link-local reachability.\n- Returns: A new `HSNetworkReachability` monitor.\n- Example:\n```js\nhs.network.reachabilityLinkLocal()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()\n```",
+          "description": "Creates a reachability monitor for link-local connectivity.\nLink-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges\nused for direct device-to-device communication without a router.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not distinguish link-local reachability.",
+          "params": [],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.reachabilityLinkLocal()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 240
+        },
+        {
           "name": "ping",
           "signature": "func ping(_ server: String, _ options: JSValue) -> HSNetworkPing?",
           "isStatic": false,
@@ -9960,10 +10101,28 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 187
+          "lineNumber": 274
         }
       ],
-      "properties": [],
+      "properties": [
+        {
+          "name": "reachabilityFlags",
+          "signature": "var reachabilityFlags: [String: Int] { get }",
+          "rawDocumentation": "A dictionary of named flag constants for use with `HSNetworkReachability.status()`.\n\nCompare individual bits against these constants to determine which network conditions apply.\nThe numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.\n\nKeys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,\n`interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.\n- Returns: A dictionary mapping flag name strings to their bitmask values.\n- Example:\n```js\nconst r = hs.network.reachabilityInternet()\nconst f = hs.network.reachabilityFlags\nconsole.log(\"Reachable: \" + ((r.status() & f.reachable) !== 0))\n```",
+          "description": "A dictionary of named flag constants for use with `HSNetworkReachability.status()`.\nCompare individual bits against these constants to determine which network conditions apply.\nThe numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.\nKeys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,\n`interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const r = hs.network.reachabilityInternet()\nconst f = hs.network.reachabilityFlags\nconsole.log(\"Reachable: \" + ((r.status() & f.reachable) !== 0))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 169
+        }
+      ],
       "types": [
         {
           "name": "HSNetworkPingAPI",
@@ -10231,6 +10390,146 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
               "lineNumber": 201
+            }
+          ]
+        },
+        {
+          "name": "HSNetworkReachabilityAPI",
+          "type": "typedef",
+          "rawDocumentation": "An active or inactive network reachability monitor. Create with `hs.network.reachability*()`.",
+          "description": "An active or inactive network reachability monitor. Create with `hs.network.reachability*()`.",
+          "methods": [
+            {
+              "name": "status",
+              "signature": "func status() -> Int",
+              "isStatic": false,
+              "rawDocumentation": "Returns the current reachability flags as a numeric bitmask.\n\nCompare against constants in `hs.network.reachabilityFlags`. Returns `0` if the\nnetwork is currently unreachable.\n- Returns: A number representing the current reachability bitmask.\n- Example:\n```js\nconst r = hs.network.reachabilityInternet()\nconst f = hs.network.reachabilityFlags\nconsole.log(\"Reachable: \" + ((r.status() & f.reachable) !== 0))\n```",
+              "description": "Returns the current reachability flags as a numeric bitmask.\nCompare against constants in `hs.network.reachabilityFlags`. Returns `0` if the\nnetwork is currently unreachable.",
+              "params": [],
+              "returns": {
+                "type": "number",
+                "description": "A number representing the current reachability bitmask."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const r = hs.network.reachabilityInternet()\nconst f = hs.network.reachabilityFlags\nconsole.log(\"Reachable: \" + ((r.status() & f.reachable) !== 0))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 88
+            },
+            {
+              "name": "statusString",
+              "signature": "func statusString() -> String",
+              "isStatic": false,
+              "rawDocumentation": "Returns a human-readable summary of the current reachability flags.\n\nThe string contains 8 characters in order: `t` (transient/expensive), `R` (reachable),\n`c` (connectionRequired), `C` (connectionOnTraffic — always `-`), `i` (interventionRequired/constrained),\n`D` (connectionOnDemand — always `-`), `l` (isLocalAddress — always `-`), `d` (isDirect).\nA letter appears when that flag is set; `-` appears when it is clear.\n- Returns: An 8-character flag string such as `\"-R-----d\"`.\n- Example:\n```js\nconst r = hs.network.reachabilityInternet()\nconsole.log(r.statusString())  // e.g. \"-R-----d\"\n```",
+              "description": "Returns a human-readable summary of the current reachability flags.\nThe string contains 8 characters in order: `t` (transient/expensive), `R` (reachable),\n`c` (connectionRequired), `C` (connectionOnTraffic — always `-`), `i` (interventionRequired/constrained),\n`D` (connectionOnDemand — always `-`), `l` (isLocalAddress — always `-`), `d` (isDirect).\nA letter appears when that flag is set; `-` appears when it is clear.",
+              "params": [],
+              "returns": {
+                "type": "string",
+                "description": "An 8-character flag string such as `\"-R-----d\"`."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const r = hs.network.reachabilityInternet()\nconsole.log(r.statusString())  // e.g. \"-R-----d\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 102
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ callback: JSFunction) -> HSNetworkReachability",
+              "isStatic": false,
+              "rawDocumentation": "Replaces the callback invoked when reachability changes.\n\nThe callback receives `(reachability, flags)` where `flags` is the same numeric\nbitmask as returned by `status()`. Call `start()` after `setCallback()` to begin\nmonitoring.\n- Parameter callback: {(reachability: HSNetworkReachability, flags: number) => void} Called on each reachability status change.\n- Returns: This reachability object for chaining.\n- Example:\n```js\nhs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()\n```",
+              "description": "Replaces the callback invoked when reachability changes.\nThe callback receives `(reachability, flags)` where `flags` is the same numeric\nbitmask as returned by `status()`. Call `start()` after `setCallback()` to begin\nmonitoring.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "Called on each reachability status change.",
+                  "optional": false,
+                  "tsType": "(reachability: HSNetworkReachability, flags: number) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSNetworkReachability",
+                "description": "This reachability object for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 117
+            },
+            {
+              "name": "start",
+              "signature": "func start() -> HSNetworkReachability",
+              "isStatic": false,
+              "rawDocumentation": "Starts monitoring for reachability changes.\n\nAfter calling `start()`, the callback registered with `setCallback()` is invoked\nwhenever the reachability status changes.\n- Returns: This reachability object for chaining.\n- Example:\n```js\nhs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()\n```",
+              "description": "Starts monitoring for reachability changes.\nAfter calling `start()`, the callback registered with `setCallback()` is invoked\nwhenever the reachability status changes.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkReachability",
+                "description": "This reachability object for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 130
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSNetworkReachability",
+              "isStatic": false,
+              "rawDocumentation": "Stops monitoring for reachability changes.\n\nThe callback will no longer be invoked. Call `start()` again to resume monitoring.\n- Returns: This reachability object for chaining.\n- Example:\n```js\nr.stop()\n```",
+              "description": "Stops monitoring for reachability changes.\nThe callback will no longer be invoked. Call `start()` again to resume monitoring.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkReachability",
+                "description": "This reachability object for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "r.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 140
+            }
+          ],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "Always `\"HSNetworkReachability\"`.",
+              "description": "Always `\"HSNetworkReachability\"`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 75
             }
           ]
         }
@@ -19847,5 +20146,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-20T12:28:45.561Z"
+  "generatedAt": "2026-07-20T15:36:36.097Z"
 }
