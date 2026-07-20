@@ -3633,6 +3633,330 @@ if you only want to temporarily remove the item without freeing it.
 }
 
 /**
+ * Module for inspecting network interfaces, resolving hostnames, and reading system configuration
+ */
+declare namespace hs.network {
+    /**
+     * Returns all network interfaces present on this system.
+Each object contains `name` (string), `isLoopback` (boolean), `isUp` (boolean), and `isRunning` (boolean). A `displayName` string is included when the system provides a human-readable label for the interface (e.g. `"Wi-Fi"` or `"Ethernet"`).
+     * @returns An array of objects describing each network interface.
+     */
+    function interfaces(): Record<string, any>[];
+
+    /**
+     * Returns the name of the primary network interface, i.e. the one currently providing the default route.
+     * @returns The BSD interface name (e.g. `"en0"`), or `null` if no primary interface can be determined.
+     */
+    function primaryInterface(): string | null;
+
+    /**
+     * Returns all IP addresses assigned to this host.
+Each object contains `interface` (the BSD name of the interface), `address` (the address string), and `family` (`"ipv4"` or `"ipv6"`).
+     * @returns An array of address objects.
+     */
+    function addresses(): Record<string, any>[];
+
+    /**
+     * Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.
+Uses CFHost, which respects the system's network configuration including VPN routes and proxy settings.
+     * @param hostname The hostname to resolve (e.g. `"example.com"` or `"localhost"`).
+     * @param family The address family to query: `"ipv4"` for A records only, `"ipv6"` for AAAA records only, or `"both"` to return all addresses. Defaults to `"both"` when omitted.
+     * @returns A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.
+     */
+    function resolve(hostname: string, family?: string | null): Promise<string[]>;
+
+    /**
+     * Creates a reachability monitor for a specific IP address.
+Returns `null` if `address` is not a valid IPv4 or IPv6 address literal.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-address targeting.
+     * @param address An IPv4 or IPv6 address string (e.g. `"192.168.1.1"` or `"::1"`).
+     * @returns A new `HSNetworkReachability` monitor, or `null` if the address is invalid.
+     */
+    function reachabilityForAddress(address: string): HSNetworkReachability | null;
+
+    /**
+     * Creates a reachability monitor for a source/destination IP address pair.
+Returns `null` if either address is not a valid IPv4 or IPv6 address literal.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-address targeting.
+     * @param localAddress An IPv4 or IPv6 source address string.
+     * @param remoteAddress An IPv4 or IPv6 destination address string.
+     * @returns A new `HSNetworkReachability` monitor, or `null` if either address is invalid.
+     */
+    function reachabilityForAddressPair(localAddress: string, remoteAddress: string): HSNetworkReachability | null;
+
+    /**
+     * Creates a reachability monitor for a given hostname.
+Returns `null` if `hostName` is empty.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-hostname targeting.
+     * @param hostName A hostname string (e.g. `"example.com"`).
+     * @returns A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty.
+     */
+    function reachabilityForHostName(hostName: string): HSNetworkReachability | null;
+
+    /**
+     * Creates a reachability monitor for general internet connectivity.
+This is the most common factory method. Use it when you want to know whether the
+device currently has a working internet connection.
+     * @returns A new `HSNetworkReachability` monitor.
+     */
+    function reachabilityInternet(): HSNetworkReachability;
+
+    /**
+     * Creates a reachability monitor for link-local connectivity.
+Link-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges
+used for direct device-to-device communication without a router.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not distinguish link-local reachability.
+     * @returns A new `HSNetworkReachability` monitor.
+     */
+    function reachabilityLinkLocal(): HSNetworkReachability;
+
+    /**
+     * Returns the contents of the macOS System Configuration dynamic store as a dictionary.
+The store holds live network configuration for the running system — interface addresses,
+routing, DNS servers, proxy settings, VPN state, and more. Keys follow a hierarchical
+path convention (e.g. `"State:/Network/Global/IPv4"`).
+Omit or pass `null` to return all keys (equivalent to `".*"`).
+     * @param pattern An optional regular expression that filters which keys are included.
+     * @returns A dictionary mapping key strings to their current values. Values may be
+     */
+    function configurationStore(pattern: string | null): Record<string, any>;
+
+    /**
+     * Returns a mapping of all configured network location UUIDs to their display names.
+Use this to discover available locations before calling `configurationSetLocation()`.
+     * @returns A dictionary mapping UUID strings to human-readable location names.
+     */
+    function configurationLocations(): Record<string, string>;
+
+    /**
+     * Switches the active network location to the one with the given name or UUID.
+Pass the location's display name (e.g. `"Home"`) or its UUID from `configurationLocations()`.
+The change is applied immediately. Returns `false` if the location was not found or
+the preferences could not be committed (e.g. insufficient privileges).
+     * @param location A location display name or UUID string.
+     * @returns `true` if the location was changed successfully, `false` otherwise.
+     */
+    function configurationSetLocation(location: string): boolean;
+
+    /**
+     * Creates a watcher that fires a callback when System Configuration dynamic store keys change.
+Call `setKeys()` to specify which keys (or patterns) to watch, `setCallback()` to register
+the handler, then `start()` to begin monitoring. The module automatically stops and
+destroys all watchers on `hs.reload()`.
+     * @returns A new `HSNetworkConfigurationWatcher` object.
+     */
+    function configurationWatcher(): HSNetworkConfigurationWatcher;
+
+    /**
+     * Sends ICMP Echo Requests to `server` and reports results via a callback.
+DNS resolution and the first ping begin immediately. The returned object can be used to
+pause, resume, or cancel the ping, and to read statistics.
+`timeout` (seconds per packet, default 2.0), `family` (`"any"` | `"ipv4"` | `"ipv6"`, default `"any"`),
+and `callback` (function).
+     * @param server A hostname or IP address to ping.
+     * @param options A callback function or options object. Optional.
+     * @returns An `HSNetworkPing` object, or `null` if the arguments are invalid.
+     */
+    function ping(server: string, options?: ((ping: HSNetworkPing, event: string, info: any) => void) | {count?: number, interval?: number, timeout?: number, family?: string, callback?: (ping: HSNetworkPing, event: string, info: any) => void}): HSNetworkPing | null;
+
+    /**
+     * A dictionary of named flag constants for use with `HSNetworkReachability.status()`.
+Compare individual bits against these constants to determine which network conditions apply.
+The numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.
+Keys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,
+`interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.
+     */
+    const reachabilityFlags: Record<string, number>;
+
+}
+
+/**
+ * A watcher for System Configuration dynamic store key changes. Create with `hs.network.configurationWatcher()`.
+ */
+declare class HSNetworkConfigurationWatcher {
+    /**
+     * Specifies which dynamic store keys (or key patterns) to watch for changes.
+Must be called before `start()`. Each element of `keys` is treated as a string literal
+when `pattern` is `false` (the default), or as a regular expression when `pattern` is `true`.
+Calling `setKeys` again replaces the previous set of watched keys.
+     * @param keys An array of exact key strings (when `pattern` is `false`) or regular expressions (when `pattern` is `true`).
+     * @param pattern Pass `true` to treat each element of `keys` as a regular expression; omit or pass `false` for literal key matching.
+     * @returns This watcher for chaining.
+     */
+    setKeys(keys: string[], pattern: boolean): HSNetworkConfigurationWatcher;
+
+    /**
+     * Sets the callback invoked when a watched key changes.
+The callback receives `(watcher, changedKeys)` where `changedKeys` is an array of key
+strings that changed since the last notification. Call `hs.network.configurationStore()`
+inside the callback to read the updated values.
+     * @param callback Called whenever a watched key changes.
+     * @returns This watcher for chaining.
+     */
+    setCallback(callback: (watcher: HSNetworkConfigurationWatcher, changedKeys: string[]) => void): HSNetworkConfigurationWatcher;
+
+    /**
+     * Starts watching for dynamic store changes.
+The callback registered with `setCallback()` will be invoked whenever a key matching the
+patterns registered with `setKeys()` changes. Call `setKeys()` and `setCallback()` before
+calling `start()`.
+     * @returns This watcher for chaining.
+     */
+    start(): HSNetworkConfigurationWatcher;
+
+    /**
+     * Stops watching for dynamic store changes.
+The callback will no longer be invoked. Call `start()` again to resume monitoring.
+     * @returns This watcher for chaining.
+     */
+    stop(): HSNetworkConfigurationWatcher;
+
+    /**
+     * Always `"HSNetworkConfigurationWatcher"`.
+     */
+    readonly typeName: string;
+
+}
+
+/**
+ * Object representing an active or completed ICMP ping operation.
+Create instances with `hs.network.ping()`.
+ */
+declare class HSNetworkPing {
+    /**
+     * Returns packet statistics for all sent packets, or for a single packet by its zero-based sequence number.
+     * @param sequenceNumber Omit to get all packets as an array; pass an integer to get a single packet object, or `null` if that sequence does not exist.
+     * @returns An array of packet objects when called without arguments, or a single packet object (or `null`).
+     */
+    packets(sequenceNumber?: number): any;
+
+    /**
+     * Returns a human-readable summary of the ping results in standard ping format.
+     * @returns A multi-line string with transmission statistics and round-trip timing.
+     */
+    summary(): string;
+
+    /**
+     * Suspends the ping. No further packets are sent until `resume()` is called.
+     * @returns This ping object if still active, or `null` if the ping has already finished.
+     */
+    pause(): HSNetworkPing | null;
+
+    /**
+     * Resumes a paused ping, continuing from where it left off.
+     * @returns This ping object if still active, or `null` if the ping has already finished.
+     */
+    resume(): HSNetworkPing | null;
+
+    /**
+     * Immediately stops the ping, firing the `"didFinish"` callback with statistics collected so far.
+     */
+    cancel(): void;
+
+    /**
+     * Replaces the ping's callback function.
+     * @param callback The new callback function.
+     * @returns This ping object for chaining.
+     */
+    setCallback(callback: (ping: HSNetworkPing, event: string, info: any) => void): HSNetworkPing;
+
+    /**
+     * Always `"HSNetworkPing"`.
+     */
+    readonly typeName: string;
+
+    /**
+     * The resolved IP address of the target, or `"<unresolved address>"` if DNS has not yet completed.
+     */
+    readonly address: string;
+
+    /**
+     * The hostname or IP address string originally passed to `hs.network.ping()`.
+     */
+    readonly server: string;
+
+    /**
+     * The number of ICMP Echo Requests sent so far.
+     */
+    readonly sent: number;
+
+    /**
+     * The total number of ICMP Echo Requests to send. May be increased while the ping is running
+provided the new value is greater than the number already sent.
+     */
+    count: number;
+
+    /**
+     * `true` while the ping is actively sending and waiting for replies.
+     */
+    readonly isRunning: boolean;
+
+    /**
+     * `true` when the ping has been suspended with `pause()`.
+     */
+    readonly isPaused: boolean;
+
+}
+
+/**
+ * An active or inactive network reachability monitor. Create with `hs.network.reachability*()`.
+ */
+declare class HSNetworkReachability {
+    /**
+     * Returns the current reachability flags as a numeric bitmask.
+Compare against constants in `hs.network.reachabilityFlags`. Returns `0` if the
+network is currently unreachable.
+     * @returns A number representing the current reachability bitmask.
+     */
+    status(): number;
+
+    /**
+     * Returns a human-readable summary of the current reachability flags.
+The string contains 8 characters in order: `t` (transient/expensive), `R` (reachable),
+`c` (connectionRequired), `C` (connectionOnTraffic — always `-`), `i` (interventionRequired/constrained),
+`D` (connectionOnDemand — always `-`), `l` (isLocalAddress — always `-`), `d` (isDirect).
+A letter appears when that flag is set; `-` appears when it is clear.
+     * @returns An 8-character flag string such as `"-R-----d"`.
+     */
+    statusString(): string;
+
+    /**
+     * Replaces the callback invoked when reachability changes.
+The callback receives `(reachability, flags)` where `flags` is the same numeric
+bitmask as returned by `status()`. Call `start()` after `setCallback()` to begin
+monitoring.
+     * @param callback Called on each reachability status change.
+     * @returns This reachability object for chaining.
+     */
+    setCallback(callback: (reachability: HSNetworkReachability, flags: number) => void): HSNetworkReachability;
+
+    /**
+     * Starts monitoring for reachability changes.
+After calling `start()`, the callback registered with `setCallback()` is invoked
+whenever the reachability status changes.
+     * @returns This reachability object for chaining.
+     */
+    start(): HSNetworkReachability;
+
+    /**
+     * Stops monitoring for reachability changes.
+The callback will no longer be invoked. Call `start()` again to resume monitoring.
+     * @returns This reachability object for chaining.
+     */
+    stop(): HSNetworkReachability;
+
+    /**
+     * Always `"HSNetworkReachability"`.
+     */
+    readonly typeName: string;
+
+}
+
+/**
  * Module for creating and displaying macOS system notifications.
 macOS notifications require user permission before they will appear. Request it once
 (typically at startup) via `hs.permissions.requestNotifications()` and it will be

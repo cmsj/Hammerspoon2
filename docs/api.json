@@ -9819,6 +9819,962 @@
       "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.title = \"Hello\"\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.title = \"Dynamic\"\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```"
     },
     {
+      "name": "hs.network",
+      "methods": [
+        {
+          "name": "interfaces",
+          "signature": "func interfaces() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns all network interfaces present on this system.\n\nEach object contains `name` (string), `isLoopback` (boolean), `isUp` (boolean), and `isRunning` (boolean). A `displayName` string is included when the system provides a human-readable label for the interface (e.g. `\"Wi-Fi\"` or `\"Ethernet\"`).\n- Returns: An array of objects describing each network interface.\n- Example:\n```js\nconst ifaces = hs.network.interfaces()\nifaces.forEach(i => console.log(i.name + \": \" + (i.displayName || \"(no display name)\")))\n```",
+          "description": "Returns all network interfaces present on this system.\nEach object contains `name` (string), `isLoopback` (boolean), `isUp` (boolean), and `isRunning` (boolean). A `displayName` string is included when the system provides a human-readable label for the interface (e.g. `\"Wi-Fi\"` or `\"Ethernet\"`).",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of objects describing each network interface."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const ifaces = hs.network.interfaces()\nifaces.forEach(i => console.log(i.name + \": \" + (i.displayName || \"(no display name)\")))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 117
+        },
+        {
+          "name": "primaryInterface",
+          "signature": "func primaryInterface() -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Returns the name of the primary network interface, i.e. the one currently providing the default route.\n\n- Returns: The BSD interface name (e.g. `\"en0\"`), or `null` if no primary interface can be determined.\n- Example:\n```js\nconst primary = hs.network.primaryInterface()\nconsole.log(\"Primary interface: \" + primary)\n```",
+          "description": "Returns the name of the primary network interface, i.e. the one currently providing the default route.",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "The BSD interface name (e.g. `\"en0\"`), or `null` if no primary interface can be determined."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const primary = hs.network.primaryInterface()\nconsole.log(\"Primary interface: \" + primary)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 127
+        },
+        {
+          "name": "addresses",
+          "signature": "func addresses() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns all IP addresses assigned to this host.\n\nEach object contains `interface` (the BSD name of the interface), `address` (the address string), and `family` (`\"ipv4\"` or `\"ipv6\"`).\n- Returns: An array of address objects.\n- Example:\n```js\nconst addrs = hs.network.addresses()\naddrs.filter(a => a.family === 'ipv4').forEach(a => console.log(a.interface + \": \" + a.address))\n```",
+          "description": "Returns all IP addresses assigned to this host.\nEach object contains `interface` (the BSD name of the interface), `address` (the address string), and `family` (`\"ipv4\"` or `\"ipv6\"`).",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of address objects."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const addrs = hs.network.addresses()\naddrs.filter(a => a.family === 'ipv4').forEach(a => console.log(a.interface + \": \" + a.address))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 138
+        },
+        {
+          "name": "resolve",
+          "signature": "func resolve(_ hostname: String, _ family: String?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.\n\nUses CFHost, which respects the system's network configuration including VPN routes and proxy settings.\n- Parameter hostname: The hostname to resolve (e.g. `\"example.com\"` or `\"localhost\"`).\n- Parameter family?: The address family to query: `\"ipv4\"` for A records only, `\"ipv6\"` for AAAA records only, or `\"both\"` to return all addresses. Defaults to `\"both\"` when omitted.\n- Returns: {Promise<string[]>} A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.\n- Example:\n```js\nhs.network.resolve(\"example.com\").then(addrs => {\n    addrs.forEach(a => console.log(a))\n})\nhs.network.resolve(\"example.com\", \"ipv4\").then(addrs => console.log(\"IPv4: \" + addrs[0]))\n```",
+          "description": "Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.\nUses CFHost, which respects the system's network configuration including VPN routes and proxy settings.",
+          "params": [
+            {
+              "name": "hostname",
+              "type": "string",
+              "description": "The hostname to resolve (e.g. `\"example.com\"` or `\"localhost\"`).",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "family",
+              "type": "string",
+              "description": "The address family to query: `\"ipv4\"` for A records only, `\"ipv6\"` for AAAA records only, or `\"both\"` to return all addresses. Defaults to `\"both\"` when omitted.",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.",
+            "promiseType": "string[]"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.resolve(\"example.com\").then(addrs => {\n    addrs.forEach(a => console.log(a))\n})\nhs.network.resolve(\"example.com\", \"ipv4\").then(addrs => console.log(\"IPv4: \" + addrs[0]))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 153
+        },
+        {
+          "name": "reachabilityForAddress",
+          "signature": "func reachabilityForAddress(_ address: String) -> HSNetworkReachability?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for a specific IP address.\n\nReturns `null` if `address` is not a valid IPv4 or IPv6 address literal.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-address targeting.\n- Parameter address: An IPv4 or IPv6 address string (e.g. `\"192.168.1.1\"` or `\"::1\"`).\n- Returns: A new `HSNetworkReachability` monitor, or `null` if the address is invalid.\n- Example:\n```js\nconst r = hs.network.reachabilityForAddress(\"8.8.8.8\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()\n```",
+          "description": "Creates a reachability monitor for a specific IP address.\nReturns `null` if `address` is not a valid IPv4 or IPv6 address literal.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-address targeting.",
+          "params": [
+            {
+              "name": "address",
+              "type": "string",
+              "description": "An IPv4 or IPv6 address string (e.g. `\"192.168.1.1\"` or `\"::1\"`).",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor, or `null` if the address is invalid."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const r = hs.network.reachabilityForAddress(\"8.8.8.8\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 183
+        },
+        {
+          "name": "reachabilityForAddressPair",
+          "signature": "func reachabilityForAddressPair(_ localAddress: String, _ remoteAddress: String) -> HSNetworkReachability?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for a source/destination IP address pair.\n\nReturns `null` if either address is not a valid IPv4 or IPv6 address literal.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-address targeting.\n- Parameter localAddress: An IPv4 or IPv6 source address string.\n- Parameter remoteAddress: An IPv4 or IPv6 destination address string.\n- Returns: A new `HSNetworkReachability` monitor, or `null` if either address is invalid.\n- Example:\n```js\nconst r = hs.network.reachabilityForAddressPair(\"0.0.0.0\", \"8.8.8.8\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()\n```",
+          "description": "Creates a reachability monitor for a source/destination IP address pair.\nReturns `null` if either address is not a valid IPv4 or IPv6 address literal.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-address targeting.",
+          "params": [
+            {
+              "name": "localAddress",
+              "type": "string",
+              "description": "An IPv4 or IPv6 source address string.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "remoteAddress",
+              "type": "string",
+              "description": "An IPv4 or IPv6 destination address string.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor, or `null` if either address is invalid."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const r = hs.network.reachabilityForAddressPair(\"0.0.0.0\", \"8.8.8.8\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 198
+        },
+        {
+          "name": "reachabilityForHostName",
+          "signature": "func reachabilityForHostName(_ hostName: String) -> HSNetworkReachability?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for a given hostname.\n\nReturns `null` if `hostName` is empty.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-hostname targeting.\n- Parameter hostName: A hostname string (e.g. `\"example.com\"`).\n- Returns: A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty.\n- Example:\n```js\nconst r = hs.network.reachabilityForHostName(\"example.com\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()\n```",
+          "description": "Creates a reachability monitor for a given hostname.\nReturns `null` if `hostName` is empty.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not support per-hostname targeting.",
+          "params": [
+            {
+              "name": "hostName",
+              "type": "string",
+              "description": "A hostname string (e.g. `\"example.com\"`).",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const r = hs.network.reachabilityForHostName(\"example.com\")\nr?.setCallback((obj, flags) => console.log(obj.statusString())).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 212
+        },
+        {
+          "name": "reachabilityInternet",
+          "signature": "func reachabilityInternet() -> HSNetworkReachability",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for general internet connectivity.\n\nThis is the most common factory method. Use it when you want to know whether the\ndevice currently has a working internet connection.\n- Returns: A new `HSNetworkReachability` monitor.\n- Example:\n```js\nhs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()\n```",
+          "description": "Creates a reachability monitor for general internet connectivity.\nThis is the most common factory method. Use it when you want to know whether the\ndevice currently has a working internet connection.",
+          "params": [],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 225
+        },
+        {
+          "name": "reachabilityLinkLocal",
+          "signature": "func reachabilityLinkLocal() -> HSNetworkReachability",
+          "isStatic": false,
+          "rawDocumentation": "Creates a reachability monitor for link-local connectivity.\n\nLink-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges\nused for direct device-to-device communication without a router.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not distinguish link-local reachability.\n- Returns: A new `HSNetworkReachability` monitor.\n- Example:\n```js\nhs.network.reachabilityLinkLocal()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()\n```",
+          "description": "Creates a reachability monitor for link-local connectivity.\nLink-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges\nused for direct device-to-device communication without a router.\nUnder the hood this monitors general system connectivity (the same as `reachabilityInternet()`),\nbecause `NWPathMonitor` does not distinguish link-local reachability.",
+          "params": [],
+          "returns": {
+            "type": "HSNetworkReachability",
+            "description": "A new `HSNetworkReachability` monitor."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.reachabilityLinkLocal()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 240
+        },
+        {
+          "name": "configurationStore",
+          "signature": "func configurationStore(_ pattern: String?) -> [String: Any]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the contents of the macOS System Configuration dynamic store as a dictionary.\n\nThe store holds live network configuration for the running system — interface addresses,\nrouting, DNS servers, proxy settings, VPN state, and more. Keys follow a hierarchical\npath convention (e.g. `\"State:/Network/Global/IPv4\"`).\n\n- Parameter pattern: An optional regular expression that filters which keys are included.\n  Omit or pass `null` to return all keys (equivalent to `\".*\"`).\n- Returns: A dictionary mapping key strings to their current values. Values may be\n  dictionaries, arrays, strings, or numbers depending on the key.\n- Example:\n```js\n// Dump everything\nconsole.log(JSON.stringify(hs.network.configurationStore()))\n\n// Filter to network state\nconst state = hs.network.configurationStore(\"State:/Network/.*\")\nconsole.log(state[\"State:/Network/Global/IPv4\"])\n```",
+          "description": "Returns the contents of the macOS System Configuration dynamic store as a dictionary.\nThe store holds live network configuration for the running system — interface addresses,\nrouting, DNS servers, proxy settings, VPN state, and more. Keys follow a hierarchical\npath convention (e.g. `\"State:/Network/Global/IPv4\"`).\nOmit or pass `null` to return all keys (equivalent to `\".*\"`).",
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string",
+              "description": "An optional regular expression that filters which keys are included.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "Object<String, Any>",
+            "description": "A dictionary mapping key strings to their current values. Values may be"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "// Dump everything\nconsole.log(JSON.stringify(hs.network.configurationStore()))\n\n// Filter to network state\nconst state = hs.network.configurationStore(\"State:/Network/.*\")\nconsole.log(state[\"State:/Network/Global/IPv4\"])"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 263
+        },
+        {
+          "name": "configurationLocations",
+          "signature": "func configurationLocations() -> [String: String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns a mapping of all configured network location UUIDs to their display names.\n\nUse this to discover available locations before calling `configurationSetLocation()`.\n- Returns: A dictionary mapping UUID strings to human-readable location names.\n- Example:\n```js\nconst locs = hs.network.configurationLocations()\nObject.entries(locs).forEach(([uuid, name]) => console.log(uuid + \": \" + name))\n```",
+          "description": "Returns a mapping of all configured network location UUIDs to their display names.\nUse this to discover available locations before calling `configurationSetLocation()`.",
+          "params": [],
+          "returns": {
+            "type": "Object<String, String>",
+            "description": "A dictionary mapping UUID strings to human-readable location names."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const locs = hs.network.configurationLocations()\nObject.entries(locs).forEach(([uuid, name]) => console.log(uuid + \": \" + name))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 274
+        },
+        {
+          "name": "configurationSetLocation",
+          "signature": "func configurationSetLocation(_ location: String) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Switches the active network location to the one with the given name or UUID.\n\nPass the location's display name (e.g. `\"Home\"`) or its UUID from `configurationLocations()`.\nThe change is applied immediately. Returns `false` if the location was not found or\nthe preferences could not be committed (e.g. insufficient privileges).\n- Parameter location: A location display name or UUID string.\n- Returns: `true` if the location was changed successfully, `false` otherwise.\n- Example:\n```js\nif (!hs.network.configurationSetLocation(\"Home\")) {\n  console.log(\"Failed to switch to Home location\")\n}\n```",
+          "description": "Switches the active network location to the one with the given name or UUID.\nPass the location's display name (e.g. `\"Home\"`) or its UUID from `configurationLocations()`.\nThe change is applied immediately. Returns `false` if the location was not found or\nthe preferences could not be committed (e.g. insufficient privileges).",
+          "params": [
+            {
+              "name": "location",
+              "type": "string",
+              "description": "A location display name or UUID string.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if the location was changed successfully, `false` otherwise."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "if (!hs.network.configurationSetLocation(\"Home\")) {\n  console.log(\"Failed to switch to Home location\")\n}"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 289
+        },
+        {
+          "name": "configurationWatcher",
+          "signature": "func configurationWatcher() -> HSNetworkConfigurationWatcher",
+          "isStatic": false,
+          "rawDocumentation": "Creates a watcher that fires a callback when System Configuration dynamic store keys change.\n\nCall `setKeys()` to specify which keys (or patterns) to watch, `setCallback()` to register\nthe handler, then `start()` to begin monitoring. The module automatically stops and\ndestroys all watchers on `hs.reload()`.\n- Returns: A new `HSNetworkConfigurationWatcher` object.\n- Example:\n```js\nhs.network.configurationWatcher()\n  .setKeys([\"State:/Network/Global/.*\"], true)\n  .setCallback((w, keys) => console.log(\"Changed: \" + keys.join(\", \")))\n  .start()\n```",
+          "description": "Creates a watcher that fires a callback when System Configuration dynamic store keys change.\nCall `setKeys()` to specify which keys (or patterns) to watch, `setCallback()` to register\nthe handler, then `start()` to begin monitoring. The module automatically stops and\ndestroys all watchers on `hs.reload()`.",
+          "params": [],
+          "returns": {
+            "type": "HSNetworkConfigurationWatcher",
+            "description": "A new `HSNetworkConfigurationWatcher` object."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.configurationWatcher()\n  .setKeys([\"State:/Network/Global/.*\"], true)\n  .setCallback((w, keys) => console.log(\"Changed: \" + keys.join(\", \")))\n  .start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 304
+        },
+        {
+          "name": "ping",
+          "signature": "func ping(_ server: String, _ options: JSValue) -> HSNetworkPing?",
+          "isStatic": false,
+          "rawDocumentation": "Sends ICMP Echo Requests to `server` and reports results via a callback.\n\nDNS resolution and the first ping begin immediately. The returned object can be used to\npause, resume, or cancel the ping, and to read statistics.\n\nThe `options` argument may be:\n- Omitted (or `undefined`) — uses all defaults.\n- A callback function — used as the event handler with all other options at their defaults.\n- An object with any of: `count` (integer, default 5), `interval` (seconds, default 1.0),\n  `timeout` (seconds per packet, default 2.0), `family` (`\"any\"` | `\"ipv4\"` | `\"ipv6\"`, default `\"any\"`),\n  and `callback` (function).\n\nThe callback receives `(ping, event, info)`:\n- `\"didStart\"` — info is the resolved IP address string.\n- `\"didFail\"` — info is an error message string (e.g. DNS failure).\n- `\"sendPacketFailed\"` — info is `[packetObject, errorString]`.\n- `\"receivedPacket\"` — info is the packet object (see `HSNetworkPing.packets()`).\n- `\"didFinish\"` — info is the summary string.\n\n- Parameter server: A hostname or IP address to ping.\n- Parameter options?: {((ping: HSNetworkPing, event: string, info: any) => void) | {count?: number, interval?: number, timeout?: number, family?: string, callback?: (ping: HSNetworkPing, event: string, info: any) => void}} A callback function or options object. Optional.\n- Returns: An `HSNetworkPing` object, or `null` if the arguments are invalid.\n- Example:\n```js\nhs.network.ping(\"8.8.8.8\", (ping, event, info) => {\n  if (event === \"receivedPacket\") {\n    console.log(\"seq \" + info.sequenceNumber + \" rtt=\" + (info.rtt * 1000).toFixed(1) + \"ms\")\n  } else if (event === \"didFinish\") {\n    console.log(ping.summary())\n  }\n})\n```",
+          "description": "Sends ICMP Echo Requests to `server` and reports results via a callback.\nDNS resolution and the first ping begin immediately. The returned object can be used to\npause, resume, or cancel the ping, and to read statistics.\n`timeout` (seconds per packet, default 2.0), `family` (`\"any\"` | `\"ipv4\"` | `\"ipv6\"`, default `\"any\"`),\nand `callback` (function).",
+          "params": [
+            {
+              "name": "server",
+              "type": "string",
+              "description": "A hostname or IP address to ping.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "options",
+              "type": "JSValue",
+              "description": "A callback function or options object. Optional.",
+              "optional": true,
+              "tsType": "((ping: HSNetworkPing, event: string, info: any) => void) | {count?: number, interval?: number, timeout?: number, family?: string, callback?: (ping: HSNetworkPing, event: string, info: any) => void}"
+            }
+          ],
+          "returns": {
+            "type": "HSNetworkPing",
+            "description": "An `HSNetworkPing` object, or `null` if the arguments are invalid."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.ping(\"8.8.8.8\", (ping, event, info) => {\n  if (event === \"receivedPacket\") {\n    console.log(\"seq \" + info.sequenceNumber + \" rtt=\" + (info.rtt * 1000).toFixed(1) + \"ms\")\n  } else if (event === \"didFinish\") {\n    console.log(ping.summary())\n  }\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 340
+        }
+      ],
+      "properties": [
+        {
+          "name": "reachabilityFlags",
+          "signature": "var reachabilityFlags: [String: Int] { get }",
+          "rawDocumentation": "A dictionary of named flag constants for use with `HSNetworkReachability.status()`.\n\nCompare individual bits against these constants to determine which network conditions apply.\nThe numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.\n\nKeys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,\n`interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.\n- Returns: A dictionary mapping flag name strings to their bitmask values.\n- Example:\n```js\nconst r = hs.network.reachabilityInternet()\nconst f = hs.network.reachabilityFlags\nconsole.log(\"Reachable: \" + ((r.status() & f.reachable) !== 0))\n```",
+          "description": "A dictionary of named flag constants for use with `HSNetworkReachability.status()`.\nCompare individual bits against these constants to determine which network conditions apply.\nThe numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.\nKeys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,\n`interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const r = hs.network.reachabilityInternet()\nconst f = hs.network.reachabilityFlags\nconsole.log(\"Reachable: \" + ((r.status() & f.reachable) !== 0))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 169
+        }
+      ],
+      "types": [
+        {
+          "name": "HSNetworkConfigurationWatcherAPI",
+          "type": "typedef",
+          "rawDocumentation": "A watcher for System Configuration dynamic store key changes. Create with `hs.network.configurationWatcher()`.",
+          "description": "A watcher for System Configuration dynamic store key changes. Create with `hs.network.configurationWatcher()`.",
+          "methods": [
+            {
+              "name": "setKeys",
+              "signature": "func setKeys(_ keys: [String], _ pattern: Bool) -> HSNetworkConfigurationWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Specifies which dynamic store keys (or key patterns) to watch for changes.\n\nMust be called before `start()`. Each element of `keys` is treated as a string literal\nwhen `pattern` is `false` (the default), or as a regular expression when `pattern` is `true`.\nCalling `setKeys` again replaces the previous set of watched keys.\n- Parameter keys: An array of exact key strings (when `pattern` is `false`) or regular expressions (when `pattern` is `true`).\n- Parameter pattern: Pass `true` to treat each element of `keys` as a regular expression; omit or pass `false` for literal key matching.\n- Returns: This watcher for chaining.\n- Example:\n```js\n// Watch a specific literal key\nhs.network.configurationWatcher()\n  .setKeys([\"State:/Network/Global/IPv4\"])\n  .setCallback((w, keys) => console.log(JSON.stringify(hs.network.configurationStore(\"State:/Network/Global/IPv4\"))))\n  .start()\n\n// Watch all State:/Network keys by pattern\nhs.network.configurationWatcher()\n  .setKeys([\"State:/Network/.*\"], true)\n  .setCallback((w, keys) => console.log(\"Changed: \" + keys.join(\", \")))\n  .start()\n```",
+              "description": "Specifies which dynamic store keys (or key patterns) to watch for changes.\nMust be called before `start()`. Each element of `keys` is treated as a string literal\nwhen `pattern` is `false` (the default), or as a regular expression when `pattern` is `true`.\nCalling `setKeys` again replaces the previous set of watched keys.",
+              "params": [
+                {
+                  "name": "keys",
+                  "type": "Array<String>",
+                  "description": "An array of exact key strings (when `pattern` is `false`) or regular expressions (when `pattern` is `true`).",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "pattern",
+                  "type": "boolean",
+                  "description": "Pass `true` to treat each element of `keys` as a regular expression; omit or pass `false` for literal key matching.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSNetworkConfigurationWatcher",
+                "description": "This watcher for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "// Watch a specific literal key\nhs.network.configurationWatcher()\n  .setKeys([\"State:/Network/Global/IPv4\"])\n  .setCallback((w, keys) => console.log(JSON.stringify(hs.network.configurationStore(\"State:/Network/Global/IPv4\"))))\n  .start()\n\n// Watch all State:/Network keys by pattern\nhs.network.configurationWatcher()\n  .setKeys([\"State:/Network/.*\"], true)\n  .setCallback((w, keys) => console.log(\"Changed: \" + keys.join(\", \")))\n  .start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkConfiguration.swift",
+              "lineNumber": 61
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ callback: JSFunction) -> HSNetworkConfigurationWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Sets the callback invoked when a watched key changes.\n\nThe callback receives `(watcher, changedKeys)` where `changedKeys` is an array of key\nstrings that changed since the last notification. Call `hs.network.configurationStore()`\ninside the callback to read the updated values.\n- Parameter callback: {(watcher: HSNetworkConfigurationWatcher, changedKeys: string[]) => void} Called whenever a watched key changes.\n- Returns: This watcher for chaining.\n- Example:\n```js\nw.setCallback((w, keys) => {\n  const vals = hs.network.configurationStore(keys[0])\n  console.log(JSON.stringify(vals))\n})\n```",
+              "description": "Sets the callback invoked when a watched key changes.\nThe callback receives `(watcher, changedKeys)` where `changedKeys` is an array of key\nstrings that changed since the last notification. Call `hs.network.configurationStore()`\ninside the callback to read the updated values.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "Called whenever a watched key changes.",
+                  "optional": false,
+                  "tsType": "(watcher: HSNetworkConfigurationWatcher, changedKeys: string[]) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSNetworkConfigurationWatcher",
+                "description": "This watcher for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.setCallback((w, keys) => {\n  const vals = hs.network.configurationStore(keys[0])\n  console.log(JSON.stringify(vals))\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkConfiguration.swift",
+              "lineNumber": 77
+            },
+            {
+              "name": "start",
+              "signature": "func start() -> HSNetworkConfigurationWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Starts watching for dynamic store changes.\n\nThe callback registered with `setCallback()` will be invoked whenever a key matching the\npatterns registered with `setKeys()` changes. Call `setKeys()` and `setCallback()` before\ncalling `start()`.\n- Returns: This watcher for chaining.\n- Example:\n```js\nw.start()\n```",
+              "description": "Starts watching for dynamic store changes.\nThe callback registered with `setCallback()` will be invoked whenever a key matching the\npatterns registered with `setKeys()` changes. Call `setKeys()` and `setCallback()` before\ncalling `start()`.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkConfigurationWatcher",
+                "description": "This watcher for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkConfiguration.swift",
+              "lineNumber": 89
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSNetworkConfigurationWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Stops watching for dynamic store changes.\n\nThe callback will no longer be invoked. Call `start()` again to resume monitoring.\n- Returns: This watcher for chaining.\n- Example:\n```js\nw.stop()\n```",
+              "description": "Stops watching for dynamic store changes.\nThe callback will no longer be invoked. Call `start()` again to resume monitoring.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkConfigurationWatcher",
+                "description": "This watcher for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkConfiguration.swift",
+              "lineNumber": 99
+            }
+          ],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "Always `\"HSNetworkConfigurationWatcher\"`.",
+              "description": "Always `\"HSNetworkConfigurationWatcher\"`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkConfiguration.swift",
+              "lineNumber": 37
+            }
+          ]
+        },
+        {
+          "name": "HSNetworkPingAPI",
+          "type": "typedef",
+          "rawDocumentation": "Object representing an active or completed ICMP ping operation.\nCreate instances with `hs.network.ping()`.",
+          "description": "Object representing an active or completed ICMP ping operation.\nCreate instances with `hs.network.ping()`.",
+          "methods": [
+            {
+              "name": "packets",
+              "signature": "func packets(_ sequenceNumber: JSValue) -> JSValue?",
+              "isStatic": false,
+              "rawDocumentation": "Returns packet statistics for all sent packets, or for a single packet by its zero-based sequence number.\n\nEach packet object contains:\n- `sequenceNumber` (number) — zero-based index\n- `icmpIdentifier` (number) — the ICMP identifier used (may be kernel-assigned)\n- `status` (string) — `\"sent\"`, `\"received\"`, or `\"timeout\"`\n- `rtt` (number | null) — round-trip time in seconds, or `null` if no reply was received\n\n- Parameter sequenceNumber?: {number} Omit to get all packets as an array; pass an integer to get a single packet object, or `null` if that sequence does not exist.\n- Returns: {any} An array of packet objects when called without arguments, or a single packet object (or `null`).\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\", {\n  callback: (ping, event) => {\n    if (event === \"didFinish\") console.log(ping.packets())\n  }\n})\n```",
+              "description": "Returns packet statistics for all sent packets, or for a single packet by its zero-based sequence number.",
+              "params": [
+                {
+                  "name": "sequenceNumber",
+                  "type": "JSValue",
+                  "description": "Omit to get all packets as an array; pass an integer to get a single packet object, or `null` if that sequence does not exist.",
+                  "optional": true,
+                  "tsType": "number"
+                }
+              ],
+              "returns": {
+                "type": "any",
+                "description": "An array of packet objects when called without arguments, or a single packet object (or `null`)."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\", {\n  callback: (ping, event) => {\n    if (event === \"didFinish\") console.log(ping.packets())\n  }\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 172
+            },
+            {
+              "name": "summary",
+              "signature": "func summary() -> String",
+              "isStatic": false,
+              "rawDocumentation": "Returns a human-readable summary of the ping results in standard ping format.\n- Returns: A multi-line string with transmission statistics and round-trip timing.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\", {\n  callback: (ping, event) => {\n    if (event === \"didFinish\") console.log(ping.summary())\n  }\n})\n```",
+              "description": "Returns a human-readable summary of the ping results in standard ping format.",
+              "params": [],
+              "returns": {
+                "type": "string",
+                "description": "A multi-line string with transmission statistics and round-trip timing."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\", {\n  callback: (ping, event) => {\n    if (event === \"didFinish\") console.log(ping.summary())\n  }\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 184
+            },
+            {
+              "name": "pause",
+              "signature": "func pause() -> HSNetworkPing?",
+              "isStatic": false,
+              "rawDocumentation": "Suspends the ping. No further packets are sent until `resume()` is called.\n- Returns: This ping object if still active, or `null` if the ping has already finished.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nsetTimeout(() => p.pause(), 2000)\n```",
+              "description": "Suspends the ping. No further packets are sent until `resume()` is called.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkPing",
+                "description": "This ping object if still active, or `null` if the ping has already finished."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nsetTimeout(() => p.pause(), 2000)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 210
+            },
+            {
+              "name": "resume",
+              "signature": "func resume() -> HSNetworkPing?",
+              "isStatic": false,
+              "rawDocumentation": "Resumes a paused ping, continuing from where it left off.\n- Returns: This ping object if still active, or `null` if the ping has already finished.\n- Example:\n```js\np.pause()\nsetTimeout(() => p.resume(), 5000)\n```",
+              "description": "Resumes a paused ping, continuing from where it left off.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkPing",
+                "description": "This ping object if still active, or `null` if the ping has already finished."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "p.pause()\nsetTimeout(() => p.resume(), 5000)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 219
+            },
+            {
+              "name": "cancel",
+              "signature": "func cancel()",
+              "isStatic": false,
+              "rawDocumentation": "Immediately stops the ping, firing the `\"didFinish\"` callback with statistics collected so far.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\", { count: 100 })\nsetTimeout(() => p.cancel(), 3000)\n```",
+              "description": "Immediately stops the ping, firing the `\"didFinish\"` callback with statistics collected so far.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\", { count: 100 })\nsetTimeout(() => p.cancel(), 3000)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 227
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ callback: JSFunction) -> HSNetworkPing",
+              "isStatic": false,
+              "rawDocumentation": "Replaces the ping's callback function.\n\nThe callback receives `(ping, event, info)`:\n- `\"didStart\"` — info is the resolved IP address string.\n- `\"didFail\"` — info is an error message string.\n- `\"sendPacketFailed\"` — info is `[packetObject, errorString]`.\n- `\"receivedPacket\"` — info is the packet object.\n- `\"didFinish\"` — info is the summary string.\n\n- Parameter callback: {(ping: HSNetworkPing, event: string, info: any) => void} The new callback function.\n- Returns: This ping object for chaining.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\np.setCallback((ping, event, info) => {\n  if (event === \"receivedPacket\") {\n    console.log(\"RTT: \" + (info.rtt * 1000).toFixed(1) + \" ms\")\n  }\n})\n```",
+              "description": "Replaces the ping's callback function.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "The new callback function.",
+                  "optional": false,
+                  "tsType": "(ping: HSNetworkPing, event: string, info: any) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSNetworkPing",
+                "description": "This ping object for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\np.setCallback((ping, event, info) => {\n  if (event === \"receivedPacket\") {\n    console.log(\"RTT: \" + (info.rtt * 1000).toFixed(1) + \" ms\")\n  }\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 249
+            }
+          ],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "Always `\"HSNetworkPing\"`.",
+              "description": "Always `\"HSNetworkPing\"`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 119
+            },
+            {
+              "name": "address",
+              "signature": "var address: String { get }",
+              "rawDocumentation": "The resolved IP address of the target, or `\"<unresolved address>\"` if DNS has not yet completed.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.address), 500)\n```",
+              "description": "The resolved IP address of the target, or `\"<unresolved address>\"` if DNS has not yet completed.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.address), 500)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 127
+            },
+            {
+              "name": "server",
+              "signature": "var server: String { get }",
+              "rawDocumentation": "The hostname or IP address string originally passed to `hs.network.ping()`.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nconsole.log(p.server)  // \"example.com\"\n```",
+              "description": "The hostname or IP address string originally passed to `hs.network.ping()`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nconsole.log(p.server)  // \"example.com\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 135
+            },
+            {
+              "name": "sent",
+              "signature": "var sent: Int { get }",
+              "rawDocumentation": "The number of ICMP Echo Requests sent so far.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.sent + \" sent\"), 3000)\n```",
+              "description": "The number of ICMP Echo Requests sent so far.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.sent + \" sent\"), 3000)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 143
+            },
+            {
+              "name": "count",
+              "signature": "var count: Int { get set }",
+              "rawDocumentation": "The total number of ICMP Echo Requests to send. May be increased while the ping is running\nprovided the new value is greater than the number already sent.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\np.count = 10\n```",
+              "description": "The total number of ICMP Echo Requests to send. May be increased while the ping is running\nprovided the new value is greater than the number already sent.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\np.count = 10"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 152
+            },
+            {
+              "name": "isRunning",
+              "signature": "var isRunning: Bool { get }",
+              "rawDocumentation": "`true` while the ping is actively sending and waiting for replies.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.isRunning), 500)\n```",
+              "description": "`true` while the ping is actively sending and waiting for replies.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.isRunning), 500)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 192
+            },
+            {
+              "name": "isPaused",
+              "signature": "var isPaused: Bool { get }",
+              "rawDocumentation": "`true` when the ping has been suspended with `pause()`.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\np.pause()\nconsole.log(p.isPaused)  // true\n```",
+              "description": "`true` when the ping has been suspended with `pause()`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\np.pause()\nconsole.log(p.isPaused)  // true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 201
+            }
+          ]
+        },
+        {
+          "name": "HSNetworkReachabilityAPI",
+          "type": "typedef",
+          "rawDocumentation": "An active or inactive network reachability monitor. Create with `hs.network.reachability*()`.",
+          "description": "An active or inactive network reachability monitor. Create with `hs.network.reachability*()`.",
+          "methods": [
+            {
+              "name": "status",
+              "signature": "func status() -> Int",
+              "isStatic": false,
+              "rawDocumentation": "Returns the current reachability flags as a numeric bitmask.\n\nCompare against constants in `hs.network.reachabilityFlags`. Returns `0` if the\nnetwork is currently unreachable.\n- Returns: A number representing the current reachability bitmask.\n- Example:\n```js\nconst r = hs.network.reachabilityInternet()\nconst f = hs.network.reachabilityFlags\nconsole.log(\"Reachable: \" + ((r.status() & f.reachable) !== 0))\n```",
+              "description": "Returns the current reachability flags as a numeric bitmask.\nCompare against constants in `hs.network.reachabilityFlags`. Returns `0` if the\nnetwork is currently unreachable.",
+              "params": [],
+              "returns": {
+                "type": "number",
+                "description": "A number representing the current reachability bitmask."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const r = hs.network.reachabilityInternet()\nconst f = hs.network.reachabilityFlags\nconsole.log(\"Reachable: \" + ((r.status() & f.reachable) !== 0))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 88
+            },
+            {
+              "name": "statusString",
+              "signature": "func statusString() -> String",
+              "isStatic": false,
+              "rawDocumentation": "Returns a human-readable summary of the current reachability flags.\n\nThe string contains 8 characters in order: `t` (transient/expensive), `R` (reachable),\n`c` (connectionRequired), `C` (connectionOnTraffic — always `-`), `i` (interventionRequired/constrained),\n`D` (connectionOnDemand — always `-`), `l` (isLocalAddress — always `-`), `d` (isDirect).\nA letter appears when that flag is set; `-` appears when it is clear.\n- Returns: An 8-character flag string such as `\"-R-----d\"`.\n- Example:\n```js\nconst r = hs.network.reachabilityInternet()\nconsole.log(r.statusString())  // e.g. \"-R-----d\"\n```",
+              "description": "Returns a human-readable summary of the current reachability flags.\nThe string contains 8 characters in order: `t` (transient/expensive), `R` (reachable),\n`c` (connectionRequired), `C` (connectionOnTraffic — always `-`), `i` (interventionRequired/constrained),\n`D` (connectionOnDemand — always `-`), `l` (isLocalAddress — always `-`), `d` (isDirect).\nA letter appears when that flag is set; `-` appears when it is clear.",
+              "params": [],
+              "returns": {
+                "type": "string",
+                "description": "An 8-character flag string such as `\"-R-----d\"`."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const r = hs.network.reachabilityInternet()\nconsole.log(r.statusString())  // e.g. \"-R-----d\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 102
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ callback: JSFunction) -> HSNetworkReachability",
+              "isStatic": false,
+              "rawDocumentation": "Replaces the callback invoked when reachability changes.\n\nThe callback receives `(reachability, flags)` where `flags` is the same numeric\nbitmask as returned by `status()`. Call `start()` after `setCallback()` to begin\nmonitoring.\n- Parameter callback: {(reachability: HSNetworkReachability, flags: number) => void} Called on each reachability status change.\n- Returns: This reachability object for chaining.\n- Example:\n```js\nhs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()\n```",
+              "description": "Replaces the callback invoked when reachability changes.\nThe callback receives `(reachability, flags)` where `flags` is the same numeric\nbitmask as returned by `status()`. Call `start()` after `setCallback()` to begin\nmonitoring.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "Called on each reachability status change.",
+                  "optional": false,
+                  "tsType": "(reachability: HSNetworkReachability, flags: number) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSNetworkReachability",
+                "description": "This reachability object for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 117
+            },
+            {
+              "name": "start",
+              "signature": "func start() -> HSNetworkReachability",
+              "isStatic": false,
+              "rawDocumentation": "Starts monitoring for reachability changes.\n\nAfter calling `start()`, the callback registered with `setCallback()` is invoked\nwhenever the reachability status changes.\n- Returns: This reachability object for chaining.\n- Example:\n```js\nhs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()\n```",
+              "description": "Starts monitoring for reachability changes.\nAfter calling `start()`, the callback registered with `setCallback()` is invoked\nwhenever the reachability status changes.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkReachability",
+                "description": "This reachability object for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.network.reachabilityInternet()\n  .setCallback((r, flags) => console.log(r.statusString()))\n  .start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 130
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSNetworkReachability",
+              "isStatic": false,
+              "rawDocumentation": "Stops monitoring for reachability changes.\n\nThe callback will no longer be invoked. Call `start()` again to resume monitoring.\n- Returns: This reachability object for chaining.\n- Example:\n```js\nr.stop()\n```",
+              "description": "Stops monitoring for reachability changes.\nThe callback will no longer be invoked. Call `start()` again to resume monitoring.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkReachability",
+                "description": "This reachability object for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "r.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 140
+            }
+          ],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "Always `\"HSNetworkReachability\"`.",
+              "description": "Always `\"HSNetworkReachability\"`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift",
+              "lineNumber": 75
+            }
+          ]
+        }
+      ],
+      "description": "Module for inspecting network interfaces, resolving hostnames, and reading system configuration",
+      "rawDocumentation": "Module for inspecting network interfaces, resolving hostnames, and reading system configuration"
+    },
+    {
       "name": "hs.notify",
       "methods": [
         {
@@ -19427,5 +20383,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-19T22:37:11.673Z"
+  "generatedAt": "2026-07-20T20:02:01.992Z"
 }

@@ -476,6 +476,8 @@ extension JSTestHarness {
                 loadModule(HSUSBModule.self, as: name)
             case "sound":
                 loadModule(HSSoundModule.self, as: name)
+            case "network":
+                loadModule(HSNetworkModule.self, as: name)
             case "ipc":
                 loadModule(HSIPCModule.self, as: name)
             default:
