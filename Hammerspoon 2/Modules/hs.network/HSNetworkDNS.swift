@@ -2,13 +2,19 @@
 //  HSNetworkDNS.swift
 //  Hammerspoon 2
 //
-//  Shared DNS resolution using CFHost for hs.network.resolve() and hs.network.ping().
-//  CFHost is more deeply integrated with macOS networking (VPN, proxy, system cache)
-//  than raw POSIX getaddrinfo.
+//  Shared DNS resolution using getaddrinfo for hs.network.resolve() and hs.network.ping().
+//
+//  Apple's deprecation notice for CFHost (effective macOS 27) says to use Network.framework,
+//  meaning NWConnection for establishing connections. NWConnection only exposes the single
+//  address it chose via Happy Eyeballs, so it cannot replace hs.network.resolve() which must
+//  return ALL records, nor ping() which needs raw sockaddr bytes for the ICMP socket.
+//
+//  getaddrinfo is the correct POSIX replacement. On macOS it goes through mDNSResponder —
+//  the same system daemon that CFHost and NWConnection use internally — so VPN split-DNS,
+//  proxy settings, /etc/hosts, mDNS, and the system cache all apply identically.
 //
 
 import Foundation
-import CFNetwork
 import Darwin
 
 // MARK: - sockaddr helpers
@@ -39,45 +45,46 @@ nonisolated func networkAddressFamily(from data: Data) -> Int32 {
     }
 }
 
-// MARK: - CFHost DNS resolution
+// MARK: - DNS resolution
 
-/// Resolves `hostname` asynchronously using CFHost on a background thread.
+/// Resolves `hostname` asynchronously using getaddrinfo on a background thread.
 /// Returns sockaddr Data objects filtered by `aiFamily` (AF_INET, AF_INET6, or AF_UNSPEC for both).
 /// Throws an NSError on lookup failure (NXDOMAIN, unreachable, etc.).
 nonisolated func resolveHostnameToAddresses(_ hostname: String, aiFamily: Int32) async throws -> [Data] {
     try await withCheckedThrowingContinuation { continuation in
         DispatchQueue.global(qos: .userInitiated).async {
-            let hostRef = unsafe CFHostCreateWithName(kCFAllocatorDefault, hostname as CFString).takeRetainedValue()
-            var streamError = CFStreamError()
+            var hints = unsafe addrinfo()
+            unsafe hints.ai_family = aiFamily
 
-            guard unsafe CFHostStartInfoResolution(hostRef, .addresses, &streamError) else {
+            var resultPtr: UnsafeMutablePointer<addrinfo>?
+            let rc = unsafe getaddrinfo(hostname, nil, &hints, &resultPtr)
+            defer { if let p = unsafe resultPtr { unsafe freeaddrinfo(p) } }
+
+            guard rc == 0 else {
                 continuation.resume(throwing: NSError(
                     domain: "hs.network.resolve",
-                    code: Int(streamError.error),
-                    userInfo: [NSLocalizedDescriptionKey: "Failed to resolve hostname '\(hostname)' (error \(streamError.error))"]
+                    code: Int(rc),
+                    userInfo: [NSLocalizedDescriptionKey: unsafe "Failed to resolve '\(hostname)': \(String(utf8String: gai_strerror(rc)) ?? "unknown")"]
                 ))
                 return
             }
 
-            var resolved: DarwinBoolean = false
-            guard let cfResult = unsafe CFHostGetAddressing(hostRef, &resolved) else {
-                continuation.resume(returning: [])
-                return
-            }
-            let nsAddresses = unsafe cfResult.takeUnretainedValue() as NSArray
-
             var seen = Set<String>()
-            var result: [Data] = []
-            for item in nsAddresses {
-                guard let data = item as? Data else { continue }
-                let family = networkAddressFamily(from: data)
+            var addresses: [Data] = []
+            var current: UnsafeMutablePointer<addrinfo>? = unsafe resultPtr
+            while let ai = unsafe current {
+                defer { unsafe current = unsafe ai.pointee.ai_next }
+                let family = Int32(unsafe ai.pointee.ai_family)
                 guard family == AF_INET || family == AF_INET6 else { continue }
                 guard aiFamily == AF_UNSPEC || family == aiFamily else { continue }
+                guard let addrPtr = unsafe ai.pointee.ai_addr else { continue }
+                let len = Int(unsafe ai.pointee.ai_addrlen)
+                let data = unsafe Data(bytes: addrPtr, count: len)
                 if let str = networkAddressString(from: data), seen.insert(str).inserted {
-                    result.append(data)
+                    addresses.append(data)
                 }
             }
-            continuation.resume(returning: result)
+            continuation.resume(returning: addresses)
         }
     }
 }
