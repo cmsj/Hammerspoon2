@@ -34,8 +34,10 @@ hs.hotkey.createModal = function(mods, key) {
             this.isActive = true;
             if (this._trigger) this._trigger.disable();
             for (const hk of this._hotkeys) hk.enable();
-            if (typeof this.enterFn === 'function') this.enterFn();
-            console._internal("hs.hotkey modal entered")
+            if (typeof this.enterFn === 'function') {
+                try { this.enterFn(); } catch(e) { console.error("hs.hotkey modal enterFn error: " + e); }
+            }
+            console.debug("hs.hotkey: modal entered")
             return this;
         },
 
@@ -44,8 +46,10 @@ hs.hotkey.createModal = function(mods, key) {
             this.isActive = false;
             for (const hk of this._hotkeys) hk.disable();
             if (this._trigger) this._trigger.enable();
-            if (typeof this.exitFn === 'function') this.exitFn();
-            console._internal("hs.hotkey modal exited")
+            if (typeof this.exitFn === 'function') {
+                try { this.exitFn(); } catch(e) { console.error("hs.hotkey modal exitFn error: " + e); }
+            }
+            console.debug("hs.hotkey: modal exited")
             return this;
         },
 
