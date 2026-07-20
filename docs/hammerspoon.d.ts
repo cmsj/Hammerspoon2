@@ -3633,7 +3633,7 @@ if you only want to temporarily remove the item without freeing it.
 }
 
 /**
- * Module for inspecting network interfaces and resolving hostnames
+ * Module for inspecting network interfaces, resolving hostnames, and reading system configuration
  */
 declare namespace hs.network {
     /**
@@ -3715,6 +3715,43 @@ because `NWPathMonitor` does not distinguish link-local reachability.
     function reachabilityLinkLocal(): HSNetworkReachability;
 
     /**
+     * Returns the contents of the macOS System Configuration dynamic store as a dictionary.
+The store holds live network configuration for the running system — interface addresses,
+routing, DNS servers, proxy settings, VPN state, and more. Keys follow a hierarchical
+path convention (e.g. `"State:/Network/Global/IPv4"`).
+Omit or pass `null` to return all keys (equivalent to `".*"`).
+     * @param pattern An optional regular expression that filters which keys are included.
+     * @returns A dictionary mapping key strings to their current values. Values may be
+     */
+    function configurationStore(pattern: string | null): Record<string, any>;
+
+    /**
+     * Returns a mapping of all configured network location UUIDs to their display names.
+Use this to discover available locations before calling `configurationSetLocation()`.
+     * @returns A dictionary mapping UUID strings to human-readable location names.
+     */
+    function configurationLocations(): Record<string, string>;
+
+    /**
+     * Switches the active network location to the one with the given name or UUID.
+Pass the location's display name (e.g. `"Home"`) or its UUID from `configurationLocations()`.
+The change is applied immediately. Returns `false` if the location was not found or
+the preferences could not be committed (e.g. insufficient privileges).
+     * @param location A location display name or UUID string.
+     * @returns `true` if the location was changed successfully, `false` otherwise.
+     */
+    function configurationSetLocation(location: string): boolean;
+
+    /**
+     * Creates a watcher that fires a callback when System Configuration dynamic store keys change.
+Call `setKeys()` to specify which keys (or patterns) to watch, `setCallback()` to register
+the handler, then `start()` to begin monitoring. The module automatically stops and
+destroys all watchers on `hs.reload()`.
+     * @returns A new `HSNetworkConfigurationWatcher` object.
+     */
+    function configurationWatcher(): HSNetworkConfigurationWatcher;
+
+    /**
      * Sends ICMP Echo Requests to `server` and reports results via a callback.
 DNS resolution and the first ping begin immediately. The returned object can be used to
 pause, resume, or cancel the ping, and to read statistics.
@@ -3734,6 +3771,54 @@ Keys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTra
 `interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.
      */
     const reachabilityFlags: Record<string, number>;
+
+}
+
+/**
+ * A watcher for System Configuration dynamic store key changes. Create with `hs.network.configurationWatcher()`.
+ */
+declare class HSNetworkConfigurationWatcher {
+    /**
+     * Specifies which dynamic store keys (or key patterns) to watch for changes.
+Must be called before `start()`. Each element of `keys` is treated as a string literal
+when `pattern` is `false` (the default), or as a regular expression when `pattern` is `true`.
+Calling `setKeys` again replaces the previous set of watched keys.
+     * @param keys An array of exact key strings (when `pattern` is `false`) or regular expressions (when `pattern` is `true`).
+     * @param pattern Pass `true` to treat each element of `keys` as a regular expression; omit or pass `false` for literal key matching.
+     * @returns This watcher for chaining.
+     */
+    setKeys(keys: string[], pattern: boolean): HSNetworkConfigurationWatcher;
+
+    /**
+     * Sets the callback invoked when a watched key changes.
+The callback receives `(watcher, changedKeys)` where `changedKeys` is an array of key
+strings that changed since the last notification. Call `hs.network.configurationStore()`
+inside the callback to read the updated values.
+     * @param callback Called whenever a watched key changes.
+     * @returns This watcher for chaining.
+     */
+    setCallback(callback: (watcher: HSNetworkConfigurationWatcher, changedKeys: string[]) => void): HSNetworkConfigurationWatcher;
+
+    /**
+     * Starts watching for dynamic store changes.
+The callback registered with `setCallback()` will be invoked whenever a key matching the
+patterns registered with `setKeys()` changes. Call `setKeys()` and `setCallback()` before
+calling `start()`.
+     * @returns This watcher for chaining.
+     */
+    start(): HSNetworkConfigurationWatcher;
+
+    /**
+     * Stops watching for dynamic store changes.
+The callback will no longer be invoked. Call `start()` again to resume monitoring.
+     * @returns This watcher for chaining.
+     */
+    stop(): HSNetworkConfigurationWatcher;
+
+    /**
+     * Always `"HSNetworkConfigurationWatcher"`.
+     */
+    readonly typeName: string;
 
 }
 

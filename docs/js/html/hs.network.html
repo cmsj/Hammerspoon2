@@ -57,12 +57,15 @@
     <span class="page-badge">Module</span>
 </div>
 
-<div class="module-description"><p>Module for inspecting network interfaces and resolving hostnames</p>
+<div class="module-description"><p>Module for inspecting network interfaces, resolving hostnames, and reading system configuration</p>
 </div>
 
 <h2 class="section-heading">Types</h2>
 <p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
 <ul class="type-list">
+    <li>
+        <a href="HSNetworkConfigurationWatcher.html">HSNetworkConfigurationWatcher</a>
+    </li>
     <li>
         <a href="HSNetworkPing.html">HSNetworkPing</a>
     </li>
@@ -384,6 +387,146 @@ because `NWPathMonitor` does not distinguish link-local reachability.</div>
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L240" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:240</a>
         </div>
     </div>
+    <div class="method" id="configurationStore">
+        <h3><a href="#configurationStore">hs.network.configurationStore(pattern) -> {[key: string]: any}</a></h3>
+
+        <div class="description">Returns the contents of the macOS System Configuration dynamic store as a dictionary.
+The store holds live network configuration for the running system — interface addresses,
+routing, DNS servers, proxy settings, VPN state, and more. Keys follow a hierarchical
+path convention (e.g. `&quot;State:/Network/Global/IPv4&quot;`).
+Omit or pass `null` to return all keys (equivalent to `&quot;.*&quot;`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.configurationStore(pattern) -> {[key: string]: any}</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">pattern</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An optional regular expression that filters which keys are included.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: any}</div>
+        <div class="return-desc">A dictionary mapping key strings to their current values. Values may be</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">// Dump everything
+console.log(JSON.stringify(hs.network.configurationStore()))
+
+// Filter to network state
+const state = hs.network.configurationStore(&quot;State:/Network/.*&quot;)
+console.log(state[&quot;State:/Network/Global/IPv4&quot;])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L263" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:263</a>
+        </div>
+    </div>
+    <div class="method" id="configurationLocations">
+        <h3><a href="#configurationLocations">hs.network.configurationLocations() -> {[key: string]: string}</a></h3>
+
+        <div class="description">Returns a mapping of all configured network location UUIDs to their display names.
+Use this to discover available locations before calling `configurationSetLocation()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.configurationLocations() -> {[key: string]: string}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: string}</div>
+        <div class="return-desc">A dictionary mapping UUID strings to human-readable location names.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const locs = hs.network.configurationLocations()
+Object.entries(locs).forEach(([uuid, name]) =&gt; console.log(uuid + &quot;: &quot; + name))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L274" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:274</a>
+        </div>
+    </div>
+    <div class="method" id="configurationSetLocation">
+        <h3><a href="#configurationSetLocation">hs.network.configurationSetLocation(location) -> boolean</a></h3>
+
+        <div class="description">Switches the active network location to the one with the given name or UUID.
+Pass the location&#39;s display name (e.g. `&quot;Home&quot;`) or its UUID from `configurationLocations()`.
+The change is applied immediately. Returns `false` if the location was not found or
+the preferences could not be committed (e.g. insufficient privileges).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.configurationSetLocation(location) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">location</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A location display name or UUID string.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the location was changed successfully, `false` otherwise.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">if (!hs.network.configurationSetLocation(&quot;Home&quot;)) {
+  console.log(&quot;Failed to switch to Home location&quot;)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L289" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:289</a>
+        </div>
+    </div>
+    <div class="method" id="configurationWatcher">
+        <h3><a href="#configurationWatcher">hs.network.configurationWatcher() -> HSNetworkConfigurationWatcher</a></h3>
+
+        <div class="description">Creates a watcher that fires a callback when System Configuration dynamic store keys change.
+Call `setKeys()` to specify which keys (or patterns) to watch, `setCallback()` to register
+the handler, then `start()` to begin monitoring. The module automatically stops and
+destroys all watchers on `hs.reload()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.configurationWatcher() -> HSNetworkConfigurationWatcher</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkConfigurationWatcher</div>
+        <div class="return-desc">A new `HSNetworkConfigurationWatcher` object.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.configurationWatcher()
+  .setKeys([&quot;State:/Network/Global/.*&quot;], true)
+  .setCallback((w, keys) =&gt; console.log(&quot;Changed: &quot; + keys.join(&quot;, &quot;)))
+  .start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L304" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:304</a>
+        </div>
+    </div>
     <div class="method" id="ping">
         <h3><a href="#ping">hs.network.ping(server, options) -> HSNetworkPing</a></h3>
 
@@ -434,7 +577,7 @@ and `callback` (function).</div>
 })</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L274" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:274</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L340" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:340</a>
         </div>
     </div>
         </main>

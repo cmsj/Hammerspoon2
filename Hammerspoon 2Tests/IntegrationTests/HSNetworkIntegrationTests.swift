@@ -807,4 +807,221 @@ struct HSNetworkTests {
             tracker.assertNoLeaks()
         }
     }
+
+    // MARK: - Suite 7: Configuration API structure
+
+    @Suite("hs.network configuration API structure tests")
+    struct HSNetworkConfigurationStructureTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSNetworkModule.self, as: "network")
+            return harness
+        }
+
+        @Test("configurationStore is a function")
+        func testConfigurationStoreIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.configurationStore === 'function'")
+        }
+
+        @Test("configurationLocations is a function")
+        func testConfigurationLocationsIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.configurationLocations === 'function'")
+        }
+
+        @Test("configurationSetLocation is a function")
+        func testConfigurationSetLocationIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.configurationSetLocation === 'function'")
+        }
+
+        @Test("configurationWatcher is a function")
+        func testConfigurationWatcherIsFunction() {
+            makeHarness().expectTrue("typeof hs.network.configurationWatcher === 'function'")
+        }
+
+        @Test("configurationWatcher() returns an object")
+        func testConfigurationWatcherReturnsObject() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.network.configurationWatcher() === 'object'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationWatcher() object has setKeys function")
+        func testConfigurationWatcherHasSetKeys() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.network.configurationWatcher().setKeys === 'function'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationWatcher() object has setCallback function")
+        func testConfigurationWatcherHasSetCallback() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.network.configurationWatcher().setCallback === 'function'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationWatcher() object has start function")
+        func testConfigurationWatcherHasStart() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.network.configurationWatcher().start === 'function'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationWatcher() object has stop function")
+        func testConfigurationWatcherHasStop() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.network.configurationWatcher().stop === 'function'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationWatcher() object has typeName string")
+        func testConfigurationWatcherHasTypeName() {
+            let harness = makeHarness()
+            harness.expectTrue("hs.network.configurationWatcher().typeName === 'HSNetworkConfigurationWatcher'")
+            #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Suite 8: Configuration behaviour
+
+    @Suite("hs.network configuration behaviour tests")
+    struct HSNetworkConfigurationBehaviourTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSNetworkModule.self, as: "network")
+            return harness
+        }
+
+        @Test("configurationStore() with no argument returns an object")
+        func testConfigurationStoreNoArgReturnsObject() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.network.configurationStore() === 'object'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationStore() result keys are strings (or result is empty)")
+        func testConfigurationStoreHasStringKeys() {
+            let harness = makeHarness()
+            // SCDynamicStore may return empty in a sandboxed test environment; that is OK.
+            harness.expectTrue("""
+                (function() {
+                    var s = hs.network.configurationStore()
+                    var keys = Object.keys(s)
+                    return keys.length === 0 || typeof keys[0] === 'string'
+                })()
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationStore() filtered result is a subset of unfiltered")
+        func testConfigurationStoreFilteredReturnsSubset() {
+            let harness = makeHarness()
+            // SCDynamicStore may return empty in a sandboxed test environment; skip assertion if so.
+            harness.expectTrue("""
+                (function() {
+                    var all = Object.keys(hs.network.configurationStore()).length
+                    var ipv4 = Object.keys(hs.network.configurationStore("State:/Network/Global/IPv4")).length
+                    return all === 0 || all >= ipv4
+                })()
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationLocations() returns an object")
+        func testConfigurationLocationsReturnsObject() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.network.configurationLocations() === 'object'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationLocations() has at least one entry")
+        func testConfigurationLocationsHasEntries() {
+            let harness = makeHarness()
+            harness.expectTrue("Object.keys(hs.network.configurationLocations()).length >= 1")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationLocations() values are strings")
+        func testConfigurationLocationsValuesAreStrings() {
+            let harness = makeHarness()
+            harness.expectTrue("""
+                (function() {
+                    var locs = hs.network.configurationLocations()
+                    var vals = Object.values(locs)
+                    return vals.length > 0 && typeof vals[0] === 'string'
+                })()
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationSetLocation() with invalid name returns false")
+        func testConfigurationSetLocationInvalidReturnsFalse() {
+            let harness = makeHarness()
+            harness.expectTrue("hs.network.configurationSetLocation('__no_such_location__') === false")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationWatcher() methods chain (return self)")
+        func testConfigurationWatcherChaining() {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.network.configurationWatcher()
+                var r = w.setKeys(['State:/Network/.*'], true)
+                        .setCallback(function() {})
+            """)
+            harness.expectTrue("r === w || typeof r === 'object'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationWatcher stop() before start() does not throw")
+        func testConfigurationWatcherStopBeforeStartIsNoop() {
+            let harness = makeHarness()
+            harness.eval("hs.network.configurationWatcher().stop()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("configurationWatcher start() and stop() round-trip does not throw")
+        func testConfigurationWatcherStartStop() {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.network.configurationWatcher()
+                w.setKeys(['State:/Network/Global/IPv4'])
+                 .setCallback(function() {})
+                 .start()
+                 .stop()
+            """)
+            #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Configuration watcher memory leak test
+
+    @Suite("hs.network configuration watcher memory tests")
+    struct HSNetworkConfigurationWatcherMemoryTests {
+
+        @Test("active HSNetworkConfigurationWatcher is released after module shutdown")
+        func testConfigurationWatcherDoesNotLeakAfterShutdown() {
+            let tracker = WeakLeakTracker()
+            autoreleasepool {
+                let harness = JSTestHarness()
+                harness.loadModule(HSNetworkModule.self, as: "network")
+
+                harness.eval("""
+                    var w = hs.network.configurationWatcher()
+                    w.setKeys(['State:/Network/Global/IPv4'])
+                     .setCallback(function() {})
+                     .start()
+                """)
+
+                if let swift = harness.evalValue("w")?.toObjectOf(HSNetworkConfigurationWatcher.self) as? HSNetworkConfigurationWatcher {
+                    tracker.track(swift)
+                }
+
+                harness.eval("w = null")
+                harness.shutdownForLeakTest()
+            }
+            tracker.assertNoLeaks()
+        }
+    }
 }

@@ -102,7 +102,7 @@ private func queryPrimaryInterface() -> String? {
 
 // MARK: - Protocol
 
-/// Module for inspecting network interfaces and resolving hostnames
+/// Module for inspecting network interfaces, resolving hostnames, and reading system configuration
 @objc protocol HSNetworkModuleAPI: JSExport {
 
     /// Returns all network interfaces present on this system.
@@ -239,6 +239,72 @@ private func queryPrimaryInterface() -> String? {
     /// ```
     @objc func reachabilityLinkLocal() -> HSNetworkReachability
 
+    // MARK: - Configuration store
+
+    /// Returns the contents of the macOS System Configuration dynamic store as a dictionary.
+    ///
+    /// The store holds live network configuration for the running system — interface addresses,
+    /// routing, DNS servers, proxy settings, VPN state, and more. Keys follow a hierarchical
+    /// path convention (e.g. `"State:/Network/Global/IPv4"`).
+    ///
+    /// - Parameter pattern: An optional regular expression that filters which keys are included.
+    ///   Omit or pass `null` to return all keys (equivalent to `".*"`).
+    /// - Returns: A dictionary mapping key strings to their current values. Values may be
+    ///   dictionaries, arrays, strings, or numbers depending on the key.
+    /// - Example:
+    /// ```js
+    /// // Dump everything
+    /// console.log(JSON.stringify(hs.network.configurationStore()))
+    ///
+    /// // Filter to network state
+    /// const state = hs.network.configurationStore("State:/Network/.*")
+    /// console.log(state["State:/Network/Global/IPv4"])
+    /// ```
+    @objc func configurationStore(_ pattern: String?) -> [String: Any]
+
+    /// Returns a mapping of all configured network location UUIDs to their display names.
+    ///
+    /// Use this to discover available locations before calling `configurationSetLocation()`.
+    /// - Returns: A dictionary mapping UUID strings to human-readable location names.
+    /// - Example:
+    /// ```js
+    /// const locs = hs.network.configurationLocations()
+    /// Object.entries(locs).forEach(([uuid, name]) => console.log(uuid + ": " + name))
+    /// ```
+    @objc func configurationLocations() -> [String: String]
+
+    /// Switches the active network location to the one with the given name or UUID.
+    ///
+    /// Pass the location's display name (e.g. `"Home"`) or its UUID from `configurationLocations()`.
+    /// The change is applied immediately. Returns `false` if the location was not found or
+    /// the preferences could not be committed (e.g. insufficient privileges).
+    /// - Parameter location: A location display name or UUID string.
+    /// - Returns: `true` if the location was changed successfully, `false` otherwise.
+    /// - Example:
+    /// ```js
+    /// if (!hs.network.configurationSetLocation("Home")) {
+    ///   console.log("Failed to switch to Home location")
+    /// }
+    /// ```
+    @objc func configurationSetLocation(_ location: String) -> Bool
+
+    /// Creates a watcher that fires a callback when System Configuration dynamic store keys change.
+    ///
+    /// Call `setKeys()` to specify which keys (or patterns) to watch, `setCallback()` to register
+    /// the handler, then `start()` to begin monitoring. The module automatically stops and
+    /// destroys all watchers on `hs.reload()`.
+    /// - Returns: A new `HSNetworkConfigurationWatcher` object.
+    /// - Example:
+    /// ```js
+    /// hs.network.configurationWatcher()
+    ///   .setKeys(["State:/Network/Global/.*"], true)
+    ///   .setCallback((w, keys) => console.log("Changed: " + keys.join(", ")))
+    ///   .start()
+    /// ```
+    @objc func configurationWatcher() -> HSNetworkConfigurationWatcher
+
+    // MARK: - Ping
+
     /// Sends ICMP Echo Requests to `server` and reports results via a callback.
     ///
     /// DNS resolution and the first ping begin immediately. The returned object can be used to
@@ -283,6 +349,7 @@ private func queryPrimaryInterface() -> String? {
     let engineID: UUID
     private var pings = HSWeakObjectSet<HSNetworkPing>()
     private var reachabilityObjects = HSWeakObjectSet<HSNetworkReachability>()
+    private var configurationWatchers = HSWeakObjectSet<HSNetworkConfigurationWatcher>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -300,6 +367,10 @@ private func queryPrimaryInterface() -> String? {
             obj.destroy()
         }
         reachabilityObjects.removeAllObjects()
+        for watcher in configurationWatchers.allObjects {
+            watcher.destroy()
+        }
+        configurationWatchers.removeAllObjects()
     }
 
     isolated deinit {
@@ -351,6 +422,57 @@ private func queryPrimaryInterface() -> String? {
         reachabilityObjects.add(obj)
         return obj
     }
+
+    // MARK: - Configuration store
+
+    @objc func configurationStore(_ pattern: String?) -> [String: Any] {
+        guard let store = SCDynamicStoreCreate(nil, "hs.network" as CFString, nil, nil) else { return [:] }
+        let pat: String
+        switch pattern {
+        case nil, "", "undefined":
+            pat = ".*"
+        default:
+            pat = pattern!
+        }
+        guard let result = SCDynamicStoreCopyMultiple(store, nil, [pat] as CFArray) as? [String: Any] else { return [:] }
+        return result
+    }
+
+    @objc func configurationLocations() -> [String: String] {
+        guard let prefs = SCPreferencesCreate(nil, "hs.network" as CFString, nil),
+              let sets = SCNetworkSetCopyAll(prefs) as? [SCNetworkSet] else { return [:] }
+        var result: [String: String] = [:]
+        for set in sets {
+            if let uuid = SCNetworkSetGetSetID(set) as String?,
+               let name = SCNetworkSetGetName(set) as String? {
+                result[uuid] = name
+            }
+        }
+        return result
+    }
+
+    @objc func configurationSetLocation(_ location: String) -> Bool {
+        guard let prefs = SCPreferencesCreate(nil, "hs.network" as CFString, nil),
+              let sets = SCNetworkSetCopyAll(prefs) as? [SCNetworkSet] else { return false }
+        for set in sets {
+            guard let uuid = SCNetworkSetGetSetID(set) as String?,
+                  let name = SCNetworkSetGetName(set) as String? else { continue }
+            guard uuid == location || name == location else { continue }
+            guard SCNetworkSetSetCurrent(set) else { return false }
+            guard SCPreferencesCommitChanges(prefs) else { return false }
+            SCPreferencesApplyChanges(prefs)
+            return true
+        }
+        return false
+    }
+
+    @objc func configurationWatcher() -> HSNetworkConfigurationWatcher {
+        let watcher = HSNetworkConfigurationWatcher()
+        configurationWatchers.add(watcher)
+        return watcher
+    }
+
+    // MARK: - Interface enumeration
 
     @objc func interfaces() -> [[String: Any]] {
         snapshotNetwork().interfaces
