@@ -9841,7 +9841,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 162
+          "lineNumber": 117
         },
         {
           "name": "primaryInterface",
@@ -9863,7 +9863,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 172
+          "lineNumber": 127
         },
         {
           "name": "addresses",
@@ -9885,14 +9885,14 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 183
+          "lineNumber": 138
         },
         {
           "name": "resolve",
           "signature": "func resolve(_ hostname: String, _ family: String?) -> JSPromise?",
           "isStatic": false,
-          "rawDocumentation": "Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.\n\nQueries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `getaddrinfo`.\n- Parameter hostname: The hostname to resolve (e.g. `\"example.com\"` or `\"localhost\"`).\n- Parameter family?: The address family to query: `\"ipv4\"` for A records only, `\"ipv6\"` for AAAA records only, or `\"both\"` to return all addresses. Defaults to `\"both\"` when omitted.\n- Returns: {Promise<string[]>} A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.\n- Example:\n```js\nhs.network.resolve(\"example.com\").then(addrs => {\n    addrs.forEach(a => console.log(a))\n})\nhs.network.resolve(\"example.com\", \"ipv4\").then(addrs => console.log(\"IPv4: \" + addrs[0]))\n```",
-          "description": "Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.\nQueries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `getaddrinfo`.",
+          "rawDocumentation": "Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.\n\nUses CFHost, which respects the system's network configuration including VPN routes and proxy settings.\n- Parameter hostname: The hostname to resolve (e.g. `\"example.com\"` or `\"localhost\"`).\n- Parameter family?: The address family to query: `\"ipv4\"` for A records only, `\"ipv6\"` for AAAA records only, or `\"both\"` to return all addresses. Defaults to `\"both\"` when omitted.\n- Returns: {Promise<string[]>} A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.\n- Example:\n```js\nhs.network.resolve(\"example.com\").then(addrs => {\n    addrs.forEach(a => console.log(a))\n})\nhs.network.resolve(\"example.com\", \"ipv4\").then(addrs => console.log(\"IPv4: \" + addrs[0]))\n```",
+          "description": "Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.\nUses CFHost, which respects the system's network configuration including VPN routes and proxy settings.",
           "params": [
             {
               "name": "hostname",
@@ -9923,13 +9923,320 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 198
+          "lineNumber": 153
+        },
+        {
+          "name": "ping",
+          "signature": "func ping(_ server: String, _ options: JSValue) -> HSNetworkPing?",
+          "isStatic": false,
+          "rawDocumentation": "Sends ICMP Echo Requests to `server` and reports results via a callback.\n\nDNS resolution and the first ping begin immediately. The returned object can be used to\npause, resume, or cancel the ping, and to read statistics.\n\nThe `options` argument may be:\n- Omitted (or `undefined`) — uses all defaults.\n- A callback function — used as the event handler with all other options at their defaults.\n- An object with any of: `count` (integer, default 5), `interval` (seconds, default 1.0),\n  `timeout` (seconds per packet, default 2.0), `family` (`\"any\"` | `\"ipv4\"` | `\"ipv6\"`, default `\"any\"`),\n  and `callback` (function).\n\nThe callback receives `(ping, event, info)`:\n- `\"didStart\"` — info is the resolved IP address string.\n- `\"didFail\"` — info is an error message string (e.g. DNS failure).\n- `\"sendPacketFailed\"` — info is `[packetObject, errorString]`.\n- `\"receivedPacket\"` — info is the packet object (see `HSNetworkPing.packets()`).\n- `\"didFinish\"` — info is the summary string.\n\n- Parameter server: A hostname or IP address to ping.\n- Parameter options?: {((ping: HSNetworkPing, event: string, info: any) => void) | {count?: number, interval?: number, timeout?: number, family?: string, callback?: (ping: HSNetworkPing, event: string, info: any) => void}} A callback function or options object. Optional.\n- Returns: An `HSNetworkPing` object, or `null` if the arguments are invalid.\n- Example:\n```js\nhs.network.ping(\"8.8.8.8\", (ping, event, info) => {\n  if (event === \"receivedPacket\") {\n    console.log(\"seq \" + info.sequenceNumber + \" rtt=\" + (info.rtt * 1000).toFixed(1) + \"ms\")\n  } else if (event === \"didFinish\") {\n    console.log(ping.summary())\n  }\n})\n```",
+          "description": "Sends ICMP Echo Requests to `server` and reports results via a callback.\nDNS resolution and the first ping begin immediately. The returned object can be used to\npause, resume, or cancel the ping, and to read statistics.\n`timeout` (seconds per packet, default 2.0), `family` (`\"any\"` | `\"ipv4\"` | `\"ipv6\"`, default `\"any\"`),\nand `callback` (function).",
+          "params": [
+            {
+              "name": "server",
+              "type": "string",
+              "description": "A hostname or IP address to ping.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "options",
+              "type": "JSValue",
+              "description": "A callback function or options object. Optional.",
+              "optional": true,
+              "tsType": "((ping: HSNetworkPing, event: string, info: any) => void) | {count?: number, interval?: number, timeout?: number, family?: string, callback?: (ping: HSNetworkPing, event: string, info: any) => void}"
+            }
+          ],
+          "returns": {
+            "type": "HSNetworkPing",
+            "description": "An `HSNetworkPing` object, or `null` if the arguments are invalid."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.network.ping(\"8.8.8.8\", (ping, event, info) => {\n  if (event === \"receivedPacket\") {\n    console.log(\"seq \" + info.sequenceNumber + \" rtt=\" + (info.rtt * 1000).toFixed(1) + \"ms\")\n  } else if (event === \"didFinish\") {\n    console.log(ping.summary())\n  }\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 187
         }
       ],
       "properties": [],
-      "types": [],
-      "description": "Module for inspecting network interfaces and IP addresses",
-      "rawDocumentation": "Module for inspecting network interfaces and IP addresses"
+      "types": [
+        {
+          "name": "HSNetworkPingAPI",
+          "type": "typedef",
+          "rawDocumentation": "Object representing an active or completed ICMP ping operation.\nCreate instances with `hs.network.ping()`.",
+          "description": "Object representing an active or completed ICMP ping operation.\nCreate instances with `hs.network.ping()`.",
+          "methods": [
+            {
+              "name": "packets",
+              "signature": "func packets(_ sequenceNumber: JSValue) -> JSValue?",
+              "isStatic": false,
+              "rawDocumentation": "Returns packet statistics for all sent packets, or for a single packet by its zero-based sequence number.\n\nEach packet object contains:\n- `sequenceNumber` (number) — zero-based index\n- `icmpIdentifier` (number) — the ICMP identifier used (may be kernel-assigned)\n- `status` (string) — `\"sent\"`, `\"received\"`, or `\"timeout\"`\n- `rtt` (number | null) — round-trip time in seconds, or `null` if no reply was received\n\n- Parameter sequenceNumber?: {number} Omit to get all packets as an array; pass an integer to get a single packet object, or `null` if that sequence does not exist.\n- Returns: {any} An array of packet objects when called without arguments, or a single packet object (or `null`).\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\", {\n  callback: (ping, event) => {\n    if (event === \"didFinish\") console.log(ping.packets())\n  }\n})\n```",
+              "description": "Returns packet statistics for all sent packets, or for a single packet by its zero-based sequence number.",
+              "params": [
+                {
+                  "name": "sequenceNumber",
+                  "type": "JSValue",
+                  "description": "Omit to get all packets as an array; pass an integer to get a single packet object, or `null` if that sequence does not exist.",
+                  "optional": true,
+                  "tsType": "number"
+                }
+              ],
+              "returns": {
+                "type": "any",
+                "description": "An array of packet objects when called without arguments, or a single packet object (or `null`)."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\", {\n  callback: (ping, event) => {\n    if (event === \"didFinish\") console.log(ping.packets())\n  }\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 172
+            },
+            {
+              "name": "summary",
+              "signature": "func summary() -> String",
+              "isStatic": false,
+              "rawDocumentation": "Returns a human-readable summary of the ping results in standard ping format.\n- Returns: A multi-line string with transmission statistics and round-trip timing.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\", {\n  callback: (ping, event) => {\n    if (event === \"didFinish\") console.log(ping.summary())\n  }\n})\n```",
+              "description": "Returns a human-readable summary of the ping results in standard ping format.",
+              "params": [],
+              "returns": {
+                "type": "string",
+                "description": "A multi-line string with transmission statistics and round-trip timing."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\", {\n  callback: (ping, event) => {\n    if (event === \"didFinish\") console.log(ping.summary())\n  }\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 184
+            },
+            {
+              "name": "pause",
+              "signature": "func pause() -> HSNetworkPing?",
+              "isStatic": false,
+              "rawDocumentation": "Suspends the ping. No further packets are sent until `resume()` is called.\n- Returns: This ping object if still active, or `null` if the ping has already finished.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nsetTimeout(() => p.pause(), 2000)\n```",
+              "description": "Suspends the ping. No further packets are sent until `resume()` is called.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkPing",
+                "description": "This ping object if still active, or `null` if the ping has already finished."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nsetTimeout(() => p.pause(), 2000)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 210
+            },
+            {
+              "name": "resume",
+              "signature": "func resume() -> HSNetworkPing?",
+              "isStatic": false,
+              "rawDocumentation": "Resumes a paused ping, continuing from where it left off.\n- Returns: This ping object if still active, or `null` if the ping has already finished.\n- Example:\n```js\np.pause()\nsetTimeout(() => p.resume(), 5000)\n```",
+              "description": "Resumes a paused ping, continuing from where it left off.",
+              "params": [],
+              "returns": {
+                "type": "HSNetworkPing",
+                "description": "This ping object if still active, or `null` if the ping has already finished."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "p.pause()\nsetTimeout(() => p.resume(), 5000)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 219
+            },
+            {
+              "name": "cancel",
+              "signature": "func cancel()",
+              "isStatic": false,
+              "rawDocumentation": "Immediately stops the ping, firing the `\"didFinish\"` callback with statistics collected so far.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\", { count: 100 })\nsetTimeout(() => p.cancel(), 3000)\n```",
+              "description": "Immediately stops the ping, firing the `\"didFinish\"` callback with statistics collected so far.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\", { count: 100 })\nsetTimeout(() => p.cancel(), 3000)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 227
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ callback: JSFunction) -> HSNetworkPing",
+              "isStatic": false,
+              "rawDocumentation": "Replaces the ping's callback function.\n\nThe callback receives `(ping, event, info)`:\n- `\"didStart\"` — info is the resolved IP address string.\n- `\"didFail\"` — info is an error message string.\n- `\"sendPacketFailed\"` — info is `[packetObject, errorString]`.\n- `\"receivedPacket\"` — info is the packet object.\n- `\"didFinish\"` — info is the summary string.\n\n- Parameter callback: {(ping: HSNetworkPing, event: string, info: any) => void} The new callback function.\n- Returns: This ping object for chaining.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\np.setCallback((ping, event, info) => {\n  if (event === \"receivedPacket\") {\n    console.log(\"RTT: \" + (info.rtt * 1000).toFixed(1) + \" ms\")\n  }\n})\n```",
+              "description": "Replaces the ping's callback function.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "The new callback function.",
+                  "optional": false,
+                  "tsType": "(ping: HSNetworkPing, event: string, info: any) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSNetworkPing",
+                "description": "This ping object for chaining."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\np.setCallback((ping, event, info) => {\n  if (event === \"receivedPacket\") {\n    console.log(\"RTT: \" + (info.rtt * 1000).toFixed(1) + \" ms\")\n  }\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 249
+            }
+          ],
+          "properties": [
+            {
+              "name": "typeName",
+              "signature": "var typeName: String { get }",
+              "rawDocumentation": "Always `\"HSNetworkPing\"`.",
+              "description": "Always `\"HSNetworkPing\"`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 119
+            },
+            {
+              "name": "address",
+              "signature": "var address: String { get }",
+              "rawDocumentation": "The resolved IP address of the target, or `\"<unresolved address>\"` if DNS has not yet completed.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.address), 500)\n```",
+              "description": "The resolved IP address of the target, or `\"<unresolved address>\"` if DNS has not yet completed.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.address), 500)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 127
+            },
+            {
+              "name": "server",
+              "signature": "var server: String { get }",
+              "rawDocumentation": "The hostname or IP address string originally passed to `hs.network.ping()`.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nconsole.log(p.server)  // \"example.com\"\n```",
+              "description": "The hostname or IP address string originally passed to `hs.network.ping()`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nconsole.log(p.server)  // \"example.com\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 135
+            },
+            {
+              "name": "sent",
+              "signature": "var sent: Int { get }",
+              "rawDocumentation": "The number of ICMP Echo Requests sent so far.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.sent + \" sent\"), 3000)\n```",
+              "description": "The number of ICMP Echo Requests sent so far.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.sent + \" sent\"), 3000)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 143
+            },
+            {
+              "name": "count",
+              "signature": "var count: Int { get set }",
+              "rawDocumentation": "The total number of ICMP Echo Requests to send. May be increased while the ping is running\nprovided the new value is greater than the number already sent.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\np.count = 10\n```",
+              "description": "The total number of ICMP Echo Requests to send. May be increased while the ping is running\nprovided the new value is greater than the number already sent.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\np.count = 10"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 152
+            },
+            {
+              "name": "isRunning",
+              "signature": "var isRunning: Bool { get }",
+              "rawDocumentation": "`true` while the ping is actively sending and waiting for replies.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.isRunning), 500)\n```",
+              "description": "`true` while the ping is actively sending and waiting for replies.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\nsetTimeout(() => console.log(p.isRunning), 500)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 192
+            },
+            {
+              "name": "isPaused",
+              "signature": "var isPaused: Bool { get }",
+              "rawDocumentation": "`true` when the ping has been suspended with `pause()`.\n- Example:\n```js\nconst p = hs.network.ping(\"example.com\")\np.pause()\nconsole.log(p.isPaused)  // true\n```",
+              "description": "`true` when the ping has been suspended with `pause()`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const p = hs.network.ping(\"example.com\")\np.pause()\nconsole.log(p.isPaused)  // true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkPing.swift",
+              "lineNumber": 201
+            }
+          ]
+        }
+      ],
+      "description": "Module for inspecting network interfaces and resolving hostnames",
+      "rawDocumentation": "Module for inspecting network interfaces and resolving hostnames"
     },
     {
       "name": "hs.notify",
@@ -19540,5 +19847,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-20T12:27:57.078Z"
+  "generatedAt": "2026-07-20T12:28:45.561Z"
 }

@@ -57,9 +57,16 @@
     <span class="page-badge">Module</span>
 </div>
 
-<div class="module-description"><p>Module for inspecting network interfaces and IP addresses</p>
+<div class="module-description"><p>Module for inspecting network interfaces and resolving hostnames</p>
 </div>
 
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSNetworkPing.html">HSNetworkPing</a>
+    </li>
+</ul>
 
 <h2 class="section-heading">Properties</h2>
 <p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
@@ -85,7 +92,7 @@ Each object contains `name` (string), `isLoopback` (boolean), `isUp` (boolean), 
 ifaces.forEach(i =&gt; console.log(i.name + &quot;: &quot; + (i.displayName || &quot;(no display name)&quot;)))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L162" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:162</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:117</a>
         </div>
     </div>
     <div class="method" id="primaryInterface">
@@ -107,7 +114,7 @@ ifaces.forEach(i =&gt; console.log(i.name + &quot;: &quot; + (i.displayName || &
 console.log(&quot;Primary interface: &quot; + primary)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L172" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:172</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L127" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:127</a>
         </div>
     </div>
     <div class="method" id="addresses">
@@ -130,14 +137,14 @@ Each object contains `interface` (the BSD name of the interface), `address` (the
 addrs.filter(a =&gt; a.family === &#39;ipv4&#39;).forEach(a =&gt; console.log(a.interface + &quot;: &quot; + a.address))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L183" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:183</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:138</a>
         </div>
     </div>
     <div class="method" id="resolve">
         <h3><a href="#resolve">hs.network.resolve(hostname, family) -> Promise&lt;string[]&gt;</a></h3>
 
         <div class="description">Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.
-Queries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `getaddrinfo`.</div>
+Uses CFHost, which respects the system&#39;s network configuration including VPN routes and proxy settings.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.network.resolve(hostname, family) -> Promise&lt;string[]&gt;</code></pre>
@@ -177,7 +184,60 @@ Queries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `
 hs.network.resolve(&quot;example.com&quot;, &quot;ipv4&quot;).then(addrs =&gt; console.log(&quot;IPv4: &quot; + addrs[0]))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L198" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:198</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L153" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:153</a>
+        </div>
+    </div>
+    <div class="method" id="ping">
+        <h3><a href="#ping">hs.network.ping(server, options) -> HSNetworkPing</a></h3>
+
+        <div class="description">Sends ICMP Echo Requests to `server` and reports results via a callback.
+DNS resolution and the first ping begin immediately. The returned object can be used to
+pause, resume, or cancel the ping, and to read statistics.
+`timeout` (seconds per packet, default 2.0), `family` (`&quot;any&quot;` | `&quot;ipv4&quot;` | `&quot;ipv6&quot;`, default `&quot;any&quot;`),
+and `callback` (function).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.ping(server, options) -> HSNetworkPing</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">server</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A hostname or IP address to ping.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A callback function or options object. Optional.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkPing</div>
+        <div class="return-desc">An `HSNetworkPing` object, or `null` if the arguments are invalid.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.ping(&quot;8.8.8.8&quot;, (ping, event, info) =&gt; {
+  if (event === &quot;receivedPacket&quot;) {
+    console.log(&quot;seq &quot; + info.sequenceNumber + &quot; rtt=&quot; + (info.rtt * 1000).toFixed(1) + &quot;ms&quot;)
+  } else if (event === &quot;didFinish&quot;) {
+    console.log(ping.summary())
+  }
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L187" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:187</a>
         </div>
     </div>
         </main>

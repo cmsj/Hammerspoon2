@@ -531,6 +531,8 @@ function extractReturns(signature, docLines) {
         let returnDesc = '';
         let promiseType = null;
 
+        let typeOverride = null;
+
         for (const line of docLines) {
             const trimmed = line.trim();
             // Match both "Returns:" and "- Returns:" with optional {Type} annotation
@@ -540,11 +542,13 @@ function extractReturns(signature, docLines) {
                 const typeAnnotation = descMatch[1];
                 returnDesc = descMatch[2].trim();
 
-                // Check if there's a Promise type annotation
                 if (typeAnnotation) {
                     const promiseMatch = typeAnnotation.match(/^Promise<(.+)>$/);
                     if (promiseMatch) {
                         promiseType = promiseMatch[1];
+                    } else {
+                        // Generic {type} override — use instead of the Swift-derived type.
+                        typeOverride = typeAnnotation;
                     }
                 }
                 break;
@@ -552,7 +556,7 @@ function extractReturns(signature, docLines) {
         }
 
         const result = {
-            type: returnMatch[1].trim(),
+            type: typeOverride || returnMatch[1].trim(),
             description: returnDesc
         };
 

@@ -5,10 +5,11 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import Darwin
 import SystemConfiguration
 
-// MARK: - File-scope helpers
+// MARK: - File-scope helpers (interface & address enumeration)
 
 private func buildDisplayNameMap() -> [String: String] {
     var map: [String: String] = [:]
@@ -85,52 +86,6 @@ private func snapshotNetwork() -> NetworkSnapshot {
     return NetworkSnapshot(interfaces: interfaces, addresses: addresses)
 }
 
-// Resolves a hostname asynchronously using getaddrinfo on a background thread.
-// aiFamily should be AF_INET, AF_INET6, or AF_UNSPEC (both).
-// Throws an NSError on lookup failure (NXDOMAIN, network unreachable, etc.).
-private func resolveHostnameAsync(_ hostname: String, aiFamily: Int32) async throws -> [String] {
-    try await withCheckedThrowingContinuation { continuation in
-        DispatchQueue.global(qos: .userInitiated).async {
-            var hints = unsafe addrinfo()
-            unsafe hints.ai_family   = aiFamily
-            unsafe hints.ai_socktype = SOCK_STREAM  // one entry per address, no duplicate UDP entries
-
-            var resPtr: UnsafeMutablePointer<addrinfo>? = nil
-            let ret = unsafe getaddrinfo(hostname, nil, &hints, &resPtr)
-            guard ret == 0 else {
-                let msg = unsafe String(cString: unsafe gai_strerror(ret))
-                continuation.resume(throwing: NSError(
-                    domain: "hs.network.resolve",
-                    code: Int(ret),
-                    userInfo: [NSLocalizedDescriptionKey: msg]
-                ))
-                return
-            }
-            guard let res = unsafe resPtr else {
-                continuation.resume(returning: [])
-                return
-            }
-            defer { unsafe freeaddrinfo(res) }
-
-            var addresses: [String] = []
-            var ai: UnsafeMutablePointer<addrinfo>? = unsafe res
-            while let current = unsafe ai {
-                if let addr = unsafe current.pointee.ai_addr {
-                    let addrLen = unsafe current.pointee.ai_addrlen
-                    var hostBuf = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                    if unsafe getnameinfo(addr, addrLen, &hostBuf, socklen_t(hostBuf.count), nil, 0, NI_NUMERICHOST) == 0,
-                       let str = String(utf8String: hostBuf),
-                       !addresses.contains(str) {
-                        addresses.append(str)
-                    }
-                }
-                unsafe ai = current.pointee.ai_next
-            }
-            continuation.resume(returning: addresses)
-        }
-    }
-}
-
 private func queryPrimaryInterface() -> String? {
     guard let store = SCDynamicStoreCreate(nil, "hs.network" as CFString, nil, nil) else {
         return nil
@@ -147,7 +102,7 @@ private func queryPrimaryInterface() -> String? {
 
 // MARK: - Protocol
 
-/// Module for inspecting network interfaces and IP addresses
+/// Module for inspecting network interfaces and resolving hostnames
 @objc protocol HSNetworkModuleAPI: JSExport {
 
     /// Returns all network interfaces present on this system.
@@ -184,7 +139,7 @@ private func queryPrimaryInterface() -> String? {
 
     /// Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.
     ///
-    /// Queries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `getaddrinfo`.
+    /// Uses CFHost, which respects the system's network configuration including VPN routes and proxy settings.
     /// - Parameter hostname: The hostname to resolve (e.g. `"example.com"` or `"localhost"`).
     /// - Parameter family?: The address family to query: `"ipv4"` for A records only, `"ipv6"` for AAAA records only, or `"both"` to return all addresses. Defaults to `"both"` when omitted.
     /// - Returns: {Promise<string[]>} A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.
@@ -196,6 +151,40 @@ private func queryPrimaryInterface() -> String? {
     /// hs.network.resolve("example.com", "ipv4").then(addrs => console.log("IPv4: " + addrs[0]))
     /// ```
     @objc func resolve(_ hostname: String, _ family: String?) -> JSPromise?
+
+    /// Sends ICMP Echo Requests to `server` and reports results via a callback.
+    ///
+    /// DNS resolution and the first ping begin immediately. The returned object can be used to
+    /// pause, resume, or cancel the ping, and to read statistics.
+    ///
+    /// The `options` argument may be:
+    /// - Omitted (or `undefined`) — uses all defaults.
+    /// - A callback function — used as the event handler with all other options at their defaults.
+    /// - An object with any of: `count` (integer, default 5), `interval` (seconds, default 1.0),
+    ///   `timeout` (seconds per packet, default 2.0), `family` (`"any"` | `"ipv4"` | `"ipv6"`, default `"any"`),
+    ///   and `callback` (function).
+    ///
+    /// The callback receives `(ping, event, info)`:
+    /// - `"didStart"` — info is the resolved IP address string.
+    /// - `"didFail"` — info is an error message string (e.g. DNS failure).
+    /// - `"sendPacketFailed"` — info is `[packetObject, errorString]`.
+    /// - `"receivedPacket"` — info is the packet object (see `HSNetworkPing.packets()`).
+    /// - `"didFinish"` — info is the summary string.
+    ///
+    /// - Parameter server: A hostname or IP address to ping.
+    /// - Parameter options?: {((ping: HSNetworkPing, event: string, info: any) => void) | {count?: number, interval?: number, timeout?: number, family?: string, callback?: (ping: HSNetworkPing, event: string, info: any) => void}} A callback function or options object. Optional.
+    /// - Returns: An `HSNetworkPing` object, or `null` if the arguments are invalid.
+    /// - Example:
+    /// ```js
+    /// hs.network.ping("8.8.8.8", (ping, event, info) => {
+    ///   if (event === "receivedPacket") {
+    ///     console.log("seq " + info.sequenceNumber + " rtt=" + (info.rtt * 1000).toFixed(1) + "ms")
+    ///   } else if (event === "didFinish") {
+    ///     console.log(ping.summary())
+    ///   }
+    /// })
+    /// ```
+    @objc func ping(_ server: String, _ options: JSValue) -> HSNetworkPing?
 }
 
 // MARK: - Implementation
@@ -205,6 +194,7 @@ private func queryPrimaryInterface() -> String? {
 @objc class HSNetworkModule: NSObject, HSModuleAPI, HSNetworkModuleAPI {
     var name = "hs.network"
     let engineID: UUID
+    private var pings = HSWeakObjectSet<HSNetworkPing>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -214,6 +204,10 @@ private func queryPrimaryInterface() -> String? {
 
     func shutdown() {
         AKDebug("Shutdown of \(name): \(engineID)")
+        for ping in pings.allObjects {
+            ping.cancel()
+        }
+        pings.removeAllObjects()
     }
 
     isolated deinit {
@@ -238,8 +232,6 @@ private func queryPrimaryInterface() -> String? {
         guard let context = JSContext.current() else { return nil }
 
         let aiFamily: Int32
-        // JSExport converts JS `undefined` (omitted arg) to "undefined" and JS `null` to "null"
-        // rather than Swift nil, so both must be treated as the default (AF_UNSPEC).
         switch family?.lowercased() {
         case nil, "both", "", "undefined", "null":
             aiFamily = AF_UNSPEC
@@ -254,12 +246,53 @@ private func queryPrimaryInterface() -> String? {
         return wrapAsyncInJSPromise(in: context) { holder in
             Task { @MainActor in
                 do {
-                    let addresses = try await resolveHostnameAsync(hostname, aiFamily: aiFamily)
-                    holder.resolveWith(addresses)
+                    let addrs = try await resolveHostnameToStrings(hostname, aiFamily: aiFamily)
+                    holder.resolveWith(addrs)
                 } catch {
                     holder.rejectWithMessage(error.localizedDescription)
                 }
             }
         }
+    }
+
+    @objc func ping(_ server: String, _ options: JSValue) -> HSNetworkPing? {
+        var count = 5
+        var interval = 1.0
+        var timeout = 2.0
+        var preferFamily: Int32 = AF_UNSPEC
+        var callbackValue: JSValue?
+
+        if !options.isUndefined && !options.isNull {
+            if options.isFunction {
+                callbackValue = options
+            } else if options.isObject {
+                let c = options.objectForKeyedSubscript("count")
+                if c != nil && c!.isNumber { count = max(1, Int(c!.toInt32())) }
+
+                let i = options.objectForKeyedSubscript("interval")
+                if i != nil && i!.isNumber { interval = max(0.1, i!.toDouble()) }
+
+                let t = options.objectForKeyedSubscript("timeout")
+                if t != nil && t!.isNumber { timeout = max(0.1, t!.toDouble()) }
+
+                let f = options.objectForKeyedSubscript("family")
+                if f != nil && f!.isString {
+                    switch f!.toString()?.lowercased() {
+                    case "ipv4": preferFamily = AF_INET
+                    case "ipv6": preferFamily = AF_INET6
+                    default:     preferFamily = AF_UNSPEC
+                    }
+                }
+
+                let cb = options.objectForKeyedSubscript("callback")
+                if cb != nil && cb!.isFunction { callbackValue = cb }
+            }
+        }
+
+        let ping = HSNetworkPing(server: server, count: count, interval: interval,
+                                  timeout: timeout, preferFamily: preferFamily,
+                                  callbackValue: callbackValue)
+        pings.add(ping)
+        return ping
     }
 }

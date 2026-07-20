@@ -3633,7 +3633,7 @@ if you only want to temporarily remove the item without freeing it.
 }
 
 /**
- * Module for inspecting network interfaces and IP addresses
+ * Module for inspecting network interfaces and resolving hostnames
  */
 declare namespace hs.network {
     /**
@@ -3658,12 +3658,104 @@ Each object contains `interface` (the BSD name of the interface), `address` (the
 
     /**
      * Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.
-Queries `/etc/hosts`, mDNS, and the configured DNS servers (in that order) via `getaddrinfo`.
+Uses CFHost, which respects the system's network configuration including VPN routes and proxy settings.
      * @param hostname The hostname to resolve (e.g. `"example.com"` or `"localhost"`).
      * @param family The address family to query: `"ipv4"` for A records only, `"ipv6"` for AAAA records only, or `"both"` to return all addresses. Defaults to `"both"` when omitted.
      * @returns A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.
      */
     function resolve(hostname: string, family?: string | null): Promise<string[]>;
+
+    /**
+     * Sends ICMP Echo Requests to `server` and reports results via a callback.
+DNS resolution and the first ping begin immediately. The returned object can be used to
+pause, resume, or cancel the ping, and to read statistics.
+`timeout` (seconds per packet, default 2.0), `family` (`"any"` | `"ipv4"` | `"ipv6"`, default `"any"`),
+and `callback` (function).
+     * @param server A hostname or IP address to ping.
+     * @param options A callback function or options object. Optional.
+     * @returns An `HSNetworkPing` object, or `null` if the arguments are invalid.
+     */
+    function ping(server: string, options?: ((ping: HSNetworkPing, event: string, info: any) => void) | {count?: number, interval?: number, timeout?: number, family?: string, callback?: (ping: HSNetworkPing, event: string, info: any) => void}): HSNetworkPing | null;
+
+}
+
+/**
+ * Object representing an active or completed ICMP ping operation.
+Create instances with `hs.network.ping()`.
+ */
+declare class HSNetworkPing {
+    /**
+     * Returns packet statistics for all sent packets, or for a single packet by its zero-based sequence number.
+     * @param sequenceNumber Omit to get all packets as an array; pass an integer to get a single packet object, or `null` if that sequence does not exist.
+     * @returns An array of packet objects when called without arguments, or a single packet object (or `null`).
+     */
+    packets(sequenceNumber?: number): any;
+
+    /**
+     * Returns a human-readable summary of the ping results in standard ping format.
+     * @returns A multi-line string with transmission statistics and round-trip timing.
+     */
+    summary(): string;
+
+    /**
+     * Suspends the ping. No further packets are sent until `resume()` is called.
+     * @returns This ping object if still active, or `null` if the ping has already finished.
+     */
+    pause(): HSNetworkPing | null;
+
+    /**
+     * Resumes a paused ping, continuing from where it left off.
+     * @returns This ping object if still active, or `null` if the ping has already finished.
+     */
+    resume(): HSNetworkPing | null;
+
+    /**
+     * Immediately stops the ping, firing the `"didFinish"` callback with statistics collected so far.
+     */
+    cancel(): void;
+
+    /**
+     * Replaces the ping's callback function.
+     * @param callback The new callback function.
+     * @returns This ping object for chaining.
+     */
+    setCallback(callback: (ping: HSNetworkPing, event: string, info: any) => void): HSNetworkPing;
+
+    /**
+     * Always `"HSNetworkPing"`.
+     */
+    readonly typeName: string;
+
+    /**
+     * The resolved IP address of the target, or `"<unresolved address>"` if DNS has not yet completed.
+     */
+    readonly address: string;
+
+    /**
+     * The hostname or IP address string originally passed to `hs.network.ping()`.
+     */
+    readonly server: string;
+
+    /**
+     * The number of ICMP Echo Requests sent so far.
+     */
+    readonly sent: number;
+
+    /**
+     * The total number of ICMP Echo Requests to send. May be increased while the ping is running
+provided the new value is greater than the number already sent.
+     */
+    count: number;
+
+    /**
+     * `true` while the ping is actively sending and waiting for replies.
+     */
+    readonly isRunning: boolean;
+
+    /**
+     * `true` when the ping has been suspended with `pause()`.
+     */
+    readonly isPaused: boolean;
 
 }
 
