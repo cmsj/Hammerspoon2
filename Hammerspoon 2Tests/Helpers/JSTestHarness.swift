@@ -370,6 +370,7 @@ class JSTestHarness {
         context.evaluateScript("""
         var console = {
             log:   function() { __hs_console_log(Array.prototype.join.call(arguments, ' ')); },
+            debug: function() { __hs_console_log(Array.prototype.join.call(arguments, ' ')); },
             warn:  function() { __hs_console_warn(Array.prototype.join.call(arguments, ' ')); },
             error: function() { __hs_console_error(Array.prototype.join.call(arguments, ' ')); }
         };
