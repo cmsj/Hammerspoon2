@@ -100,6 +100,7 @@ extension SBApplication: ShortcutsBridgeApp {}
     var name = "hs.shortcuts"
     let engineID: UUID
     private var runningProcesses: [Process] = []
+    private var isShutdown = false
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -108,6 +109,7 @@ extension SBApplication: ShortcutsBridgeApp {}
     }
 
     func shutdown() {
+        isShutdown = true
         for process in runningProcesses { process.terminate() }
         runningProcesses.removeAll()
     }
@@ -156,6 +158,7 @@ extension SBApplication: ShortcutsBridgeApp {}
             Task { @MainActor in
                 do {
                     let (output, exitCode) = try await self.runCLI(shortcutName: name)
+                    guard !self.isShutdown else { return }
                     if exitCode == 0 {
                         let value: Any = output?.isEmpty == false ? output as Any : NSNull()
                         holder.resolveWith(value)
@@ -167,6 +170,7 @@ extension SBApplication: ShortcutsBridgeApp {}
                         holder.rejectWithMessage(message)
                     }
                 } catch {
+                    guard !self.isShutdown else { return }
                     AKError("hs.shortcuts.run(): '\(name)' threw: \(error.localizedDescription)")
                     holder.rejectWithMessage("Failed to run shortcut '\(name)': \(error.localizedDescription)")
                 }
