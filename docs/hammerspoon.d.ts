@@ -2610,6 +2610,77 @@ later resolved with `pathFromBookmark`.
      */
     function pathFromBookmark(data: string): string | null;
 
+    /**
+     * Return information about all currently mounted filesystem volumes.
+     * @param showHidden Pass `true` to include hidden volumes. Defaults to `false`.
+     * @returns Object keyed by mount path, or `null` on failure.
+     */
+    function volumes(showHidden: boolean): Record<string, any> | null;
+
+    /**
+     * Unmount and eject the volume at the given path.
+     * @param path The mount path of the volume to eject. `~` is expanded.
+     * @returns `true` if the volume was ejected successfully, `false` otherwise.
+     */
+    function ejectVolume(path: string): boolean;
+
+    /**
+     * Create a new volume event watcher.
+Call `setCallback()` and `start()` on the returned object to begin receiving
+volume mount/unmount/rename events.
+     * @returns An `HSVolumeWatcher` object.
+     */
+    function addVolumeWatcher(): HSVolumeWatcher;
+
+    /**
+     * Stop and destroy a volume watcher previously created with `addVolumeWatcher`.
+     * @param watcher The watcher to remove.
+     */
+    function removeVolumeWatcher(watcher: HSVolumeWatcher): void;
+
+}
+
+/**
+ * A volume event watcher that monitors filesystem mount/unmount/rename events.
+Create via `hs.fs.addVolumeWatcher()`. Set a callback with `setCallback()`, then
+call `start()` to begin receiving events.
+| Event | Info keys |
+|-------|-----------|
+| `"didMount"` | `path: string` |
+| `"didUnmount"` | `path: string` |
+| `"willUnmount"` | `path: string` |
+| `"didRename"` | `path: string`, `name: string`, `oldPath?: string`, `oldName?: string` |
+ */
+declare class HSVolumeWatcher {
+    /**
+     * Starts monitoring volume events.
+     * @returns self, for chaining
+     */
+    start(): HSVolumeWatcher;
+
+    /**
+     * Stops monitoring volume events.
+     * @returns self, for chaining
+     */
+    stop(): HSVolumeWatcher;
+
+    /**
+     * Sets the callback function invoked when volume events occur.
+     * @param fn Called with the event name and an info dictionary; see type documentation for event names and info keys.
+     * @returns self, for chaining
+     */
+    setCallback(fn: (event: string, info: Record<string, any>) => void): HSVolumeWatcher;
+
+    /**
+     * Stops the watcher and releases all resources. Called automatically during shutdown.
+     */
+    destroy(): void;
+
+    /**
+     * The unique identifier assigned to this watcher.
+     */
+    readonly identifier: string;
+
 }
 
 /**

@@ -95,6 +95,13 @@ const home = hs.fs.homeDirectory();
 </code></pre>
 </div>
 
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSVolumeWatcher.html">HSVolumeWatcher</a>
+    </li>
+</ul>
 
 <h2 class="section-heading">Properties</h2>
 <p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
@@ -1390,6 +1397,150 @@ later resolved with `pathFromBookmark`.</div>
 
         <div class="source-link">
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L533" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:533</a>
+        </div>
+    </div>
+    <div class="method" id="volumes">
+        <h3><a href="#volumes">hs.fs.volumes(showHidden) -> [String: Any]</a></h3>
+
+        <div class="description">Return information about all currently mounted filesystem volumes.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.volumes(showHidden) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">showHidden</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` to include hidden volumes. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">Object keyed by mount path, or `null` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const vols = hs.fs.volumes()
+for (const [path, info] of Object.entries(vols)) {
+    console.log(path + &quot; — &quot; + info.name)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L561" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:561</a>
+        </div>
+    </div>
+    <div class="method" id="ejectVolume">
+        <h3><a href="#ejectVolume">hs.fs.ejectVolume(path) -> boolean</a></h3>
+
+        <div class="description">Unmount and eject the volume at the given path.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.ejectVolume(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The mount path of the volume to eject. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the volume was ejected successfully, `false` otherwise.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const ok = hs.fs.ejectVolume(&quot;/Volumes/MyDisk&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L571" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:571</a>
+        </div>
+    </div>
+    <div class="method" id="addVolumeWatcher">
+        <h3><a href="#addVolumeWatcher">hs.fs.addVolumeWatcher() -> HSVolumeWatcher</a></h3>
+
+        <div class="description">Create a new volume event watcher.
+Call `setCallback()` and `start()` on the returned object to begin receiving
+volume mount/unmount/rename events.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.addVolumeWatcher() -> HSVolumeWatcher</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSVolumeWatcher</div>
+        <div class="return-desc">An `HSVolumeWatcher` object.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const w = hs.fs.addVolumeWatcher()
+w.setCallback((event, info) =&gt; {
+    console.log(event + &quot;: &quot; + info.path)
+}).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L586" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:586</a>
+        </div>
+    </div>
+    <div class="method" id="removeVolumeWatcher">
+        <h3><a href="#removeVolumeWatcher">hs.fs.removeVolumeWatcher(watcher) -> None</a></h3>
+
+        <div class="description">Stop and destroy a volume watcher previously created with `addVolumeWatcher`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.removeVolumeWatcher(watcher) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">watcher</td>
+                    <td class="param-type">HSVolumeWatcher</td>
+                    <td class="param-desc">The watcher to remove.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const w = hs.fs.addVolumeWatcher()
+// ... later ...
+hs.fs.removeVolumeWatcher(w)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L597" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:597</a>
         </div>
     </div>
         </main>
