@@ -65,7 +65,7 @@ NSNumber *_Nullable HSScreenAmbientLight(CGDirectDisplayID displayID) {
     if (!dsClient || !dsCopyFn) return nil;
 
     SEL sel = NSSelectorFromString(@"copyPropertyForKey:andDisplay:");
-    id result = dsCopyFn(dsClient, sel, @"AggregatedLux", (uint64_t)displayID);
+    id result = (__bridge_transfer id)dsCopyFn(dsClient, sel, @"AggregatedLux", (uint64_t)displayID);
 
     if (![result isKindOfClass:[NSNumber class]]) return nil;
     return (NSNumber *)result;
