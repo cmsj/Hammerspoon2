@@ -5,7 +5,7 @@
 
 import Foundation
 import JavaScriptCore
-import AppKit          // NSWorkspace (fileUTI)
+import AppKit          // NSWorkspace (volumes, eject, fileUTI)
 import Darwin          // POSIX stat/lstat/rmdir
 import UniformTypeIdentifiers
 
@@ -531,6 +531,70 @@ import UniformTypeIdentifiers
     /// const path = hs.fs.pathFromBookmark(savedData)
     /// ```
     @objc func pathFromBookmark(_ data: String) -> String?
+
+    // MARK: - Volume operations
+
+    /// Return information about all currently mounted filesystem volumes.
+    ///
+    /// Returns an object keyed by the volume mount path. Each value contains:
+    /// - `name` — Localised display name of the volume.
+    /// - `isLocal` — `true` if the volume is locally connected.
+    /// - `isInternal` — `true` if the volume resides on internal storage.
+    /// - `isEjectable` — `true` if the volume can be ejected.
+    /// - `isRemovable` — `true` if the volume resides on removable media.
+    /// - `isBrowsable` — `true` if the volume can be browsed by the user.
+    /// - `isReadOnly` — `true` if the volume is mounted read-only.
+    /// - `isRootFileSystem` — `true` if this is the root filesystem (`/`).
+    /// - `totalCapacity` — Total size in bytes.
+    /// - `availableCapacity` — Available space in bytes.
+    /// - `uuid` — Volume UUID string (if available).
+    ///
+    /// - Parameter showHidden: Pass `true` to include hidden volumes. Defaults to `false`.
+    /// - Returns: Object keyed by mount path, or `null` on failure.
+    /// - Example:
+    /// ```js
+    /// const vols = hs.fs.volumes()
+    /// for (const [path, info] of Object.entries(vols)) {
+    ///     console.log(path + " — " + info.name)
+    /// }
+    /// ```
+    @objc func volumes(_ showHidden: Bool) -> [String: Any]?
+
+    /// Unmount and eject the volume at the given path.
+    ///
+    /// - Parameter path: The mount path of the volume to eject. `~` is expanded.
+    /// - Returns: `true` if the volume was ejected successfully, `false` otherwise.
+    /// - Example:
+    /// ```js
+    /// const ok = hs.fs.ejectVolume("/Volumes/MyDisk")
+    /// ```
+    @objc func ejectVolume(_ path: String) -> Bool
+
+    /// Create a new volume event watcher.
+    ///
+    /// Call `setCallback()` and `start()` on the returned object to begin receiving
+    /// volume mount/unmount/rename events.
+    ///
+    /// - Returns: An `HSVolumeWatcher` object.
+    /// - Example:
+    /// ```js
+    /// const w = hs.fs.addVolumeWatcher()
+    /// w.setCallback((event, info) => {
+    ///     console.log(event + ": " + info.path)
+    /// }).start()
+    /// ```
+    @objc func addVolumeWatcher() -> HSVolumeWatcher
+
+    /// Stop and destroy a volume watcher previously created with `addVolumeWatcher`.
+    ///
+    /// - Parameter watcher: The watcher to remove.
+    /// - Example:
+    /// ```js
+    /// const w = hs.fs.addVolumeWatcher()
+    /// // ... later ...
+    /// hs.fs.removeVolumeWatcher(w)
+    /// ```
+    @objc func removeVolumeWatcher(_ watcher: HSVolumeWatcher)
 }
 
 // MARK: - Implementation
@@ -547,7 +611,14 @@ import UniformTypeIdentifiers
         AKDebug("Init of \(name): \(engineID)")
     }
 
-    func shutdown() {}
+    private var volumeWatchers = HSWeakObjectSet<HSVolumeWatcher>()
+
+    func shutdown() {
+        for watcher in volumeWatchers.allObjects {
+            watcher.destroy()
+        }
+        volumeWatchers.removeAllObjects()
+    }
 
     isolated deinit {
         AKDebug("Deinit of \(name): \(engineID)")
@@ -978,6 +1049,72 @@ import UniformTypeIdentifiers
             AKError("hs.fs.pathFromBookmark: \(error.localizedDescription)")
             return nil
         }
+    }
+
+    // MARK: - Volume operations
+
+    @objc func volumes(_ showHidden: Bool) -> [String: Any]? {
+        let keys: Set<URLResourceKey> = [
+            .volumeLocalizedNameKey,
+            .volumeIsLocalKey,
+            .volumeIsInternalKey,
+            .volumeIsEjectableKey,
+            .volumeIsRemovableKey,
+            .volumeIsBrowsableKey,
+            .volumeIsReadOnlyKey,
+            .volumeIsRootFileSystemKey,
+            .volumeTotalCapacityKey,
+            .volumeAvailableCapacityKey,
+            .volumeUUIDStringKey,
+        ]
+        var options: FileManager.VolumeEnumerationOptions = []
+        if !showHidden { options.insert(.skipHiddenVolumes) }
+
+        guard let urls = fm.mountedVolumeURLs(includingResourceValuesForKeys: Array(keys),
+                                              options: options) else {
+            AKError("hs.fs.volumes: could not enumerate mounted volumes")
+            return nil
+        }
+
+        var result: [String: Any] = [:]
+        for url in urls {
+            guard let values = try? url.resourceValues(forKeys: keys) else { continue }
+            var info: [String: Any] = [:]
+            if let v = values.volumeLocalizedName    { info["name"]              = v }
+            if let v = values.volumeIsLocal          { info["isLocal"]           = v }
+            if let v = values.volumeIsInternal       { info["isInternal"]        = v }
+            if let v = values.volumeIsEjectable      { info["isEjectable"]       = v }
+            if let v = values.volumeIsRemovable      { info["isRemovable"]       = v }
+            if let v = values.volumeIsBrowsable      { info["isBrowsable"]       = v }
+            if let v = values.volumeIsReadOnly       { info["isReadOnly"]        = v }
+            if let v = values.volumeIsRootFileSystem { info["isRootFileSystem"]  = v }
+            if let v = values.volumeTotalCapacity    { info["totalCapacity"]     = v }
+            if let v = values.volumeAvailableCapacity { info["availableCapacity"] = v }
+            if let v = values.volumeUUIDString       { info["uuid"]              = v }
+            result[url.path] = info
+        }
+        return result
+    }
+
+    @objc func ejectVolume(_ path: String) -> Bool {
+        do {
+            try NSWorkspace.shared.unmountAndEjectDevice(at: URL(fileURLWithPath: expand(path)))
+            return true
+        } catch {
+            AKError("hs.fs.ejectVolume: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    @objc func addVolumeWatcher() -> HSVolumeWatcher {
+        let watcher = HSVolumeWatcher()
+        volumeWatchers.add(watcher)
+        return watcher
+    }
+
+    @objc func removeVolumeWatcher(_ watcher: HSVolumeWatcher) {
+        watcher.destroy()
+        volumeWatchers.remove(watcher)
     }
 }
 

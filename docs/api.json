@@ -6787,10 +6787,240 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 533
+        },
+        {
+          "name": "volumes",
+          "signature": "func volumes(_ showHidden: Bool) -> [String: Any]?",
+          "isStatic": false,
+          "rawDocumentation": "Return information about all currently mounted filesystem volumes.\n\nReturns an object keyed by the volume mount path. Each value contains:\n- `name` — Localised display name of the volume.\n- `isLocal` — `true` if the volume is locally connected.\n- `isInternal` — `true` if the volume resides on internal storage.\n- `isEjectable` — `true` if the volume can be ejected.\n- `isRemovable` — `true` if the volume resides on removable media.\n- `isBrowsable` — `true` if the volume can be browsed by the user.\n- `isReadOnly` — `true` if the volume is mounted read-only.\n- `isRootFileSystem` — `true` if this is the root filesystem (`/`).\n- `totalCapacity` — Total size in bytes.\n- `availableCapacity` — Available space in bytes.\n- `uuid` — Volume UUID string (if available).\n\n- Parameter showHidden: Pass `true` to include hidden volumes. Defaults to `false`.\n- Returns: Object keyed by mount path, or `null` on failure.\n- Example:\n```js\nconst vols = hs.fs.volumes()\nfor (const [path, info] of Object.entries(vols)) {\n    console.log(path + \" — \" + info.name)\n}\n```",
+          "description": "Return information about all currently mounted filesystem volumes.",
+          "params": [
+            {
+              "name": "showHidden",
+              "type": "boolean",
+              "description": "Pass `true` to include hidden volumes. Defaults to `false`.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "Object<String, Any>",
+            "description": "Object keyed by mount path, or `null` on failure."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const vols = hs.fs.volumes()\nfor (const [path, info] of Object.entries(vols)) {\n    console.log(path + \" — \" + info.name)\n}"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 561
+        },
+        {
+          "name": "ejectVolume",
+          "signature": "func ejectVolume(_ path: String) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Unmount and eject the volume at the given path.\n\n- Parameter path: The mount path of the volume to eject. `~` is expanded.\n- Returns: `true` if the volume was ejected successfully, `false` otherwise.\n- Example:\n```js\nconst ok = hs.fs.ejectVolume(\"/Volumes/MyDisk\")\n```",
+          "description": "Unmount and eject the volume at the given path.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "The mount path of the volume to eject. `~` is expanded.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if the volume was ejected successfully, `false` otherwise."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const ok = hs.fs.ejectVolume(\"/Volumes/MyDisk\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 571
+        },
+        {
+          "name": "addVolumeWatcher",
+          "signature": "func addVolumeWatcher() -> HSVolumeWatcher",
+          "isStatic": false,
+          "rawDocumentation": "Create a new volume event watcher.\n\nCall `setCallback()` and `start()` on the returned object to begin receiving\nvolume mount/unmount/rename events.\n\n- Returns: An `HSVolumeWatcher` object.\n- Example:\n```js\nconst w = hs.fs.addVolumeWatcher()\nw.setCallback((event, info) => {\n    console.log(event + \": \" + info.path)\n}).start()\n```",
+          "description": "Create a new volume event watcher.\nCall `setCallback()` and `start()` on the returned object to begin receiving\nvolume mount/unmount/rename events.",
+          "params": [],
+          "returns": {
+            "type": "HSVolumeWatcher",
+            "description": "An `HSVolumeWatcher` object."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const w = hs.fs.addVolumeWatcher()\nw.setCallback((event, info) => {\n    console.log(event + \": \" + info.path)\n}).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 586
+        },
+        {
+          "name": "removeVolumeWatcher",
+          "signature": "func removeVolumeWatcher(_ watcher: HSVolumeWatcher)",
+          "isStatic": false,
+          "rawDocumentation": "Stop and destroy a volume watcher previously created with `addVolumeWatcher`.\n\n- Parameter watcher: The watcher to remove.\n- Example:\n```js\nconst w = hs.fs.addVolumeWatcher()\n// ... later ...\nhs.fs.removeVolumeWatcher(w)\n```",
+          "description": "Stop and destroy a volume watcher previously created with `addVolumeWatcher`.",
+          "params": [
+            {
+              "name": "watcher",
+              "type": "HSVolumeWatcher",
+              "description": "The watcher to remove.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const w = hs.fs.addVolumeWatcher()\n// ... later ...\nhs.fs.removeVolumeWatcher(w)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 597
         }
       ],
       "properties": [],
-      "types": [],
+      "types": [
+        {
+          "name": "HSVolumeWatcherAPI",
+          "type": "typedef",
+          "rawDocumentation": "A volume event watcher that monitors filesystem mount/unmount/rename events.\n\nCreate via `hs.fs.addVolumeWatcher()`. Set a callback with `setCallback()`, then\ncall `start()` to begin receiving events.\n\nThe callback receives `(event, info)`:\n\n| Event | Info keys |\n|-------|-----------|\n| `\"didMount\"` | `path: string` |\n| `\"didUnmount\"` | `path: string` |\n| `\"willUnmount\"` | `path: string` |\n| `\"didRename\"` | `path: string`, `name: string`, `oldPath?: string`, `oldName?: string` |\n\nExample:\n```js\nconst w = hs.fs.addVolumeWatcher()\nw.setCallback((event, info) => {\n    console.log(event + \": \" + info.path)\n}).start()\n```",
+          "description": "A volume event watcher that monitors filesystem mount/unmount/rename events.\nCreate via `hs.fs.addVolumeWatcher()`. Set a callback with `setCallback()`, then\ncall `start()` to begin receiving events.\n| Event | Info keys |\n|-------|-----------|\n| `\"didMount\"` | `path: string` |\n| `\"didUnmount\"` | `path: string` |\n| `\"willUnmount\"` | `path: string` |\n| `\"didRename\"` | `path: string`, `name: string`, `oldPath?: string`, `oldName?: string` |",
+          "methods": [
+            {
+              "name": "start",
+              "signature": "func start() -> HSVolumeWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Starts monitoring volume events.\n- Returns: self, for chaining\n- Example:\n```js\nconst w = hs.fs.addVolumeWatcher()\nw.setCallback((ev, info) => console.log(ev)).start()\n```",
+              "description": "Starts monitoring volume events.",
+              "params": [],
+              "returns": {
+                "type": "HSVolumeWatcher",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const w = hs.fs.addVolumeWatcher()\nw.setCallback((ev, info) => console.log(ev)).start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSVolumeWatcher.swift",
+              "lineNumber": 50
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSVolumeWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Stops monitoring volume events.\n- Returns: self, for chaining\n- Example:\n```js\nw.stop()\n```",
+              "description": "Stops monitoring volume events.",
+              "params": [],
+              "returns": {
+                "type": "HSVolumeWatcher",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSVolumeWatcher.swift",
+              "lineNumber": 58
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ fn: JSFunction) -> HSVolumeWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Sets the callback function invoked when volume events occur.\n- Parameter fn: {(event: string, info: Record<string, any>) => void} Called with the event name and an info dictionary; see type documentation for event names and info keys.\n- Returns: self, for chaining\n- Example:\n```js\nw.setCallback((event, info) => {\n    if (event === \"didMount\") console.log(\"Mounted: \" + info.path)\n})\n```",
+              "description": "Sets the callback function invoked when volume events occur.",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSFunction",
+                  "description": "Called with the event name and an info dictionary; see type documentation for event names and info keys.",
+                  "optional": false,
+                  "tsType": "(event: string, info: Record<string, any>) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSVolumeWatcher",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.setCallback((event, info) => {\n    if (event === \"didMount\") console.log(\"Mounted: \" + info.path)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSVolumeWatcher.swift",
+              "lineNumber": 69
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Stops the watcher and releases all resources. Called automatically during shutdown.\n- Example:\n```js\nw.destroy()\n```",
+              "description": "Stops the watcher and releases all resources. Called automatically during shutdown.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSVolumeWatcher.swift",
+              "lineNumber": 76
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "The unique identifier assigned to this watcher.\n- Example:\n```js\nconst w = hs.fs.addVolumeWatcher()\nconsole.log(w.identifier)\n```",
+              "description": "The unique identifier assigned to this watcher.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const w = hs.fs.addVolumeWatcher()\nconsole.log(w.identifier)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSVolumeWatcher.swift",
+              "lineNumber": 41
+            }
+          ]
+        }
+      ],
       "description": "Module for filesystem operations.\n`hs.fs` provides a comprehensive set of filesystem operations covering file\nI/O, directory management, path manipulation, metadata access, symbolic\nlinks, Finder tags, and macOS-specific features like file bookmarks and\nUniform Type Identifiers.\nIt replaces both Hammerspoon v1's `hs.fs` module and the functionality that\nwas previously available through Lua's built-in `io` and `file` modules.\n## Reading and writing files\n```javascript\nconst contents = hs.fs.read(\"/etc/hosts\");           // entire file\nconst chunk    = hs.fs.read(\"/etc/hosts\", 100, 50);  // 50 bytes from offset 100\n\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    console.log(line);\n    return true; // return false to stop early\n});\n\nhs.fs.write(\"/tmp/hello.txt\", \"Hello, world!\\n\");\nhs.fs.append(\"/tmp/hello.txt\", \"More content\\n\");\n```\n## Directory operations\n```javascript\nhs.fs.mkdir(\"~/Projects/new-thing\");\n\nconst files = hs.fs.list(\"~/Documents\");\nconst all   = hs.fs.listRecursive(\"~/Documents\");\n```\n## Path utilities\n```javascript\nconst abs  = hs.fs.pathToAbsolute(\"~/Library\");\nconst tmp  = hs.fs.temporaryDirectory();\nconst home = hs.fs.homeDirectory();\n```\n## Metadata\n```javascript\nconst info = hs.fs.attributes(\"/etc/hosts\");\n// { size: 1234, type: \"file\", permissions: 420,\n//   ownerID: 0, groupID: 0,\n//   creationDate: 1700000000.0, modificationDate: 1700001000.0 }\n```",
       "rawDocumentation": "Module for filesystem operations.\n\n`hs.fs` provides a comprehensive set of filesystem operations covering file\nI/O, directory management, path manipulation, metadata access, symbolic\nlinks, Finder tags, and macOS-specific features like file bookmarks and\nUniform Type Identifiers.\n\nIt replaces both Hammerspoon v1's `hs.fs` module and the functionality that\nwas previously available through Lua's built-in `io` and `file` modules.\n\n## Reading and writing files\n\n```javascript\nconst contents = hs.fs.read(\"/etc/hosts\");           // entire file\nconst chunk    = hs.fs.read(\"/etc/hosts\", 100, 50);  // 50 bytes from offset 100\n\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    console.log(line);\n    return true; // return false to stop early\n});\n\nhs.fs.write(\"/tmp/hello.txt\", \"Hello, world!\\n\");\nhs.fs.append(\"/tmp/hello.txt\", \"More content\\n\");\n```\n\n## Directory operations\n\n```javascript\nhs.fs.mkdir(\"~/Projects/new-thing\");\n\nconst files = hs.fs.list(\"~/Documents\");\nconst all   = hs.fs.listRecursive(\"~/Documents\");\n```\n\n## Path utilities\n\n```javascript\nconst abs  = hs.fs.pathToAbsolute(\"~/Library\");\nconst tmp  = hs.fs.temporaryDirectory();\nconst home = hs.fs.homeDirectory();\n```\n\n## Metadata\n\n```javascript\nconst info = hs.fs.attributes(\"/etc/hosts\");\n// { size: 1234, type: \"file\", permissions: 420,\n//   ownerID: 0, groupID: 0,\n//   creationDate: 1700000000.0, modificationDate: 1700001000.0 }\n```"
     },
@@ -20383,5 +20613,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-20T20:02:01.992Z"
+  "generatedAt": "2026-07-21T11:47:33.630Z"
 }
