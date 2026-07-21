@@ -2638,6 +2638,48 @@ volume mount/unmount/rename events.
      */
     function removeVolumeWatcher(watcher: HSVolumeWatcher): void;
 
+    /**
+     * Get the value of an extended attribute for a file or directory.
+Attribute values are returned as ISO Latin-1 encoded strings so that arbitrary byte
+sequences are represented without loss. ASCII text attribute values appear readable as-is.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @param attribute Name of the extended attribute.
+     * @param options Array of option strings: `"noFollow"` (do not follow symlinks), `"hfsCompression"`, `"createOnly"`, `"replaceOnly"`, `"noSecurity"`, `"noDefault"`. Pass an empty array or omit to use no options.
+     * @param position Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `"com.apple.ResourceFork"`.
+     * @returns The attribute value as a string, `""` if the attribute exists but contains no data, or `null` if the attribute does not exist or an error occurs.
+     */
+    function xattrGet(path: string, attribute: string, options?: string[], position?: number): string | null;
+
+    /**
+     * List all extended attributes defined for a file or directory.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @param options Array of option strings. Pass an empty array or omit to use no options.
+     * @returns Array of attribute name strings (may be empty), or `null` on error.
+     */
+    function xattrList(path: string, options?: string[]): string[] | null;
+
+    /**
+     * Set the value of an extended attribute for a file or directory.
+The value is written as ISO Latin-1 bytes, providing a lossless round-trip with
+`xattrGet`. Plain ASCII strings work directly without any encoding.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @param attribute Name of the extended attribute.
+     * @param value The value to write.
+     * @param options Array of option strings: `"noFollow"`, `"hfsCompression"`, `"createOnly"`, `"replaceOnly"`, `"noSecurity"`, `"noDefault"`. Pass an empty array or omit to use no options.
+     * @param position Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `"com.apple.ResourceFork"`.
+     * @returns `true` on success, `false` on failure.
+     */
+    function xattrSet(path: string, attribute: string, value: string, options?: string[], position?: number): boolean;
+
+    /**
+     * Remove an extended attribute from a file or directory.
+     * @param path Path to the file or directory. `~` is expanded.
+     * @param attribute Name of the extended attribute to remove.
+     * @param options Array of option strings: `"noFollow"`, `"hfsCompression"`. Pass an empty array or omit to use no options.
+     * @returns `true` on success, `false` on failure (including if the attribute does not exist).
+     */
+    function xattrRemove(path: string, attribute: string, options?: string[]): boolean;
+
 }
 
 /**

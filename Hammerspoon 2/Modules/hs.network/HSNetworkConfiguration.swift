@@ -20,7 +20,7 @@ private nonisolated func scConfigWatcherCallback(
     _ changedKeys: CFArray,
     _ context: UnsafeMutableRawPointer?
 ) {
-    guard let context = context else { return }
+    guard let context = unsafe context else { return }
     let keys = changedKeys as? [String] ?? []   // convert CFArray before crossing isolation boundary
     let watcher = unsafe Unmanaged<HSNetworkConfigurationWatcher>.fromOpaque(context).takeUnretainedValue()
     MainActor.assumeIsolated {
@@ -113,9 +113,9 @@ private nonisolated func scConfigWatcherCallback(
 
     override init() {
         super.init()
-        var ctx = SCDynamicStoreContext(version: 0, info: nil, retain: nil, release: nil, copyDescription: nil)
-        ctx.info = unsafe Unmanaged.passUnretained(self).toOpaque()
-        store = SCDynamicStoreCreate(
+        var ctx = unsafe SCDynamicStoreContext(version: 0, info: nil, retain: nil, release: nil, copyDescription: nil)
+        unsafe ctx.info = unsafe Unmanaged.passUnretained(self).toOpaque()
+        store = unsafe SCDynamicStoreCreate(
             nil,
             "hs.network.configurationWatcher" as CFString,
             scConfigWatcherCallback,

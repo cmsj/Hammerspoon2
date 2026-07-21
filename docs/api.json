@@ -6896,6 +6896,196 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
           "lineNumber": 597
+        },
+        {
+          "name": "xattrGet",
+          "signature": "func xattrGet(_ path: String, _ attribute: String, _ options: NSArray?, _ position: Int) -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Get the value of an extended attribute for a file or directory.\n\nAttribute values are returned as ISO Latin-1 encoded strings so that arbitrary byte\nsequences are represented without loss. ASCII text attribute values appear readable as-is.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - attribute: Name of the extended attribute.\n  - options?: {string[]} Array of option strings: `\"noFollow\"` (do not follow symlinks), `\"hfsCompression\"`, `\"createOnly\"`, `\"replaceOnly\"`, `\"noSecurity\"`, `\"noDefault\"`. Pass an empty array or omit to use no options.\n  - position?: Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `\"com.apple.ResourceFork\"`.\n- Returns: The attribute value as a string, `\"\"` if the attribute exists but contains no data, or `null` if the attribute does not exist or an error occurs.\n- Example:\n```js\nconst quarantine = hs.fs.xattrGet(\"/path/to/file.dmg\", \"com.apple.quarantine\")\nif (quarantine !== null) console.log(\"quarantine: \" + quarantine)\n```",
+          "description": "Get the value of an extended attribute for a file or directory.\nAttribute values are returned as ISO Latin-1 encoded strings so that arbitrary byte\nsequences are represented without loss. ASCII text attribute values appear readable as-is.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "Path to the file or directory. `~` is expanded.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "attribute",
+              "type": "string",
+              "description": "Name of the extended attribute.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "options",
+              "type": "NSArray",
+              "description": "Array of option strings: `\"noFollow\"` (do not follow symlinks), `\"hfsCompression\"`, `\"createOnly\"`, `\"replaceOnly\"`, `\"noSecurity\"`, `\"noDefault\"`. Pass an empty array or omit to use no options.",
+              "optional": true,
+              "tsType": "string[]"
+            },
+            {
+              "name": "position",
+              "type": "number",
+              "description": "Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `\"com.apple.ResourceFork\"`.",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "The attribute value as a string, `\"\"` if the attribute exists but contains no data, or `null` if the attribute does not exist or an error occurs."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const quarantine = hs.fs.xattrGet(\"/path/to/file.dmg\", \"com.apple.quarantine\")\nif (quarantine !== null) console.log(\"quarantine: \" + quarantine)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 617
+        },
+        {
+          "name": "xattrList",
+          "signature": "func xattrList(_ path: String, _ options: NSArray?) -> [String]?",
+          "isStatic": false,
+          "rawDocumentation": "List all extended attributes defined for a file or directory.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - options?: {string[]} Array of option strings. Pass an empty array or omit to use no options.\n- Returns: Array of attribute name strings (may be empty), or `null` on error.\n- Example:\n```js\nconst attrs = hs.fs.xattrList(\"/path/to/file.dmg\")\nif (attrs) attrs.forEach(a => console.log(a))\n```",
+          "description": "List all extended attributes defined for a file or directory.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "Path to the file or directory. `~` is expanded.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "options",
+              "type": "NSArray",
+              "description": "Array of option strings. Pass an empty array or omit to use no options.",
+              "optional": true,
+              "tsType": "string[]"
+            }
+          ],
+          "returns": {
+            "type": "Array<String>",
+            "description": "Array of attribute name strings (may be empty), or `null` on error."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const attrs = hs.fs.xattrList(\"/path/to/file.dmg\")\nif (attrs) attrs.forEach(a => console.log(a))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 630
+        },
+        {
+          "name": "xattrSet",
+          "signature": "func xattrSet(_ path: String, _ attribute: String, _ value: String, _ options: NSArray?, _ position: Int) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Set the value of an extended attribute for a file or directory.\n\nThe value is written as ISO Latin-1 bytes, providing a lossless round-trip with\n`xattrGet`. Plain ASCII strings work directly without any encoding.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - attribute: Name of the extended attribute.\n  - value: The value to write.\n  - options?: {string[]} Array of option strings: `\"noFollow\"`, `\"hfsCompression\"`, `\"createOnly\"`, `\"replaceOnly\"`, `\"noSecurity\"`, `\"noDefault\"`. Pass an empty array or omit to use no options.\n  - position?: Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `\"com.apple.ResourceFork\"`.\n- Returns: `true` on success, `false` on failure.\n- Example:\n```js\nhs.fs.xattrSet(\"/path/to/file.txt\", \"com.example.origin\", \"https://example.com\")\n```",
+          "description": "Set the value of an extended attribute for a file or directory.\nThe value is written as ISO Latin-1 bytes, providing a lossless round-trip with\n`xattrGet`. Plain ASCII strings work directly without any encoding.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "Path to the file or directory. `~` is expanded.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "attribute",
+              "type": "string",
+              "description": "Name of the extended attribute.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "value",
+              "type": "string",
+              "description": "The value to write.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "options",
+              "type": "NSArray",
+              "description": "Array of option strings: `\"noFollow\"`, `\"hfsCompression\"`, `\"createOnly\"`, `\"replaceOnly\"`, `\"noSecurity\"`, `\"noDefault\"`. Pass an empty array or omit to use no options.",
+              "optional": true,
+              "tsType": "string[]"
+            },
+            {
+              "name": "position",
+              "type": "number",
+              "description": "Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `\"com.apple.ResourceFork\"`.",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` on success, `false` on failure."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.fs.xattrSet(\"/path/to/file.txt\", \"com.example.origin\", \"https://example.com\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 648
+        },
+        {
+          "name": "xattrRemove",
+          "signature": "func xattrRemove(_ path: String, _ attribute: String, _ options: NSArray?) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Remove an extended attribute from a file or directory.\n\n- Parameters:\n  - path: Path to the file or directory. `~` is expanded.\n  - attribute: Name of the extended attribute to remove.\n  - options?: {string[]} Array of option strings: `\"noFollow\"`, `\"hfsCompression\"`. Pass an empty array or omit to use no options.\n- Returns: `true` on success, `false` on failure (including if the attribute does not exist).\n- Example:\n```js\nhs.fs.xattrRemove(\"/path/to/file.dmg\", \"com.apple.quarantine\")\n```",
+          "description": "Remove an extended attribute from a file or directory.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "Path to the file or directory. `~` is expanded.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "attribute",
+              "type": "string",
+              "description": "Name of the extended attribute to remove.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "options",
+              "type": "NSArray",
+              "description": "Array of option strings: `\"noFollow\"`, `\"hfsCompression\"`. Pass an empty array or omit to use no options.",
+              "optional": true,
+              "tsType": "string[]"
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` on success, `false` on failure (including if the attribute does not exist)."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.fs.xattrRemove(\"/path/to/file.dmg\", \"com.apple.quarantine\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
+          "lineNumber": 661
         }
       ],
       "properties": [],
@@ -20613,5 +20803,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-21T11:47:33.630Z"
+  "generatedAt": "2026-07-21T14:09:16.039Z"
 }
