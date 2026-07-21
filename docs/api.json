@@ -13780,6 +13780,95 @@
       "rawDocumentation": "Inspect and control the displays attached to the system.\n\n## Obtaining screens\n\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n\n## Navigation\n\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n\n## Display modes\n\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.mode);\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n\n## Screenshots\n\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```"
     },
     {
+      "name": "hs.shortcuts",
+      "methods": [
+        {
+          "name": "list",
+          "signature": "func list() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns an array of all available shortcuts.\n\nEach entry is a plain object with the following keys:\n\n| Key | Type | Description |\n|-----|------|-------------|\n| `name` | `string` | The display name of the shortcut |\n| `id` | `string` | A UUID uniquely identifying the shortcut |\n| `acceptsInput` | `boolean` | Whether the shortcut expects input when run |\n| `actionCount` | `number` | How many actions the shortcut contains |\n\n- Returns: An array of shortcut descriptor objects.\n- Example:\n```js\nconst shortcuts = hs.shortcuts.list()\nshortcuts.forEach(s => console.log(s.name))\n```",
+          "description": "Returns an array of all available shortcuts.\n| Key | Type | Description |\n|-----|------|-------------|\n| `name` | `string` | The display name of the shortcut |\n| `id` | `string` | A UUID uniquely identifying the shortcut |\n| `acceptsInput` | `boolean` | Whether the shortcut expects input when run |\n| `actionCount` | `number` | How many actions the shortcut contains |",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of shortcut descriptor objects."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const shortcuts = hs.shortcuts.list()\nshortcuts.forEach(s => console.log(s.name))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.shortcuts/HSShortcutsModule.swift",
+          "lineNumber": 62
+        },
+        {
+          "name": "run",
+          "signature": "func run(_ name: String) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Runs a Shortcuts shortcut by name and returns any output.\n\nExecutes the shortcut in the background via the `shortcuts` CLI tool.\nIf the shortcut produces output (via a \"Stop and Output\" action), the\nPromise resolves with that string. If the shortcut produces no output,\nthe Promise resolves with `null`. The Promise rejects if the shortcut\ncannot be found or exits with a non-zero status.\n\n- Parameter name: The exact display name of the shortcut to run.\n- Returns: {Promise<string|null>} A Promise resolving to the shortcut output string, or `null` if the shortcut produced no output.\n- Example:\n```js\nhs.shortcuts.run(\"My Shortcut\")\n    .then(output => console.log(\"Done, output: \" + output))\n    .catch(err => console.log(\"Failed: \" + err))\n```",
+          "description": "Runs a Shortcuts shortcut by name and returns any output.\nExecutes the shortcut in the background via the `shortcuts` CLI tool.\nIf the shortcut produces output (via a \"Stop and Output\" action), the\nPromise resolves with that string. If the shortcut produces no output,\nthe Promise resolves with `null`. The Promise rejects if the shortcut\ncannot be found or exits with a non-zero status.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The exact display name of the shortcut to run.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "A Promise resolving to the shortcut output string, or `null` if the shortcut produced no output.",
+            "promiseType": "string|null"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.shortcuts.run(\"My Shortcut\")\n    .then(output => console.log(\"Done, output: \" + output))\n    .catch(err => console.log(\"Failed: \" + err))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.shortcuts/HSShortcutsModule.swift",
+          "lineNumber": 80
+        },
+        {
+          "name": "open",
+          "signature": "func open(_ name: String)",
+          "isStatic": false,
+          "rawDocumentation": "Opens a shortcut in the Shortcuts app for viewing or editing.\n\nUses the `shortcuts://open-shortcut` URL scheme to bring Shortcuts to\nthe foreground and navigate directly to the named shortcut.\n\n- Parameter name: The display name of the shortcut to open.\n- Example:\n```js\nhs.shortcuts.open(\"My Shortcut\")\n```",
+          "description": "Opens a shortcut in the Shortcuts app for viewing or editing.\nUses the `shortcuts://open-shortcut` URL scheme to bring Shortcuts to\nthe foreground and navigate directly to the named shortcut.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The display name of the shortcut to open.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.shortcuts.open(\"My Shortcut\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.shortcuts/HSShortcutsModule.swift",
+          "lineNumber": 92
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Run and interact with macOS Shortcuts from JavaScript.\nThis module bridges to the Shortcuts app, letting you enumerate available\nshortcuts and run them from your Hammerspoon configuration.\n## Listing shortcuts\n```js\nconst all = hs.shortcuts.list()\nall.forEach(s => console.log(s.name + \" (accepts input: \" + s.acceptsInput + \")\"))\n```\n## Running a shortcut\n```js\nhs.shortcuts.run(\"My Shortcut\").then(output => {\n    if (output) console.log(\"Output: \" + output)\n}).catch(err => console.log(\"Error: \" + err))\n```\n## Opening a shortcut for editing\n```js\nhs.shortcuts.open(\"My Shortcut\")\n```",
+      "rawDocumentation": "Run and interact with macOS Shortcuts from JavaScript.\n\nThis module bridges to the Shortcuts app, letting you enumerate available\nshortcuts and run them from your Hammerspoon configuration.\n\n## Listing shortcuts\n```js\nconst all = hs.shortcuts.list()\nall.forEach(s => console.log(s.name + \" (accepts input: \" + s.acceptsInput + \")\"))\n```\n\n## Running a shortcut\n```js\nhs.shortcuts.run(\"My Shortcut\").then(output => {\n    if (output) console.log(\"Output: \" + output)\n}).catch(err => console.log(\"Error: \" + err))\n```\n\n## Opening a shortcut for editing\n```js\nhs.shortcuts.open(\"My Shortcut\")\n```"
+    },
+    {
       "name": "hs.sound",
       "methods": [
         {
@@ -20820,5 +20909,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-21T15:21:00.960Z"
+  "generatedAt": "2026-07-21T20:33:35.487Z"
 }

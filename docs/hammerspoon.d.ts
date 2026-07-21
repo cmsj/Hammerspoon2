@@ -5147,6 +5147,61 @@ reading is currently unavailable.
 }
 
 /**
+ * Run and interact with macOS Shortcuts from JavaScript.
+This module bridges to the Shortcuts app, letting you enumerate available
+shortcuts and run them from your Hammerspoon configuration.
+## Listing shortcuts
+```js
+const all = hs.shortcuts.list()
+all.forEach(s => console.log(s.name + " (accepts input: " + s.acceptsInput + ")"))
+```
+## Running a shortcut
+```js
+hs.shortcuts.run("My Shortcut").then(output => {
+    if (output) console.log("Output: " + output)
+}).catch(err => console.log("Error: " + err))
+```
+## Opening a shortcut for editing
+```js
+hs.shortcuts.open("My Shortcut")
+```
+ */
+declare namespace hs.shortcuts {
+    /**
+     * Returns an array of all available shortcuts.
+| Key | Type | Description |
+|-----|------|-------------|
+| `name` | `string` | The display name of the shortcut |
+| `id` | `string` | A UUID uniquely identifying the shortcut |
+| `acceptsInput` | `boolean` | Whether the shortcut expects input when run |
+| `actionCount` | `number` | How many actions the shortcut contains |
+     * @returns An array of shortcut descriptor objects.
+     */
+    function list(): Record<string, any>[];
+
+    /**
+     * Runs a Shortcuts shortcut by name and returns any output.
+Executes the shortcut in the background via the `shortcuts` CLI tool.
+If the shortcut produces output (via a "Stop and Output" action), the
+Promise resolves with that string. If the shortcut produces no output,
+the Promise resolves with `null`. The Promise rejects if the shortcut
+cannot be found or exits with a non-zero status.
+     * @param name The exact display name of the shortcut to run.
+     * @returns A Promise resolving to the shortcut output string, or `null` if the shortcut produced no output.
+     */
+    function run(name: string): Promise<string|null>;
+
+    /**
+     * Opens a shortcut in the Shortcuts app for viewing or editing.
+Uses the `shortcuts://open-shortcut` URL scheme to bring Shortcuts to
+the foreground and navigate directly to the named shortcut.
+     * @param name The display name of the shortcut to open.
+     */
+    function open(name: string): void;
+
+}
+
+/**
  * Play audio from files on disk or from the system's built-in sound library.
  */
 declare namespace hs.sound {

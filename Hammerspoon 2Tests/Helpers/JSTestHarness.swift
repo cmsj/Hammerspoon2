@@ -478,6 +478,8 @@ extension JSTestHarness {
                 loadModule(HSSoundModule.self, as: name)
             case "network":
                 loadModule(HSNetworkModule.self, as: name)
+            case "shortcuts":
+                loadModule(HSShortcutsModule.self, as: name)
             case "ipc":
                 loadModule(HSIPCModule.self, as: name)
             default:
