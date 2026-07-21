@@ -1543,6 +1543,214 @@ hs.fs.removeVolumeWatcher(w)</code></pre>
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L597" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:597</a>
         </div>
     </div>
+    <div class="method" id="xattrGet">
+        <h3><a href="#xattrGet">hs.fs.xattrGet(path, attribute, options, position) -> string</a></h3>
+
+        <div class="description">Get the value of an extended attribute for a file or directory.
+Attribute values are returned as ISO Latin-1 encoded strings so that arbitrary byte
+sequences are represented without loss. ASCII text attribute values appear readable as-is.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.xattrGet(path, attribute, options, position) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">attribute</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Name of the extended attribute.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">NSArray</td>
+                    <td class="param-desc">Array of option strings: `&quot;noFollow&quot;` (do not follow symlinks), `&quot;hfsCompression&quot;`, `&quot;createOnly&quot;`, `&quot;replaceOnly&quot;`, `&quot;noSecurity&quot;`, `&quot;noDefault&quot;`. Pass an empty array or omit to use no options.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">position</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `&quot;com.apple.ResourceFork&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The attribute value as a string, `&quot;&quot;` if the attribute exists but contains no data, or `null` if the attribute does not exist or an error occurs.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const quarantine = hs.fs.xattrGet(&quot;/path/to/file.dmg&quot;, &quot;com.apple.quarantine&quot;)
+if (quarantine !== null) console.log(&quot;quarantine: &quot; + quarantine)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L617" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:617</a>
+        </div>
+    </div>
+    <div class="method" id="xattrList">
+        <h3><a href="#xattrList">hs.fs.xattrList(path, options) -> [String]</a></h3>
+
+        <div class="description">List all extended attributes defined for a file or directory.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.xattrList(path, options) -> [String]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">NSArray</td>
+                    <td class="param-desc">Array of option strings. Pass an empty array or omit to use no options.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String]</div>
+        <div class="return-desc">Array of attribute name strings (may be empty), or `null` on error.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const attrs = hs.fs.xattrList(&quot;/path/to/file.dmg&quot;)
+if (attrs) attrs.forEach(a =&gt; console.log(a))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L630" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:630</a>
+        </div>
+    </div>
+    <div class="method" id="xattrSet">
+        <h3><a href="#xattrSet">hs.fs.xattrSet(path, attribute, value, options, position) -> boolean</a></h3>
+
+        <div class="description">Set the value of an extended attribute for a file or directory.
+The value is written as ISO Latin-1 bytes, providing a lossless round-trip with
+`xattrGet`. Plain ASCII strings work directly without any encoding.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.xattrSet(path, attribute, value, options, position) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">attribute</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Name of the extended attribute.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The value to write.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">NSArray</td>
+                    <td class="param-desc">Array of option strings: `&quot;noFollow&quot;`, `&quot;hfsCompression&quot;`, `&quot;createOnly&quot;`, `&quot;replaceOnly&quot;`, `&quot;noSecurity&quot;`, `&quot;noDefault&quot;`. Pass an empty array or omit to use no options.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">position</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `&quot;com.apple.ResourceFork&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.xattrSet(&quot;/path/to/file.txt&quot;, &quot;com.example.origin&quot;, &quot;https://example.com&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L648" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:648</a>
+        </div>
+    </div>
+    <div class="method" id="xattrRemove">
+        <h3><a href="#xattrRemove">hs.fs.xattrRemove(path, attribute, options) -> boolean</a></h3>
+
+        <div class="description">Remove an extended attribute from a file or directory.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.xattrRemove(path, attribute, options) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">attribute</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Name of the extended attribute to remove.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">NSArray</td>
+                    <td class="param-desc">Array of option strings: `&quot;noFollow&quot;`, `&quot;hfsCompression&quot;`. Pass an empty array or omit to use no options.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure (including if the attribute does not exist).</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.xattrRemove(&quot;/path/to/file.dmg&quot;, &quot;com.apple.quarantine&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L661" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:661</a>
+        </div>
+    </div>
         </main>
 
         <!-- Right TOC sidebar -->
