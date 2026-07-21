@@ -176,9 +176,7 @@ import AppKit
 
         switch event {
         case "didMount", "didUnmount", "willUnmount":
-            // NSDevicePath is a POSIX path string available for all three events.
-            guard let path = userInfo?["NSDevicePath"] as? String else { return nil }
-            info["path"] = path
+            info["path"] = (userInfo?["NSDevicePath"] as? String) ?? ""
 
         case "didRename":
             if let url = userInfo?["NSWorkspaceVolumeURL"] as? URL {
