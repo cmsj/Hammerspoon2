@@ -13335,6 +13335,23 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 283
+            },
+            {
+              "name": "ambientLight",
+              "signature": "var ambientLight: number? { get }",
+              "rawDocumentation": "The ambient light level measured by this display's built-in sensor, in lux.\n\nReturns `null` if the display does not have an ambient light sensor or if the\nreading is currently unavailable.\n\n- Example:\n```js\nconst lux = hs.screen.main().ambientLight\nif (lux !== null) console.log(\"Ambient light: \" + lux + \" lux\")\n```",
+              "description": "The ambient light level measured by this display's built-in sensor, in lux.\nReturns `null` if the display does not have an ambient light sensor or if the\nreading is currently unavailable.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const lux = hs.screen.main().ambientLight\nif (lux !== null) console.log(\"Ambient light: \" + lux + \" lux\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+              "lineNumber": 297
             }
           ]
         }
@@ -20383,5 +20400,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-20T20:02:01.992Z"
+  "generatedAt": "2026-07-21T09:31:55.082Z"
 }

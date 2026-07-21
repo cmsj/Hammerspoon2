@@ -353,6 +353,35 @@ struct HSScreenIntegrationTests {
         harness.expectTrue("roundTripped")
     }
 
+    // MARK: - Ambient Light
+
+    @Test("ambientLight returns a number or null")
+    func testAmbientLight() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("var lux = hs.screen.primary().ambientLight;")
+        harness.expectTrue("lux === null || typeof lux === 'number'")
+        #expect(!harness.hasException)
+    }
+
+    @Test("ambientLight is consistent across repeated reads")
+    func testAmbientLightConsistency() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("""
+        var s = hs.screen.primary();
+        var a = s.ambientLight;
+        var b = s.ambientLight;
+        var bothNull = (a === null && b === null);
+        var bothNumbers = (typeof a === 'number' && typeof b === 'number');
+        var consistent = bothNull || bothNumbers;
+        """)
+        harness.expectTrue("consistent")
+        #expect(!harness.hasException)
+    }
+
     // MARK: - Desktop Image
 
     @Test("desktopImage returns a string or null")
