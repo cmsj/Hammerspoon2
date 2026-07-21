@@ -5,7 +5,7 @@
 
 import Foundation
 import JavaScriptCore
-import AppKit          // NSWorkspace (fileUTI)
+import AppKit          // NSWorkspace (volumes, eject, fileUTI)
 import Darwin          // POSIX stat/lstat/rmdir
 import UniformTypeIdentifiers
 
@@ -531,6 +531,134 @@ import UniformTypeIdentifiers
     /// const path = hs.fs.pathFromBookmark(savedData)
     /// ```
     @objc func pathFromBookmark(_ data: String) -> String?
+
+    // MARK: - Volume operations
+
+    /// Return information about all currently mounted filesystem volumes.
+    ///
+    /// Returns an object keyed by the volume mount path. Each value contains:
+    /// - `name` — Localised display name of the volume.
+    /// - `isLocal` — `true` if the volume is locally connected.
+    /// - `isInternal` — `true` if the volume resides on internal storage.
+    /// - `isEjectable` — `true` if the volume can be ejected.
+    /// - `isRemovable` — `true` if the volume resides on removable media.
+    /// - `isBrowsable` — `true` if the volume can be browsed by the user.
+    /// - `isReadOnly` — `true` if the volume is mounted read-only.
+    /// - `isRootFileSystem` — `true` if this is the root filesystem (`/`).
+    /// - `totalCapacity` — Total size in bytes.
+    /// - `availableCapacity` — Available space in bytes.
+    /// - `uuid` — Volume UUID string (if available).
+    ///
+    /// - Parameter showHidden: Pass `true` to include hidden volumes. Defaults to `false`.
+    /// - Returns: Object keyed by mount path, or `null` on failure.
+    /// - Example:
+    /// ```js
+    /// const vols = hs.fs.volumes()
+    /// for (const [path, info] of Object.entries(vols)) {
+    ///     console.log(path + " — " + info.name)
+    /// }
+    /// ```
+    @objc func volumes(_ showHidden: Bool) -> [String: Any]?
+
+    /// Unmount and eject the volume at the given path.
+    ///
+    /// - Parameter path: The mount path of the volume to eject. `~` is expanded.
+    /// - Returns: `true` if the volume was ejected successfully, `false` otherwise.
+    /// - Example:
+    /// ```js
+    /// const ok = hs.fs.ejectVolume("/Volumes/MyDisk")
+    /// ```
+    @objc func ejectVolume(_ path: String) -> Bool
+
+    /// Create a new volume event watcher.
+    ///
+    /// Call `setCallback()` and `start()` on the returned object to begin receiving
+    /// volume mount/unmount/rename events.
+    ///
+    /// - Returns: An `HSVolumeWatcher` object.
+    /// - Example:
+    /// ```js
+    /// const w = hs.fs.addVolumeWatcher()
+    /// w.setCallback((event, info) => {
+    ///     console.log(event + ": " + info.path)
+    /// }).start()
+    /// ```
+    @objc func addVolumeWatcher() -> HSVolumeWatcher
+
+    /// Stop and destroy a volume watcher previously created with `addVolumeWatcher`.
+    ///
+    /// - Parameter watcher: The watcher to remove.
+    /// - Example:
+    /// ```js
+    /// const w = hs.fs.addVolumeWatcher()
+    /// // ... later ...
+    /// hs.fs.removeVolumeWatcher(w)
+    /// ```
+    @objc func removeVolumeWatcher(_ watcher: HSVolumeWatcher)
+
+    // MARK: - Extended attributes
+
+    /// Get the value of an extended attribute for a file or directory.
+    ///
+    /// Attribute values are returned as ISO Latin-1 encoded strings so that arbitrary byte
+    /// sequences are represented without loss. ASCII text attribute values appear readable as-is.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file or directory. `~` is expanded.
+    ///   - attribute: Name of the extended attribute.
+    ///   - options?: {string[]} Array of option strings: `"noFollow"` (do not follow symlinks), `"hfsCompression"`, `"createOnly"`, `"replaceOnly"`, `"noSecurity"`, `"noDefault"`. Pass an empty array or omit to use no options.
+    ///   - position?: Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `"com.apple.ResourceFork"`.
+    /// - Returns: The attribute value as a string, `""` if the attribute exists but contains no data, or `null` if the attribute does not exist or an error occurs.
+    /// - Example:
+    /// ```js
+    /// const quarantine = hs.fs.xattrGet("/path/to/file.dmg", "com.apple.quarantine")
+    /// if (quarantine !== null) console.log("quarantine: " + quarantine)
+    /// ```
+    @objc func xattrGet(_ path: String, _ attribute: String, _ options: NSArray?, _ position: Int) -> String?
+
+    /// List all extended attributes defined for a file or directory.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file or directory. `~` is expanded.
+    ///   - options?: {string[]} Array of option strings. Pass an empty array or omit to use no options.
+    /// - Returns: Array of attribute name strings (may be empty), or `null` on error.
+    /// - Example:
+    /// ```js
+    /// const attrs = hs.fs.xattrList("/path/to/file.dmg")
+    /// if (attrs) attrs.forEach(a => console.log(a))
+    /// ```
+    @objc func xattrList(_ path: String, _ options: NSArray?) -> [String]?
+
+    /// Set the value of an extended attribute for a file or directory.
+    ///
+    /// The value is written as ISO Latin-1 bytes, providing a lossless round-trip with
+    /// `xattrGet`. Plain ASCII strings work directly without any encoding.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file or directory. `~` is expanded.
+    ///   - attribute: Name of the extended attribute.
+    ///   - value: The value to write.
+    ///   - options?: {string[]} Array of option strings: `"noFollow"`, `"hfsCompression"`, `"createOnly"`, `"replaceOnly"`, `"noSecurity"`, `"noDefault"`. Pass an empty array or omit to use no options.
+    ///   - position?: Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `"com.apple.ResourceFork"`.
+    /// - Returns: `true` on success, `false` on failure.
+    /// - Example:
+    /// ```js
+    /// hs.fs.xattrSet("/path/to/file.txt", "com.example.origin", "https://example.com")
+    /// ```
+    @objc func xattrSet(_ path: String, _ attribute: String, _ value: String, _ options: NSArray?, _ position: Int) -> Bool
+
+    /// Remove an extended attribute from a file or directory.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file or directory. `~` is expanded.
+    ///   - attribute: Name of the extended attribute to remove.
+    ///   - options?: {string[]} Array of option strings: `"noFollow"`, `"hfsCompression"`. Pass an empty array or omit to use no options.
+    /// - Returns: `true` on success, `false` on failure (including if the attribute does not exist).
+    /// - Example:
+    /// ```js
+    /// hs.fs.xattrRemove("/path/to/file.dmg", "com.apple.quarantine")
+    /// ```
+    @objc func xattrRemove(_ path: String, _ attribute: String, _ options: NSArray?) -> Bool
 }
 
 // MARK: - Implementation
@@ -547,7 +675,14 @@ import UniformTypeIdentifiers
         AKDebug("Init of \(name): \(engineID)")
     }
 
-    func shutdown() {}
+    private var volumeWatchers = HSWeakObjectSet<HSVolumeWatcher>()
+
+    func shutdown() {
+        for watcher in volumeWatchers.allObjects {
+            watcher.destroy()
+        }
+        volumeWatchers.removeAllObjects()
+    }
 
     isolated deinit {
         AKDebug("Deinit of \(name): \(engineID)")
@@ -579,6 +714,25 @@ import UniformTypeIdentifiers
         case S_IFBLK:  return "blockSpecial"
         default:       return "unknown"
         }
+    }
+
+    private func parseXattrOptions(_ options: NSArray?) -> Int32? {
+        guard let options = options else { return 0 }
+        var flags: Int32 = 0
+        for case let opt as String in options {
+            switch opt {
+            case "noFollow":       flags |= XATTR_NOFOLLOW
+            case "hfsCompression": flags |= XATTR_SHOWCOMPRESSION
+            case "createOnly":     flags |= XATTR_CREATE
+            case "replaceOnly":    flags |= XATTR_REPLACE
+            case "noSecurity":     flags |= XATTR_NOSECURITY
+            case "noDefault":      flags |= XATTR_NODEFAULT
+            default:
+                AKError("hs.fs xattr: unrecognized option '\(opt)'")
+                return nil
+            }
+        }
+        return flags
     }
 
     // MARK: - File I/O
@@ -978,6 +1132,162 @@ import UniformTypeIdentifiers
             AKError("hs.fs.pathFromBookmark: \(error.localizedDescription)")
             return nil
         }
+    }
+
+    // MARK: - Volume operations
+
+    @objc func volumes(_ showHidden: Bool) -> [String: Any]? {
+        let keys: Set<URLResourceKey> = [
+            .volumeLocalizedNameKey,
+            .volumeIsLocalKey,
+            .volumeIsInternalKey,
+            .volumeIsEjectableKey,
+            .volumeIsRemovableKey,
+            .volumeIsBrowsableKey,
+            .volumeIsReadOnlyKey,
+            .volumeIsRootFileSystemKey,
+            .volumeTotalCapacityKey,
+            .volumeAvailableCapacityKey,
+            .volumeUUIDStringKey,
+        ]
+        var options: FileManager.VolumeEnumerationOptions = []
+        if !showHidden { options.insert(.skipHiddenVolumes) }
+
+        guard let urls = fm.mountedVolumeURLs(includingResourceValuesForKeys: Array(keys),
+                                              options: options) else {
+            AKError("hs.fs.volumes: could not enumerate mounted volumes")
+            return nil
+        }
+
+        var result: [String: Any] = [:]
+        for url in urls {
+            guard let values = try? url.resourceValues(forKeys: keys) else { continue }
+            var info: [String: Any] = [:]
+            if let v = values.volumeLocalizedName    { info["name"]              = v }
+            if let v = values.volumeIsLocal          { info["isLocal"]           = v }
+            if let v = values.volumeIsInternal       { info["isInternal"]        = v }
+            if let v = values.volumeIsEjectable      { info["isEjectable"]       = v }
+            if let v = values.volumeIsRemovable      { info["isRemovable"]       = v }
+            if let v = values.volumeIsBrowsable      { info["isBrowsable"]       = v }
+            if let v = values.volumeIsReadOnly       { info["isReadOnly"]        = v }
+            if let v = values.volumeIsRootFileSystem { info["isRootFileSystem"]  = v }
+            if let v = values.volumeTotalCapacity    { info["totalCapacity"]     = v }
+            if let v = values.volumeAvailableCapacity { info["availableCapacity"] = v }
+            if let v = values.volumeUUIDString       { info["uuid"]              = v }
+            result[url.path] = info
+        }
+        return result
+    }
+
+    @objc func ejectVolume(_ path: String) -> Bool {
+        do {
+            try NSWorkspace.shared.unmountAndEjectDevice(at: URL(fileURLWithPath: expand(path)))
+            return true
+        } catch {
+            AKError("hs.fs.ejectVolume: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    @objc func addVolumeWatcher() -> HSVolumeWatcher {
+        let watcher = HSVolumeWatcher()
+        volumeWatchers.add(watcher)
+        return watcher
+    }
+
+    @objc func removeVolumeWatcher(_ watcher: HSVolumeWatcher) {
+        watcher.destroy()
+        volumeWatchers.remove(watcher)
+    }
+
+    // MARK: - Extended attributes
+
+    @objc func xattrGet(_ path: String, _ attribute: String, _ options: NSArray?, _ position: Int) -> String? {
+        let p = expand(path)
+        guard let flags = parseXattrOptions(options) else { return nil }
+        let pos = UInt32(max(0, position))
+
+        let size = unsafe Darwin.getxattr(p, attribute, nil, 0, pos, flags)
+        if size < 0 {
+            if errno != ENOATTR {
+                AKError(unsafe "hs.fs.xattrGet: \(String(cString: strerror(errno)))")
+            }
+            return nil
+        }
+        guard size > 0 else { return "" }
+
+        var buffer = [UInt8](repeating: 0, count: size)
+        let read = unsafe buffer.withUnsafeMutableBytes { ptr in
+            unsafe Darwin.getxattr(p, attribute, ptr.baseAddress, size, pos, flags)
+        }
+        if read < 0 {
+            AKError(unsafe "hs.fs.xattrGet: \(String(cString: strerror(errno)))")
+            return nil
+        }
+        return String(bytes: buffer[..<read], encoding: .isoLatin1)
+    }
+
+    @objc func xattrList(_ path: String, _ options: NSArray?) -> [String]? {
+        let p = expand(path)
+        guard let flags = parseXattrOptions(options) else { return nil }
+
+        let size = unsafe Darwin.listxattr(p, nil, 0, flags)
+        if size < 0 {
+            AKError(unsafe "hs.fs.xattrList: \(String(cString: strerror(errno)))")
+            return nil
+        }
+        guard size > 0 else { return [] }
+
+        var buffer = [UInt8](repeating: 0, count: size)
+        let read = unsafe buffer.withUnsafeMutableBytes { ptr in
+            let cBuf: UnsafeMutablePointer<CChar>? = unsafe ptr.baseAddress?.assumingMemoryBound(to: CChar.self)
+            return unsafe Darwin.listxattr(p, cBuf, size, flags)
+        }
+        if read < 0 {
+            AKError(unsafe "hs.fs.xattrList: \(String(cString: strerror(errno)))")
+            return nil
+        }
+
+        // The buffer is a sequence of NUL-terminated attribute name strings concatenated together.
+        var result: [String] = []
+        var remaining = Data(buffer[..<read])
+        while !remaining.isEmpty {
+            guard let nullIdx = remaining.firstIndex(of: 0) else { break }
+            if let name = String(data: remaining[..<nullIdx], encoding: .utf8), !name.isEmpty {
+                result.append(name)
+            }
+            remaining = remaining[(nullIdx + 1)...]
+        }
+        return result
+    }
+
+    @objc func xattrSet(_ path: String, _ attribute: String, _ value: String, _ options: NSArray?, _ position: Int) -> Bool {
+        let p = expand(path)
+        guard let flags = parseXattrOptions(options) else { return false }
+        let pos = UInt32(max(0, position))
+
+        guard let data = value.data(using: .isoLatin1) else {
+            AKError("hs.fs.xattrSet: value contains characters outside the Latin-1 range")
+            return false
+        }
+        let result = unsafe data.withUnsafeBytes { ptr in
+            unsafe Darwin.setxattr(p, attribute, ptr.baseAddress, data.count, pos, flags)
+        }
+        if result < 0 {
+            AKError(unsafe "hs.fs.xattrSet: \(String(cString: strerror(errno)))")
+            return false
+        }
+        return true
+    }
+
+    @objc func xattrRemove(_ path: String, _ attribute: String, _ options: NSArray?) -> Bool {
+        let p = expand(path)
+        guard let flags = parseXattrOptions(options) else { return false }
+        if unsafe Darwin.removexattr(p, attribute, flags) < 0 {
+            AKError(unsafe "hs.fs.xattrRemove: \(String(cString: strerror(errno)))")
+            return false
+        }
+        return true
     }
 }
 
