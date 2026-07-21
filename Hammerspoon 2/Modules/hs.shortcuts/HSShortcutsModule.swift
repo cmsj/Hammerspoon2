@@ -99,6 +99,7 @@ extension SBApplication: ShortcutsBridgeApp {}
 @objc class HSShortcutsModule: NSObject, HSModuleAPI, HSShortcutsModuleAPI {
     var name = "hs.shortcuts"
     let engineID: UUID
+    private var runningProcesses: [Process] = []
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -106,7 +107,10 @@ extension SBApplication: ShortcutsBridgeApp {}
         AKDebug("Init of \(name): \(engineID)")
     }
 
-    func shutdown() {}
+    func shutdown() {
+        for process in runningProcesses { process.terminate() }
+        runningProcesses.removeAll()
+    }
 
     isolated deinit {
         AKDebug("Deinit of \(name): \(engineID)")
@@ -151,7 +155,7 @@ extension SBApplication: ShortcutsBridgeApp {}
         return wrapAsyncInJSPromise(in: context) { holder in
             Task { @MainActor in
                 do {
-                    let (output, exitCode) = try await Self.runCLI(shortcutName: name)
+                    let (output, exitCode) = try await self.runCLI(shortcutName: name)
                     if exitCode == 0 {
                         let value: Any = output?.isEmpty == false ? output as Any : NSNull()
                         holder.resolveWith(value)
@@ -185,7 +189,7 @@ extension SBApplication: ShortcutsBridgeApp {}
 
     // MARK: - Private Helpers
 
-    nonisolated private static func runCLI(shortcutName: String) async throws -> (String?, Int32) {
+    private func runCLI(shortcutName: String) async throws -> (String?, Int32) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
         process.arguments = ["run", shortcutName]
@@ -196,13 +200,15 @@ extension SBApplication: ShortcutsBridgeApp {}
         process.standardError = errorPipe
 
         try process.run()
+        runningProcesses.append(process)
 
         // Drain both pipes concurrently on background threads so the child process
         // never blocks on a full pipe buffer before it exits.
-        async let outData = readPipe(outputPipe)
-        async let errData = readPipe(errorPipe)
+        async let outData = Self.readPipe(outputPipe)
+        async let errData = Self.readPipe(errorPipe)
         let (out, err) = await (outData, errData)
         process.waitUntilExit()   // by now the process has already exited (pipes at EOF)
+        runningProcesses.removeAll { $0 === process }
 
         let outStr = String(data: out, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
         let errStr = String(data: err, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
