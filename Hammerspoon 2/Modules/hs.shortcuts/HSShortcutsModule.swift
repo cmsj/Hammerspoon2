@@ -195,22 +195,26 @@ extension SBApplication: ShortcutsBridgeApp {}
         process.standardOutput = outputPipe
         process.standardError = errorPipe
 
-        return try await withCheckedThrowingContinuation { continuation in
-            process.terminationHandler = { p in
-                let outData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-                let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-                let out = String(data: outData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-                let err = String(data: errData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-                // On success return stdout; on failure return stderr (or stdout if stderr is empty)
-                let output = p.terminationStatus == 0
-                    ? out
-                    : (err?.isEmpty == false ? err : out)
-                continuation.resume(returning: (output, p.terminationStatus))
-            }
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: error)
+        try process.run()
+
+        // Drain both pipes concurrently on background threads so the child process
+        // never blocks on a full pipe buffer before it exits.
+        async let outData = readPipe(outputPipe)
+        async let errData = readPipe(errorPipe)
+        let (out, err) = await (outData, errData)
+        process.waitUntilExit()   // by now the process has already exited (pipes at EOF)
+
+        let outStr = String(data: out, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let errStr = String(data: err, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        // On success return stdout; on failure return stderr (or stdout if stderr is empty)
+        let output = process.terminationStatus == 0 ? outStr : (errStr?.isEmpty == false ? errStr : outStr)
+        return (output, process.terminationStatus)
+    }
+
+    nonisolated private static func readPipe(_ pipe: Pipe) async -> Data {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                continuation.resume(returning: pipe.fileHandleForReading.readDataToEndOfFile())
             }
         }
     }
