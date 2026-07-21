@@ -3,7 +3,7 @@
 //  Hammerspoon 2
 //
 
-#import "Modules/hs.screen/HSScreenRotation.h"
+#import "Modules/hs.screen/HSScreenPrivate.h"
 
 // JSSynchronousGarbageCollectForDebugging is exported from JavaScriptCore.framework
 // but not declared in its public headers. It runs a full synchronous GC cycle

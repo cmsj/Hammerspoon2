@@ -281,6 +281,20 @@ import ScreenCaptureKit
     /// s.desktopImage = "/Users/me/wallpaper.jpg"
     /// ```
     @objc var desktopImage: String? { get set }
+
+    // MARK: - Ambient Light
+
+    /// The ambient light level measured by this display's built-in sensor, in lux.
+    ///
+    /// Returns `null` if the display does not have an ambient light sensor or if the
+    /// reading is currently unavailable.
+    ///
+    /// - Example:
+    /// ```js
+    /// const lux = hs.screen.main().ambientLight
+    /// if (lux !== null) console.log("Ambient light: " + lux + " lux")
+    /// ```
+    @objc var ambientLight: NSNumber? { get }
 }
 
 // MARK: - CGDisplayMode helpers
@@ -549,6 +563,12 @@ private extension CGDisplayMode {
         return HSRect(x: hsRect.x + Double(screenOrigin.x),
                       y: hsRect.y + Double(screenOrigin.y),
                       w: hsRect.w, h: hsRect.h)
+    }
+
+    // MARK: - Ambient Light
+
+    @objc var ambientLight: NSNumber? {
+        HSScreenAmbientLight(displayID)
     }
 
     // MARK: - Desktop

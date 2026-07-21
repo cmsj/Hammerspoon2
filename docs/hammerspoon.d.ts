@@ -5137,6 +5137,13 @@ Assign a new absolute file path or `file://` URL string to change the wallpaper.
      */
     desktopImage: string | null;
 
+    /**
+     * The ambient light level measured by this display's built-in sensor, in lux.
+Returns `null` if the display does not have an ambient light sensor or if the
+reading is currently unavailable.
+     */
+    readonly ambientLight: number | null;
+
 }
 
 /**
