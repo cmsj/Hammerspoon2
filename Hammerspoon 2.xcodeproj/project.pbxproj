@@ -16,6 +16,7 @@
 		4F947D922F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F947DA62F56404F00DD814E /* OSAKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F947DA52F56404F00DD814E /* OSAKit.framework */; };
 		4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 4FACE0032F12345678900000 /* JavaScriptCoreExtras */; };
+		4FBB01002F70123400DEAD01 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBB01012F70123400DEAD01 /* ScriptingBridge.framework */; };
 		4FCE0A032F00000000000003 /* CommandLineKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4FCE0A022F00000000000002 /* CommandLineKit */; };
 		4FE4C00C2F0000000000000C /* hs in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FE4C0012F00000000000001 /* hs */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -89,6 +90,7 @@
 		4F973B132EF9523A006A6709 /* index.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = index.njk; sourceTree = "<group>"; };
 		4F973B142EF9523A006A6709 /* module.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = module.njk; sourceTree = "<group>"; };
 		4F973B152EF9523A006A6709 /* type.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = type.njk; sourceTree = "<group>"; };
+		4FBB01012F70123400DEAD01 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		4FE4C0012F00000000000001 /* hs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -144,6 +146,7 @@
 				4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */,
 				4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */,
 				4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */,
+				4FBB01002F70123400DEAD01 /* ScriptingBridge.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,6 +216,7 @@
 			isa = PBXGroup;
 			children = (
 				4F947DA52F56404F00DD814E /* OSAKit.framework */,
+				4FBB01012F70123400DEAD01 /* ScriptingBridge.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

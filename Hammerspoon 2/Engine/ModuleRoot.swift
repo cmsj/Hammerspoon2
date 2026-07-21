@@ -82,6 +82,7 @@ import JavaScriptCoreExtras
     @objc var urlevent: HSURLEventModule { get }
     @objc var ipc: HSIPCModule { get }
     @objc var usb: HSUSBModule { get }
+    @objc var shortcuts: HSShortcutsModule { get }
     @objc var sound: HSSoundModule { get }
     @objc var network: HSNetworkModule { get }
     @objc var window: HSWindowModule { get }
@@ -191,6 +192,7 @@ import JavaScriptCoreExtras
     @objc var ipc: HSIPCModule { get { getOrCreate(name: "ipc", type: HSIPCModule.self)}}
     @objc var urlevent: HSURLEventModule { get { getOrCreate(name: "urlevent", type: HSURLEventModule.self)}}
     @objc var usb: HSUSBModule { get { getOrCreate(name: "usb", type: HSUSBModule.self)}}
+    @objc var shortcuts: HSShortcutsModule { get { getOrCreate(name: "shortcuts", type: HSShortcutsModule.self)}}
     @objc var sound: HSSoundModule { get { getOrCreate(name: "sound", type: HSSoundModule.self)}}
     @objc var network: HSNetworkModule { get { getOrCreate(name: "network", type: HSNetworkModule.self)}}
     @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
