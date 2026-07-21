@@ -77,9 +77,7 @@ struct HSFSXattrTests {
         @Test("xattrList on a real file returns an array")
         func testXattrListReturnsArray() {
             let sut = HSFSModule(engineID: UUID())
-            let result = sut.xattrList("/etc/hosts", nil)
-            #expect(result != nil)
-            #expect(result is [String])
+            #expect(sut.xattrList("/etc/hosts", nil) != nil)
         }
 
         @Test("xattrList on a non-existent path returns null")
@@ -247,13 +245,14 @@ struct HSFSXattrTests {
     @Suite("hs.fs xattr options tests")
     struct HSFSXattrOptionsTests {
 
-        @Test("unrecognized option is warned but does not crash")
-        func testUnrecognizedOption() throws {
+        @Test("unrecognized option causes the call to fail and return nil/false")
+        func testUnrecognizedOptionFails() throws {
             let sut = HSFSModule(engineID: UUID())
             let tmp = try TempXattrFile()
-            // Unrecognized options log a warning; the call still succeeds (falls through to no-option behavior)
-            let result = sut.xattrList(tmp.path, ["unknownOption"] as NSArray)
-            #expect(result != nil)
+            #expect(sut.xattrList(tmp.path, ["unknownOption"] as NSArray) == nil)
+            #expect(sut.xattrGet(tmp.path, "any.attr", ["unknownOption"] as NSArray, 0) == nil)
+            #expect(sut.xattrSet(tmp.path, "any.attr", "value", ["unknownOption"] as NSArray, 0) == false)
+            #expect(sut.xattrRemove(tmp.path, "any.attr", ["unknownOption"] as NSArray) == false)
         }
 
         @Test("nil options is treated as empty")

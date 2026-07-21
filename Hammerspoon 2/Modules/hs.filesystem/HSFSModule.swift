@@ -716,7 +716,7 @@ import UniformTypeIdentifiers
         }
     }
 
-    private func parseXattrOptions(_ options: NSArray?) -> Int32 {
+    private func parseXattrOptions(_ options: NSArray?) -> Int32? {
         guard let options = options else { return 0 }
         var flags: Int32 = 0
         for case let opt as String in options {
@@ -727,7 +727,9 @@ import UniformTypeIdentifiers
             case "replaceOnly":    flags |= XATTR_REPLACE
             case "noSecurity":     flags |= XATTR_NOSECURITY
             case "noDefault":      flags |= XATTR_NODEFAULT
-            default:               AKWarning("hs.fs xattr: unrecognized option '\(opt)'")
+            default:
+                AKError("hs.fs xattr: unrecognized option '\(opt)'")
+                return nil
             }
         }
         return flags
@@ -1202,7 +1204,7 @@ import UniformTypeIdentifiers
 
     @objc func xattrGet(_ path: String, _ attribute: String, _ options: NSArray?, _ position: Int) -> String? {
         let p = expand(path)
-        let flags = parseXattrOptions(options)
+        guard let flags = parseXattrOptions(options) else { return nil }
         let pos = UInt32(max(0, position))
 
         let size = unsafe Darwin.getxattr(p, attribute, nil, 0, pos, flags)
@@ -1227,7 +1229,7 @@ import UniformTypeIdentifiers
 
     @objc func xattrList(_ path: String, _ options: NSArray?) -> [String]? {
         let p = expand(path)
-        let flags = parseXattrOptions(options)
+        guard let flags = parseXattrOptions(options) else { return nil }
 
         let size = unsafe Darwin.listxattr(p, nil, 0, flags)
         if size < 0 {
@@ -1261,7 +1263,7 @@ import UniformTypeIdentifiers
 
     @objc func xattrSet(_ path: String, _ attribute: String, _ value: String, _ options: NSArray?, _ position: Int) -> Bool {
         let p = expand(path)
-        let flags = parseXattrOptions(options)
+        guard let flags = parseXattrOptions(options) else { return false }
         let pos = UInt32(max(0, position))
 
         guard let data = value.data(using: .isoLatin1) else {
@@ -1280,7 +1282,7 @@ import UniformTypeIdentifiers
 
     @objc func xattrRemove(_ path: String, _ attribute: String, _ options: NSArray?) -> Bool {
         let p = expand(path)
-        let flags = parseXattrOptions(options)
+        guard let flags = parseXattrOptions(options) else { return false }
         if unsafe Darwin.removexattr(p, attribute, flags) < 0 {
             AKError(unsafe "hs.fs.xattrRemove: \(String(cString: strerror(errno)))")
             return false
