@@ -33,9 +33,11 @@ BOOL HSScreenSetRotation(CGDirectDisplayID displayID, int degrees) {
 // MARK: - Ambient Light Sensor
 
 // Function pointer type matching copyPropertyForKey:andDisplay:'s signature.
-// Returned id is treated as autoreleased (+0), consistent with the Swift reference
-// implementation that used takeUnretainedValue().
-typedef id _Nullable (*DSCopyPropertyFn)(id _Nonnull, SEL _Nonnull, NSString * _Nonnull, uint64_t);
+// Returns void * rather than id so ARC does not insert a spurious retain on the
+// call site.  The method name starts with "copy" so it follows the Copy Rule and
+// returns a +1 retained object; we transfer ownership to ARC explicitly with
+// __bridge_transfer after the call.
+typedef void * _Nullable (*DSCopyPropertyFn)(id _Nonnull, SEL _Nonnull, NSString * _Nonnull, uint64_t);
 
 NSNumber *_Nullable HSScreenAmbientLight(CGDirectDisplayID displayID) {
     static id dsClient = nil;
@@ -65,12 +67,14 @@ NSNumber *_Nullable HSScreenAmbientLight(CGDirectDisplayID displayID) {
     if (!dsClient || !dsCopyFn) return nil;
 
     SEL sel = NSSelectorFromString(@"copyPropertyForKey:andDisplay:");
-    id result = nil;
+    void *rawResult = nil;
     @try {
-        result = (__bridge_transfer id)dsCopyFn(dsClient, sel, @"AggregatedLux", (uint64_t)displayID);
+        rawResult = dsCopyFn(dsClient, sel, @"AggregatedLux", (uint64_t)displayID);
     } @catch (...) {
         return nil;
     }
+    if (!rawResult) return nil;
+    id result = (__bridge_transfer id)rawResult;
 
     if (![result isKindOfClass:[NSNumber class]]) return nil;
     return (NSNumber *)result;
