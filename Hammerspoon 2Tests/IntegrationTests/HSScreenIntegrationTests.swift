@@ -5,7 +5,14 @@
 
 import Testing
 import JavaScriptCore
+import CoreGraphics
 @testable import Hammerspoon_2
+
+private nonisolated func hasScreens() -> Bool {
+    var count: UInt32 = 0
+    CGGetOnlineDisplayList(0, nil, &count)
+    return count > 0
+}
 
 /// Integration tests for hs.screen module.
 ///
@@ -355,7 +362,7 @@ struct HSScreenIntegrationTests {
 
     // MARK: - Ambient Light
 
-    @Test("ambientLight returns a number or null")
+    @Test("ambientLight returns a number or null", .disabled(if: !hasScreens(), "No screens available"))
     func testAmbientLight() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
@@ -365,7 +372,7 @@ struct HSScreenIntegrationTests {
         #expect(!harness.hasException)
     }
 
-    @Test("ambientLight is consistent across repeated reads")
+    @Test("ambientLight is consistent across repeated reads", .disabled(if: !hasScreens(), "No screens available"))
     func testAmbientLightConsistency() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
