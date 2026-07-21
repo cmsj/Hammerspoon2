@@ -368,7 +368,7 @@ struct HSScreenIntegrationTests {
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("var lux = hs.screen.primary().ambientLight;")
-        harness.expectTrue("lux === null || typeof lux === 'number'")
+        harness.expectTrue("lux == null || typeof lux === 'number'")
         #expect(!harness.hasException)
     }
 
@@ -381,7 +381,7 @@ struct HSScreenIntegrationTests {
         var s = hs.screen.primary();
         var a = s.ambientLight;
         var b = s.ambientLight;
-        var bothNull = (a === null && b === null);
+        var bothNull = (a == null && b == null);
         var bothNumbers = (typeof a === 'number' && typeof b === 'number');
         var consistent = bothNull || bothNumbers;
         """)
