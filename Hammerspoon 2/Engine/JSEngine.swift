@@ -61,6 +61,7 @@ class JSEngine {
         // This is our startup sequence - install all components in order
         do {
             try context.install([
+                .fetch,
                 ConsoleModuleInstaller(),      // console namespace
                 RequireInstaller(),            // require() function
                 TypeBridgesInstaller(),        // HSPoint, HSSize, HSRect, HSFont, HSAlert
