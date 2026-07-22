@@ -104,9 +104,14 @@
             _cache[resolved] = mod;
 
             if (resolved.endsWith('.json')) {
-                mod.exports = JSON.parse(src);
-                mod.loaded  = true;
-                return mod.exports;
+                try {
+                    mod.exports = JSON.parse(src);
+                    mod.loaded  = true;
+                    return mod.exports;
+                } catch (e) {
+                    delete _cache[resolved];
+                    throw e;
+                }
             }
 
             // Wrap in CommonJS function so each module gets its own scope.
