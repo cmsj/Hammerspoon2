@@ -93,6 +93,11 @@ class JSEngine {
             context.globalObject.deleteProperty("hs")
             context.globalObject.deleteProperty("console")
             context.globalObject.deleteProperty("require")
+            // Defensively remove require primitives in case require.js failed before its IIFE ran
+            context.globalObject.deleteProperty("_hs_readFile")
+            context.globalObject.deleteProperty("_hs_fileExists")
+            context.globalObject.deleteProperty("_hs_expandPath")
+            context.globalObject.deleteProperty("_hs_eval")
 
             // Force a synchronous full GC cycle (mark → sweep → finalize) before
             // tearing down the VM. JSC's concurrent GC defers ObjC bridge finalizers
@@ -199,26 +204,39 @@ extension JSEngine: JSEngineProtocol {
 
 struct RequireInstaller: JSContextInstallable {
     func install(in context: JSContext) throws {
-        let require: @convention(block) (String) -> (JSValue?) = { [weak context] path in
-            let expandedPath = NSString(string: path).expandingTildeInPath
+        // Four primitives used by require.js. They are captured in its IIFE closure
+        // and then deleted from global scope, so user code cannot reach them.
 
-            // Return void or throw an error here.
-            guard FileManager.default.fileExists(atPath: expandedPath) else {
-                AKError("require(): \(expandedPath) could not be found. Current working directory is \(FileManager.default.currentDirectoryPath)")
-                return nil
-            }
-
-            let fileURL = URL(fileURLWithPath: expandedPath)
-
-            guard let fileContent = try? String(contentsOfFile: expandedPath, encoding: .utf8) else {
-                AKError("require(): Unable to read \(expandedPath)")
-                return nil
-            }
-
-            return context?.evaluateScript(fileContent, withSourceURL: fileURL)
+        let readFile: @convention(block) (String) -> String? = { path in
+            let expanded = NSString(string: path).expandingTildeInPath
+            return try? String(contentsOfFile: expanded, encoding: .utf8)
         }
 
-        context.setObject(require, forKeyedSubscript: "require" as NSString)
+        let fileExists: @convention(block) (String) -> Bool = { path in
+            let expanded = NSString(string: path).expandingTildeInPath
+            var isDir: ObjCBool = false
+            let exists = FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir)
+            return exists && !isDir.boolValue
+        }
+
+        let expandPath: @convention(block) (String) -> String = { path in
+            NSString(string: path).expandingTildeInPath
+        }
+
+        let evalScript: @convention(block) (String, String) -> JSValue? = { [weak context] source, filename in
+            guard let context else { return nil }
+            return context.evaluateScript(source, withSourceURL: URL(fileURLWithPath: filename))
+        }
+
+        context.setObject(readFile,   forKeyedSubscript: "_hs_readFile"   as NSString)
+        context.setObject(fileExists, forKeyedSubscript: "_hs_fileExists" as NSString)
+        context.setObject(expandPath, forKeyedSubscript: "_hs_expandPath" as NSString)
+        context.setObject(evalScript, forKeyedSubscript: "_hs_eval"       as NSString)
+
+        guard let requireURL = Bundle.main.url(forResource: "require", withExtension: "js") else {
+            throw HammerspoonError(.vmCreation, msg: "require.js not found in bundle")
+        }
+        context.evaluateScript(try String(contentsOf: requireURL, encoding: .utf8), withSourceURL: requireURL)
     }
 }
 
