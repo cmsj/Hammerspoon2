@@ -46,6 +46,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		4F296C603010E91600705CD1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 12;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F947D932F563FCF00DD814E /* Embed XPC Services */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -95,6 +104,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4F296C5F3010E8F000705CD1 /* Exceptions for "Hammerspoon 2" folder in "Hammerspoon 2" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Modules/hs.task/README.md,
+				Modules/hs.ui/HS_UI_GUIDE.md,
+			);
+			target = 4F5641822E8333830099EB4C /* Hammerspoon 2 */;
+		};
 		4F947DA72F5640D100DD814E /* Exceptions for "HammerspoonOSAScriptHelper" folder in "HammerspoonOSAScriptHelper" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -111,9 +128,24 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		4F296C643010E96F00705CD1 /* Exceptions for "Hammerspoon 2" folder in "Copy Files" phase from "Hammerspoon 2" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 4F296C603010E91600705CD1 /* CopyFiles */;
+			membershipExceptions = (
+				UserAssets/seed-bundle.js,
+				UserAssets/seed-package.json,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4F5641852E8333830099EB4C /* Hammerspoon 2 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4F296C5F3010E8F000705CD1 /* Exceptions for "Hammerspoon 2" folder in "Hammerspoon 2" target */,
+				4F296C643010E96F00705CD1 /* Exceptions for "Hammerspoon 2" folder in "Copy Files" phase from "Hammerspoon 2" target */,
+			);
 			path = "Hammerspoon 2";
 			sourceTree = "<group>";
 		};
@@ -259,6 +291,7 @@
 				4F5641812E8333830099EB4C /* Resources */,
 				4F947D932F563FCF00DD814E /* Embed XPC Services */,
 				4FE4C00D2F0000000000000D /* Embed Tools */,
+				4F296C603010E91600705CD1 /* CopyFiles */,
 			);
 			buildRules = (
 			);

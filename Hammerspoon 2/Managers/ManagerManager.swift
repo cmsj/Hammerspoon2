@@ -53,15 +53,9 @@ class ManagerManager {
     func boot() throws {
         try engine.resetContext()
 
+        setupConfigDirectory()
+
         let configDir = settings.configLocation.deletingLastPathComponent()
-        var configDirExists = ObjCBool(booleanLiteral: false)
-        unsafe _ = fileSystem.fileExists(atPath: configDir.path, isDirectory: &configDirExists)
-
-        if !configDirExists.boolValue {
-            AKError("Configuration directory does not exist at: \(configDir.path)")
-            return
-        }
-
         FileManager.default.changeCurrentDirectoryPath(configDir.path)
 
         if !fileSystem.fileExists(atPath: settings.configLocation.path) {
@@ -69,6 +63,54 @@ class ManagerManager {
             return
         }
         try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
+    }
+
+    // Creates the config directory if absent, then seeds any bundled UserAsset
+    // files that are not already present (so user customisations are preserved).
+    private func setupConfigDirectory() {
+        let configDir = settings.configLocation.deletingLastPathComponent()
+        let fm = FileManager.default
+
+        guard !fileSystem.fileExists(atPath: configDir.path) else {
+            // Config directory exists, take no further action
+            return
+        }
+
+        do {
+            try fm.createDirectory(at: configDir, withIntermediateDirectories: true)
+            AKDebug("Created config directory: \(configDir.path)")
+        } catch {
+            AKError("Failed to create config directory at \(configDir.path): \(error.localizedDescription)")
+            return
+        }
+
+        guard let sharedSupport = Bundle.main.sharedSupportURL else {
+            AKError("Could not locate SharedSupport directory in bundle")
+            return
+        }
+
+        let seedFiles: [(bundleName: String, destName: String)] = [
+            ("seed-package.json", "package.json"),
+            ("seed-bundle.js",    "bundle.js"),
+        ]
+
+        for (bundleName, destName) in seedFiles {
+            let dest = configDir.appendingPathComponent(destName)
+            guard !fileSystem.fileExists(atPath: dest.path) else { continue }
+
+            let src = sharedSupport.appendingPathComponent(bundleName)
+            guard fileSystem.fileExists(atPath: src.path) else {
+                AKError("Seed file missing from bundle: \(bundleName)")
+                continue
+            }
+
+            do {
+                try fm.copyItem(at: src, to: dest)
+                AKDebug("Seeded \(destName) into config directory")
+            } catch {
+                AKError("Failed to copy \(destName) to config directory: \(error.localizedDescription)")
+            }
+        }
     }
 
     func shutdown() {
