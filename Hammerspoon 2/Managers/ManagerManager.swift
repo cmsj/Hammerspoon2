@@ -53,15 +53,9 @@ class ManagerManager {
     func boot() throws {
         try engine.resetContext()
 
+        setupConfigDirectory()
+
         let configDir = settings.configLocation.deletingLastPathComponent()
-        var configDirExists = ObjCBool(booleanLiteral: false)
-        unsafe _ = fileSystem.fileExists(atPath: configDir.path, isDirectory: &configDirExists)
-
-        if !configDirExists.boolValue {
-            AKError("Configuration directory does not exist at: \(configDir.path)")
-            return
-        }
-
         FileManager.default.changeCurrentDirectoryPath(configDir.path)
 
         if !fileSystem.fileExists(atPath: settings.configLocation.path) {
@@ -69,6 +63,45 @@ class ManagerManager {
             return
         }
         try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
+    }
+
+    // Creates the config directory if absent, then seeds any bundled UserAsset
+    // files that are not already present (so user customisations are preserved).
+    private func setupConfigDirectory() {
+        let configDir = settings.configLocation.deletingLastPathComponent()
+        let fm = FileManager.default
+
+        if !fileSystem.fileExists(atPath: configDir.path) {
+            do {
+                try fm.createDirectory(at: configDir, withIntermediateDirectories: true)
+                AKDebug("Created config directory: \(configDir.path)")
+            } catch {
+                AKError("Failed to create config directory at \(configDir.path): \(error.localizedDescription)")
+                return
+            }
+        }
+
+        let seedFiles: [(resource: String, ext: String)] = [
+            ("package", "json"),
+            ("bundle",  "js"),
+        ]
+
+        for (resource, ext) in seedFiles {
+            let dest = configDir.appendingPathComponent("\(resource).\(ext)")
+            guard !fileSystem.fileExists(atPath: dest.path) else { continue }
+
+            guard let src = Bundle.main.url(forResource: resource, withExtension: ext) else {
+                AKError("Seed file missing from bundle: \(resource).\(ext)")
+                continue
+            }
+
+            do {
+                try fm.copyItem(at: src, to: dest)
+                AKDebug("Seeded \(resource).\(ext) into config directory")
+            } catch {
+                AKError("Failed to copy \(resource).\(ext) to config directory: \(error.localizedDescription)")
+            }
+        }
     }
 
     func shutdown() {
