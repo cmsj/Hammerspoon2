@@ -482,6 +482,8 @@ extension JSTestHarness {
                 loadModule(HSShortcutsModule.self, as: name)
             case "ipc":
                 loadModule(HSIPCModule.self, as: name)
+            case "mouse":
+                loadModule(HSMouseModule.self, as: name)
             default:
                 print("⚠️ Unknown module: \(name)")
             }

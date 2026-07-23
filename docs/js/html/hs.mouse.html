@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.mouse - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.mouse</span>
+</nav>
+<div class="page-header">
+    <h1>hs.mouse</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Control and inspect the mouse pointer and attached mouse devices.</p>
+<h2>Position</h2>
+<p>All coordinates use <strong>Hammerspoon screen coordinates</strong>: <code>(0, 0)</code> is at the top-left
+of the primary display and <code>y</code> increases downward.</p>
+<pre><code class="language-js">const pos = hs.mouse.absolutePosition()
+console.log(&quot;Mouse at &quot; + pos.x + &quot;, &quot; + pos.y)
+
+hs.mouse.setAbsolutePosition(100, 200)
+</code></pre>
+<h2>Device info</h2>
+<pre><code class="language-js">console.log(&quot;Mice: &quot; + hs.mouse.count())
+hs.mouse.names().forEach(n =&gt; console.log(n))
+</code></pre>
+<h2>Cursor</h2>
+<pre><code class="language-js">console.log(hs.mouse.currentCursorType())   // e.g. &quot;arrow&quot;
+console.log(hs.mouse.scrollDirection())      // &quot;natural&quot; or &quot;normal&quot;
+</code></pre>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="absolutePosition">
+        <h3><a href="#absolutePosition">hs.mouse.absolutePosition() -> {[key: string]: number}</a></h3>
+
+        <div class="description">Returns the current mouse pointer position in Hammerspoon screen coordinates.
+Hammerspoon coordinates have `(0, 0)` at the top-left of the primary display,
+with `y` increasing downward.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.absolutePosition() -> {[key: string]: number}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: number}</div>
+        <div class="return-desc">An object with `x` and `y` number properties.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const pos = hs.mouse.absolutePosition()
+console.log(&quot;x=&quot; + pos.x + &quot; y=&quot; + pos.y)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L111" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:111</a>
+        </div>
+    </div>
+    <div class="method" id="setAbsolutePosition">
+        <h3><a href="#setAbsolutePosition">hs.mouse.setAbsolutePosition(x, y) -> None</a></h3>
+
+        <div class="description">Moves the mouse pointer to the specified absolute position in Hammerspoon screen coordinates.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.setAbsolutePosition(x, y) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal position; `0` is the left edge of the primary display.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical position; `0` is the top edge of the primary display.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.mouse.setAbsolutePosition(100, 200)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L121" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:121</a>
+        </div>
+    </div>
+    <div class="method" id="getRelativePosition">
+        <h3><a href="#getRelativePosition">hs.mouse.getRelativePosition() -> [String: Double]</a></h3>
+
+        <div class="description">Returns the mouse pointer position relative to the screen it is currently on.
+The returned coordinates have `(0, 0)` at the top-left corner of the screen
+that the cursor is on.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.getRelativePosition() -> [String: Double]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Double]</div>
+        <div class="return-desc">An object with `x` and `y` number properties, or `null` if no screen can be determined.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const rel = hs.mouse.getRelativePosition()
+if (rel) console.log(&quot;x=&quot; + rel.x + &quot; y=&quot; + rel.y)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L133" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:133</a>
+        </div>
+    </div>
+    <div class="method" id="setRelativePosition">
+        <h3><a href="#setRelativePosition">hs.mouse.setRelativePosition(x, y) -> None</a></h3>
+
+        <div class="description">Moves the mouse pointer to a position relative to the screen it is currently on.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.setRelativePosition(x, y) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal offset from the current screen&#39;s left edge.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical offset from the current screen&#39;s top edge.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.mouse.setRelativePosition(0, 0)  // move to top-left of current screen</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L143" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:143</a>
+        </div>
+    </div>
+    <div class="method" id="getCurrentScreen">
+        <h3><a href="#getCurrentScreen">hs.mouse.getCurrentScreen() -> HSScreen</a></h3>
+
+        <div class="description">Returns the screen that the mouse pointer is currently on.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.getCurrentScreen() -> HSScreen</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSScreen</div>
+        <div class="return-desc">An HSScreen object for the display containing the cursor, or `null` if none can be determined.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const s = hs.mouse.getCurrentScreen()
+if (s) console.log(&quot;Mouse is on: &quot; + s.name)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L155" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:155</a>
+        </div>
+    </div>
+    <div class="method" id="count">
+        <h3><a href="#count">hs.mouse.count(includeInternal) -> number</a></h3>
+
+        <div class="description">Returns the number of mouse devices currently attached to the system.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.count(includeInternal) -> number</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">includeInternal</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true`, built-in pointing devices (e.g. the MacBook built-in trackpad) are included. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The number of attached mouse devices.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(&quot;External mice: &quot; + hs.mouse.count())
+console.log(&quot;All pointing devices: &quot; + hs.mouse.count(true))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L168" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:168</a>
+        </div>
+    </div>
+    <div class="method" id="names">
+        <h3><a href="#names">hs.mouse.names(includeInternal) -> string[]</a></h3>
+
+        <div class="description">Returns the product names of all mouse devices currently attached to the system.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.names(includeInternal) -> string[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">includeInternal</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true`, built-in pointing devices are included. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string[]</div>
+        <div class="return-desc">An array of product name strings.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.mouse.names().forEach(n =&gt; console.log(n))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L178" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:178</a>
+        </div>
+    </div>
+    <div class="method" id="trackingSpeed">
+        <h3><a href="#trackingSpeed">hs.mouse.trackingSpeed() -> number</a></h3>
+
+        <div class="description">Returns the current mouse tracking speed (acceleration level).
+Values range from `-1.0` (system default, acceleration disabled) to `3.0` (maximum acceleration).
+Returns `-1.0` if the value cannot be read.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.trackingSpeed() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">The current tracking speed as a number.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(&quot;Tracking speed: &quot; + hs.mouse.trackingSpeed())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L191" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:191</a>
+        </div>
+    </div>
+    <div class="method" id="setTrackingSpeed">
+        <h3><a href="#setTrackingSpeed">hs.mouse.setTrackingSpeed(speed) -> None</a></h3>
+
+        <div class="description">Sets the mouse tracking speed (acceleration level).
+The change takes effect immediately for the current login session and is also persisted
+to preferences so it survives a restart.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.setTrackingSpeed(speed) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">speed</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Desired tracking speed in the range `-1.0` to `3.0`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.mouse.setTrackingSpeed(1.5)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L202" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:202</a>
+        </div>
+    </div>
+    <div class="method" id="scrollDirection">
+        <h3><a href="#scrollDirection">hs.mouse.scrollDirection() -> string</a></h3>
+
+        <div class="description">Returns the current scroll wheel direction setting.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.scrollDirection() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">`&quot;natural&quot;` if content scrolls in the same direction as the finger/wheel movement (macOS default), or `&quot;normal&quot;` for the traditional direction.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.mouse.scrollDirection())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L211" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:211</a>
+        </div>
+    </div>
+    <div class="method" id="currentCursorType">
+        <h3><a href="#currentCursorType">hs.mouse.currentCursorType() -> string</a></h3>
+
+        <div class="description">Returns the name of the cursor type currently set by this application.
+has the keyboard focus, the visible system cursor may differ.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.mouse.currentCursorType() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">A string such as `&quot;arrow&quot;`, `&quot;iBeam&quot;`, `&quot;crosshair&quot;`, `&quot;pointingHand&quot;`,</div>
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">This reflects the cursor set by the Hammerspoon process. If another application</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.mouse.currentCursorType())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L228" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:228</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.mouse');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

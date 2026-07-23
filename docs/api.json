@@ -10239,6 +10239,304 @@
       "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.title = \"Hello\"\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.title = \"Dynamic\"\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```"
     },
     {
+      "name": "hs.mouse",
+      "methods": [
+        {
+          "name": "absolutePosition",
+          "signature": "func absolutePosition() -> [String: Double]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the current mouse pointer position in Hammerspoon screen coordinates.\n\nHammerspoon coordinates have `(0, 0)` at the top-left of the primary display,\nwith `y` increasing downward.\n- Returns: An object with `x` and `y` number properties.\n- Example:\n```js\nconst pos = hs.mouse.absolutePosition()\nconsole.log(\"x=\" + pos.x + \" y=\" + pos.y)\n```",
+          "description": "Returns the current mouse pointer position in Hammerspoon screen coordinates.\nHammerspoon coordinates have `(0, 0)` at the top-left of the primary display,\nwith `y` increasing downward.",
+          "params": [],
+          "returns": {
+            "type": "Object<String, Double>",
+            "description": "An object with `x` and `y` number properties."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const pos = hs.mouse.absolutePosition()\nconsole.log(\"x=\" + pos.x + \" y=\" + pos.y)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 111
+        },
+        {
+          "name": "setAbsolutePosition",
+          "signature": "func setAbsolutePosition(_ x: Double, _ y: Double)",
+          "isStatic": false,
+          "rawDocumentation": "Moves the mouse pointer to the specified absolute position in Hammerspoon screen coordinates.\n\n- Parameter x: Horizontal position; `0` is the left edge of the primary display.\n- Parameter y: Vertical position; `0` is the top edge of the primary display.\n- Example:\n```js\nhs.mouse.setAbsolutePosition(100, 200)\n```",
+          "description": "Moves the mouse pointer to the specified absolute position in Hammerspoon screen coordinates.",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal position; `0` is the left edge of the primary display.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical position; `0` is the top edge of the primary display.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.mouse.setAbsolutePosition(100, 200)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 121
+        },
+        {
+          "name": "getRelativePosition",
+          "signature": "func getRelativePosition() -> [String: Double]?",
+          "isStatic": false,
+          "rawDocumentation": "Returns the mouse pointer position relative to the screen it is currently on.\n\nThe returned coordinates have `(0, 0)` at the top-left corner of the screen\nthat the cursor is on.\n- Returns: An object with `x` and `y` number properties, or `null` if no screen can be determined.\n- Example:\n```js\nconst rel = hs.mouse.getRelativePosition()\nif (rel) console.log(\"x=\" + rel.x + \" y=\" + rel.y)\n```",
+          "description": "Returns the mouse pointer position relative to the screen it is currently on.\nThe returned coordinates have `(0, 0)` at the top-left corner of the screen\nthat the cursor is on.",
+          "params": [],
+          "returns": {
+            "type": "Object<String, Double>",
+            "description": "An object with `x` and `y` number properties, or `null` if no screen can be determined."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const rel = hs.mouse.getRelativePosition()\nif (rel) console.log(\"x=\" + rel.x + \" y=\" + rel.y)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 133
+        },
+        {
+          "name": "setRelativePosition",
+          "signature": "func setRelativePosition(_ x: Double, _ y: Double)",
+          "isStatic": false,
+          "rawDocumentation": "Moves the mouse pointer to a position relative to the screen it is currently on.\n\n- Parameter x: Horizontal offset from the current screen's left edge.\n- Parameter y: Vertical offset from the current screen's top edge.\n- Example:\n```js\nhs.mouse.setRelativePosition(0, 0)  // move to top-left of current screen\n```",
+          "description": "Moves the mouse pointer to a position relative to the screen it is currently on.",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "description": "Horizontal offset from the current screen's left edge.",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Vertical offset from the current screen's top edge.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.mouse.setRelativePosition(0, 0)  // move to top-left of current screen"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 143
+        },
+        {
+          "name": "getCurrentScreen",
+          "signature": "func getCurrentScreen() -> HSScreen?",
+          "isStatic": false,
+          "rawDocumentation": "Returns the screen that the mouse pointer is currently on.\n\n- Returns: An HSScreen object for the display containing the cursor, or `null` if none can be determined.\n- Example:\n```js\nconst s = hs.mouse.getCurrentScreen()\nif (s) console.log(\"Mouse is on: \" + s.name)\n```",
+          "description": "Returns the screen that the mouse pointer is currently on.",
+          "params": [],
+          "returns": {
+            "type": "HSScreen",
+            "description": "An HSScreen object for the display containing the cursor, or `null` if none can be determined."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const s = hs.mouse.getCurrentScreen()\nif (s) console.log(\"Mouse is on: \" + s.name)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 155
+        },
+        {
+          "name": "count",
+          "signature": "func count(_ includeInternal: Bool) -> Int",
+          "isStatic": false,
+          "rawDocumentation": "Returns the number of mouse devices currently attached to the system.\n\n- Parameter includeInternal: When `true`, built-in pointing devices (e.g. the MacBook built-in trackpad) are included. Defaults to `false`.\n- Returns: The number of attached mouse devices.\n- Example:\n```js\nconsole.log(\"External mice: \" + hs.mouse.count())\nconsole.log(\"All pointing devices: \" + hs.mouse.count(true))\n```",
+          "description": "Returns the number of mouse devices currently attached to the system.",
+          "params": [
+            {
+              "name": "includeInternal",
+              "type": "boolean",
+              "description": "When `true`, built-in pointing devices (e.g. the MacBook built-in trackpad) are included. Defaults to `false`.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "number",
+            "description": "The number of attached mouse devices."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(\"External mice: \" + hs.mouse.count())\nconsole.log(\"All pointing devices: \" + hs.mouse.count(true))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 168
+        },
+        {
+          "name": "names",
+          "signature": "func names(_ includeInternal: Bool) -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the product names of all mouse devices currently attached to the system.\n\n- Parameter includeInternal: When `true`, built-in pointing devices are included. Defaults to `false`.\n- Returns: An array of product name strings.\n- Example:\n```js\nhs.mouse.names().forEach(n => console.log(n))\n```",
+          "description": "Returns the product names of all mouse devices currently attached to the system.",
+          "params": [
+            {
+              "name": "includeInternal",
+              "type": "boolean",
+              "description": "When `true`, built-in pointing devices are included. Defaults to `false`.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of product name strings."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.mouse.names().forEach(n => console.log(n))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 178
+        },
+        {
+          "name": "trackingSpeed",
+          "signature": "func trackingSpeed() -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Returns the current mouse tracking speed (acceleration level).\n\nValues range from `-1.0` (system default, acceleration disabled) to `3.0` (maximum acceleration).\nReturns `-1.0` if the value cannot be read.\n- Returns: The current tracking speed as a number.\n- Example:\n```js\nconsole.log(\"Tracking speed: \" + hs.mouse.trackingSpeed())\n```",
+          "description": "Returns the current mouse tracking speed (acceleration level).\nValues range from `-1.0` (system default, acceleration disabled) to `3.0` (maximum acceleration).\nReturns `-1.0` if the value cannot be read.",
+          "params": [],
+          "returns": {
+            "type": "number",
+            "description": "The current tracking speed as a number."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(\"Tracking speed: \" + hs.mouse.trackingSpeed())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 191
+        },
+        {
+          "name": "setTrackingSpeed",
+          "signature": "func setTrackingSpeed(_ speed: Double)",
+          "isStatic": false,
+          "rawDocumentation": "Sets the mouse tracking speed (acceleration level).\n\nThe change takes effect immediately for the current login session and is also persisted\nto preferences so it survives a restart.\n- Parameter speed: Desired tracking speed in the range `-1.0` to `3.0`.\n- Example:\n```js\nhs.mouse.setTrackingSpeed(1.5)\n```",
+          "description": "Sets the mouse tracking speed (acceleration level).\nThe change takes effect immediately for the current login session and is also persisted\nto preferences so it survives a restart.",
+          "params": [
+            {
+              "name": "speed",
+              "type": "number",
+              "description": "Desired tracking speed in the range `-1.0` to `3.0`.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.mouse.setTrackingSpeed(1.5)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 202
+        },
+        {
+          "name": "scrollDirection",
+          "signature": "func scrollDirection() -> String",
+          "isStatic": false,
+          "rawDocumentation": "Returns the current scroll wheel direction setting.\n\n- Returns: `\"natural\"` if content scrolls in the same direction as the finger/wheel movement (macOS default), or `\"normal\"` for the traditional direction.\n- Example:\n```js\nconsole.log(hs.mouse.scrollDirection())\n```",
+          "description": "Returns the current scroll wheel direction setting.",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "`\"natural\"` if content scrolls in the same direction as the finger/wheel movement (macOS default), or `\"normal\"` for the traditional direction."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.mouse.scrollDirection())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 211
+        },
+        {
+          "name": "currentCursorType",
+          "signature": "func currentCursorType() -> String",
+          "isStatic": false,
+          "rawDocumentation": "Returns the name of the cursor type currently set by this application.\n\n- Note: This reflects the cursor set by the Hammerspoon process. If another application\n  has the keyboard focus, the visible system cursor may differ.\n- Returns: A string such as `\"arrow\"`, `\"iBeam\"`, `\"crosshair\"`, `\"pointingHand\"`,\n  `\"openHand\"`, `\"closedHand\"`, `\"resizeLeft\"`, `\"resizeRight\"`, `\"resizeLeftRight\"`,\n  `\"resizeUp\"`, `\"resizeDown\"`, `\"resizeUpDown\"`, `\"operationNotAllowed\"`,\n  `\"dragLink\"`, `\"dragCopy\"`, `\"contextualMenu\"`,\n  `\"iBeamCursorForVerticalLayout\"`, or `\"unknown\"`.\n- Example:\n```js\nconsole.log(hs.mouse.currentCursorType())\n```",
+          "description": "Returns the name of the cursor type currently set by this application.\nhas the keyboard focus, the visible system cursor may differ.",
+          "params": [],
+          "returns": {
+            "type": "string",
+            "description": "A string such as `\"arrow\"`, `\"iBeam\"`, `\"crosshair\"`, `\"pointingHand\"`,"
+          },
+          "notes": [
+            "This reflects the cursor set by the Hammerspoon process. If another application"
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.mouse.currentCursorType())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
+          "lineNumber": 228
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Control and inspect the mouse pointer and attached mouse devices.\n## Position\nAll coordinates use **Hammerspoon screen coordinates**: `(0, 0)` is at the top-left\nof the primary display and `y` increases downward.\n```js\nconst pos = hs.mouse.absolutePosition()\nconsole.log(\"Mouse at \" + pos.x + \", \" + pos.y)\n\nhs.mouse.setAbsolutePosition(100, 200)\n```\n## Device info\n```js\nconsole.log(\"Mice: \" + hs.mouse.count())\nhs.mouse.names().forEach(n => console.log(n))\n```\n## Cursor\n```js\nconsole.log(hs.mouse.currentCursorType())   // e.g. \"arrow\"\nconsole.log(hs.mouse.scrollDirection())      // \"natural\" or \"normal\"\n```",
+      "rawDocumentation": "Control and inspect the mouse pointer and attached mouse devices.\n\n## Position\n\nAll coordinates use **Hammerspoon screen coordinates**: `(0, 0)` is at the top-left\nof the primary display and `y` increases downward.\n\n```js\nconst pos = hs.mouse.absolutePosition()\nconsole.log(\"Mouse at \" + pos.x + \", \" + pos.y)\n\nhs.mouse.setAbsolutePosition(100, 200)\n```\n\n## Device info\n\n```js\nconsole.log(\"Mice: \" + hs.mouse.count())\nhs.mouse.names().forEach(n => console.log(n))\n```\n\n## Cursor\n\n```js\nconsole.log(hs.mouse.currentCursorType())   // e.g. \"arrow\"\nconsole.log(hs.mouse.scrollDirection())      // \"natural\" or \"normal\"\n```"
+    },
+    {
       "name": "hs.network",
       "methods": [
         {
@@ -20909,5 +21207,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-21T20:33:35.487Z"
+  "generatedAt": "2026-07-23T10:47:17.128Z"
 }
