@@ -14,3 +14,25 @@
 #import <JavaScriptCore/JavaScriptCore.h>
 JS_EXPORT void JSSynchronousGarbageCollectForDebugging(JSContextRef ctx);
 
+// IOHIDGetAccelerationWithKey / IOHIDSetAccelerationWithKey were deprecated in macOS 10.12
+// but remain the only public API for reading and writing live mouse-acceleration values
+// for the current session. These wrappers silence the deprecation warnings so they can be
+// called from Swift without polluting the build log.
+#import <IOKit/hidsystem/IOHIDLib.h>
+
+static inline kern_return_t
+hs_IOHIDGetAccelerationWithKey(io_connect_t handle, CFStringRef key, double *acceleration) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return IOHIDGetAccelerationWithKey(handle, key, acceleration);
+#pragma clang diagnostic pop
+}
+
+static inline kern_return_t
+hs_IOHIDSetAccelerationWithKey(io_connect_t handle, CFStringRef key, double acceleration) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return IOHIDSetAccelerationWithKey(handle, key, acceleration);
+#pragma clang diagnostic pop
+}
+

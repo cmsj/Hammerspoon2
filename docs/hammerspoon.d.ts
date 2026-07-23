@@ -3746,6 +3746,112 @@ if you only want to temporarily remove the item without freeing it.
 }
 
 /**
+ * Control and inspect the mouse pointer and attached mouse devices.
+## Position
+All coordinates use **Hammerspoon screen coordinates**: `(0, 0)` is at the top-left
+of the primary display and `y` increases downward.
+```js
+const pos = hs.mouse.absolutePosition()
+console.log("Mouse at " + pos.x + ", " + pos.y)
+
+hs.mouse.setAbsolutePosition(100, 200)
+```
+## Device info
+```js
+console.log("Mice: " + hs.mouse.count())
+hs.mouse.names().forEach(n => console.log(n))
+```
+## Cursor
+```js
+console.log(hs.mouse.currentCursorType())   // e.g. "arrow"
+console.log(hs.mouse.scrollDirection())      // "natural" or "normal"
+```
+ */
+declare namespace hs.mouse {
+    /**
+     * Returns the current mouse pointer position in Hammerspoon screen coordinates.
+Hammerspoon coordinates have `(0, 0)` at the top-left of the primary display,
+with `y` increasing downward.
+     * @returns An object with `x` and `y` number properties.
+     */
+    function absolutePosition(): Record<string, number>;
+
+    /**
+     * Moves the mouse pointer to the specified absolute position in Hammerspoon screen coordinates.
+     * @param x Horizontal position; `0` is the left edge of the primary display.
+     * @param y Vertical position; `0` is the top edge of the primary display.
+     */
+    function setAbsolutePosition(x: number, y: number): void;
+
+    /**
+     * Returns the mouse pointer position relative to the screen it is currently on.
+The returned coordinates have `(0, 0)` at the top-left corner of the screen
+that the cursor is on.
+     * @returns An object with `x` and `y` number properties, or `null` if no screen can be determined.
+     */
+    function getRelativePosition(): Record<string, number> | null;
+
+    /**
+     * Moves the mouse pointer to a position relative to the screen it is currently on.
+     * @param x Horizontal offset from the current screen's left edge.
+     * @param y Vertical offset from the current screen's top edge.
+     */
+    function setRelativePosition(x: number, y: number): void;
+
+    /**
+     * Returns the screen that the mouse pointer is currently on.
+     * @returns An HSScreen object for the display containing the cursor, or `null` if none can be determined.
+     */
+    function getCurrentScreen(): HSScreen | null;
+
+    /**
+     * Returns the number of mouse devices currently attached to the system.
+     * @param includeInternal When `true`, built-in pointing devices (e.g. the MacBook built-in trackpad) are included. Defaults to `false`.
+     * @returns The number of attached mouse devices.
+     */
+    function count(includeInternal: boolean): number;
+
+    /**
+     * Returns the product names of all mouse devices currently attached to the system.
+     * @param includeInternal When `true`, built-in pointing devices are included. Defaults to `false`.
+     * @returns An array of product name strings.
+     */
+    function names(includeInternal: boolean): string[];
+
+    /**
+     * Returns the current mouse tracking speed (acceleration level).
+Values range from `-1.0` (system default, acceleration disabled) to `3.0` (maximum acceleration).
+Returns `-1.0` if the value cannot be read.
+     * @returns The current tracking speed as a number.
+     */
+    function trackingSpeed(): number;
+
+    /**
+     * Sets the mouse tracking speed (acceleration level).
+The change takes effect immediately for the current login session and is also persisted
+to preferences so it survives a restart. Values outside the valid range or non-finite
+values are rejected with a warning and no change is made.
+     * @param speed Desired tracking speed in the range `-1.0` to `3.0`.
+     */
+    function setTrackingSpeed(speed: number): void;
+
+    /**
+     * Returns the current scroll wheel direction setting.
+     * @returns `"natural"` if content scrolls in the same direction as the finger/wheel movement (macOS default), or `"normal"` for the traditional direction.
+     */
+    function scrollDirection(): string;
+
+    /**
+     * Returns the name of the cursor type currently set by this application.
+has the keyboard focus, the visible system cursor may differ.
+     * @remarks This reflects the cursor set by the Hammerspoon process. If another application
+     * @returns A string such as `"arrow"`, `"iBeam"`, `"crosshair"`, `"pointingHand"`,
+     */
+    function currentCursorType(): string;
+
+}
+
+/**
  * Module for inspecting network interfaces, resolving hostnames, and reading system configuration
  */
 declare namespace hs.network {
