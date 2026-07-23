@@ -3829,7 +3829,8 @@ Returns `-1.0` if the value cannot be read.
     /**
      * Sets the mouse tracking speed (acceleration level).
 The change takes effect immediately for the current login session and is also persisted
-to preferences so it survives a restart.
+to preferences so it survives a restart. Values outside the valid range or non-finite
+values are rejected with a warning and no change is made.
      * @param speed Desired tracking speed in the range `-1.0` to `3.0`.
      */
     function setTrackingSpeed(speed: number): void;

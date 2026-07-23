@@ -340,7 +340,8 @@ Returns `-1.0` if the value cannot be read.</div>
 
         <div class="description">Sets the mouse tracking speed (acceleration level).
 The change takes effect immediately for the current login session and is also persisted
-to preferences so it survives a restart.</div>
+to preferences so it survives a restart. Values outside the valid range or non-finite
+values are rejected with a warning and no change is made.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.mouse.setTrackingSpeed(speed) -> None</code></pre>
@@ -371,7 +372,7 @@ to preferences so it survives a restart.</div>
         <pre><code class="language-js">hs.mouse.setTrackingSpeed(1.5)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L202" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:202</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L203" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:203</a>
         </div>
     </div>
     <div class="method" id="scrollDirection">
@@ -392,7 +393,7 @@ to preferences so it survives a restart.</div>
         <pre><code class="language-js">console.log(hs.mouse.scrollDirection())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L211" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:211</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L212" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:212</a>
         </div>
     </div>
     <div class="method" id="currentCursorType">
@@ -416,7 +417,7 @@ has the keyboard focus, the visible system cursor may differ.</div>
         <pre><code class="language-js">console.log(hs.mouse.currentCursorType())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L228" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:228</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.mouse/HSMouseModule.swift#L229" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift:229</a>
         </div>
     </div>
         </main>

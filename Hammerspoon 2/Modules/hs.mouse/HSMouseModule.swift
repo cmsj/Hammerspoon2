@@ -193,7 +193,8 @@ private func openHIDEventDriver() -> io_connect_t {
     /// Sets the mouse tracking speed (acceleration level).
     ///
     /// The change takes effect immediately for the current login session and is also persisted
-    /// to preferences so it survives a restart.
+    /// to preferences so it survives a restart. Values outside the valid range or non-finite
+    /// values are rejected with a warning and no change is made.
     /// - Parameter speed: Desired tracking speed in the range `-1.0` to `3.0`.
     /// - Example:
     /// ```js
@@ -323,6 +324,10 @@ private func openHIDEventDriver() -> io_connect_t {
     }
 
     @objc func setTrackingSpeed(_ speed: Double) {
+        guard speed.isFinite && speed >= -1.0 && speed <= 3.0 else {
+            AKWarning("hs.mouse.setTrackingSpeed(): speed must be in the range -1.0 to 3.0 (got \(speed))")
+            return
+        }
         let connect = openHIDEventDriver()
         guard connect != IO_OBJECT_NULL else {
             AKWarning("hs.mouse.setTrackingSpeed(): Failed to open HID event driver")

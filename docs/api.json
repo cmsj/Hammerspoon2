@@ -10461,8 +10461,8 @@
           "name": "setTrackingSpeed",
           "signature": "func setTrackingSpeed(_ speed: Double)",
           "isStatic": false,
-          "rawDocumentation": "Sets the mouse tracking speed (acceleration level).\n\nThe change takes effect immediately for the current login session and is also persisted\nto preferences so it survives a restart.\n- Parameter speed: Desired tracking speed in the range `-1.0` to `3.0`.\n- Example:\n```js\nhs.mouse.setTrackingSpeed(1.5)\n```",
-          "description": "Sets the mouse tracking speed (acceleration level).\nThe change takes effect immediately for the current login session and is also persisted\nto preferences so it survives a restart.",
+          "rawDocumentation": "Sets the mouse tracking speed (acceleration level).\n\nThe change takes effect immediately for the current login session and is also persisted\nto preferences so it survives a restart. Values outside the valid range or non-finite\nvalues are rejected with a warning and no change is made.\n- Parameter speed: Desired tracking speed in the range `-1.0` to `3.0`.\n- Example:\n```js\nhs.mouse.setTrackingSpeed(1.5)\n```",
+          "description": "Sets the mouse tracking speed (acceleration level).\nThe change takes effect immediately for the current login session and is also persisted\nto preferences so it survives a restart. Values outside the valid range or non-finite\nvalues are rejected with a warning and no change is made.",
           "params": [
             {
               "name": "speed",
@@ -10482,7 +10482,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
-          "lineNumber": 202
+          "lineNumber": 203
         },
         {
           "name": "scrollDirection",
@@ -10504,7 +10504,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
-          "lineNumber": 211
+          "lineNumber": 212
         },
         {
           "name": "currentCursorType",
@@ -10528,7 +10528,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.mouse/HSMouseModule.swift",
-          "lineNumber": 228
+          "lineNumber": 229
         }
       ],
       "properties": [],
@@ -21207,5 +21207,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-23T10:47:17.128Z"
+  "generatedAt": "2026-07-23T12:34:00.014Z"
 }
