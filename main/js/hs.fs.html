@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.fs - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.fs</span>
+</nav>
+<div class="page-header">
+    <h1>hs.fs</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Module for filesystem operations.</p>
+<p><code>hs.fs</code> provides a comprehensive set of filesystem operations covering file
+I/O, directory management, path manipulation, metadata access, symbolic
+links, Finder tags, and macOS-specific features like file bookmarks and
+Uniform Type Identifiers.</p>
+<p>It replaces both Hammerspoon v1&#39;s <code>hs.fs</code> module and the functionality that
+was previously available through Lua&#39;s built-in <code>io</code> and <code>file</code> modules.</p>
+<h2>Reading and writing files</h2>
+<pre><code class="language-javascript">const contents = hs.fs.read(&quot;/etc/hosts&quot;);           // entire file
+const chunk    = hs.fs.read(&quot;/etc/hosts&quot;, 100, 50);  // 50 bytes from offset 100
+
+hs.fs.readLines(&quot;/etc/hosts&quot;, function(line) {
+    console.log(line);
+    return true; // return false to stop early
+});
+
+hs.fs.write(&quot;/tmp/hello.txt&quot;, &quot;Hello, world!\n&quot;);
+hs.fs.append(&quot;/tmp/hello.txt&quot;, &quot;More content\n&quot;);
+</code></pre>
+<h2>Directory operations</h2>
+<pre><code class="language-javascript">hs.fs.mkdir(&quot;~/Projects/new-thing&quot;);
+
+const files = hs.fs.list(&quot;~/Documents&quot;);
+const all   = hs.fs.listRecursive(&quot;~/Documents&quot;);
+</code></pre>
+<h2>Path utilities</h2>
+<pre><code class="language-javascript">const abs  = hs.fs.pathToAbsolute(&quot;~/Library&quot;);
+const tmp  = hs.fs.temporaryDirectory();
+const home = hs.fs.homeDirectory();
+</code></pre>
+<h2>Metadata</h2>
+<pre><code class="language-javascript">const info = hs.fs.attributes(&quot;/etc/hosts&quot;);
+// { size: 1234, type: &quot;file&quot;, permissions: 420,
+//   ownerID: 0, groupID: 0,
+//   creationDate: 1700000000.0, modificationDate: 1700001000.0 }
+</code></pre>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSVolumeWatcher.html">HSVolumeWatcher</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="read">
+        <h3><a href="#read">hs.fs.read(path, offset, length) -> string</a></h3>
+
+        <div class="description">Read part or all of a file as a UTF-8 string.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.read(path, offset, length) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">offset</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Byte offset to start reading from. Pass `0` (or omit) to read from the beginning.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">length</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Maximum number of bytes to read. Pass `0` (or omit) to read to the end of the file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The file contents as a UTF-8 string, or `null` if the file cannot be read.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const all   = hs.fs.read(&quot;/etc/hosts&quot;)            // entire file
+const chunk = hs.fs.read(&quot;/etc/hosts&quot;, 100, 50)   // 50 bytes starting at byte 100</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L80" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:80</a>
+        </div>
+    </div>
+    <div class="method" id="readLines">
+        <h3><a href="#readLines">hs.fs.readLines(path, callback) -> boolean</a></h3>
+
+        <div class="description">Read a file line-by-line, invoking a callback for each line.
+Lines are delivered with newline characters stripped. Both `&#92;n` and `&#92;r&#92;n` line endings are handled.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.readLines(path, callback) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.readLines(&quot;/etc/hosts&quot;, (line) =&gt; {
+    if (line.startsWith(&quot;#&quot;)) return true
+    console.log(line)
+    return true
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L98" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:98</a>
+        </div>
+    </div>
+    <div class="method" id="write">
+        <h3><a href="#write">hs.fs.write(path, content, inPlace) -> boolean</a></h3>
+
+        <div class="description">Write a UTF-8 string to a file, creating it or overwriting any existing content.
+Intermediate directories are not created automatically; use `mkdir` first if needed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.write(path, content, inPlace) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">content</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">String to write.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">inPlace</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Whether to write the file in-place or atomically. Defaults to atomically (false).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.write(&quot;/tmp/hello.txt&quot;, &quot;Hello, world!&#92;n&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L113" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:113</a>
+        </div>
+    </div>
+    <div class="method" id="append">
+        <h3><a href="#append">hs.fs.append(path, content) -> boolean</a></h3>
+
+        <div class="description">Append a UTF-8 string to a file, creating it if it does not exist.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.append(path, content) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">content</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">String to append.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.append(&quot;/tmp/log.txt&quot;, &quot;another line&#92;n&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L125" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:125</a>
+        </div>
+    </div>
+    <div class="method" id="exists">
+        <h3><a href="#exists">hs.fs.exists(path) -> boolean</a></h3>
+
+        <div class="description">Determine if a filesystem object exists at the given path
+Unlike `isFile` and `isDirectory`, this follows symlinks.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.exists(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to check. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if any filesystem entry (file, directory, symlink, etc.) exists at the path.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">if (hs.fs.exists(&quot;/tmp/file.txt&quot;)) console.log(&quot;exists&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:138</a>
+        </div>
+    </div>
+    <div class="method" id="isFile">
+        <h3><a href="#isFile">hs.fs.isFile(path) -> boolean</a></h3>
+
+        <div class="description">Determine if a file exists at the given path
+This does **not** follow symlinks; a symlink pointing at a file returns `false`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.isFile(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to check. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if a regular file (not a directory or symlink) exists at the path.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.isFile(&quot;/etc/hosts&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L149" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:149</a>
+        </div>
+    </div>
+    <div class="method" id="isDirectory">
+        <h3><a href="#isDirectory">hs.fs.isDirectory(path) -> boolean</a></h3>
+
+        <div class="description">Determine if a directory exists at the given path
+This does **not** follow symlinks; a symlink pointing at a directory returns `false`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.isDirectory(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to check. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if a directory exists at the path.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.isDirectory(&quot;/tmp&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L160" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:160</a>
+        </div>
+    </div>
+    <div class="method" id="isSymlink">
+        <h3><a href="#isSymlink">hs.fs.isSymlink(path) -> boolean</a></h3>
+
+        <div class="description">Determine if a symlink exists at the given path</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.isSymlink(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to check. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the path is a symbolic link.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.isSymlink(&quot;/var&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L170" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:170</a>
+        </div>
+    </div>
+    <div class="method" id="isReadable">
+        <h3><a href="#isReadable">hs.fs.isReadable(path) -> boolean</a></h3>
+
+        <div class="description">Determine if a given filesystem path is readable</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.isReadable(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to check. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the current process can read the file or directory at the path.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.isReadable(&quot;/etc/hosts&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L180" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:180</a>
+        </div>
+    </div>
+    <div class="method" id="isWritable">
+        <h3><a href="#isWritable">hs.fs.isWritable(path) -> boolean</a></h3>
+
+        <div class="description">Determine if a given filesystem path is writable</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.isWritable(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to check. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the current process can write to the file or directory at the path.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.isWritable(&quot;/tmp&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L190" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:190</a>
+        </div>
+    </div>
+    <div class="method" id="copy">
+        <h3><a href="#copy">hs.fs.copy(source, destination) -> boolean</a></h3>
+
+        <div class="description">Copy a file or directory to a new location.
+The destination must not already exist. If `source` is a directory, its
+entire contents are copied recursively.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.copy(source, destination) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the existing file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">destination</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path for the copy. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.copy(&quot;/tmp/a.txt&quot;, &quot;/tmp/b.txt&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L207" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:207</a>
+        </div>
+    </div>
+    <div class="method" id="move">
+        <h3><a href="#move">hs.fs.move(source, destination) -> boolean</a></h3>
+
+        <div class="description">Move (rename) a file or directory.
+The destination must not already exist.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.move(source, destination) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the existing file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">destination</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">New path. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.move(&quot;/tmp/old.txt&quot;, &quot;/tmp/new.txt&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L221" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:221</a>
+        </div>
+    </div>
+    <div class="method" id="deletePath">
+        <h3><a href="#deletePath">hs.fs.deletePath(path) -> boolean</a></h3>
+
+        <div class="description">Delete a file or directory at the given path.
+Directories are removed recursively. To remove only an empty directory,
+use `rmdir` instead.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.deletePath(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to delete. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.deletePath(&quot;/tmp/old.txt&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L234" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:234</a>
+        </div>
+    </div>
+    <div class="method" id="list">
+        <h3><a href="#list">hs.fs.list(path) -> [String]</a></h3>
+
+        <div class="description">List the immediate contents of a directory.
+Returns bare filenames (not full paths), sorted alphabetically.
+The `.` and `..` entries are never included.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.list(path) -> [String]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the directory. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String]</div>
+        <div class="return-desc">Sorted array of filenames, or `null` if the path cannot be read.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const files = hs.fs.list(&quot;~/Documents&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L249" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:249</a>
+        </div>
+    </div>
+    <div class="method" id="listRecursive">
+        <h3><a href="#listRecursive">hs.fs.listRecursive(path) -> [String]</a></h3>
+
+        <div class="description">Recursively list all entries under a directory.
+Returns paths relative to `path`, sorted alphabetically.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.listRecursive(path) -> [String]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the root directory. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String]</div>
+        <div class="return-desc">Sorted array of relative paths, or `null` if the path cannot be read.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const all = hs.fs.listRecursive(&quot;~/Documents&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L261" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:261</a>
+        </div>
+    </div>
+    <div class="method" id="mkdir">
+        <h3><a href="#mkdir">hs.fs.mkdir(path) -> boolean</a></h3>
+
+        <div class="description">Create a directory, including all necessary intermediate directories.
+Succeeds silently if the directory already exists.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.mkdir(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path of the directory to create. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.mkdir(&quot;~/Projects/new-thing&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L273" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:273</a>
+        </div>
+    </div>
+    <div class="method" id="rmdir">
+        <h3><a href="#rmdir">hs.fs.rmdir(path) -> boolean</a></h3>
+
+        <div class="description">Remove an empty directory.
+Fails if the directory is not empty. Use `deletePath` to remove a non-empty
+directory recursively.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.rmdir(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path of the directory to remove. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.rmdir(&quot;/tmp/empty-dir&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L286" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:286</a>
+        </div>
+    </div>
+    <div class="method" id="currentDir">
+        <h3><a href="#currentDir">hs.fs.currentDir() -> string</a></h3>
+
+        <div class="description">Returns the current working directory of the process.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.currentDir() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">Current directory path, or `null` on error.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.currentDir())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L297" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:297</a>
+        </div>
+    </div>
+    <div class="method" id="chdir">
+        <h3><a href="#chdir">hs.fs.chdir(path) -> boolean</a></h3>
+
+        <div class="description">Change the current working directory of the process.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.chdir(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">New working directory path. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.chdir(&quot;~/Projects&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L307" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:307</a>
+        </div>
+    </div>
+    <div class="method" id="pathToAbsolute">
+        <h3><a href="#pathToAbsolute">hs.fs.pathToAbsolute(path) -> string</a></h3>
+
+        <div class="description">Resolve a path to its absolute, canonical form.
+Expands `~`, resolves `.` and `..`, and follows all symbolic links.
+Returns `null` if any component of the path does not exist.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.pathToAbsolute(path) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to resolve.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">Absolute canonical path, or `null` if it cannot be resolved.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.pathToAbsolute(&quot;~/Library&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L322" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:322</a>
+        </div>
+    </div>
+    <div class="method" id="displayName">
+        <h3><a href="#displayName">hs.fs.displayName(path) -> string</a></h3>
+
+        <div class="description">Return the localised display name for a file or directory as shown by Finder.
+For example, `/Library` appears as `&quot;Library&quot;` in Finder even though its
+on-disk name is the same.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.displayName(path) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">Display name string, or `null` if the path does not exist.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.displayName(&quot;/Library&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L335" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:335</a>
+        </div>
+    </div>
+    <div class="method" id="temporaryDirectory">
+        <h3><a href="#temporaryDirectory">hs.fs.temporaryDirectory() -> string</a></h3>
+
+        <div class="description">Returns the temporary directory for the current user.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.temporaryDirectory() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">Temporary directory path (always ends with `/`).</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.temporaryDirectory())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L344" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:344</a>
+        </div>
+    </div>
+    <div class="method" id="homeDirectory">
+        <h3><a href="#homeDirectory">hs.fs.homeDirectory() -> string</a></h3>
+
+        <div class="description">Returns the home directory for the current user.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.homeDirectory() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">Home directory path string.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.homeDirectory())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L353" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:353</a>
+        </div>
+    </div>
+    <div class="method" id="urlFromPath">
+        <h3><a href="#urlFromPath">hs.fs.urlFromPath(path) -> string</a></h3>
+
+        <div class="description">Returns a `file://` URL string for the given path.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.urlFromPath(path) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Filesystem path. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">URL string</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.urlFromPath(&quot;/tmp/foo.txt&quot;))
+// → &quot;file:///tmp/foo.txt&quot;</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L364" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:364</a>
+        </div>
+    </div>
+    <div class="method" id="attributes">
+        <h3><a href="#attributes">hs.fs.attributes(path) -> [String: Any]</a></h3>
+
+        <div class="description">Get metadata attributes for a file or directory.
+Does not follow symbolic links. Use `isSymlink` to detect links before calling this if needed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.attributes(path) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to inspect. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">Attributes object, or `null` if the path cannot be accessed.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const info = hs.fs.attributes(&quot;/etc/hosts&quot;)
+console.log(info.size, info.type)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L389" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:389</a>
+        </div>
+    </div>
+    <div class="method" id="touch">
+        <h3><a href="#touch">hs.fs.touch(path) -> boolean</a></h3>
+
+        <div class="description">Update the modification timestamp of a file to the current time.
+Creates the file if it does not exist (equivalent to the POSIX `touch` command).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.touch(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.touch(&quot;/tmp/marker.txt&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L401" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:401</a>
+        </div>
+    </div>
+    <div class="method" id="link">
+        <h3><a href="#link">hs.fs.link(source, destination) -> boolean</a></h3>
+
+        <div class="description">Create a hard link at `destination` pointing at `source`.
+Both paths must be on the same filesystem volume.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.link(source, destination) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path of the existing file.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">destination</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path for the new hard link.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.link(&quot;/tmp/a.txt&quot;, &quot;/tmp/b.txt&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L417" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:417</a>
+        </div>
+    </div>
+    <div class="method" id="symlink">
+        <h3><a href="#symlink">hs.fs.symlink(source, destination) -> boolean</a></h3>
+
+        <div class="description">Create a symbolic link at `destination` pointing at `source`.
+Unlike hard links, symlinks may cross filesystem boundaries and may
+point to paths that do not yet exist.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.symlink(source, destination) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path the symlink will point to.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">destination</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path where the symlink will be created.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.symlink(&quot;/usr/local/bin&quot;, &quot;/tmp/bin-link&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L432" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:432</a>
+        </div>
+    </div>
+    <div class="method" id="readlink">
+        <h3><a href="#readlink">hs.fs.readlink(path) -> string</a></h3>
+
+        <div class="description">Read the target of a symbolic link without resolving it.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.readlink(path) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the symbolic link.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The raw path the link points to, or `null` if the path is not a symlink.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.readlink(&quot;/var&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L442" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:442</a>
+        </div>
+    </div>
+    <div class="method" id="tags">
+        <h3><a href="#tags">hs.fs.tags(path) -> [String]</a></h3>
+
+        <div class="description">Get the Finder tags assigned to a file or directory.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.tags(path) -> [String]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String]</div>
+        <div class="return-desc">Array of tag name strings, or `null` if no tags are set.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.fs.tags(&quot;~/Documents/report.pdf&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L454" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:454</a>
+        </div>
+    </div>
+    <div class="method" id="fileUTI">
+        <h3><a href="#fileUTI">hs.fs.fileUTI(path) -> string</a></h3>
+
+        <div class="description">Replace all Finder tags on a file or directory.
+This function is only available on macOS Tahoe (26) or later.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.fileUTI(path) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.setTags(&quot;~/Documents/report.pdf&quot;, [&quot;Important&quot;, &quot;Work&quot;])</code></pre>
+        <pre><code class="language-js">hs.fs.addTags(&quot;~/Documents/report.pdf&quot;, [&quot;Reviewed&quot;])</code></pre>
+        <pre><code class="language-js">hs.fs.removeTags(&quot;~/Documents/report.pdf&quot;, [&quot;Draft&quot;])</code></pre>
+        <pre><code class="language-js">console.log(hs.fs.fileUTI(&quot;/etc/hosts&quot;))    // → &quot;public.plain-text&quot;
+console.log(hs.fs.fileUTI(&quot;/tmp/foo.png&quot;))  // → &quot;public.png&quot;</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L508" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:508</a>
+        </div>
+    </div>
+    <div class="method" id="pathToBookmark">
+        <h3><a href="#pathToBookmark">hs.fs.pathToBookmark(path) -> string</a></h3>
+
+        <div class="description">Encode a file path as a persistent bookmark that survives file moves and renames.
+The returned string is base64-encoded bookmark data that can be stored and
+later resolved with `pathFromBookmark`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.pathToBookmark(path) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">Base64-encoded bookmark string, or `null` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const data = hs.fs.pathToBookmark(&quot;/tmp/foo.txt&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L523" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:523</a>
+        </div>
+    </div>
+    <div class="method" id="pathFromBookmark">
+        <h3><a href="#pathFromBookmark">hs.fs.pathFromBookmark(data) -> string</a></h3>
+
+        <div class="description">Resolve a base64-encoded bookmark back to a file path.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.pathFromBookmark(data) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">data</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Base64-encoded bookmark string produced by `pathToBookmark`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The current file path, or `null` if the bookmark cannot be resolved.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const path = hs.fs.pathFromBookmark(savedData)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L533" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:533</a>
+        </div>
+    </div>
+    <div class="method" id="volumes">
+        <h3><a href="#volumes">hs.fs.volumes(showHidden) -> [String: Any]</a></h3>
+
+        <div class="description">Return information about all currently mounted filesystem volumes.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.volumes(showHidden) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">showHidden</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` to include hidden volumes. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">Object keyed by mount path, or `null` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const vols = hs.fs.volumes()
+for (const [path, info] of Object.entries(vols)) {
+    console.log(path + &quot; — &quot; + info.name)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L561" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:561</a>
+        </div>
+    </div>
+    <div class="method" id="ejectVolume">
+        <h3><a href="#ejectVolume">hs.fs.ejectVolume(path) -> boolean</a></h3>
+
+        <div class="description">Unmount and eject the volume at the given path.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.ejectVolume(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The mount path of the volume to eject. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the volume was ejected successfully, `false` otherwise.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const ok = hs.fs.ejectVolume(&quot;/Volumes/MyDisk&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L571" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:571</a>
+        </div>
+    </div>
+    <div class="method" id="addVolumeWatcher">
+        <h3><a href="#addVolumeWatcher">hs.fs.addVolumeWatcher() -> HSVolumeWatcher</a></h3>
+
+        <div class="description">Create a new volume event watcher.
+Call `setCallback()` and `start()` on the returned object to begin receiving
+volume mount/unmount/rename events.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.addVolumeWatcher() -> HSVolumeWatcher</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSVolumeWatcher</div>
+        <div class="return-desc">An `HSVolumeWatcher` object.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const w = hs.fs.addVolumeWatcher()
+w.setCallback((event, info) =&gt; {
+    console.log(event + &quot;: &quot; + info.path)
+}).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L586" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:586</a>
+        </div>
+    </div>
+    <div class="method" id="removeVolumeWatcher">
+        <h3><a href="#removeVolumeWatcher">hs.fs.removeVolumeWatcher(watcher) -> None</a></h3>
+
+        <div class="description">Stop and destroy a volume watcher previously created with `addVolumeWatcher`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.removeVolumeWatcher(watcher) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">watcher</td>
+                    <td class="param-type">HSVolumeWatcher</td>
+                    <td class="param-desc">The watcher to remove.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const w = hs.fs.addVolumeWatcher()
+// ... later ...
+hs.fs.removeVolumeWatcher(w)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L597" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:597</a>
+        </div>
+    </div>
+    <div class="method" id="xattrGet">
+        <h3><a href="#xattrGet">hs.fs.xattrGet(path, attribute, options, position) -> string</a></h3>
+
+        <div class="description">Get the value of an extended attribute for a file or directory.
+Attribute values are returned as ISO Latin-1 encoded strings so that arbitrary byte
+sequences are represented without loss. ASCII text attribute values appear readable as-is.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.xattrGet(path, attribute, options, position) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">attribute</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Name of the extended attribute.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">NSArray</td>
+                    <td class="param-desc">Array of option strings: `&quot;noFollow&quot;` (do not follow symlinks), `&quot;hfsCompression&quot;`, `&quot;createOnly&quot;`, `&quot;replaceOnly&quot;`, `&quot;noSecurity&quot;`, `&quot;noDefault&quot;`. Pass an empty array or omit to use no options.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">position</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `&quot;com.apple.ResourceFork&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The attribute value as a string, `&quot;&quot;` if the attribute exists but contains no data, or `null` if the attribute does not exist or an error occurs.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const quarantine = hs.fs.xattrGet(&quot;/path/to/file.dmg&quot;, &quot;com.apple.quarantine&quot;)
+if (quarantine !== null) console.log(&quot;quarantine: &quot; + quarantine)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L617" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:617</a>
+        </div>
+    </div>
+    <div class="method" id="xattrList">
+        <h3><a href="#xattrList">hs.fs.xattrList(path, options) -> [String]</a></h3>
+
+        <div class="description">List all extended attributes defined for a file or directory.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.xattrList(path, options) -> [String]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">NSArray</td>
+                    <td class="param-desc">Array of option strings. Pass an empty array or omit to use no options.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String]</div>
+        <div class="return-desc">Array of attribute name strings (may be empty), or `null` on error.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const attrs = hs.fs.xattrList(&quot;/path/to/file.dmg&quot;)
+if (attrs) attrs.forEach(a =&gt; console.log(a))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L630" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:630</a>
+        </div>
+    </div>
+    <div class="method" id="xattrSet">
+        <h3><a href="#xattrSet">hs.fs.xattrSet(path, attribute, value, options, position) -> boolean</a></h3>
+
+        <div class="description">Set the value of an extended attribute for a file or directory.
+The value is written as ISO Latin-1 bytes, providing a lossless round-trip with
+`xattrGet`. Plain ASCII strings work directly without any encoding.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.xattrSet(path, attribute, value, options, position) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">attribute</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Name of the extended attribute.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The value to write.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">NSArray</td>
+                    <td class="param-desc">Array of option strings: `&quot;noFollow&quot;`, `&quot;hfsCompression&quot;`, `&quot;createOnly&quot;`, `&quot;replaceOnly&quot;`, `&quot;noSecurity&quot;`, `&quot;noDefault&quot;`. Pass an empty array or omit to use no options.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">position</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Byte offset within the attribute data. Defaults to `0`. Non-zero values are only valid for `&quot;com.apple.ResourceFork&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.xattrSet(&quot;/path/to/file.txt&quot;, &quot;com.example.origin&quot;, &quot;https://example.com&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L648" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:648</a>
+        </div>
+    </div>
+    <div class="method" id="xattrRemove">
+        <h3><a href="#xattrRemove">hs.fs.xattrRemove(path, attribute, options) -> boolean</a></h3>
+
+        <div class="description">Remove an extended attribute from a file or directory.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.xattrRemove(path, attribute, options) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file or directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">attribute</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Name of the extended attribute to remove.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">NSArray</td>
+                    <td class="param-desc">Array of option strings: `&quot;noFollow&quot;`, `&quot;hfsCompression&quot;`. Pass an empty array or omit to use no options.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure (including if the attribute does not exist).</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.fs.xattrRemove(&quot;/path/to/file.dmg&quot;, &quot;com.apple.quarantine&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L661" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:661</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.fs');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

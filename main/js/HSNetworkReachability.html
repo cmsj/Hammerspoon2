@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSNetworkReachability - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSNetworkReachability</span>
+</nav>
+<div class="page-header">
+    <h1>HSNetworkReachability</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>An active or inactive network reachability monitor. Create with <code>hs.network.reachability*()</code>.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="typeName">
+        <h3><a href="#typeName">typeName</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">Always `&quot;HSNetworkReachability&quot;`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkReachability.swift#L75" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift:75</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="status">
+        <h3>
+<a href="#status">status() -> number</a>
+        </h3>
+
+        <div class="description">Returns the current reachability flags as a numeric bitmask.
+Compare against constants in `hs.network.reachabilityFlags`. Returns `0` if the
+network is currently unreachable.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">status() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">A number representing the current reachability bitmask.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.network.reachabilityInternet()
+const f = hs.network.reachabilityFlags
+console.log(&quot;Reachable: &quot; + ((r.status() &amp; f.reachable) !== 0))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkReachability.swift#L88" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift:88</a>
+        </div>
+    </div>
+    <div class="method" id="statusString">
+        <h3>
+<a href="#statusString">statusString() -> string</a>
+        </h3>
+
+        <div class="description">Returns a human-readable summary of the current reachability flags.
+The string contains 8 characters in order: `t` (transient/expensive), `R` (reachable),
+`c` (connectionRequired), `C` (connectionOnTraffic — always `-`), `i` (interventionRequired/constrained),
+`D` (connectionOnDemand — always `-`), `l` (isLocalAddress — always `-`), `d` (isDirect).
+A letter appears when that flag is set; `-` appears when it is clear.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">statusString() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">An 8-character flag string such as `&quot;-R-----d&quot;`.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.network.reachabilityInternet()
+console.log(r.statusString())  // e.g. &quot;-R-----d&quot;</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkReachability.swift#L102" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift:102</a>
+        </div>
+    </div>
+    <div class="method" id="setCallback">
+        <h3>
+<a href="#setCallback">setCallback(callback) -> HSNetworkReachability</a>
+        </h3>
+
+        <div class="description">Replaces the callback invoked when reachability changes.
+The callback receives `(reachability, flags)` where `flags` is the same numeric
+bitmask as returned by `status()`. Call `start()` after `setCallback()` to begin
+monitoring.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCallback(callback) -> HSNetworkReachability</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called on each reachability status change.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">This reachability object for chaining.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.reachabilityInternet()
+  .setCallback((r, flags) =&gt; console.log(r.statusString()))
+  .start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkReachability.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift:117</a>
+        </div>
+    </div>
+    <div class="method" id="start">
+        <h3>
+<a href="#start">start() -> HSNetworkReachability</a>
+        </h3>
+
+        <div class="description">Starts monitoring for reachability changes.
+After calling `start()`, the callback registered with `setCallback()` is invoked
+whenever the reachability status changes.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">start() -> HSNetworkReachability</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">This reachability object for chaining.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.reachabilityInternet()
+  .setCallback((r, flags) =&gt; console.log(r.statusString()))
+  .start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkReachability.swift#L130" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift:130</a>
+        </div>
+    </div>
+    <div class="method" id="stop">
+        <h3>
+<a href="#stop">stop() -> HSNetworkReachability</a>
+        </h3>
+
+        <div class="description">Stops monitoring for reachability changes.
+The callback will no longer be invoked. Call `start()` again to resume monitoring.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">stop() -> HSNetworkReachability</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">This reachability object for chaining.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">r.stop()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkReachability.swift#L140" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkReachability.swift:140</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSNetworkReachability');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

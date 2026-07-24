@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.network - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.network</span>
+</nav>
+<div class="page-header">
+    <h1>hs.network</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Module for inspecting network interfaces, resolving hostnames, and reading system configuration</p>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSNetworkConfigurationWatcher.html">HSNetworkConfigurationWatcher</a>
+    </li>
+    <li>
+        <a href="HSNetworkPing.html">HSNetworkPing</a>
+    </li>
+    <li>
+        <a href="HSNetworkReachability.html">HSNetworkReachability</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="reachabilityFlags">
+        <h3><a href="#reachabilityFlags">hs.network.reachabilityFlags</a></h3>
+        <div class="prop-type">{[key: string]: number}</div>
+        <div class="description">A dictionary of named flag constants for use with `HSNetworkReachability.status()`.
+Compare individual bits against these constants to determine which network conditions apply.
+The numeric values match the deprecated `SCNetworkReachabilityFlags` for backward compatibility.
+Keys: `transientConnection`, `reachable`, `connectionRequired`, `connectionOnTraffic`,
+`interventionRequired`, `connectionOnDemand`, `isLocalAddress`, `isDirect`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L169" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:169</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="interfaces">
+        <h3><a href="#interfaces">hs.network.interfaces() -> [[String: Any]]</a></h3>
+
+        <div class="description">Returns all network interfaces present on this system.
+Each object contains `name` (string), `isLoopback` (boolean), `isUp` (boolean), and `isRunning` (boolean). A `displayName` string is included when the system provides a human-readable label for the interface (e.g. `&quot;Wi-Fi&quot;` or `&quot;Ethernet&quot;`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.interfaces() -> [[String: Any]]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[[String: Any]]</div>
+        <div class="return-desc">An array of objects describing each network interface.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const ifaces = hs.network.interfaces()
+ifaces.forEach(i =&gt; console.log(i.name + &quot;: &quot; + (i.displayName || &quot;(no display name)&quot;)))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:117</a>
+        </div>
+    </div>
+    <div class="method" id="primaryInterface">
+        <h3><a href="#primaryInterface">hs.network.primaryInterface() -> string</a></h3>
+
+        <div class="description">Returns the name of the primary network interface, i.e. the one currently providing the default route.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.primaryInterface() -> string</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The BSD interface name (e.g. `&quot;en0&quot;`), or `null` if no primary interface can be determined.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const primary = hs.network.primaryInterface()
+console.log(&quot;Primary interface: &quot; + primary)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L127" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:127</a>
+        </div>
+    </div>
+    <div class="method" id="addresses">
+        <h3><a href="#addresses">hs.network.addresses() -> [[String: Any]]</a></h3>
+
+        <div class="description">Returns all IP addresses assigned to this host.
+Each object contains `interface` (the BSD name of the interface), `address` (the address string), and `family` (`&quot;ipv4&quot;` or `&quot;ipv6&quot;`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.addresses() -> [[String: Any]]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[[String: Any]]</div>
+        <div class="return-desc">An array of address objects.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const addrs = hs.network.addresses()
+addrs.filter(a =&gt; a.family === &#39;ipv4&#39;).forEach(a =&gt; console.log(a.interface + &quot;: &quot; + a.address))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:138</a>
+        </div>
+    </div>
+    <div class="method" id="resolve">
+        <h3><a href="#resolve">hs.network.resolve(hostname, family) -> Promise&lt;string[]&gt;</a></h3>
+
+        <div class="description">Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.
+Uses CFHost, which respects the system&#39;s network configuration including VPN routes and proxy settings.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.resolve(hostname, family) -> Promise&lt;string[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">hostname</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The hostname to resolve (e.g. `&quot;example.com&quot;` or `&quot;localhost&quot;`).</td>
+                </tr>
+                <tr>
+                    <td class="param-name">family</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The address family to query: `&quot;ipv4&quot;` for A records only, `&quot;ipv6&quot;` for AAAA records only, or `&quot;both&quot;` to return all addresses. Defaults to `&quot;both&quot;` when omitted.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;string[]&gt;</div>
+        <div class="return-desc">A Promise that resolves to an array of IP address strings, or rejects with an error message if the lookup fails.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.resolve(&quot;example.com&quot;).then(addrs =&gt; {
+    addrs.forEach(a =&gt; console.log(a))
+})
+hs.network.resolve(&quot;example.com&quot;, &quot;ipv4&quot;).then(addrs =&gt; console.log(&quot;IPv4: &quot; + addrs[0]))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L153" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:153</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityForAddress">
+        <h3><a href="#reachabilityForAddress">hs.network.reachabilityForAddress(address) -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for a specific IP address.
+Returns `null` if `address` is not a valid IPv4 or IPv6 address literal.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-address targeting.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityForAddress(address) -> HSNetworkReachability</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">address</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An IPv4 or IPv6 address string (e.g. `&quot;192.168.1.1&quot;` or `&quot;::1&quot;`).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor, or `null` if the address is invalid.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.network.reachabilityForAddress(&quot;8.8.8.8&quot;)
+r?.setCallback((obj, flags) =&gt; console.log(obj.statusString())).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L183" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:183</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityForAddressPair">
+        <h3><a href="#reachabilityForAddressPair">hs.network.reachabilityForAddressPair(localAddress, remoteAddress) -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for a source/destination IP address pair.
+Returns `null` if either address is not a valid IPv4 or IPv6 address literal.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-address targeting.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityForAddressPair(localAddress, remoteAddress) -> HSNetworkReachability</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">localAddress</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An IPv4 or IPv6 source address string.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">remoteAddress</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An IPv4 or IPv6 destination address string.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor, or `null` if either address is invalid.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.network.reachabilityForAddressPair(&quot;0.0.0.0&quot;, &quot;8.8.8.8&quot;)
+r?.setCallback((obj, flags) =&gt; console.log(obj.statusString())).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L198" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:198</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityForHostName">
+        <h3><a href="#reachabilityForHostName">hs.network.reachabilityForHostName(hostName) -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for a given hostname.
+Returns `null` if `hostName` is empty.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not support per-hostname targeting.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityForHostName(hostName) -> HSNetworkReachability</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">hostName</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A hostname string (e.g. `&quot;example.com&quot;`).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor, or `null` if `hostName` is empty.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.network.reachabilityForHostName(&quot;example.com&quot;)
+r?.setCallback((obj, flags) =&gt; console.log(obj.statusString())).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L212" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:212</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityInternet">
+        <h3><a href="#reachabilityInternet">hs.network.reachabilityInternet() -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for general internet connectivity.
+This is the most common factory method. Use it when you want to know whether the
+device currently has a working internet connection.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityInternet() -> HSNetworkReachability</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.reachabilityInternet()
+  .setCallback((r, flags) =&gt; console.log(r.statusString()))
+  .start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L225" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:225</a>
+        </div>
+    </div>
+    <div class="method" id="reachabilityLinkLocal">
+        <h3><a href="#reachabilityLinkLocal">hs.network.reachabilityLinkLocal() -> HSNetworkReachability</a></h3>
+
+        <div class="description">Creates a reachability monitor for link-local connectivity.
+Link-local addresses cover the `169.254.x.x` (IPv4) and `fe80::/10` (IPv6) ranges
+used for direct device-to-device communication without a router.
+Under the hood this monitors general system connectivity (the same as `reachabilityInternet()`),
+because `NWPathMonitor` does not distinguish link-local reachability.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.reachabilityLinkLocal() -> HSNetworkReachability</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkReachability</div>
+        <div class="return-desc">A new `HSNetworkReachability` monitor.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.reachabilityLinkLocal()
+  .setCallback((r, flags) =&gt; console.log(r.statusString()))
+  .start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L240" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:240</a>
+        </div>
+    </div>
+    <div class="method" id="configurationStore">
+        <h3><a href="#configurationStore">hs.network.configurationStore(pattern) -> {[key: string]: any}</a></h3>
+
+        <div class="description">Returns the contents of the macOS System Configuration dynamic store as a dictionary.
+The store holds live network configuration for the running system — interface addresses,
+routing, DNS servers, proxy settings, VPN state, and more. Keys follow a hierarchical
+path convention (e.g. `&quot;State:/Network/Global/IPv4&quot;`).
+Omit or pass `null` to return all keys (equivalent to `&quot;.*&quot;`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.configurationStore(pattern) -> {[key: string]: any}</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">pattern</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">An optional regular expression that filters which keys are included.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: any}</div>
+        <div class="return-desc">A dictionary mapping key strings to their current values. Values may be</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">// Dump everything
+console.log(JSON.stringify(hs.network.configurationStore()))
+
+// Filter to network state
+const state = hs.network.configurationStore(&quot;State:/Network/.*&quot;)
+console.log(state[&quot;State:/Network/Global/IPv4&quot;])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L263" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:263</a>
+        </div>
+    </div>
+    <div class="method" id="configurationLocations">
+        <h3><a href="#configurationLocations">hs.network.configurationLocations() -> {[key: string]: string}</a></h3>
+
+        <div class="description">Returns a mapping of all configured network location UUIDs to their display names.
+Use this to discover available locations before calling `configurationSetLocation()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.configurationLocations() -> {[key: string]: string}</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">{[key: string]: string}</div>
+        <div class="return-desc">A dictionary mapping UUID strings to human-readable location names.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const locs = hs.network.configurationLocations()
+Object.entries(locs).forEach(([uuid, name]) =&gt; console.log(uuid + &quot;: &quot; + name))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L274" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:274</a>
+        </div>
+    </div>
+    <div class="method" id="configurationSetLocation">
+        <h3><a href="#configurationSetLocation">hs.network.configurationSetLocation(location) -> boolean</a></h3>
+
+        <div class="description">Switches the active network location to the one with the given name or UUID.
+Pass the location&#39;s display name (e.g. `&quot;Home&quot;`) or its UUID from `configurationLocations()`.
+The change is applied immediately. Returns `false` if the location was not found or
+the preferences could not be committed (e.g. insufficient privileges).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.configurationSetLocation(location) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">location</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A location display name or UUID string.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the location was changed successfully, `false` otherwise.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">if (!hs.network.configurationSetLocation(&quot;Home&quot;)) {
+  console.log(&quot;Failed to switch to Home location&quot;)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L289" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:289</a>
+        </div>
+    </div>
+    <div class="method" id="configurationWatcher">
+        <h3><a href="#configurationWatcher">hs.network.configurationWatcher() -> HSNetworkConfigurationWatcher</a></h3>
+
+        <div class="description">Creates a watcher that fires a callback when System Configuration dynamic store keys change.
+Call `setKeys()` to specify which keys (or patterns) to watch, `setCallback()` to register
+the handler, then `start()` to begin monitoring. The module automatically stops and
+destroys all watchers on `hs.reload()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.configurationWatcher() -> HSNetworkConfigurationWatcher</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkConfigurationWatcher</div>
+        <div class="return-desc">A new `HSNetworkConfigurationWatcher` object.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.configurationWatcher()
+  .setKeys([&quot;State:/Network/Global/.*&quot;], true)
+  .setCallback((w, keys) =&gt; console.log(&quot;Changed: &quot; + keys.join(&quot;, &quot;)))
+  .start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L304" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:304</a>
+        </div>
+    </div>
+    <div class="method" id="ping">
+        <h3><a href="#ping">hs.network.ping(server, options) -> HSNetworkPing</a></h3>
+
+        <div class="description">Sends ICMP Echo Requests to `server` and reports results via a callback.
+DNS resolution and the first ping begin immediately. The returned object can be used to
+pause, resume, or cancel the ping, and to read statistics.
+`timeout` (seconds per packet, default 2.0), `family` (`&quot;any&quot;` | `&quot;ipv4&quot;` | `&quot;ipv6&quot;`, default `&quot;any&quot;`),
+and `callback` (function).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.network.ping(server, options) -> HSNetworkPing</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">server</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A hostname or IP address to ping.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A callback function or options object. Optional.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSNetworkPing</div>
+        <div class="return-desc">An `HSNetworkPing` object, or `null` if the arguments are invalid.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.network.ping(&quot;8.8.8.8&quot;, (ping, event, info) =&gt; {
+  if (event === &quot;receivedPacket&quot;) {
+    console.log(&quot;seq &quot; + info.sequenceNumber + &quot; rtt=&quot; + (info.rtt * 1000).toFixed(1) + &quot;ms&quot;)
+  } else if (event === &quot;didFinish&quot;) {
+    console.log(ping.summary())
+  }
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.network/HSNetworkModule.swift#L340" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift:340</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.network');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
