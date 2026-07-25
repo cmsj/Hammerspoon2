@@ -13079,7 +13079,7 @@
           "name": "toFile",
           "signature": "func toFile(_ path: String, _ data: [String: Any], _ binary: Bool) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Write a JavaScript object to a plist file on disk.\n\nKeys must be strings. Values may be strings, numbers, booleans, arrays, or\nnested objects. JavaScript null values are not plist-compatible and will cause\nthe write to fail.\n\n- Parameters:\n  - path: Destination file path\n  - data: A JavaScript object to serialize as a property list\n  - binary: If true, write binary plist format; if false (default), write XML plist format\n- Returns: true if the file was written successfully\n- Example:\n```js\nhs.plist.toFile(\"/tmp/test.plist\", { name: \"Hammerspoon\", version: 2 })\nhs.plist.toFile(\"/tmp/test.plist\", { name: \"Hammerspoon\" }, true)\n```",
+          "rawDocumentation": "Write a JavaScript object to a plist file on disk.\n\nKeys must be strings. Values may be strings, numbers, booleans, arrays, or\nnested objects. JavaScript null values are not plist-compatible and will cause\nthe write to fail.\n\n- Parameters:\n  - path: Destination file path\n  - data: A JavaScript object to serialize as a property list\n  - binary?: If true, write binary plist format; if false (default), write XML plist format\n- Returns: true if the file was written successfully\n- Example:\n```js\nhs.plist.toFile(\"/tmp/test.plist\", { name: \"Hammerspoon\", version: 2 })\nhs.plist.toFile(\"/tmp/test.plist\", { name: \"Hammerspoon\" }, true)\n```",
           "description": "Write a JavaScript object to a plist file on disk.\nKeys must be strings. Values may be strings, numbers, booleans, arrays, or\nnested objects. JavaScript null values are not plist-compatible and will cause\nthe write to fail.",
           "params": [
             {
@@ -13100,7 +13100,7 @@
               "name": "binary",
               "type": "boolean",
               "description": "If true, write binary plist format; if false (default), write XML plist format",
-              "optional": false,
+              "optional": true,
               "tsType": null
             }
           ],
@@ -13123,7 +13123,7 @@
           "name": "toString",
           "signature": "func toString(_ data: [String: Any], _ binary: Bool) -> String?",
           "isStatic": false,
-          "rawDocumentation": "Serialize a JavaScript object to a plist string.\n\nWith binary set to false (default), returns an XML plist string suitable for\nstoring in text files or passing to `readString`. With binary set to true,\nreturns a base64-encoded binary plist string.\n\n- Parameters:\n  - data: A JavaScript object to serialize as a property list\n  - binary: If true, produce base64-encoded binary plist output; if false (default), produce an XML string\n- Returns: The serialized plist string, or null if serialization failed\n- Example:\n```js\nconst xml = hs.plist.toString({ name: \"Hammerspoon\", version: 2 })\nconst b64 = hs.plist.toString({ name: \"Hammerspoon\" }, true)\n```",
+          "rawDocumentation": "Serialize a JavaScript object to a plist string.\n\nWith binary set to false (default), returns an XML plist string suitable for\nstoring in text files or passing to `readString`. With binary set to true,\nreturns a base64-encoded binary plist string.\n\n- Parameters:\n  - data: A JavaScript object to serialize as a property list\n  - binary?: If true, produce base64-encoded binary plist output; if false (default), produce an XML string\n- Returns: The serialized plist string, or null if serialization failed\n- Example:\n```js\nconst xml = hs.plist.toString({ name: \"Hammerspoon\", version: 2 })\nconst b64 = hs.plist.toString({ name: \"Hammerspoon\" }, true)\n```",
           "description": "Serialize a JavaScript object to a plist string.\nWith binary set to false (default), returns an XML plist string suitable for\nstoring in text files or passing to `readString`. With binary set to true,\nreturns a base64-encoded binary plist string.",
           "params": [
             {
@@ -13137,7 +13137,7 @@
               "name": "binary",
               "type": "boolean",
               "description": "If true, produce base64-encoded binary plist output; if false (default), produce an XML string",
-              "optional": false,
+              "optional": true,
               "tsType": null
             }
           ],
@@ -21357,5 +21357,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-25T21:07:58.664Z"
+  "generatedAt": "2026-07-25T21:19:01.556Z"
 }

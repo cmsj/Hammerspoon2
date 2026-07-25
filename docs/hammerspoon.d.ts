@@ -4910,7 +4910,7 @@ the write to fail.
      * @param binary If true, write binary plist format; if false (default), write XML plist format
      * @returns true if the file was written successfully
      */
-    function toFile(path: string, data: Record<string, any>, binary: boolean): boolean;
+    function toFile(path: string, data: Record<string, any>, binary?: boolean): boolean;
 
     /**
      * Serialize a JavaScript object to a plist string.
@@ -4921,7 +4921,7 @@ returns a base64-encoded binary plist string.
      * @param binary If true, produce base64-encoded binary plist output; if false (default), produce an XML string
      * @returns The serialized plist string, or null if serialization failed
      */
-    function toString(data: Record<string, any>, binary: boolean): string | null;
+    function toString(data: Record<string, any>, binary?: boolean): string | null;
 
 }
 

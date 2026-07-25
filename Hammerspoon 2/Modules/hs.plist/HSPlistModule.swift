@@ -64,7 +64,7 @@ import JavaScriptCore
     /// - Parameters:
     ///   - path: Destination file path
     ///   - data: A JavaScript object to serialize as a property list
-    ///   - binary: If true, write binary plist format; if false (default), write XML plist format
+    ///   - binary?: If true, write binary plist format; if false (default), write XML plist format
     /// - Returns: true if the file was written successfully
     /// - Example:
     /// ```js
@@ -81,7 +81,7 @@ import JavaScriptCore
     ///
     /// - Parameters:
     ///   - data: A JavaScript object to serialize as a property list
-    ///   - binary: If true, produce base64-encoded binary plist output; if false (default), produce an XML string
+    ///   - binary?: If true, produce base64-encoded binary plist output; if false (default), produce an XML string
     /// - Returns: The serialized plist string, or null if serialization failed
     /// - Example:
     /// ```js
