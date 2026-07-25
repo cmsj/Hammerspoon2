@@ -4877,6 +4877,55 @@ resolve immediately with the previously granted or denied state.
 }
 
 /**
+ * Module for reading and writing macOS property list (plist) files.
+Property lists are a structured data format used extensively on Apple platforms
+for storing configuration, preferences, and serialized data. This module supports
+both XML and binary plist formats.
+ */
+declare namespace hs.plist {
+    /**
+     * Read a plist file and return its contents as a JavaScript value.
+Supports both XML and binary plist formats. Returns a JavaScript object for
+dictionary-rooted plists, an array for array-rooted plists, or a string or
+number for scalar-rooted plists.
+     * @param path Path to the plist file
+     * @returns The plist contents, or null if the file could not be read or parsed
+     */
+    function fromFile(path: string): any;
+
+    /**
+     * Read a plist from an XML string and return its contents as a JavaScript value.
+     * @param plistString An XML plist string
+     * @returns The plist contents, or null if the string could not be parsed
+     */
+    function fromString(plistString: string): any;
+
+    /**
+     * Write a JavaScript object to a plist file on disk.
+Keys must be strings. Values may be strings, numbers, booleans, arrays, or
+nested objects. JavaScript null values are not plist-compatible and will cause
+the write to fail.
+     * @param path Destination file path
+     * @param data A JavaScript object to serialize as a property list
+     * @param binary If true, write binary plist format; if false (default), write XML plist format
+     * @returns true if the file was written successfully
+     */
+    function toFile(path: string, data: Record<string, any>, binary: boolean): boolean;
+
+    /**
+     * Serialize a JavaScript object to a plist string.
+With binary set to false (default), returns an XML plist string suitable for
+storing in text files or passing to `readString`. With binary set to true,
+returns a base64-encoded binary plist string.
+     * @param data A JavaScript object to serialize as a property list
+     * @param binary If true, produce base64-encoded binary plist output; if false (default), produce an XML string
+     * @returns The serialized plist string, or null if serialization failed
+     */
+    function toString(data: Record<string, any>, binary: boolean): string | null;
+
+}
+
+/**
  * Monitor and control system power: prevent sleep, read battery state, respond to
 power events, and lock or sleep the machine.
 ## Preventing sleep

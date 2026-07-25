@@ -87,6 +87,7 @@ import JavaScriptCoreExtras
     @objc var network: HSNetworkModule { get }
     @objc var window: HSWindowModule { get }
     @objc var mouse: HSMouseModule { get }
+    @objc var plist: HSPlistModule { get }
 }
 
 @_documentation(visibility: private)
@@ -198,6 +199,7 @@ import JavaScriptCoreExtras
     @objc var network: HSNetworkModule { get { getOrCreate(name: "network", type: HSNetworkModule.self)}}
     @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
     @objc var mouse: HSMouseModule { get { getOrCreate(name: "mouse", type: HSMouseModule.self)}}
+    @objc var plist: HSPlistModule { get { getOrCreate(name: "plist", type: HSPlistModule.self)}}
 }
 
 // MARK: - JSContextInstallable

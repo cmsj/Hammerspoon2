@@ -13013,6 +13013,156 @@
       "rawDocumentation": "Module for checking and requesting system permissions"
     },
     {
+      "name": "hs.plist",
+      "methods": [
+        {
+          "name": "fromFile",
+          "signature": "func fromFile(_ path: String) -> NSObject?",
+          "isStatic": false,
+          "rawDocumentation": "Read a plist file and return its contents as a JavaScript value.\n\nSupports both XML and binary plist formats. Returns a JavaScript object for\ndictionary-rooted plists, an array for array-rooted plists, or a string or\nnumber for scalar-rooted plists.\n\n- Parameter path: Path to the plist file\n- Returns: {any} The plist contents, or null if the file could not be read or parsed\n- Example:\n```js\nconst prefs = hs.plist.fromFile(\"/Users/me/Library/Preferences/com.example.app.plist\")\nconsole.log(prefs.SomeKey)\n```",
+          "description": "Read a plist file and return its contents as a JavaScript value.\nSupports both XML and binary plist formats. Returns a JavaScript object for\ndictionary-rooted plists, an array for array-rooted plists, or a string or\nnumber for scalar-rooted plists.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "Path to the plist file",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "The plist contents, or null if the file could not be read or parsed"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const prefs = hs.plist.fromFile(\"/Users/me/Library/Preferences/com.example.app.plist\")\nconsole.log(prefs.SomeKey)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.plist/HSPlistModule.swift",
+          "lineNumber": 42
+        },
+        {
+          "name": "fromString",
+          "signature": "func fromString(_ plistString: String) -> NSObject?",
+          "isStatic": false,
+          "rawDocumentation": "Read a plist from an XML string and return its contents as a JavaScript value.\n\n- Parameter plistString: An XML plist string\n- Returns: {any} The plist contents, or null if the string could not be parsed\n- Example:\n```js\nconst xml = '<?xml version=\"1.0\" encoding=\"UTF-8\"?>' +\n    '<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">' +\n    '<plist version=\"1.0\"><dict><key>Name</key><string>Test</string></dict></plist>'\nconst data = hs.plist.fromString(xml)\nconsole.log(data.Name)\n```",
+          "description": "Read a plist from an XML string and return its contents as a JavaScript value.",
+          "params": [
+            {
+              "name": "plistString",
+              "type": "string",
+              "description": "An XML plist string",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "The plist contents, or null if the string could not be parsed"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const xml = '<?xml version=\"1.0\" encoding=\"UTF-8\"?>' +\n    '<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">' +\n    '<plist version=\"1.0\"><dict><key>Name</key><string>Test</string></dict></plist>'\nconst data = hs.plist.fromString(xml)\nconsole.log(data.Name)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.plist/HSPlistModule.swift",
+          "lineNumber": 56
+        },
+        {
+          "name": "toFile",
+          "signature": "func toFile(_ path: String, _ data: [String: Any], _ binary: Bool) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Write a JavaScript object to a plist file on disk.\n\nKeys must be strings. Values may be strings, numbers, booleans, arrays, or\nnested objects. JavaScript null values are not plist-compatible and will cause\nthe write to fail.\n\n- Parameters:\n  - path: Destination file path\n  - data: A JavaScript object to serialize as a property list\n  - binary: If true, write binary plist format; if false (default), write XML plist format\n- Returns: true if the file was written successfully\n- Example:\n```js\nhs.plist.toFile(\"/tmp/test.plist\", { name: \"Hammerspoon\", version: 2 })\nhs.plist.toFile(\"/tmp/test.plist\", { name: \"Hammerspoon\" }, true)\n```",
+          "description": "Write a JavaScript object to a plist file on disk.\nKeys must be strings. Values may be strings, numbers, booleans, arrays, or\nnested objects. JavaScript null values are not plist-compatible and will cause\nthe write to fail.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "Destination file path",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "data",
+              "type": "Object<String, Any>",
+              "description": "A JavaScript object to serialize as a property list",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "binary",
+              "type": "boolean",
+              "description": "If true, write binary plist format; if false (default), write XML plist format",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if the file was written successfully"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.plist.toFile(\"/tmp/test.plist\", { name: \"Hammerspoon\", version: 2 })\nhs.plist.toFile(\"/tmp/test.plist\", { name: \"Hammerspoon\" }, true)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.plist/HSPlistModule.swift",
+          "lineNumber": 74
+        },
+        {
+          "name": "toString",
+          "signature": "func toString(_ data: [String: Any], _ binary: Bool) -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Serialize a JavaScript object to a plist string.\n\nWith binary set to false (default), returns an XML plist string suitable for\nstoring in text files or passing to `readString`. With binary set to true,\nreturns a base64-encoded binary plist string.\n\n- Parameters:\n  - data: A JavaScript object to serialize as a property list\n  - binary: If true, produce base64-encoded binary plist output; if false (default), produce an XML string\n- Returns: The serialized plist string, or null if serialization failed\n- Example:\n```js\nconst xml = hs.plist.toString({ name: \"Hammerspoon\", version: 2 })\nconst b64 = hs.plist.toString({ name: \"Hammerspoon\" }, true)\n```",
+          "description": "Serialize a JavaScript object to a plist string.\nWith binary set to false (default), returns an XML plist string suitable for\nstoring in text files or passing to `readString`. With binary set to true,\nreturns a base64-encoded binary plist string.",
+          "params": [
+            {
+              "name": "data",
+              "type": "Object<String, Any>",
+              "description": "A JavaScript object to serialize as a property list",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "binary",
+              "type": "boolean",
+              "description": "If true, produce base64-encoded binary plist output; if false (default), produce an XML string",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "The serialized plist string, or null if serialization failed"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const xml = hs.plist.toString({ name: \"Hammerspoon\", version: 2 })\nconst b64 = hs.plist.toString({ name: \"Hammerspoon\" }, true)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.plist/HSPlistModule.swift",
+          "lineNumber": 91
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Module for reading and writing macOS property list (plist) files.\nProperty lists are a structured data format used extensively on Apple platforms\nfor storing configuration, preferences, and serialized data. This module supports\nboth XML and binary plist formats.",
+      "rawDocumentation": "Module for reading and writing macOS property list (plist) files.\n\nProperty lists are a structured data format used extensively on Apple platforms\nfor storing configuration, preferences, and serialized data. This module supports\nboth XML and binary plist formats.\n\nJavaScript ↔ plist type mapping:\n- JavaScript strings ↔ plist strings\n- JavaScript numbers ↔ plist integers and reals\n- JavaScript booleans ↔ plist true/false\n- JavaScript arrays ↔ plist arrays\n- JavaScript objects ↔ plist dictionaries\n- JavaScript null is not supported by the plist format and will cause write operations to fail\n- Plist Date and Data values are returned as opaque objects and may not be directly usable in JavaScript"
+    },
+    {
       "name": "hs.power",
       "methods": [
         {
@@ -21207,5 +21357,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-23T12:34:00.014Z"
+  "generatedAt": "2026-07-25T21:07:58.664Z"
 }
