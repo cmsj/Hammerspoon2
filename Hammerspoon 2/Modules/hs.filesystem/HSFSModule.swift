@@ -1244,7 +1244,7 @@ import UniformTypeIdentifiers
         guard size > 0 else { return "" }
 
         var buffer = [UInt8](repeating: 0, count: size)
-        let read = unsafe buffer.withUnsafeMutableBytes { ptr in
+        let read = buffer.withUnsafeMutableBytes { ptr in
             unsafe Darwin.getxattr(p, attribute, ptr.baseAddress, size, pos, flags)
         }
         if read < 0 {
@@ -1266,7 +1266,7 @@ import UniformTypeIdentifiers
         guard size > 0 else { return [] }
 
         var buffer = [UInt8](repeating: 0, count: size)
-        let read = unsafe buffer.withUnsafeMutableBytes { ptr in
+        let read = buffer.withUnsafeMutableBytes { ptr in
             let cBuf: UnsafeMutablePointer<CChar>? = unsafe ptr.baseAddress?.assumingMemoryBound(to: CChar.self)
             return unsafe Darwin.listxattr(p, cBuf, size, flags)
         }

@@ -159,7 +159,7 @@ import CoreServices
             return self
         }
 
-        generation &+= 1
+        unsafe generation &+= 1
         unsafe FSEventStreamSetDispatchQueue(newStream, HSPathWatcher.eventsQueue)
         guard unsafe FSEventStreamStart(newStream) else {
             unsafe FSEventStreamInvalidate(newStream)
@@ -180,7 +180,7 @@ import CoreServices
         // This ensures takeUnretainedValue() in those callbacks completes while
         // selfRetain still holds the watcher alive.
         HSPathWatcher.eventsQueue.sync {}
-        generation &+= 1  // after sync, so all in-flight callbacks have already captured the old value
+        unsafe generation &+= 1  // after sync, so all in-flight callbacks have already captured the old value
         unsafe FSEventStreamInvalidate(s)
         unsafe FSEventStreamRelease(s)
         unsafe stream = nil
@@ -214,7 +214,7 @@ import CoreServices
 private let hsPathWatcherCallback: FSEventStreamCallback = { _, clientCallbackInfo, numEvents, eventPaths, eventFlags, _ in
     guard let infoPtr = unsafe clientCallbackInfo else { return }
     let watcher = unsafe Unmanaged<HSPathWatcher>.fromOpaque(infoPtr).takeUnretainedValue()
-    let capturedGeneration = watcher.generation  // safe: see ordering comment on the property
+    let capturedGeneration = unsafe watcher.generation  // safe: see ordering comment on the property
 
     // With kFSEventStreamCreateFlagUseCFTypes, eventPaths is a CFArray of CFStrings.
     let nsArray = unsafe unsafeBitCast(eventPaths, to: NSArray.self)
@@ -227,7 +227,7 @@ private let hsPathWatcherCallback: FSEventStreamCallback = { _, clientCallbackIn
 
     Task { @MainActor in
         // Skip if the watcher was stopped or restarted after this callback was queued.
-        guard watcher.generation == capturedGeneration else { return }
+        guard unsafe watcher.generation == capturedGeneration else { return }
         watcher.fire(paths: paths, flagsPerPath: flagsPerPath)
     }
 }
