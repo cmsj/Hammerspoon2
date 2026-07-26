@@ -165,6 +165,10 @@ import CoreServices
     @objc @discardableResult func stop() -> HSPathWatcher {
         guard let s = unsafe stream else { return self }
         unsafe FSEventStreamStop(s)
+        // Drain any callbacks already queued on eventsQueue before Stop was called.
+        // This ensures takeUnretainedValue() in those callbacks completes while
+        // selfRetain still holds the watcher alive.
+        HSPathWatcher.eventsQueue.sync {}
         unsafe FSEventStreamInvalidate(s)
         unsafe FSEventStreamRelease(s)
         unsafe stream = nil
