@@ -107,6 +107,11 @@ import CoreServices
 
     static let eventsQueue = DispatchQueue(label: "hs.pathwatcher.events", qos: .utility)
 
+    // Written from the main actor only; read from eventsQueue in the C callback.
+    // Safe without atomics: start() writes before FSEventStreamStart (happens-before all
+    // callbacks); stop() writes after eventsQueue.sync (happens-after all callback reads).
+    nonisolated(unsafe) fileprivate var generation: Int = 0
+
     private let watchedPath: String
     private var callback: JSCallback?
     private var stream: FSEventStreamRef?
@@ -154,6 +159,7 @@ import CoreServices
             return self
         }
 
+        generation &+= 1
         unsafe FSEventStreamSetDispatchQueue(newStream, HSPathWatcher.eventsQueue)
         guard unsafe FSEventStreamStart(newStream) else {
             unsafe FSEventStreamInvalidate(newStream)
@@ -174,6 +180,7 @@ import CoreServices
         // This ensures takeUnretainedValue() in those callbacks completes while
         // selfRetain still holds the watcher alive.
         HSPathWatcher.eventsQueue.sync {}
+        generation &+= 1  // after sync, so all in-flight callbacks have already captured the old value
         unsafe FSEventStreamInvalidate(s)
         unsafe FSEventStreamRelease(s)
         unsafe stream = nil
@@ -202,11 +209,12 @@ import CoreServices
 
 // MARK: - C callback
 
-// Scheduled on DispatchQueue.main so this runs on the main queue;
-// MainActor.assumeIsolated is safe to call here.
+// Runs on HSPathWatcher.eventsQueue (background). Captures the watcher's generation
+// so the MainActor Task can discard events from a stopped or replaced stream.
 private let hsPathWatcherCallback: FSEventStreamCallback = { _, clientCallbackInfo, numEvents, eventPaths, eventFlags, _ in
     guard let infoPtr = unsafe clientCallbackInfo else { return }
     let watcher = unsafe Unmanaged<HSPathWatcher>.fromOpaque(infoPtr).takeUnretainedValue()
+    let capturedGeneration = watcher.generation  // safe: see ordering comment on the property
 
     // With kFSEventStreamCreateFlagUseCFTypes, eventPaths is a CFArray of CFStrings.
     let nsArray = unsafe unsafeBitCast(eventPaths, to: NSArray.self)
@@ -218,6 +226,8 @@ private let hsPathWatcherCallback: FSEventStreamCallback = { _, clientCallbackIn
     }
 
     Task { @MainActor in
+        // Skip if the watcher was stopped or restarted after this callback was queued.
+        guard watcher.generation == capturedGeneration else { return }
         watcher.fire(paths: paths, flagsPerPath: flagsPerPath)
     }
 }
