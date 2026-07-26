@@ -154,10 +154,15 @@ import CoreServices
             return self
         }
 
+        unsafe FSEventStreamSetDispatchQueue(newStream, HSPathWatcher.eventsQueue)
+        guard unsafe FSEventStreamStart(newStream) else {
+            unsafe FSEventStreamInvalidate(newStream)
+            unsafe FSEventStreamRelease(newStream)
+            AKError("hs.fs.createPathWatcher: failed to start event stream for \(watchedPath)")
+            return self
+        }
         unsafe stream = newStream
         selfRetain = self
-        unsafe FSEventStreamSetDispatchQueue(newStream, HSPathWatcher.eventsQueue)
-        unsafe FSEventStreamStart(newStream)
         AKTrace("HSPathWatcher(\(identifier)): started watching \(watchedPath)")
         return self
     }
