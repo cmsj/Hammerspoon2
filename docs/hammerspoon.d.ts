@@ -2639,6 +2639,15 @@ volume mount/unmount/rename events.
     function removeVolumeWatcher(watcher: HSVolumeWatcher): void;
 
     /**
+     * Create a watcher for filesystem events at a given path.
+Events are batched and delivered with a latency of approximately one second.
+Call `setCallback()` and `start()` on the returned object to begin receiving events.
+     * @param path The path to watch. `~` is expanded.
+     * @returns An `HSPathWatcher` object.
+     */
+    function createPathWatcher(path: string): HSPathWatcher;
+
+    /**
      * Get the value of an extended attribute for a file or directory.
 Attribute values are returned as ISO Latin-1 encoded strings so that arbitrary byte
 sequences are represented without loss. ASCII text attribute values appear readable as-is.
@@ -2679,6 +2688,46 @@ The value is written as ISO Latin-1 bytes, providing a lossless round-trip with
      * @returns `true` on success, `false` on failure (including if the attribute does not exist).
      */
     function xattrRemove(path: string, attribute: string, options?: string[]): boolean;
+
+}
+
+/**
+ * Watches a filesystem path for changes and invokes a callback when they occur.
+Created via `hs.fs.createPathWatcher(path)`. Set a callback with `setCallback()`,
+then call `start()` to begin receiving events.
+Common flag values: `"itemCreated"`, `"itemRemoved"`, `"itemModified"`,
+`"itemRenamed"`, `"itemIsFile"`, `"itemIsDir"`, `"itemIsSymlink"`,
+`"mustScanSubDirs"`, `"rootChanged"`.
+ */
+declare class HSPathWatcher {
+    /**
+     * Starts monitoring the watched path for filesystem changes.
+     * @returns self, for chaining
+     */
+    start(): HSPathWatcher;
+
+    /**
+     * Stops monitoring the watched path.
+     * @returns self, for chaining
+     */
+    stop(): HSPathWatcher;
+
+    /**
+     * Sets the callback invoked when filesystem changes are detected.
+     * @param fn Called with an array of changed paths and a parallel array of per-path flag string arrays.
+     * @returns self, for chaining
+     */
+    setCallback(fn: (paths: string[], flags: string[][]) => void): HSPathWatcher;
+
+    /**
+     * Stops the watcher and releases all resources. Called automatically during shutdown.
+     */
+    destroy(): void;
+
+    /**
+     * The unique identifier assigned to this watcher.
+     */
+    readonly identifier: string;
 
 }
 

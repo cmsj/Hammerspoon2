@@ -1,0 +1,224 @@
+//
+//  HSPathWatcher.swift
+//  Hammerspoon 2
+//
+
+import Foundation
+import JavaScriptCore
+import CoreServices
+
+// MARK: - API protocol
+
+/// Watches a filesystem path for changes and invokes a callback when they occur.
+///
+/// Created via `hs.fs.createPathWatcher(path)`. Set a callback with `setCallback()`,
+/// then call `start()` to begin receiving events.
+///
+/// The callback receives `(paths, flags)`:
+/// - `paths`: array of changed file/directory paths
+/// - `flags`: parallel array of string arrays, one per path, describing what changed
+///
+/// Common flag values: `"itemCreated"`, `"itemRemoved"`, `"itemModified"`,
+/// `"itemRenamed"`, `"itemIsFile"`, `"itemIsDir"`, `"itemIsSymlink"`,
+/// `"mustScanSubDirs"`, `"rootChanged"`.
+///
+/// Example:
+/// ```js
+/// const w = hs.fs.createPathWatcher("/Users/me/Documents")
+/// w.setCallback((paths, flags) => {
+///     paths.forEach((p, i) => console.log(flags[i].join(",") + ": " + p))
+/// }).start()
+/// ```
+@objc protocol HSPathWatcherAPI: HSTypeAPI, JSExport {
+
+    /// The unique identifier assigned to this watcher.
+    /// - Example:
+    /// ```js
+    /// const w = hs.fs.createPathWatcher("/tmp")
+    /// console.log(w.identifier)
+    /// ```
+    @objc var identifier: String { get }
+
+    /// Starts monitoring the watched path for filesystem changes.
+    /// - Returns: self, for chaining
+    /// - Example:
+    /// ```js
+    /// const w = hs.fs.createPathWatcher("/tmp")
+    /// w.setCallback((paths, flags) => console.log(paths.join(", "))).start()
+    /// ```
+    @objc @discardableResult func start() -> HSPathWatcher
+
+    /// Stops monitoring the watched path.
+    /// - Returns: self, for chaining
+    /// - Example:
+    /// ```js
+    /// w.stop()
+    /// ```
+    @objc @discardableResult func stop() -> HSPathWatcher
+
+    /// Sets the callback invoked when filesystem changes are detected.
+    /// - Parameter fn: {(paths: string[], flags: string[][]) => void} Called with an array of changed paths and a parallel array of per-path flag string arrays.
+    /// - Returns: self, for chaining
+    /// - Example:
+    /// ```js
+    /// w.setCallback((paths, flags) => {
+    ///     paths.forEach((p, i) => console.log(p + ": " + flags[i].join(", ")))
+    /// })
+    /// ```
+    @objc func setCallback(_ fn: JSFunction) -> HSPathWatcher
+
+    /// Stops the watcher and releases all resources. Called automatically during shutdown.
+    /// - Example:
+    /// ```js
+    /// w.destroy()
+    /// ```
+    @objc func destroy()
+}
+
+// MARK: - Implementation
+
+@safe @_documentation(visibility: private)
+@MainActor
+@objc class HSPathWatcher: NSObject, HSPathWatcherAPI {
+    @objc var typeName = "HSPathWatcher"
+    @objc let identifier = UUID().uuidString
+
+    static let eventsQueue = DispatchQueue(label: "hs.pathwatcher.events", qos: .utility)
+
+    private let watchedPath: String
+    private var callback: JSCallback?
+    private var stream: FSEventStreamRef?
+    private var selfRetain: HSPathWatcher?
+    private let latency: CFTimeInterval = 1.0
+
+    init(path: String) {
+        self.watchedPath = path
+        super.init()
+    }
+
+    isolated deinit {
+        destroy()
+        AKDebug("deinit of HSPathWatcher(\(identifier))")
+    }
+
+    // MARK: - API
+
+    @objc @discardableResult func start() -> HSPathWatcher {
+        guard unsafe stream == nil else { return self }
+
+        var context = unsafe FSEventStreamContext(
+            version: 0,
+            info: Unmanaged.passUnretained(self).toOpaque(),
+            retain: nil,
+            release: nil,
+            copyDescription: nil
+        )
+
+        let paths = [watchedPath] as CFArray
+        let streamFlags = UInt32(kFSEventStreamCreateFlagUseCFTypes) |
+                          UInt32(kFSEventStreamCreateFlagFileEvents) |
+                          UInt32(kFSEventStreamCreateFlagWatchRoot)
+
+        guard let newStream = unsafe FSEventStreamCreate(
+            kCFAllocatorDefault,
+            hsPathWatcherCallback,
+            &context,
+            paths,
+            FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
+            latency,
+            streamFlags
+        ) else {
+            AKError("hs.fs.createPathWatcher: failed to create event stream for \(watchedPath)")
+            return self
+        }
+
+        unsafe stream = newStream
+        selfRetain = self
+        unsafe FSEventStreamSetDispatchQueue(newStream, HSPathWatcher.eventsQueue)
+        unsafe FSEventStreamStart(newStream)
+        AKTrace("HSPathWatcher(\(identifier)): started watching \(watchedPath)")
+        return self
+    }
+
+    @objc @discardableResult func stop() -> HSPathWatcher {
+        guard let s = unsafe stream else { return self }
+        unsafe FSEventStreamStop(s)
+        unsafe FSEventStreamInvalidate(s)
+        unsafe FSEventStreamRelease(s)
+        unsafe stream = nil
+        selfRetain = nil
+        AKTrace("HSPathWatcher(\(identifier)): stopped")
+        return self
+    }
+
+    @objc func setCallback(_ fn: JSFunction) -> HSPathWatcher {
+        callback?.detach(from: self)
+        callback = JSCallback(value: fn, owner: self)
+        return self
+    }
+
+    @objc func destroy() {
+        _ = stop()
+        callback?.detach(from: self)
+        callback = nil
+    }
+
+    // Called from the C callback — always on DispatchQueue.main.
+    func fire(paths: [String], flagsPerPath: [[String]]) {
+        _ = callback?.value?.call(withArguments: [paths, flagsPerPath])
+    }
+}
+
+// MARK: - C callback
+
+// Scheduled on DispatchQueue.main so this runs on the main queue;
+// MainActor.assumeIsolated is safe to call here.
+private let hsPathWatcherCallback: FSEventStreamCallback = { _, clientCallbackInfo, numEvents, eventPaths, eventFlags, _ in
+    guard let infoPtr = unsafe clientCallbackInfo else { return }
+    let watcher = unsafe Unmanaged<HSPathWatcher>.fromOpaque(infoPtr).takeUnretainedValue()
+
+    // With kFSEventStreamCreateFlagUseCFTypes, eventPaths is a CFArray of CFStrings.
+    let nsArray = unsafe unsafeBitCast(eventPaths, to: NSArray.self)
+    let paths = (0..<numEvents).compactMap { nsArray[$0] as? String }
+
+    var flagsPerPath: [[String]] = []
+    for i in 0..<numEvents {
+        flagsPerPath.append(parseFSEventFlags(unsafe eventFlags[i]))
+    }
+
+    Task { @MainActor in
+        watcher.fire(paths: paths, flagsPerPath: flagsPerPath)
+    }
+}
+
+// MARK: - Flag parsing
+
+private func parseFSEventFlags(_ flags: FSEventStreamEventFlags) -> [String] {
+    var result: [String] = []
+    func has(_ flag: Int) -> Bool {
+        flags & FSEventStreamEventFlags(UInt32(bitPattern: Int32(flag))) != 0
+    }
+
+    if has(kFSEventStreamEventFlagMustScanSubDirs)   { result.append("mustScanSubDirs") }
+    if has(kFSEventStreamEventFlagUserDropped)        { result.append("userDropped") }
+    if has(kFSEventStreamEventFlagKernelDropped)      { result.append("kernelDropped") }
+    if has(kFSEventStreamEventFlagRootChanged)        { result.append("rootChanged") }
+    if has(kFSEventStreamEventFlagMount)              { result.append("mount") }
+    if has(kFSEventStreamEventFlagUnmount)            { result.append("unmount") }
+    if has(kFSEventStreamEventFlagItemCreated)        { result.append("itemCreated") }
+    if has(kFSEventStreamEventFlagItemRemoved)        { result.append("itemRemoved") }
+    if has(kFSEventStreamEventFlagItemInodeMetaMod)   { result.append("itemInodeMetaMod") }
+    if has(kFSEventStreamEventFlagItemRenamed)        { result.append("itemRenamed") }
+    if has(kFSEventStreamEventFlagItemModified)       { result.append("itemModified") }
+    if has(kFSEventStreamEventFlagItemFinderInfoMod)  { result.append("itemFinderInfoMod") }
+    if has(kFSEventStreamEventFlagItemChangeOwner)    { result.append("itemChangeOwner") }
+    if has(kFSEventStreamEventFlagItemXattrMod)       { result.append("itemXattrMod") }
+    if has(kFSEventStreamEventFlagItemIsFile)         { result.append("itemIsFile") }
+    if has(kFSEventStreamEventFlagItemIsDir)          { result.append("itemIsDir") }
+    if has(kFSEventStreamEventFlagItemIsSymlink)      { result.append("itemIsSymlink") }
+    if has(kFSEventStreamEventFlagOwnEvent)           { result.append("ownEvent") }
+    if has(kFSEventStreamEventFlagItemIsHardlink)     { result.append("itemIsHardlink") }
+    if has(kFSEventStreamEventFlagItemIsLastHardlink) { result.append("itemIsLastHardlink") }
+    if has(kFSEventStreamEventFlagItemCloned)         { result.append("itemCloned") }
+    return result
+}
