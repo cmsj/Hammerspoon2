@@ -99,6 +99,9 @@ const home = hs.fs.homeDirectory();
 <p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
 <ul class="type-list">
     <li>
+        <a href="HSPathWatcher.html">HSPathWatcher</a>
+    </li>
+    <li>
         <a href="HSVolumeWatcher.html">HSVolumeWatcher</a>
     </li>
 </ul>
@@ -1543,6 +1546,49 @@ hs.fs.removeVolumeWatcher(w)</code></pre>
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L597" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:597</a>
         </div>
     </div>
+    <div class="method" id="createPathWatcher">
+        <h3><a href="#createPathWatcher">hs.fs.createPathWatcher(path) -> HSPathWatcher</a></h3>
+
+        <div class="description">Create a watcher for filesystem events at a given path.
+Events are batched and delivered with a latency of approximately one second.
+Call `setCallback()` and `start()` on the returned object to begin receiving events.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.fs.createPathWatcher(path) -> HSPathWatcher</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path to watch. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSPathWatcher</div>
+        <div class="return-desc">An `HSPathWatcher` object.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const w = hs.fs.createPathWatcher(&quot;/Users/me/Documents&quot;)
+w.setCallback((paths, flags) =&gt; {
+    paths.forEach((p, i) =&gt; console.log(flags[i].join(&quot;,&quot;) + &quot;: &quot; + p))
+}).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L615" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:615</a>
+        </div>
+    </div>
     <div class="method" id="xattrGet">
         <h3><a href="#xattrGet">hs.fs.xattrGet(path, attribute, options, position) -> string</a></h3>
 
@@ -1596,7 +1642,7 @@ sequences are represented without loss. ASCII text attribute values appear reada
 if (quarantine !== null) console.log(&quot;quarantine: &quot; + quarantine)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L617" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:617</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L635" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:635</a>
         </div>
     </div>
     <div class="method" id="xattrList">
@@ -1640,7 +1686,7 @@ if (quarantine !== null) console.log(&quot;quarantine: &quot; + quarantine)</cod
 if (attrs) attrs.forEach(a =&gt; console.log(a))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L630" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:630</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L648" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:648</a>
         </div>
     </div>
     <div class="method" id="xattrSet">
@@ -1700,7 +1746,7 @@ The value is written as ISO Latin-1 bytes, providing a lossless round-trip with
         <pre><code class="language-js">hs.fs.xattrSet(&quot;/path/to/file.txt&quot;, &quot;com.example.origin&quot;, &quot;https://example.com&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L648" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:648</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L666" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:666</a>
         </div>
     </div>
     <div class="method" id="xattrRemove">
@@ -1748,7 +1794,7 @@ The value is written as ISO Latin-1 bytes, providing a lossless round-trip with
         <pre><code class="language-js">hs.fs.xattrRemove(&quot;/path/to/file.dmg&quot;, &quot;com.apple.quarantine&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L661" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:661</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFSModule.swift#L679" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift:679</a>
         </div>
     </div>
         </main>

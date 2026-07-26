@@ -596,6 +596,24 @@ import UniformTypeIdentifiers
     /// ```
     @objc func removeVolumeWatcher(_ watcher: HSVolumeWatcher)
 
+    // MARK: - Path watchers
+
+    /// Create a watcher for filesystem events at a given path.
+    ///
+    /// Events are batched and delivered with a latency of approximately one second.
+    /// Call `setCallback()` and `start()` on the returned object to begin receiving events.
+    ///
+    /// - Parameter path: The path to watch. `~` is expanded.
+    /// - Returns: An `HSPathWatcher` object.
+    /// - Example:
+    /// ```js
+    /// const w = hs.fs.createPathWatcher("/Users/me/Documents")
+    /// w.setCallback((paths, flags) => {
+    ///     paths.forEach((p, i) => console.log(flags[i].join(",") + ": " + p))
+    /// }).start()
+    /// ```
+    @objc func createPathWatcher(_ path: String) -> HSPathWatcher
+
     // MARK: - Extended attributes
 
     /// Get the value of an extended attribute for a file or directory.
@@ -676,12 +694,13 @@ import UniformTypeIdentifiers
     }
 
     private var volumeWatchers = HSWeakObjectSet<HSVolumeWatcher>()
+    private var pathWatchers = HSWeakObjectSet<HSPathWatcher>()
 
     func shutdown() {
-        for watcher in volumeWatchers.allObjects {
-            watcher.destroy()
-        }
+        for watcher in volumeWatchers.allObjects { watcher.destroy() }
         volumeWatchers.removeAllObjects()
+        for watcher in pathWatchers.allObjects { watcher.destroy() }
+        pathWatchers.removeAllObjects()
     }
 
     isolated deinit {
@@ -1200,6 +1219,14 @@ import UniformTypeIdentifiers
         volumeWatchers.remove(watcher)
     }
 
+    // MARK: - Path watchers
+
+    @objc func createPathWatcher(_ path: String) -> HSPathWatcher {
+        let watcher = HSPathWatcher(path: expand(path))
+        pathWatchers.add(watcher)
+        return watcher
+    }
+
     // MARK: - Extended attributes
 
     @objc func xattrGet(_ path: String, _ attribute: String, _ options: NSArray?, _ position: Int) -> String? {
@@ -1217,7 +1244,7 @@ import UniformTypeIdentifiers
         guard size > 0 else { return "" }
 
         var buffer = [UInt8](repeating: 0, count: size)
-        let read = unsafe buffer.withUnsafeMutableBytes { ptr in
+        let read = buffer.withUnsafeMutableBytes { ptr in
             unsafe Darwin.getxattr(p, attribute, ptr.baseAddress, size, pos, flags)
         }
         if read < 0 {
@@ -1239,7 +1266,7 @@ import UniformTypeIdentifiers
         guard size > 0 else { return [] }
 
         var buffer = [UInt8](repeating: 0, count: size)
-        let read = unsafe buffer.withUnsafeMutableBytes { ptr in
+        let read = buffer.withUnsafeMutableBytes { ptr in
             let cBuf: UnsafeMutablePointer<CChar>? = unsafe ptr.baseAddress?.assumingMemoryBound(to: CChar.self)
             return unsafe Darwin.listxattr(p, cBuf, size, flags)
         }
