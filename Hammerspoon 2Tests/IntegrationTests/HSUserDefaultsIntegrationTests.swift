@@ -164,6 +164,47 @@ struct HSUserDefaultsTests {
             #expect(!harness.hasException)
         }
 
+        @Test("set() with a native hs.* object does not crash, does not throw, and does not store anything")
+        func testSetNativeObjectRejected() {
+            let key = testKey()
+            let harness = makeHarness()
+            defer { harness.eval("hs.userdefaults.clear('\(key)')") }
+
+            // A native Hammerspoon object (unlike a plain JS object or function) keeps its
+            // native identity across the JS<->Swift bridge, so it reaches `set()` as a
+            // non-property-list NSObject. Without validation, forwarding it straight to
+            // UserDefaults raises an uncatchable Objective-C exception and crashes the process.
+            harness.eval("hs.userdefaults.set('\(key)', hs.userdefaults)")
+            harness.expectTrue("hs.userdefaults.get('\(key)') === null || hs.userdefaults.get('\(key)') === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("set() with a function value stores an empty object rather than throwing")
+        func testSetFunctionValueStoresEmptyObject() {
+            let key = testKey()
+            let harness = makeHarness()
+            defer { harness.eval("hs.userdefaults.clear('\(key)')") }
+
+            // JavaScriptCore's bridge has no property-list representation for a JS function,
+            // so it coerces it to an empty object before Swift ever sees it. This is a
+            // harmless JSC bridging quirk, not a storable-type validation gap.
+            harness.eval("hs.userdefaults.set('\(key)', function() {})")
+            harness.eval("var r = hs.userdefaults.get('\(key)')")
+            harness.expectTrue("typeof r === 'object' && r !== null && Object.keys(r).length === 0")
+            #expect(!harness.hasException)
+        }
+
+        @Test("set() with undefined does not store anything and does not throw")
+        func testSetUndefinedValueRejected() {
+            let key = testKey()
+            let harness = makeHarness()
+            defer { harness.eval("hs.userdefaults.clear('\(key)')") }
+
+            harness.eval("hs.userdefaults.set('\(key)', undefined)")
+            harness.expectTrue("hs.userdefaults.get('\(key)') === null || hs.userdefaults.get('\(key)') === undefined")
+            #expect(!harness.hasException)
+        }
+
         @Test("clear removes a stored value")
         func testClearRemovesValue() {
             let key = testKey()

@@ -7539,6 +7539,12 @@ information such as passwords, API keys, or tokens.
 declare namespace hs.userdefaults {
     /**
      * Store a value under the given key. The value persists across Hammerspoon restarts.
+Values must be storable as a property list: strings, numbers, booleans, Dates,
+arrays, or objects (which may themselves nest any of those types).
+is rejected with a logged error and nothing is stored. JavaScript functions have
+no property-list representation; if passed directly, or nested inside an array or
+object, they are silently stored as an empty object.
+     * @remarks Passing a native object from another `hs.*` module (e.g. a timer or hotkey)
      * @param key The name of the setting
      * @param value A string, number, boolean, Date, array, or object to store
      */

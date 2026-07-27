@@ -42,6 +42,13 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
 @objc protocol HSUserDefaultsModuleAPI: JSExport {
 
     /// Store a value under the given key. The value persists across Hammerspoon restarts.
+    ///
+    /// Values must be storable as a property list: strings, numbers, booleans, Dates,
+    /// arrays, or objects (which may themselves nest any of those types).
+    /// - Note: Passing a native object from another `hs.*` module (e.g. a timer or hotkey)
+    ///   is rejected with a logged error and nothing is stored. JavaScript functions have
+    ///   no property-list representation; if passed directly, or nested inside an array or
+    ///   object, they are silently stored as an empty object.
     /// - Parameters:
     ///   - key: The name of the setting
     ///   - value: A string, number, boolean, Date, array, or object to store
@@ -153,6 +160,10 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     @objc func set(_ key: String, _ value: Any) {
         guard let suite else {
             AKError("hs.userdefaults.set(): No UserDefaults suite available")
+            return
+        }
+        guard PropertyListSerialization.propertyList(value, isValidFor: .xml) else {
+            AKError("hs.userdefaults.set(): Value for key '\(key)' is not a storable type (must be a string, number, boolean, Date, array, or object)")
             return
         }
         suite.set(value, forKey: key)

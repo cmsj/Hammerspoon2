@@ -95,7 +95,12 @@ information such as passwords, API keys, or tokens.</li>
     <div class="method" id="set">
         <h3><a href="#set">hs.userdefaults.set(key, value) -> None</a></h3>
 
-        <div class="description">Store a value under the given key. The value persists across Hammerspoon restarts.</div>
+        <div class="description">Store a value under the given key. The value persists across Hammerspoon restarts.
+Values must be storable as a property list: strings, numbers, booleans, Dates,
+arrays, or objects (which may themselves nest any of those types).
+is rejected with a logged error and nothing is stored. JavaScript functions have
+no property-list representation; if passed directly, or nested inside an array or
+object, they are silently stored as an empty object.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.userdefaults.set(key, value) -> None</code></pre>
@@ -126,6 +131,8 @@ information such as passwords, API keys, or tokens.</li>
         <div class="card-section-label">Returns</div>
         <div class="return-desc" style="color: var(--text-muted);">None</div>
 
+        <div class="card-section-label">Notes</div>
+        <div class="note">Passing a native object from another `hs.*` module (e.g. a timer or hotkey)</div>
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">hs.userdefaults.set(&quot;username&quot;, &quot;chris&quot;)
@@ -133,7 +140,7 @@ hs.userdefaults.set(&quot;launchCount&quot;, 42)
 hs.userdefaults.set(&quot;lastRun&quot;, new Date())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L54" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:54</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L61" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:61</a>
         </div>
     </div>
     <div class="method" id="get">
@@ -171,7 +178,7 @@ hs.userdefaults.set(&quot;lastRun&quot;, new Date())</code></pre>
         <pre><code class="language-js">const username = hs.userdefaults.get(&quot;username&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L63" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:63</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L70" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:70</a>
         </div>
     </div>
     <div class="method" id="clear">
@@ -209,7 +216,7 @@ hs.userdefaults.set(&quot;lastRun&quot;, new Date())</code></pre>
         <pre><code class="language-js">hs.userdefaults.clear(&quot;username&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L72" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:72</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:79</a>
         </div>
     </div>
     <div class="method" id="getKeys">
@@ -230,7 +237,7 @@ hs.userdefaults.set(&quot;lastRun&quot;, new Date())</code></pre>
         <pre><code class="language-js">console.log(hs.userdefaults.getKeys())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L80" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:80</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L87" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:87</a>
         </div>
     </div>
     <div class="method" id="addWatcher">
@@ -274,7 +281,7 @@ hs.userdefaults.set(&quot;lastRun&quot;, new Date())</code></pre>
 })</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L92" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:92</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L99" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:99</a>
         </div>
     </div>
     <div class="method" id="removeWatcher">
@@ -316,7 +323,7 @@ hs.userdefaults.set(&quot;lastRun&quot;, new Date())</code></pre>
         <pre><code class="language-js">hs.userdefaults.removeWatcher(&quot;username&quot;, myHandler)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L102" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:102</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.userdefaults/HSUserDefaultsModule.swift#L109" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift:109</a>
         </div>
     </div>
         </main>

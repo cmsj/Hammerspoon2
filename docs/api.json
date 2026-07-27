@@ -19690,8 +19690,8 @@
           "name": "set",
           "signature": "func set(_ key: String, _ value: Any)",
           "isStatic": false,
-          "rawDocumentation": "Store a value under the given key. The value persists across Hammerspoon restarts.\n- Parameters:\n  - key: The name of the setting\n  - value: A string, number, boolean, Date, array, or object to store\n- Example:\n```js\nhs.userdefaults.set(\"username\", \"chris\")\nhs.userdefaults.set(\"launchCount\", 42)\nhs.userdefaults.set(\"lastRun\", new Date())\n```",
-          "description": "Store a value under the given key. The value persists across Hammerspoon restarts.",
+          "rawDocumentation": "Store a value under the given key. The value persists across Hammerspoon restarts.\n\nValues must be storable as a property list: strings, numbers, booleans, Dates,\narrays, or objects (which may themselves nest any of those types).\n- Note: Passing a native object from another `hs.*` module (e.g. a timer or hotkey)\n  is rejected with a logged error and nothing is stored. JavaScript functions have\n  no property-list representation; if passed directly, or nested inside an array or\n  object, they are silently stored as an empty object.\n- Parameters:\n  - key: The name of the setting\n  - value: A string, number, boolean, Date, array, or object to store\n- Example:\n```js\nhs.userdefaults.set(\"username\", \"chris\")\nhs.userdefaults.set(\"launchCount\", 42)\nhs.userdefaults.set(\"lastRun\", new Date())\n```",
+          "description": "Store a value under the given key. The value persists across Hammerspoon restarts.\nValues must be storable as a property list: strings, numbers, booleans, Dates,\narrays, or objects (which may themselves nest any of those types).\nis rejected with a logged error and nothing is stored. JavaScript functions have\nno property-list representation; if passed directly, or nested inside an array or\nobject, they are silently stored as an empty object.",
           "params": [
             {
               "name": "key",
@@ -19709,7 +19709,9 @@
             }
           ],
           "returns": null,
-          "notes": [],
+          "notes": [
+            "Passing a native object from another `hs.*` module (e.g. a timer or hotkey)"
+          ],
           "examples": [
             {
               "lang": "js",
@@ -19718,7 +19720,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 54
+          "lineNumber": 61
         },
         {
           "name": "get",
@@ -19748,7 +19750,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 63
+          "lineNumber": 70
         },
         {
           "name": "clear",
@@ -19778,7 +19780,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 72
+          "lineNumber": 79
         },
         {
           "name": "getKeys",
@@ -19800,7 +19802,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 80
+          "lineNumber": 87
         },
         {
           "name": "addWatcher",
@@ -19834,7 +19836,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 92
+          "lineNumber": 99
         },
         {
           "name": "removeWatcher",
@@ -19868,7 +19870,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 102
+          "lineNumber": 109
         }
       ],
       "properties": [],
@@ -21700,5 +21702,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-27T21:58:43.773Z"
+  "generatedAt": "2026-07-27T22:39:19.917Z"
 }
