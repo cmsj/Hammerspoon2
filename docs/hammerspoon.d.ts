@@ -7516,6 +7516,25 @@ The listener is called with two arguments: the event type string (`"added"` or `
 }
 
 /**
+ * Module for storing small amounts of data that persists across Hammerspoon restarts.
+Values are stored in a dedicated `UserDefaults` suite named "hs.userdefaults", kept
+separate from the app's own preferences so it doesn't get confused with Hammerspoon's
+own configuration when inspected with tools like the `defaults` command line utility.
+Because the suite is just a standard macOS preferences domain, it can also be inspected
+```sh
+# Read every value stored by hs.userdefaults
+defaults read hs.userdefaults
+
+# Read a single key
+defaults read hs.userdefaults someKey
+
+# Write a value from the command line
+defaults write hs.userdefaults someKey "some value"
+
+# Delete a key
+defaults delete hs.userdefaults someKey
+```
+information such as passwords, API keys, or tokens.
  */
 declare namespace hs.userdefaults {
     /**

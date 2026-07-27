@@ -19718,7 +19718,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 35
+          "lineNumber": 54
         },
         {
           "name": "get",
@@ -19748,7 +19748,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 44
+          "lineNumber": 63
         },
         {
           "name": "clear",
@@ -19778,7 +19778,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 53
+          "lineNumber": 72
         },
         {
           "name": "getKeys",
@@ -19800,7 +19800,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 61
+          "lineNumber": 80
         },
         {
           "name": "addWatcher",
@@ -19834,7 +19834,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 73
+          "lineNumber": 92
         },
         {
           "name": "removeWatcher",
@@ -19868,11 +19868,13 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
-          "lineNumber": 83
+          "lineNumber": 102
         }
       ],
       "properties": [],
-      "types": []
+      "types": [],
+      "description": "Module for storing small amounts of data that persists across Hammerspoon restarts.\nValues are stored in a dedicated `UserDefaults` suite named \"hs.userdefaults\", kept\nseparate from the app's own preferences so it doesn't get confused with Hammerspoon's\nown configuration when inspected with tools like the `defaults` command line utility.\nBecause the suite is just a standard macOS preferences domain, it can also be inspected\n```sh\n# Read every value stored by hs.userdefaults\ndefaults read hs.userdefaults\n\n# Read a single key\ndefaults read hs.userdefaults someKey\n\n# Write a value from the command line\ndefaults write hs.userdefaults someKey \"some value\"\n\n# Delete a key\ndefaults delete hs.userdefaults someKey\n```\ninformation such as passwords, API keys, or tokens.",
+      "rawDocumentation": "Module for storing small amounts of data that persists across Hammerspoon restarts.\n\nValues are stored in a dedicated `UserDefaults` suite named \"hs.userdefaults\", kept\nseparate from the app's own preferences so it doesn't get confused with Hammerspoon's\nown configuration when inspected with tools like the `defaults` command line utility.\n\nJavaScript ↔ storage type mapping:\n- JavaScript strings, numbers, booleans, arrays and objects round-trip directly\n- JavaScript `Date` objects round-trip directly (no special API required)\n- JavaScript `null`/`undefined` are not storable values; use `clear()` to remove a key\n\nBecause the suite is just a standard macOS preferences domain, it can also be inspected\nand manipulated from the command line with the `defaults` tool:\n```sh\n# Read every value stored by hs.userdefaults\ndefaults read hs.userdefaults\n\n# Read a single key\ndefaults read hs.userdefaults someKey\n\n# Write a value from the command line\ndefaults write hs.userdefaults someKey \"some value\"\n\n# Delete a key\ndefaults delete hs.userdefaults someKey\n```\n\n- Note: This suite is **not encrypted on disk**. Do not use it to store sensitive\n  information such as passwords, API keys, or tokens."
     },
     {
       "name": "hs.window",
@@ -21698,5 +21700,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-27T21:47:32.295Z"
+  "generatedAt": "2026-07-27T21:58:43.773Z"
 }

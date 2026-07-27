@@ -8,6 +8,8 @@ import JavaScriptCore
 
 // MARK: - Declare our JavaScript API
 
+private let hsUserDefaultsSuiteName = "hs.userdefaults"
+
 /// Module for storing small amounts of data that persists across Hammerspoon restarts.
 ///
 /// Values are stored in a dedicated `UserDefaults` suite named "hs.userdefaults", kept
@@ -18,8 +20,25 @@ import JavaScriptCore
 /// - JavaScript strings, numbers, booleans, arrays and objects round-trip directly
 /// - JavaScript `Date` objects round-trip directly (no special API required)
 /// - JavaScript `null`/`undefined` are not storable values; use `clear()` to remove a key
-private let hsUserDefaultsSuiteName = "hs.userdefaults"
-
+///
+/// Because the suite is just a standard macOS preferences domain, it can also be inspected
+/// and manipulated from the command line with the `defaults` tool:
+/// ```sh
+/// # Read every value stored by hs.userdefaults
+/// defaults read hs.userdefaults
+///
+/// # Read a single key
+/// defaults read hs.userdefaults someKey
+///
+/// # Write a value from the command line
+/// defaults write hs.userdefaults someKey "some value"
+///
+/// # Delete a key
+/// defaults delete hs.userdefaults someKey
+/// ```
+///
+/// - Note: This suite is **not encrypted on disk**. Do not use it to store sensitive
+///   information such as passwords, API keys, or tokens.
 @objc protocol HSUserDefaultsModuleAPI: JSExport {
 
     /// Store a value under the given key. The value persists across Hammerspoon restarts.
