@@ -19684,6 +19684,201 @@
       "rawDocumentation": "Module for monitoring USB device connections and disconnections"
     },
     {
+      "name": "hs.userdefaults",
+      "methods": [
+        {
+          "name": "set",
+          "signature": "func set(_ key: String, _ value: Any)",
+          "isStatic": false,
+          "rawDocumentation": "Store a value under the given key. The value persists across Hammerspoon restarts.\n\nValues must be storable as a property list: strings, numbers, booleans, Dates,\narrays, or objects (which may themselves nest any of those types).\n- Note: Passing a native object from another `hs.*` module (e.g. a timer or hotkey)\n  is rejected with a logged error and nothing is stored. JavaScript functions have\n  no property-list representation; if passed directly, or nested inside an array or\n  object, they are silently stored as an empty object.\n- Parameters:\n  - key: The name of the setting\n  - value: A string, number, boolean, Date, array, or object to store\n- Example:\n```js\nhs.userdefaults.set(\"username\", \"chris\")\nhs.userdefaults.set(\"launchCount\", 42)\nhs.userdefaults.set(\"lastRun\", new Date())\n```",
+          "description": "Store a value under the given key. The value persists across Hammerspoon restarts.\nValues must be storable as a property list: strings, numbers, booleans, Dates,\narrays, or objects (which may themselves nest any of those types).\nis rejected with a logged error and nothing is stored. JavaScript functions have\nno property-list representation; if passed directly, or nested inside an array or\nobject, they are silently stored as an empty object.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "value",
+              "type": "*",
+              "description": "A string, number, boolean, Date, array, or object to store",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [
+            "Passing a native object from another `hs.*` module (e.g. a timer or hotkey)"
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.userdefaults.set(\"username\", \"chris\")\nhs.userdefaults.set(\"launchCount\", 42)\nhs.userdefaults.set(\"lastRun\", new Date())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 61
+        },
+        {
+          "name": "get",
+          "signature": "func get(_ key: String) -> Any?",
+          "isStatic": false,
+          "rawDocumentation": "Retrieve a previously stored value.\n- Parameter key: The name of the setting\n- Returns: {any} The stored value, or null if nothing is stored under that key\n- Example:\n```js\nconst username = hs.userdefaults.get(\"username\")\n```",
+          "description": "Retrieve a previously stored value.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "The stored value, or null if nothing is stored under that key"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const username = hs.userdefaults.get(\"username\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 70
+        },
+        {
+          "name": "clear",
+          "signature": "func clear(_ key: String) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Delete a previously stored value.\n- Parameter key: The name of the setting to remove\n- Returns: true if a value existed and was removed, false if the key was not set\n- Example:\n```js\nhs.userdefaults.clear(\"username\")\n```",
+          "description": "Delete a previously stored value.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting to remove",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if a value existed and was removed, false if the key was not set"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.userdefaults.clear(\"username\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 79
+        },
+        {
+          "name": "getKeys",
+          "signature": "func getKeys() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Get the names of all currently stored settings.\n- Returns: An array of setting names\n- Example:\n```js\nconsole.log(hs.userdefaults.getKeys())\n```",
+          "description": "Get the names of all currently stored settings.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of setting names"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.userdefaults.getKeys())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 87
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ key: String, _ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Watch a key for changes.\n- Parameters:\n  - key: The name of the setting to watch\n  - listener: {(key: string, newValue: any) => void} Called with the key and its new value whenever it changes\n- Example:\n```js\nhs.userdefaults.addWatcher(\"username\", (key, newValue) => {\n    console.log(key + \" changed to \" + newValue)\n})\n```",
+          "description": "Watch a key for changes.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting to watch",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "Called with the key and its new value whenever it changes",
+              "optional": false,
+              "tsType": "(key: string, newValue: any) => void"
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.userdefaults.addWatcher(\"username\", (key, newValue) => {\n    console.log(key + \" changed to \" + newValue)\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 99
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ key: String, _ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Remove a previously registered watcher.\n- Parameters:\n  - key: The name of the setting originally passed to `addWatcher`\n  - listener: The function originally passed to `addWatcher`\n- Example:\n```js\nhs.userdefaults.removeWatcher(\"username\", myHandler)\n```",
+          "description": "Remove a previously registered watcher.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting originally passed to `addWatcher`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "The function originally passed to `addWatcher`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.userdefaults.removeWatcher(\"username\", myHandler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 109
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Module for storing small amounts of data that persists across Hammerspoon restarts.\nValues are stored in a dedicated `UserDefaults` suite named \"hs.userdefaults\", kept\nseparate from the app's own preferences so it doesn't get confused with Hammerspoon's\nown configuration when inspected with tools like the `defaults` command line utility.\nBecause the suite is just a standard macOS preferences domain, it can also be inspected\n```sh\n# Read every value stored by hs.userdefaults\ndefaults read hs.userdefaults\n\n# Read a single key\ndefaults read hs.userdefaults someKey\n\n# Write a value from the command line\ndefaults write hs.userdefaults someKey \"some value\"\n\n# Delete a key\ndefaults delete hs.userdefaults someKey\n```\ninformation such as passwords, API keys, or tokens.",
+      "rawDocumentation": "Module for storing small amounts of data that persists across Hammerspoon restarts.\n\nValues are stored in a dedicated `UserDefaults` suite named \"hs.userdefaults\", kept\nseparate from the app's own preferences so it doesn't get confused with Hammerspoon's\nown configuration when inspected with tools like the `defaults` command line utility.\n\nJavaScript ↔ storage type mapping:\n- JavaScript strings, numbers, booleans, arrays and objects round-trip directly\n- JavaScript `Date` objects round-trip directly (no special API required)\n- JavaScript `null`/`undefined` are not storable values; use `clear()` to remove a key\n\nBecause the suite is just a standard macOS preferences domain, it can also be inspected\nand manipulated from the command line with the `defaults` tool:\n```sh\n# Read every value stored by hs.userdefaults\ndefaults read hs.userdefaults\n\n# Read a single key\ndefaults read hs.userdefaults someKey\n\n# Write a value from the command line\ndefaults write hs.userdefaults someKey \"some value\"\n\n# Delete a key\ndefaults delete hs.userdefaults someKey\n```\n\n- Note: This suite is **not encrypted on disk**. Do not use it to store sensitive\n  information such as passwords, API keys, or tokens."
+    },
+    {
       "name": "hs.window",
       "methods": [
         {
@@ -21507,5 +21702,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-26T12:22:42.365Z"
+  "generatedAt": "2026-07-27T22:39:19.917Z"
 }

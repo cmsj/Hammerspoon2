@@ -88,6 +88,7 @@ import JavaScriptCoreExtras
     @objc var window: HSWindowModule { get }
     @objc var mouse: HSMouseModule { get }
     @objc var plist: HSPlistModule { get }
+    @objc var userdefaults: HSUserDefaultsModule { get }
 }
 
 @_documentation(visibility: private)
@@ -200,6 +201,7 @@ import JavaScriptCoreExtras
     @objc var window: HSWindowModule { get { getOrCreate(name: "window", type: HSWindowModule.self)}}
     @objc var mouse: HSMouseModule { get { getOrCreate(name: "mouse", type: HSMouseModule.self)}}
     @objc var plist: HSPlistModule { get { getOrCreate(name: "plist", type: HSPlistModule.self)}}
+    @objc var userdefaults: HSUserDefaultsModule { get { getOrCreate(name: "userdefaults", type: HSUserDefaultsModule.self)}}
 }
 
 // MARK: - JSContextInstallable

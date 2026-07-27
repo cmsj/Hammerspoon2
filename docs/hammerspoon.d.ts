@@ -7516,6 +7516,77 @@ The listener is called with two arguments: the event type string (`"added"` or `
 }
 
 /**
+ * Module for storing small amounts of data that persists across Hammerspoon restarts.
+Values are stored in a dedicated `UserDefaults` suite named "hs.userdefaults", kept
+separate from the app's own preferences so it doesn't get confused with Hammerspoon's
+own configuration when inspected with tools like the `defaults` command line utility.
+Because the suite is just a standard macOS preferences domain, it can also be inspected
+```sh
+# Read every value stored by hs.userdefaults
+defaults read hs.userdefaults
+
+# Read a single key
+defaults read hs.userdefaults someKey
+
+# Write a value from the command line
+defaults write hs.userdefaults someKey "some value"
+
+# Delete a key
+defaults delete hs.userdefaults someKey
+```
+information such as passwords, API keys, or tokens.
+ */
+declare namespace hs.userdefaults {
+    /**
+     * Store a value under the given key. The value persists across Hammerspoon restarts.
+Values must be storable as a property list: strings, numbers, booleans, Dates,
+arrays, or objects (which may themselves nest any of those types).
+is rejected with a logged error and nothing is stored. JavaScript functions have
+no property-list representation; if passed directly, or nested inside an array or
+object, they are silently stored as an empty object.
+     * @remarks Passing a native object from another `hs.*` module (e.g. a timer or hotkey)
+     * @param key The name of the setting
+     * @param value A string, number, boolean, Date, array, or object to store
+     */
+    function set(key: string, value: any): void;
+
+    /**
+     * Retrieve a previously stored value.
+     * @param key The name of the setting
+     * @returns The stored value, or null if nothing is stored under that key
+     */
+    function get(key: string): any;
+
+    /**
+     * Delete a previously stored value.
+     * @param key The name of the setting to remove
+     * @returns true if a value existed and was removed, false if the key was not set
+     */
+    function clear(key: string): boolean;
+
+    /**
+     * Get the names of all currently stored settings.
+     * @returns An array of setting names
+     */
+    function getKeys(): string[];
+
+    /**
+     * Watch a key for changes.
+     * @param key The name of the setting to watch
+     * @param listener Called with the key and its new value whenever it changes
+     */
+    function addWatcher(key: string, listener: (key: string, newValue: any) => void): void;
+
+    /**
+     * Remove a previously registered watcher.
+     * @param key The name of the setting originally passed to `addWatcher`
+     * @param listener The function originally passed to `addWatcher`
+     */
+    function removeWatcher(key: string, listener: (...args: any[]) => any): void;
+
+}
+
+/**
  * Module for interacting with windows
  */
 declare namespace hs.window {
