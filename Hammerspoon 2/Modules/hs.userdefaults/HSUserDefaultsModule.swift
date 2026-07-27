@@ -99,21 +99,26 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     var name = "hs.userdefaults"
     let engineID: UUID
 
-    private let suite: UserDefaults
+    private let suite: UserDefaults?
     private var watcherCallbacks: [String: JSFunction] = [:]
 
     @objc var _watcherEmitter: JSFunction?
 
     required init(engineID: UUID) {
         self.engineID = engineID
-        self.suite = UserDefaults(suiteName: hsUserDefaultsSuiteName) ?? .standard
+        self.suite = UserDefaults(suiteName: hsUserDefaultsSuiteName)
         super.init()
+        if suite == nil {
+            AKError("hs.userdefaults: Failed to create UserDefaults suite '\(hsUserDefaultsSuiteName)'. This module will not function.")
+        }
         AKDebug("Init of \(name): \(engineID)")
     }
 
     func shutdown() {
-        for key in watcherCallbacks.keys {
-            suite.removeObserver(self, forKeyPath: key)
+        if let suite {
+            for key in watcherCallbacks.keys {
+                suite.removeObserver(self, forKeyPath: key)
+            }
         }
         watcherCallbacks.removeAll()
         _watcherEmitter = nil
@@ -127,20 +132,36 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     // MARK: - Storage
 
     @objc func set(_ key: String, _ value: Any) {
+        guard let suite else {
+            AKError("hs.userdefaults.set(): No UserDefaults suite available")
+            return
+        }
         suite.set(value, forKey: key)
     }
 
     @objc func get(_ key: String) -> Any? {
+        guard let suite else {
+            AKError("hs.userdefaults.get(): No UserDefaults suite available")
+            return nil
+        }
         return suite.object(forKey: key)
     }
 
     @objc func clear(_ key: String) -> Bool {
+        guard let suite else {
+            AKError("hs.userdefaults.clear(): No UserDefaults suite available")
+            return false
+        }
         let existed = suite.object(forKey: key) != nil
         suite.removeObject(forKey: key)
         return existed
     }
 
     @objc func getKeys() -> [String] {
+        guard let suite else {
+            AKError("hs.userdefaults.getKeys(): No UserDefaults suite available")
+            return []
+        }
         return Array(suite.dictionaryRepresentation().keys)
     }
 
@@ -155,16 +176,24 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     }
 
     @objc(_addWatcher::) func _addWatcher(_ key: String, callback: JSFunction) {
+        guard let suite else {
+            AKError("hs.userdefaults.addWatcher(): No UserDefaults suite available")
+            return
+        }
         guard watcherCallbacks[key] == nil else {
             AKWarning("hs.userdefaults.addWatcher(): Already watching '\(key)'. Refusing to create a second.")
             return
         }
         watcherCallbacks[key] = callback
-        suite.addObserver(self, forKeyPath: key, options: [.new], context: nil)
+        unsafe suite.addObserver(self, forKeyPath: key, options: [.new], context: nil)
         AKTrace("hs.userdefaults.addWatcher(): Started watching '\(key)'")
     }
 
     @objc func _removeWatcher(_ key: String) {
+        guard let suite else {
+            AKError("hs.userdefaults.removeWatcher(): No UserDefaults suite available")
+            return
+        }
         guard watcherCallbacks[key] != nil else { return }
         suite.removeObserver(self, forKeyPath: key)
         watcherCallbacks.removeValue(forKey: key)
@@ -179,7 +208,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     ) {
         guard let keyPath else { return }
         MainActor.assumeIsolated {
-            guard let callback = watcherCallbacks[keyPath] else { return }
+            guard let suite, let callback = watcherCallbacks[keyPath] else { return }
             let newValue = suite.object(forKey: keyPath)
             _ = callback.call(withArguments: [keyPath, newValue as Any])
         }
