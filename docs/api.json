@@ -19684,6 +19684,197 @@
       "rawDocumentation": "Module for monitoring USB device connections and disconnections"
     },
     {
+      "name": "hs.userdefaults",
+      "methods": [
+        {
+          "name": "set",
+          "signature": "func set(_ key: String, _ value: Any)",
+          "isStatic": false,
+          "rawDocumentation": "Store a value under the given key. The value persists across Hammerspoon restarts.\n- Parameters:\n  - key: The name of the setting\n  - value: A string, number, boolean, Date, array, or object to store\n- Example:\n```js\nhs.userdefaults.set(\"username\", \"chris\")\nhs.userdefaults.set(\"launchCount\", 42)\nhs.userdefaults.set(\"lastRun\", new Date())\n```",
+          "description": "Store a value under the given key. The value persists across Hammerspoon restarts.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "value",
+              "type": "*",
+              "description": "A string, number, boolean, Date, array, or object to store",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.userdefaults.set(\"username\", \"chris\")\nhs.userdefaults.set(\"launchCount\", 42)\nhs.userdefaults.set(\"lastRun\", new Date())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 35
+        },
+        {
+          "name": "get",
+          "signature": "func get(_ key: String) -> Any?",
+          "isStatic": false,
+          "rawDocumentation": "Retrieve a previously stored value.\n- Parameter key: The name of the setting\n- Returns: {any} The stored value, or null if nothing is stored under that key\n- Example:\n```js\nconst username = hs.userdefaults.get(\"username\")\n```",
+          "description": "Retrieve a previously stored value.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "The stored value, or null if nothing is stored under that key"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const username = hs.userdefaults.get(\"username\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 44
+        },
+        {
+          "name": "clear",
+          "signature": "func clear(_ key: String) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Delete a previously stored value.\n- Parameter key: The name of the setting to remove\n- Returns: true if a value existed and was removed, false if the key was not set\n- Example:\n```js\nhs.userdefaults.clear(\"username\")\n```",
+          "description": "Delete a previously stored value.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting to remove",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if a value existed and was removed, false if the key was not set"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.userdefaults.clear(\"username\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 53
+        },
+        {
+          "name": "getKeys",
+          "signature": "func getKeys() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Get the names of all currently stored settings.\n- Returns: An array of setting names\n- Example:\n```js\nconsole.log(hs.userdefaults.getKeys())\n```",
+          "description": "Get the names of all currently stored settings.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of setting names"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.userdefaults.getKeys())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 61
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ key: String, _ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Watch a key for changes.\n- Parameters:\n  - key: The name of the setting to watch\n  - listener: {(key: string, newValue: any) => void} Called with the key and its new value whenever it changes\n- Example:\n```js\nhs.userdefaults.addWatcher(\"username\", (key, newValue) => {\n    console.log(key + \" changed to \" + newValue)\n})\n```",
+          "description": "Watch a key for changes.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting to watch",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "Called with the key and its new value whenever it changes",
+              "optional": false,
+              "tsType": "(key: string, newValue: any) => void"
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.userdefaults.addWatcher(\"username\", (key, newValue) => {\n    console.log(key + \" changed to \" + newValue)\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 73
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ key: String, _ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Remove a previously registered watcher.\n- Parameters:\n  - key: The name of the setting originally passed to `addWatcher`\n  - listener: The function originally passed to `addWatcher`\n- Example:\n```js\nhs.userdefaults.removeWatcher(\"username\", myHandler)\n```",
+          "description": "Remove a previously registered watcher.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The name of the setting originally passed to `addWatcher`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "The function originally passed to `addWatcher`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.userdefaults.removeWatcher(\"username\", myHandler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.userdefaults/HSUserDefaultsModule.swift",
+          "lineNumber": 83
+        }
+      ],
+      "properties": [],
+      "types": []
+    },
+    {
       "name": "hs.window",
       "methods": [
         {
@@ -21507,5 +21698,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-26T12:22:42.365Z"
+  "generatedAt": "2026-07-27T21:47:32.295Z"
 }

@@ -7516,6 +7516,52 @@ The listener is called with two arguments: the event type string (`"added"` or `
 }
 
 /**
+ */
+declare namespace hs.userdefaults {
+    /**
+     * Store a value under the given key. The value persists across Hammerspoon restarts.
+     * @param key The name of the setting
+     * @param value A string, number, boolean, Date, array, or object to store
+     */
+    function set(key: string, value: any): void;
+
+    /**
+     * Retrieve a previously stored value.
+     * @param key The name of the setting
+     * @returns The stored value, or null if nothing is stored under that key
+     */
+    function get(key: string): any;
+
+    /**
+     * Delete a previously stored value.
+     * @param key The name of the setting to remove
+     * @returns true if a value existed and was removed, false if the key was not set
+     */
+    function clear(key: string): boolean;
+
+    /**
+     * Get the names of all currently stored settings.
+     * @returns An array of setting names
+     */
+    function getKeys(): string[];
+
+    /**
+     * Watch a key for changes.
+     * @param key The name of the setting to watch
+     * @param listener Called with the key and its new value whenever it changes
+     */
+    function addWatcher(key: string, listener: (key: string, newValue: any) => void): void;
+
+    /**
+     * Remove a previously registered watcher.
+     * @param key The name of the setting originally passed to `addWatcher`
+     * @param listener The function originally passed to `addWatcher`
+     */
+    function removeWatcher(key: string, listener: (...args: any[]) => any): void;
+
+}
+
+/**
  * Module for interacting with windows
  */
 declare namespace hs.window {
