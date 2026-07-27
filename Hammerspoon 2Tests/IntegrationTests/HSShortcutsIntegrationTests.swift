@@ -7,7 +7,7 @@ import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
 
-@Suite("hs.shortcuts tests")
+@Suite("hs.shortcuts tests", .serialized)
 struct HSShortcutsIntegrationTests {
 
     // MARK: - API Structure Tests

@@ -7,7 +7,7 @@ import Testing
 import JavaScriptCore
 @testable import Hammerspoon_2
 
-@Suite("hs.network tests")
+@Suite("hs.network tests", .serialized)
 struct HSNetworkTests {
 
     // MARK: - Suite 1: API structure
