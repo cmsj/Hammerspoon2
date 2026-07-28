@@ -514,6 +514,11 @@ declare namespace hs.appinfo {
      */
     const configDir: string;
 
+    /**
+     * The user-assigned name of this Mac, as shown in System Settings > Sharing
+     */
+    const machineName: string;
+
 }
 
 /**
@@ -3943,6 +3948,12 @@ Each object contains `interface` (the BSD name of the interface), `address` (the
      * @returns An array of address objects.
      */
     function addresses(): Record<string, any>[];
+
+    /**
+     * Returns all hostnames known for this Mac.
+     * @returns An array of hostname strings (e.g. `["My-Mac.local"]`).
+     */
+    function hostnames(): string[];
 
     /**
      * Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.

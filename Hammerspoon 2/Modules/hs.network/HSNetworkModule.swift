@@ -137,6 +137,16 @@ private func queryPrimaryInterface() -> String? {
     /// ```
     @objc func addresses() -> [[String: Any]]
 
+    /// Returns all hostnames known for this Mac.
+    ///
+    /// - Returns: An array of hostname strings (e.g. `["My-Mac.local"]`).
+    /// - Example:
+    /// ```js
+    /// const names = hs.network.hostnames()
+    /// names.forEach(n => console.log(n))
+    /// ```
+    @objc func hostnames() -> [String]
+
     /// Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.
     ///
     /// Uses CFHost, which respects the system's network configuration including VPN routes and proxy settings.
@@ -484,6 +494,10 @@ private func queryPrimaryInterface() -> String? {
 
     @objc func addresses() -> [[String: Any]] {
         snapshotNetwork().addresses
+    }
+
+    @objc func hostnames() -> [String] {
+        Host.current().names
     }
 
     @objc func resolve(_ hostname: String, _ family: String?) -> JSPromise? {

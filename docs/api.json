@@ -414,6 +414,23 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
           "lineNumber": 106
+        },
+        {
+          "name": "machineName",
+          "signature": "var machineName: String { get }",
+          "rawDocumentation": "The user-assigned name of this Mac, as shown in System Settings > Sharing\n- Example:\n```js\nconsole.log(hs.appinfo.machineName)\n```",
+          "description": "The user-assigned name of this Mac, as shown in System Settings > Sharing",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.appinfo.machineName)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
+          "lineNumber": 113
         }
       ],
       "types": [],
@@ -10756,6 +10773,28 @@
           "lineNumber": 138
         },
         {
+          "name": "hostnames",
+          "signature": "func hostnames() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns all hostnames known for this Mac.\n\n- Returns: An array of hostname strings (e.g. `[\"My-Mac.local\"]`).\n- Example:\n```js\nconst names = hs.network.hostnames()\nnames.forEach(n => console.log(n))\n```",
+          "description": "Returns all hostnames known for this Mac.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of hostname strings (e.g. `[\"My-Mac.local\"]`)."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const names = hs.network.hostnames()\nnames.forEach(n => console.log(n))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
+          "lineNumber": 148
+        },
+        {
           "name": "resolve",
           "signature": "func resolve(_ hostname: String, _ family: String?) -> JSPromise?",
           "isStatic": false,
@@ -10791,7 +10830,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 153
+          "lineNumber": 163
         },
         {
           "name": "reachabilityForAddress",
@@ -10821,7 +10860,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 183
+          "lineNumber": 193
         },
         {
           "name": "reachabilityForAddressPair",
@@ -10858,7 +10897,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 198
+          "lineNumber": 208
         },
         {
           "name": "reachabilityForHostName",
@@ -10888,7 +10927,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 212
+          "lineNumber": 222
         },
         {
           "name": "reachabilityInternet",
@@ -10910,7 +10949,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 225
+          "lineNumber": 235
         },
         {
           "name": "reachabilityLinkLocal",
@@ -10932,7 +10971,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 240
+          "lineNumber": 250
         },
         {
           "name": "configurationStore",
@@ -10962,7 +11001,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 263
+          "lineNumber": 273
         },
         {
           "name": "configurationLocations",
@@ -10984,7 +11023,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 274
+          "lineNumber": 284
         },
         {
           "name": "configurationSetLocation",
@@ -11014,7 +11053,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 289
+          "lineNumber": 299
         },
         {
           "name": "configurationWatcher",
@@ -11036,7 +11075,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 304
+          "lineNumber": 314
         },
         {
           "name": "ping",
@@ -11073,7 +11112,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 340
+          "lineNumber": 350
         }
       ],
       "properties": [
@@ -11092,7 +11131,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.network/HSNetworkModule.swift",
-          "lineNumber": 169
+          "lineNumber": 179
         }
       ],
       "types": [
@@ -22111,5 +22150,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-28T19:53:07.288Z"
+  "generatedAt": "2026-07-28T22:31:08.686Z"
 }

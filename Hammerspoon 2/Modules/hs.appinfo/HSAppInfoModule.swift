@@ -24,6 +24,15 @@ struct HSAppInfoData {
     let bundleIdentifier = readFromInfoPlist(withKey: "CFBundleIdentifier") ?? "(unknown bundle identifier)"
     let bundlePath = Bundle.main.bundlePath
     let resourcePath = Bundle.main.resourcePath ?? "(unknown resource path)"
+    let machineName = Host.current().localizedName ?? "(unknown machine name)"
+    let pid = Int(ProcessInfo.processInfo.processIdentifier)
+    let arguments = ProcessInfo.processInfo.arguments
+    let environment = ProcessInfo.processInfo.environment
+    let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+    let osVersionParts = ProcessInfo.processInfo.operatingSystemVersion
+    let cpuCount = ProcessInfo.processInfo.processorCount
+    let ramAmount: Int = Int(ProcessInfo.processInfo.physicalMemory / 1024 / 1024 / 1024)
+
 }
 
 /// Module for accessing information about the Hammerspoon application itself
@@ -104,9 +113,28 @@ struct HSAppInfoData {
     /// console.log(hs.appinfo.configDir)
     /// ```
     @objc var configDir: String { get }
-}
 
-// MARK: - Implementation
+    /// The user-assigned name of this Mac, as shown in System Settings > Sharing
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.machineName)
+    /// ```
+    @objc var machineName: String { get }
+    
+    /// Hammerspoon 2's Process Identifier (PID)
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.pid)
+    /// ```
+    @objc var pid: Int { get }
+
+    @objc var arguments: [String] { get }
+    @objc var environment: [String: String] { get }
+    @objc var osVersion: String { get }
+    @objc var osVersionParts: [String: Int] { get }
+    @objc var cpuCount: Int { get }
+    @objc var ramAmount: Int { get }
+}
 
 @_documentation(visibility: private)
 @MainActor
@@ -129,6 +157,18 @@ struct HSAppInfoData {
         _bundleIdentifier = appData.bundleIdentifier
         _bundlePath = appData.bundlePath
         _resourcePath = appData.resourcePath
+        _machineName = appData.machineName
+        _pid = appData.pid
+        _arguments = appData.arguments
+        _environment = appData.environment
+        _osVersion = appData.osVersion
+        _osVersionParts = [
+            "major": appData.osVersionParts.majorVersion,
+            "minor": appData.osVersionParts.minorVersion,
+            "patch": appData.osVersionParts.patchVersion
+            ]
+        _cpuCount = appData.cpuCount
+        _ramAmount = appData.ramAmount
 
         super.init()
         AKDebug("Init of \(name): \(engineID)")
@@ -151,6 +191,14 @@ struct HSAppInfoData {
     private let _bundleIdentifier: String
     private let _bundlePath: String
     private let _resourcePath: String
+    private let _machineName: String
+    private let _pid: Int
+    private let _arguments: [String]
+    private let _environment: [String: String]
+    private let _osVersion: String
+    private let _osVersionParts: [String: Int]
+    private let _cpuCount: Int
+    private let _ramAmount: Int
 
     // MARK: - Public API
 
@@ -167,4 +215,12 @@ struct HSAppInfoData {
     @objc var configDir: String {
         "/\(SettingsManager.shared.configLocation.pathComponents.dropFirst().dropLast().joined(separator: "/"))"
     }
+    @objc var machineName: String { _machineName }
+    @objc var pid: Int { _pid }
+    @objc var arguments: [String] { _arguments }
+    @objc var environment: [String: String] { _environment }
+    @objc var osVersion: String { _osVersion }
+    @objc var osVersionParts: [String: Int] { _osVersionParts }
+    @objc var cpuCount: Int { _cpuCount }
+    @objc var ramAmount: Int { _ramAmount }
 }
