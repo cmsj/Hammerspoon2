@@ -301,18 +301,22 @@ struct HSEventTapTests {
         }
 
         @Test("makeKeyEvent sets the correct event type for keyDown")
-        func testMakeKeyEventTypeIsKeyDown() {
+        func testMakeKeyEventTypeIsKeyDown() throws {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeKeyEvent('a', true)")
-            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.keyDown"))
+            let eventType = try #require(harness.evalInt("evt.type"))
+            let keyDownType = try #require(harness.evalInt("hs.eventtap.eventTypes.keyDown"))
+            #expect(eventType == keyDownType)
             #expect(!harness.hasException)
         }
 
         @Test("makeKeyEvent sets the correct event type for keyUp")
-        func testMakeKeyEventTypeIsKeyUp() {
+        func testMakeKeyEventTypeIsKeyUp() throws {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeKeyEvent('a', false)")
-            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.keyUp"))
+            let eventType = try #require(harness.evalInt("evt.type"))
+            let keyUpType = try #require(harness.evalInt("hs.eventtap.eventTypes.keyUp"))
+            #expect(eventType == keyUpType)
             #expect(!harness.hasException)
         }
 
@@ -357,13 +361,15 @@ struct HSEventTapTests {
         }
 
         @Test("makeKeyEvent 'minus' and '-' produce the same keyCode")
-        func testMakeKeyEventMinusAliasMatchesChar() {
+        func testMakeKeyEventMinusAliasMatchesChar() throws {
             let harness = makeHarness()
             harness.eval("""
                 var evt1 = hs.eventtap.makeKeyEvent('minus', true)
                 var evt2 = hs.eventtap.makeKeyEvent('-', true)
             """)
-            #expect(harness.evalInt("evt1.keyCode") == harness.evalInt("evt2.keyCode"))
+            let keyCode1 = try #require(harness.evalInt("evt1.keyCode"))
+            let keyCode2 = try #require(harness.evalInt("evt2.keyCode"))
+            #expect(keyCode1 == keyCode2)
             #expect(!harness.hasException)
         }
 
@@ -399,13 +405,15 @@ struct HSEventTapTests {
         }
 
         @Test("event rawFlags can be read and written")
-        func testEventRawFlagsGetSet() {
+        func testEventRawFlagsGetSet() throws {
             let harness = makeHarness()
             harness.eval("""
                 var evt = hs.eventtap.makeKeyEvent('a', true)
                 evt.rawFlags = hs.eventtap.modifierFlags.cmd
             """)
-            #expect(harness.evalInt("evt.rawFlags") == harness.evalInt("hs.eventtap.modifierFlags.cmd"))
+            let rawFlags = try #require(harness.evalInt("evt.rawFlags"))
+            let cmdFlag = try #require(harness.evalInt("hs.eventtap.modifierFlags.cmd"))
+            #expect(rawFlags == cmdFlag)
             #expect(!harness.hasException)
         }
 
@@ -450,10 +458,12 @@ struct HSEventTapTests {
         }
 
         @Test("makeMouseEvent sets the correct event type")
-        func testMakeMouseEventType() {
+        func testMakeMouseEventType() throws {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.leftMouseDown, 400, 300, 0)")
-            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.leftMouseDown"))
+            let eventType = try #require(harness.evalInt("evt.type"))
+            let leftMouseDownType = try #require(harness.evalInt("hs.eventtap.eventTypes.leftMouseDown"))
+            #expect(eventType == leftMouseDownType)
             #expect(!harness.hasException)
         }
 
@@ -477,10 +487,12 @@ struct HSEventTapTests {
         }
 
         @Test("makeScrollWheelEvent has scroll event type")
-        func testMakeScrollWheelEventType() {
+        func testMakeScrollWheelEventType() throws {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeScrollWheelEvent(0, 3, 500, 400)")
-            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.scrollWheel"))
+            let eventType = try #require(harness.evalInt("evt.type"))
+            let scrollWheelType = try #require(harness.evalInt("hs.eventtap.eventTypes.scrollWheel"))
+            #expect(eventType == scrollWheelType)
             #expect(!harness.hasException)
         }
 

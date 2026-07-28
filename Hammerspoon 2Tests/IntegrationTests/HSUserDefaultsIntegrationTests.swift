@@ -149,7 +149,7 @@ struct HSUserDefaultsTests {
         }
 
         @Test("Date value round-trips through set/get")
-        func testDateRoundTrip() {
+        func testDateRoundTrip() throws {
             let key = testKey()
             let harness = makeHarness()
             defer { harness.eval("hs.userdefaults.clear('\(key)')") }
@@ -160,7 +160,9 @@ struct HSUserDefaultsTests {
                 var r = hs.userdefaults.get('\(key)')
             """)
             harness.expectTrue("r instanceof Date")
-            #expect(harness.evalDouble("r.getTime()") == harness.evalDouble("original.getTime()"))
+            let roundTripped = try #require(harness.evalDouble("r.getTime()"))
+            let original = try #require(harness.evalDouble("original.getTime()"))
+            #expect(roundTripped == original)
             #expect(!harness.hasException)
         }
 

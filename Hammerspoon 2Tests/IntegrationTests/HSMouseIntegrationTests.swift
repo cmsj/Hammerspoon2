@@ -176,20 +176,24 @@ struct HSMouseTests {
         }
 
         @Test("names() length matches count()")
-        func testNamesLengthMatchesCount() {
+        func testNamesLengthMatchesCount() throws {
             let harness = makeHarness()
             harness.eval("var n = hs.mouse.count()")
             harness.eval("var names = hs.mouse.names()")
-            #expect(harness.evalInt("names.length") == harness.evalInt("n"))
+            let namesLength = try #require(harness.evalInt("names.length"))
+            let count = try #require(harness.evalInt("n"))
+            #expect(namesLength == count)
             #expect(!harness.hasException)
         }
 
         @Test("names(true) length matches count(true)")
-        func testNamesIncludeInternalLengthMatchesCount() {
+        func testNamesIncludeInternalLengthMatchesCount() throws {
             let harness = makeHarness()
             harness.eval("var n = hs.mouse.count(true)")
             harness.eval("var names = hs.mouse.names(true)")
-            #expect(harness.evalInt("names.length") == harness.evalInt("n"))
+            let namesLength = try #require(harness.evalInt("names.length"))
+            let count = try #require(harness.evalInt("n"))
+            #expect(namesLength == count)
             #expect(!harness.hasException)
         }
 
