@@ -122,7 +122,12 @@ let wifiWatcherValidEvents: Set<String> = [
             let wasRunning = isRunning
             if wasRunning { module?.stopWatching(self) }
             _events = filtered
-            if wasRunning { module?.startWatching(self) }
+            if wasRunning {
+                isRunning = module?.startWatching(self) ?? true
+                if !isRunning {
+                    AKWarning("HSWifiWatcher(\(identifier)).events: failed to register one or more event types; call start() again to retry")
+                }
+            }
         }
     }
 
@@ -144,8 +149,11 @@ let wifiWatcherValidEvents: Set<String> = [
 
     @objc @discardableResult func start() -> HSWifiWatcher {
         guard !isRunning else { return self }
+        guard module?.startWatching(self) ?? true else {
+            AKWarning("HSWifiWatcher(\(identifier)).start(): failed to register one or more event types; call start() again to retry")
+            return self
+        }
         isRunning = true
-        module?.startWatching(self)
         AKTrace("HSWifiWatcher(\(identifier)).start(): Started")
         return self
     }

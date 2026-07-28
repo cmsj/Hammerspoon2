@@ -417,24 +417,46 @@ private enum HSWifiError: LocalizedError {
 
     // MARK: - Watcher event (de)registration, ref-counted per CWEventType (see HSAXModule for precedent)
 
-    func startWatching(_ watcher: HSWifiWatcher) {
+    /// Registers `watcher`'s event types, incrementing shared ref counts. If any event type
+    /// fails to register, only the increments made by *this* call are rolled back (other
+    /// watchers' active subscriptions are left untouched) and `false` is returned, so the
+    /// caller (HSWifiWatcher.start()) can leave itself in a retryable, not-running state
+    /// rather than getting stuck "running" with no actual registration.
+    @discardableResult
+    func startWatching(_ watcher: HSWifiWatcher) -> Bool {
+        var incrementedTypes: [CWEventType] = []
+        var success = true
+
         for name in watcher.events {
             guard let type = wifiEventTypeMap[name] else { continue }
             let currentCount = eventRefCounts[type, default: 0]
             guard currentCount == 0 else {
                 eventRefCounts[type] = currentCount + 1
+                incrementedTypes.append(type)
                 continue
             }
             do {
                 try client.startMonitoringEvent(with: type)
                 eventRefCounts[type] = 1
+                incrementedTypes.append(type)
                 AKTrace("hs.wifi: started monitoring \(name)")
             } catch {
-                // Leave the ref count at 0 so a later watcher retries registration
-                // instead of assuming this event type is already being monitored.
                 AKError("hs.wifi: failed to start monitoring \(name): \(error.localizedDescription)")
+                success = false
             }
         }
+
+        if !success {
+            for type in incrementedTypes {
+                let count = eventRefCounts[type, default: 0]
+                eventRefCounts[type] = count - 1
+                if count - 1 == 0 {
+                    try? client.stopMonitoringEvent(with: type)
+                }
+            }
+        }
+
+        return success
     }
 
     func stopWatching(_ watcher: HSWifiWatcher) {
