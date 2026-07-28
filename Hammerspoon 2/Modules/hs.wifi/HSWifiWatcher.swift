@@ -159,23 +159,35 @@ let wifiWatcherValidEvents: Set<String> = [
     @objc @discardableResult func start() -> HSWifiWatcher {
         guard !isRunning else { return self }
         guard let module else {
-            isRunning = true
+            AKError("HSWifiWatcher(\(identifier)).start(): Missing HSWifiModule")
             return self
         }
+
         registeredEvents = module.startWatching(self)
+        isRunning = true
+
         guard Set(_events).isSubset(of: registeredEvents) else {
-            AKWarning("HSWifiWatcher(\(identifier)).start(): failed to register one or more event types; call start() again to retry")
+            AKWarning("HSWifiWatcher(\(identifier)).start(): failed to register one or more event types")
             return self
         }
-        isRunning = true
         AKTrace("HSWifiWatcher(\(identifier)).start(): Started")
         return self
     }
 
     @objc @discardableResult func stop() -> HSWifiWatcher {
         guard isRunning else { return self }
-        if let module { registeredEvents = module.stopWatching(self) }
+        guard let module else {
+            AKError("HSWifiWatcher(\(identifier)).stop(): Missing HSWifiModule")
+            return self
+        }
+
+        registeredEvents = module.stopWatching(self)
         isRunning = false
+
+        guard registeredEvents.isEmpty else {
+            AKWarning("HSWifiWatcher(\(identifier)).stop(): failed to unregister one or more event types")
+            return self
+        }
         AKTrace("HSWifiWatcher(\(identifier)).stop(): Stopped")
         return self
     }
