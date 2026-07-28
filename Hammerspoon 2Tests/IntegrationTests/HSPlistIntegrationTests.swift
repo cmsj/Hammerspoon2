@@ -26,22 +26,26 @@ struct HSPlistTests {
 
         @Test("fromFile is a function")
         func testFromFileIsFunction() {
-            makeHarness().expectTrue("typeof hs.plist.fromFile === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.plist.fromFile") == "function")
         }
 
         @Test("fromString is a function")
         func testFromStringIsFunction() {
-            makeHarness().expectTrue("typeof hs.plist.fromString === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.plist.fromString") == "function")
         }
 
         @Test("toFile is a function")
         func testToFileIsFunction() {
-            makeHarness().expectTrue("typeof hs.plist.toFile === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.plist.toFile") == "function")
         }
 
         @Test("toString is a function")
         func testToStringIsFunction() {
-            makeHarness().expectTrue("typeof hs.plist.toString === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.plist.toString") == "function")
         }
 
         @Test("fromFile with nonexistent path returns null without throwing")
@@ -64,7 +68,7 @@ struct HSPlistTests {
         func testToFileInvalidDirectoryReturnsFalse() {
             let harness = makeHarness()
             harness.eval("var r = hs.plist.toFile('/nonexistent/dir/foo.plist', { key: 'val' })")
-            harness.expectTrue("r === false")
+            #expect(harness.evalBool("r") == false)
             #expect(!harness.hasException)
         }
 
@@ -72,7 +76,7 @@ struct HSPlistTests {
         func testToStringReturnsString() {
             let harness = makeHarness()
             harness.eval("var r = hs.plist.toString({ key: 'value' })")
-            harness.expectTrue("typeof r === 'string'")
+            #expect(harness.evalTypeOf("r") == "string")
             harness.expectTrue("r.length > 0")
             #expect(!harness.hasException)
         }
@@ -103,7 +107,7 @@ struct HSPlistTests {
             let harness = makeHarness()
             harness.eval("hs.plist.toFile('\(path)', { greeting: 'hello' })")
             harness.eval("var data = hs.plist.fromFile('\(path)')")
-            harness.expectTrue("data.greeting === 'hello'")
+            #expect(harness.evalString("data.greeting") == "hello")
             #expect(!harness.hasException)
         }
 
@@ -115,7 +119,7 @@ struct HSPlistTests {
             let harness = makeHarness()
             harness.eval("hs.plist.toFile('\(path)', { count: 42, ratio: 3.14 })")
             harness.eval("var data = hs.plist.fromFile('\(path)')")
-            harness.expectTrue("data.count === 42")
+            #expect(harness.evalInt("data.count") == 42)
             harness.expectTrue("Math.abs(data.ratio - 3.14) < 0.001")
             #expect(!harness.hasException)
         }
@@ -128,8 +132,8 @@ struct HSPlistTests {
             let harness = makeHarness()
             harness.eval("hs.plist.toFile('\(path)', { active: true, disabled: false })")
             harness.eval("var data = hs.plist.fromFile('\(path)')")
-            harness.expectTrue("data.active === true")
-            harness.expectTrue("data.disabled === false")
+            #expect(harness.evalBool("data.active") == true)
+            #expect(harness.evalBool("data.disabled") == false)
             #expect(!harness.hasException)
         }
 
@@ -142,9 +146,9 @@ struct HSPlistTests {
             harness.eval("hs.plist.toFile('\(path)', { items: ['a', 'b', 'c'] })")
             harness.eval("var data = hs.plist.fromFile('\(path)')")
             harness.expectTrue("Array.isArray(data.items)")
-            harness.expectTrue("data.items.length === 3")
-            harness.expectTrue("data.items[0] === 'a'")
-            harness.expectTrue("data.items[2] === 'c'")
+            #expect(harness.evalInt("data.items.length") == 3)
+            #expect(harness.evalString("data.items[0]") == "a")
+            #expect(harness.evalString("data.items[2]") == "c")
             #expect(!harness.hasException)
         }
 
@@ -156,9 +160,9 @@ struct HSPlistTests {
             let harness = makeHarness()
             harness.eval("hs.plist.toFile('\(path)', { nested: { x: 1, y: 2 } })")
             harness.eval("var data = hs.plist.fromFile('\(path)')")
-            harness.expectTrue("typeof data.nested === 'object'")
-            harness.expectTrue("data.nested.x === 1")
-            harness.expectTrue("data.nested.y === 2")
+            #expect(harness.evalTypeOf("data.nested") == "object")
+            #expect(harness.evalInt("data.nested.x") == 1)
+            #expect(harness.evalInt("data.nested.y") == 2)
             #expect(!harness.hasException)
         }
 
@@ -169,7 +173,7 @@ struct HSPlistTests {
 
             let harness = makeHarness()
             harness.eval("var result = hs.plist.toFile('\(path)', { key: 'value' })")
-            harness.expectTrue("result === true")
+            #expect(harness.evalBool("result") == true)
             #expect(!harness.hasException)
         }
 
@@ -183,8 +187,8 @@ struct HSPlistTests {
             let harness = makeHarness()
             harness.eval("hs.plist.toFile('\(path)', { name: 'Hammerspoon', version: 2 }, true)")
             harness.eval("var data = hs.plist.fromFile('\(path)')")
-            harness.expectTrue("data.name === 'Hammerspoon'")
-            harness.expectTrue("data.version === 2")
+            #expect(harness.evalString("data.name") == "Hammerspoon")
+            #expect(harness.evalInt("data.version") == 2)
             #expect(!harness.hasException)
         }
 
@@ -205,7 +209,7 @@ struct HSPlistTests {
         func testToStringBinaryIsBase64() {
             let harness = makeHarness()
             harness.eval("var b64 = hs.plist.toString({ key: 'value' }, true)")
-            harness.expectTrue("typeof b64 === 'string'")
+            #expect(harness.evalTypeOf("b64") == "string")
             harness.expectTrue("b64.length > 0")
             harness.expectFalse("b64.includes('<?xml')")
             #expect(!harness.hasException)
@@ -219,9 +223,9 @@ struct HSPlistTests {
                 var data = hs.plist.fromString(xml)
             """)
             harness.expectTrue("data !== null && data !== undefined")
-            harness.expectTrue("data.name === 'Hammerspoon'")
-            harness.expectTrue("data.count === 99")
-            harness.expectTrue("data.flag === true")
+            #expect(harness.evalString("data.name") == "Hammerspoon")
+            #expect(harness.evalInt("data.count") == 99)
+            #expect(harness.evalBool("data.flag") == true)
             #expect(!harness.hasException)
         }
     }

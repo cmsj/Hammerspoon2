@@ -27,22 +27,26 @@ struct HSNotifyTests {
 
         @Test("show is a function")
         func testShowIsFunction() {
-            makeHarness().expectTrue("typeof hs.notify.show === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.notify.show") == "function")
         }
 
         @Test("create is a function")
         func testCreateIsFunction() {
-            makeHarness().expectTrue("typeof hs.notify.create === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.notify.create") == "function")
         }
 
         @Test("removeAllDelivered is a function")
         func testRemoveAllDeliveredIsFunction() {
-            makeHarness().expectTrue("typeof hs.notify.removeAllDelivered === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.notify.removeAllDelivered") == "function")
         }
 
         @Test("removeAllPending is a function")
         func testRemoveAllPendingIsFunction() {
-            makeHarness().expectTrue("typeof hs.notify.removeAllPending === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.notify.removeAllPending") == "function")
         }
 
         @Test("new() returns null when called without a title")
@@ -64,15 +68,13 @@ struct HSNotifyTests {
         @Test("new() returns an object when given a valid title")
         func testCreateReturnsObject() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.notify.create({ title: 'Test' }) === 'object'")
+            #expect(harness.evalTypeOf("hs.notify.create({ title: 'Test' })") == "object")
         }
 
         @Test("HSNotification has an identifier string")
         func testNotificationHasIdentifier() {
             let harness = makeHarness()
-            harness.expectTrue(
-                "typeof hs.notify.create({ title: 'Test' }).identifier === 'string'"
-            )
+            #expect(harness.evalTypeOf("hs.notify.create({ title: 'Test' }).identifier") == "string")
         }
 
         @Test("HSNotification.identifier is a non-empty string")
@@ -98,17 +100,13 @@ struct HSNotifyTests {
         @Test("HSNotification.send is a function")
         func testNotificationSendIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue(
-                "typeof hs.notify.create({ title: 'Test' }).send === 'function'"
-            )
+            #expect(harness.evalTypeOf("hs.notify.create({ title: 'Test' }).send") == "function")
         }
 
         @Test("HSNotification.withdraw is a function")
         func testNotificationWithdrawIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue(
-                "typeof hs.notify.create({ title: 'Test' }).withdraw === 'function'"
-            )
+            #expect(harness.evalTypeOf("hs.notify.create({ title: 'Test' }).withdraw") == "function")
         }
 
         @Test("HSNotification.send() returns the notification itself (for chaining)")
@@ -187,18 +185,20 @@ struct HSNotifyTests {
 
         @Test("checkNotifications is a function")
         func testCheckNotificationsIsFunction() {
-            makeHarness().expectTrue("typeof hs.permissions.checkNotifications === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.permissions.checkNotifications") == "function")
         }
 
         @Test("requestNotifications is a function")
         func testRequestNotificationsIsFunction() {
-            makeHarness().expectTrue("typeof hs.permissions.requestNotifications === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.permissions.requestNotifications") == "function")
         }
 
         @Test("checkNotifications returns a boolean")
         func testCheckNotificationsReturnsBool() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.permissions.checkNotifications() === 'boolean'")
+            #expect(harness.evalTypeOf("hs.permissions.checkNotifications()") == "boolean")
         }
     }
 

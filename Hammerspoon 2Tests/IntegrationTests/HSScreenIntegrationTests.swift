@@ -34,7 +34,7 @@ struct HSScreenIntegrationTests {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.expectTrue("typeof hs.screen === 'object'")
+        #expect(harness.evalTypeOf("hs.screen") == "object")
     }
 
     @Test("hs.screen exposes all expected functions")
@@ -42,9 +42,9 @@ struct HSScreenIntegrationTests {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.expectTrue("typeof hs.screen.all === 'function'")
-        harness.expectTrue("typeof hs.screen.main === 'function'")
-        harness.expectTrue("typeof hs.screen.primary === 'function'")
+        #expect(harness.evalTypeOf("hs.screen.all") == "function")
+        #expect(harness.evalTypeOf("hs.screen.main") == "function")
+        #expect(harness.evalTypeOf("hs.screen.primary") == "function")
     }
 
     // MARK: - all / main / primary
@@ -66,7 +66,7 @@ struct HSScreenIntegrationTests {
 
         harness.eval("var s = hs.screen.main();")
         harness.expectTrue("s !== null && s !== undefined")
-        harness.expectTrue("typeof s === 'object'")
+        #expect(harness.evalTypeOf("s") == "object")
     }
 
     @Test("primary() returns an HSScreen object")
@@ -76,7 +76,7 @@ struct HSScreenIntegrationTests {
 
         harness.eval("var s = hs.screen.primary();")
         harness.expectTrue("s !== null && s !== undefined")
-        harness.expectTrue("typeof s === 'object'")
+        #expect(harness.evalTypeOf("s") == "object")
     }
 
     // MARK: - Identity Properties
@@ -209,7 +209,7 @@ struct HSScreenIntegrationTests {
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("var r = hs.screen.primary().rotation;")
-        harness.expectTrue("typeof r === 'number'")
+        #expect(harness.evalTypeOf("r") == "number")
         harness.expectTrue("r === 0 || r === 90 || r === 180 || r === 270")
     }
 
@@ -244,8 +244,8 @@ struct HSScreenIntegrationTests {
 
         harness.eval("var n = hs.screen.primary().next();")
         harness.expectTrue("n !== null && n !== undefined")
-        harness.expectTrue("typeof n === 'object'")
-        harness.expectTrue("typeof n.id === 'number'")
+        #expect(harness.evalTypeOf("n") == "object")
+        #expect(harness.evalTypeOf("n.id") == "number")
     }
 
     @Test("previous() returns an HSScreen object")
@@ -255,7 +255,7 @@ struct HSScreenIntegrationTests {
 
         harness.eval("var p = hs.screen.primary().previous();")
         harness.expectTrue("p !== null && p !== undefined")
-        harness.expectTrue("typeof p.id === 'number'")
+        #expect(harness.evalTypeOf("p.id") == "number")
     }
 
     @Test("next() of previous() round-trips to the same screen")
@@ -296,10 +296,10 @@ struct HSScreenIntegrationTests {
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("var s = hs.screen.primary();")
-        harness.expectTrue("typeof s.toEast === 'function'")
-        harness.expectTrue("typeof s.toWest === 'function'")
-        harness.expectTrue("typeof s.toNorth === 'function'")
-        harness.expectTrue("typeof s.toSouth === 'function'")
+        #expect(harness.evalTypeOf("s.toEast") == "function")
+        #expect(harness.evalTypeOf("s.toWest") == "function")
+        #expect(harness.evalTypeOf("s.toNorth") == "function")
+        #expect(harness.evalTypeOf("s.toSouth") == "function")
     }
 
     @Test("Directional methods return null or an HSScreen")

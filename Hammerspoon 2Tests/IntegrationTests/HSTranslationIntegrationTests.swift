@@ -24,35 +24,35 @@ struct HSTranslationTests {
 
         @Test("hs.translation module exists")
         func testModuleExists() {
-            makeHarness().expectTrue("typeof hs.translation === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.translation") == "object")
         }
 
         @Test("supportedLanguages is a function")
         func testSupportedLanguagesIsFunction() {
-            makeHarness().expectTrue("typeof hs.translation.supportedLanguages === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.translation.supportedLanguages") == "function")
         }
 
         @Test("status is a function")
         func testStatusIsFunction() {
-            makeHarness().expectTrue("typeof hs.translation.status === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.translation.status") == "function")
         }
 
         @Test("session is a function")
         func testSessionIsFunction() {
-            makeHarness().expectTrue("typeof hs.translation.session === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.translation.session") == "function")
         }
 
         @Test("supportedLanguages() returns a thenable Promise")
         func testSupportedLanguagesReturnsPromise() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.translation.supportedLanguages().then === 'function'")
+            #expect(harness.evalTypeOf("hs.translation.supportedLanguages().then") == "function")
             #expect(!harness.hasException)
         }
 
         @Test("status() returns a thenable Promise")
         func testStatusReturnsPromise() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.translation.status('en', 'fr').then === 'function'")
+            #expect(harness.evalTypeOf("hs.translation.status('en', 'fr').then") == "function")
             #expect(!harness.hasException)
         }
 
@@ -70,10 +70,10 @@ struct HSTranslationTests {
             harness.eval("var s = hs.translation.session('en', 'fr')")
             let sessionIsNull = harness.evalValue("s === null || s === undefined")?.toBool() ?? true
             guard !sessionIsNull else { return } // en→fr not installed; shape check is vacuously satisfied
-            harness.expectTrue("s.typeName === 'HSTranslationSession'")
-            harness.expectTrue("s.sourceLanguage === 'en'")
-            harness.expectTrue("s.targetLanguage === 'fr'")
-            harness.expectTrue("typeof s.translate === 'function'")
+            #expect(harness.evalString("s.typeName") == "HSTranslationSession")
+            #expect(harness.evalString("s.sourceLanguage") == "en")
+            #expect(harness.evalString("s.targetLanguage") == "fr")
+            #expect(harness.evalTypeOf("s.translate") == "function")
         }
 
         @Test("translate() returns a thenable Promise when session is available")
@@ -82,7 +82,7 @@ struct HSTranslationTests {
             harness.eval("var s = hs.translation.session('en', 'fr')")
             let sessionIsNull = harness.evalValue("s === null || s === undefined")?.toBool() ?? true
             guard !sessionIsNull else { return } // en→fr not installed
-            harness.expectTrue("typeof s.translate('hello').then === 'function'")
+            #expect(harness.evalTypeOf("s.translate('hello').then") == "function")
             #expect(!harness.hasException)
         }
     }

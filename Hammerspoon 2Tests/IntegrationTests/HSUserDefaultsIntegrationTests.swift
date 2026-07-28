@@ -24,32 +24,32 @@ struct HSUserDefaultsTests {
 
         @Test("set is a function")
         func testSetIsFunction() {
-            makeHarness().expectTrue("typeof hs.userdefaults.set === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.set") == "function")
         }
 
         @Test("get is a function")
         func testGetIsFunction() {
-            makeHarness().expectTrue("typeof hs.userdefaults.get === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.get") == "function")
         }
 
         @Test("clear is a function")
         func testClearIsFunction() {
-            makeHarness().expectTrue("typeof hs.userdefaults.clear === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.clear") == "function")
         }
 
         @Test("getKeys is a function")
         func testGetKeysIsFunction() {
-            makeHarness().expectTrue("typeof hs.userdefaults.getKeys === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.getKeys") == "function")
         }
 
         @Test("addWatcher is a function")
         func testAddWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.userdefaults.addWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.addWatcher") == "function")
         }
 
         @Test("removeWatcher is a function")
         func testRemoveWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.userdefaults.removeWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.removeWatcher") == "function")
         }
 
         @Test("_watcherEmitter is initialized by hs.userdefaults.js")
@@ -71,7 +71,7 @@ struct HSUserDefaultsTests {
         func testClearUnknownKeyReturnsFalse() {
             let harness = makeHarness()
             harness.eval("var r = hs.userdefaults.clear('hs_userdefaults_test_definitely_unset_key')")
-            harness.expectTrue("r === false")
+            #expect(harness.evalBool("r") == false)
             #expect(!harness.hasException)
         }
     }
@@ -98,7 +98,7 @@ struct HSUserDefaultsTests {
             defer { harness.eval("hs.userdefaults.clear('\(key)')") }
 
             harness.eval("hs.userdefaults.set('\(key)', 'hello')")
-            harness.expectTrue("hs.userdefaults.get('\(key)') === 'hello'")
+            #expect(harness.evalString("hs.userdefaults.get('\(key)')") == "hello")
             #expect(!harness.hasException)
         }
 
@@ -120,7 +120,7 @@ struct HSUserDefaultsTests {
             defer { harness.eval("hs.userdefaults.clear('\(key)')") }
 
             harness.eval("hs.userdefaults.set('\(key)', true)")
-            harness.expectTrue("hs.userdefaults.get('\(key)') === true")
+            #expect(harness.evalBool("hs.userdefaults.get('\(key)')") == true)
             #expect(!harness.hasException)
         }
 
@@ -149,7 +149,7 @@ struct HSUserDefaultsTests {
         }
 
         @Test("Date value round-trips through set/get")
-        func testDateRoundTrip() {
+        func testDateRoundTrip() throws {
             let key = testKey()
             let harness = makeHarness()
             defer { harness.eval("hs.userdefaults.clear('\(key)')") }
@@ -160,7 +160,9 @@ struct HSUserDefaultsTests {
                 var r = hs.userdefaults.get('\(key)')
             """)
             harness.expectTrue("r instanceof Date")
-            harness.expectTrue("r.getTime() === original.getTime()")
+            let roundTripped = try #require(harness.evalDouble("r.getTime()"))
+            let original = try #require(harness.evalDouble("original.getTime()"))
+            #expect(roundTripped == original)
             #expect(!harness.hasException)
         }
 
@@ -212,7 +214,7 @@ struct HSUserDefaultsTests {
             defer { harness.eval("hs.userdefaults.clear('\(key)')") }
 
             harness.eval("hs.userdefaults.set('\(key)', 'temp')")
-            harness.expectTrue("hs.userdefaults.clear('\(key)') === true")
+            #expect(harness.evalBool("hs.userdefaults.clear('\(key)')") == true)
             harness.expectTrue("hs.userdefaults.get('\(key)') === null || hs.userdefaults.get('\(key)') === undefined")
             #expect(!harness.hasException)
         }
@@ -225,7 +227,7 @@ struct HSUserDefaultsTests {
 
             harness.eval("hs.userdefaults.set('\(key)', 'first')")
             harness.eval("hs.userdefaults.set('\(key)', 'second')")
-            harness.expectTrue("hs.userdefaults.get('\(key)') === 'second'")
+            #expect(harness.evalString("hs.userdefaults.get('\(key)')") == "second")
             #expect(!harness.hasException)
         }
 
@@ -280,8 +282,8 @@ struct HSUserDefaultsTests {
                 hs.userdefaults.addWatcher('\(key)', handler)
                 hs.userdefaults.set('\(key)', 'watched-value')
             """)
-            harness.expectTrue("seenKey === '\(key)'")
-            harness.expectTrue("seenValue === 'watched-value'")
+            #expect(harness.evalString("seenKey") == "\(key)")
+            #expect(harness.evalString("seenValue") == "watched-value")
             #expect(!harness.hasException)
         }
 
@@ -299,7 +301,7 @@ struct HSUserDefaultsTests {
                 hs.userdefaults.removeWatcher('\(key)', handler)
                 hs.userdefaults.set('\(key)', 'second')
             """)
-            harness.expectTrue("callCount === 1")
+            #expect(harness.evalInt("callCount") == 1)
             #expect(!harness.hasException)
         }
 
@@ -318,8 +320,8 @@ struct HSUserDefaultsTests {
                 hs.userdefaults.addWatcher('\(key)', handlerB)
                 hs.userdefaults.set('\(key)', 'value')
             """)
-            harness.expectTrue("aCount === 1")
-            harness.expectTrue("bCount === 1")
+            #expect(harness.evalInt("aCount") == 1)
+            #expect(harness.evalInt("bCount") == 1)
             #expect(!harness.hasException)
         }
 
@@ -336,7 +338,7 @@ struct HSUserDefaultsTests {
                 hs.userdefaults.addWatcher('\(key)', handler)
                 hs.userdefaults.set('\(key)', 'value')
             """)
-            harness.expectTrue("callCount === 1")
+            #expect(harness.evalInt("callCount") == 1)
             #expect(!harness.hasException)
         }
     }

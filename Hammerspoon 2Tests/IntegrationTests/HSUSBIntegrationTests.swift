@@ -23,27 +23,27 @@ struct HSUSBTests {
 
         @Test("attachedDevices is a function")
         func testAttachedDevicesIsFunction() {
-            makeHarness().expectTrue("typeof hs.usb.attachedDevices === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.usb.attachedDevices") == "function")
         }
 
         @Test("addWatcher is a function")
         func testAddWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.usb.addWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.usb.addWatcher") == "function")
         }
 
         @Test("removeWatcher is a function")
         func testRemoveWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.usb.removeWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.usb.removeWatcher") == "function")
         }
 
         @Test("_addWatcher is a function")
         func testPrivateAddWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.usb._addWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.usb._addWatcher") == "function")
         }
 
         @Test("_removeWatcher is a function")
         func testPrivateRemoveWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.usb._removeWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.usb._removeWatcher") == "function")
         }
 
         @Test("_watcherEmitter is initialised by hs.usb.js")

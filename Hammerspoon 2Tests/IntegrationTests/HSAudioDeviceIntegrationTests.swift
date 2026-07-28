@@ -183,7 +183,7 @@ struct HSAudioDeviceTests {
         @Test("HSAudioDevice transportType is a string")
         func testTransportType() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.audiodevice.all()[0].transportType === 'string'")
+            #expect(harness.evalTypeOf("hs.audiodevice.all()[0].transportType") == "string")
         }
 
         @Test("allOutputDevices() all have isOutput true")

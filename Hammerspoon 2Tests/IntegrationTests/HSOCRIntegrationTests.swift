@@ -76,23 +76,23 @@ struct HSOCRTests {
 
         @Test("hs.ocr module exists and is an object")
         func testModuleExists() {
-            makeHarness().expectTrue("typeof hs.ocr === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.ocr") == "object")
         }
 
         @Test("recognizeText is a function")
         func testRecognizeTextIsFunction() {
-            makeHarness().expectTrue("typeof hs.ocr.recognizeText === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ocr.recognizeText") == "function")
         }
 
         @Test("supportedLanguages is a function")
         func testSupportedLanguagesIsFunction() {
-            makeHarness().expectTrue("typeof hs.ocr.supportedLanguages === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ocr.supportedLanguages") == "function")
         }
 
         @Test("recognizeText returns a thenable Promise")
         func testRecognizeTextReturnsPromise() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ocr.recognizeText('/nonexistent.png').then === 'function'")
+            #expect(harness.evalTypeOf("hs.ocr.recognizeText('/nonexistent.png').then") == "function")
             #expect(harness.hasException == false)
         }
 
@@ -167,7 +167,7 @@ struct HSOCRTests {
                 return val != nil && !val!.isNull && !val!.isUndefined
             }
             try #require(ok, "promise should have rejected for a missing file")
-            harness.expectFalse("_ocrError === 'resolved_unexpectedly'")
+            #expect(harness.evalString("_ocrError") != "resolved_unexpectedly")
         }
     }
 
@@ -202,7 +202,7 @@ struct HSOCRTests {
                 return val != nil && !val!.isNull && !val!.isUndefined
             }
             try #require(ok, "recognizeText should resolve within 10 seconds")
-            harness.expectFalse("_ocrResult === 'error'")
+            #expect(harness.evalString("_ocrResult") != "error")
         }
 
         @Test("result has typeName HSOCRResult")
@@ -244,7 +244,7 @@ struct HSOCRTests {
                 return v != nil && !v!.isNull && !v!.isUndefined
             }
             try #require(ok, "recognizeText should resolve within 10 seconds")
-            harness.expectTrue("typeof _ocrR3.text === 'string'")
+            #expect(harness.evalTypeOf("_ocrR3.text") == "string")
         }
 
         @Test("result.observations is an array")
@@ -501,7 +501,7 @@ struct HSOCRTests {
                 return v != nil && !v!.isNull && !v!.isUndefined
             }
             try #require(ok, "recognizeText should resolve within 10 seconds")
-            harness.expectFalse("_ocrFast === 'error'")
+            #expect(harness.evalString("_ocrFast") != "error")
             #expect(harness.hasException == false)
         }
     }

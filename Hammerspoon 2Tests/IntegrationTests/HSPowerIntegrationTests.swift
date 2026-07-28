@@ -36,101 +36,101 @@ struct HSPowerTests {
 
         @Test("hs.power is an object")
         func testModuleIsObject() {
-            makeHarness().expectTrue("typeof hs.power === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.power") == "object")
         }
 
         // MARK: Functions
 
         @Test("preventSleep is a function")
         func testPreventSleepIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.preventSleep === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.preventSleep") == "function")
         }
 
         @Test("allowSleep is a function")
         func testAllowSleepIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.allowSleep === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.allowSleep") == "function")
         }
 
         @Test("isSleepPrevented is a function")
         func testIsSleepPreventedIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.isSleepPrevented === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.isSleepPrevented") == "function")
         }
 
         @Test("declareActivity is a function")
         func testDeclareActivityIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.declareActivity === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.declareActivity") == "function")
         }
 
         @Test("currentAssertions is a function")
         func testCurrentAssertionsIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.currentAssertions === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.currentAssertions") == "function")
         }
 
         @Test("systemSleep is a function")
         func testSystemSleepIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.systemSleep === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.systemSleep") == "function")
         }
 
         @Test("lockScreen is a function")
         func testLockScreenIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.lockScreen === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.lockScreen") == "function")
         }
 
         @Test("startScreensaver is a function")
         func testStartScreensaverIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.startScreensaver === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.startScreensaver") == "function")
         }
 
         @Test("batteryInfo is a function")
         func testBatteryInfoIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.batteryInfo === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.batteryInfo") == "function")
         }
 
         @Test("addEventWatcher is a function")
         func testAddEventWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.addEventWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.addEventWatcher") == "function")
         }
 
         @Test("removeEventWatcher is a function")
         func testRemoveEventWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.removeEventWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.removeEventWatcher") == "function")
         }
 
         @Test("addBatteryWatcher is a function")
         func testAddBatteryWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.addBatteryWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.addBatteryWatcher") == "function")
         }
 
         @Test("removeBatteryWatcher is a function")
         func testRemoveBatteryWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.power.removeBatteryWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.power.removeBatteryWatcher") == "function")
         }
 
         // MARK: Properties (not functions)
 
         @Test("percentage is a number property")
         func testPercentageIsProperty() {
-            makeHarness().expectTrue("typeof hs.power.percentage === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.power.percentage") == "number")
         }
 
         @Test("isCharging is a boolean property")
         func testIsChargingIsProperty() {
-            makeHarness().expectTrue("typeof hs.power.isCharging === 'boolean'")
+            #expect(makeHarness().evalTypeOf("hs.power.isCharging") == "boolean")
         }
 
         @Test("powerSource is a string property")
         func testPowerSourceIsProperty() {
-            makeHarness().expectTrue("typeof hs.power.powerSource === 'string'")
+            #expect(makeHarness().evalTypeOf("hs.power.powerSource") == "string")
         }
 
         @Test("isLowPowerMode is a boolean property")
         func testIsLowPowerModeIsProperty() {
-            makeHarness().expectTrue("typeof hs.power.isLowPowerMode === 'boolean'")
+            #expect(makeHarness().evalTypeOf("hs.power.isLowPowerMode") == "boolean")
         }
 
         @Test("thermalState is a string property")
         func testThermalStateIsProperty() {
-            makeHarness().expectTrue("typeof hs.power.thermalState === 'string'")
+            #expect(makeHarness().evalTypeOf("hs.power.thermalState") == "string")
         }
 
         // MARK: JS layer internals
@@ -397,7 +397,7 @@ struct HSPowerTests {
 
         @Test("isLowPowerMode is a boolean")
         func testIsLowPowerModeIsBoolean() {
-            makeHarness().expectTrue("typeof hs.power.isLowPowerMode === 'boolean'")
+            #expect(makeHarness().evalTypeOf("hs.power.isLowPowerMode") == "boolean")
         }
 
         @Test("thermalState is a recognised string")
@@ -416,12 +416,12 @@ struct HSPowerTests {
 
         @Test("percentage is a number")
         func testPercentageIsNumber() {
-            makeHarness().expectTrue("typeof hs.power.percentage === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.power.percentage") == "number")
         }
 
         @Test("isCharging is a boolean")
         func testIsChargingIsBoolean() {
-            makeHarness().expectTrue("typeof hs.power.isCharging === 'boolean'")
+            #expect(makeHarness().evalTypeOf("hs.power.isCharging") == "boolean")
         }
 
         @Test("percentage is -1 or in range 0–100")

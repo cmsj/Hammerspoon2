@@ -30,17 +30,17 @@ struct HSSpotlightTests {
 
         @Test("create is a function")
         func testCreateIsFunction() {
-            makeHarness().expectTrue("typeof hs.spotlight.create === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.spotlight.create") == "function")
         }
 
         @Test("search is a function")
         func testSearchIsFunction() {
-            makeHarness().expectTrue("typeof hs.spotlight.search === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.spotlight.search") == "function")
         }
 
         @Test("scope is an object")
         func testScopeIsObject() {
-            makeHarness().expectTrue("typeof hs.spotlight.scope === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.spotlight.scope") == "object")
         }
 
         @Test("scope.home is an array")
@@ -80,7 +80,7 @@ struct HSSpotlightTests {
 
         @Test("attribute is an object")
         func testAttributeIsObject() {
-            makeHarness().expectTrue("typeof hs.spotlight.attribute === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.spotlight.attribute") == "object")
         }
 
         @Test("attribute.path is 'kMDItemPath'")
@@ -100,12 +100,12 @@ struct HSSpotlightTests {
 
         @Test("attribute.fileSize is a string")
         func testAttributeFileSizeIsString() {
-            makeHarness().expectTrue("typeof hs.spotlight.attribute.fileSize === 'string'")
+            #expect(makeHarness().evalTypeOf("hs.spotlight.attribute.fileSize") == "string")
         }
 
         @Test("attribute.bundleIdentifier is a string")
         func testAttributeBundleIdentifierIsString() {
-            makeHarness().expectTrue("typeof hs.spotlight.attribute.bundleIdentifier === 'string'")
+            #expect(makeHarness().evalTypeOf("hs.spotlight.attribute.bundleIdentifier") == "string")
         }
     }
 
@@ -118,7 +118,7 @@ struct HSSpotlightTests {
         func testCreateReturnsObject() {
             let harness = makeHarness()
             harness.eval("var q = hs.spotlight.create()")
-            harness.expectTrue("typeof q === 'object'")
+            #expect(harness.evalTypeOf("q") == "object")
             #expect(!harness.hasException)
         }
 
@@ -126,7 +126,7 @@ struct HSSpotlightTests {
         func testQueryHasIdentifier() {
             let harness = makeHarness()
             harness.eval("var q = hs.spotlight.create()")
-            harness.expectTrue("typeof q.identifier === 'string'")
+            #expect(harness.evalTypeOf("q.identifier") == "string")
             harness.expectTrue("q.identifier.length > 0")
         }
 
@@ -146,7 +146,7 @@ struct HSSpotlightTests {
         func testCountDefaultsToZero() {
             let harness = makeHarness()
             harness.eval("var q = hs.spotlight.create()")
-            harness.expectTrue("typeof q.count === 'number'")
+            #expect(harness.evalTypeOf("q.count") == "number")
             harness.expectEqual("q.count", 0)
         }
 

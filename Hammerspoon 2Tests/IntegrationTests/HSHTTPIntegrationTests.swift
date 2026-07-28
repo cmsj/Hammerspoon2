@@ -22,37 +22,37 @@ struct HSHTTPOtherTests {
 
         @Test("get is a function")
         func testGetIsFunction() {
-            makeHarness().expectTrue("typeof hs.http.get === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.http.get") == "function")
         }
 
         @Test("post is a function")
         func testPostIsFunction() {
-            makeHarness().expectTrue("typeof hs.http.post === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.http.post") == "function")
         }
 
         @Test("put is a function")
         func testPutIsFunction() {
-            makeHarness().expectTrue("typeof hs.http.put === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.http.put") == "function")
         }
 
         @Test("doRequest is a function")
         func testDoRequestIsFunction() {
-            makeHarness().expectTrue("typeof hs.http.doRequest === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.http.doRequest") == "function")
         }
 
         @Test("encodeForQuery is a function")
         func testEncodeForQueryIsFunction() {
-            makeHarness().expectTrue("typeof hs.http.encodeForQuery === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.http.encodeForQuery") == "function")
         }
 
         @Test("urlParts is a function")
         func testUrlPartsIsFunction() {
-            makeHarness().expectTrue("typeof hs.http.urlParts === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.http.urlParts") == "function")
         }
 
         @Test("convertHtmlEntities is a function")
         func testConvertHtmlEntitiesIsFunction() {
-            makeHarness().expectTrue("typeof hs.http.convertHtmlEntities === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.http.convertHtmlEntities") == "function")
         }
 
         @Test("get returns a Promise-like object")
@@ -297,7 +297,7 @@ struct HSHTTPOtherTests {
 
         @Test("openWebSocket is a function")
         func testOpenWebSocketIsFunction() {
-            makeHarness().expectTrue("typeof hs.http.openWebSocket === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.http.openWebSocket") == "function")
         }
 
         @Test("openWebSocket with invalid URL returns null")
@@ -321,7 +321,7 @@ struct HSHTTPOtherTests {
         func testHasIdentifier() {
             let h = makeHarness()
             h.eval("var ws = hs.http.openWebSocket('ws://localhost:9999/no-server')")
-            h.expectTrue("typeof ws.identifier === 'string'")
+            #expect(h.evalTypeOf("ws.identifier") == "string")
             h.expectTrue("ws.identifier.length > 0")
             h.eval("ws.destroy()")
             #expect(!h.hasException)
@@ -340,13 +340,13 @@ struct HSHTTPOtherTests {
         func testHasMethods() {
             let h = makeHarness()
             h.eval("var ws = hs.http.openWebSocket('ws://localhost:9999/no-server')")
-            h.expectTrue("typeof ws.send === 'function'")
-            h.expectTrue("typeof ws.close === 'function'")
-            h.expectTrue("typeof ws.destroy === 'function'")
-            h.expectTrue("typeof ws.setOpenCallback === 'function'")
-            h.expectTrue("typeof ws.setMessageCallback === 'function'")
-            h.expectTrue("typeof ws.setCloseCallback === 'function'")
-            h.expectTrue("typeof ws.setErrorCallback === 'function'")
+            #expect(h.evalTypeOf("ws.send") == "function")
+            #expect(h.evalTypeOf("ws.close") == "function")
+            #expect(h.evalTypeOf("ws.destroy") == "function")
+            #expect(h.evalTypeOf("ws.setOpenCallback") == "function")
+            #expect(h.evalTypeOf("ws.setMessageCallback") == "function")
+            #expect(h.evalTypeOf("ws.setCloseCallback") == "function")
+            #expect(h.evalTypeOf("ws.setErrorCallback") == "function")
             h.eval("ws.destroy()")
             #expect(!h.hasException)
         }

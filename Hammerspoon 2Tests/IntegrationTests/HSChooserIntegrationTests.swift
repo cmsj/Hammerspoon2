@@ -23,7 +23,7 @@ struct HSChooserTests {
 
         @Test("create is a function")
         func testCreateIsFunction() {
-            makeHarness().expectTrue("typeof hs.chooser.create === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.chooser.create") == "function")
         }
 
         @Test("create returns an object")
@@ -66,14 +66,14 @@ struct HSChooserTests {
         func testSearchSubTextDefault() {
             let harness = makeHarness()
             harness.eval("var c = hs.chooser.create()")
-            harness.expectTrue("c.searchSubText === false")
+            #expect(harness.evalBool("c.searchSubText") == false)
         }
 
         @Test("enableDefaultForQuery defaults to false")
         func testEnableDefaultForQueryDefault() {
             let harness = makeHarness()
             harness.eval("var c = hs.chooser.create()")
-            harness.expectTrue("c.enableDefaultForQuery === false")
+            #expect(harness.evalBool("c.enableDefaultForQuery") == false)
         }
 
         @Test("width defaults to 0.5")
@@ -94,27 +94,27 @@ struct HSChooserTests {
         func testIsVisibleDefault() {
             let harness = makeHarness()
             harness.eval("var c = hs.chooser.create()")
-            harness.expectTrue("c.isVisible === false")
+            #expect(harness.evalBool("c.isVisible") == false)
         }
 
         @Test("setChoices is a function")
         func testSetChoicesIsFunction() {
-            makeHarness().expectTrue("typeof hs.chooser.create().setChoices === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.chooser.create().setChoices") == "function")
         }
 
         @Test("refreshChoices is a function")
         func testRefreshChoicesIsFunction() {
-            makeHarness().expectTrue("typeof hs.chooser.create().refreshChoices === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.chooser.create().refreshChoices") == "function")
         }
 
         @Test("show is a function")
         func testShowIsFunction() {
-            makeHarness().expectTrue("typeof hs.chooser.create().show === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.chooser.create().show") == "function")
         }
 
         @Test("hide is a function")
         func testHideIsFunction() {
-            makeHarness().expectTrue("typeof hs.chooser.create().hide === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.chooser.create().hide") == "function")
         }
 
         @Test("onSelect property is writable")
@@ -161,12 +161,12 @@ struct HSChooserTests {
 
         @Test("select is a function")
         func testSelectIsFunction() {
-            makeHarness().expectTrue("typeof hs.chooser.create().select === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.chooser.create().select") == "function")
         }
 
         @Test("selectedRowContents is a function")
         func testSelectedRowContentsIsFunction() {
-            makeHarness().expectTrue("typeof hs.chooser.create().selectedRowContents === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.chooser.create().selectedRowContents") == "function")
         }
     }
 
@@ -290,7 +290,7 @@ struct HSChooserTests {
             var c = hs.chooser.create()
             c.searchSubText = true
         """)
-            harness.expectTrue("c.searchSubText === true")
+            #expect(harness.evalBool("c.searchSubText") == true)
             #expect(!harness.hasException)
         }
 
@@ -343,7 +343,7 @@ struct HSChooserTests {
             var c = hs.chooser.create()
             c.enableDefaultForQuery = true
         """)
-            harness.expectTrue("c.enableDefaultForQuery === true")
+            #expect(harness.evalBool("c.enableDefaultForQuery") == true)
             #expect(!harness.hasException)
         }
 
@@ -358,7 +358,7 @@ struct HSChooserTests {
             harness.expectTrue("item !== null && item !== undefined")
             harness.expectEqual("item.text", "Alpha")
             harness.expectEqual("item.subText", "sub")
-            harness.expectTrue("item.valid === true")
+            #expect(harness.evalBool("item.valid") == true)
             #expect(!harness.hasException)
         }
 

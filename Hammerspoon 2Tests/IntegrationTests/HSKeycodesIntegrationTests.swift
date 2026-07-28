@@ -28,52 +28,52 @@ struct HSKeycodesTests {
 
         @Test("currentLayout is a function")
         func testCurrentLayoutIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.currentLayout === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.currentLayout") == "function")
         }
 
         @Test("currentMethod is a function")
         func testCurrentMethodIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.currentMethod === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.currentMethod") == "function")
         }
 
         @Test("currentSourceID is a function")
         func testCurrentSourceIDIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.currentSourceID === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.currentSourceID") == "function")
         }
 
         @Test("layouts is a function")
         func testLayoutsIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.layouts === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.layouts") == "function")
         }
 
         @Test("methods is a function")
         func testMethodsIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.methods === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.methods") == "function")
         }
 
         @Test("setLayout is a function")
         func testSetLayoutIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.setLayout === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.setLayout") == "function")
         }
 
         @Test("setMethod is a function")
         func testSetMethodIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.setMethod === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.setMethod") == "function")
         }
 
         @Test("setSourceID is a function")
         func testSetSourceIDIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.setSourceID === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.setSourceID") == "function")
         }
 
         @Test("addWatcher is a function")
         func testAddWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.addWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.addWatcher") == "function")
         }
 
         @Test("removeWatcher is a function")
         func testRemoveWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.keycodes.removeWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.keycodes.removeWatcher") == "function")
         }
 
         @Test("_watcherEmitter is initialized by hs.keycodes.js")
@@ -98,77 +98,77 @@ struct HSKeycodesTests {
         @Test("map contains named special keys")
         func testMapContainsSpecialKeys() {
             let harness = makeHarness()
-            harness.expectTrue("hs.keycodes.map['return'] === 36")
-            harness.expectTrue("hs.keycodes.map['tab'] === 48")
-            harness.expectTrue("hs.keycodes.map['space'] === 49")
-            harness.expectTrue("hs.keycodes.map['delete'] === 51")
-            harness.expectTrue("hs.keycodes.map['escape'] === 53")
-            harness.expectTrue("hs.keycodes.map['capslock'] === 57")
-            harness.expectTrue("hs.keycodes.map['forwarddelete'] === 117")
-            harness.expectTrue("hs.keycodes.map['help'] === 114")
+            #expect(harness.evalInt("hs.keycodes.map['return']") == 36)
+            #expect(harness.evalInt("hs.keycodes.map['tab']") == 48)
+            #expect(harness.evalInt("hs.keycodes.map['space']") == 49)
+            #expect(harness.evalInt("hs.keycodes.map['delete']") == 51)
+            #expect(harness.evalInt("hs.keycodes.map['escape']") == 53)
+            #expect(harness.evalInt("hs.keycodes.map['capslock']") == 57)
+            #expect(harness.evalInt("hs.keycodes.map['forwarddelete']") == 117)
+            #expect(harness.evalInt("hs.keycodes.map['help']") == 114)
             #expect(!harness.hasException)
         }
 
         @Test("map contains navigation keys")
         func testMapContainsNavigationKeys() {
             let harness = makeHarness()
-            harness.expectTrue("hs.keycodes.map['home'] === 115")
-            harness.expectTrue("hs.keycodes.map['end'] === 119")
-            harness.expectTrue("hs.keycodes.map['pageup'] === 116")
-            harness.expectTrue("hs.keycodes.map['pagedown'] === 121")
-            harness.expectTrue("hs.keycodes.map['left'] === 123")
-            harness.expectTrue("hs.keycodes.map['right'] === 124")
-            harness.expectTrue("hs.keycodes.map['down'] === 125")
-            harness.expectTrue("hs.keycodes.map['up'] === 126")
+            #expect(harness.evalInt("hs.keycodes.map['home']") == 115)
+            #expect(harness.evalInt("hs.keycodes.map['end']") == 119)
+            #expect(harness.evalInt("hs.keycodes.map['pageup']") == 116)
+            #expect(harness.evalInt("hs.keycodes.map['pagedown']") == 121)
+            #expect(harness.evalInt("hs.keycodes.map['left']") == 123)
+            #expect(harness.evalInt("hs.keycodes.map['right']") == 124)
+            #expect(harness.evalInt("hs.keycodes.map['down']") == 125)
+            #expect(harness.evalInt("hs.keycodes.map['up']") == 126)
             #expect(!harness.hasException)
         }
 
         @Test("map contains function keys f1-f20")
         func testMapContainsFunctionKeys() {
             let harness = makeHarness()
-            harness.expectTrue("hs.keycodes.map['f1'] === 122")
-            harness.expectTrue("hs.keycodes.map['f2'] === 120")
-            harness.expectTrue("hs.keycodes.map['f3'] === 99")
-            harness.expectTrue("hs.keycodes.map['f12'] === 111")
-            harness.expectTrue("hs.keycodes.map['f20'] === 90")
+            #expect(harness.evalInt("hs.keycodes.map['f1']") == 122)
+            #expect(harness.evalInt("hs.keycodes.map['f2']") == 120)
+            #expect(harness.evalInt("hs.keycodes.map['f3']") == 99)
+            #expect(harness.evalInt("hs.keycodes.map['f12']") == 111)
+            #expect(harness.evalInt("hs.keycodes.map['f20']") == 90)
             #expect(!harness.hasException)
         }
 
         @Test("map contains modifier keys")
         func testMapContainsModifierKeys() {
             let harness = makeHarness()
-            harness.expectTrue("hs.keycodes.map['cmd'] === 55")
-            harness.expectTrue("hs.keycodes.map['shift'] === 56")
-            harness.expectTrue("hs.keycodes.map['alt'] === 58")
-            harness.expectTrue("hs.keycodes.map['ctrl'] === 59")
-            harness.expectTrue("hs.keycodes.map['fn'] === 63")
-            harness.expectTrue("hs.keycodes.map['rightshift'] === 60")
-            harness.expectTrue("hs.keycodes.map['rightalt'] === 61")
-            harness.expectTrue("hs.keycodes.map['rightctrl'] === 62")
+            #expect(harness.evalInt("hs.keycodes.map['cmd']") == 55)
+            #expect(harness.evalInt("hs.keycodes.map['shift']") == 56)
+            #expect(harness.evalInt("hs.keycodes.map['alt']") == 58)
+            #expect(harness.evalInt("hs.keycodes.map['ctrl']") == 59)
+            #expect(harness.evalInt("hs.keycodes.map['fn']") == 63)
+            #expect(harness.evalInt("hs.keycodes.map['rightshift']") == 60)
+            #expect(harness.evalInt("hs.keycodes.map['rightalt']") == 61)
+            #expect(harness.evalInt("hs.keycodes.map['rightctrl']") == 62)
             #expect(!harness.hasException)
         }
 
         @Test("map contains numpad keys")
         func testMapContainsNumpadKeys() {
             let harness = makeHarness()
-            harness.expectTrue("hs.keycodes.map['pad0'] === 82")
-            harness.expectTrue("hs.keycodes.map['pad9'] === 92")
-            harness.expectTrue("hs.keycodes.map['padenter'] === 76")
-            harness.expectTrue("hs.keycodes.map['pad+'] === 69")
-            harness.expectTrue("hs.keycodes.map['pad-'] === 78")
-            harness.expectTrue("hs.keycodes.map['pad*'] === 67")
-            harness.expectTrue("hs.keycodes.map['pad/'] === 75")
-            harness.expectTrue("hs.keycodes.map['pad.'] === 65")
-            harness.expectTrue("hs.keycodes.map['padclear'] === 71")
+            #expect(harness.evalInt("hs.keycodes.map['pad0']") == 82)
+            #expect(harness.evalInt("hs.keycodes.map['pad9']") == 92)
+            #expect(harness.evalInt("hs.keycodes.map['padenter']") == 76)
+            #expect(harness.evalInt("hs.keycodes.map['pad+']") == 69)
+            #expect(harness.evalInt("hs.keycodes.map['pad-']") == 78)
+            #expect(harness.evalInt("hs.keycodes.map['pad*']") == 67)
+            #expect(harness.evalInt("hs.keycodes.map['pad/']") == 75)
+            #expect(harness.evalInt("hs.keycodes.map['pad.']") == 65)
+            #expect(harness.evalInt("hs.keycodes.map['padclear']") == 71)
             #expect(!harness.hasException)
         }
 
         @Test("map contains media keys")
         func testMapContainsMediaKeys() {
             let harness = makeHarness()
-            harness.expectTrue("hs.keycodes.map['volup'] === 72")
-            harness.expectTrue("hs.keycodes.map['voldown'] === 73")
-            harness.expectTrue("hs.keycodes.map['mute'] === 74")
+            #expect(harness.evalInt("hs.keycodes.map['volup']") == 72)
+            #expect(harness.evalInt("hs.keycodes.map['voldown']") == 73)
+            #expect(harness.evalInt("hs.keycodes.map['mute']") == 74)
             #expect(!harness.hasException)
         }
 
@@ -176,10 +176,10 @@ struct HSKeycodesTests {
         func testMapIsBidirectional() {
             let harness = makeHarness()
             // return → 36, so map["36"] should be "return"
-            harness.expectTrue("hs.keycodes.map['36'] === 'return'")
-            harness.expectTrue("hs.keycodes.map['48'] === 'tab'")
-            harness.expectTrue("hs.keycodes.map['122'] === 'f1'")
-            harness.expectTrue("hs.keycodes.map['55'] === 'cmd'")
+            #expect(harness.evalString("hs.keycodes.map['36']") == "return")
+            #expect(harness.evalString("hs.keycodes.map['48']") == "tab")
+            #expect(harness.evalString("hs.keycodes.map['122']") == "f1")
+            #expect(harness.evalString("hs.keycodes.map['55']") == "cmd")
             #expect(!harness.hasException)
         }
 
@@ -207,7 +207,7 @@ struct HSKeycodesTests {
         @Test("currentLayout returns a non-empty string")
         func testCurrentLayoutReturnsString() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.keycodes.currentLayout() === 'string'")
+            #expect(harness.evalTypeOf("hs.keycodes.currentLayout()") == "string")
             harness.expectTrue("hs.keycodes.currentLayout().length > 0")
             #expect(!harness.hasException)
         }
@@ -215,7 +215,7 @@ struct HSKeycodesTests {
         @Test("currentSourceID returns a reverse-DNS string")
         func testCurrentSourceIDReturnsDNSString() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.keycodes.currentSourceID() === 'string'")
+            #expect(harness.evalTypeOf("hs.keycodes.currentSourceID()") == "string")
             harness.expectTrue("hs.keycodes.currentSourceID().includes('.')")
             #expect(!harness.hasException)
         }
@@ -235,7 +235,7 @@ struct HSKeycodesTests {
             let harness = makeHarness()
             harness.expectTrue("Array.isArray(hs.keycodes.layouts())")
             harness.expectTrue("hs.keycodes.layouts().length > 0")
-            harness.expectTrue("typeof hs.keycodes.layouts()[0] === 'string'")
+            #expect(harness.evalTypeOf("hs.keycodes.layouts()[0]") == "string")
             #expect(!harness.hasException)
         }
 

@@ -42,20 +42,20 @@ struct HSCameraTests {
         @Test("hs.camera object exists")
         func testModuleExists() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.camera === 'object'")
+            #expect(harness.evalTypeOf("hs.camera") == "object")
         }
 
         @Test("all() method exists and returns an array")
         func testAllMethodExists() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.camera.all === 'function'")
+            #expect(harness.evalTypeOf("hs.camera.all") == "function")
             harness.expectTrue("Array.isArray(hs.camera.all())")
         }
 
         @Test("findByName() method exists and returns null for unknown name")
         func testFindByNameMethodExists() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.camera.findByName === 'function'")
+            #expect(harness.evalTypeOf("hs.camera.findByName") == "function")
             let result = harness.evalValue("hs.camera.findByName('__nonexistent__')")
             #expect(result?.isNull == true || result?.isUndefined == true)
         }
@@ -63,7 +63,7 @@ struct HSCameraTests {
         @Test("findByUID() method exists and returns null for unknown UID")
         func testFindByUIDMethodExists() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.camera.findByUID === 'function'")
+            #expect(harness.evalTypeOf("hs.camera.findByUID") == "function")
             let result = harness.evalValue("hs.camera.findByUID('__nonexistent__')")
             #expect(result?.isNull == true || result?.isUndefined == true)
         }
@@ -71,8 +71,8 @@ struct HSCameraTests {
         @Test("addWatcher() and removeWatcher() methods exist")
         func testWatcherMethodsExist() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.camera.addWatcher === 'function'")
-            harness.expectTrue("typeof hs.camera.removeWatcher === 'function'")
+            #expect(harness.evalTypeOf("hs.camera.addWatcher") == "function")
+            #expect(harness.evalTypeOf("hs.camera.removeWatcher") == "function")
         }
 
         @Test("module-level addWatcher() / removeWatcher() cycle is safe")
@@ -198,7 +198,7 @@ struct HSCameraTests {
         @Test("camera has captureImage() method")
         func testCaptureImageMethodExists() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.camera.all()[0].captureImage === 'function'")
+            #expect(harness.evalTypeOf("hs.camera.all()[0].captureImage") == "function")
         }
 
         @Test("camera has addWatcher() and removeWatcher() methods")

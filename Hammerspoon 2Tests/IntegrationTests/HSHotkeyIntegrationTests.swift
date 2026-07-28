@@ -22,22 +22,22 @@ struct HSHotkeyTests {
 
         @Test("bind is a function")
         func testBindIsFunction() {
-            makeHarness().expectTrue("typeof hs.hotkey.bind === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.hotkey.bind") == "function")
         }
 
         @Test("bindSpec is a function")
         func testBindSpecIsFunction() {
-            makeHarness().expectTrue("typeof hs.hotkey.bindSpec === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.hotkey.bindSpec") == "function")
         }
 
         @Test("getKeyCodeMap is a function")
         func testGetKeyCodeMapIsFunction() {
-            makeHarness().expectTrue("typeof hs.hotkey.getKeyCodeMap === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.hotkey.getKeyCodeMap") == "function")
         }
 
         @Test("getModifierMap is a function")
         func testGetModifierMapIsFunction() {
-            makeHarness().expectTrue("typeof hs.hotkey.getModifierMap === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.hotkey.getModifierMap") == "function")
         }
     }
 
@@ -56,11 +56,11 @@ struct HSHotkeyTests {
         @Test("getKeyCodeMap returns an object containing standard keys")
         func testKeyCodeMapContainsStandardKeys() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.hotkey.getKeyCodeMap() === 'object'")
-            harness.expectTrue("typeof hs.hotkey.getKeyCodeMap()['a'] === 'number'")
-            harness.expectTrue("typeof hs.hotkey.getKeyCodeMap()['space'] === 'number'")
-            harness.expectTrue("typeof hs.hotkey.getKeyCodeMap()['return'] === 'number'")
-            harness.expectTrue("typeof hs.hotkey.getKeyCodeMap()['f1'] === 'number'")
+            #expect(harness.evalTypeOf("hs.hotkey.getKeyCodeMap()") == "object")
+            #expect(harness.evalTypeOf("hs.hotkey.getKeyCodeMap()['a']") == "number")
+            #expect(harness.evalTypeOf("hs.hotkey.getKeyCodeMap()['space']") == "number")
+            #expect(harness.evalTypeOf("hs.hotkey.getKeyCodeMap()['return']") == "number")
+            #expect(harness.evalTypeOf("hs.hotkey.getKeyCodeMap()['f1']") == "number")
             #expect(!harness.hasException)
         }
 
@@ -68,9 +68,9 @@ struct HSHotkeyTests {
         func testModifierMapContainsExpectedKeys() {
             let harness = makeHarness()
             let js = "hs.hotkey.getModifierMap()"
-            harness.expectTrue("typeof \(js) === 'object'")
+            #expect(harness.evalTypeOf(js) == "object")
             for mod in ["cmd", "shift", "alt", "ctrl"] {
-                harness.expectTrue("typeof \(js)['\(mod)'] === 'number'")
+                #expect(harness.evalTypeOf("\(js)['\(mod)']") == "number")
             }
             #expect(!harness.hasException)
         }
@@ -80,9 +80,9 @@ struct HSHotkeyTests {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], '1', () => {}, () => {})")
             harness.expectTrue("typeof hk === 'object' && hk !== null")
-            harness.expectTrue("typeof hk.enable === 'function'")
-            harness.expectTrue("typeof hk.disable === 'function'")
-            harness.expectTrue("typeof hk.isEnabled === 'function'")
+            #expect(harness.evalTypeOf("hk.enable") == "function")
+            #expect(harness.evalTypeOf("hk.disable") == "function")
+            #expect(harness.evalTypeOf("hk.isEnabled") == "function")
             #expect(!harness.hasException)
         }
 

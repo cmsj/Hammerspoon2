@@ -33,9 +33,9 @@ import JavaScriptCore
         var task = hs.task.create('/bin/echo', ['hello']);
         """)
 
-        harness.expectTrue("typeof task === 'object'")
-        harness.expectTrue("typeof task.start === 'function'")
-        harness.expectTrue("typeof task.terminate === 'function'")
+        #expect(harness.evalTypeOf("task") == "object")
+        #expect(harness.evalTypeOf("task.start") == "function")
+        #expect(harness.evalTypeOf("task.terminate") == "function")
     }
 
     @Test("hs.task object has all expected methods")
@@ -46,21 +46,21 @@ import JavaScriptCore
         harness.eval("var t = hs.task.create('/bin/echo', ['test'])")
 
         // Lifecycle methods
-        harness.expectTrue("typeof t.start === 'function'")
-        harness.expectTrue("typeof t.terminate === 'function'")
-        harness.expectTrue("typeof t.kill9 === 'function'")
-        harness.expectTrue("typeof t.interrupt === 'function'")
-        harness.expectTrue("typeof t.pause === 'function'")
-        harness.expectTrue("typeof t.resume === 'function'")
-        harness.expectTrue("typeof t.waitUntilExit === 'function'")
+        #expect(harness.evalTypeOf("t.start") == "function")
+        #expect(harness.evalTypeOf("t.terminate") == "function")
+        #expect(harness.evalTypeOf("t.kill9") == "function")
+        #expect(harness.evalTypeOf("t.interrupt") == "function")
+        #expect(harness.evalTypeOf("t.pause") == "function")
+        #expect(harness.evalTypeOf("t.resume") == "function")
+        #expect(harness.evalTypeOf("t.waitUntilExit") == "function")
 
         // stdin/stdout methods
-        harness.expectTrue("typeof t.sendInput === 'function'")
-        harness.expectTrue("typeof t.closeInput === 'function'")
+        #expect(harness.evalTypeOf("t.sendInput") == "function")
+        #expect(harness.evalTypeOf("t.closeInput") == "function")
 
         // Properties
-        harness.expectTrue("typeof t.isRunning === 'boolean'")
-        harness.expectTrue("typeof t.pid === 'number'")
+        #expect(harness.evalTypeOf("t.isRunning") == "boolean")
+        #expect(harness.evalTypeOf("t.pid") == "number")
 
         // State properties (can be null/undefined initially)
         harness.expectTrue("t.terminationStatus == null || typeof t.terminationStatus === 'number'")
@@ -179,7 +179,7 @@ import JavaScriptCore
         """)
 
         // Before starting
-        harness.expectTrue("task.isRunning === false")
+        #expect(harness.evalBool("task.isRunning") == false)
 
         // Start the task
         harness.eval("task.start()")
@@ -305,7 +305,7 @@ import JavaScriptCore
         """)
 
         try? await Task.sleep(for: .seconds(0.1))
-        harness.expectTrue("task.isRunning === true")
+        #expect(harness.evalBool("task.isRunning") == true)
 
         // Terminate the task
         harness.eval("task.terminate()")
@@ -414,7 +414,7 @@ import JavaScriptCore
         """)
 
         try? await Task.sleep(for: .seconds(0.1))
-        harness.expectTrue("task.isRunning === true")
+        #expect(harness.evalBool("task.isRunning") == true)
 
         // Close stdin - cat should exit
         harness.eval("task.closeInput()")
@@ -526,7 +526,7 @@ import JavaScriptCore
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
-        harness.expectTrue("typeof hs.task.runAsync === 'function'")
+        #expect(harness.evalTypeOf("hs.task.runAsync") == "function")
     }
 
     @Test("hs.task.runAsync() returns Promise with stdout/stderr/exitCode")
@@ -793,13 +793,13 @@ import JavaScriptCore
 
         harness.eval("var builder = hs.task.builder('/bin/echo')")
 
-        harness.expectTrue("typeof builder === 'object'")
-        harness.expectTrue("typeof builder.withArgs === 'function'")
-        harness.expectTrue("typeof builder.withEnvironment === 'function'")
-        harness.expectTrue("typeof builder.inDirectory === 'function'")
-        harness.expectTrue("typeof builder.onOutput === 'function'")
-        harness.expectTrue("typeof builder.run === 'function'")
-        harness.expectTrue("typeof builder.build === 'function'")
+        #expect(harness.evalTypeOf("builder") == "object")
+        #expect(harness.evalTypeOf("builder.withArgs") == "function")
+        #expect(harness.evalTypeOf("builder.withEnvironment") == "function")
+        #expect(harness.evalTypeOf("builder.inDirectory") == "function")
+        #expect(harness.evalTypeOf("builder.onOutput") == "function")
+        #expect(harness.evalTypeOf("builder.run") == "function")
+        #expect(harness.evalTypeOf("builder.build") == "function")
     }
 
     @Test("TaskBuilder.withArgs() adds arguments")
@@ -933,8 +933,8 @@ import JavaScriptCore
         """)
 
         // Task should exist but not be running
-        harness.expectTrue("typeof task === 'object'")
-        harness.expectTrue("task.isRunning === false")
+        #expect(harness.evalTypeOf("task") == "object")
+        #expect(harness.evalBool("task.isRunning") == false)
 
         // Should be able to start it
         harness.eval("task.start()")

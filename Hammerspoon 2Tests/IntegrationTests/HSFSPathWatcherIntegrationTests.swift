@@ -51,14 +51,15 @@ struct HSFSPathWatcherTests {
 
         @Test("createPathWatcher is a function")
         func testCreatePathWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.createPathWatcher === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.fs.createPathWatcher") == "function")
         }
 
         @Test("createPathWatcher returns an object")
         func testCreatePathWatcherReturnsObject() {
             let harness = makeHarness()
             harness.eval("var w = hs.fs.createPathWatcher('/tmp')")
-            harness.expectTrue("typeof w === 'object'")
+            #expect(harness.evalTypeOf("w") == "object")
             #expect(!harness.hasException)
         }
 
@@ -66,7 +67,7 @@ struct HSFSPathWatcherTests {
         func testWatcherHasIdentifier() {
             let harness = makeHarness()
             harness.eval("var w = hs.fs.createPathWatcher('/tmp')")
-            harness.expectTrue("typeof w.identifier === 'string'")
+            #expect(harness.evalTypeOf("w.identifier") == "string")
             harness.expectTrue("w.identifier.length > 0")
             #expect(!harness.hasException)
         }
@@ -75,10 +76,10 @@ struct HSFSPathWatcherTests {
         func testWatcherHasMethods() {
             let harness = makeHarness()
             harness.eval("var w = hs.fs.createPathWatcher('/tmp')")
-            harness.expectTrue("typeof w.start === 'function'")
-            harness.expectTrue("typeof w.stop === 'function'")
-            harness.expectTrue("typeof w.setCallback === 'function'")
-            harness.expectTrue("typeof w.destroy === 'function'")
+            #expect(harness.evalTypeOf("w.start") == "function")
+            #expect(harness.evalTypeOf("w.stop") == "function")
+            #expect(harness.evalTypeOf("w.setCallback") == "function")
+            #expect(harness.evalTypeOf("w.destroy") == "function")
             #expect(!harness.hasException)
         }
 

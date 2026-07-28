@@ -31,7 +31,7 @@ struct HSOSAScriptIntegrationTests {
         let harness = JSTestHarness()
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
-        harness.expectTrue("typeof hs.osascript === 'object'")
+        #expect(harness.evalTypeOf("hs.osascript") == "object")
     }
 
     @Test("hs.osascript exposes all expected functions")
@@ -39,16 +39,16 @@ struct HSOSAScriptIntegrationTests {
         let harness = JSTestHarness()
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
-        harness.expectTrue("typeof hs.osascript.applescript === 'function'")
-        harness.expectTrue("typeof hs.osascript.javascript === 'function'")
-        harness.expectTrue("typeof hs.osascript.applescriptFromFile === 'function'")
-        harness.expectTrue("typeof hs.osascript.javascriptFromFile === 'function'")
-        harness.expectTrue("typeof hs.osascript._execute === 'function'")
-        harness.expectTrue("typeof hs.osascript.applescriptSync === 'function'")
-        harness.expectTrue("typeof hs.osascript.javascriptSync === 'function'")
-        harness.expectTrue("typeof hs.osascript.applescriptSyncFromFile === 'function'")
-        harness.expectTrue("typeof hs.osascript.javascriptSyncFromFile === 'function'")
-        harness.expectTrue("typeof hs.osascript._executeSync === 'function'")
+        #expect(harness.evalTypeOf("hs.osascript.applescript") == "function")
+        #expect(harness.evalTypeOf("hs.osascript.javascript") == "function")
+        #expect(harness.evalTypeOf("hs.osascript.applescriptFromFile") == "function")
+        #expect(harness.evalTypeOf("hs.osascript.javascriptFromFile") == "function")
+        #expect(harness.evalTypeOf("hs.osascript._execute") == "function")
+        #expect(harness.evalTypeOf("hs.osascript.applescriptSync") == "function")
+        #expect(harness.evalTypeOf("hs.osascript.javascriptSync") == "function")
+        #expect(harness.evalTypeOf("hs.osascript.applescriptSyncFromFile") == "function")
+        #expect(harness.evalTypeOf("hs.osascript.javascriptSyncFromFile") == "function")
+        #expect(harness.evalTypeOf("hs.osascript._executeSync") == "function")
     }
 
     // MARK: - Promise Return Type Tests
@@ -95,8 +95,8 @@ struct HSOSAScriptIntegrationTests {
         harness.expectTrue("'success' in r")
         harness.expectTrue("'result' in r")
         harness.expectTrue("'raw' in r")
-        harness.expectTrue("typeof r.success === 'boolean'")
-        harness.expectTrue("typeof r.raw === 'string'")
+        #expect(harness.evalTypeOf("r.success") == "boolean")
+        #expect(harness.evalTypeOf("r.raw") == "string")
     }
 
     // MARK: - AppleScript Type Mapping Tests
@@ -119,7 +119,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", "hello from applescript")
         harness.expectEqual("r.raw", "hello from applescript")
     }
@@ -142,7 +142,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", 42)
     }
 
@@ -164,8 +164,8 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
-        harness.expectTrue("r.result === true")
+        #expect(harness.evalBool("r.success") == true)
+        #expect(harness.evalBool("r.result") == true)
     }
 
     @Test("applescript() maps boolean false correctly")
@@ -186,8 +186,8 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
-        harness.expectTrue("r.result === false")
+        #expect(harness.evalBool("r.success") == true)
+        #expect(harness.evalBool("r.result") == false)
     }
 
     @Test("applescript() maps a list return value to a JS array")
@@ -208,7 +208,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectTrue("Array.isArray(r.result)")
         harness.expectEqual("r.result.length", 3)
         harness.expectEqual("r.result[0]", 1)
@@ -237,7 +237,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectTrue("typeof r.result === 'object' && r.result !== null")
         harness.expectEqual("r.result.firstName", "Alice")
         harness.expectEqual("r.result.personAge", 30)
@@ -261,7 +261,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectTrue("r.result === null")
     }
 
@@ -285,7 +285,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve even on error")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.length > 0")
     }
@@ -308,7 +308,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve even on runtime error")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.length > 0")
     }
@@ -355,7 +355,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", 2)
     }
 
@@ -377,7 +377,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", "hello from osa js")
     }
 
@@ -399,7 +399,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve even on JS error")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.length > 0")
     }
@@ -422,7 +422,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", "Finder")
     }
 
@@ -446,7 +446,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 2.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.indexOf('Failed to read file:') !== -1")
     }
@@ -469,7 +469,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 2.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.indexOf('Failed to read file:') !== -1")
     }
@@ -496,7 +496,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", "from file")
     }
 
@@ -522,7 +522,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", 4)
     }
 
@@ -546,7 +546,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", "via execute")
     }
 
@@ -568,7 +568,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", 9)
     }
 
@@ -592,7 +592,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 5.0) { resolved }
         #expect(completed, "Promise should resolve")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectTrue("typeof r.result === 'string' && r.result.length > 0")
     }
 
@@ -650,7 +650,7 @@ struct HSOSAScriptIntegrationTests {
 
         let completed = await harness.waitForAsync(timeout: 10.0) { resolved }
         #expect(completed, "Second call should complete")
-        harness.expectTrue("secondResult.success === true")
+        #expect(harness.evalBool("secondResult.success") == true)
         harness.expectEqual("secondResult.result", 99)
     }
 
@@ -664,7 +664,7 @@ struct HSOSAScriptIntegrationTests {
         harness.eval("var r = hs.osascript.applescriptSync('return \"sync hello\"');")
         harness.expectTrue("r !== null && r !== undefined")
         harness.expectTrue("'success' in r && 'result' in r && 'raw' in r")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", "sync hello")
         harness.expectEqual("r.raw", "sync hello")
     }
@@ -675,7 +675,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript.javascriptSync('6 * 7');")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", 42)
     }
 
@@ -691,7 +691,7 @@ struct HSOSAScriptIntegrationTests {
         harness.expectEqual("rNum.result", 99)
 
         harness.eval("var rBool = hs.osascript.applescriptSync('return true');")
-        harness.expectTrue("rBool.result === true")
+        #expect(harness.evalBool("rBool.result") == true)
 
         harness.eval("var rNull = hs.osascript.applescriptSync('return missing value');")
         harness.expectTrue("rNull.result === null")
@@ -703,7 +703,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript.applescriptSync('this is not valid @@@');")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.length > 0")
     }
@@ -714,7 +714,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript.javascriptSync('throw new Error(\"sync error\")');")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.length > 0")
     }
@@ -729,7 +729,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript.applescriptSyncFromFile('\(tmpPath)');")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", "sync from file")
     }
 
@@ -739,7 +739,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript.applescriptSyncFromFile('/nonexistent/sync.applescript');")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.indexOf('Failed to read file:') !== -1")
     }
@@ -754,7 +754,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript.javascriptSyncFromFile('\(tmpPath)');")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", 6)
     }
 
@@ -764,7 +764,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript.javascriptSyncFromFile('/nonexistent/sync.js');")
-        harness.expectTrue("r.success === false")
+        #expect(harness.evalBool("r.success") == false)
         harness.expectTrue("r.result === null")
         harness.expectTrue("r.raw.indexOf('Failed to read file:') !== -1")
     }
@@ -775,7 +775,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript._executeSync('return \"via executeSync\"', 'AppleScript');")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", "via executeSync")
     }
 
@@ -785,7 +785,7 @@ struct HSOSAScriptIntegrationTests {
         harness.loadModule(HSOSAScriptModule.self, as: "osascript")
 
         harness.eval("var r = hs.osascript._executeSync('5 * 5', 'JavaScript');")
-        harness.expectTrue("r.success === true")
+        #expect(harness.evalBool("r.success") == true)
         harness.expectEqual("r.result", 25)
     }
 

@@ -105,37 +105,37 @@ struct HSAXTests {
         @Test("systemWideElement is a function")
         func testSystemWideElementIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.systemWideElement === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.systemWideElement") == "function")
         }
 
         @Test("applicationElement is a function")
         func testApplicationElementIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.applicationElement === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.applicationElement") == "function")
         }
 
         @Test("windowElement is a function")
         func testWindowElementIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.windowElement === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.windowElement") == "function")
         }
 
         @Test("elementAtPoint is a function")
         func testElementAtPointIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.elementAtPoint === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.elementAtPoint") == "function")
         }
 
         @Test("addWatcher is a function")
         func testAddWatcherIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.addWatcher === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.addWatcher") == "function")
         }
 
         @Test("removeWatcher is a function")
         func testRemoveWatcherIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.removeWatcher === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.removeWatcher") == "function")
         }
 
         // MARK: - JS enhancement API presence
@@ -149,25 +149,25 @@ struct HSAXTests {
         @Test("focusedElement is a function")
         func testFocusedElementIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.focusedElement === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.focusedElement") == "function")
         }
 
         @Test("findByRole is a function")
         func testFindByRoleIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.findByRole === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.findByRole") == "function")
         }
 
         @Test("findByTitle is a function")
         func testFindByTitleIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.findByTitle === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.findByTitle") == "function")
         }
 
         @Test("printHierarchy is a function")
         func testPrintHierarchyIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.printHierarchy === 'function'")
+            #expect(harness.evalTypeOf("hs.ax.printHierarchy") == "function")
         }
 
         // MARK: - Graceful returns without accessibility permissions
@@ -222,7 +222,7 @@ struct HSAXTests {
         @Test("systemWideElement pid is a number")
         func testSystemWideElementPid() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.ax.systemWideElement().pid === 'number'")
+            #expect(harness.evalTypeOf("hs.ax.systemWideElement().pid") == "number")
         }
 
         // MARK: - Application element (Finder)
