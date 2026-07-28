@@ -417,65 +417,63 @@ private enum HSWifiError: LocalizedError {
 
     // MARK: - Watcher event (de)registration, ref-counted per CWEventType (see HSAXModule for precedent)
 
-    /// Registers `watcher`'s event types, incrementing shared ref counts. If any event type
-    /// fails to register, only the increments made by *this* call are rolled back (other
-    /// watchers' active subscriptions are left untouched) and `false` is returned, so the
-    /// caller (HSWifiWatcher.start()) can leave itself in a retryable, not-running state
-    /// rather than getting stuck "running" with no actual registration.
+    /// Registers any of `watcher.events` not already in `watcher.registeredEvents`. Each event
+    /// type is independent: on success it's added to the returned set and the shared ref count
+    /// is incremented; on failure it's logged and left alone — no ref count change, nothing to
+    /// roll back. Already-registered names are passed through unchanged, so calling this again
+    /// after a partial failure only retries the names that are still missing, rather than
+    /// double-incrementing the ones that already succeeded.
     @discardableResult
-    func startWatching(_ watcher: HSWifiWatcher) -> Bool {
-        var incrementedTypes: [CWEventType] = []
-        var success = true
-
-        for name in watcher.events {
+    func startWatching(_ watcher: HSWifiWatcher) -> Set<String> {
+        var registered = watcher.registeredEvents
+        for name in watcher.events where !registered.contains(name) {
             guard let type = wifiEventTypeMap[name] else { continue }
             let currentCount = eventRefCounts[type, default: 0]
-            guard currentCount == 0 else {
+            if currentCount > 0 {
                 eventRefCounts[type] = currentCount + 1
-                incrementedTypes.append(type)
+                registered.insert(name)
                 continue
             }
             do {
                 try client.startMonitoringEvent(with: type)
                 eventRefCounts[type] = 1
-                incrementedTypes.append(type)
+                registered.insert(name)
                 AKTrace("hs.wifi: started monitoring \(name)")
             } catch {
                 AKError("hs.wifi: failed to start monitoring \(name): \(error.localizedDescription)")
-                success = false
             }
         }
-
-        if !success {
-            for type in incrementedTypes {
-                let count = eventRefCounts[type, default: 0]
-                eventRefCounts[type] = count - 1
-                if count - 1 == 0 {
-                    try? client.stopMonitoringEvent(with: type)
-                }
-            }
-        }
-
-        return success
+        return registered
     }
 
-    func stopWatching(_ watcher: HSWifiWatcher) {
-        for name in watcher.events {
-            guard let type = wifiEventTypeMap[name], let currentCount = eventRefCounts[type], currentCount > 0 else { continue }
+    /// Unregisters any of `watcher.registeredEvents`. Each event type is independent: on success
+    /// (or if the ref count is simply decremented without reaching zero) it's removed from the
+    /// returned set; on failure to actually deregister with CoreWLAN it's logged and left in the
+    /// returned set — we can't confirm CoreWLAN stopped monitoring it, so bookkeeping keeps
+    /// treating it as registered rather than claiming ownership of it is free.
+    @discardableResult
+    func stopWatching(_ watcher: HSWifiWatcher) -> Set<String> {
+        var registered = watcher.registeredEvents
+        for name in watcher.registeredEvents {
+            guard let type = wifiEventTypeMap[name], let currentCount = eventRefCounts[type], currentCount > 0 else {
+                registered.remove(name)
+                continue
+            }
             guard currentCount == 1 else {
                 eventRefCounts[type] = currentCount - 1
+                registered.remove(name)
                 continue
             }
             do {
                 try client.stopMonitoringEvent(with: type)
                 eventRefCounts[type] = 0
+                registered.remove(name)
                 AKTrace("hs.wifi: stopped monitoring \(name)")
             } catch {
-                // Leave the ref count at 1 so we don't lose track of an event type CoreWLAN
-                // is (as far as we know) still actually monitoring.
                 AKError("hs.wifi: failed to stop monitoring \(name): \(error.localizedDescription)")
             }
         }
+        return registered
     }
 
     // MARK: - Off-main-thread scan/associate work (nonisolated static — no access to `self`)

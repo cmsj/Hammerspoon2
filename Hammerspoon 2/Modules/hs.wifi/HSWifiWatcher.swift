@@ -107,6 +107,10 @@ let wifiWatcherValidEvents: Set<String> = [
     private var callback: JSCallback?
     private var isRunning = false
     private var _events: [String] = ["ssidChange"]
+    // The subset of `_events` the module has confirmed is actually registered with CoreWLAN.
+    // Retrying start() only (re)attempts names missing from this set, so a partially-successful
+    // registration is never double-counted against the module's shared ref counts.
+    var registeredEvents: Set<String> = []
 
     @objc var events: [String] {
         get { _events }
@@ -120,10 +124,15 @@ let wifiWatcherValidEvents: Set<String> = [
                 return
             }
             let wasRunning = isRunning
-            if wasRunning { module?.stopWatching(self) }
+            if wasRunning, let module { registeredEvents = module.stopWatching(self) }
             _events = filtered
             if wasRunning {
-                isRunning = module?.startWatching(self) ?? true
+                guard let module else {
+                    isRunning = true
+                    return
+                }
+                registeredEvents = module.startWatching(self)
+                isRunning = Set(_events).isSubset(of: registeredEvents)
                 if !isRunning {
                     AKWarning("HSWifiWatcher(\(identifier)).events: failed to register one or more event types; call start() again to retry")
                 }
@@ -149,7 +158,12 @@ let wifiWatcherValidEvents: Set<String> = [
 
     @objc @discardableResult func start() -> HSWifiWatcher {
         guard !isRunning else { return self }
-        guard module?.startWatching(self) ?? true else {
+        guard let module else {
+            isRunning = true
+            return self
+        }
+        registeredEvents = module.startWatching(self)
+        guard Set(_events).isSubset(of: registeredEvents) else {
             AKWarning("HSWifiWatcher(\(identifier)).start(): failed to register one or more event types; call start() again to retry")
             return self
         }
@@ -160,8 +174,8 @@ let wifiWatcherValidEvents: Set<String> = [
 
     @objc @discardableResult func stop() -> HSWifiWatcher {
         guard isRunning else { return self }
+        if let module { registeredEvents = module.stopWatching(self) }
         isRunning = false
-        module?.stopWatching(self)
         AKTrace("HSWifiWatcher(\(identifier)).stop(): Stopped")
         return self
     }
