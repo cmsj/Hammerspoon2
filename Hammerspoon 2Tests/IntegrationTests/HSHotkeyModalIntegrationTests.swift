@@ -24,14 +24,14 @@ struct HSHotkeyModalTests {
 
         @Test("hs.hotkey.createModal is a function")
         func testCreateModalIsFunction() {
-            makeHarness().expectTrue("typeof hs.hotkey.createModal === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.hotkey.createModal") == "function")
         }
 
         @Test("created modal has bind as a function")
         func testBindIsFunction() {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
-            harness.expectTrue("typeof m.bind === 'function'")
+            #expect(harness.evalTypeOf("m.bind") == "function")
             #expect(!harness.hasException)
         }
 
@@ -39,7 +39,7 @@ struct HSHotkeyModalTests {
         func testEnterIsFunction() {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
-            harness.expectTrue("typeof m.enter === 'function'")
+            #expect(harness.evalTypeOf("m.enter") == "function")
             #expect(!harness.hasException)
         }
 
@@ -47,7 +47,7 @@ struct HSHotkeyModalTests {
         func testExitIsFunction() {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
-            harness.expectTrue("typeof m.exit === 'function'")
+            #expect(harness.evalTypeOf("m.exit") == "function")
             #expect(!harness.hasException)
         }
 
@@ -55,7 +55,7 @@ struct HSHotkeyModalTests {
         func testDestroyIsFunction() {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
-            harness.expectTrue("typeof m.destroy === 'function'")
+            #expect(harness.evalTypeOf("m.destroy") == "function")
             #expect(!harness.hasException)
         }
 
@@ -79,7 +79,7 @@ struct HSHotkeyModalTests {
         func testIsActiveIsBoolean() {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
-            harness.expectTrue("typeof m.isActive === 'boolean'")
+            #expect(harness.evalTypeOf("m.isActive") == "boolean")
             #expect(!harness.hasException)
         }
     }
@@ -115,7 +115,7 @@ struct HSHotkeyModalTests {
         func testIsActiveFalseInitially() {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
-            harness.expectTrue("m.isActive === false")
+            #expect(harness.evalBool("m.isActive") == false)
             #expect(!harness.hasException)
         }
 
@@ -124,7 +124,7 @@ struct HSHotkeyModalTests {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
             harness.eval("m.enter()")
-            harness.expectTrue("m.isActive === true")
+            #expect(harness.evalBool("m.isActive") == true)
             #expect(!harness.hasException)
         }
 
@@ -134,7 +134,7 @@ struct HSHotkeyModalTests {
             harness.eval("var m = hs.hotkey.createModal([], '')")
             harness.eval("m.enter()")
             harness.eval("m.exit()")
-            harness.expectTrue("m.isActive === false")
+            #expect(harness.evalBool("m.isActive") == false)
             #expect(!harness.hasException)
         }
 
@@ -251,8 +251,8 @@ struct HSHotkeyModalTests {
                 var m2 = hs.hotkey.createModal([], '')
                 m1.enter()
             """)
-            harness.expectTrue("m1.isActive === true")
-            harness.expectTrue("m2.isActive === false")
+            #expect(harness.evalBool("m1.isActive") == true)
+            #expect(harness.evalBool("m2.isActive") == false)
             #expect(!harness.hasException)
         }
 

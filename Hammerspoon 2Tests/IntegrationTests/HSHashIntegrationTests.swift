@@ -200,10 +200,10 @@ struct HSHashIntegrationTests {
         let harness = JSTestHarness()
         harness.loadModule(HSHashModule.self, as: "hash")
 
-        harness.expectTrue("typeof hs.hash === 'object'")
-        harness.expectTrue("typeof hs.hash.md5 === 'function'")
-        harness.expectTrue("typeof hs.hash.sha256 === 'function'")
-        harness.expectTrue("typeof hs.hash.base64Encode === 'function'")
+        #expect(harness.evalTypeOf("hs.hash") == "object")
+        #expect(harness.evalTypeOf("hs.hash.md5") == "function")
+        #expect(harness.evalTypeOf("hs.hash.sha256") == "function")
+        #expect(harness.evalTypeOf("hs.hash.base64Encode") == "function")
     }
 
     // MARK: - Real-World Use Cases
@@ -246,8 +246,8 @@ struct HSHashIntegrationTests {
         const signature = generateSignature(apiKey, requestData);
         """)
 
-        harness.expectTrue("signature.length === 64")
-        harness.expectTrue("typeof signature === 'string'")
+        #expect(harness.evalInt("signature.length") == 64)
+        #expect(harness.evalTypeOf("signature") == "string")
     }
 
     @Test("Data integrity check pattern works")

@@ -23,17 +23,20 @@ struct HSNetworkTests {
 
         @Test("interfaces is a function")
         func testInterfacesIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.interfaces === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.interfaces") == "function")
         }
 
         @Test("primaryInterface is a function")
         func testPrimaryInterfaceIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.primaryInterface === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.primaryInterface") == "function")
         }
 
         @Test("addresses is a function")
         func testAddressesIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.addresses === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.addresses") == "function")
         }
     }
 
@@ -66,7 +69,7 @@ struct HSNetworkTests {
         func testLoopbackFlagIsSet() {
             let harness = makeHarness()
             harness.eval("var lo = hs.network.interfaces().find(function(i) { return i.name === 'lo0'; })")
-            harness.expectTrue("lo.isLoopback === true")
+            #expect(harness.evalBool("lo.isLoopback") == true)
             #expect(!harness.hasException)
         }
 
@@ -188,7 +191,8 @@ struct HSNetworkTests {
 
         @Test("resolve is a function")
         func testResolveIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.resolve === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.resolve") == "function")
         }
 
         @Test("resolve returns a Promise")
@@ -295,7 +299,8 @@ struct HSNetworkTests {
 
         @Test("ping is a function")
         func testPingIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.ping === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.ping") == "function")
         }
 
         @Test("ping() returns an object")
@@ -311,13 +316,13 @@ struct HSNetworkTests {
         func testPingObjectShape() {
             let harness = makeHarness()
             harness.eval("var p = hs.network.ping('127.0.0.1', function(){})")
-            harness.expectTrue("typeof p.server === 'string'")
-            harness.expectTrue("p.server === '127.0.0.1'")
-            harness.expectTrue("typeof p.address === 'string'")
-            harness.expectTrue("typeof p.sent === 'number'")
-            harness.expectTrue("typeof p.count === 'number'")
-            harness.expectTrue("typeof p.isRunning === 'boolean'")
-            harness.expectTrue("typeof p.isPaused === 'boolean'")
+            #expect(harness.evalTypeOf("p.server") == "string")
+            #expect(harness.evalString("p.server") == "127.0.0.1")
+            #expect(harness.evalTypeOf("p.address") == "string")
+            #expect(harness.evalTypeOf("p.sent") == "number")
+            #expect(harness.evalTypeOf("p.count") == "number")
+            #expect(harness.evalTypeOf("p.isRunning") == "boolean")
+            #expect(harness.evalTypeOf("p.isPaused") == "boolean")
             #expect(!harness.hasException)
             harness.eval("p.cancel()")
         }
@@ -326,12 +331,12 @@ struct HSNetworkTests {
         func testPingObjectMethods() {
             let harness = makeHarness()
             harness.eval("var p = hs.network.ping('127.0.0.1', function(){})")
-            harness.expectTrue("typeof p.pause === 'function'")
-            harness.expectTrue("typeof p.resume === 'function'")
-            harness.expectTrue("typeof p.cancel === 'function'")
-            harness.expectTrue("typeof p.setCallback === 'function'")
-            harness.expectTrue("typeof p.packets === 'function'")
-            harness.expectTrue("typeof p.summary === 'function'")
+            #expect(harness.evalTypeOf("p.pause") == "function")
+            #expect(harness.evalTypeOf("p.resume") == "function")
+            #expect(harness.evalTypeOf("p.cancel") == "function")
+            #expect(harness.evalTypeOf("p.setCallback") == "function")
+            #expect(harness.evalTypeOf("p.packets") == "function")
+            #expect(harness.evalTypeOf("p.summary") == "function")
             #expect(!harness.hasException)
             harness.eval("p.cancel()")
         }
@@ -374,7 +379,7 @@ struct HSNetworkTests {
                 });
                 p.cancel();
             """)
-            harness.expectTrue("__cancel_done === true")
+            #expect(harness.evalBool("__cancel_done") == true)
             #expect(!harness.hasException)
         }
 
@@ -383,7 +388,7 @@ struct HSNetworkTests {
             let harness = makeHarness()
             harness.eval("var p = hs.network.ping('127.0.0.1', function(){})")
             harness.eval("p.pause()")
-            harness.expectTrue("p.isPaused === true")
+            #expect(harness.evalBool("p.isPaused") == true)
             harness.eval("p.cancel()")
             #expect(!harness.hasException)
         }
@@ -394,7 +399,7 @@ struct HSNetworkTests {
             harness.eval("var p = hs.network.ping('127.0.0.1', function(){})")
             harness.eval("p.pause()")
             harness.eval("p.resume()")
-            harness.expectTrue("p.isPaused === false")
+            #expect(harness.evalBool("p.isPaused") == false)
             harness.eval("p.cancel()")
             #expect(!harness.hasException)
         }
@@ -423,7 +428,7 @@ struct HSNetworkTests {
             harness.eval("var p = hs.network.ping('127.0.0.1', {count: 5, callback: function(){}})")
             let original = harness.evalValue("p.count")?.toInt32() ?? 0
             harness.eval("p.count = 10")
-            harness.expectTrue("p.count === 10")
+            #expect(harness.evalInt("p.count") == 10)
             harness.eval("p.count = -1")
             // negative value should be rejected (count stays at 10)
             harness.expectTrue("p.count > 0")
@@ -486,9 +491,9 @@ struct HSNetworkTests {
 
             // Only validate packet details if we received one
             guard harness.evalValue("__ping_packet")?.isObject == true else { return }
-            harness.expectTrue("typeof __ping_packet.sequenceNumber === 'number'")
-            harness.expectTrue("typeof __ping_packet.icmpIdentifier === 'number'")
-            harness.expectTrue("__ping_packet.status === 'received'")
+            #expect(harness.evalTypeOf("__ping_packet.sequenceNumber") == "number")
+            #expect(harness.evalTypeOf("__ping_packet.icmpIdentifier") == "number")
+            #expect(harness.evalString("__ping_packet.status") == "received")
             harness.expectTrue("typeof __ping_packet.rtt === 'number' && __ping_packet.rtt > 0")
         }
 
@@ -564,32 +569,38 @@ struct HSNetworkTests {
 
         @Test("reachabilityFlags is an object")
         func testFlagsIsObject() {
-            makeHarness().expectTrue("typeof hs.network.reachabilityFlags === 'object'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.reachabilityFlags") == "object")
         }
 
         @Test("reachabilityForAddress is a function")
         func testForAddressIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.reachabilityForAddress === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.reachabilityForAddress") == "function")
         }
 
         @Test("reachabilityForAddressPair is a function")
         func testForAddressPairIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.reachabilityForAddressPair === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.reachabilityForAddressPair") == "function")
         }
 
         @Test("reachabilityForHostName is a function")
         func testForHostNameIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.reachabilityForHostName === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.reachabilityForHostName") == "function")
         }
 
         @Test("reachabilityInternet is a function")
         func testInternetIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.reachabilityInternet === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.reachabilityInternet") == "function")
         }
 
         @Test("reachabilityLinkLocal is a function")
         func testLinkLocalIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.reachabilityLinkLocal === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.reachabilityLinkLocal") == "function")
         }
 
         @Test("reachabilityInternet() returns an object with expected methods")
@@ -597,12 +608,12 @@ struct HSNetworkTests {
             let harness = makeHarness()
             harness.eval("var r = hs.network.reachabilityInternet()")
             harness.expectTrue("typeof r === 'object' && r !== null")
-            harness.expectTrue("r.typeName === 'HSNetworkReachability'")
-            harness.expectTrue("typeof r.status === 'function'")
-            harness.expectTrue("typeof r.statusString === 'function'")
-            harness.expectTrue("typeof r.setCallback === 'function'")
-            harness.expectTrue("typeof r.start === 'function'")
-            harness.expectTrue("typeof r.stop === 'function'")
+            #expect(harness.evalString("r.typeName") == "HSNetworkReachability")
+            #expect(harness.evalTypeOf("r.status") == "function")
+            #expect(harness.evalTypeOf("r.statusString") == "function")
+            #expect(harness.evalTypeOf("r.setCallback") == "function")
+            #expect(harness.evalTypeOf("r.start") == "function")
+            #expect(harness.evalTypeOf("r.stop") == "function")
             #expect(!harness.hasException)
             harness.eval("r.stop()")
         }
@@ -625,7 +636,7 @@ struct HSNetworkTests {
             harness.eval("var f = hs.network.reachabilityFlags")
             for key in ["reachable", "connectionRequired", "transientConnection", "isDirect",
                         "interventionRequired", "connectionOnTraffic", "connectionOnDemand", "isLocalAddress"] {
-                harness.expectTrue("typeof f.\(key) === 'number'")
+                #expect(harness.evalTypeOf("f.\(key)") == "number")
             }
             #expect(!harness.hasException)
         }
@@ -821,63 +832,67 @@ struct HSNetworkTests {
 
         @Test("configurationStore is a function")
         func testConfigurationStoreIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.configurationStore === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.configurationStore") == "function")
         }
 
         @Test("configurationLocations is a function")
         func testConfigurationLocationsIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.configurationLocations === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.configurationLocations") == "function")
         }
 
         @Test("configurationSetLocation is a function")
         func testConfigurationSetLocationIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.configurationSetLocation === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.configurationSetLocation") == "function")
         }
 
         @Test("configurationWatcher is a function")
         func testConfigurationWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.network.configurationWatcher === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.network.configurationWatcher") == "function")
         }
 
         @Test("configurationWatcher() returns an object")
         func testConfigurationWatcherReturnsObject() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.network.configurationWatcher() === 'object'")
+            #expect(harness.evalTypeOf("hs.network.configurationWatcher()") == "object")
             #expect(!harness.hasException)
         }
 
         @Test("configurationWatcher() object has setKeys function")
         func testConfigurationWatcherHasSetKeys() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.network.configurationWatcher().setKeys === 'function'")
+            #expect(harness.evalTypeOf("hs.network.configurationWatcher().setKeys") == "function")
             #expect(!harness.hasException)
         }
 
         @Test("configurationWatcher() object has setCallback function")
         func testConfigurationWatcherHasSetCallback() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.network.configurationWatcher().setCallback === 'function'")
+            #expect(harness.evalTypeOf("hs.network.configurationWatcher().setCallback") == "function")
             #expect(!harness.hasException)
         }
 
         @Test("configurationWatcher() object has start function")
         func testConfigurationWatcherHasStart() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.network.configurationWatcher().start === 'function'")
+            #expect(harness.evalTypeOf("hs.network.configurationWatcher().start") == "function")
             #expect(!harness.hasException)
         }
 
         @Test("configurationWatcher() object has stop function")
         func testConfigurationWatcherHasStop() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.network.configurationWatcher().stop === 'function'")
+            #expect(harness.evalTypeOf("hs.network.configurationWatcher().stop") == "function")
             #expect(!harness.hasException)
         }
 
         @Test("configurationWatcher() object has typeName string")
         func testConfigurationWatcherHasTypeName() {
             let harness = makeHarness()
-            harness.expectTrue("hs.network.configurationWatcher().typeName === 'HSNetworkConfigurationWatcher'")
+            #expect(harness.evalString("hs.network.configurationWatcher().typeName") == "HSNetworkConfigurationWatcher")
             #expect(!harness.hasException)
         }
     }
@@ -896,7 +911,7 @@ struct HSNetworkTests {
         @Test("configurationStore() with no argument returns an object")
         func testConfigurationStoreNoArgReturnsObject() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.network.configurationStore() === 'object'")
+            #expect(harness.evalTypeOf("hs.network.configurationStore()") == "object")
             #expect(!harness.hasException)
         }
 
@@ -931,7 +946,7 @@ struct HSNetworkTests {
         @Test("configurationLocations() returns an object")
         func testConfigurationLocationsReturnsObject() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.network.configurationLocations() === 'object'")
+            #expect(harness.evalTypeOf("hs.network.configurationLocations()") == "object")
             #expect(!harness.hasException)
         }
 

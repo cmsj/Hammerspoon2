@@ -120,9 +120,9 @@ struct HSTimerIntegrationTests {
 
         harness.eval("var t = hs.timer.doAfter(10, function() {})")
 
-        harness.expectTrue("typeof t.start === 'function'")
-        harness.expectTrue("typeof t.stop === 'function'")
-        harness.expectTrue("typeof t.running === 'function'")
+        #expect(harness.evalTypeOf("t.start") == "function")
+        #expect(harness.evalTypeOf("t.stop") == "function")
+        #expect(harness.evalTypeOf("t.running") == "function")
     }
 
     @Test("running() returns correct state")

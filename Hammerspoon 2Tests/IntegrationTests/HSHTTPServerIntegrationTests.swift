@@ -27,19 +27,19 @@ struct HSHTTPTests {
 
         @Test("create is a function")
         func testCreateIsFunction() {
-            makeHarness().expectTrue("typeof hs.httpserver.create === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.httpserver.create") == "function")
         }
 
         @Test("create returns an object")
         func testCreateReturnsObject() {
-            makeHarness().expectTrue("typeof hs.httpserver.create() === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.httpserver.create()") == "object")
         }
 
         @Test("server has identifier")
         func testServerHasIdentifier() {
             let h = makeHarness()
             h.eval("var s = hs.httpserver.create()")
-            h.expectTrue("typeof s.identifier === 'string'")
+            #expect(h.evalTypeOf("s.identifier") == "string")
             h.expectTrue("s.identifier.length > 0")
             #expect(!h.hasException)
         }
@@ -55,42 +55,42 @@ struct HSHTTPTests {
         func testSetPortIsFunction() {
             let h = makeHarness()
             h.eval("var s = hs.httpserver.create()")
-            h.expectTrue("typeof s.setPort === 'function'")
+            #expect(h.evalTypeOf("s.setPort") == "function")
         }
 
         @Test("server has setCallback function")
         func testSetCallbackIsFunction() {
             let h = makeHarness()
             h.eval("var s = hs.httpserver.create()")
-            h.expectTrue("typeof s.setCallback === 'function'")
+            #expect(h.evalTypeOf("s.setCallback") == "function")
         }
 
         @Test("server has setDocumentRoot function")
         func testSetDocumentRootIsFunction() {
             let h = makeHarness()
             h.eval("var s = hs.httpserver.create()")
-            h.expectTrue("typeof s.setDocumentRoot === 'function'")
+            #expect(h.evalTypeOf("s.setDocumentRoot") == "function")
         }
 
         @Test("server has start function")
         func testStartIsFunction() {
             let h = makeHarness()
             h.eval("var s = hs.httpserver.create()")
-            h.expectTrue("typeof s.start === 'function'")
+            #expect(h.evalTypeOf("s.start") == "function")
         }
 
         @Test("server has stop function")
         func testStopIsFunction() {
             let h = makeHarness()
             h.eval("var s = hs.httpserver.create()")
-            h.expectTrue("typeof s.stop === 'function'")
+            #expect(h.evalTypeOf("s.stop") == "function")
         }
 
         @Test("server has getPort function")
         func testGetPortIsFunction() {
             let h = makeHarness()
             h.eval("var s = hs.httpserver.create()")
-            h.expectTrue("typeof s.getPort === 'function'")
+            #expect(h.evalTypeOf("s.getPort") == "function")
         }
 
         @Test("setters return the server for chaining")
@@ -108,7 +108,7 @@ struct HSHTTPTests {
         func testSetWebSocketCallbackIsFunction() {
             let h = makeHarness()
             h.eval("var s = hs.httpserver.create()")
-            h.expectTrue("typeof s.setWebSocketCallback === 'function'")
+            #expect(h.evalTypeOf("s.setWebSocketCallback") == "function")
         }
 
         @Test("setWebSocketCallback returns server for chaining")

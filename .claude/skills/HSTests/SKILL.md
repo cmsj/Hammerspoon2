@@ -88,19 +88,33 @@ bundle, so JS enhancements are included in integration tests without extra setup
 
 ### Assertions
 
+Prefer bringing equality-style checks into Swift with a plain `#expect(...)` rather
+than `expectTrue`/`expectFalse`. `expectTrue("typeof x === 'number'")` only ever
+reports "expected true, got false" — Swift Testing's `#expect` macro captures both
+sides of a `==` comparison and reports the actual value on failure, which is far
+more useful for debugging. Use the `evalString`/`evalBool`/`evalInt`/`evalDouble`/
+`evalTypeOf` helpers on `JSTestHarness` for this:
+
 ```swift
-// Check a JS expression evaluates to true
-harness.expectTrue("typeof hs.foo.someMethod === 'function'")
+// Type checks — use evalTypeOf, not expectTrue("typeof ... === '...'")
+#expect(harness.evalTypeOf("hs.foo.someMethod") == "function")
+#expect(harness.evalTypeOf("hs.foo.name") == "string")
+
+// Equality checks against a known value — use the typed eval helpers
+#expect(harness.evalString("hs.foo.name") == "expected string")
+#expect(harness.evalInt("hs.foo.count") == 42)
+#expect(harness.evalDouble("hs.foo.ratio") == 0.5)
+#expect(harness.evalBool("hs.foo.isReady") == true)
+
+// Reserve expectTrue/expectFalse for genuine boolean checks with no natural
+// "actual vs expected" pair — comparisons, predicates, compound conditions:
 harness.expectTrue("Array.isArray(hs.foo.list())")
 harness.expectTrue("hs.foo.count >= 0")
-
-// Check a JS expression evaluates to false
 harness.expectFalse("hs.foo.isEmpty()")
 
-// Check a JS expression equals a typed Swift value
+// expectEqual still works and is fine for quick one-offs, but a direct #expect
+// is preferred for the reasons above
 harness.expectEqual("hs.foo.name", "expected string")
-harness.expectEqual("hs.foo.count", 42)
-harness.expectEqual("hs.foo.ratio", 0.5)
 
 // Run JS without asserting on the result
 harness.eval("hs.foo.doSomething()")

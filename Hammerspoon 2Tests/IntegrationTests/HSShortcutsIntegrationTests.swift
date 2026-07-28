@@ -23,22 +23,22 @@ struct HSShortcutsIntegrationTests {
 
         @Test("hs.shortcuts is an object")
         func testModuleIsObject() {
-            makeHarness().expectTrue("typeof hs.shortcuts === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.shortcuts") == "object")
         }
 
         @Test("list is a function")
         func testListIsFunction() {
-            makeHarness().expectTrue("typeof hs.shortcuts.list === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.shortcuts.list") == "function")
         }
 
         @Test("run is a function")
         func testRunIsFunction() {
-            makeHarness().expectTrue("typeof hs.shortcuts.run === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.shortcuts.run") == "function")
         }
 
         @Test("open is a function")
         func testOpenIsFunction() {
-            makeHarness().expectTrue("typeof hs.shortcuts.open === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.shortcuts.open") == "function")
         }
     }
 

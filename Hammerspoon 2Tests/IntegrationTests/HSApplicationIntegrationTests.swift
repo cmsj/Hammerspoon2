@@ -53,9 +53,9 @@ struct HSApplicationTests {
             // Should be a valid object if it exists
             let hasFront = harness.eval("frontApp !== null && frontApp !== undefined") as? Bool
             if hasFront == true {
-                harness.expectTrue("typeof frontApp === 'object'")
-                harness.expectTrue("typeof frontApp.name === 'function'")
-                harness.expectTrue("typeof frontApp.bundleID === 'function'")
+                #expect(harness.evalTypeOf("frontApp") == "object")
+                #expect(harness.evalTypeOf("frontApp.name") == "function")
+                #expect(harness.evalTypeOf("frontApp.bundleID") == "function")
             }
         }
 
@@ -68,7 +68,7 @@ struct HSApplicationTests {
 
             // Menu bar owner should always exist on macOS
             harness.expectTrue("menuOwner !== null && menuOwner !== undefined")
-            harness.expectTrue("typeof menuOwner === 'object'")
+            #expect(harness.evalTypeOf("menuOwner") == "object")
         }
 
         @Test("matchingName finds Finder")
@@ -80,7 +80,7 @@ struct HSApplicationTests {
             harness.eval("var finder = hs.application.matchingName('Finder')")
 
             harness.expectTrue("finder !== null && finder !== undefined")
-            harness.expectTrue("typeof finder === 'object'")
+            #expect(harness.evalTypeOf("finder") == "object")
         }
 
         @Test("matchingBundleID finds application")
@@ -115,10 +115,10 @@ struct HSApplicationTests {
 
             let hasApp = harness.eval("testApp !== null && testApp !== undefined") as? Bool
             if hasApp == true {
-                harness.expectTrue("typeof testApp.name === 'function'")
-                harness.expectTrue("typeof testApp.bundleID === 'function'")
-                harness.expectTrue("typeof testApp.pid === 'function'")
-                harness.expectTrue("typeof testApp.path === 'function'")
+                #expect(harness.evalTypeOf("testApp.name") == "function")
+                #expect(harness.evalTypeOf("testApp.bundleID") == "function")
+                #expect(harness.evalTypeOf("testApp.pid") == "function")
+                #expect(harness.evalTypeOf("testApp.path") == "function")
             }
         }
 
@@ -248,7 +248,7 @@ struct HSApplicationTests {
 
             let hasInfo = harness.eval("info !== null && info !== undefined") as? Bool
             if hasInfo == true {
-                harness.expectTrue("typeof info === 'object'")
+                #expect(harness.evalTypeOf("info") == "object")
 
                 // Info dictionary should have standard keys
                 harness.expectTrue("typeof info.CFBundleIdentifier !== 'undefined'")
@@ -333,7 +333,7 @@ struct HSApplicationTests {
         """)
 
             harness.expectTrue("finderInfo !== null")
-            harness.expectTrue("finderInfo.name === 'Finder'")
+            #expect(harness.evalString("finderInfo.name") == "Finder")
         }
 
         @Test("Switch to application pattern works")
@@ -395,13 +395,13 @@ struct HSApplicationTests {
         @Test("addWatcher is a function")
         func testAddWatcherIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.application.addWatcher === 'function'")
+            #expect(harness.evalTypeOf("hs.application.addWatcher") == "function")
         }
 
         @Test("removeWatcher is a function")
         func testRemoveWatcherIsFunction() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.application.removeWatcher === 'function'")
+            #expect(harness.evalTypeOf("hs.application.removeWatcher") == "function")
         }
 
         @Test("_watcherEmitter is initialized by hs.application.js")

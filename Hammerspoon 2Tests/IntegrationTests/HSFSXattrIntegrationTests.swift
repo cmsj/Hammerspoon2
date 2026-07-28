@@ -44,22 +44,22 @@ struct HSFSXattrTests {
 
         @Test("xattrGet is a function")
         func testXattrGetIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.xattrGet === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.fs.xattrGet") == "function")
         }
 
         @Test("xattrList is a function")
         func testXattrListIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.xattrList === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.fs.xattrList") == "function")
         }
 
         @Test("xattrSet is a function")
         func testXattrSetIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.xattrSet === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.fs.xattrSet") == "function")
         }
 
         @Test("xattrRemove is a function")
         func testXattrRemoveIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.xattrRemove === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.fs.xattrRemove") == "function")
         }
     }
 
@@ -187,8 +187,8 @@ struct HSFSXattrTests {
                 var ok = hs.fs.xattrSet('\(tmp.path)', 'com.example.hs2js', 'test-value')
                 var got = hs.fs.xattrGet('\(tmp.path)', 'com.example.hs2js')
             """)
-            harness.expectTrue("ok === true")
-            harness.expectTrue("got === 'test-value'")
+            #expect(harness.evalBool("ok") == true)
+            #expect(harness.evalString("got") == "test-value")
             #expect(!harness.hasException)
         }
     }
@@ -295,7 +295,7 @@ struct HSFSXattrTests {
             harness.loadModule(HSFSModule.self, as: "fs")
             _ = HSFSModule(engineID: UUID()).xattrSet(tmp.path, "com.example.hs2noopts", "hello", nil, 0)
             harness.eval("var v = hs.fs.xattrGet('\(tmp.path)', 'com.example.hs2noopts')")
-            harness.expectTrue("v === 'hello'")
+            #expect(harness.evalString("v") == "hello")
             #expect(!harness.hasException)
         }
     }

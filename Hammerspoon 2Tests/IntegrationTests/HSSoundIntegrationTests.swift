@@ -22,17 +22,17 @@ struct HSSoundTests {
 
         @Test("fromFile is a function")
         func testFromFileIsFunction() {
-            makeHarness().expectTrue("typeof hs.sound.fromFile === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.sound.fromFile") == "function")
         }
 
         @Test("named is a function")
         func testNamedIsFunction() {
-            makeHarness().expectTrue("typeof hs.sound.named === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.sound.named") == "function")
         }
 
         @Test("systemSounds is a function")
         func testSystemSoundsIsFunction() {
-            makeHarness().expectTrue("typeof hs.sound.systemSounds === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.sound.systemSounds") == "function")
         }
 
         @Test("named returns null for a nonexistent sound without throwing")
@@ -104,13 +104,13 @@ struct HSSoundTests {
         func testNamedObjectProperties() {
             let harness = makeHarness()
             harness.eval("var s = hs.sound.named('Basso')")
-            harness.expectTrue("typeof s === 'object'")
+            #expect(harness.evalTypeOf("s") == "object")
             harness.expectTrue("typeof s.identifier === 'string' && s.identifier.length > 0")
             harness.expectTrue("typeof s.duration === 'number' && s.duration > 0")
-            harness.expectTrue("typeof s.currentTime === 'number'")
-            harness.expectTrue("typeof s.volume === 'number'")
-            harness.expectTrue("typeof s.loops === 'boolean'")
-            harness.expectTrue("typeof s.isPlaying === 'boolean'")
+            #expect(harness.evalTypeOf("s.currentTime") == "number")
+            #expect(harness.evalTypeOf("s.volume") == "number")
+            #expect(harness.evalTypeOf("s.loops") == "boolean")
+            #expect(harness.evalTypeOf("s.isPlaying") == "boolean")
             #expect(!harness.hasException)
         }
 
@@ -126,7 +126,7 @@ struct HSSoundTests {
         func testIsPlayingInitiallyFalse() {
             let harness = makeHarness()
             harness.eval("var s = hs.sound.named('Basso')")
-            harness.expectTrue("s.isPlaying === false")
+            #expect(harness.evalBool("s.isPlaying") == false)
             #expect(!harness.hasException)
         }
 
@@ -155,7 +155,7 @@ struct HSSoundTests {
         func testLoopsRoundTrip() {
             let harness = makeHarness()
             harness.eval("var s = hs.sound.named('Basso'); s.loops = true")
-            harness.expectTrue("s.loops === true")
+            #expect(harness.evalBool("s.loops") == true)
             #expect(!harness.hasException)
         }
 

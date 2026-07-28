@@ -24,30 +24,30 @@ struct HSFSVolumeTests {
 
         @Test("volumes is a function")
         func testVolumesIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.volumes === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.fs.volumes") == "function")
         }
 
         @Test("ejectVolume is a function")
         func testEjectVolumeIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.ejectVolume === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.fs.ejectVolume") == "function")
         }
 
         @Test("addVolumeWatcher is a function")
         func testAddVolumeWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.addVolumeWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.fs.addVolumeWatcher") == "function")
         }
 
         @Test("removeVolumeWatcher is a function")
         func testRemoveVolumeWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.fs.removeVolumeWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.fs.removeVolumeWatcher") == "function")
         }
 
         @Test("addVolumeWatcher returns an object with an identifier string")
         func testWatcherHasIdentifier() {
             let harness = makeHarness()
             harness.eval("var w = hs.fs.addVolumeWatcher()")
-            harness.expectTrue("typeof w === 'object'")
-            harness.expectTrue("typeof w.identifier === 'string'")
+            #expect(harness.evalTypeOf("w") == "object")
+            #expect(harness.evalTypeOf("w.identifier") == "string")
             harness.expectTrue("w.identifier.length > 0")
             #expect(!harness.hasException)
         }
@@ -56,10 +56,10 @@ struct HSFSVolumeTests {
         func testWatcherMethods() {
             let harness = makeHarness()
             harness.eval("var w = hs.fs.addVolumeWatcher()")
-            harness.expectTrue("typeof w.start === 'function'")
-            harness.expectTrue("typeof w.stop === 'function'")
-            harness.expectTrue("typeof w.setCallback === 'function'")
-            harness.expectTrue("typeof w.destroy === 'function'")
+            #expect(harness.evalTypeOf("w.start") == "function")
+            #expect(harness.evalTypeOf("w.stop") == "function")
+            #expect(harness.evalTypeOf("w.setCallback") == "function")
+            #expect(harness.evalTypeOf("w.destroy") == "function")
             #expect(!harness.hasException)
         }
 
@@ -91,7 +91,7 @@ struct HSFSVolumeTests {
         @Test("volumes() returns an object")
         func testVolumesReturnsObject() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.fs.volumes() === 'object'")
+            #expect(harness.evalTypeOf("hs.fs.volumes()") == "object")
             #expect(!harness.hasException)
         }
 
@@ -106,13 +106,13 @@ struct HSFSVolumeTests {
         func testRootVolumeProperties() {
             let harness = makeHarness()
             harness.eval("var root = hs.fs.volumes()['/']")
-            harness.expectTrue("typeof root.name === 'string'")
-            harness.expectTrue("typeof root.isLocal === 'boolean'")
-            harness.expectTrue("typeof root.isReadOnly === 'boolean'")
-            harness.expectTrue("typeof root.isRootFileSystem === 'boolean'")
-            harness.expectTrue("root.isRootFileSystem === true")
-            harness.expectTrue("typeof root.totalCapacity === 'number'")
-            harness.expectTrue("typeof root.availableCapacity === 'number'")
+            #expect(harness.evalTypeOf("root.name") == "string")
+            #expect(harness.evalTypeOf("root.isLocal") == "boolean")
+            #expect(harness.evalTypeOf("root.isReadOnly") == "boolean")
+            #expect(harness.evalTypeOf("root.isRootFileSystem") == "boolean")
+            #expect(harness.evalBool("root.isRootFileSystem") == true)
+            #expect(harness.evalTypeOf("root.totalCapacity") == "number")
+            #expect(harness.evalTypeOf("root.availableCapacity") == "number")
             harness.expectTrue("root.totalCapacity > 0")
             #expect(!harness.hasException)
         }

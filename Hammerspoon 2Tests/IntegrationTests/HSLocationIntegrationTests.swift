@@ -27,58 +27,68 @@ struct HSLocationTests {
 
         @Test("hs.location is accessible as an object")
         func testModuleAccess() {
-            makeHarness().expectTrue("typeof hs.location === 'object'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location") == "object")
         }
 
         @Test("servicesEnabled is a function")
         func testServicesEnabledIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.servicesEnabled === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.servicesEnabled") == "function")
         }
 
         @Test("authorizationStatus is a function")
         func testAuthorizationStatusIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.authorizationStatus === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.authorizationStatus") == "function")
         }
 
         @Test("get is a function")
         func testGetIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.get === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.get") == "function")
         }
 
         @Test("distance is a function")
         func testDistanceIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.distance === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.distance") == "function")
         }
 
         @Test("sunrise is a function")
         func testSunriseIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.sunrise === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.sunrise") == "function")
         }
 
         @Test("sunset is a function")
         func testSunsetIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.sunset === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.sunset") == "function")
         }
 
         @Test("addWatcher is a function")
         func testAddWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.addWatcher === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.addWatcher") == "function")
         }
 
         @Test("removeWatcher is a function")
         func testRemoveWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.removeWatcher === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.removeWatcher") == "function")
         }
 
         @Test("geocoder is an object")
         func testGeocoderIsObject() {
-            makeHarness().expectTrue("typeof hs.location.geocoder === 'object'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.geocoder") == "object")
         }
 
         @Test("servicesEnabled returns a boolean")
         func testServicesEnabledReturnsBool() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.location.servicesEnabled() === 'boolean'")
+            #expect(harness.evalTypeOf("hs.location.servicesEnabled()") == "boolean")
             #expect(!harness.hasException)
         }
 
@@ -116,7 +126,7 @@ struct HSLocationTests {
                 { latitude: 48.8566, longitude:  2.3522 }
             );
         """)
-            harness.expectTrue("typeof d === 'number'")
+            #expect(harness.evalTypeOf("d") == "number")
             harness.expectTrue("Math.abs(d - 341402) < 5000")
             #expect(!harness.hasException)
         }
@@ -130,7 +140,7 @@ struct HSLocationTests {
                 { latitude: 40.0, longitude: -74.0 }
             );
         """)
-            harness.expectTrue("d === 0")
+            #expect(harness.evalInt("d") == 0)
             #expect(!harness.hasException)
         }
 
@@ -140,7 +150,7 @@ struct HSLocationTests {
             harness.eval("""
             var d = hs.location.distance({}, { latitude: 40.0, longitude: -74.0 });
         """)
-            harness.expectTrue("d === -1")
+            #expect(harness.evalInt("d") == -1)
             #expect(!harness.hasException)
         }
 
@@ -150,7 +160,7 @@ struct HSLocationTests {
             harness.eval("""
             var d = hs.location.distance({ latitude: 40.0, longitude: -74.0 }, {});
         """)
-            harness.expectTrue("d === -1")
+            #expect(harness.evalInt("d") == -1)
             #expect(!harness.hasException)
         }
 
@@ -160,13 +170,13 @@ struct HSLocationTests {
             harness.eval("""
             var rise = hs.location.sunrise(51.5074, -0.1278, new Date('2024-01-01T12:00:00Z'));
         """)
-            harness.expectTrue("typeof rise === 'object'")
+            #expect(harness.evalTypeOf("rise") == "object")
             // Known: 1 Jan 2024 sunrise London ≈ 08:06 UTC
-            harness.expectTrue("rise.getFullYear() === 2024")
-            harness.expectTrue("rise.getMonth() === 0")
-            harness.expectTrue("rise.getDate() === 1")
-            harness.expectTrue("rise.getHours() === 8")
-            harness.expectTrue("rise.getMinutes() === 6")
+            #expect(harness.evalInt("rise.getFullYear()") == 2024)
+            #expect(harness.evalInt("rise.getMonth()") == 0)
+            #expect(harness.evalInt("rise.getDate()") == 1)
+            #expect(harness.evalInt("rise.getHours()") == 8)
+            #expect(harness.evalInt("rise.getMinutes()") == 6)
             #expect(!harness.hasException)
         }
 
@@ -176,13 +186,13 @@ struct HSLocationTests {
             harness.eval("""
             var set = hs.location.sunset(51.5074, -0.1278, new Date('2024-01-01T12:00:00Z'));
         """)
-            harness.expectTrue("typeof set === 'object'")
+            #expect(harness.evalTypeOf("set") == "object")
             // 1 Jan 2024 sunset London ≈ 16:01 UTC
-            harness.expectTrue("set.getFullYear() === 2024")
-            harness.expectTrue("set.getMonth() === 0")
-            harness.expectTrue("set.getDate() === 1")
-            harness.expectTrue("set.getHours() === 16")
-            harness.expectTrue("set.getMinutes() === 1")
+            #expect(harness.evalInt("set.getFullYear()") == 2024)
+            #expect(harness.evalInt("set.getMonth()") == 0)
+            #expect(harness.evalInt("set.getDate()") == 1)
+            #expect(harness.evalInt("set.getHours()") == 16)
+            #expect(harness.evalInt("set.getMinutes()") == 1)
             #expect(!harness.hasException)
         }
 
@@ -213,7 +223,7 @@ struct HSLocationTests {
             var rise = hs.location.sunrise(51.5074, -0.1278);
         """)
             // Should still return a number for London (sun rises every day)
-            harness.expectTrue("typeof rise === 'object'")
+            #expect(harness.evalTypeOf("rise") == "object")
             #expect(!harness.hasException)
         }
 
@@ -223,7 +233,7 @@ struct HSLocationTests {
             harness.eval("""
             var rise = hs.location.sunrise(51.5074, -0.1278, null);
         """)
-            harness.expectTrue("typeof rise === 'object'")
+            #expect(harness.evalTypeOf("rise") == "object")
             #expect(!harness.hasException)
         }
 
@@ -258,12 +268,14 @@ struct HSLocationTests {
 
         @Test("lookupAddress is a function")
         func testLookupAddressIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.geocoder.lookupAddress === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.geocoder.lookupAddress") == "function")
         }
 
         @Test("lookupLocation is a function")
         func testLookupLocationIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.geocoder.lookupLocation === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.geocoder.lookupLocation") == "function")
         }
 
         @Test("lookupLocation returns null for an invalid locationTable")
@@ -313,12 +325,14 @@ struct HSLocationTests {
 
         @Test("addWatcher() returns a watcher object")
         func testAddWatcherReturnsObject() {
-            makeHarness().expectTrue("typeof hs.location.addWatcher() === 'object'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.addWatcher()") == "object")
         }
 
         @Test("watcher has an identifier string")
         func testWatcherHasIdentifier() {
-            makeHarness().expectTrue("typeof hs.location.addWatcher().identifier === 'string'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.addWatcher().identifier") == "string")
         }
 
         @Test("watcher identifier is a non-empty string")
@@ -341,27 +355,32 @@ struct HSLocationTests {
 
         @Test("watcher has typeName HSLocationWatcher")
         func testWatcherTypeName() {
-            makeHarness().expectTrue("hs.location.addWatcher().typeName === 'HSLocationWatcher'")
+            let harness = makeHarness()
+            #expect(harness.evalString("hs.location.addWatcher().typeName") == "HSLocationWatcher")
         }
 
         @Test("start is a function")
         func testStartIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.addWatcher().start === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.addWatcher().start") == "function")
         }
 
         @Test("stop is a function")
         func testStopIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.addWatcher().stop === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.addWatcher().stop") == "function")
         }
 
         @Test("setCallback is a function")
         func testSetCallbackIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.addWatcher().setCallback === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.addWatcher().setCallback") == "function")
         }
 
         @Test("location is a function")
         func testLocationIsFunction() {
-            makeHarness().expectTrue("typeof hs.location.addWatcher().location === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.location.addWatcher().location") == "function")
         }
 
         @Test("watcher.location() returns null when no location yet")
@@ -418,7 +437,7 @@ struct HSLocationTests {
             var w = hs.location.addWatcher();
             w.distanceFilter = 100;
         """)
-            harness.expectTrue("w.distanceFilter === 100")
+            #expect(harness.evalInt("w.distanceFilter") == 100)
             #expect(!harness.hasException)
         }
     }

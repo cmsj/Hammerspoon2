@@ -212,6 +212,43 @@ class JSTestHarness {
         return context.evaluateScript(script)
     }
 
+    /// Evaluate a JavaScript expression and cast the result to `String`.
+    ///
+    /// Prefer this (with a plain `#expect(harness.evalString(...) == "...")`) over
+    /// `expectTrue("... === '...'")` — Swift Testing captures both sides of the
+    /// comparison and reports the actual value on failure, instead of just `false`.
+    /// - Parameter script: JavaScript expression to evaluate
+    func evalString(_ script: String) -> String? {
+        eval(script) as? String
+    }
+
+    /// Evaluate a JavaScript expression and cast the result to `Bool`.
+    /// - Parameter script: JavaScript expression to evaluate
+    func evalBool(_ script: String) -> Bool? {
+        eval(script) as? Bool
+    }
+
+    /// Evaluate a JavaScript expression and cast the result to `Int`.
+    /// - Parameter script: JavaScript expression to evaluate
+    func evalInt(_ script: String) -> Int? {
+        eval(script) as? Int
+    }
+
+    /// Evaluate a JavaScript expression and cast the result to `Double`.
+    /// - Parameter script: JavaScript expression to evaluate
+    func evalDouble(_ script: String) -> Double? {
+        eval(script) as? Double
+    }
+
+    /// Evaluate `typeof (expression)` and return the result as a `String`.
+    ///
+    /// Use with a direct `#expect(harness.evalTypeOf("hs.foo.bar") == "function")` so a
+    /// failure reports the actual type string, rather than just "expected true".
+    /// - Parameter expression: JavaScript expression whose type should be checked
+    func evalTypeOf(_ expression: String) -> String? {
+        evalString("typeof (\(expression))")
+    }
+
     /// Check if the last evaluation threw a JavaScript exception
     var hasException: Bool {
         return lastException != nil

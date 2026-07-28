@@ -26,185 +26,185 @@ struct HSEventTapTests {
 
         @Test("eventTypes is an object")
         func testEventTypesIsObject() {
-            makeHarness().expectTrue("typeof hs.eventtap.eventTypes === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.eventTypes") == "object")
         }
 
         @Test("eventTypes.keyDown is a number")
         func testEventTypesKeyDownIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.eventTypes.keyDown === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.eventTypes.keyDown") == "number")
         }
 
         @Test("eventTypes.keyUp is a number")
         func testEventTypesKeyUpIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.eventTypes.keyUp === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.eventTypes.keyUp") == "number")
         }
 
         @Test("eventTypes.leftMouseDown is a number")
         func testEventTypesLeftMouseDownIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.eventTypes.leftMouseDown === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.eventTypes.leftMouseDown") == "number")
         }
 
         @Test("eventTypes.scrollWheel is a number")
         func testEventTypesScrollWheelIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.eventTypes.scrollWheel === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.eventTypes.scrollWheel") == "number")
         }
 
         @Test("modifierFlags is an object")
         func testModifierFlagsIsObject() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags === 'object'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags") == "object")
         }
 
         @Test("modifierFlags.cmd is a number")
         func testModifierFlagsCmdIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags.cmd === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags.cmd") == "number")
         }
 
         @Test("modifierFlags.shift is a number")
         func testModifierFlagsShiftIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags.shift === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags.shift") == "number")
         }
 
         @Test("modifierFlags.leftCmd is a number")
         func testModifierFlagsLeftCmdIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags.leftCmd === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags.leftCmd") == "number")
         }
 
         @Test("modifierFlags.rightCmd is a number")
         func testModifierFlagsRightCmdIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags.rightCmd === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags.rightCmd") == "number")
         }
 
         @Test("modifierFlags.leftAlt is a number")
         func testModifierFlagsLeftAltIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags.leftAlt === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags.leftAlt") == "number")
         }
 
         @Test("modifierFlags.rightAlt is a number")
         func testModifierFlagsRightAltIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags.rightAlt === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags.rightAlt") == "number")
         }
 
         @Test("modifierFlags.leftCtrl is a number")
         func testModifierFlagsLeftCtrlIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags.leftCtrl === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags.leftCtrl") == "number")
         }
 
         @Test("modifierFlags.rightCtrl is a number")
         func testModifierFlagsRightCtrlIsNumber() {
-            makeHarness().expectTrue("typeof hs.eventtap.modifierFlags.rightCtrl === 'number'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.modifierFlags.rightCtrl") == "number")
         }
 
         @Test("consume is a boolean")
         func testConsumeIsBoolean() {
-            makeHarness().expectTrue("typeof hs.eventtap.consume === 'boolean'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.consume") == "boolean")
         }
 
         @Test("emit is a boolean")
         func testEmitIsBoolean() {
-            makeHarness().expectTrue("typeof hs.eventtap.emit === 'boolean'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.emit") == "boolean")
         }
 
         // MARK: Watcher management
 
         @Test("addWatcher is a function")
         func testAddWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.addWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.addWatcher") == "function")
         }
 
         @Test("removeWatcher is a function")
         func testRemoveWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.removeWatcher === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.removeWatcher") == "function")
         }
 
         // MARK: Event constructors
 
         @Test("makeKeyEvent is a function")
         func testMakeKeyEventIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.makeKeyEvent === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.makeKeyEvent") == "function")
         }
 
         @Test("makeKeyEventWithCode is a function")
         func testMakeKeyEventWithCodeIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.makeKeyEventWithCode === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.makeKeyEventWithCode") == "function")
         }
 
         @Test("makeMouseEvent is a function")
         func testMakeMouseEventIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.makeMouseEvent === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.makeMouseEvent") == "function")
         }
 
         @Test("makeScrollWheelEvent is a function")
         func testMakeScrollWheelEventIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.makeScrollWheelEvent === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.makeScrollWheelEvent") == "function")
         }
 
         // MARK: Convenience senders
 
         @Test("keyStroke is a function")
         func testKeyStrokeIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.keyStroke === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.keyStroke") == "function")
         }
 
         @Test("keyStrokes is a function")
         func testKeyStrokesIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.keyStrokes === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.keyStrokes") == "function")
         }
 
         @Test("leftClick is a function")
         func testLeftClickIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.leftClick === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.leftClick") == "function")
         }
 
         @Test("rightClick is a function")
         func testRightClickIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.rightClick === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.rightClick") == "function")
         }
 
         @Test("doubleLeftClick is a function")
         func testDoubleLeftClickIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.doubleLeftClick === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.doubleLeftClick") == "function")
         }
 
         @Test("middleClick is a function")
         func testMiddleClickIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.middleClick === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.middleClick") == "function")
         }
 
         @Test("scrollWheel is a function")
         func testScrollWheelIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.scrollWheel === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.scrollWheel") == "function")
         }
 
         // MARK: System state
 
         @Test("currentModifiers is a function")
         func testCurrentModifiersIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.currentModifiers === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.currentModifiers") == "function")
         }
 
         @Test("checkMouseButtons is a function")
         func testCheckMouseButtonsIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.checkMouseButtons === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.checkMouseButtons") == "function")
         }
 
         @Test("mouseLocation is a function")
         func testMouseLocationIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.mouseLocation === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.mouseLocation") == "function")
         }
 
         @Test("doubleClickInterval is a function")
         func testDoubleClickIntervalIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.doubleClickInterval === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.doubleClickInterval") == "function")
         }
 
         @Test("keyRepeatDelay is a function")
         func testKeyRepeatDelayIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.keyRepeatDelay === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.keyRepeatDelay") == "function")
         }
 
         @Test("keyRepeatInterval is a function")
         func testKeyRepeatIntervalIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.keyRepeatInterval === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.keyRepeatInterval") == "function")
         }
 
         // MARK: Event object API
@@ -213,7 +213,7 @@ struct HSEventTapTests {
         func testEventPostIsFunction() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeKeyEvent('a', true)")
-            harness.expectTrue("typeof evt.post === 'function'")
+            #expect(harness.evalTypeOf("evt.post") == "function")
             #expect(!harness.hasException)
         }
     }
@@ -233,12 +233,12 @@ struct HSEventTapTests {
 
         @Test("consume equals false")
         func testConsumeEqualsFalse() {
-            makeHarness().expectTrue("hs.eventtap.consume === false")
+            #expect(makeHarness().evalBool("hs.eventtap.consume") == false)
         }
 
         @Test("emit equals true")
         func testEmitEqualsTrue() {
-            makeHarness().expectTrue("hs.eventtap.emit === true")
+            #expect(makeHarness().evalBool("hs.eventtap.emit") == true)
         }
 
         @Test("consume and emit are different values")
@@ -304,7 +304,7 @@ struct HSEventTapTests {
         func testMakeKeyEventTypeIsKeyDown() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeKeyEvent('a', true)")
-            harness.expectTrue("evt.type === hs.eventtap.eventTypes.keyDown")
+            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.keyDown"))
             #expect(!harness.hasException)
         }
 
@@ -312,7 +312,7 @@ struct HSEventTapTests {
         func testMakeKeyEventTypeIsKeyUp() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeKeyEvent('a', false)")
-            harness.expectTrue("evt.type === hs.eventtap.eventTypes.keyUp")
+            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.keyUp"))
             #expect(!harness.hasException)
         }
 
@@ -320,7 +320,7 @@ struct HSEventTapTests {
         func testMakeKeyEventKeyCodeForA() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeKeyEvent('a', true)")
-            harness.expectTrue("typeof evt.keyCode === 'number'")
+            #expect(harness.evalTypeOf("evt.keyCode") == "number")
             #expect(!harness.hasException)
         }
 
@@ -363,7 +363,7 @@ struct HSEventTapTests {
                 var evt1 = hs.eventtap.makeKeyEvent('minus', true)
                 var evt2 = hs.eventtap.makeKeyEvent('-', true)
             """)
-            harness.expectTrue("evt1.keyCode === evt2.keyCode")
+            #expect(harness.evalInt("evt1.keyCode") == harness.evalInt("evt2.keyCode"))
             #expect(!harness.hasException)
         }
 
@@ -381,7 +381,7 @@ struct HSEventTapTests {
         func testMakeKeyEventWithCodeSetsKeyCode() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeKeyEventWithCode(36, true)")
-            harness.expectTrue("evt.keyCode === 36")
+            #expect(harness.evalInt("evt.keyCode") == 36)
             #expect(!harness.hasException)
         }
 
@@ -394,7 +394,7 @@ struct HSEventTapTests {
                 var evt = hs.eventtap.makeKeyEvent('a', true)
                 evt.keyCode = 42
             """)
-            harness.expectTrue("evt.keyCode === 42")
+            #expect(harness.evalInt("evt.keyCode") == 42)
             #expect(!harness.hasException)
         }
 
@@ -405,7 +405,7 @@ struct HSEventTapTests {
                 var evt = hs.eventtap.makeKeyEvent('a', true)
                 evt.rawFlags = hs.eventtap.modifierFlags.cmd
             """)
-            harness.expectTrue("evt.rawFlags === hs.eventtap.modifierFlags.cmd")
+            #expect(harness.evalInt("evt.rawFlags") == harness.evalInt("hs.eventtap.modifierFlags.cmd"))
             #expect(!harness.hasException)
         }
 
@@ -421,9 +421,9 @@ struct HSEventTapTests {
         func testEventLocationHasXAndY() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.leftMouseDown, 100, 200, 0)")
-            harness.expectTrue("typeof evt.location === 'object'")
-            harness.expectTrue("typeof evt.location.x === 'number'")
-            harness.expectTrue("typeof evt.location.y === 'number'")
+            #expect(harness.evalTypeOf("evt.location") == "object")
+            #expect(harness.evalTypeOf("evt.location.x") == "number")
+            #expect(harness.evalTypeOf("evt.location.y") == "number")
             #expect(!harness.hasException)
         }
 
@@ -434,8 +434,8 @@ struct HSEventTapTests {
                 var evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.mouseMoved, 0, 0, 0)
                 evt.location = {x: 150, y: 250}
             """)
-            harness.expectTrue("evt.location.x === 150")
-            harness.expectTrue("evt.location.y === 250")
+            #expect(harness.evalInt("evt.location.x") == 150)
+            #expect(harness.evalInt("evt.location.y") == 250)
             #expect(!harness.hasException)
         }
 
@@ -453,7 +453,7 @@ struct HSEventTapTests {
         func testMakeMouseEventType() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.leftMouseDown, 400, 300, 0)")
-            harness.expectTrue("evt.type === hs.eventtap.eventTypes.leftMouseDown")
+            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.leftMouseDown"))
             #expect(!harness.hasException)
         }
 
@@ -461,8 +461,8 @@ struct HSEventTapTests {
         func testMakeMouseEventCoordinates() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeMouseEvent(hs.eventtap.eventTypes.leftMouseDown, 123, 456, 0)")
-            harness.expectTrue("evt.location.x === 123")
-            harness.expectTrue("evt.location.y === 456")
+            #expect(harness.evalInt("evt.location.x") == 123)
+            #expect(harness.evalInt("evt.location.y") == 456)
             #expect(!harness.hasException)
         }
 
@@ -480,7 +480,7 @@ struct HSEventTapTests {
         func testMakeScrollWheelEventType() {
             let harness = makeHarness()
             harness.eval("var evt = hs.eventtap.makeScrollWheelEvent(0, 3, 500, 400)")
-            harness.expectTrue("evt.type === hs.eventtap.eventTypes.scrollWheel")
+            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.scrollWheel"))
             #expect(!harness.hasException)
         }
 
@@ -507,7 +507,7 @@ struct HSEventTapTests {
                 copy.keyCode = 99
             """)
             harness.expectTrue("evt.keyCode !== 99")
-            harness.expectTrue("copy.keyCode === 99")
+            #expect(harness.evalInt("copy.keyCode") == 99)
             #expect(!harness.hasException)
         }
 
@@ -523,7 +523,7 @@ struct HSEventTapTests {
                 )
             """)
             harness.expectTrue("tap !== null && tap !== undefined")
-            harness.expectTrue("typeof tap.identifier === 'string'")
+            #expect(harness.evalTypeOf("tap.identifier") == "string")
             harness.expectTrue("tap.identifier.length > 0")
             #expect(!harness.hasException)
         }
@@ -557,7 +557,7 @@ struct HSEventTapTests {
         func testListenOnlyDefaultsFalse() {
             let harness = makeHarness()
             harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(evt) {})")
-            harness.expectTrue("tap.listenOnly === false")
+            #expect(harness.evalBool("tap.listenOnly") == false)
             #expect(!harness.hasException)
         }
 
@@ -565,7 +565,7 @@ struct HSEventTapTests {
         func testAddWatcherListenOnly() {
             let harness = makeHarness()
             harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(evt) {}, true)")
-            harness.expectTrue("tap.listenOnly === true")
+            #expect(harness.evalBool("tap.listenOnly") == true)
             #expect(!harness.hasException)
         }
 
@@ -573,7 +573,7 @@ struct HSEventTapTests {
         func testAddWatcherExplicitModify() {
             let harness = makeHarness()
             harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(evt) {}, false)")
-            harness.expectTrue("tap.listenOnly === false")
+            #expect(harness.evalBool("tap.listenOnly") == false)
             #expect(!harness.hasException)
         }
 
@@ -599,10 +599,10 @@ struct HSEventTapTests {
         func testCheckMouseButtonsReturnsObject() {
             let harness = makeHarness()
             harness.eval("var buttons = hs.eventtap.checkMouseButtons()")
-            harness.expectTrue("typeof buttons === 'object'")
-            harness.expectTrue("typeof buttons.left === 'boolean'")
-            harness.expectTrue("typeof buttons.right === 'boolean'")
-            harness.expectTrue("typeof buttons.middle === 'boolean'")
+            #expect(harness.evalTypeOf("buttons") == "object")
+            #expect(harness.evalTypeOf("buttons.left") == "boolean")
+            #expect(harness.evalTypeOf("buttons.right") == "boolean")
+            #expect(harness.evalTypeOf("buttons.middle") == "boolean")
             #expect(!harness.hasException)
         }
 
@@ -610,9 +610,9 @@ struct HSEventTapTests {
         func testMouseLocationReturnsObject() {
             let harness = makeHarness()
             harness.eval("var loc = hs.eventtap.mouseLocation()")
-            harness.expectTrue("typeof loc === 'object'")
-            harness.expectTrue("typeof loc.x === 'number'")
-            harness.expectTrue("typeof loc.y === 'number'")
+            #expect(harness.evalTypeOf("loc") == "object")
+            #expect(harness.evalTypeOf("loc.x") == "number")
+            #expect(harness.evalTypeOf("loc.y") == "number")
             #expect(!harness.hasException)
         }
 
@@ -686,7 +686,7 @@ struct HSEventTapTests {
                 tap.start()
             """)
             harness.expectTrue("tap.isEnabled() === true")
-            harness.expectTrue("tap.listenOnly === true")
+            #expect(harness.evalBool("tap.listenOnly") == true)
             harness.eval("tap.stop()")
             harness.expectTrue("tap.isEnabled() === false")
             #expect(!harness.hasException)
@@ -851,12 +851,12 @@ struct HSEventTapTests {
 
         @Test("bindHotkey is a function")
         func testBindHotkeyIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.bindHotkey === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.bindHotkey") == "function")
         }
 
         @Test("removeHotkey is a function")
         func testRemoveHotkeyIsFunction() {
-            makeHarness().expectTrue("typeof hs.eventtap.removeHotkey === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.eventtap.removeHotkey") == "function")
         }
 
         @Test("bindHotkey with valid args returns an object")
@@ -864,9 +864,9 @@ struct HSEventTapTests {
             let harness = makeHarness()
             harness.eval("var hk = hs.eventtap.bindHotkey(['cmd'], 'h', () => {}, () => {})")
             harness.expectTrue("typeof hk === 'object' && hk !== null")
-            harness.expectTrue("typeof hk.enable === 'function'")
-            harness.expectTrue("typeof hk.disable === 'function'")
-            harness.expectTrue("typeof hk.isEnabled === 'function'")
+            #expect(harness.evalTypeOf("hk.enable") == "function")
+            #expect(harness.evalTypeOf("hk.disable") == "function")
+            #expect(harness.evalTypeOf("hk.isEnabled") == "function")
             #expect(!harness.hasException)
         }
 

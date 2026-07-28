@@ -23,19 +23,21 @@ struct HSMenuBarTests {
 
         @Test("hs.menubar is an object")
         func testModuleIsObject() {
-            makeHarness().expectTrue("typeof hs.menubar === 'object'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.menubar") == "object")
         }
 
         @Test("create is a function")
         func testCreateIsFunction() {
-            makeHarness().expectTrue("typeof hs.menubar.create === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.menubar.create") == "function")
         }
 
         @Test("create(true) returns an object")
         func testCreateReturnsObject() {
             let harness = makeHarness()
             harness.eval("var item = hs.menubar.create(true)")
-            harness.expectTrue("typeof item === 'object'")
+            #expect(harness.evalTypeOf("item") == "object")
             #expect(!harness.hasException)
         }
 
@@ -46,32 +48,38 @@ struct HSMenuBarTests {
 
         @Test("setIcon is a function")
         func testSetIconIsFunction() {
-            makeHarness().expectTrue("typeof hs.menubar.create(true).setIcon === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.menubar.create(true).setIcon") == "function")
         }
 
         @Test("setClickCallback is a function")
         func testSetClickCallbackIsFunction() {
-            makeHarness().expectTrue("typeof hs.menubar.create(true).setClickCallback === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.menubar.create(true).setClickCallback") == "function")
         }
 
         @Test("show is a function")
         func testShowIsFunction() {
-            makeHarness().expectTrue("typeof hs.menubar.create(true).show === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.menubar.create(true).show") == "function")
         }
 
         @Test("hide is a function")
         func testHideIsFunction() {
-            makeHarness().expectTrue("typeof hs.menubar.create(true).hide === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.menubar.create(true).hide") == "function")
         }
 
         @Test("isVisible is a function")
         func testIsVisibleIsFunction() {
-            makeHarness().expectTrue("typeof hs.menubar.create(true).isVisible === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.menubar.create(true).isVisible") == "function")
         }
 
         @Test("destroy is a function")
         func testDestroyIsFunction() {
-            makeHarness().expectTrue("typeof hs.menubar.create(true).destroy === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.menubar.create(true).destroy") == "function")
         }
 
         @Test("title property is gettable and settable")

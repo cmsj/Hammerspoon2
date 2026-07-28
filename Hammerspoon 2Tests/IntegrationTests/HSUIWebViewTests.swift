@@ -34,7 +34,7 @@ struct HSUIWebViewTests {
 
         @Test("webview is a function on hs.ui")
         func testWebviewIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview") == "function")
         }
 
         @Test("webview() returns a non-null object")
@@ -54,102 +54,102 @@ struct HSUIWebViewTests {
 
         @Test("loadURL is a function")
         func testLoadURLIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().loadURL === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().loadURL") == "function")
         }
 
         @Test("loadHTML is a function")
         func testLoadHTMLIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().loadHTML === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().loadHTML") == "function")
         }
 
         @Test("goBack is a function")
         func testGoBackIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().goBack === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().goBack") == "function")
         }
 
         @Test("goForward is a function")
         func testGoForwardIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().goForward === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().goForward") == "function")
         }
 
         @Test("reload is a function")
         func testReloadIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().reload === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().reload") == "function")
         }
 
         @Test("stopLoading is a function")
         func testStopLoadingIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().stopLoading === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().stopLoading") == "function")
         }
 
         @Test("userAgent is a function")
         func testUserAgentIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().userAgent === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().userAgent") == "function")
         }
 
         @Test("inspectable is a function")
         func testInspectableIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().inspectable === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().inspectable") == "function")
         }
 
         @Test("toolbar is a function")
         func testToolbarIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().toolbar === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().toolbar") == "function")
         }
 
         @Test("backForwardGestures is a function")
         func testBackForwardGesturesIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().backForwardGestures === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().backForwardGestures") == "function")
         }
 
         @Test("magnificationGestures is a function")
         func testMagnificationGesturesIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().magnificationGestures === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().magnificationGestures") == "function")
         }
 
         @Test("linkPreviews is a function")
         func testLinkPreviewsIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().linkPreviews === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().linkPreviews") == "function")
         }
 
         @Test("contentBackground is a function")
         func testContentBackgroundIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().contentBackground === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().contentBackground") == "function")
         }
 
         @Test("onLoadChange is a function")
         func testOnLoadChangeIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().onLoadChange === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().onLoadChange") == "function")
         }
 
         @Test("onNavigate is a function")
         func testOnNavigateIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().onNavigate === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().onNavigate") == "function")
         }
 
         @Test("onTitleChange is a function")
         func testOnTitleChangeIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().onTitleChange === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().onTitleChange") == "function")
         }
 
         @Test("onNavigationDecision is a function")
         func testOnNavigationDecisionIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().onNavigationDecision === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().onNavigationDecision") == "function")
         }
 
         @Test("execJS is a function")
         func testExecJSIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().execJS === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().execJS") == "function")
         }
 
         @Test("evalJSResult is a function")
         func testEvalJSResultIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.webview().evalJSResult === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().evalJSResult") == "function")
         }
 
         @Test("window has a webview method for embedding")
         func testWindowHasWebviewMethod() {
-            makeHarness().expectTrue("typeof hs.ui.window({x:0,y:0,w:100,h:100}).webview === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.ui.window({x:0,y:0,w:100,h:100}).webview") == "function")
         }
     }
 
@@ -182,28 +182,28 @@ struct HSUIWebViewTests {
         func testIsLoadingDefault() {
             let harness = makeHarness()
             harness.eval("var wv = hs.ui.webview()")
-            harness.expectTrue("wv.isLoading === false")
+            #expect(harness.evalBool("wv.isLoading") == false)
         }
 
         @Test("estimatedProgress defaults to 0")
         func testEstimatedProgressDefault() {
             let harness = makeHarness()
             harness.eval("var wv = hs.ui.webview()")
-            harness.expectTrue("wv.estimatedProgress === 0")
+            #expect(harness.evalDouble("wv.estimatedProgress") == 0)
         }
 
         @Test("canGoBack defaults to false")
         func testCanGoBackDefault() {
             let harness = makeHarness()
             harness.eval("var wv = hs.ui.webview()")
-            harness.expectTrue("wv.canGoBack === false")
+            #expect(harness.evalBool("wv.canGoBack") == false)
         }
 
         @Test("canGoForward defaults to false")
         func testCanGoForwardDefault() {
             let harness = makeHarness()
             harness.eval("var wv = hs.ui.webview()")
-            harness.expectTrue("wv.canGoForward === false")
+            #expect(harness.evalBool("wv.canGoForward") == false)
         }
     }
 

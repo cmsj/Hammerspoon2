@@ -23,44 +23,51 @@ struct HSUITests {
 
         @Test("hs.ui is an object")
         func testModuleIsObject() {
-            makeHarness().expectTrue("typeof hs.ui === 'object'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui") == "object")
         }
 
         @Test("window is a function")
         func testWindowIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.window === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui.window") == "function")
         }
 
         @Test("alert is a function")
         func testAlertIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.alert === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui.alert") == "function")
         }
 
         @Test("dialog is a function")
         func testDialogIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.dialog === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui.dialog") == "function")
         }
 
         @Test("textPrompt is a function")
         func testTextPromptIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.textPrompt === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui.textPrompt") == "function")
         }
 
         @Test("filePicker is a function")
         func testFilePickerIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.filePicker === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui.filePicker") == "function")
         }
 
         @Test("string is a function")
         func testStringIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.string === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui.string") == "function")
         }
 
         @Test("window() returns an object")
         func testWindowReturnsObject() {
             let harness = makeHarness()
             harness.eval("var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})")
-            harness.expectTrue("typeof w === 'object'")
+            #expect(harness.evalTypeOf("w") == "object")
             #expect(!harness.hasException)
         }
 
@@ -74,19 +81,21 @@ struct HSUITests {
 
         @Test("HSUIWindow has show function")
         func testWindowShowIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.window({x:0, y:0, w:100, h:100}).show === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui.window({x:0, y:0, w:100, h:100}).show") == "function")
         }
 
         @Test("HSUIWindow has close function")
         func testWindowCloseIsFunction() {
-            makeHarness().expectTrue("typeof hs.ui.window({x:0, y:0, w:100, h:100}).close === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.ui.window({x:0, y:0, w:100, h:100}).close") == "function")
         }
 
         @Test("alert() returns an object")
         func testAlertReturnsObject() {
             let harness = makeHarness()
             harness.eval("var a = hs.ui.alert('Test')")
-            harness.expectTrue("typeof a === 'object'")
+            #expect(harness.evalTypeOf("a") == "object")
             #expect(!harness.hasException)
         }
 
@@ -99,7 +108,7 @@ struct HSUITests {
         func testDialogReturnsObject() {
             let harness = makeHarness()
             harness.eval("var d = hs.ui.dialog('Test')")
-            harness.expectTrue("typeof d === 'object'")
+            #expect(harness.evalTypeOf("d") == "object")
             #expect(!harness.hasException)
         }
     }

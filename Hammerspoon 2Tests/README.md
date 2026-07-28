@@ -237,15 +237,24 @@ let success = harness.waitFor(timeout: 1.0) { called }
 
 ### Assertions
 
-```swift
-// Assert JavaScript expression is true
-harness.expectTrue("typeof hash === 'object'")
+Prefer a direct `#expect(...)` over `expectTrue`/`expectFalse` for type and equality
+checks — Swift Testing captures both sides of a `==` comparison and reports the
+actual value on failure, instead of just "expected true, got false". Use the typed
+`evalString`/`evalBool`/`evalInt`/`evalDouble`/`evalTypeOf` helpers on `JSTestHarness`:
 
-// Assert JavaScript expression is false
-harness.expectFalse("nonexistent === undefined")
+```swift
+// Assert a JavaScript expression's type
+#expect(harness.evalTypeOf("hash") == "object")
+
+// Assert a JavaScript expression's boolean value
+#expect(harness.evalBool("nonexistent === undefined") == false)
 
 // Assert JavaScript expression equals value
 harness.expectEqual("1 + 1", 2)
+
+// Reserve expectTrue/expectFalse for predicates with no natural "actual vs
+// expected" pair
+harness.expectTrue("Array.isArray(runningBrowsers)")
 
 // Assert exception was thrown
 harness.eval("throw new Error()")
@@ -325,8 +334,8 @@ func testApplicationObject() async {
     harness.loadModule(HSApplicationModule.self, as: "application")
 
     harness.eval("var app = application.frontmost()")
-    harness.expectTrue("typeof app.name === 'function'")
-    harness.expectTrue("typeof app.bundleID === 'function'")
+    #expect(harness.evalTypeOf("app.name") == "function")
+    #expect(harness.evalTypeOf("app.bundleID") == "function")
 }
 ```
 
@@ -341,7 +350,7 @@ func testEnhancement() {
     harness.loadModule(HSTimerModule.self, as: "timer")
 
     // Enhancement should be auto-loaded
-    harness.expectTrue("typeof timer.minutes === 'function'")
+    #expect(harness.evalTypeOf("timer.minutes") == "function")
     harness.expectEqual("timer.minutes(5)", 300.0)
 }
 ```

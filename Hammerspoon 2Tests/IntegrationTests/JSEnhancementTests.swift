@@ -23,10 +23,10 @@ struct JSEnhancementTests {
         let harness = JSTestHarness()
         harness.loadModule(HSTimerModule.self, as: "timer")
 
-        harness.expectTrue("typeof hs.timer.minutes === 'function'")
-        harness.expectTrue("typeof hs.timer.hours === 'function'")
-        harness.expectTrue("typeof hs.timer.days === 'function'")
-        harness.expectTrue("typeof hs.timer.weeks === 'function'")
+        #expect(harness.evalTypeOf("hs.timer.minutes") == "function")
+        #expect(harness.evalTypeOf("hs.timer.hours") == "function")
+        #expect(harness.evalTypeOf("hs.timer.days") == "function")
+        #expect(harness.evalTypeOf("hs.timer.weeks") == "function")
     }
 
     @Test("Timer conversion functions work correctly")
@@ -46,10 +46,10 @@ struct JSEnhancementTests {
         let harness = JSTestHarness()
         harness.loadModule(HSTimerModule.self, as: "timer")
 
-        harness.expectTrue("typeof hs.timer.doUntil === 'function'")
-        harness.expectTrue("typeof hs.timer.doWhile === 'function'")
-        harness.expectTrue("typeof hs.timer.waitUntil === 'function'")
-        harness.expectTrue("typeof hs.timer.waitWhile === 'function'")
+        #expect(harness.evalTypeOf("hs.timer.doUntil") == "function")
+        #expect(harness.evalTypeOf("hs.timer.doWhile") == "function")
+        #expect(harness.evalTypeOf("hs.timer.waitUntil") == "function")
+        #expect(harness.evalTypeOf("hs.timer.waitWhile") == "function")
     }
 
     @Test("Timer predicate functions validate input types")
@@ -82,7 +82,7 @@ struct JSEnhancementTests {
         harness.loadModule(HSTimerModule.self, as: "timer")
 
         // Enhanced functions should be available
-        harness.expectTrue("typeof hs.timer.minutes === 'function'")
+        #expect(harness.evalTypeOf("hs.timer.minutes") == "function")
     }
 
     @Test("Enhancements don't break core functionality")
@@ -91,9 +91,9 @@ struct JSEnhancementTests {
         harness.loadModule(HSTimerModule.self, as: "timer")
 
         // Core Swift functions should still work
-        harness.expectTrue("typeof hs.timer.doAfter === 'function'")
-        harness.expectTrue("typeof hs.timer.doEvery === 'function'")
-        harness.expectTrue("typeof hs.timer.create === 'function'")
+        #expect(harness.evalTypeOf("hs.timer.doAfter") == "function")
+        #expect(harness.evalTypeOf("hs.timer.doEvery") == "function")
+        #expect(harness.evalTypeOf("hs.timer.create") == "function")
 
         // And they should still be callable
         harness.eval("var t = hs.timer.doAfter(10, function() {})")

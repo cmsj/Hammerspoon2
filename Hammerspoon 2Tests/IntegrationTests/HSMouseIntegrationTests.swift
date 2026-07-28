@@ -25,65 +25,65 @@ struct HSMouseTests {
 
         @Test("absolutePosition is a function")
         func testAbsolutePositionIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.absolutePosition === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.absolutePosition") == "function")
         }
 
         @Test("setAbsolutePosition is a function")
         func testSetAbsolutePositionIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.setAbsolutePosition === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.setAbsolutePosition") == "function")
         }
 
         @Test("getRelativePosition is a function")
         func testGetRelativePositionIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.getRelativePosition === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.getRelativePosition") == "function")
         }
 
         @Test("setRelativePosition is a function")
         func testSetRelativePositionIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.setRelativePosition === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.setRelativePosition") == "function")
         }
 
         // MARK: Screen functions
 
         @Test("getCurrentScreen is a function")
         func testGetCurrentScreenIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.getCurrentScreen === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.getCurrentScreen") == "function")
         }
 
         // MARK: Device functions
 
         @Test("count is a function")
         func testCountIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.count === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.count") == "function")
         }
 
         @Test("names is a function")
         func testNamesIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.names === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.names") == "function")
         }
 
         // MARK: Settings functions
 
         @Test("trackingSpeed is a function")
         func testTrackingSpeedIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.trackingSpeed === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.trackingSpeed") == "function")
         }
 
         @Test("setTrackingSpeed is a function")
         func testSetTrackingSpeedIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.setTrackingSpeed === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.setTrackingSpeed") == "function")
         }
 
         @Test("scrollDirection is a function")
         func testScrollDirectionIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.scrollDirection === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.scrollDirection") == "function")
         }
 
         // MARK: Cursor functions
 
         @Test("currentCursorType is a function")
         func testCurrentCursorTypeIsFunction() {
-            makeHarness().expectTrue("typeof hs.mouse.currentCursorType === 'function'")
+            #expect(makeHarness().evalTypeOf("hs.mouse.currentCursorType") == "function")
         }
     }
 
@@ -105,8 +105,8 @@ struct HSMouseTests {
             let harness = makeHarness()
             harness.eval("var pos = hs.mouse.absolutePosition()")
             harness.expectTrue("typeof pos === 'object' && pos !== null")
-            harness.expectTrue("typeof pos.x === 'number'")
-            harness.expectTrue("typeof pos.y === 'number'")
+            #expect(harness.evalTypeOf("pos.x") == "number")
+            #expect(harness.evalTypeOf("pos.y") == "number")
             #expect(!harness.hasException)
         }
 
@@ -180,7 +180,7 @@ struct HSMouseTests {
             let harness = makeHarness()
             harness.eval("var n = hs.mouse.count()")
             harness.eval("var names = hs.mouse.names()")
-            harness.expectTrue("names.length === n")
+            #expect(harness.evalInt("names.length") == harness.evalInt("n"))
             #expect(!harness.hasException)
         }
 
@@ -189,7 +189,7 @@ struct HSMouseTests {
             let harness = makeHarness()
             harness.eval("var n = hs.mouse.count(true)")
             harness.eval("var names = hs.mouse.names(true)")
-            harness.expectTrue("names.length === n")
+            #expect(harness.evalInt("names.length") == harness.evalInt("n"))
             #expect(!harness.hasException)
         }
 
@@ -216,7 +216,7 @@ struct HSMouseTests {
         @Test("trackingSpeed() returns a number")
         func testTrackingSpeedIsNumber() {
             let harness = makeHarness()
-            harness.expectTrue("typeof hs.mouse.trackingSpeed() === 'number'")
+            #expect(harness.evalTypeOf("hs.mouse.trackingSpeed()") == "number")
             #expect(!harness.hasException)
         }
 

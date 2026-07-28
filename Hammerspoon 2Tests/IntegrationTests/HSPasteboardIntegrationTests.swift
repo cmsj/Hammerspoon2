@@ -28,91 +28,111 @@ struct HSPasteboardTests {
         // MARK: Read functions
 
         @Test("readString is a function") func testReadStringIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.readString === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.readString") == "function")
         }
 
         @Test("readHTML is a function") func testReadHTMLIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.readHTML === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.readHTML") == "function")
         }
 
         @Test("readRTF is a function") func testReadRTFIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.readRTF === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.readRTF") == "function")
         }
 
         @Test("readURL is a function") func testReadURLIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.readURL === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.readURL") == "function")
         }
 
         @Test("readImage is a function") func testReadImageIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.readImage === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.readImage") == "function")
         }
 
         @Test("readData is a function") func testReadDataIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.readData === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.readData") == "function")
         }
 
         // MARK: Write functions
 
         @Test("writeString is a function") func testWriteStringIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.writeString === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.writeString") == "function")
         }
 
         @Test("writeHTML is a function") func testWriteHTMLIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.writeHTML === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.writeHTML") == "function")
         }
 
         @Test("writeRTF is a function") func testWriteRTFIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.writeRTF === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.writeRTF") == "function")
         }
 
         @Test("writeURL is a function") func testWriteURLIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.writeURL === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.writeURL") == "function")
         }
 
         @Test("writeImage is a function") func testWriteImageIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.writeImage === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.writeImage") == "function")
         }
 
         @Test("writeData is a function") func testWriteDataIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.writeData === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.writeData") == "function")
         }
 
         @Test("writeObjects is a function") func testWriteObjectsIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.writeObjects === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.writeObjects") == "function")
         }
 
         // MARK: Introspection
 
         @Test("types is a function") func testTypesIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.types === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.types") == "function")
         }
 
         @Test("hasType is a function") func testHasTypeIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.hasType === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.hasType") == "function")
         }
 
         @Test("changeCount is a number") func testChangeCountIsNumber() {
-            makeHarness().expectTrue("typeof hs.pasteboard.changeCount === 'number'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.changeCount") == "number")
         }
 
         // MARK: Management
 
         @Test("clear is a function") func testClearIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.clear === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.clear") == "function")
         }
 
         // MARK: Watcher API
 
         @Test("addWatcher is a function") func testAddWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.addWatcher === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.addWatcher") == "function")
         }
 
         @Test("removeWatcher is a function") func testRemoveWatcherIsFunction() {
-            makeHarness().expectTrue("typeof hs.pasteboard.removeWatcher === 'function'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.removeWatcher") == "function")
         }
 
         @Test("watcherInterval is a number") func testWatcherIntervalIsNumber() {
-            makeHarness().expectTrue("typeof hs.pasteboard.watcherInterval === 'number'")
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.watcherInterval") == "number")
         }
 
         @Test("watcherInterval defaults to 0.5") func testWatcherIntervalDefault() {
@@ -183,7 +203,7 @@ struct HSPasteboardTests {
         func testWriteStringReturnsTrue() {
             withSavedPasteboard {
                 let harness = makeHarness()
-                harness.expectTrue("hs.pasteboard.writeString('test') === true")
+                #expect(harness.evalBool("hs.pasteboard.writeString('test')") == true)
             }
         }
 
@@ -223,7 +243,7 @@ struct HSPasteboardTests {
         func testWriteHTMLReturnsTrue() {
             withSavedPasteboard {
                 let harness = makeHarness()
-                harness.expectTrue("hs.pasteboard.writeHTML('<p>hi</p>') === true")
+                #expect(harness.evalBool("hs.pasteboard.writeHTML('<p>hi</p>')") == true)
             }
         }
 
@@ -242,7 +262,7 @@ struct HSPasteboardTests {
         func testWriteURLInvalidURL() {
             withSavedPasteboard {
                 let harness = makeHarness()
-                harness.expectFalse("hs.pasteboard.writeURL('not a valid url !!') === true")
+                #expect(harness.evalBool("hs.pasteboard.writeURL('not a valid url !!')") != true)
             }
         }
 
@@ -267,8 +287,8 @@ struct HSPasteboardTests {
         func testWriteDataInvalidBase64() {
             withSavedPasteboard {
                 let harness = makeHarness()
-                harness.expectFalse(
-                    "hs.pasteboard.writeData('!!!not valid base64!!!', 'public.utf8-plain-text') === true"
+                #expect(
+                    harness.evalBool("hs.pasteboard.writeData('!!!not valid base64!!!', 'public.utf8-plain-text')") != true
                 )
             }
         }
@@ -294,9 +314,7 @@ struct HSPasteboardTests {
         func testWriteObjectsReturnsTrue() {
             withSavedPasteboard {
                 let harness = makeHarness()
-                harness.expectTrue("""
-                hs.pasteboard.writeObjects({ "public.utf8-plain-text": "test" }) === true
-            """)
+                #expect(harness.evalBool("hs.pasteboard.writeObjects({ \"public.utf8-plain-text\": \"test\" })") == true)
             }
         }
 
@@ -304,7 +322,7 @@ struct HSPasteboardTests {
         func testWriteObjectsNonObject() {
             withSavedPasteboard {
                 let harness = makeHarness()
-                harness.expectFalse("hs.pasteboard.writeObjects('a string') === true")
+                #expect(harness.evalBool("hs.pasteboard.writeObjects('a string')") != true)
             }
         }
 
@@ -312,7 +330,7 @@ struct HSPasteboardTests {
         func testWriteObjectsNoValidEntries() {
             withSavedPasteboard {
                 let harness = makeHarness()
-                harness.expectFalse("hs.pasteboard.writeObjects({ 'public.utf8-plain-text': 42 }) === true")
+                #expect(harness.evalBool("hs.pasteboard.writeObjects({ 'public.utf8-plain-text': 42 })") != true)
             }
         }
 
@@ -565,7 +583,7 @@ struct HSPasteboardTests {
             }
 
             if received {
-                harness.expectTrue("typeof _we2ReceivedCount === 'number'")
+                #expect(harness.evalTypeOf("_we2ReceivedCount") == "number")
                 harness.expectTrue("_we2ReceivedCount > 0")
             } else {
                 #expect(Bool(false), "Watcher callback should have fired")
