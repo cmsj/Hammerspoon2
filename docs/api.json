@@ -19901,7 +19901,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 192
+          "lineNumber": 201
         },
         {
           "name": "interfaceDetails",
@@ -19931,7 +19931,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 202
+          "lineNumber": 211
         },
         {
           "name": "currentNetwork",
@@ -19961,7 +19961,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 211
+          "lineNumber": 220
         },
         {
           "name": "setPower",
@@ -19998,7 +19998,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 222
+          "lineNumber": 231
         },
         {
           "name": "disassociate",
@@ -20025,7 +20025,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 230
+          "lineNumber": 239
         },
         {
           "name": "associate",
@@ -20070,7 +20070,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 246
+          "lineNumber": 255
         },
         {
           "name": "scanNetworks",
@@ -20101,7 +20101,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 259
+          "lineNumber": 268
         },
         {
           "name": "addWatcher",
@@ -20123,7 +20123,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 276
+          "lineNumber": 285
         }
       ],
       "properties": [
@@ -20142,7 +20142,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
-          "lineNumber": 266
+          "lineNumber": 275
         }
       ],
       "types": [
@@ -22111,5 +22111,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-28T16:15:36.359Z"
+  "generatedAt": "2026-07-28T16:48:45.032Z"
 }
