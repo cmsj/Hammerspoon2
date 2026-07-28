@@ -420,13 +420,18 @@ private enum HSWifiError: LocalizedError {
     func startWatching(_ watcher: HSWifiWatcher) {
         for name in watcher.events {
             guard let type = wifiEventTypeMap[name] else { continue }
-            let count = eventRefCounts[type, default: 0] + 1
-            eventRefCounts[type] = count
-            guard count == 1 else { continue }
+            let currentCount = eventRefCounts[type, default: 0]
+            guard currentCount == 0 else {
+                eventRefCounts[type] = currentCount + 1
+                continue
+            }
             do {
                 try client.startMonitoringEvent(with: type)
+                eventRefCounts[type] = 1
                 AKTrace("hs.wifi: started monitoring \(name)")
             } catch {
+                // Leave the ref count at 0 so a later watcher retries registration
+                // instead of assuming this event type is already being monitored.
                 AKError("hs.wifi: failed to start monitoring \(name): \(error.localizedDescription)")
             }
         }
@@ -434,13 +439,18 @@ private enum HSWifiError: LocalizedError {
 
     func stopWatching(_ watcher: HSWifiWatcher) {
         for name in watcher.events {
-            guard let type = wifiEventTypeMap[name], let count = eventRefCounts[type], count > 0 else { continue }
-            eventRefCounts[type] = count - 1
-            guard count - 1 == 0 else { continue }
+            guard let type = wifiEventTypeMap[name], let currentCount = eventRefCounts[type], currentCount > 0 else { continue }
+            guard currentCount == 1 else {
+                eventRefCounts[type] = currentCount - 1
+                continue
+            }
             do {
                 try client.stopMonitoringEvent(with: type)
+                eventRefCounts[type] = 0
                 AKTrace("hs.wifi: stopped monitoring \(name)")
             } catch {
+                // Leave the ref count at 1 so we don't lose track of an event type CoreWLAN
+                // is (as far as we know) still actually monitoring.
                 AKError("hs.wifi: failed to stop monitoring \(name): \(error.localizedDescription)")
             }
         }
