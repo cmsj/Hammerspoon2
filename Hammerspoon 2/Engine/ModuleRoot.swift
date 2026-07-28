@@ -89,6 +89,7 @@ import JavaScriptCoreExtras
     @objc var mouse: HSMouseModule { get }
     @objc var plist: HSPlistModule { get }
     @objc var userdefaults: HSUserDefaultsModule { get }
+    @objc var wifi: HSWifiModule { get }
 }
 
 @_documentation(visibility: private)
@@ -202,6 +203,7 @@ import JavaScriptCoreExtras
     @objc var mouse: HSMouseModule { get { getOrCreate(name: "mouse", type: HSMouseModule.self)}}
     @objc var plist: HSPlistModule { get { getOrCreate(name: "plist", type: HSPlistModule.self)}}
     @objc var userdefaults: HSUserDefaultsModule { get { getOrCreate(name: "userdefaults", type: HSUserDefaultsModule.self)}}
+    @objc var wifi: HSWifiModule { get { getOrCreate(name: "wifi", type: HSWifiModule.self)}}
 }
 
 // MARK: - JSContextInstallable
