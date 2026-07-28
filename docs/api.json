@@ -243,7 +243,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 36
+          "lineNumber": 45
         },
         {
           "name": "displayName",
@@ -260,7 +260,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 43
+          "lineNumber": 52
         },
         {
           "name": "version",
@@ -277,7 +277,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 50
+          "lineNumber": 59
         },
         {
           "name": "build",
@@ -294,7 +294,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 57
+          "lineNumber": 66
         },
         {
           "name": "minimumOSVersion",
@@ -311,7 +311,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 64
+          "lineNumber": 73
         },
         {
           "name": "copyrightNotice",
@@ -328,7 +328,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 71
+          "lineNumber": 80
         },
         {
           "name": "bundleIdentifier",
@@ -345,7 +345,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 78
+          "lineNumber": 87
         },
         {
           "name": "bundlePath",
@@ -362,7 +362,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 85
+          "lineNumber": 94
         },
         {
           "name": "resourcePath",
@@ -379,7 +379,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 92
+          "lineNumber": 101
         },
         {
           "name": "configPath",
@@ -396,7 +396,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 99
+          "lineNumber": 108
         },
         {
           "name": "configDir",
@@ -413,7 +413,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 106
+          "lineNumber": 115
         },
         {
           "name": "machineName",
@@ -430,7 +430,126 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
-          "lineNumber": 113
+          "lineNumber": 122
+        },
+        {
+          "name": "pid",
+          "signature": "var pid: Int { get }",
+          "rawDocumentation": "Hammerspoon 2's Process Identifier (PID)\n- Example:\n```js\nconsole.log(hs.appinfo.pid)\n```",
+          "description": "Hammerspoon 2's Process Identifier (PID)",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.appinfo.pid)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
+          "lineNumber": 129
+        },
+        {
+          "name": "arguments",
+          "signature": "var arguments: [String] { get }",
+          "rawDocumentation": "The command-line arguments Hammerspoon 2 was launched with\n- Example:\n```js\nconsole.log(hs.appinfo.arguments.join(\" \"))\n```",
+          "description": "The command-line arguments Hammerspoon 2 was launched with",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.appinfo.arguments.join(\" \"))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
+          "lineNumber": 136
+        },
+        {
+          "name": "environment",
+          "signature": "var environment: [String: String] { get }",
+          "rawDocumentation": "The environment variables Hammerspoon 2 was launched with\n- Example:\n```js\nconsole.log(hs.appinfo.environment[\"PATH\"])\n```",
+          "description": "The environment variables Hammerspoon 2 was launched with",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.appinfo.environment[\"PATH\"])"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
+          "lineNumber": 143
+        },
+        {
+          "name": "osVersion",
+          "signature": "var osVersion: String { get }",
+          "rawDocumentation": "The version of macOS Hammerspoon 2 is currently running on (e.g., \"15.1.0\")\n- Example:\n```js\nconsole.log(hs.appinfo.osVersion)\n```",
+          "description": "The version of macOS Hammerspoon 2 is currently running on (e.g., \"15.1.0\")",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.appinfo.osVersion)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
+          "lineNumber": 150
+        },
+        {
+          "name": "osVersionParts",
+          "signature": "var osVersionParts: [String: Int] { get }",
+          "rawDocumentation": "The version of macOS Hammerspoon 2 is currently running on, broken into its numeric components\n\nKeys: `major`, `minor`, `patch`.\n- Example:\n```js\nconst v = hs.appinfo.osVersionParts\nconsole.log(v.major + \".\" + v.minor + \".\" + v.patch)\n```",
+          "description": "The version of macOS Hammerspoon 2 is currently running on, broken into its numeric components\nKeys: `major`, `minor`, `patch`.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const v = hs.appinfo.osVersionParts\nconsole.log(v.major + \".\" + v.minor + \".\" + v.patch)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
+          "lineNumber": 160
+        },
+        {
+          "name": "cpuCount",
+          "signature": "var cpuCount: Int { get }",
+          "rawDocumentation": "The number of logical CPU cores available on this Mac\n- Example:\n```js\nconsole.log(hs.appinfo.cpuCount)\n```",
+          "description": "The number of logical CPU cores available on this Mac",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.appinfo.cpuCount)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
+          "lineNumber": 167
+        },
+        {
+          "name": "ramAmount",
+          "signature": "var ramAmount: Int { get }",
+          "rawDocumentation": "The amount of physical RAM installed on this Mac, in gigabytes\n- Example:\n```js\nconsole.log(hs.appinfo.ramAmount)\n```",
+          "description": "The amount of physical RAM installed on this Mac, in gigabytes",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.appinfo.ramAmount)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.appinfo/HSAppInfoModule.swift",
+          "lineNumber": 174
         }
       ],
       "types": [],
@@ -22150,5 +22269,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-28T22:31:08.686Z"
+  "generatedAt": "2026-07-28T22:56:48.318Z"
 }

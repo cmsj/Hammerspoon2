@@ -519,6 +519,42 @@ declare namespace hs.appinfo {
      */
     const machineName: string;
 
+    /**
+     * Hammerspoon 2's Process Identifier (PID)
+     */
+    const pid: number;
+
+    /**
+     * The command-line arguments Hammerspoon 2 was launched with
+     */
+    const arguments: string[];
+
+    /**
+     * The environment variables Hammerspoon 2 was launched with
+     */
+    const environment: Record<string, string>;
+
+    /**
+     * The version of macOS Hammerspoon 2 is currently running on (e.g., "15.1.0")
+     */
+    const osVersion: string;
+
+    /**
+     * The version of macOS Hammerspoon 2 is currently running on, broken into its numeric components
+Keys: `major`, `minor`, `patch`.
+     */
+    const osVersionParts: Record<string, number>;
+
+    /**
+     * The number of logical CPU cores available on this Mac
+     */
+    const cpuCount: number;
+
+    /**
+     * The amount of physical RAM installed on this Mac, in gigabytes
+     */
+    const ramAmount: number;
+
 }
 
 /**

@@ -128,11 +128,49 @@ struct HSAppInfoData {
     /// ```
     @objc var pid: Int { get }
 
+    /// The command-line arguments Hammerspoon 2 was launched with
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.arguments.join(" "))
+    /// ```
     @objc var arguments: [String] { get }
+
+    /// The environment variables Hammerspoon 2 was launched with
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.environment["PATH"])
+    /// ```
     @objc var environment: [String: String] { get }
+
+    /// The version of macOS Hammerspoon 2 is currently running on (e.g., "15.1.0")
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.osVersion)
+    /// ```
     @objc var osVersion: String { get }
+
+    /// The version of macOS Hammerspoon 2 is currently running on, broken into its numeric components
+    ///
+    /// Keys: `major`, `minor`, `patch`.
+    /// - Example:
+    /// ```js
+    /// const v = hs.appinfo.osVersionParts
+    /// console.log(v.major + "." + v.minor + "." + v.patch)
+    /// ```
     @objc var osVersionParts: [String: Int] { get }
+
+    /// The number of logical CPU cores available on this Mac
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.cpuCount)
+    /// ```
     @objc var cpuCount: Int { get }
+
+    /// The amount of physical RAM installed on this Mac, in gigabytes
+    /// - Example:
+    /// ```js
+    /// console.log(hs.appinfo.ramAmount)
+    /// ```
     @objc var ramAmount: Int { get }
 }
 
