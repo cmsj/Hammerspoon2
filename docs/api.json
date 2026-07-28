@@ -19879,6 +19879,415 @@
       "rawDocumentation": "Module for storing small amounts of data that persists across Hammerspoon restarts.\n\nValues are stored in a dedicated `UserDefaults` suite named \"hs.userdefaults\", kept\nseparate from the app's own preferences so it doesn't get confused with Hammerspoon's\nown configuration when inspected with tools like the `defaults` command line utility.\n\nJavaScript ↔ storage type mapping:\n- JavaScript strings, numbers, booleans, arrays and objects round-trip directly\n- JavaScript `Date` objects round-trip directly (no special API required)\n- JavaScript `null`/`undefined` are not storable values; use `clear()` to remove a key\n\nBecause the suite is just a standard macOS preferences domain, it can also be inspected\nand manipulated from the command line with the `defaults` tool:\n```sh\n# Read every value stored by hs.userdefaults\ndefaults read hs.userdefaults\n\n# Read a single key\ndefaults read hs.userdefaults someKey\n\n# Write a value from the command line\ndefaults write hs.userdefaults someKey \"some value\"\n\n# Delete a key\ndefaults delete hs.userdefaults someKey\n```\n\n- Note: This suite is **not encrypted on disk**. Do not use it to store sensitive\n  information such as passwords, API keys, or tokens."
     },
     {
+      "name": "hs.wifi",
+      "methods": [
+        {
+          "name": "interfaces",
+          "signature": "func interfaces() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the names of all Wi-Fi interfaces attached to the system (e.g. `[\"en0\"]`).\n- Returns: an array of interface name strings\n- Example:\n```js\nconsole.log(hs.wifi.interfaces())\n```",
+          "description": "Returns the names of all Wi-Fi interfaces attached to the system (e.g. `[\"en0\"]`).",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "an array of interface name strings"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.wifi.interfaces())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 192
+        },
+        {
+          "name": "interfaceDetails",
+          "signature": "func interfaceDetails(_ interface: String?) -> [String: Any]?",
+          "isStatic": false,
+          "rawDocumentation": "Returns detailed information about a Wi-Fi interface.\n- Parameter interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface\n- Returns: a table with keys `interface, active, power, ssid, bssid, security, interfaceMode, activePHYMode, rssi, noise, transmitRate, transmitPower, countryCode, hardwareAddress, wlanChannel, supportedChannels, cachedScanResults, configuration`; or null if the interface doesn't exist. `ssid`/`bssid`/`countryCode`/`wlanChannel` may be absent without Location Services authorization.\n- Example:\n```js\nconst info = hs.wifi.interfaceDetails()\nif (info) console.log(info.ssid + \" on channel \" + info.wlanChannel.number)\n```",
+          "description": "Returns detailed information about a Wi-Fi interface.",
+          "params": [
+            {
+              "name": "interface",
+              "type": "string",
+              "description": "the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "Object<String, Any>",
+            "description": "a table with keys `interface, active, power, ssid, bssid, security, interfaceMode, activePHYMode, rssi, noise, transmitRate, transmitPower, countryCode, hardwareAddress, wlanChannel, supportedChannels, cachedScanResults, configuration`; or null if the interface doesn't exist. `ssid`/`bssid`/`countryCode`/`wlanChannel` may be absent without Location Services authorization."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const info = hs.wifi.interfaceDetails()\nif (info) console.log(info.ssid + \" on channel \" + info.wlanChannel.number)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 202
+        },
+        {
+          "name": "currentNetwork",
+          "signature": "func currentNetwork(_ interface: String?) -> String?",
+          "isStatic": false,
+          "rawDocumentation": "Returns the SSID of the network currently joined on an interface.\n- Parameter interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface\n- Returns: the SSID string, or null if not joined to a network (or Location Services is not authorized)\n- Example:\n```js\nconsole.log(hs.wifi.currentNetwork())\n```",
+          "description": "Returns the SSID of the network currently joined on an interface.",
+          "params": [
+            {
+              "name": "interface",
+              "type": "string",
+              "description": "the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "the SSID string, or null if not joined to a network (or Location Services is not authorized)"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.wifi.currentNetwork())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 211
+        },
+        {
+          "name": "setPower",
+          "signature": "func setPower(_ state: Bool, _ interface: String?) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Turns a Wi-Fi interface on or off.\n- Parameters:\n  - state: true to power the interface on, false to power it off\n  - interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface\n- Returns: true if the power state was changed successfully, false if the interface doesn't exist or the change failed (see the Console for the reason)\n- Example:\n```js\nhs.wifi.setPower(false) // turn Wi-Fi off\n```",
+          "description": "Turns a Wi-Fi interface on or off.",
+          "params": [
+            {
+              "name": "state",
+              "type": "boolean",
+              "description": "true to power the interface on, false to power it off",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "interface",
+              "type": "string",
+              "description": "the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if the power state was changed successfully, false if the interface doesn't exist or the change failed (see the Console for the reason)"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.wifi.setPower(false) // turn Wi-Fi off"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 222
+        },
+        {
+          "name": "disassociate",
+          "signature": "func disassociate(_ interface: String?)",
+          "isStatic": false,
+          "rawDocumentation": "Disconnects an interface from its current network.\n- Parameter interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface\n- Example:\n```js\nhs.wifi.disassociate()\n```",
+          "description": "Disconnects an interface from its current network.",
+          "params": [
+            {
+              "name": "interface",
+              "type": "string",
+              "description": "the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.wifi.disassociate()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 230
+        },
+        {
+          "name": "associate",
+          "signature": "func associate(_ ssid: String, _ passphrase: String?, _ interface: String?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Scans for a network by SSID and joins it. Enterprise networks are not supported.\n\nThis can take several seconds; it runs off the main thread so it does not block the app.\n- Parameters:\n  - ssid: the SSID of the network to join\n  - passphrase?: the network passphrase; required for WEP/WPA/WPA2/WPA3 Personal networks\n  - interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface\n- Returns: {Promise<boolean>} A Promise that resolves `true` if joined successfully, `false` if no network with that SSID was found, or rejects if the interface doesn't exist or the association attempt fails\n- Example:\n```js\nhs.wifi.associate(\"MyNetwork\", \"hunter2\")\n    .then(joined => console.log(joined ? \"Joined\" : \"Network not found\"))\n    .catch(err => console.log(\"Error: \" + err))\n```",
+          "description": "Scans for a network by SSID and joins it. Enterprise networks are not supported.\nThis can take several seconds; it runs off the main thread so it does not block the app.",
+          "params": [
+            {
+              "name": "ssid",
+              "type": "string",
+              "description": "the SSID of the network to join",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "passphrase",
+              "type": "string",
+              "description": "the network passphrase; required for WEP/WPA/WPA2/WPA3 Personal networks",
+              "optional": true,
+              "tsType": null
+            },
+            {
+              "name": "interface",
+              "type": "string",
+              "description": "the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "A Promise that resolves `true` if joined successfully, `false` if no network with that SSID was found, or rejects if the interface doesn't exist or the association attempt fails",
+            "promiseType": "boolean"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.wifi.associate(\"MyNetwork\", \"hunter2\")\n    .then(joined => console.log(joined ? \"Joined\" : \"Network not found\"))\n    .catch(err => console.log(\"Error: \" + err))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 246
+        },
+        {
+          "name": "scanNetworks",
+          "signature": "func scanNetworks(_ interface: String?) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Scans for visible Wi-Fi networks.\n\nThis can take a few seconds; it runs off the main thread so it does not block the app.\n- Parameter interface?: the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface\n- Returns: {Promise<object[]>} A Promise that resolves to an array of network tables, each with keys `ssid, bssid, rssi, noise, ibss, countryCode, beaconInterval, security, phyModes, wlanChannel, informationElementData`; or rejects if the interface doesn't exist or the scan fails. `bssid`/`countryCode` may be absent without Location Services authorization. `informationElementData` is raw beacon/probe-response data returned as an array of byte values (0-255) rather than a string, since it can contain sequences that are unsafe to render as text.\n- Example:\n```js\nhs.wifi.scanNetworks().then(networks => {\n    networks.forEach(n => console.log(n.ssid + \" (\" + n.rssi + \" dBm)\"))\n})\n```",
+          "description": "Scans for visible Wi-Fi networks.\nThis can take a few seconds; it runs off the main thread so it does not block the app.",
+          "params": [
+            {
+              "name": "interface",
+              "type": "string",
+              "description": "the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface",
+              "optional": true,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "A Promise that resolves to an array of network tables, each with keys `ssid, bssid, rssi, noise, ibss, countryCode, beaconInterval, security, phyModes, wlanChannel, informationElementData`; or rejects if the interface doesn't exist or the scan fails. `bssid`/`countryCode` may be absent without Location Services authorization. `informationElementData` is raw beacon/probe-response data returned as an array of byte values (0-255) rather than a string, since it can contain sequences that are unsafe to render as text.",
+            "promiseType": "object[]"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.wifi.scanNetworks().then(networks => {\n    networks.forEach(n => console.log(n.ssid + \" (\" + n.rssi + \" dBm)\"))\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 259
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher() -> HSWifiWatcher",
+          "isStatic": false,
+          "rawDocumentation": "Creates a new Wi-Fi event watcher. Call `.setCallback()` and `.start()` to activate it.\nThe watcher is stopped automatically when the module shuts down.\n- Returns: an HSWifiWatcher\n- Example:\n```js\nconst w = hs.wifi.addWatcher()\nw.setCallback((event, info) => console.log(event, info)).start()\n```",
+          "description": "Creates a new Wi-Fi event watcher. Call `.setCallback()` and `.start()` to activate it.\nThe watcher is stopped automatically when the module shuts down.",
+          "params": [],
+          "returns": {
+            "type": "HSWifiWatcher",
+            "description": "an HSWifiWatcher"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const w = hs.wifi.addWatcher()\nw.setCallback((event, info) => console.log(event, info)).start()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 276
+        }
+      ],
+      "properties": [
+        {
+          "name": "watcherEventTypes",
+          "signature": "var watcherEventTypes: [String] { get }",
+          "rawDocumentation": "The Wi-Fi event types that can be passed to `HSWifiWatcher.events`.\n- Example:\n```js\nconsole.log(hs.wifi.watcherEventTypes)\n```",
+          "description": "The Wi-Fi event types that can be passed to `HSWifiWatcher.events`.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.wifi.watcherEventTypes)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiModule.swift",
+          "lineNumber": 266
+        }
+      ],
+      "types": [
+        {
+          "name": "HSWifiWatcherAPI",
+          "type": "typedef",
+          "rawDocumentation": "A Wi-Fi event watcher that monitors changes to a Wi-Fi interface.\n\nCreate via `hs.wifi.addWatcher()`. Set a callback with `setCallback()`, then\ncall `start()` to begin receiving events. By default only `\"ssidChange\"` is\nwatched; use the `events` property to watch other event types.\n\nThe callback receives `(event, info)`:\n\n| Event | Info keys |\n|-------|-----------|\n| `\"ssidChange\"` | `interface: string` |\n| `\"bssidChange\"` | `interface: string` |\n| `\"countryCodeChange\"` | `interface: string` |\n| `\"linkChange\"` | `interface: string` |\n| `\"linkQualityChange\"` | `interface: string`, `rssi: number`, `transmitRate: number` |\n| `\"modeChange\"` | `interface: string` |\n| `\"powerChange\"` | `interface: string` |\n| `\"scanCacheUpdated\"` | `interface: string` |\n\nExample:\n```js\nconst w = hs.wifi.addWatcher()\nw.setCallback((event, info) => {\n    console.log(event + \" on \" + info.interface)\n}).start()\n```",
+          "description": "A Wi-Fi event watcher that monitors changes to a Wi-Fi interface.\nCreate via `hs.wifi.addWatcher()`. Set a callback with `setCallback()`, then\ncall `start()` to begin receiving events. By default only `\"ssidChange\"` is\nwatched; use the `events` property to watch other event types.\n| Event | Info keys |\n|-------|-----------|\n| `\"ssidChange\"` | `interface: string` |\n| `\"bssidChange\"` | `interface: string` |\n| `\"countryCodeChange\"` | `interface: string` |\n| `\"linkChange\"` | `interface: string` |\n| `\"linkQualityChange\"` | `interface: string`, `rssi: number`, `transmitRate: number` |\n| `\"modeChange\"` | `interface: string` |\n| `\"powerChange\"` | `interface: string` |\n| `\"scanCacheUpdated\"` | `interface: string` |",
+          "methods": [
+            {
+              "name": "start",
+              "signature": "func start() -> HSWifiWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Starts monitoring the event types configured in `events`.\n- Returns: self, for chaining\n- Example:\n```js\nconst w = hs.wifi.addWatcher()\nw.setCallback((ev, info) => console.log(ev)).start()\n```",
+              "description": "Starts monitoring the event types configured in `events`.",
+              "params": [],
+              "returns": {
+                "type": "HSWifiWatcher",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const w = hs.wifi.addWatcher()\nw.setCallback((ev, info) => console.log(ev)).start()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiWatcher.swift",
+              "lineNumber": 70
+            },
+            {
+              "name": "stop",
+              "signature": "func stop() -> HSWifiWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Stops monitoring Wi-Fi events.\n- Returns: self, for chaining\n- Example:\n```js\nw.stop()\n```",
+              "description": "Stops monitoring Wi-Fi events.",
+              "params": [],
+              "returns": {
+                "type": "HSWifiWatcher",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.stop()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiWatcher.swift",
+              "lineNumber": 78
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ fn: JSFunction) -> HSWifiWatcher",
+              "isStatic": false,
+              "rawDocumentation": "Sets the callback function invoked when a watched Wi-Fi event occurs.\n- Parameter fn: {(event: string, info: Record<string, any>) => void} Called with the event name and an info dictionary; see type documentation for event names and info keys.\n- Returns: self, for chaining\n- Example:\n```js\nw.setCallback((event, info) => {\n    if (event === \"powerChange\") console.log(\"power changed on \" + info.interface)\n})\n```",
+              "description": "Sets the callback function invoked when a watched Wi-Fi event occurs.",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSFunction",
+                  "description": "Called with the event name and an info dictionary; see type documentation for event names and info keys.",
+                  "optional": false,
+                  "tsType": "(event: string, info: Record<string, any>) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSWifiWatcher",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.setCallback((event, info) => {\n    if (event === \"powerChange\") console.log(\"power changed on \" + info.interface)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiWatcher.swift",
+              "lineNumber": 89
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Stops the watcher and releases all resources. Called automatically during shutdown.\n- Example:\n```js\nw.destroy()\n```",
+              "description": "Stops the watcher and releases all resources. Called automatically during shutdown.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "w.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiWatcher.swift",
+              "lineNumber": 96
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "The unique identifier assigned to this watcher.\n- Example:\n```js\nconst w = hs.wifi.addWatcher()\nconsole.log(w.identifier)\n```",
+              "description": "The unique identifier assigned to this watcher.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const w = hs.wifi.addWatcher()\nconsole.log(w.identifier)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiWatcher.swift",
+              "lineNumber": 50
+            },
+            {
+              "name": "events",
+              "signature": "var events: [String] { get set }",
+              "rawDocumentation": "The event types this watcher will invoke its callback for. Defaults to\n`[\"ssidChange\"]`. Unrecognized values are ignored with a console warning;\nsee `hs.wifi.watcherEventTypes` for the list of valid values. Can be\nchanged while the watcher is running.\n- Example:\n```js\nconst w = hs.wifi.addWatcher()\nw.events = [\"ssidChange\", \"powerChange\"]\n```",
+              "description": "The event types this watcher will invoke its callback for. Defaults to\n`[\"ssidChange\"]`. Unrecognized values are ignored with a console warning;\nsee `hs.wifi.watcherEventTypes` for the list of valid values. Can be\nchanged while the watcher is running.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const w = hs.wifi.addWatcher()\nw.events = [\"ssidChange\", \"powerChange\"]"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.wifi/HSWifiWatcher.swift",
+              "lineNumber": 61
+            }
+          ]
+        }
+      ],
+      "description": "Control and query Wi-Fi interfaces, scan for networks, and watch for Wi-Fi events.\nBuilt on CoreWLAN. Fields that reveal network identity — `ssid`, `bssid`, `countryCode`,\nand BSSIDs inside scan results — are only populated once Location Services is enabled and\nthe user has authorized this app; call `hs.permissions.requestLocation()` first (the same\ngate `hs.location` uses). Without authorization these fields are `null`/omitted, not errors.",
+      "rawDocumentation": "Control and query Wi-Fi interfaces, scan for networks, and watch for Wi-Fi events.\n\nBuilt on CoreWLAN. Fields that reveal network identity — `ssid`, `bssid`, `countryCode`,\nand BSSIDs inside scan results — are only populated once Location Services is enabled and\nthe user has authorized this app; call `hs.permissions.requestLocation()` first (the same\ngate `hs.location` uses). Without authorization these fields are `null`/omitted, not errors."
+    },
+    {
       "name": "hs.window",
       "methods": [
         {
@@ -21702,5 +22111,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-27T22:39:19.917Z"
+  "generatedAt": "2026-07-28T16:15:36.359Z"
 }

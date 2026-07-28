@@ -7587,6 +7587,136 @@ object, they are silently stored as an empty object.
 }
 
 /**
+ * Control and query Wi-Fi interfaces, scan for networks, and watch for Wi-Fi events.
+Built on CoreWLAN. Fields that reveal network identity — `ssid`, `bssid`, `countryCode`,
+and BSSIDs inside scan results — are only populated once Location Services is enabled and
+the user has authorized this app; call `hs.permissions.requestLocation()` first (the same
+gate `hs.location` uses). Without authorization these fields are `null`/omitted, not errors.
+ */
+declare namespace hs.wifi {
+    /**
+     * Returns the names of all Wi-Fi interfaces attached to the system (e.g. `["en0"]`).
+     * @returns an array of interface name strings
+     */
+    function interfaces(): string[];
+
+    /**
+     * Returns detailed information about a Wi-Fi interface.
+     * @param interface the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
+     * @returns a table with keys `interface, active, power, ssid, bssid, security, interfaceMode, activePHYMode, rssi, noise, transmitRate, transmitPower, countryCode, hardwareAddress, wlanChannel, supportedChannels, cachedScanResults, configuration`; or null if the interface doesn't exist. `ssid`/`bssid`/`countryCode`/`wlanChannel` may be absent without Location Services authorization.
+     */
+    function interfaceDetails(interface?: string | null): Record<string, any> | null;
+
+    /**
+     * Returns the SSID of the network currently joined on an interface.
+     * @param interface the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
+     * @returns the SSID string, or null if not joined to a network (or Location Services is not authorized)
+     */
+    function currentNetwork(interface?: string | null): string | null;
+
+    /**
+     * Turns a Wi-Fi interface on or off.
+     * @param state true to power the interface on, false to power it off
+     * @param interface the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
+     * @returns true if the power state was changed successfully, false if the interface doesn't exist or the change failed (see the Console for the reason)
+     */
+    function setPower(state: boolean, interface?: string | null): boolean;
+
+    /**
+     * Disconnects an interface from its current network.
+     * @param interface the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
+     */
+    function disassociate(interface?: string | null): void;
+
+    /**
+     * Scans for a network by SSID and joins it. Enterprise networks are not supported.
+This can take several seconds; it runs off the main thread so it does not block the app.
+     * @param ssid the SSID of the network to join
+     * @param passphrase the network passphrase; required for WEP/WPA/WPA2/WPA3 Personal networks
+     * @param interface the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
+     * @returns A Promise that resolves `true` if joined successfully, `false` if no network with that SSID was found, or rejects if the interface doesn't exist or the association attempt fails
+     */
+    function associate(ssid: string, passphrase?: string | null, interface?: string | null): Promise<boolean>;
+
+    /**
+     * Scans for visible Wi-Fi networks.
+This can take a few seconds; it runs off the main thread so it does not block the app.
+     * @param interface the interface name as returned by `interfaces()`; omit for the system's default Wi-Fi interface
+     * @returns A Promise that resolves to an array of network tables, each with keys `ssid, bssid, rssi, noise, ibss, countryCode, beaconInterval, security, phyModes, wlanChannel, informationElementData`; or rejects if the interface doesn't exist or the scan fails. `bssid`/`countryCode` may be absent without Location Services authorization. `informationElementData` is raw beacon/probe-response data returned as an array of byte values (0-255) rather than a string, since it can contain sequences that are unsafe to render as text.
+     */
+    function scanNetworks(interface?: string | null): Promise<object[]>;
+
+    /**
+     * Creates a new Wi-Fi event watcher. Call `.setCallback()` and `.start()` to activate it.
+The watcher is stopped automatically when the module shuts down.
+     * @returns an HSWifiWatcher
+     */
+    function addWatcher(): HSWifiWatcher;
+
+    /**
+     * The Wi-Fi event types that can be passed to `HSWifiWatcher.events`.
+     */
+    const watcherEventTypes: string[];
+
+}
+
+/**
+ * A Wi-Fi event watcher that monitors changes to a Wi-Fi interface.
+Create via `hs.wifi.addWatcher()`. Set a callback with `setCallback()`, then
+call `start()` to begin receiving events. By default only `"ssidChange"` is
+watched; use the `events` property to watch other event types.
+| Event | Info keys |
+|-------|-----------|
+| `"ssidChange"` | `interface: string` |
+| `"bssidChange"` | `interface: string` |
+| `"countryCodeChange"` | `interface: string` |
+| `"linkChange"` | `interface: string` |
+| `"linkQualityChange"` | `interface: string`, `rssi: number`, `transmitRate: number` |
+| `"modeChange"` | `interface: string` |
+| `"powerChange"` | `interface: string` |
+| `"scanCacheUpdated"` | `interface: string` |
+ */
+declare class HSWifiWatcher {
+    /**
+     * Starts monitoring the event types configured in `events`.
+     * @returns self, for chaining
+     */
+    start(): HSWifiWatcher;
+
+    /**
+     * Stops monitoring Wi-Fi events.
+     * @returns self, for chaining
+     */
+    stop(): HSWifiWatcher;
+
+    /**
+     * Sets the callback function invoked when a watched Wi-Fi event occurs.
+     * @param fn Called with the event name and an info dictionary; see type documentation for event names and info keys.
+     * @returns self, for chaining
+     */
+    setCallback(fn: (event: string, info: Record<string, any>) => void): HSWifiWatcher;
+
+    /**
+     * Stops the watcher and releases all resources. Called automatically during shutdown.
+     */
+    destroy(): void;
+
+    /**
+     * The unique identifier assigned to this watcher.
+     */
+    readonly identifier: string;
+
+    /**
+     * The event types this watcher will invoke its callback for. Defaults to
+`["ssidChange"]`. Unrecognized values are ignored with a console warning;
+see `hs.wifi.watcherEventTypes` for the list of valid values. Can be
+changed while the watcher is running.
+     */
+    events: string[];
+
+}
+
+/**
  * Module for interacting with windows
  */
 declare namespace hs.window {

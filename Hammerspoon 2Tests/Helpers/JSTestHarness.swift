@@ -525,6 +525,8 @@ extension JSTestHarness {
                 loadModule(HSPlistModule.self, as: name)
             case "userdefaults":
                 loadModule(HSUserDefaultsModule.self, as: name)
+            case "wifi":
+                loadModule(HSWifiModule.self, as: name)
             default:
                 print("⚠️ Unknown module: \(name)")
             }
