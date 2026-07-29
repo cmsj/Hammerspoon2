@@ -22,21 +22,6 @@ private func localeTemperatureUnit(_ locale: Locale) -> String? {
     return (locale as NSLocale).object(forKey: key) as? String
 }
 
-private func localeExemplarCharacters(_ locale: Locale) -> [String] {
-    guard let set = locale.exemplarCharacterSet else { return [] }
-    var result: [String] = []
-    for plane: UInt8 in 0...16 {
-        guard set.hasMember(inPlane: plane) else { continue }
-        let planeStart = UInt32(plane) << 16
-        let planeEnd = (UInt32(plane) + 1) << 16
-        for value in planeStart..<planeEnd {
-            guard let scalar = Unicode.Scalar(value), set.contains(scalar) else { continue }
-            result.append(String(scalar))
-        }
-    }
-    return result
-}
-
 private func localeCalendarDetails(_ locale: Locale) -> [String: Any] {
     var calendar = Calendar(identifier: locale.calendar.identifier)
     calendar.locale = locale
@@ -75,7 +60,6 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
         "measurementSystem": localeMeasurementSystem(locale.measurementSystem),
         "usesMetricSystem": locale.measurementSystem == .metric,
         "collationIdentifier": locale.collation.identifier,
-        "exemplarCharacters": localeExemplarCharacters(locale),
         "calendar": localeCalendarDetails(locale),
         "timeFormatIs24Hour": locale.hourCycle == .zeroToTwentyThree || locale.hourCycle == .oneToTwentyFour
     ]
@@ -163,8 +147,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     ///   `usesMetricSystem`, `temperatureUnit`, `timeFormatIs24Hour`,
     ///   `quotationBeginDelimiter`, `quotationEndDelimiter`,
     ///   `alternateQuotationBeginDelimiter`, `alternateQuotationEndDelimiter`,
-    ///   `exemplarCharacters` (an array of the characters typically used to write the
-    ///   locale's language), and `calendar` — a nested object describing the locale's
+    ///    and `calendar` — a nested object describing the locale's
     ///   calendar (`identifier`, `firstWeekday`, `minimumDaysInFirstWeek`, `amSymbol`,
     ///   `pmSymbol`, and arrays of era/month/quarter/weekday symbols in their standard,
     ///   short, standalone, and very-short forms).
