@@ -3603,6 +3603,79 @@ whenever the keyboard input source changes.
 }
 
 /**
+ * Retrieve information about the user's Language & Region settings, and respond to changes.
+Locales encapsulate linguistic, cultural, and technological conventions — things like the
+symbol used for a decimal separator, or the way dates and calendars are formatted.
+## Reading locale information
+```js
+console.log("Current locale: " + hs.locale.current())
+const info = hs.locale.details()
+console.log("Uses metric: " + info.usesMetricSystem)
+```
+## Watching for changes
+```js
+hs.locale.addWatcher(() => {
+    console.log("Locale settings changed: " + JSON.stringify(hs.locale.details()))
+})
+```
+ */
+declare namespace hs.locale {
+    /**
+     * Returns the identifiers for all locales available on the system.
+     * @returns An array of locale identifier strings (e.g. `["en_US", "de_CH", "ja_JP"]`).
+     */
+    function availableLocales(): string[];
+
+    /**
+     * Returns the user's currently selected locale identifier.
+     * @returns The identifier of the user's currently selected locale (e.g. `"en_US"`).
+     */
+    function current(): string;
+
+    /**
+     * Returns the user's preferred languages, in priority order.
+     * @returns An array of language identifier strings, most preferred first.
+     */
+    function preferredLanguages(): string[];
+
+    /**
+     * Returns detailed information about the current or a specified locale.
+user's currently selected locale is used.
+     * @param identifier A locale identifier from `availableLocales()`. If omitted, the
+     * @returns A dictionary describing the locale, including (where available):
+     */
+    function details(identifier?: string | null): Record<string, any>;
+
+    /**
+     * Returns the localized display name for a locale identifier.
+of the strings returned by `availableLocales()`.
+currently selected locale is used. Must be one of the strings returned by
+`availableLocales()`.
+     * @param localeCode The locale identifier to look up (e.g. `"de_CH"`). Must be one
+     * @param baseLocaleCode The locale to display the name in. If omitted, the user's
+     * @returns A dictionary with `name` (e.g. `"German"`) and `nameWithDialect`
+     */
+    function localizedName(localeCode: string, baseLocaleCode?: string | null): Record<string, string> | null;
+
+    /**
+     * Registers a listener that fires whenever any of the user's locale settings change.
+The listener is called with no arguments. Read `current()` or `details()` inside the
+callback to inspect the new state.
+The OS subscription starts lazily on the first listener and is released automatically
+when the last listener is removed via `removeWatcher`.
+     * @param listener A function called when locale settings change.
+     */
+    function addWatcher(listener: () => void): void;
+
+    /**
+     * Removes a previously registered locale change listener.
+     * @param listener The function originally passed to `addWatcher`.
+     */
+    function removeWatcher(listener: (...args: any[]) => any): void;
+
+}
+
+/**
  * Determine the Mac's location via macOS Location Services.
 Location data is obtained through WiFi network scanning and, where available, GPS
 hardware. User permission is required — call `hs.permissions.requestLocation()`

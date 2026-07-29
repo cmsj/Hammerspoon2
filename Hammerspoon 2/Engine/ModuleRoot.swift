@@ -65,6 +65,7 @@ import JavaScriptCoreExtras
     @objc var keycodes: HSKeycodesModule { get }
     @objc var http: HSHTTPModule { get }
     @objc var httpserver: HSHTTPServerModule { get }
+    @objc var locale: HSLocaleModule { get }
     @objc var location: HSLocationModule { get }
     @objc var menubar: HSMenuBarModule { get }
     @objc var notify: HSNotifyModule { get }
@@ -179,6 +180,7 @@ import JavaScriptCoreExtras
     @objc var keycodes: HSKeycodesModule { get { getOrCreate(name: "keycodes", type: HSKeycodesModule.self)}}
     @objc var http: HSHTTPModule { get { getOrCreate(name: "http", type: HSHTTPModule.self)}}
     @objc var httpserver: HSHTTPServerModule { get { getOrCreate(name: "httpserver", type: HSHTTPServerModule.self)}}
+    @objc var locale: HSLocaleModule { get { getOrCreate(name: "locale", type: HSLocaleModule.self)}}
     @objc var location: HSLocationModule { get { getOrCreate(name: "location", type: HSLocationModule.self)}}
     @objc var menubar: HSMenuBarModule { get { getOrCreate(name: "menubar", type: HSMenuBarModule.self)}}
     @objc var notify: HSNotifyModule { get { getOrCreate(name: "notify", type: HSNotifyModule.self)}}
