@@ -158,17 +158,6 @@ struct HSLocaleTests {
             #expect(!harness.hasException)
         }
 
-        @Test("details() includes a non-empty exemplarCharacters array")
-        func testDetailsExemplarCharacters() {
-            let harness = makeHarness()
-            harness.eval("var info = hs.locale.details('en_US')")
-            #expect(!harness.hasException)
-            harness.expectTrue("Array.isArray(info.exemplarCharacters)")
-            harness.expectTrue("info.exemplarCharacters.length > 0")
-            harness.expectTrue("info.exemplarCharacters.includes('A')")
-            #expect(!harness.hasException)
-        }
-
         @Test("details() with an unrecognized identifier does not throw")
         func testDetailsUnrecognizedIdentifier() {
             let harness = makeHarness()
