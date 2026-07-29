@@ -535,7 +535,7 @@ declare namespace hs.appinfo {
     const environment: Record<string, string>;
 
     /**
-     * The version of macOS Hammerspoon 2 is currently running on (e.g., "15.1.0")
+     * The version of macOS Hammerspoon 2 is currently running on (e.g., "Version 26.5.2 (Build 25F84)")
      */
     const osVersion: string;
 

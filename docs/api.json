@@ -486,8 +486,8 @@
         {
           "name": "osVersion",
           "signature": "var osVersion: String { get }",
-          "rawDocumentation": "The version of macOS Hammerspoon 2 is currently running on (e.g., \"15.1.0\")\n- Example:\n```js\nconsole.log(hs.appinfo.osVersion)\n```",
-          "description": "The version of macOS Hammerspoon 2 is currently running on (e.g., \"15.1.0\")",
+          "rawDocumentation": "The version of macOS Hammerspoon 2 is currently running on (e.g., \"Version 26.5.2 (Build 25F84)\")\n- Example:\n```js\nconsole.log(hs.appinfo.osVersion)\n```",
+          "description": "The version of macOS Hammerspoon 2 is currently running on (e.g., \"Version 26.5.2 (Build 25F84)\")",
           "tsType": null,
           "notes": [],
           "examples": [
@@ -22465,5 +22465,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-29T09:36:56.830Z"
+  "generatedAt": "2026-07-29T11:22:09.014Z"
 }
