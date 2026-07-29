@@ -514,6 +514,47 @@ declare namespace hs.appinfo {
      */
     const configDir: string;
 
+    /**
+     * The user-assigned name of this Mac, as shown in System Settings > Sharing
+     */
+    const machineName: string;
+
+    /**
+     * Hammerspoon 2's Process Identifier (PID)
+     */
+    const pid: number;
+
+    /**
+     * The command-line arguments Hammerspoon 2 was launched with
+     */
+    const arguments: string[];
+
+    /**
+     * The environment variables Hammerspoon 2 was launched with
+     */
+    const environment: Record<string, string>;
+
+    /**
+     * The version of macOS Hammerspoon 2 is currently running on (e.g., "Version 26.5.2 (Build 25F84)")
+     */
+    const osVersion: string;
+
+    /**
+     * The version of macOS Hammerspoon 2 is currently running on, broken into its numeric components
+Keys: `major`, `minor`, `patch`.
+     */
+    const osVersionParts: Record<string, number>;
+
+    /**
+     * The number of logical CPU cores available on this Mac
+     */
+    const cpuCount: number;
+
+    /**
+     * The amount of physical RAM installed on this Mac, in gigabytes
+     */
+    const ramAmount: number;
+
 }
 
 /**
@@ -3562,6 +3603,79 @@ whenever the keyboard input source changes.
 }
 
 /**
+ * Retrieve information about the user's Language & Region settings, and respond to changes.
+Locales encapsulate linguistic, cultural, and technological conventions — things like the
+symbol used for a decimal separator, or the way dates and calendars are formatted.
+## Reading locale information
+```js
+console.log("Current locale: " + hs.locale.current())
+const info = hs.locale.details()
+console.log("Uses metric: " + info.usesMetricSystem)
+```
+## Watching for changes
+```js
+hs.locale.addWatcher(() => {
+    console.log("Locale settings changed: " + JSON.stringify(hs.locale.details()))
+})
+```
+ */
+declare namespace hs.locale {
+    /**
+     * Returns the identifiers for all locales available on the system.
+     * @returns An array of locale identifier strings (e.g. `["en_US", "de_CH", "ja_JP"]`).
+     */
+    function availableLocales(): string[];
+
+    /**
+     * Returns the user's currently selected locale identifier.
+     * @returns The identifier of the user's currently selected locale (e.g. `"en_US"`).
+     */
+    function current(): string;
+
+    /**
+     * Returns the user's preferred languages, in priority order.
+     * @returns An array of language identifier strings, most preferred first.
+     */
+    function preferredLanguages(): string[];
+
+    /**
+     * Returns detailed information about the current or a specified locale.
+user's currently selected locale is used.
+     * @param identifier A locale identifier from `availableLocales()`. If omitted, the
+     * @returns A dictionary describing the locale, including (where available):
+     */
+    function details(identifier?: string | null): Record<string, any>;
+
+    /**
+     * Returns the localized display name for a locale identifier.
+of the strings returned by `availableLocales()`.
+currently selected locale is used. Must be one of the strings returned by
+`availableLocales()`.
+     * @param localeCode The locale identifier to look up (e.g. `"de_CH"`). Must be one
+     * @param baseLocaleCode The locale to display the name in. If omitted, the user's
+     * @returns A dictionary with `name` (e.g. `"German"`) and `nameWithDialect`
+     */
+    function localizedName(localeCode: string, baseLocaleCode?: string | null): Record<string, string> | null;
+
+    /**
+     * Registers a listener that fires whenever any of the user's locale settings change.
+The listener is called with no arguments. Read `current()` or `details()` inside the
+callback to inspect the new state.
+The OS subscription starts lazily on the first listener and is released automatically
+when the last listener is removed via `removeWatcher`.
+     * @param listener A function called when locale settings change.
+     */
+    function addWatcher(listener: () => void): void;
+
+    /**
+     * Removes a previously registered locale change listener.
+     * @param listener The function originally passed to `addWatcher`.
+     */
+    function removeWatcher(listener: (...args: any[]) => any): void;
+
+}
+
+/**
  * Determine the Mac's location via macOS Location Services.
 Location data is obtained through WiFi network scanning and, where available, GPS
 hardware. User permission is required — call `hs.permissions.requestLocation()`
@@ -3943,6 +4057,12 @@ Each object contains `interface` (the BSD name of the interface), `address` (the
      * @returns An array of address objects.
      */
     function addresses(): Record<string, any>[];
+
+    /**
+     * Returns all hostnames known for this Mac.
+     * @returns An array of hostname strings (e.g. `["My-Mac.local"]`).
+     */
+    function hostnames(): string[];
 
     /**
      * Asynchronously resolves a hostname to its IP addresses using the system DNS resolver.

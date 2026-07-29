@@ -481,6 +481,8 @@ extension JSTestHarness {
                 loadModule(HSPowerModule.self, as: name)
             case "location":
                 loadModule(HSLocationModule.self, as: name)
+            case "locale":
+                loadModule(HSLocaleModule.self, as: name)
             case "audiodevice":
                 loadModule(HSAudioDeviceModule.self, as: name)
             case "translation":
