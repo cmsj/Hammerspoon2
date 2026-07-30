@@ -12,10 +12,13 @@ import Darwin
 // IOSSIOSPEED is defined in <IOKit/serial/ioss.h> as the function-like macro
 // _IOW('T', 2, speed_t), which the Clang importer does not expose to Swift.
 // Computed manually here from the same _IOW formula so we don't depend on import support.
+// speed_t is `unsigned long` on Darwin — 8 bytes on 64-bit macOS, not 4 — so the encoded
+// argument length must match MemoryLayout<speed_t>.size or the ioctl request number won't
+// match what the driver expects and the call fails (silently, since its result isn't checked).
 private let ioctlIOSSIOSPEED: UInt = {
     let group = UInt(UInt8(ascii: "T"))
     let number: UInt = 2
-    let length = UInt(MemoryLayout<UInt32>.size)
+    let length = UInt(MemoryLayout<speed_t>.size)
     let ioc_in: UInt = 0x80000000
     return ioc_in | ((length & 0x1fff) << 16) | (group << 8) | number
 }()
@@ -495,7 +498,7 @@ private let ioctlIOSSIOSPEED: UInt = {
 
         tcsetattr(fd, TCSANOW, &options)
 
-        var speed = UInt32(_baudRate)
+        var speed = speed_t(_baudRate)
         _ = withUnsafeMutablePointer(to: &speed) { ptr in
             ioctl(fd, ioctlIOSSIOSPEED, ptr)
         }
