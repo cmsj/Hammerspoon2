@@ -5491,6 +5491,183 @@ reading is currently unavailable.
 }
 
 /**
+ * Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).
+IMPORTANT NOTE: This module is not currently very well tested with real hardware. Please provide feedback
+(positive or negative!) via GitHub Issues.
+Enumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a
+port object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open
+until you call `open()` on it.
+ */
+declare namespace hs.serial {
+    /**
+     * Returns the names of all currently connected serial ports.
+     * @returns An array of port name strings (e.g. `"usbserial-1420"`)
+     */
+    function availablePortNames(): string[];
+
+    /**
+     * Returns the device paths of all currently connected serial ports.
+     * @returns An array of path strings (e.g. `"/dev/cu.usbserial-1420"`)
+     */
+    function availablePortPaths(): string[];
+
+    /**
+     * Returns IOKit registry details for all currently connected serial ports.
+     * @returns An object keyed by port name, whose values are objects containing that port's IOKit registry properties.
+     */
+    function availablePortDetails(): Record<string, Record<string, any>>;
+
+    /**
+     * Creates a serial port object for a port discovered via `availablePortNames()`.
+     * @param name The port name, as returned by `availablePortNames()`
+     * @returns A new `HSSerialPort`, or `null` if no port with that name is currently connected
+     */
+    function createPortNamed(name: string): HSSerialPort | null;
+
+    /**
+     * Creates a serial port object for an arbitrary device path.
+Unlike `createPortNamed()`, the path does not need to correspond to a port
+currently discoverable via IOKit — it is only validated when you call `open()`.
+     * @param path The device path (e.g. `"/dev/cu.usbserial-1420"`)
+     * @returns A new `HSSerialPort`
+     */
+    function createPortAtPath(path: string): HSSerialPort;
+
+    /**
+     * Register a listener for serial port connection and disconnection events.
+The listener is called with two arguments: the event type string (`"added"` or `"removed"`)
+and a port-info object with `name` and `path` fields.
+     * @param listener The function to call when a serial port is added or removed
+     */
+    function addWatcher(listener: (event: string, port: {name: string, path: string}) => void): void;
+
+    /**
+     * Remove a previously registered serial port event listener.
+     * @param listener The function originally passed to `addWatcher`
+     */
+    function removeWatcher(listener: (...args: any[]) => any): void;
+
+}
+
+/**
+ * A serial port, created via `hs.serial.createPortNamed()` or `hs.serial.createPortAtPath()`.
+The port is not open until you call `open()`. Configure it (baud rate, data bits, etc.)
+either before or after opening — configuration changes made while open are applied immediately.
+Received data, and lifecycle events, are delivered via the callback registered with `setCallback()`.
+ */
+declare class HSSerialPort {
+    /**
+     * Opens the port using its current configuration.
+     * @returns self, for chaining
+     */
+    open(): HSSerialPort;
+
+    /**
+     * Closes the port.
+     * @returns self, for chaining
+     */
+    close(): HSSerialPort;
+
+    /**
+     * Sends data through the port.
+The string is transmitted as raw bytes: each character's code point (0–255) becomes
+one byte on the wire. This lets you round-trip arbitrary binary data — build the string
+with `String.fromCharCode()` for non-text payloads.
+     * @param value The data to send
+     * @returns self, for chaining
+     */
+    sendData(value: string): HSSerialPort;
+
+    /**
+     * Sets the callback invoked for port lifecycle events and received data.
+The callback receives two arguments: an event type string and a data string.
+     * @param fn Called on port events
+     * @returns self, for chaining
+     */
+    setCallback(fn: (event: string, data: string) => void): HSSerialPort;
+
+    /**
+     * Closes the port and releases all resources. Called automatically during shutdown.
+     */
+    destroy(): void;
+
+    /**
+     * The unique identifier assigned to this port object.
+     */
+    readonly identifier: string;
+
+    /**
+     * The port's name (e.g. `"usbserial-1420"`).
+     */
+    readonly name: string;
+
+    /**
+     * The port's device path (e.g. `"/dev/cu.usbserial-1420"`).
+     */
+    readonly path: string;
+
+    /**
+     * Whether the port is currently open.
+     */
+    readonly isOpen: boolean;
+
+    /**
+     * The baud rate, in bits per second. Default is `115200`.
+Setting a non-standard value (i.e. not one of 300, 1200, 2400, 4800, 9600, 14400,
+19200, 28800, 38400, 57600, 115200, 230400) is rejected unless `allowNonStandardBaudRates`
+is `true`.
+     */
+    baudRate: number;
+
+    /**
+     * Whether `baudRate` may be set to a value outside the standard set. Default is `false`.
+     */
+    allowNonStandardBaudRates: boolean;
+
+    /**
+     * The number of data bits, 5–8. Default is `8`.
+     */
+    dataBits: number;
+
+    /**
+     * The number of stop bits, 1 or 2. Default is `1`.
+     */
+    stopBits: number;
+
+    /**
+     * The parity mode: `"none"`, `"odd"`, or `"even"`. Default is `"none"`.
+     */
+    parity: string;
+
+    /**
+     * The state of the DTR (Data Terminal Ready) control line. Default is `false`.
+     */
+    dtr: boolean;
+
+    /**
+     * The state of the RTS (Request To Send) control line. Default is `false`.
+     */
+    rts: boolean;
+
+    /**
+     * Whether to use hardware RTS/CTS flow control. Default is `false`.
+     */
+    usesRTSCTSFlowControl: boolean;
+
+    /**
+     * Whether to use hardware DTR/DSR flow control. Default is `false`.
+     */
+    usesDTRDSRFlowControl: boolean;
+
+    /**
+     * Whether data sent with `sendData()` is also delivered back to the callback
+as a `"received"` event, simulating local echo. Default is `false`.
+     */
+    shouldEchoReceivedData: boolean;
+
+}
+
+/**
  * Run and interact with macOS Shortcuts from JavaScript.
 This module bridges to the Shortcuts app, letting you enumerate available
 shortcuts and run them from your Hammerspoon configuration.

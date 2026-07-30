@@ -9841,7 +9841,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.locale/HSLocaleModule.swift",
-          "lineNumber": 135
+          "lineNumber": 119
         },
         {
           "name": "current",
@@ -9863,7 +9863,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.locale/HSLocaleModule.swift",
-          "lineNumber": 144
+          "lineNumber": 128
         },
         {
           "name": "preferredLanguages",
@@ -9885,13 +9885,13 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.locale/HSLocaleModule.swift",
-          "lineNumber": 153
+          "lineNumber": 137
         },
         {
           "name": "details",
           "signature": "func details(_ identifier: String?) -> [String: Any]",
           "isStatic": false,
-          "rawDocumentation": "Returns detailed information about the current or a specified locale.\n\n- Parameter identifier?: A locale identifier from `availableLocales()`. If omitted, the\n  user's currently selected locale is used.\n- Returns: A dictionary describing the locale, including (where available):\n  `identifier`, `languageCode`, `countryCode`, `scriptCode`, `variantCode`,\n  `currencyCode`, `currencySymbol`, `decimalSeparator`, `groupingSeparator`,\n  `collationIdentifier`, `measurementSystem` (`\"metric\"`, `\"us\"`, or `\"uk\"`),\n  `usesMetricSystem`, `temperatureUnit`, `timeFormatIs24Hour`,\n  `quotationBeginDelimiter`, `quotationEndDelimiter`,\n  `alternateQuotationBeginDelimiter`, `alternateQuotationEndDelimiter`,\n  `exemplarCharacters` (an array of the characters typically used to write the\n  locale's language), and `calendar` — a nested object describing the locale's\n  calendar (`identifier`, `firstWeekday`, `minimumDaysInFirstWeek`, `amSymbol`,\n  `pmSymbol`, and arrays of era/month/quarter/weekday symbols in their standard,\n  short, standalone, and very-short forms).\n- Example:\n```js\nconst info = hs.locale.details(\"de_CH\")\nconsole.log(info.currencySymbol + \" \" + info.decimalSeparator)\nconsole.log(info.calendar.monthSymbols.join(\", \"))\n```",
+          "rawDocumentation": "Returns detailed information about the current or a specified locale.\n\n- Parameter identifier?: A locale identifier from `availableLocales()`. If omitted, the\n  user's currently selected locale is used.\n- Returns: A dictionary describing the locale, including (where available):\n  `identifier`, `languageCode`, `countryCode`, `scriptCode`, `variantCode`,\n  `currencyCode`, `currencySymbol`, `decimalSeparator`, `groupingSeparator`,\n  `collationIdentifier`, `measurementSystem` (`\"metric\"`, `\"us\"`, or `\"uk\"`),\n  `usesMetricSystem`, `temperatureUnit`, `timeFormatIs24Hour`,\n  `quotationBeginDelimiter`, `quotationEndDelimiter`,\n  `alternateQuotationBeginDelimiter`, `alternateQuotationEndDelimiter`,\n   and `calendar` — a nested object describing the locale's\n  calendar (`identifier`, `firstWeekday`, `minimumDaysInFirstWeek`, `amSymbol`,\n  `pmSymbol`, and arrays of era/month/quarter/weekday symbols in their standard,\n  short, standalone, and very-short forms).\n- Example:\n```js\nconst info = hs.locale.details(\"de_CH\")\nconsole.log(info.currencySymbol + \" \" + info.decimalSeparator)\nconsole.log(info.calendar.monthSymbols.join(\", \"))\n```",
           "description": "Returns detailed information about the current or a specified locale.\nuser's currently selected locale is used.",
           "params": [
             {
@@ -9915,7 +9915,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.locale/HSLocaleModule.swift",
-          "lineNumber": 177
+          "lineNumber": 160
         },
         {
           "name": "localizedName",
@@ -9952,7 +9952,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.locale/HSLocaleModule.swift",
-          "lineNumber": 193
+          "lineNumber": 176
         },
         {
           "name": "addWatcher",
@@ -9979,7 +9979,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.locale/HSLocaleModule.swift",
-          "lineNumber": 211
+          "lineNumber": 194
         },
         {
           "name": "removeWatcher",
@@ -10006,7 +10006,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.locale/HSLocaleModule.swift",
-          "lineNumber": 222
+          "lineNumber": 205
         }
       ],
       "properties": [],
@@ -14730,6 +14730,567 @@
       ],
       "description": "Inspect and control the displays attached to the system.\n## Obtaining screens\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n## Navigation\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n## Display modes\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.mode);\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n## Screenshots\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```",
       "rawDocumentation": "Inspect and control the displays attached to the system.\n\n## Obtaining screens\n\n```javascript\nconst all    = hs.screen.all();   // [HSScreen, ...]\nconst main   = hs.screen.main();   // screen containing the focused window\nconst primary = hs.screen.primary(); // screen with the global menu bar\n```\n\n## Navigation\n\n```javascript\nconst right = hs.screen.main().toEast();\nif (right) console.log(\"Screen to the right:\", right.name);\n```\n\n## Display modes\n\n```javascript\nconst s = hs.screen.primary();\nconsole.log(s.mode);\n// → { width: 1440, height: 900, scale: 2, frequency: 60 }\n\ns.setMode(1920, 1080, 1, 60);\n```\n\n## Screenshots\n\n```javascript\nconst img = await hs.screen.main().snapshot();\nimg.saveToFile(\"/tmp/screen.png\");\n```"
+    },
+    {
+      "name": "hs.serial",
+      "methods": [
+        {
+          "name": "availablePortNames",
+          "signature": "func availablePortNames() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the names of all currently connected serial ports.\n- Returns: An array of port name strings (e.g. `\"usbserial-1420\"`)\n- Example:\n```js\nconsole.log(hs.serial.availablePortNames())\n```",
+          "description": "Returns the names of all currently connected serial ports.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of port name strings (e.g. `\"usbserial-1420\"`)"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.serial.availablePortNames())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
+          "lineNumber": 127
+        },
+        {
+          "name": "availablePortPaths",
+          "signature": "func availablePortPaths() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the device paths of all currently connected serial ports.\n- Returns: An array of path strings (e.g. `\"/dev/cu.usbserial-1420\"`)\n- Example:\n```js\nconsole.log(hs.serial.availablePortPaths())\n```",
+          "description": "Returns the device paths of all currently connected serial ports.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of path strings (e.g. `\"/dev/cu.usbserial-1420\"`)"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.serial.availablePortPaths())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
+          "lineNumber": 135
+        },
+        {
+          "name": "availablePortDetails",
+          "signature": "func availablePortDetails() -> [String: [String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns IOKit registry details for all currently connected serial ports.\n- Returns: An object keyed by port name, whose values are objects containing that port's IOKit registry properties.\n- Example:\n```js\nconst details = hs.serial.availablePortDetails()\nObject.keys(details).forEach(name => console.log(name, details[name]))\n```",
+          "description": "Returns IOKit registry details for all currently connected serial ports.",
+          "params": [],
+          "returns": {
+            "type": "[String: [String: Any]]",
+            "description": "An object keyed by port name, whose values are objects containing that port's IOKit registry properties."
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const details = hs.serial.availablePortDetails()\nObject.keys(details).forEach(name => console.log(name, details[name]))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
+          "lineNumber": 144
+        },
+        {
+          "name": "createPortNamed",
+          "signature": "func createPortNamed(_ name: String) -> HSSerialPort?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a serial port object for a port discovered via `availablePortNames()`.\n- Parameter name: The port name, as returned by `availablePortNames()`\n- Returns: A new `HSSerialPort`, or `null` if no port with that name is currently connected\n- Example:\n```js\nconst port = hs.serial.createPortNamed(\"usbserial-1420\")\n```",
+          "description": "Creates a serial port object for a port discovered via `availablePortNames()`.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The port name, as returned by `availablePortNames()`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSSerialPort",
+            "description": "A new `HSSerialPort`, or `null` if no port with that name is currently connected"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const port = hs.serial.createPortNamed(\"usbserial-1420\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
+          "lineNumber": 153
+        },
+        {
+          "name": "createPortAtPath",
+          "signature": "func createPortAtPath(_ path: String) -> HSSerialPort",
+          "isStatic": false,
+          "rawDocumentation": "Creates a serial port object for an arbitrary device path.\n\nUnlike `createPortNamed()`, the path does not need to correspond to a port\ncurrently discoverable via IOKit — it is only validated when you call `open()`.\n- Parameter path: The device path (e.g. `\"/dev/cu.usbserial-1420\"`)\n- Returns: A new `HSSerialPort`\n- Example:\n```js\nconst port = hs.serial.createPortAtPath(\"/dev/cu.usbserial-1420\")\n```",
+          "description": "Creates a serial port object for an arbitrary device path.\nUnlike `createPortNamed()`, the path does not need to correspond to a port\ncurrently discoverable via IOKit — it is only validated when you call `open()`.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": "The device path (e.g. `\"/dev/cu.usbserial-1420\"`)",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSSerialPort",
+            "description": "A new `HSSerialPort`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const port = hs.serial.createPortAtPath(\"/dev/cu.usbserial-1420\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
+          "lineNumber": 165
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Register a listener for serial port connection and disconnection events.\n\nThe listener is called with two arguments: the event type string (`\"added\"` or `\"removed\"`)\nand a port-info object with `name` and `path` fields.\n- Parameter listener: {(event: string, port: {name: string, path: string}) => void} The function to call when a serial port is added or removed\n- Example:\n```js\nhs.serial.addWatcher((event, port) => console.log(event + \": \" + port.name))\n```",
+          "description": "Register a listener for serial port connection and disconnection events.\nThe listener is called with two arguments: the event type string (`\"added\"` or `\"removed\"`)\nand a port-info object with `name` and `path` fields.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "The function to call when a serial port is added or removed",
+              "optional": false,
+              "tsType": "(event: string, port: {name: string, path: string}) => void"
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.serial.addWatcher((event, port) => console.log(event + \": \" + port.name))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
+          "lineNumber": 176
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Remove a previously registered serial port event listener.\n- Parameter listener: The function originally passed to `addWatcher`\n- Example:\n```js\nhs.serial.removeWatcher(myHandler)\n```",
+          "description": "Remove a previously registered serial port event listener.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "The function originally passed to `addWatcher`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.serial.removeWatcher(myHandler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
+          "lineNumber": 184
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSSerialPortAPI",
+          "type": "typedef",
+          "rawDocumentation": "A serial port, created via `hs.serial.createPortNamed()` or `hs.serial.createPortAtPath()`.\n\nThe port is not open until you call `open()`. Configure it (baud rate, data bits, etc.)\neither before or after opening — configuration changes made while open are applied immediately.\n\nReceived data, and lifecycle events, are delivered via the callback registered with `setCallback()`.\n- Example:\n```js\nconst port = hs.serial.createPortNamed(hs.serial.availablePortNames()[0])\nport.baudRate = 9600\nport.setCallback((event, data) => {\n    if (event === \"received\") console.log(\"Received: \" + data)\n    if (event === \"error\") console.log(\"Error: \" + data)\n}).open()\nport.sendData(\"AT\\r\\n\")\n```",
+          "description": "A serial port, created via `hs.serial.createPortNamed()` or `hs.serial.createPortAtPath()`.\nThe port is not open until you call `open()`. Configure it (baud rate, data bits, etc.)\neither before or after opening — configuration changes made while open are applied immediately.\nReceived data, and lifecycle events, are delivered via the callback registered with `setCallback()`.",
+          "methods": [
+            {
+              "name": "open",
+              "signature": "func open() -> HSSerialPort",
+              "isStatic": false,
+              "rawDocumentation": "Opens the port using its current configuration.\n- Returns: self, for chaining\n- Example:\n```js\nport.setCallback((event, data) => console.log(event, data)).open()\n```",
+              "description": "Opens the port using its current configuration.",
+              "params": [],
+              "returns": {
+                "type": "HSSerialPort",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.setCallback((event, data) => console.log(event, data)).open()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 157
+            },
+            {
+              "name": "close",
+              "signature": "func close() -> HSSerialPort",
+              "isStatic": false,
+              "rawDocumentation": "Closes the port.\n- Returns: self, for chaining\n- Example:\n```js\nport.close()\n```",
+              "description": "Closes the port.",
+              "params": [],
+              "returns": {
+                "type": "HSSerialPort",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.close()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 165
+            },
+            {
+              "name": "sendData",
+              "signature": "func sendData(_ value: String) -> HSSerialPort",
+              "isStatic": false,
+              "rawDocumentation": "Sends data through the port.\n\nThe string is transmitted as raw bytes: each character's code point (0–255) becomes\none byte on the wire. This lets you round-trip arbitrary binary data — build the string\nwith `String.fromCharCode()` for non-text payloads.\n- Parameter value: The data to send\n- Returns: self, for chaining\n- Example:\n```js\nport.sendData(\"AT\\r\\n\")\n```",
+              "description": "Sends data through the port.\nThe string is transmitted as raw bytes: each character's code point (0–255) becomes\none byte on the wire. This lets you round-trip arbitrary binary data — build the string\nwith `String.fromCharCode()` for non-text payloads.",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "string",
+                  "description": "The data to send",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSSerialPort",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.sendData(\"AT\\r\\n\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 178
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ fn: JSFunction) -> HSSerialPort",
+              "isStatic": false,
+              "rawDocumentation": "Sets the callback invoked for port lifecycle events and received data.\n\nThe callback receives two arguments: an event type string and a data string.\n- `\"opened\"` — the port was opened; data is empty\n- `\"closed\"` — the port was closed; data is empty\n- `\"received\"` — data arrived; data holds the received bytes (see `sendData()` for encoding)\n- `\"removed\"` — the underlying device disappeared; the port is closed automatically\n- `\"error\"` — an error occurred; data holds a description\n- Parameter fn: {(event: string, data: string) => void} Called on port events\n- Returns: self, for chaining\n- Example:\n```js\nport.setCallback((event, data) => console.log(event, data))\n```",
+              "description": "Sets the callback invoked for port lifecycle events and received data.\nThe callback receives two arguments: an event type string and a data string.",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSFunction",
+                  "description": "Called on port events",
+                  "optional": false,
+                  "tsType": "(event: string, data: string) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSSerialPort",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.setCallback((event, data) => console.log(event, data))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 194
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Closes the port and releases all resources. Called automatically during shutdown.\n- Example:\n```js\nport.destroy()\n```",
+              "description": "Closes the port and releases all resources. Called automatically during shutdown.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 201
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "The unique identifier assigned to this port object.\n- Example:\n```js\nconst port = hs.serial.createPortAtPath(\"/dev/cu.usbserial-1420\")\nconsole.log(port.identifier)\n```",
+              "description": "The unique identifier assigned to this port object.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const port = hs.serial.createPortAtPath(\"/dev/cu.usbserial-1420\")\nconsole.log(port.identifier)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 52
+            },
+            {
+              "name": "name",
+              "signature": "var name: String { get }",
+              "rawDocumentation": "The port's name (e.g. `\"usbserial-1420\"`).\n- Example:\n```js\nconsole.log(port.name)\n```",
+              "description": "The port's name (e.g. `\"usbserial-1420\"`).",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(port.name)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 59
+            },
+            {
+              "name": "path",
+              "signature": "var path: String { get }",
+              "rawDocumentation": "The port's device path (e.g. `\"/dev/cu.usbserial-1420\"`).\n- Example:\n```js\nconsole.log(port.path)\n```",
+              "description": "The port's device path (e.g. `\"/dev/cu.usbserial-1420\"`).",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(port.path)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 66
+            },
+            {
+              "name": "isOpen",
+              "signature": "var isOpen: Bool { get }",
+              "rawDocumentation": "Whether the port is currently open.\n- Example:\n```js\nconsole.log(port.isOpen)\n```",
+              "description": "Whether the port is currently open.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(port.isOpen)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 73
+            },
+            {
+              "name": "baudRate",
+              "signature": "var baudRate: Int { get set }",
+              "rawDocumentation": "The baud rate, in bits per second. Default is `115200`.\n\nSetting a non-standard value (i.e. not one of 300, 1200, 2400, 4800, 9600, 14400,\n19200, 28800, 38400, 57600, 115200, 230400) is rejected unless `allowNonStandardBaudRates`\nis `true`.\n- Example:\n```js\nport.baudRate = 9600\n```",
+              "description": "The baud rate, in bits per second. Default is `115200`.\nSetting a non-standard value (i.e. not one of 300, 1200, 2400, 4800, 9600, 14400,\n19200, 28800, 38400, 57600, 115200, 230400) is rejected unless `allowNonStandardBaudRates`\nis `true`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.baudRate = 9600"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 84
+            },
+            {
+              "name": "allowNonStandardBaudRates",
+              "signature": "var allowNonStandardBaudRates: Bool { get set }",
+              "rawDocumentation": "Whether `baudRate` may be set to a value outside the standard set. Default is `false`.\n- Example:\n```js\nport.allowNonStandardBaudRates = true\nport.baudRate = 123456\n```",
+              "description": "Whether `baudRate` may be set to a value outside the standard set. Default is `false`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.allowNonStandardBaudRates = true\nport.baudRate = 123456"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 92
+            },
+            {
+              "name": "dataBits",
+              "signature": "var dataBits: Int { get set }",
+              "rawDocumentation": "The number of data bits, 5–8. Default is `8`.\n- Example:\n```js\nport.dataBits = 7\n```",
+              "description": "The number of data bits, 5–8. Default is `8`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.dataBits = 7"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 99
+            },
+            {
+              "name": "stopBits",
+              "signature": "var stopBits: Int { get set }",
+              "rawDocumentation": "The number of stop bits, 1 or 2. Default is `1`.\n- Example:\n```js\nport.stopBits = 2\n```",
+              "description": "The number of stop bits, 1 or 2. Default is `1`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.stopBits = 2"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 106
+            },
+            {
+              "name": "parity",
+              "signature": "var parity: String { get set }",
+              "rawDocumentation": "The parity mode: `\"none\"`, `\"odd\"`, or `\"even\"`. Default is `\"none\"`.\n- Example:\n```js\nport.parity = \"even\"\n```",
+              "description": "The parity mode: `\"none\"`, `\"odd\"`, or `\"even\"`. Default is `\"none\"`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.parity = \"even\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 113
+            },
+            {
+              "name": "dtr",
+              "signature": "var dtr: Bool { get set }",
+              "rawDocumentation": "The state of the DTR (Data Terminal Ready) control line. Default is `false`.\n- Example:\n```js\nport.dtr = true\n```",
+              "description": "The state of the DTR (Data Terminal Ready) control line. Default is `false`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.dtr = true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 120
+            },
+            {
+              "name": "rts",
+              "signature": "var rts: Bool { get set }",
+              "rawDocumentation": "The state of the RTS (Request To Send) control line. Default is `false`.\n- Example:\n```js\nport.rts = true\n```",
+              "description": "The state of the RTS (Request To Send) control line. Default is `false`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.rts = true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 127
+            },
+            {
+              "name": "usesRTSCTSFlowControl",
+              "signature": "var usesRTSCTSFlowControl: Bool { get set }",
+              "rawDocumentation": "Whether to use hardware RTS/CTS flow control. Default is `false`.\n- Example:\n```js\nport.usesRTSCTSFlowControl = true\n```",
+              "description": "Whether to use hardware RTS/CTS flow control. Default is `false`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.usesRTSCTSFlowControl = true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 134
+            },
+            {
+              "name": "usesDTRDSRFlowControl",
+              "signature": "var usesDTRDSRFlowControl: Bool { get set }",
+              "rawDocumentation": "Whether to use hardware DTR/DSR flow control. Default is `false`.\n- Example:\n```js\nport.usesDTRDSRFlowControl = true\n```",
+              "description": "Whether to use hardware DTR/DSR flow control. Default is `false`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.usesDTRDSRFlowControl = true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 141
+            },
+            {
+              "name": "shouldEchoReceivedData",
+              "signature": "var shouldEchoReceivedData: Bool { get set }",
+              "rawDocumentation": "Whether data sent with `sendData()` is also delivered back to the callback\nas a `\"received\"` event, simulating local echo. Default is `false`.\n- Example:\n```js\nport.shouldEchoReceivedData = true\n```",
+              "description": "Whether data sent with `sendData()` is also delivered back to the callback\nas a `\"received\"` event, simulating local echo. Default is `false`.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "port.shouldEchoReceivedData = true"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
+              "lineNumber": 149
+            }
+          ]
+        }
+      ],
+      "description": "Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).\nIMPORTANT NOTE: This module is not currently very well tested with real hardware. Please provide feedback\n(positive or negative!) via GitHub Issues.\nEnumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a\nport object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open\nuntil you call `open()` on it.",
+      "rawDocumentation": "Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).\n\nIMPORTANT NOTE: This module is not currently very well tested with real hardware. Please provide feedback\n(positive or negative!) via GitHub Issues.\n\nEnumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a\nport object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open\nuntil you call `open()` on it.\n\n- Example:\n```js\nconst port = hs.serial.createPortNamed(hs.serial.availablePortNames()[0])\nport.baudRate = 9600\nport.setCallback((event, data) => {\n    if (event === \"received\") {\n        console.log(\"Received: \" + data)\n    }\n}).open()\nport.sendData(\"AT\\r\\n\")\n```"
     },
     {
       "name": "hs.shortcuts",
@@ -22465,5 +23026,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-29T11:22:09.014Z"
+  "generatedAt": "2026-07-30T15:19:55.175Z"
 }
