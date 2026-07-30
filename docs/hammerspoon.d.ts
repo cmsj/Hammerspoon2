@@ -5492,6 +5492,8 @@ reading is currently unavailable.
 
 /**
  * Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).
+IMPORTANT NOTE: This module is not currently very well tested with real hardware. Please provide feedback
+(positive or negative!) via GitHub Issues.
 Enumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a
 port object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open
 until you call `open()` on it.

@@ -14754,7 +14754,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
-          "lineNumber": 124
+          "lineNumber": 127
         },
         {
           "name": "availablePortPaths",
@@ -14776,7 +14776,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
-          "lineNumber": 132
+          "lineNumber": 135
         },
         {
           "name": "availablePortDetails",
@@ -14798,7 +14798,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
-          "lineNumber": 141
+          "lineNumber": 144
         },
         {
           "name": "createPortNamed",
@@ -14828,7 +14828,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
-          "lineNumber": 150
+          "lineNumber": 153
         },
         {
           "name": "createPortAtPath",
@@ -14858,7 +14858,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
-          "lineNumber": 162
+          "lineNumber": 165
         },
         {
           "name": "addWatcher",
@@ -14885,7 +14885,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
-          "lineNumber": 173
+          "lineNumber": 176
         },
         {
           "name": "removeWatcher",
@@ -14912,7 +14912,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift",
-          "lineNumber": 181
+          "lineNumber": 184
         }
       ],
       "properties": [],
@@ -14943,7 +14943,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 154
+              "lineNumber": 157
             },
             {
               "name": "close",
@@ -14965,7 +14965,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 162
+              "lineNumber": 165
             },
             {
               "name": "sendData",
@@ -14995,7 +14995,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 175
+              "lineNumber": 178
             },
             {
               "name": "setCallback",
@@ -15025,7 +15025,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 191
+              "lineNumber": 194
             },
             {
               "name": "destroy",
@@ -15044,7 +15044,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 198
+              "lineNumber": 201
             }
           ],
           "properties": [
@@ -15063,7 +15063,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 49
+              "lineNumber": 52
             },
             {
               "name": "name",
@@ -15080,7 +15080,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 56
+              "lineNumber": 59
             },
             {
               "name": "path",
@@ -15097,7 +15097,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 63
+              "lineNumber": 66
             },
             {
               "name": "isOpen",
@@ -15114,7 +15114,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 70
+              "lineNumber": 73
             },
             {
               "name": "baudRate",
@@ -15131,7 +15131,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 81
+              "lineNumber": 84
             },
             {
               "name": "allowNonStandardBaudRates",
@@ -15148,7 +15148,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 89
+              "lineNumber": 92
             },
             {
               "name": "dataBits",
@@ -15165,7 +15165,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 96
+              "lineNumber": 99
             },
             {
               "name": "stopBits",
@@ -15182,7 +15182,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 103
+              "lineNumber": 106
             },
             {
               "name": "parity",
@@ -15199,7 +15199,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 110
+              "lineNumber": 113
             },
             {
               "name": "dtr",
@@ -15216,7 +15216,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 117
+              "lineNumber": 120
             },
             {
               "name": "rts",
@@ -15233,7 +15233,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 124
+              "lineNumber": 127
             },
             {
               "name": "usesRTSCTSFlowControl",
@@ -15250,7 +15250,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 131
+              "lineNumber": 134
             },
             {
               "name": "usesDTRDSRFlowControl",
@@ -15267,7 +15267,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 138
+              "lineNumber": 141
             },
             {
               "name": "shouldEchoReceivedData",
@@ -15284,13 +15284,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.serial/HSSerialPort.swift",
-              "lineNumber": 146
+              "lineNumber": 149
             }
           ]
         }
       ],
-      "description": "Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).\nEnumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a\nport object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open\nuntil you call `open()` on it.",
-      "rawDocumentation": "Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).\n\nEnumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a\nport object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open\nuntil you call `open()` on it.\n\n- Example:\n```js\nconst port = hs.serial.createPortNamed(hs.serial.availablePortNames()[0])\nport.baudRate = 9600\nport.setCallback((event, data) => {\n    if (event === \"received\") {\n        console.log(\"Received: \" + data)\n    }\n}).open()\nport.sendData(\"AT\\r\\n\")\n```"
+      "description": "Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).\nIMPORTANT NOTE: This module is not currently very well tested with real hardware. Please provide feedback\n(positive or negative!) via GitHub Issues.\nEnumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a\nport object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open\nuntil you call `open()` on it.",
+      "rawDocumentation": "Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).\n\nIMPORTANT NOTE: This module is not currently very well tested with real hardware. Please provide feedback\n(positive or negative!) via GitHub Issues.\n\nEnumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a\nport object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open\nuntil you call `open()` on it.\n\n- Example:\n```js\nconst port = hs.serial.createPortNamed(hs.serial.availablePortNames()[0])\nport.baudRate = 9600\nport.setCallback((event, data) => {\n    if (event === \"received\") {\n        console.log(\"Received: \" + data)\n    }\n}).open()\nport.sendData(\"AT\\r\\n\")\n```"
     },
     {
       "name": "hs.shortcuts",
@@ -23026,5 +23026,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-30T10:19:46.677Z"
+  "generatedAt": "2026-07-30T15:19:55.175Z"
 }

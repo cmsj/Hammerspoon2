@@ -212,7 +212,9 @@ private let ioctlIOSSIOSPEED: UInt = {
     @objc let path: String
 
     static let standardBaudRates: Set<Int> = [300, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200, 230400]
-    private static let ioQueue = DispatchQueue(label: "hs.serial.io", qos: .utility)
+    // Per-instance (not static/shared): performClose() drains this queue synchronously,
+    // and a shared queue would make that drain wait on unrelated ports' in-flight reads/writes too.
+    private let ioQueue = DispatchQueue(label: "hs.serial.io", qos: .utility)
 
     // Written from the main actor only; read from ioQueue in the read source's event handler.
     // Safe without atomics: open() writes fd/generation before resuming the read source
@@ -381,10 +383,13 @@ private let ioctlIOSSIOSPEED: UInt = {
         let echo = shouldEchoReceivedData
         let bytes = [UInt8](data)
 
-        HSSerialPort.ioQueue.async {
+        ioQueue.async {
             var remaining = bytes[...]
             var attempts = 0
-            while !remaining.isEmpty && attempts < 2000 {
+            // Bounded to a few hundred ms: this loop runs on a per-port queue, but
+            // performClose() still drains it synchronously on the main actor, so the
+            // retry budget doubles as a cap on how long close()/destroy() can block.
+            while !remaining.isEmpty && attempts < 200 {
                 let written = remaining.withUnsafeBufferPointer { ptr -> Int in
                     Darwin.write(localFD, ptr.baseAddress, ptr.count)
                 }
@@ -442,7 +447,7 @@ private let ioctlIOSSIOSPEED: UInt = {
     fileprivate func performClose() {
         guard isOpen else { return }
         readSource?.cancel()
-        HSSerialPort.ioQueue.sync {}  // drain in-flight reads/writes before invalidating fd
+        ioQueue.sync {}  // drain in-flight reads/writes before invalidating fd
         generation &+= 1
         Darwin.close(fd)
         fd = -1
@@ -521,7 +526,7 @@ private let ioctlIOSSIOSPEED: UInt = {
     private func startReading() {
         let localFD = fd
         let capturedGeneration = unsafe generation
-        let source = DispatchSource.makeReadSource(fileDescriptor: localFD, queue: HSSerialPort.ioQueue)
+        let source = DispatchSource.makeReadSource(fileDescriptor: localFD, queue: ioQueue)
         source.setEventHandler(handler: hsSerialPortReadHandler(fd: localFD, generation: capturedGeneration, port: self))
         source.resume()
         readSource = source
@@ -537,7 +542,7 @@ private let ioctlIOSSIOSPEED: UInt = {
 // MARK: - Background read handler
 
 // This must be a file-scope function, not a closure written inline in an @MainActor
-// method: DispatchSourceRead invokes its handler synchronously on HSSerialPort.ioQueue,
+// method: DispatchSourceRead invokes its handler synchronously on the port's ioQueue,
 // but a closure literal lexically inside a @MainActor method inherits @MainActor
 // isolation under this project's default actor isolation setting. That mismatch trips
 // a runtime isolation check (dispatch_assert_queue) and crashes. A nonisolated file-scope

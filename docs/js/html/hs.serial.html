@@ -58,6 +58,8 @@
 </div>
 
 <div class="module-description"><p>Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).</p>
+<p>IMPORTANT NOTE: This module is not currently very well tested with real hardware. Please provide feedback
+(positive or negative!) via GitHub Issues.</p>
 <p>Enumerate available ports with <code>availablePortNames()</code>/<code>availablePortPaths()</code>, then create a
 port object with <code>createPortNamed()</code>/<code>createPortAtPath()</code>. The returned object is not open
 until you call <code>open()</code> on it.</p>
@@ -105,7 +107,7 @@ port.sendData(&quot;AT\r\n&quot;)
         <pre><code class="language-js">console.log(hs.serial.availablePortNames())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L124" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:124</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L127" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:127</a>
         </div>
     </div>
     <div class="method" id="availablePortPaths">
@@ -126,7 +128,7 @@ port.sendData(&quot;AT\r\n&quot;)
         <pre><code class="language-js">console.log(hs.serial.availablePortPaths())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L132" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:132</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L135" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:135</a>
         </div>
     </div>
     <div class="method" id="availablePortDetails">
@@ -148,7 +150,7 @@ port.sendData(&quot;AT\r\n&quot;)
 Object.keys(details).forEach(name =&gt; console.log(name, details[name]))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L141" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:141</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L144" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:144</a>
         </div>
     </div>
     <div class="method" id="createPortNamed">
@@ -186,7 +188,7 @@ Object.keys(details).forEach(name =&gt; console.log(name, details[name]))</code>
         <pre><code class="language-js">const port = hs.serial.createPortNamed(&quot;usbserial-1420&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L150" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:150</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L153" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:153</a>
         </div>
     </div>
     <div class="method" id="createPortAtPath">
@@ -226,7 +228,7 @@ currently discoverable via IOKit — it is only validated when you call `open()`
         <pre><code class="language-js">const port = hs.serial.createPortAtPath(&quot;/dev/cu.usbserial-1420&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L162" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:162</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L165" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:165</a>
         </div>
     </div>
     <div class="method" id="addWatcher">
@@ -265,7 +267,7 @@ and a port-info object with `name` and `path` fields.</div>
         <pre><code class="language-js">hs.serial.addWatcher((event, port) =&gt; console.log(event + &quot;: &quot; + port.name))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L173" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:173</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:176</a>
         </div>
     </div>
     <div class="method" id="removeWatcher">
@@ -302,7 +304,7 @@ and a port-info object with `name` and `path` fields.</div>
         <pre><code class="language-js">hs.serial.removeWatcher(myHandler)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L181" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:181</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.serial/HSSerialModule.swift#L184" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.serial/HSSerialModule.swift:184</a>
         </div>
     </div>
         </main>
