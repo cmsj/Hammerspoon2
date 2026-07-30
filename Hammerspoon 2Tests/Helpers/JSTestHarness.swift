@@ -513,6 +513,8 @@ extension JSTestHarness {
                 loadModule(HSHotkeyModule.self, as: name)
             case "usb":
                 loadModule(HSUSBModule.self, as: name)
+            case "serial":
+                loadModule(HSSerialModule.self, as: name)
             case "sound":
                 loadModule(HSSoundModule.self, as: name)
             case "network":
