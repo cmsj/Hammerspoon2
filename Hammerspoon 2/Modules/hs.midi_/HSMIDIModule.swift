@@ -37,6 +37,25 @@ func midiIsOffline(_ object: MIDIObjectRef) -> Bool {
     return value == 1
 }
 
+// MIDIClientCreateWithBlock's notifyBlock is documented as being called "on an arbitrary
+// thread" (thread-safety is the block's responsibility) — NOT necessarily the calling
+// thread's run loop. This must be built by a file-scope `nonisolated` function (mirroring
+// HSMIDIDevice's `hsMIDIMakeReceiveHandler`/HSSerialPort's `hsSerialPortReadHandler`): a
+// closure literal written directly inside an `@MainActor` method would wrongly infer
+// @MainActor isolation under this project's default-actor-isolation setting, making
+// `MainActor.assumeIsolated` trap when CoreMIDI actually calls it off-main. Only `messageID`
+// (a plain value) is extracted synchronously before hopping via `Task { @MainActor in }` —
+// the `MIDINotification` pointer itself is only valid for the duration of this call.
+nonisolated private func hsMIDIMakeSetupNotifyHandler(module: HSMIDIModule) -> (UnsafePointer<MIDINotification>) -> Void {
+    return { [weak module] notification in
+        let messageID = unsafe notification.pointee.messageID
+        Task { @MainActor [weak module] in
+            guard let module else { return }
+            module.handleSetupNotification(messageID: messageID)
+        }
+    }
+}
+
 /// A MIDI endpoint is "virtual" when it has no owning entity — i.e. it was published
 /// directly by another app/driver (IAC bus, software instrument, etc.) rather than
 /// belonging to a physical device's entity/endpoint hierarchy.
@@ -301,11 +320,7 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
 
     private func ensureClient() {
         guard client == 0 else { return }
-        let status = unsafe MIDIClientCreateWithBlock("Hammerspoon 2" as CFString, &client) { [weak self] notification in
-            MainActor.assumeIsolated {
-                unsafe self?.handleSetupNotification(notification)
-            }
-        }
+        let status = unsafe MIDIClientCreateWithBlock("Hammerspoon 2" as CFString, &client, hsMIDIMakeSetupNotifyHandler(module: self))
         guard status == noErr else {
             AKError("hs.midi: Failed to create MIDIClient (error \(status))")
             client = MIDIClientRef()
@@ -313,9 +328,8 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
         }
     }
 
-    private func handleSetupNotification(_ notification: UnsafePointer<MIDINotification>) {
+    fileprivate func handleSetupNotification(messageID: MIDINotificationMessageID) {
         guard let callback = deviceCallbackHandler else { return }
-        let messageID = unsafe notification.pointee.messageID
         guard messageID == .msgSetupChanged || messageID == .msgObjectAdded || messageID == .msgObjectRemoved else { return }
         _ = callback.value?.call(withArguments: [devices(), virtualSources()])
     }

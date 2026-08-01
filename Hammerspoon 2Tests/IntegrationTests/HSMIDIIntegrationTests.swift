@@ -499,6 +499,34 @@ struct HSMIDITests {
             harness.expectTrue("names.includes('\(source.name)')")
         }
 
+        // Regression test: MIDIClientCreateWithBlock's notify block is documented as running
+        // on "an arbitrary thread" — exercising it for real (rather than just checking that
+        // registering a callback doesn't throw) is what catches a MainActor.assumeIsolated
+        // trap that a synchronous, same-thread-assuming test would miss entirely. Verified
+        // the notification mechanism itself is fast and reliable in an unloaded process via a
+        // standalone script; under the full ~1700-test suite it joins the same known class of
+        // flakiness as HSFSPathWatcherTests/HSOCRTests (OS async-callback delivery becoming
+        // unreliable under heavy full-suite resource contention, not a delivery failure this
+        // module causes) — see the "Flakiness note" in this module's project memory.
+        @Test("deviceCallback fires when a virtual source appears, without crashing")
+        func testDeviceCallbackFiresOnSetupChange() async throws {
+            let harness = JSTestHarness()
+            harness.loadModule(HSMIDIModule.self, as: "midi")
+
+            var fired = false
+            harness.registerCallback("onSetupChange") { fired = true }
+            harness.eval("hs.midi.deviceCallback(() => onSetupChange())")
+            #expect(!harness.hasException)
+
+            let source = try TestMIDIVirtualSource(name: "HSMIDITestSetupChange-\(UUID().uuidString)")
+
+            let didFire = await harness.waitForAsync(timeout: 5.0) { fired }
+            #expect(didFire, "deviceCallback should fire when a virtual source appears")
+
+            harness.eval("hs.midi.deviceCallback(null)")
+            withExtendedLifetime(source) {}
+        }
+
         @Test("receiving a noteOn message fires the callback with decoded fields")
         func testReceiveNoteOn() async throws {
             let source = try TestMIDIVirtualSource(name: "HSMIDITestReceiveNoteOn-\(UUID().uuidString)")
