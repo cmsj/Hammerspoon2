@@ -7,42 +7,35 @@ import Foundation
 import JavaScriptCore
 import CoreMIDI
 
-/// Walks every `MIDIPacket` in a `MIDIPacketList`, navigating via the list's real
-/// underlying memory (not a Swift-level copy) since `MIDIPacketNext` computes each
-/// packet's address as an offset from the pointer it's given — packets are packed
-/// tightly by actual length, not strided by `sizeof(MIDIPacket)`.
-nonisolated private func withEachMIDIPacket(in pktlist: UnsafePointer<MIDIPacketList>, _ body: (UnsafePointer<MIDIPacket>) -> Void) {
-    guard let packetOffset = MemoryLayout<MIDIPacketList>.offset(of: \.packet) else { return }
-    var packetPtr = unsafe UnsafeRawPointer(pktlist)
-        .advanced(by: packetOffset)
-        .assumingMemoryBound(to: MIDIPacket.self)
-    let count = Int(unsafe pktlist.pointee.numPackets)
-    for _ in 0..<count {
-        unsafe body(packetPtr)
-        unsafe packetPtr = unsafe UnsafePointer(MIDIPacketNext(packetPtr))
-    }
+/// Collects every `MIDIUniversalMessage` `MIDIEventListForEachEvent` parses out of an event
+/// list. `MIDIEventVisitor` is a plain C function pointer (no captures allowed), so this
+/// must be a file-scope function — state is threaded through the opaque `context` pointer
+/// instead, which the caller points at a local `[MIDIUniversalMessage]` for the duration of
+/// the (synchronous) `MIDIEventListForEachEvent` call.
+nonisolated private func hsMIDIEventVisitor(_ context: UnsafeMutableRawPointer?, _ timeStamp: MIDITimeStamp, _ message: MIDIUniversalMessage) {
+    guard let context = unsafe context else { return }
+    let collected = unsafe context.assumingMemoryBound(to: [MIDIUniversalMessage].self)
+    unsafe collected.pointee.append(message)
 }
 
-// MIDIReadProc is a `@convention(c)` function pointer with no captures allowed, so this
-// must be a file-scope function (mirroring HSSerialPort's `hsSerialPortReadHandler`):
-// CoreMIDI invokes it on an internal high-priority thread, not the main thread — a
-// closure literal written inside an `@MainActor` method would wrongly infer @MainActor
-// isolation and trip a runtime isolation check when CoreMIDI calls it off-main.
-nonisolated private func hsMIDIReadProc(_ pktlist: UnsafePointer<MIDIPacketList>, _ readProcRefCon: UnsafeMutableRawPointer?, _ srcConnRefCon: UnsafeMutableRawPointer?) {
-    guard let refCon = unsafe readProcRefCon else { return }
-    let device = unsafe Unmanaged<HSMIDIDevice>.fromOpaque(refCon).takeUnretainedValue()
+// MIDIReceiveBlock runs on an internal high-priority thread CoreMIDI owns, not the main
+// thread, so this must be built by a file-scope `nonisolated` function (mirroring
+// HSSerialPort's `hsSerialPortReadHandler`): a closure literal written directly inside an
+// `@MainActor` method would wrongly infer @MainActor isolation under this project's
+// default-actor-isolation setting and trip a runtime isolation check when CoreMIDI calls it
+// off-main. A closure returned from a `nonisolated` function correctly infers nonisolated.
+nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDevice>) -> (UnsafePointer<MIDIEventList>, UnsafeMutableRawPointer?) -> Void {
+    return { evtlist, _ in
+        let device = unsafe deviceRef.takeUnretainedValue()
 
-    var messages: [[UInt8]] = []
-    unsafe withEachMIDIPacket(in: pktlist) { packetPtr in
-        let length = unsafe Int(packetPtr.pointee.length)
-        let bytes = unsafe withUnsafeBytes(of: packetPtr.pointee.data) { raw in
-            unsafe Array(raw.prefix(length))
+        var collected: [MIDIUniversalMessage] = []
+        withUnsafeMutablePointer(to: &collected) { collectedPtr in
+            unsafe MIDIEventListForEachEvent(evtlist, hsMIDIEventVisitor, UnsafeMutableRawPointer(collectedPtr))
         }
-        messages.append(bytes)
-    }
 
-    Task { @MainActor in
-        device.handleIncomingPackets(messages)
+        Task { @MainActor in
+            device.handleIncomingMessages(collected)
+        }
     }
 }
 
@@ -183,7 +176,7 @@ nonisolated private func hsMIDIReadProc(_ pktlist: UnsafePointer<MIDIPacketList>
     // Retains self while `inputPort` is connected — CoreMIDI's C callback only has a raw
     // pointer to us, which ARC knows nothing about, so nothing else keeps us alive for it.
     private var selfRef: Unmanaged<HSMIDIDevice>?
-    private var parserState = MIDIParserState()
+    private var sysexAccumulator: [UInt8]?
     private var _callback: JSCallback?
     private var isDestroyed = false
 
@@ -233,11 +226,11 @@ nonisolated private func hsMIDIReadProc(_ pktlist: UnsafePointer<MIDIPacketList>
             AKWarning("hs.midi: sendCommand() failed for '\(name)' — no destination endpoint")
             return false
         }
-        guard let bytes = encodeMIDICommand(type: commandType, metadata: metadata) else {
+        guard let word = encodeMIDICommand(type: commandType, metadata: metadata) else {
             AKWarning("hs.midi: sendCommand() failed for '\(name)' — invalid commandType '\(commandType)' or metadata")
             return false
         }
-        return sendMIDIBytes(bytes, via: port, to: destination)
+        return sendMIDIPackets([[word]], via: port, to: destination)
     }
 
     @objc func sendSysex(_ command: String) {
@@ -249,7 +242,7 @@ nonisolated private func hsMIDIReadProc(_ pktlist: UnsafePointer<MIDIPacketList>
             AKWarning("hs.midi: sendSysex() failed for '\(name)' — malformed hex string")
             return
         }
-        _ = sendMIDIBytes(bytes, via: port, to: destination)
+        _ = sendMIDIPackets(encodeSysexWords(stripSysexFraming(bytes)), via: port, to: destination)
     }
 
     @objc func identityRequest() {
@@ -257,8 +250,8 @@ nonisolated private func hsMIDIReadProc(_ pktlist: UnsafePointer<MIDIPacketList>
             AKWarning("hs.midi: identityRequest() failed for '\(name)' — no destination endpoint")
             return
         }
-        let identityRequestBytes: [UInt8] = [0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]
-        _ = sendMIDIBytes(identityRequestBytes, via: port, to: destination)
+        let identityRequestPayload: [UInt8] = [0x7E, 0x7F, 0x06, 0x01] // Universal Non-Realtime Identity Request, F0/F7 framing implicit in UMP
+        _ = sendMIDIPackets(encodeSysexWords(identityRequestPayload), via: port, to: destination)
     }
 
     @objc func destroy() {
@@ -278,9 +271,8 @@ nonisolated private func hsMIDIReadProc(_ pktlist: UnsafePointer<MIDIPacketList>
         guard client != 0 else { return }
 
         unsafe selfRef = unsafe Unmanaged.passRetained(self)
-        let refCon = unsafe selfRef!.toOpaque()
 
-        let status = unsafe MIDIInputPortCreate(client, "Hammerspoon 2 Input" as CFString, hsMIDIReadProc, refCon, &inputPort)
+        let status = unsafe MIDIInputPortCreateWithProtocol(client, "Hammerspoon 2 Input" as CFString, ._1_0, &inputPort, hsMIDIMakeReceiveHandler(deviceRef: selfRef!))
         guard status == noErr else {
             AKError("hs.midi: Failed to create input port for '\(name)' (error \(status))")
             unsafe selfRef?.release()
@@ -308,15 +300,13 @@ nonisolated private func hsMIDIReadProc(_ pktlist: UnsafePointer<MIDIPacketList>
         unsafe selfRef = nil
     }
 
-    // MARK: - Fileprivate (called from the file-scope read handler above)
+    // MARK: - Fileprivate (called from the file-scope receive handler above)
 
-    fileprivate func handleIncomingPackets(_ packets: [[UInt8]]) {
+    fileprivate func handleIncomingMessages(_ messages: [MIDIUniversalMessage]) {
         guard !isDestroyed, let callback = _callback else { return }
-        for bytes in packets {
-            let decoded = parseMIDIBytes(bytes, state: &parserState)
-            for message in decoded {
-                _ = callback.value?.call(withArguments: [self, name, message.commandType, message.description, message.metadata])
-            }
+        for message in messages {
+            guard let decoded = decodeUniversalMessage(message, sysexAccumulator: &sysexAccumulator) else { continue }
+            _ = callback.value?.call(withArguments: [self, name, decoded.commandType, decoded.description, decoded.metadata])
         }
     }
 }

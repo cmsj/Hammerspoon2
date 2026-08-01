@@ -10,6 +10,41 @@ import CoreMIDI
 
 // MARK: - Helpers
 
+/// Builds a `MIDIEventList` from `packets` (each inner array is one packet's UMP words) in a
+/// freshly-allocated, generously-sized buffer, handing it to `body` for the duration of the
+/// call. Shared by the virtual-source test helper (to inject received messages) and the pure
+/// codec round-trip tests (to decode via CoreMIDI's own `MIDIEventListForEachEvent`).
+private func withMIDIEventList<T>(_ packets: [[UInt32]], _ body: (UnsafeMutablePointer<MIDIEventList>) -> T) -> T {
+    let totalWords = packets.reduce(0) { $0 + $1.count }
+    let bufferSize = totalWords * 4 + packets.count * 16 + 64
+    let rawBuffer = UnsafeMutableRawPointer.allocate(byteCount: bufferSize, alignment: MemoryLayout<MIDIEventList>.alignment)
+    defer { rawBuffer.deallocate() }
+    let eventListPtr = rawBuffer.bindMemory(to: MIDIEventList.self, capacity: 1)
+    var packetPtr = MIDIEventListInit(eventListPtr, ._1_0)
+    for packet in packets {
+        packetPtr = packet.withUnsafeBufferPointer { wordsPtr in
+            MIDIEventListAdd(eventListPtr, bufferSize, packetPtr, 0, wordsPtr.count, wordsPtr.baseAddress!)
+        }
+    }
+    return body(eventListPtr)
+}
+
+/// Decodes every `MIDIUniversalMessage` out of an event list via CoreMIDI's own
+/// `MIDIEventListForEachEvent` — used to validate this module's encoder against Apple's own
+/// decoder. Pure in-memory operation, no `MIDIClientRef`/daemon connection needed.
+private func decodedMessages(from packets: [[UInt32]]) -> [MIDIUniversalMessage] {
+    withMIDIEventList(packets) { eventListPtr in
+        var collected: [MIDIUniversalMessage] = []
+        withUnsafeMutablePointer(to: &collected) { collectedPtr in
+            MIDIEventListForEachEvent(eventListPtr, { context, _, message in
+                guard let context else { return }
+                context.assumingMemoryBound(to: [MIDIUniversalMessage].self).pointee.append(message)
+            }, UnsafeMutableRawPointer(collectedPtr))
+        }
+        return collected
+    }
+}
+
 /// A virtual MIDI source created by the test itself, used as a stand-in for real MIDI
 /// hardware. Since CoreMIDI publishes virtual endpoints system-wide the same way a real
 /// external device's endpoints would appear, `hs.midi.virtualSources()` / `virtualSourceNamed()`
@@ -39,13 +74,13 @@ private final class TestMIDIVirtualSource {
 
         var sourceStatus: OSStatus = noErr
         for attempt in 0..<12 {
-            sourceStatus = MIDISourceCreate(client, name as CFString, &source)
+            sourceStatus = MIDISourceCreateWithProtocol(client, name as CFString, ._1_0, &source)
             if sourceStatus == noErr { break }
             usleep(useconds_t(30_000 * (attempt + 1)))
         }
         guard sourceStatus == noErr else {
             MIDIClientDispose(client)
-            throw NSError(domain: "TestMIDIVirtualSource", code: 2, userInfo: [NSLocalizedDescriptionKey: "MIDISourceCreate failed (\(sourceStatus))"])
+            throw NSError(domain: "TestMIDIVirtualSource", code: 2, userInfo: [NSLocalizedDescriptionKey: "MIDISourceCreateWithProtocol failed (\(sourceStatus))"])
         }
     }
 
@@ -54,14 +89,21 @@ private final class TestMIDIVirtualSource {
         MIDIClientDispose(client)
     }
 
-    /// Injects a single MIDI message as though it arrived from this source.
-    func send(_ bytes: [UInt8]) {
-        var packetList = MIDIPacketList()
-        let packet = MIDIPacketListInit(&packetList)
-        _ = bytes.withUnsafeBufferPointer { ptr in
-            MIDIPacketListAdd(&packetList, 1024, packet, 0, ptr.count, ptr.baseAddress!)
+    /// Injects a channel voice message using this module's own production encoder
+    /// (`encodeMIDICommand`) — this test exercises the real encoder on the "sender" side,
+    /// not a hand-rolled duplicate of it.
+    func send(commandType: String, metadata: [String: Any]) {
+        guard let word = encodeMIDICommand(type: commandType, metadata: metadata) else {
+            Issue.record("test injection: failed to encode \(commandType)")
+            return
         }
-        _ = MIDIReceived(source, &packetList)
+        withMIDIEventList([[word]]) { _ = MIDIReceivedEventList(source, $0) }
+    }
+
+    /// Injects a sysex message (payload only, no 0xF0/0xF7 framing) using this module's own
+    /// production encoder (`encodeSysexWords`).
+    func sendSysex(_ payload: [UInt8]) {
+        withMIDIEventList(encodeSysexWords(payload)) { _ = MIDIReceivedEventList(source, $0) }
     }
 }
 
@@ -271,74 +313,74 @@ struct HSMIDITests {
         }
     }
 
-    // MARK: - Pure codec tests (no JSTestHarness — exercises the Swift-only byte codec directly)
+    // MARK: - Pure codec tests (no JSTestHarness, no MIDIClientRef — pure in-memory UMP encode/decode)
 
     @Suite("hs.midi message codec tests")
     struct HSMIDICodecTests {
 
-        @Test("noteOn encodes to the expected bytes and round-trips through the decoder")
-        func testNoteOnRoundTrip() {
-            var state = MIDIParserState()
-            let bytes = encodeMIDICommand(type: "noteOn", metadata: ["note": 60, "velocity": 100, "channel": 2])
-            #expect(bytes == [0x92, 60, 100])
-            let decoded = parseMIDIBytes(bytes!, state: &state)
-            #expect(decoded.count == 1)
-            #expect(decoded[0].commandType == "noteOn")
-            #expect(decoded[0].metadata["note"] as? Int == 60)
-            #expect(decoded[0].metadata["velocity"] as? Int == 100)
-            #expect(decoded[0].metadata["channel"] as? Int == 2)
+        private func decodedMessage(_ word: UInt32) -> MIDIUniversalMessage? {
+            decodedMessages(from: [[word]]).first
+        }
+
+        /// Encodes `metadata` via the production `encodeMIDICommand`, decodes the resulting
+        /// word via CoreMIDI's own `MIDIEventListForEachEvent`, then decodes that via this
+        /// module's `decodeUniversalMessage` — a full encode → CoreMIDI → decode round trip.
+        private func encodeDecodeRoundTrip(type: String, metadata: [String: Any]) throws -> (commandType: String, description: String, metadata: [String: Any]) {
+            let word = try #require(encodeMIDICommand(type: type, metadata: metadata))
+            let message = try #require(decodedMessage(word))
+            var acc: [UInt8]?
+            return try #require(decodeUniversalMessage(message, sysexAccumulator: &acc))
+        }
+
+        @Test("noteOn encodes to the expected UMP word and round-trips through CoreMIDI's own decoder")
+        func testNoteOnRoundTrip() throws {
+            let metadata: [String: Any] = ["note": 60, "velocity": 100, "channel": 2]
+            #expect(encodeMIDICommand(type: "noteOn", metadata: metadata) == 0x20923C64)
+            let decoded = try encodeDecodeRoundTrip(type: "noteOn", metadata: metadata)
+            #expect(decoded.commandType == "noteOn")
+            #expect(decoded.metadata["note"] as? Int == 60)
+            #expect(decoded.metadata["velocity"] as? Int == 100)
+            #expect(decoded.metadata["channel"] as? Int == 2)
         }
 
         @Test("noteOff round-trips")
-        func testNoteOffRoundTrip() {
-            var state = MIDIParserState()
-            let bytes = encodeMIDICommand(type: "noteOff", metadata: ["note": 40, "velocity": 0, "channel": 0])
-            let decoded = parseMIDIBytes(bytes!, state: &state)
-            #expect(decoded.first?.commandType == "noteOff")
-            #expect(decoded.first?.metadata["note"] as? Int == 40)
+        func testNoteOffRoundTrip() throws {
+            let decoded = try encodeDecodeRoundTrip(type: "noteOff", metadata: ["note": 40, "velocity": 0, "channel": 0])
+            #expect(decoded.commandType == "noteOff")
+            #expect(decoded.metadata["note"] as? Int == 40)
         }
 
         @Test("polyphonicKeyPressure round-trips")
-        func testPolyphonicKeyPressureRoundTrip() {
-            var state = MIDIParserState()
-            let bytes = encodeMIDICommand(type: "polyphonicKeyPressure", metadata: ["note": 72, "pressure": 90, "channel": 1])
-            let decoded = parseMIDIBytes(bytes!, state: &state)
-            #expect(decoded.first?.commandType == "polyphonicKeyPressure")
-            #expect(decoded.first?.metadata["pressure"] as? Int == 90)
+        func testPolyphonicKeyPressureRoundTrip() throws {
+            let decoded = try encodeDecodeRoundTrip(type: "polyphonicKeyPressure", metadata: ["note": 72, "pressure": 90, "channel": 1])
+            #expect(decoded.commandType == "polyphonicKeyPressure")
+            #expect(decoded.metadata["pressure"] as? Int == 90)
         }
 
         @Test("controlChange round-trips")
-        func testControlChangeRoundTrip() {
-            var state = MIDIParserState()
-            let bytes = encodeMIDICommand(type: "controlChange", metadata: ["controllerNumber": 7, "controllerValue": 127, "channel": 0])
-            let decoded = parseMIDIBytes(bytes!, state: &state)
-            #expect(decoded.first?.metadata["controllerNumber"] as? Int == 7)
-            #expect(decoded.first?.metadata["controllerValue"] as? Int == 127)
+        func testControlChangeRoundTrip() throws {
+            let decoded = try encodeDecodeRoundTrip(type: "controlChange", metadata: ["controllerNumber": 7, "controllerValue": 127, "channel": 0])
+            #expect(decoded.metadata["controllerNumber"] as? Int == 7)
+            #expect(decoded.metadata["controllerValue"] as? Int == 127)
         }
 
         @Test("programChange round-trips")
-        func testProgramChangeRoundTrip() {
-            var state = MIDIParserState()
-            let bytes = encodeMIDICommand(type: "programChange", metadata: ["programNumber": 5, "channel": 0])
-            let decoded = parseMIDIBytes(bytes!, state: &state)
-            #expect(decoded.first?.metadata["programNumber"] as? Int == 5)
+        func testProgramChangeRoundTrip() throws {
+            let decoded = try encodeDecodeRoundTrip(type: "programChange", metadata: ["programNumber": 5, "channel": 0])
+            #expect(decoded.metadata["programNumber"] as? Int == 5)
         }
 
         @Test("channelPressure round-trips")
-        func testChannelPressureRoundTrip() {
-            var state = MIDIParserState()
-            let bytes = encodeMIDICommand(type: "channelPressure", metadata: ["pressure": 64, "channel": 0])
-            let decoded = parseMIDIBytes(bytes!, state: &state)
-            #expect(decoded.first?.metadata["pressure"] as? Int == 64)
+        func testChannelPressureRoundTrip() throws {
+            let decoded = try encodeDecodeRoundTrip(type: "channelPressure", metadata: ["pressure": 64, "channel": 0])
+            #expect(decoded.metadata["pressure"] as? Int == 64)
         }
 
         @Test("pitchWheelChange round-trips with center value")
-        func testPitchWheelChangeRoundTrip() {
-            var state = MIDIParserState()
-            let bytes = encodeMIDICommand(type: "pitchWheelChange", metadata: ["pitchChange": 8192, "channel": 0])
-            let decoded = parseMIDIBytes(bytes!, state: &state)
-            #expect(decoded.first?.commandType == "pitchWheelChange")
-            #expect(decoded.first?.metadata["pitchChange"] as? Int == 8192)
+        func testPitchWheelChangeRoundTrip() throws {
+            let decoded = try encodeDecodeRoundTrip(type: "pitchWheelChange", metadata: ["pitchChange": 8192, "channel": 0])
+            #expect(decoded.commandType == "pitchWheelChange")
+            #expect(decoded.metadata["pitchChange"] as? Int == 8192)
         }
 
         @Test("encodeMIDICommand returns nil for out-of-range values")
@@ -353,36 +395,65 @@ struct HSMIDITests {
             #expect(encodeMIDICommand(type: "bogusCommand", metadata: [:]) == nil)
         }
 
-        @Test("running status lets consecutive messages omit the repeated status byte")
-        func testRunningStatus() {
-            var state = MIDIParserState()
-            let bytes: [UInt8] = [0x90, 60, 100, 61, 101]
-            let decoded = parseMIDIBytes(bytes, state: &state)
-            #expect(decoded.count == 2)
-            #expect(decoded[0].metadata["note"] as? Int == 60)
-            #expect(decoded[1].metadata["note"] as? Int == 61)
-            #expect(decoded[1].commandType == "noteOn")
+        @Test("a short sysex payload round-trips as a single Complete packet")
+        func testSysexCompleteRoundTrip() {
+            let packets = encodeSysexWords([0x7E, 0x7F, 0x06, 0x01])
+            #expect(packets.count == 1)
+            let messages = decodedMessages(from: packets)
+            #expect(messages.count == 1)
+            var acc: [UInt8]?
+            let decoded = decodeUniversalMessage(messages[0], sysexAccumulator: &acc)
+            #expect(decoded?.commandType == "systemExclusive")
+            #expect(decoded?.metadata["data"] as? String == "F0 7E 7F 06 01 F7")
+            #expect(acc == nil)
         }
 
-        @Test("a sysex message spanning two calls accumulates correctly")
-        func testSysexAcrossCalls() {
-            var state = MIDIParserState()
-            let firstResult = parseMIDIBytes([0xF0, 0x7E, 0x7F], state: &state)
-            #expect(firstResult.isEmpty)
-            let secondResult = parseMIDIBytes([0x06, 0x01, 0xF7], state: &state)
-            #expect(secondResult.count == 1)
-            #expect(secondResult[0].commandType == "systemExclusive")
-            #expect(secondResult[0].metadata["data"] as? String == "F0 7E 7F 06 01 F7")
+        @Test("a long sysex payload chunks into Start/Continue/End packets and reassembles")
+        func testSysexMultiChunkRoundTrip() {
+            let payload = (0..<20).map { UInt8($0) } // 20 bytes -> 4 chunks of 6/6/6/2
+            let packets = encodeSysexWords(payload)
+            #expect(packets.count == 4)
+            let messages = decodedMessages(from: packets)
+            #expect(messages.count == 4)
+
+            var acc: [UInt8]?
+            var lastDecoded: (commandType: String, description: String, metadata: [String: Any])?
+            for message in messages {
+                let result = decodeUniversalMessage(message, sysexAccumulator: &acc)
+                if let result { lastDecoded = result }
+            }
+            let expectedHex = ([0xF0] + payload + [0xF7]).map { String(format: "%02X", $0) }.joined(separator: " ")
+            #expect(lastDecoded?.commandType == "systemExclusive")
+            #expect(lastDecoded?.metadata["data"] as? String == expectedHex)
+            #expect(acc == nil, "accumulator should be cleared once the End chunk completes the message")
         }
 
-        @Test("real-time bytes do not disturb an in-progress sysex")
-        func testRealTimeDuringSysex() {
-            var state = MIDIParserState()
-            let decoded = parseMIDIBytes([0xF0, 0x7E, 0xF8, 0x7F, 0x06, 0x01, 0xF7], state: &state)
-            #expect(decoded.count == 2)
-            #expect(decoded[0].commandType == "systemRealTime")
-            #expect(decoded[1].commandType == "systemExclusive")
-            #expect(decoded[1].metadata["data"] as? String == "F0 7E 7F 06 01 F7")
+        @Test("system real-time messages interleaved with an in-progress sysex don't disturb its accumulator")
+        func testRealTimeDuringSysexAccumulation() {
+            // Build the sysex chunks separately, but decode a system real-time message
+            // (Timing Clock, 0xF8) between the Start and End chunks to confirm it doesn't
+            // touch `sysexAccumulator`.
+            let payload = (0..<10).map { UInt8($0) } // -> Start (6 bytes) + End (4 bytes)
+            let sysexPackets = encodeSysexWords(payload)
+            #expect(sysexPackets.count == 2)
+            // UMP System word: byte0 = (type=0x1 << 4 | group), byte1 = status. Timing Clock
+            // (0xF8) carries no data bytes.
+            let realTimeWord: UInt32 = (0x1 << 28) | (0xF8 << 16)
+            let messages = decodedMessages(from: [sysexPackets[0], [realTimeWord], sysexPackets[1]])
+            #expect(messages.count == 3)
+
+            var acc: [UInt8]?
+            let startResult = decodeUniversalMessage(messages[0], sysexAccumulator: &acc)
+            #expect(startResult == nil)
+            #expect(acc?.count == 6)
+
+            let realTimeResult = decodeUniversalMessage(messages[1], sysexAccumulator: &acc)
+            #expect(realTimeResult?.commandType == "systemRealTime")
+            #expect(acc?.count == 6, "the interleaved real-time message must not touch the sysex accumulator")
+
+            let endResult = decodeUniversalMessage(messages[2], sysexAccumulator: &acc)
+            #expect(endResult?.commandType == "systemExclusive")
+            #expect(acc == nil)
         }
 
         @Test("hexStringToBytes parses whitespace-separated and compact hex")
@@ -396,6 +467,12 @@ struct HSMIDITests {
             #expect(hexStringToBytes("F0 7E 7") == nil)
             #expect(hexStringToBytes("ZZ") == nil)
             #expect(hexStringToBytes("") == nil)
+        }
+
+        @Test("stripSysexFraming removes a leading 0xF0 and trailing 0xF7 if present")
+        func testStripSysexFraming() {
+            #expect(stripSysexFraming([0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]) == [0x7E, 0x7F, 0x06, 0x01])
+            #expect(stripSysexFraming([0x7E, 0x7F, 0x06, 0x01]) == [0x7E, 0x7F, 0x06, 0x01])
         }
 
         @Test("commandTypes table has an entry for every command type the decoder can produce")
@@ -439,7 +516,7 @@ struct HSMIDITests {
             """)
             #expect(!harness.hasException)
 
-            source.send([0x90, 60, 100])
+            source.send(commandType: "noteOn", metadata: ["note": 60, "velocity": 100, "channel": 0])
 
             let fired = await harness.waitForAsync(timeout: 3.0) { received != nil }
             #expect(fired, "the noteOn callback should have fired")
@@ -467,7 +544,7 @@ struct HSMIDITests {
             """)
             #expect(!harness.hasException)
 
-            source.send([0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7])
+            source.sendSysex([0x7E, 0x7F, 0x06, 0x01])
 
             let fired = await harness.waitForAsync(timeout: 3.0) { received != nil }
             #expect(fired, "the sysex callback should have fired")
@@ -493,12 +570,12 @@ struct HSMIDITests {
                 })
             """)
 
-            source.send([0x90, 60, 100])
+            source.send(commandType: "noteOn", metadata: ["note": 60, "velocity": 100, "channel": 0])
             let firstFired = await harness.waitForAsync(timeout: 3.0) { receiveCount > 0 }
             #expect(firstFired)
 
             harness.eval("d.setCallback(null)")
-            source.send([0x90, 61, 101])
+            source.send(commandType: "noteOn", metadata: ["note": 61, "velocity": 101, "channel": 0])
             // Give any (incorrectly still-connected) delivery a moment to arrive before asserting it didn't.
             try await Task.sleep(nanoseconds: 300_000_000)
             #expect(receiveCount == 1)

@@ -4,20 +4,13 @@
 //
 
 import Foundation
+import CoreMIDI
 
-// Pure MIDI 1.0 byte-stream codec. No CoreMIDI types, no actor isolation —
-// fully unit-testable without any hardware or OS API.
-
-/// Per-device parsing state. MIDI sysex messages can arrive split across
-/// multiple `MIDIPacket`s, and running status lets a device omit a repeated
-/// status byte across consecutive same-type messages, so this must persist
-/// across separate calls to `parseMIDIBytes`.
-struct MIDIParserState {
-    fileprivate var runningStatus: UInt8?
-    fileprivate var pending: [UInt8] = []
-    fileprivate var pendingLength: Int = 0
-    fileprivate var inSysex = false
-}
+// MIDI 1.0-over-UMP (Universal MIDI Packet) codec, built on CoreMIDI's MIDIEventList
+// family (MIDIPacketList-based sending/receiving is deprecated in favor of this).
+// MIDIEventListInit/Add/ForEachEvent are pure in-memory struct operations — no
+// MIDIClientRef or daemon connection needed — so this is fully unit-testable without
+// any hardware, by round-tripping through those functions directly.
 
 let midiCommandTypeNumbers: [String: Int] = [
     "noteOff": 1,
@@ -34,46 +27,25 @@ let midiCommandTypeNumbers: [String: Int] = [
 
 // MARK: - Decoding
 
-private func channelVoiceDataLength(forHighNibble highNibble: UInt8) -> Int? {
-    switch highNibble {
-    case 0x80, 0x90, 0xA0, 0xB0, 0xE0: return 2
-    case 0xC0, 0xD0: return 1
-    default: return nil
-    }
-}
+// CoreMIDI's MIDISystemStatus enum covers both what hs.midi calls "systemCommon"
+// (MTC/song position/song select/tune request) and "systemRealTime" (clock/start/stop/
+// active sensing/reset) under one type — the split below preserves hs.midi's existing
+// JS-facing distinction between the two.
+private let systemCommonStatuses: Set<UInt32> = [0xF1, 0xF2, 0xF3, 0xF6]
 
-// F1: MTC quarter frame (1 data byte), F2: song position (2 data bytes),
-// F3: song select (1 data byte), F6: tune request (no data bytes).
-private func systemCommonTotalLength(forStatus status: UInt8) -> Int {
+private func systemStatusDescription(_ status: UInt32) -> String {
     switch status {
-    case 0xF1: return 2
-    case 0xF2: return 3
-    case 0xF3: return 2
-    default: return 1
-    }
-}
-
-private func decodeChannelVoice(_ bytes: [UInt8]) -> (commandType: String, description: String, metadata: [String: Any]) {
-    let status = bytes[0]
-    let channel = Int(status & 0x0F)
-    switch status & 0xF0 {
-    case 0x80:
-        return ("noteOff", "Note Off", ["note": Int(bytes[1]), "velocity": Int(bytes[2]), "channel": channel])
-    case 0x90:
-        return ("noteOn", "Note On", ["note": Int(bytes[1]), "velocity": Int(bytes[2]), "channel": channel])
-    case 0xA0:
-        return ("polyphonicKeyPressure", "Polyphonic Key Pressure", ["note": Int(bytes[1]), "pressure": Int(bytes[2]), "channel": channel])
-    case 0xB0:
-        return ("controlChange", "Control Change", ["controllerNumber": Int(bytes[1]), "controllerValue": Int(bytes[2]), "channel": channel])
-    case 0xC0:
-        return ("programChange", "Program Change", ["programNumber": Int(bytes[1]), "channel": channel])
-    case 0xD0:
-        return ("channelPressure", "Channel Pressure", ["pressure": Int(bytes[1]), "channel": channel])
-    case 0xE0:
-        let pitchChange = (Int(bytes[2]) << 7) | Int(bytes[1])
-        return ("pitchWheelChange", "Pitch Wheel Change", ["pitchChange": pitchChange, "channel": channel])
-    default:
-        return ("unknown", "Unknown Channel Voice Message", ["channel": channel])
+    case 0xF1: return "MIDI Time Code Quarter Frame"
+    case 0xF2: return "Song Position Pointer"
+    case 0xF3: return "Song Select"
+    case 0xF6: return "Tune Request"
+    case 0xF8: return "Timing Clock"
+    case 0xFA: return "Start"
+    case 0xFB: return "Continue"
+    case 0xFC: return "Stop"
+    case 0xFE: return "Active Sensing"
+    case 0xFF: return "System Reset"
+    default: return "System"
     }
 }
 
@@ -81,105 +53,92 @@ private func hexString(_ bytes: [UInt8]) -> String {
     bytes.map { unsafe String(format: "%02X", $0) }.joined(separator: " ")
 }
 
-private func decodeSysex(_ bytes: [UInt8]) -> (commandType: String, description: String, metadata: [String: Any]) {
-    ("systemExclusive", "System Exclusive", ["data": hexString(bytes)])
-}
+/// Decodes a single UMP message (as parsed by CoreMIDI's `MIDIEventListForEachEvent`)
+/// into hs.midi's `(commandType, description, metadata)` shape.
+///
+/// `sysexAccumulator` persists per-device across calls: sysex arrives as a `.start` chunk,
+/// zero or more `.continue` chunks, and a final `.end` chunk (or a single `.complete` chunk
+/// for short messages) — this function returns `nil` for `.start`/`.continue` since they
+/// aren't a complete message yet.
+///
+/// Returns `nil` for message types hs.midi doesn't expose at MIDI 1.0 protocol (channel
+/// voice 2, data128, utility) — unreachable in practice since every port/source this module
+/// creates negotiates `MIDIProtocolID._1_0`, but the switch needs an exhaustive default.
+func decodeUniversalMessage(_ message: MIDIUniversalMessage, sysexAccumulator: inout [UInt8]?) -> (commandType: String, description: String, metadata: [String: Any])? {
+    switch message.type {
+    case .channelVoice1:
+        let cv = message.channelVoice1
+        let channel = Int(cv.channel)
+        switch cv.status {
+        case .noteOff:
+            return ("noteOff", "Note Off", ["note": Int(cv.note.number), "velocity": Int(cv.note.velocity), "channel": channel])
+        case .noteOn:
+            return ("noteOn", "Note On", ["note": Int(cv.note.number), "velocity": Int(cv.note.velocity), "channel": channel])
+        case .polyPressure:
+            return ("polyphonicKeyPressure", "Polyphonic Key Pressure", ["note": Int(cv.polyPressure.noteNumber), "pressure": Int(cv.polyPressure.pressure), "channel": channel])
+        case .controlChange:
+            return ("controlChange", "Control Change", ["controllerNumber": Int(cv.controlChange.index), "controllerValue": Int(cv.controlChange.data), "channel": channel])
+        case .programChange:
+            return ("programChange", "Program Change", ["programNumber": Int(cv.program), "channel": channel])
+        case .channelPressure:
+            return ("channelPressure", "Channel Pressure", ["pressure": Int(cv.channelPressure), "channel": channel])
+        case .pitchBend:
+            return ("pitchWheelChange", "Pitch Wheel Change", ["pitchChange": Int(cv.pitchBend), "channel": channel])
+        default:
+            return ("unknown", "Unknown Channel Voice Message", ["channel": channel])
+        }
 
-private func decodeSystemCommon(_ bytes: [UInt8]) -> (commandType: String, description: String, metadata: [String: Any]) {
-    ("systemCommon", "System Common", ["data": hexString(bytes)])
-}
+    case .sysEx:
+        let sysex = message.sysEx
+        // `sysex.channel` is mislabeled in CoreMIDI's own header — it actually holds the
+        // valid byte count (0-6) of `sysex.data`, not a MIDI channel. Confirmed empirically
+        // by inspecting the raw decoded struct bytes against a hand-built UMP message.
+        let byteCount = Int(sysex.channel)
+        let chunk = withUnsafeBytes(of: sysex.data) { raw in unsafe Array(raw.prefix(byteCount)) }
+        // The decoded `data` metadata re-adds the classic 0xF0/0xF7 framing bytes UMP
+        // itself doesn't carry (status/start/end already say "this is sysex" structurally)
+        // — preserves the exact JS-facing shape this module had before the UMP migration.
+        switch sysex.status {
+        case .complete:
+            return ("systemExclusive", "System Exclusive", ["data": hexString([0xF0] + chunk + [0xF7])])
+        case .start:
+            sysexAccumulator = chunk
+            return nil
+        case .continue:
+            sysexAccumulator?.append(contentsOf: chunk)
+            return nil
+        case .end:
+            var bytes = sysexAccumulator ?? []
+            bytes.append(contentsOf: chunk)
+            sysexAccumulator = nil
+            return ("systemExclusive", "System Exclusive", ["data": hexString([0xF0] + bytes + [0xF7])])
+        default:
+            return nil
+        }
 
-private func decodeSystemRealTime(_ byte: UInt8) -> (commandType: String, description: String, metadata: [String: Any]) {
-    let description: String
-    switch byte {
-    case 0xF8: description = "Timing Clock"
-    case 0xFA: description = "Start"
-    case 0xFB: description = "Continue"
-    case 0xFC: description = "Stop"
-    case 0xFE: description = "Active Sensing"
-    case 0xFF: description = "System Reset"
-    default: description = "System Real Time"
+    case .system:
+        let status = message.system.status.rawValue
+        let commandType = systemCommonStatuses.contains(status) ? "systemCommon" : "systemRealTime"
+        return (commandType, systemStatusDescription(status), ["status": Int(status)])
+
+    case .invalid:
+        // CoreMIDI's own UMP decoder (MIDIEventListForEachEvent) doesn't recognize every
+        // System status byte on this SDK — Tune Request (0xF6) and the Real-Time family
+        // (0xF8-0xFF, clock/start/stop/active-sensing/reset) all come back as `.invalid`,
+        // confirmed empirically, even though MTC/song-position/song-select (0xF1-0xF3)
+        // decode correctly via `.system`. When that happens, CoreMIDI leaves the original
+        // raw word untouched in the `unknown` union arm (only a *successfully* classified
+        // message repacks that memory into its own type-specific fields), so fall back to
+        // extracting the status byte ourselves directly from it.
+        let word0 = message.unknown.words.0
+        guard (word0 >> 28) & 0xF == 0x1 else { return nil } // not a System-type word — genuinely unrecognized
+        let status = (word0 >> 16) & 0xFF
+        let commandType = systemCommonStatuses.contains(status) ? "systemCommon" : "systemRealTime"
+        return (commandType, systemStatusDescription(status), ["status": Int(status)])
+
+    default:
+        return nil
     }
-    return ("systemRealTime", description, ["status": Int(byte)])
-}
-
-/// Decodes a chunk of raw MIDI 1.0 bytes into zero or more discrete messages, updating
-/// `state` with any partial message left over for the next call (a split sysex, or a
-/// running-status byte carried forward for the next call's leading data byte).
-func parseMIDIBytes(_ bytes: [UInt8], state: inout MIDIParserState) -> [(commandType: String, description: String, metadata: [String: Any])] {
-    var results: [(commandType: String, description: String, metadata: [String: Any])] = []
-
-    for byte in bytes {
-        // Real-time bytes may appear at any point in the stream — including mid-sysex or
-        // mid-message — and must not disturb whatever else is in progress.
-        if byte >= 0xF8 {
-            results.append(decodeSystemRealTime(byte))
-            continue
-        }
-
-        if state.inSysex {
-            state.pending.append(byte)
-            if byte == 0xF7 {
-                results.append(decodeSysex(state.pending))
-                state.pending = []
-                state.inSysex = false
-            }
-            continue
-        }
-
-        if byte == 0xF0 {
-            state.pending = [byte]
-            state.inSysex = true
-            state.runningStatus = nil
-            continue
-        }
-
-        if byte >= 0xF1 && byte <= 0xF6 {
-            state.runningStatus = nil
-            state.pending = [byte]
-            state.pendingLength = systemCommonTotalLength(forStatus: byte)
-            if state.pending.count == state.pendingLength {
-                results.append(decodeSystemCommon(state.pending))
-                state.pending = []
-            }
-            continue
-        }
-
-        if byte >= 0x80 {
-            guard let dataLength = channelVoiceDataLength(forHighNibble: byte & 0xF0) else {
-                state.pending = []
-                state.runningStatus = nil
-                continue
-            }
-            state.runningStatus = byte
-            state.pending = [byte]
-            state.pendingLength = dataLength + 1
-            continue
-        }
-
-        // Data byte (< 0x80)
-        if !state.pending.isEmpty {
-            state.pending.append(byte)
-            if state.pending.count == state.pendingLength {
-                if state.pending[0] >= 0xF0 {
-                    results.append(decodeSystemCommon(state.pending))
-                } else {
-                    results.append(decodeChannelVoice(state.pending))
-                }
-                state.pending = []
-            }
-        } else if let running = state.runningStatus, let dataLength = channelVoiceDataLength(forHighNibble: running & 0xF0) {
-            state.pending = [running, byte]
-            state.pendingLength = dataLength + 1
-            if state.pending.count == state.pendingLength {
-                results.append(decodeChannelVoice(state.pending))
-                state.pending = []
-            }
-        }
-        // else: a stray data byte with no status context to interpret it against — drop it.
-    }
-
-    return results
 }
 
 // MARK: - Encoding
@@ -202,38 +161,83 @@ private func midiChannelNibble(_ metadata: [String: Any]) -> UInt8 {
     midiByte(metadata["channel"], max: 15) ?? 0
 }
 
-/// Encodes a `sendCommand` invocation into raw MIDI 1.0 bytes, or `nil` if `type` is
-/// unrecognised or `metadata` is missing/out-of-range required fields.
-func encodeMIDICommand(type: String, metadata: [String: Any]) -> [UInt8]? {
+/// Encodes a `sendCommand` invocation into a single UMP word (MIDI 1.0 protocol), or
+/// `nil` if `type` is unrecognised or `metadata` is missing/out-of-range required fields.
+/// hs.midi never exposes UMP groups to JS, so `group` defaults to 0 (a single virtual
+/// cable per device).
+func encodeMIDICommand(type: String, metadata: [String: Any], group: UInt8 = 0) -> UInt32? {
     let channel = midiChannelNibble(metadata)
     switch type {
     case "noteOff":
         guard let note = midiByte(metadata["note"]), let velocity = midiByte(metadata["velocity"]) else { return nil }
-        return [0x80 | channel, note, velocity]
+        return MIDI1UPNoteOff(group, channel, note, velocity)
     case "noteOn":
         guard let note = midiByte(metadata["note"]), let velocity = midiByte(metadata["velocity"]) else { return nil }
-        return [0x90 | channel, note, velocity]
+        return MIDI1UPNoteOn(group, channel, note, velocity)
     case "polyphonicKeyPressure":
         guard let note = midiByte(metadata["note"]), let pressure = midiByte(metadata["pressure"]) else { return nil }
-        return [0xA0 | channel, note, pressure]
+        return MIDI1UPPolyPressure(group, channel, note, pressure)
     case "controlChange":
         guard let controllerNumber = midiByte(metadata["controllerNumber"]), let controllerValue = midiByte(metadata["controllerValue"]) else { return nil }
-        return [0xB0 | channel, controllerNumber, controllerValue]
+        return MIDI1UPControlChange(group, channel, controllerNumber, controllerValue)
     case "programChange":
         guard let programNumber = midiByte(metadata["programNumber"]) else { return nil }
-        return [0xC0 | channel, programNumber]
+        return MIDI1UPProgramChange(group, channel, programNumber)
     case "channelPressure":
         guard let pressure = midiByte(metadata["pressure"]) else { return nil }
-        return [0xD0 | channel, pressure]
+        return MIDI1UPChannelPressure(group, channel, pressure)
     case "pitchWheelChange":
         // 14-bit value — midiByte() clamps to UInt8 (max 127), so resolve it directly here instead.
         guard let pitchChange = midiInt(metadata["pitchChange"]), pitchChange >= 0, pitchChange <= 16383 else { return nil }
         let lsb = UInt8(pitchChange & 0x7F)
         let msb = UInt8((pitchChange >> 7) & 0x7F)
-        return [0xE0 | channel, lsb, msb]
+        return MIDI1UPPitchBend(group, channel, lsb, msb)
     default:
         return nil
     }
+}
+
+/// Chunks a sysex payload (without the 0xF0/0xF7 framing bytes — UMP encodes "this is
+/// sysex" and start/continue/end structurally, not via literal framing bytes) into UMP
+/// SysEx7 packets (`kMIDIMessageTypeSysEx`, 2 words each — no CF_INLINE helper exists for
+/// this message type, so the word layout is hand-built here; verified by round-tripping
+/// through `MIDIEventListForEachEvent`). Each packet holds up to 6 payload bytes, framed
+/// as Complete (single packet), or Start/Continue/…/Continue/End (multiple packets).
+func encodeSysexWords(_ bytes: [UInt8], group: UInt8 = 0) -> [[UInt32]] {
+    guard !bytes.isEmpty else { return [] }
+    let chunkSize = 6
+    let chunks = stride(from: 0, to: bytes.count, by: chunkSize).map { start in
+        Array(bytes[start..<min(start + chunkSize, bytes.count)])
+    }
+    return chunks.enumerated().map { index, chunk in
+        let status: UInt32
+        if chunks.count == 1 {
+            status = 0x0 // Complete
+        } else if index == 0 {
+            status = 0x1 // Start
+        } else if index == chunks.count - 1 {
+            status = 0x3 // End
+        } else {
+            status = 0x2 // Continue
+        }
+        var padded = chunk
+        while padded.count < chunkSize { padded.append(0) }
+        let word0: UInt32 = (0x3 << 28) | (UInt32(group) << 24) | (status << 20) | (UInt32(chunk.count) << 16)
+            | (UInt32(padded[0]) << 8) | UInt32(padded[1])
+        let word1: UInt32 = (UInt32(padded[2]) << 24) | (UInt32(padded[3]) << 16) | (UInt32(padded[4]) << 8) | UInt32(padded[5])
+        return [word0, word1]
+    }
+}
+
+/// Strips the classic 0xF0/0xF7 sysex framing bytes if present. `sendSysex()` callers write
+/// the familiar full F0...F7 sequence (matching MIDI convention and this module's previous
+/// API), but UMP encodes "this is sysex" and start/continue/end structurally rather than via
+/// literal framing bytes, so `encodeSysexWords` wants just the payload in between.
+func stripSysexFraming(_ bytes: [UInt8]) -> [UInt8] {
+    var result = bytes[...]
+    if result.first == 0xF0 { result = result.dropFirst() }
+    if result.last == 0xF7 { result = result.dropLast() }
+    return Array(result)
 }
 
 /// Parses a hex string (whitespace ignored) into raw bytes, or `nil` if malformed.

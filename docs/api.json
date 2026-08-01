@@ -10743,7 +10743,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 112
+          "lineNumber": 138
         },
         {
           "name": "virtualSources",
@@ -10765,7 +10765,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 122
+          "lineNumber": 148
         },
         {
           "name": "deviceCallback",
@@ -10792,7 +10792,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 136
+          "lineNumber": 162
         },
         {
           "name": "deviceNamed",
@@ -10822,7 +10822,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 149
+          "lineNumber": 175
         },
         {
           "name": "virtualSourceNamed",
@@ -10852,7 +10852,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 162
+          "lineNumber": 188
         }
       ],
       "properties": [
@@ -10871,7 +10871,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 104
+          "lineNumber": 130
         }
       ],
       "types": [
@@ -10909,7 +10909,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 122
+              "lineNumber": 115
             },
             {
               "name": "sendCommand",
@@ -10946,7 +10946,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 141
+              "lineNumber": 134
             },
             {
               "name": "sendSysex",
@@ -10973,7 +10973,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 149
+              "lineNumber": 142
             },
             {
               "name": "identityRequest",
@@ -10992,7 +10992,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 157
+              "lineNumber": 150
             },
             {
               "name": "destroy",
@@ -11011,7 +11011,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 165
+              "lineNumber": 158
             }
           ],
           "properties": [
@@ -11030,7 +11030,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 60
+              "lineNumber": 53
             },
             {
               "name": "name",
@@ -11047,7 +11047,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 67
+              "lineNumber": 60
             },
             {
               "name": "displayName",
@@ -11064,7 +11064,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 74
+              "lineNumber": 67
             },
             {
               "name": "manufacturer",
@@ -11081,7 +11081,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 81
+              "lineNumber": 74
             },
             {
               "name": "model",
@@ -11098,7 +11098,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 88
+              "lineNumber": 81
             },
             {
               "name": "isOnline",
@@ -11115,7 +11115,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 95
+              "lineNumber": 88
             },
             {
               "name": "isVirtual",
@@ -11132,7 +11132,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
-              "lineNumber": 103
+              "lineNumber": 96
             }
           ]
         }
@@ -23446,5 +23446,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-31T11:29:18.675Z"
+  "generatedAt": "2026-07-31T14:18:32.031Z"
 }

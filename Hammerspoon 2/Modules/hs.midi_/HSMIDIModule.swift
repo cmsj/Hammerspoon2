@@ -66,26 +66,52 @@ private func firstSourceAndDestination(of device: MIDIDeviceRef) -> (source: MID
     return (nil, nil)
 }
 
-/// Builds a single-message `MIDIPacketList` and sends it. Allocates enough room for
-/// `bytes` plus packet-list/packet header overhead so arbitrarily long sysex messages
-/// (which don't fit in a stack-sized packet list) are handled safely.
-func sendMIDIBytes(_ bytes: [UInt8], via port: MIDIPortRef, to destination: MIDIEndpointRef) -> Bool {
-    guard !bytes.isEmpty else { return false }
-    let bufferSize = bytes.count + 512
-    let rawBuffer = UnsafeMutableRawPointer.allocate(byteCount: bufferSize, alignment: MemoryLayout<MIDIPacketList>.alignment)
-    defer { unsafe rawBuffer.deallocate() }
-    let packetListPtr = unsafe rawBuffer.bindMemory(to: MIDIPacketList.self, capacity: 1)
-    let firstPacket = unsafe MIDIPacketListInit(packetListPtr)
-    // MIDIPacketListAdd returns a non-optional pointer on this SDK — it has no way to
-    // signal "buffer too small" to Swift. That's fine here: bufferSize always has 512
-    // bytes of slack over the actual message, far more than any command this module
-    // sends (including sysex) needs.
-    _ = bytes.withUnsafeBufferPointer { bufferPtr in
-        unsafe MIDIPacketListAdd(packetListPtr, bufferSize, firstPacket, 0, bufferPtr.count, bufferPtr.baseAddress!)
+/// Builds `MIDIEventList`(s) from `packets` (each inner array is one packet's UMP words —
+/// 1 word for a channel voice message, 2 words per sysex chunk) and sends them. Batches
+/// across multiple event lists if the total would exceed `MIDIEventListAdd`'s documented
+/// 65536-byte-per-list cap — relevant for large sysex dumps, since each 6-byte sysex chunk
+/// costs ~20 bytes of UMP + packet-header overhead, a much worse ratio than the byte-packed
+/// format this replaces.
+func sendMIDIPackets(_ packets: [[UInt32]], via port: MIDIPortRef, to destination: MIDIEndpointRef) -> Bool {
+    guard !packets.isEmpty else { return false }
+
+    let maxListBytes = 65536
+    var batch: [[UInt32]] = []
+    var batchBytes = 16 // event-list header slack
+
+    for packet in packets {
+        let packetBytes = packet.count * 4 + 16
+        if !batch.isEmpty && batchBytes + packetBytes > maxListBytes {
+            guard sendMIDIEventList(batch, via: port, to: destination) else { return false }
+            batch = []
+            batchBytes = 16
+        }
+        batch.append(packet)
+        batchBytes += packetBytes
     }
-    let status = unsafe MIDISend(port, destination, packetListPtr)
+    guard !batch.isEmpty else { return true }
+    return sendMIDIEventList(batch, via: port, to: destination)
+}
+
+private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to destination: MIDIEndpointRef) -> Bool {
+    let totalWords = packets.reduce(0) { $0 + $1.count }
+    let bufferSize = totalWords * 4 + packets.count * 16 + 64
+    let rawBuffer = UnsafeMutableRawPointer.allocate(byteCount: bufferSize, alignment: MemoryLayout<MIDIEventList>.alignment)
+    defer { unsafe rawBuffer.deallocate() }
+    let eventListPtr = unsafe rawBuffer.bindMemory(to: MIDIEventList.self, capacity: 1)
+    // MIDIEventListInit/Add return non-optional pointers on this SDK — no way to signal
+    // "buffer too small" to Swift. That's fine here: bufferSize always has generous slack
+    // over the actual content.
+    var packetPtr = unsafe MIDIEventListInit(eventListPtr, ._1_0)
+    for packet in packets {
+        unsafe packetPtr = packet.withUnsafeBufferPointer { wordsPtr in
+            unsafe MIDIEventListAdd(eventListPtr, bufferSize, packetPtr, 0, wordsPtr.count, wordsPtr.baseAddress!)
+        }
+    }
+
+    let status = unsafe MIDISendEventList(port, destination, eventListPtr)
     guard status == noErr else {
-        AKError("hs.midi: MIDISend failed with status \(status)")
+        AKError("hs.midi: MIDISendEventList failed with status \(status)")
         return false
     }
     return true
