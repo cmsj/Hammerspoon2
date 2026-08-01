@@ -53,6 +53,18 @@ private func hexString(_ bytes: [UInt8]) -> String {
     bytes.map { unsafe String(format: "%02X", $0) }.joined(separator: " ")
 }
 
+/// A hard ceiling on `sysexAccumulator`'s growth. Real-world sysex (patch dumps, identity
+/// replies, even bulk/firmware dumps) is essentially always well under this — at MIDI 1.0's
+/// wire speed (31,250 bit/s), transferring 1 MiB takes minutes — so this is a generous safety
+/// ceiling, not a realistic message size. Without it, a device that sends a `.start` chunk and
+/// then an unbounded stream of `.continue` chunks without ever sending `.end` (malfunctioning
+/// hardware, or a malicious/malformed source) would grow the accumulator without bound and
+/// eventually exhaust process memory.
+///
+/// Not marked `private` — referenced directly by the regression test so it doesn't hardcode a
+/// duplicate magic number to determine how many chunks are needed to exceed the cap.
+let maxSysexAccumulatorBytes = 1 * 1024 * 1024
+
 /// Decodes a single UMP message (as parsed by CoreMIDI's `MIDIEventListForEachEvent`)
 /// into hs.midi's `(commandType, description, metadata)` shape.
 ///
@@ -105,7 +117,14 @@ func decodeUniversalMessage(_ message: MIDIUniversalMessage, sysexAccumulator: i
             sysexAccumulator = chunk
             return nil
         case .continue:
-            sysexAccumulator?.append(contentsOf: chunk)
+            guard var acc = sysexAccumulator else { return nil } // no Start seen, or already abandoned below
+            guard acc.count + chunk.count <= maxSysexAccumulatorBytes else {
+                AKWarning("hs.midi: sysex message exceeded \(maxSysexAccumulatorBytes) bytes without an End chunk — dropping")
+                sysexAccumulator = nil
+                return nil
+            }
+            acc.append(contentsOf: chunk)
+            sysexAccumulator = acc
             return nil
         case .end:
             var bytes = sysexAccumulator ?? []

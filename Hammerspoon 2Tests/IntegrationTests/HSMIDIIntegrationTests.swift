@@ -428,6 +428,37 @@ struct HSMIDITests {
             #expect(acc == nil, "accumulator should be cleared once the End chunk completes the message")
         }
 
+        @Test("a runaway sysex stream without an End chunk is dropped instead of growing without bound")
+        func testSysexAccumulatorIsBounded() {
+            // Build one representative Start/Continue/End trio via the real encode → CoreMIDI
+            // → decode pipeline, then replay the *decoded* Continue message directly (bypassing
+            // CoreMIDI) enough times to exceed maxSysexAccumulatorBytes. This tests the
+            // accumulator's own bound, not CoreMIDI's unrelated ~64KB-per-event-list cap that
+            // pushing this many chunks through MIDIEventListAdd for real would hit first.
+            let payload = Array(repeating: UInt8(0), count: 18) // -> Start(6) + Continue(6) + End(6)
+            let packets = encodeSysexWords(payload)
+            #expect(packets.count == 3)
+            let messages = decodedMessages(from: packets)
+            #expect(messages.count == 3)
+
+            var acc: [UInt8]?
+            #expect(decodeUniversalMessage(messages[0], sysexAccumulator: &acc) == nil) // Start
+            #expect(acc?.count == 6)
+
+            let chunksNeeded = (maxSysexAccumulatorBytes / 6) + 10
+            for _ in 0..<chunksNeeded {
+                _ = decodeUniversalMessage(messages[1], sysexAccumulator: &acc) // Continue
+            }
+            #expect(acc == nil, "accumulator should have been dropped once it exceeded the cap")
+
+            // A subsequent End must not resurrect the dropped message as a giant payload — it
+            // should fall back to the same "no Start seen" behavior the decoder already used
+            // for a stream that genuinely never had a Start (just the End chunk's own bytes).
+            let result = decodeUniversalMessage(messages[2], sysexAccumulator: &acc) // End
+            #expect(result?.commandType == "systemExclusive")
+            #expect((result?.metadata["data"] as? String)?.count ?? 0 < 100, "must not include the dropped accumulated data")
+        }
+
         @Test("system real-time messages interleaved with an in-progress sysex don't disturb its accumulator")
         func testRealTimeDuringSysexAccumulation() {
             // Build the sysex chunks separately, but decode a system real-time message
