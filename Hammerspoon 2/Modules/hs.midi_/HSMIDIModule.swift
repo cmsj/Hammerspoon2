@@ -139,6 +139,8 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
 // MARK: - Protocol
 
 /// A module for enumerating, watching, and communicating with MIDI devices.
+/// IMPORTANT NOTE: This module has not had very much real-world testing yet. Please report positive or
+/// negative feedback via GitHub Issues.
 @objc protocol HSMIDIModuleAPI: JSExport {
 
     /// A table mapping each MIDI command type name to a stable numeric identifier.
