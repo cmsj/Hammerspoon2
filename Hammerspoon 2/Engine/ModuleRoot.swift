@@ -68,6 +68,7 @@ import JavaScriptCoreExtras
     @objc var locale: HSLocaleModule { get }
     @objc var location: HSLocationModule { get }
     @objc var menubar: HSMenuBarModule { get }
+    @objc var midi: HSMIDIModule { get }
     @objc var notify: HSNotifyModule { get }
     @objc var ocr: HSOCRModule { get }
     @objc var osascript: HSOSAScriptModule { get }
@@ -184,6 +185,7 @@ import JavaScriptCoreExtras
     @objc var locale: HSLocaleModule { get { getOrCreate(name: "locale", type: HSLocaleModule.self)}}
     @objc var location: HSLocationModule { get { getOrCreate(name: "location", type: HSLocationModule.self)}}
     @objc var menubar: HSMenuBarModule { get { getOrCreate(name: "menubar", type: HSMenuBarModule.self)}}
+    @objc var midi: HSMIDIModule { get { getOrCreate(name: "midi", type: HSMIDIModule.self)}}
     @objc var notify: HSNotifyModule { get { getOrCreate(name: "notify", type: HSNotifyModule.self)}}
     @objc var ocr: HSOCRModule { get { getOrCreate(name: "ocr", type: HSOCRModule.self)}}
     @objc var osascript: HSOSAScriptModule { get { getOrCreate(name: "osascript", type: HSOSAScriptModule.self)}}

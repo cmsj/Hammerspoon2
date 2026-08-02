@@ -3929,6 +3929,139 @@ if you only want to temporarily remove the item without freeing it.
 }
 
 /**
+ * A module for enumerating, watching, and communicating with MIDI devices.
+ */
+declare namespace hs.midi {
+    /**
+     * Returns the names of all currently connected (online) physical MIDI devices.
+     * @returns An array of device name strings
+     */
+    function devices(): string[];
+
+    /**
+     * Returns the names of all available virtual MIDI sources — endpoints published
+by other apps/drivers (e.g. the IAC Driver, virtual instruments) rather than
+belonging to a physical device.
+     * @returns An array of virtual source name strings
+     */
+    function virtualSources(): string[];
+
+    /**
+     * Sets or removes a callback fired whenever the set of connected MIDI devices
+or virtual sources changes.
+The callback receives two arguments: the current result of `devices()` and the
+current result of `virtualSources()`.
+     * @param fn The function to call on any MIDI setup change, or `null` to remove it
+     */
+    function deviceCallback(fn: ((devices: string[], virtualSources: string[]) => void) | null): void;
+
+    /**
+     * Creates an `hs.midi` object for a physical device.
+`new`/`alloc`/`copy`-prefixed method names, which have special meaning under
+Objective-C's ARC ownership conventions.
+     * @param deviceName The name of the device, as returned by `devices()`
+     * @returns An `HSMIDIDevice` object, or `nil` if no device has that name
+     */
+    function deviceNamed(deviceName: string): HSMIDIDevice | null;
+
+    /**
+     * Creates an `hs.midi` object for an existing virtual source (receive-only —
+a "source" endpoint can only be read from).
+the same ARC-related reason as `deviceNamed()`.
+     * @param virtualSourceName The name of the virtual source, as returned by `virtualSources()`
+     * @returns An `HSMIDIDevice` object, or `nil` if no virtual source has that name
+     */
+    function virtualSourceNamed(virtualSourceName: string): HSMIDIDevice | null;
+
+    /**
+     * A table mapping each MIDI command type name to a stable numeric identifier.
+     */
+    const commandTypes: Record<string, number>;
+
+}
+
+/**
+ * A MIDI device or virtual source, created via `hs.midi.deviceNamed()` or
+`hs.midi.virtualSourceNamed()`.
+ */
+declare class HSMIDIDevice {
+    /**
+     * Sets or removes the callback fired when a MIDI message is received.
+The callback receives five arguments: this device object, the device's name,
+the command type as a string (e.g. `"noteOn"`, `"controlChange"`,
+`"systemExclusive"` — see `hs.midi.commandTypes` for the full set), a
+human-readable description, and a metadata table of command-specific fields.
+when released, but some send `noteOn` with `velocity` 0 instead of `noteOff`.
+     * @param fn The function to call on each received message, or `null` to remove it
+     * @returns This device object, for chaining
+     */
+    setCallback(fn: ((device: HSMIDIDevice, deviceName: string, commandType: string, description: string, metadata: object) => void) | null): HSMIDIDevice;
+
+    /**
+     * Sends a MIDI command to the device.
+     * @param commandType The command type string
+     * @param metadata A table of command-specific fields
+     * @returns `true` if the command was sent, `false` if the device has no
+     */
+    sendCommand(commandType: string, metadata: object): boolean;
+
+    /**
+     * Sends a System Exclusive command to the device.
+     * @param command A hex string (whitespace ignored), e.g. `"F0 7E 7F 06 01 F7"`
+     */
+    sendSysex(command: string): void;
+
+    /**
+     * Sends a MIDI Identity Request. The device's reply, if any, arrives via the
+callback set with `setCallback()` as a `systemExclusive` message.
+     */
+    identityRequest(): void;
+
+    /**
+     * Stops receiving from and releases all resources held by this device object.
+Called automatically when Hammerspoon reloads.
+     */
+    destroy(): void;
+
+    /**
+     * A unique identifier for this device object.
+     */
+    readonly identifier: string;
+
+    /**
+     * The device's raw name.
+     */
+    readonly name: string;
+
+    /**
+     * The device's user-facing display name. Falls back to `name` if unavailable.
+     */
+    readonly displayName: string;
+
+    /**
+     * The device's manufacturer name, or an empty string if unavailable.
+     */
+    readonly manufacturer: string;
+
+    /**
+     * The device's model name, or an empty string if unavailable.
+     */
+    readonly model: string;
+
+    /**
+     * Whether the device is currently online (connected).
+     */
+    readonly isOnline: boolean;
+
+    /**
+     * Whether this is a virtual source (created via `hs.midi.virtualSourceNamed()`)
+rather than a physical device.
+     */
+    readonly isVirtual: boolean;
+
+}
+
+/**
  * Control and inspect the mouse pointer and attached mouse devices.
 ## Position
 All coordinates use **Hammerspoon screen coordinates**: `(0, 0)` is at the top-left

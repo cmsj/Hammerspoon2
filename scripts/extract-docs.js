@@ -28,6 +28,12 @@ const OUTPUT_COMBINED_DIR = path.join(OUTPUT_JSON_DIR, 'combined');
 // produced, so the generated JSON/HTML always uses the JS-facing name.
 const MODULE_NAME_OVERRIDES = {
     'hs.filesystem': 'hs.fs',
+    // The on-disk folder is "hs.midi_", not "hs.midi": Xcode's file-system-synchronized
+    // group scanner misclassifies any brand-new folder ending in ".midi" as an opaque
+    // resource bundle (".midi"/".mid" is a recognized system UTI for Standard MIDI Files),
+    // which silently drops its .swift files from the Sources build phase. See the sibling
+    // note in Modules/hs.midi_/HSMIDIModule.swift.
+    'hs.midi_': 'hs.midi',
 };
 
 /**

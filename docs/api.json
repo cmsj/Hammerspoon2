@@ -10721,6 +10721,426 @@
       "rawDocumentation": "Module for creating and managing macOS system menu bar items.\n\nMenu bar items appear in the right side of the macOS menu bar (alongside the clock, Wi-Fi icon, etc.).\nEach item can display a title, an icon, or both, and can open a menu or invoke a callback when clicked.\n\n## Creating a simple title item\n\n```js\nconst item = hs.menubar.create()\nitem.title = \"Hello\"\nitem.setClickCallback(() => console.log(\"clicked!\"))\n```\n\n## Creating an icon item with a static menu\n\n```js\nconst item = hs.menubar.create()\nitem.setIcon(HSImage.fromSymbol(\"star.fill\"))\nitem.setTooltip(\"My automation\")\nitem.setMenu([\n    { title: \"Reload config\", fn: () => hs.reload() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```\n\n## Creating an item with a dynamic menu\n\n```js\nconst item = hs.menubar.create()\nitem.title = \"Dynamic\"\nitem.setMenu(() => [\n    { title: \"Time: \" + new Date().toLocaleTimeString() },\n    { title: \"-\" },\n    { title: \"Remove from menubar\", fn: () => item.hide() }\n])\n```"
     },
     {
+      "name": "hs.midi",
+      "methods": [
+        {
+          "name": "devices",
+          "signature": "func devices() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the names of all currently connected (online) physical MIDI devices.\n- Returns: An array of device name strings\n- Example:\n```js\nconsole.log(hs.midi.devices())\n```",
+          "description": "Returns the names of all currently connected (online) physical MIDI devices.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of device name strings"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.midi.devices())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
+          "lineNumber": 138
+        },
+        {
+          "name": "virtualSources",
+          "signature": "func virtualSources() -> [String]",
+          "isStatic": false,
+          "rawDocumentation": "Returns the names of all available virtual MIDI sources — endpoints published\nby other apps/drivers (e.g. the IAC Driver, virtual instruments) rather than\nbelonging to a physical device.\n- Returns: An array of virtual source name strings\n- Example:\n```js\nconsole.log(hs.midi.virtualSources())\n```",
+          "description": "Returns the names of all available virtual MIDI sources — endpoints published\nby other apps/drivers (e.g. the IAC Driver, virtual instruments) rather than\nbelonging to a physical device.",
+          "params": [],
+          "returns": {
+            "type": "Array<String>",
+            "description": "An array of virtual source name strings"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.midi.virtualSources())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
+          "lineNumber": 148
+        },
+        {
+          "name": "deviceCallback",
+          "signature": "func deviceCallback(_ fn: JSValue?)",
+          "isStatic": false,
+          "rawDocumentation": "Sets or removes a callback fired whenever the set of connected MIDI devices\nor virtual sources changes.\n\nThe callback receives two arguments: the current result of `devices()` and the\ncurrent result of `virtualSources()`.\n- Parameter fn: {((devices: string[], virtualSources: string[]) => void) | null} The function to call on any MIDI setup change, or `null` to remove it\n- Example:\n```js\nhs.midi.deviceCallback((devices, virtualSources) => {\n    console.log(\"MIDI devices changed: \" + devices.join(\", \"))\n})\n```",
+          "description": "Sets or removes a callback fired whenever the set of connected MIDI devices\nor virtual sources changes.\nThe callback receives two arguments: the current result of `devices()` and the\ncurrent result of `virtualSources()`.",
+          "params": [
+            {
+              "name": "fn",
+              "type": "JSValue",
+              "description": "The function to call on any MIDI setup change, or `null` to remove it",
+              "optional": false,
+              "tsType": "((devices: string[], virtualSources: string[]) => void) | null"
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.midi.deviceCallback((devices, virtualSources) => {\n    console.log(\"MIDI devices changed: \" + devices.join(\", \"))\n})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
+          "lineNumber": 162
+        },
+        {
+          "name": "deviceNamed",
+          "signature": "func deviceNamed(_ deviceName: String) -> HSMIDIDevice?",
+          "isStatic": false,
+          "rawDocumentation": "Creates an `hs.midi` object for a physical device.\n\nNote: named `deviceNamed()` rather than v1's `new()` — Hammerspoon 2 avoids\n`new`/`alloc`/`copy`-prefixed method names, which have special meaning under\nObjective-C's ARC ownership conventions.\n- Parameter deviceName: The name of the device, as returned by `devices()`\n- Returns: An `HSMIDIDevice` object, or `nil` if no device has that name\n- Example:\n```js\nconst kb = hs.midi.deviceNamed(hs.midi.devices()[0])\n```",
+          "description": "Creates an `hs.midi` object for a physical device.\n`new`/`alloc`/`copy`-prefixed method names, which have special meaning under\nObjective-C's ARC ownership conventions.",
+          "params": [
+            {
+              "name": "deviceName",
+              "type": "string",
+              "description": "The name of the device, as returned by `devices()`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSMIDIDevice",
+            "description": "An `HSMIDIDevice` object, or `nil` if no device has that name"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const kb = hs.midi.deviceNamed(hs.midi.devices()[0])"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
+          "lineNumber": 175
+        },
+        {
+          "name": "virtualSourceNamed",
+          "signature": "func virtualSourceNamed(_ virtualSourceName: String) -> HSMIDIDevice?",
+          "isStatic": false,
+          "rawDocumentation": "Creates an `hs.midi` object for an existing virtual source (receive-only —\na \"source\" endpoint can only be read from).\n\nNote: named `virtualSourceNamed()` rather than v1's `newVirtualSource()`, for\nthe same ARC-related reason as `deviceNamed()`.\n- Parameter virtualSourceName: The name of the virtual source, as returned by `virtualSources()`\n- Returns: An `HSMIDIDevice` object, or `nil` if no virtual source has that name\n- Example:\n```js\nconst iac = hs.midi.virtualSourceNamed(hs.midi.virtualSources()[0])\n```",
+          "description": "Creates an `hs.midi` object for an existing virtual source (receive-only —\na \"source\" endpoint can only be read from).\nthe same ARC-related reason as `deviceNamed()`.",
+          "params": [
+            {
+              "name": "virtualSourceName",
+              "type": "string",
+              "description": "The name of the virtual source, as returned by `virtualSources()`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSMIDIDevice",
+            "description": "An `HSMIDIDevice` object, or `nil` if no virtual source has that name"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const iac = hs.midi.virtualSourceNamed(hs.midi.virtualSources()[0])"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
+          "lineNumber": 188
+        }
+      ],
+      "properties": [
+        {
+          "name": "commandTypes",
+          "signature": "var commandTypes: [String: Int] { get }",
+          "rawDocumentation": "A table mapping each MIDI command type name to a stable numeric identifier.\n- Example:\n```js\nconsole.log(hs.midi.commandTypes.noteOn)\n```",
+          "description": "A table mapping each MIDI command type name to a stable numeric identifier.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.midi.commandTypes.noteOn)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
+          "lineNumber": 130
+        }
+      ],
+      "types": [
+        {
+          "name": "HSMIDIDeviceAPI",
+          "type": "typedef",
+          "rawDocumentation": "A MIDI device or virtual source, created via `hs.midi.deviceNamed()` or\n`hs.midi.virtualSourceNamed()`.",
+          "description": "A MIDI device or virtual source, created via `hs.midi.deviceNamed()` or\n`hs.midi.virtualSourceNamed()`.",
+          "methods": [
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ fn: JSValue?) -> HSMIDIDevice",
+              "isStatic": false,
+              "rawDocumentation": "Sets or removes the callback fired when a MIDI message is received.\n\nThe callback receives five arguments: this device object, the device's name,\nthe command type as a string (e.g. `\"noteOn\"`, `\"controlChange\"`,\n`\"systemExclusive\"` — see `hs.midi.commandTypes` for the full set), a\nhuman-readable description, and a metadata table of command-specific fields.\n\nNote: most MIDI keyboards send `noteOn` when a key is pressed and `noteOff`\nwhen released, but some send `noteOn` with `velocity` 0 instead of `noteOff`.\n- Parameter fn: {((device: HSMIDIDevice, deviceName: string, commandType: string, description: string, metadata: object) => void) | null} The function to call on each received message, or `null` to remove it\n- Returns: This device object, for chaining\n- Example:\n```js\nkb.setCallback((device, deviceName, commandType, description, metadata) => {\n    if (commandType === \"noteOn\") console.log(\"Note \" + metadata.note + \" velocity \" + metadata.velocity)\n})\n```",
+              "description": "Sets or removes the callback fired when a MIDI message is received.\nThe callback receives five arguments: this device object, the device's name,\nthe command type as a string (e.g. `\"noteOn\"`, `\"controlChange\"`,\n`\"systemExclusive\"` — see `hs.midi.commandTypes` for the full set), a\nhuman-readable description, and a metadata table of command-specific fields.\nwhen released, but some send `noteOn` with `velocity` 0 instead of `noteOff`.",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSValue",
+                  "description": "The function to call on each received message, or `null` to remove it",
+                  "optional": false,
+                  "tsType": "((device: HSMIDIDevice, deviceName: string, commandType: string, description: string, metadata: object) => void) | null"
+                }
+              ],
+              "returns": {
+                "type": "HSMIDIDevice",
+                "description": "This device object, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "kb.setCallback((device, deviceName, commandType, description, metadata) => {\n    if (commandType === \"noteOn\") console.log(\"Note \" + metadata.note + \" velocity \" + metadata.velocity)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 115
+            },
+            {
+              "name": "sendCommand",
+              "signature": "func sendCommand(_ commandType: String, _ metadata: [String: Any]) -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Sends a MIDI command to the device.\n\nSupported `commandType` values and their `metadata` fields:\n- `noteOn`, `noteOff`: `note` (0-127), `velocity` (0-127), `channel` (0-15)\n- `polyphonicKeyPressure`: `note` (0-127), `pressure` (0-127), `channel` (0-15)\n- `controlChange`: `controllerNumber` (0-127), `controllerValue` (0-127), `channel` (0-15)\n- `programChange`: `programNumber` (0-127), `channel` (0-15)\n- `channelPressure`: `pressure` (0-127), `channel` (0-15)\n- `pitchWheelChange`: `pitchChange` (0-16383, center `8192`), `channel` (0-15)\n- Parameter commandType: The command type string\n- Parameter metadata: {object} A table of command-specific fields\n- Returns: `true` if the command was sent, `false` if the device has no\n  destination (e.g. a virtual source) or `commandType`/`metadata` was invalid\n- Example:\n```js\nkb.sendCommand(\"noteOn\", { note: 60, velocity: 100, channel: 0 })\n```",
+              "description": "Sends a MIDI command to the device.",
+              "params": [
+                {
+                  "name": "commandType",
+                  "type": "string",
+                  "description": "The command type string",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "metadata",
+                  "type": "Object<String, Any>",
+                  "description": "A table of command-specific fields",
+                  "optional": false,
+                  "tsType": "object"
+                }
+              ],
+              "returns": {
+                "type": "boolean",
+                "description": "`true` if the command was sent, `false` if the device has no"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "kb.sendCommand(\"noteOn\", { note: 60, velocity: 100, channel: 0 })"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 134
+            },
+            {
+              "name": "sendSysex",
+              "signature": "func sendSysex(_ command: String)",
+              "isStatic": false,
+              "rawDocumentation": "Sends a System Exclusive command to the device.\n- Parameter command: A hex string (whitespace ignored), e.g. `\"F0 7E 7F 06 01 F7\"`\n- Example:\n```js\nkb.sendSysex(\"F0 7E 7F 06 01 F7\")\n```",
+              "description": "Sends a System Exclusive command to the device.",
+              "params": [
+                {
+                  "name": "command",
+                  "type": "string",
+                  "description": "A hex string (whitespace ignored), e.g. `\"F0 7E 7F 06 01 F7\"`",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "kb.sendSysex(\"F0 7E 7F 06 01 F7\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 142
+            },
+            {
+              "name": "identityRequest",
+              "signature": "func identityRequest()",
+              "isStatic": false,
+              "rawDocumentation": "Sends a MIDI Identity Request. The device's reply, if any, arrives via the\ncallback set with `setCallback()` as a `systemExclusive` message.\n- Example:\n```js\nkb.identityRequest()\n```",
+              "description": "Sends a MIDI Identity Request. The device's reply, if any, arrives via the\ncallback set with `setCallback()` as a `systemExclusive` message.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "kb.identityRequest()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 150
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Stops receiving from and releases all resources held by this device object.\nCalled automatically when Hammerspoon reloads.\n- Example:\n```js\nkb.destroy()\n```",
+              "description": "Stops receiving from and releases all resources held by this device object.\nCalled automatically when Hammerspoon reloads.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "kb.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 158
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier for this device object.\n- Example:\n```js\nconst kb = hs.midi.deviceNamed(hs.midi.devices()[0])\nconsole.log(kb.identifier)\n```",
+              "description": "A unique identifier for this device object.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const kb = hs.midi.deviceNamed(hs.midi.devices()[0])\nconsole.log(kb.identifier)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 53
+            },
+            {
+              "name": "name",
+              "signature": "var name: String { get }",
+              "rawDocumentation": "The device's raw name.\n- Example:\n```js\nconsole.log(kb.name)\n```",
+              "description": "The device's raw name.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(kb.name)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 60
+            },
+            {
+              "name": "displayName",
+              "signature": "var displayName: String { get }",
+              "rawDocumentation": "The device's user-facing display name. Falls back to `name` if unavailable.\n- Example:\n```js\nconsole.log(kb.displayName)\n```",
+              "description": "The device's user-facing display name. Falls back to `name` if unavailable.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(kb.displayName)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 67
+            },
+            {
+              "name": "manufacturer",
+              "signature": "var manufacturer: String { get }",
+              "rawDocumentation": "The device's manufacturer name, or an empty string if unavailable.\n- Example:\n```js\nconsole.log(kb.manufacturer)\n```",
+              "description": "The device's manufacturer name, or an empty string if unavailable.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(kb.manufacturer)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 74
+            },
+            {
+              "name": "model",
+              "signature": "var model: String { get }",
+              "rawDocumentation": "The device's model name, or an empty string if unavailable.\n- Example:\n```js\nconsole.log(kb.model)\n```",
+              "description": "The device's model name, or an empty string if unavailable.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(kb.model)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 81
+            },
+            {
+              "name": "isOnline",
+              "signature": "var isOnline: Bool { get }",
+              "rawDocumentation": "Whether the device is currently online (connected).\n- Example:\n```js\nconsole.log(kb.isOnline)\n```",
+              "description": "Whether the device is currently online (connected).",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(kb.isOnline)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 88
+            },
+            {
+              "name": "isVirtual",
+              "signature": "var isVirtual: Bool { get }",
+              "rawDocumentation": "Whether this is a virtual source (created via `hs.midi.virtualSourceNamed()`)\nrather than a physical device.\n- Example:\n```js\nconsole.log(kb.isVirtual)\n```",
+              "description": "Whether this is a virtual source (created via `hs.midi.virtualSourceNamed()`)\nrather than a physical device.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(kb.isVirtual)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIDevice.swift",
+              "lineNumber": 96
+            }
+          ]
+        }
+      ],
+      "description": "A module for enumerating, watching, and communicating with MIDI devices.",
+      "rawDocumentation": "A module for enumerating, watching, and communicating with MIDI devices."
+    },
+    {
       "name": "hs.mouse",
       "methods": [
         {
@@ -23026,5 +23446,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-07-30T15:19:55.175Z"
+  "generatedAt": "2026-07-31T14:18:32.031Z"
 }
