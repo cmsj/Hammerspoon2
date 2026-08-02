@@ -227,7 +227,7 @@ private let ioctlIOSSIOSPEED: UInt = {
     private var callback: JSCallback?
     private var selfRetain: HSSerialPort?
 
-    @objc var isOpen: Bool { fd != -1 }
+    @objc var isOpen: Bool { unsafe fd != -1 }
 
     private var _baudRate = 115200
     @objc var baudRate: Int {
@@ -341,16 +341,16 @@ private let ioctlIOSSIOSPEED: UInt = {
     @objc @discardableResult func open() -> HSSerialPort {
         guard !isOpen else { return self }
 
-        let openedFD = path.withCString { Darwin.open($0, O_RDWR | O_NOCTTY | O_NONBLOCK) }
+        let openedFD = path.withCString { unsafe Darwin.open($0, O_RDWR | O_NOCTTY | O_NONBLOCK) }
         guard openedFD != -1 else {
-            let message = String(cString: strerror(errno))
+            let message = unsafe String(cString: strerror(errno))
             AKError("hs.serial: failed to open \(path): \(message)")
             fireCallback(event: "error", data: "Failed to open port: \(message)")
             return self
         }
 
-        fd = openedFD
-        generation &+= 1
+        unsafe fd = openedFD
+        unsafe generation &+= 1
         applyTermiosSettings()
         applyControlLine(bit: TIOCM_DTR, enabled: _dtr)
         applyControlLine(bit: TIOCM_RTS, enabled: _rts)
@@ -378,8 +378,8 @@ private let ioctlIOSSIOSPEED: UInt = {
             return self
         }
 
-        let localFD = fd
-        let capturedGeneration = generation
+        let localFD = unsafe fd
+        let capturedGeneration = unsafe generation
         let echo = shouldEchoReceivedData
         let bytes = [UInt8](data)
 
@@ -391,7 +391,7 @@ private let ioctlIOSSIOSPEED: UInt = {
             // retry budget doubles as a cap on how long close()/destroy() can block.
             while !remaining.isEmpty && attempts < 200 {
                 let written = remaining.withUnsafeBufferPointer { ptr -> Int in
-                    Darwin.write(localFD, ptr.baseAddress, ptr.count)
+                    unsafe Darwin.write(localFD, ptr.baseAddress, ptr.count)
                 }
                 if written > 0 {
                     remaining = remaining.dropFirst(written)
@@ -404,25 +404,25 @@ private let ioctlIOSSIOSPEED: UInt = {
                     usleep(1000)
                     continue
                 }
-                let message = String(cString: strerror(err))
-                Task { @MainActor [weak self] in
-                    guard let self, self.generation == capturedGeneration else { return }
+                let message = unsafe String(cString: strerror(err))
+                Task { @MainActor [weak self = self] in
+                    guard let self, unsafe self.generation == capturedGeneration else { return }
                     self.fireCallback(event: "error", data: "Write failed: \(message)")
                 }
                 return
             }
 
             if !remaining.isEmpty {
-                Task { @MainActor [weak self] in
-                    guard let self, self.generation == capturedGeneration else { return }
+                Task { @MainActor [weak self = self] in
+                    guard let self, unsafe self.generation == capturedGeneration else { return }
                     self.fireCallback(event: "error", data: "Write timed out")
                 }
                 return
             }
 
             if echo {
-                Task { @MainActor [weak self] in
-                    guard let self, self.generation == capturedGeneration else { return }
+                Task { @MainActor [weak self = self] in
+                    guard let self, unsafe self.generation == capturedGeneration else { return }
                     self.fireCallback(event: "received", data: value)
                 }
             }
@@ -448,9 +448,9 @@ private let ioctlIOSSIOSPEED: UInt = {
         guard isOpen else { return }
         readSource?.cancel()
         ioQueue.sync {}  // drain in-flight reads/writes before invalidating fd
-        generation &+= 1
-        Darwin.close(fd)
-        fd = -1
+        unsafe generation &+= 1
+        unsafe Darwin.close(fd)
+        unsafe fd = -1
         readSource = nil
         selfRetain = nil
         AKTrace("HSSerialPort(\(identifier)): closed")
@@ -461,8 +461,8 @@ private let ioctlIOSSIOSPEED: UInt = {
     private func applyTermiosSettings() {
         guard isOpen else { return }
         var options = termios()
-        tcgetattr(fd, &options)
-        cfmakeraw(&options)
+        unsafe tcgetattr(fd, &options)
+        unsafe cfmakeraw(&options)
         options.c_cflag |= tcflag_t(CLOCAL | CREAD)
 
         options.c_cflag &= ~tcflag_t(CSIZE)
@@ -501,30 +501,30 @@ private let ioctlIOSSIOSPEED: UInt = {
             options.c_cflag &= ~tcflag_t(CDTR_IFLOW | CDSR_OFLOW)
         }
 
-        tcsetattr(fd, TCSANOW, &options)
+        unsafe tcsetattr(fd, TCSANOW, &options)
 
         var speed = speed_t(_baudRate)
         _ = withUnsafeMutablePointer(to: &speed) { ptr in
-            ioctl(fd, ioctlIOSSIOSPEED, ptr)
+            unsafe ioctl(fd, ioctlIOSSIOSPEED, ptr)
         }
     }
 
     private func applyControlLine(bit: Int32, enabled: Bool) {
         guard isOpen else { return }
         var status: Int32 = 0
-        guard ioctl(fd, UInt(TIOCMGET), &status) == 0 else { return }
+        guard unsafe ioctl(fd, UInt(TIOCMGET), &status) == 0 else { return }
         if enabled {
             status |= bit
         } else {
             status &= ~bit
         }
-        _ = ioctl(fd, UInt(TIOCMSET), &status)
+        _ = unsafe ioctl(fd, UInt(TIOCMSET), &status)
     }
 
     // MARK: - Private: reading
 
     private func startReading() {
-        let localFD = fd
+        let localFD = unsafe fd
         let capturedGeneration = unsafe generation
         let source = DispatchSource.makeReadSource(fileDescriptor: localFD, queue: ioQueue)
         source.setEventHandler(handler: hsSerialPortReadHandler(fd: localFD, generation: capturedGeneration, port: self))
