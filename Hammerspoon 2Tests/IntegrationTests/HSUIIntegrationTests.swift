@@ -5,6 +5,7 @@
 
 import Testing
 import JavaScriptCore
+import AVFoundation
 @testable import Hammerspoon_2
 
 @Suite("hs.ui tests", .serialized)
@@ -214,6 +215,86 @@ struct HSUITests {
                     .backgroundColor("#2C3E50")
             """)
             #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Suite 3: HSVideo loop() queue management
+    //
+    // Regression coverage for a bug where loop(false) unconditionally reset the
+    // AVQueuePlayer's queue down to just the first item — correct cleanup for the
+    // single-URL case where AVPlayerLooper had actually been enabled, but destructive
+    // for a multi-URL playlist (where looping is not supported at all), silently
+    // discarding every item but the first.
+
+    @Suite("HSVideo loop() tests")
+    struct HSVideoLoopTests {
+
+        @Test("loop(false) on a multi-URL playlist preserves all queued items")
+        func testLoopFalsePreservesMultiItemQueue() {
+            let harness = JSTestHarness()
+            harness.eval("""
+                var v = HSVideo.fromURLs([
+                    "https://example.com/one.mp4",
+                    "https://example.com/two.mp4",
+                    "https://example.com/three.mp4"
+                ])
+                v.loop(false)
+            """)
+            #expect(!harness.hasException)
+            guard let video = harness.evalValue("v")?.toObjectOf(HSVideo.self) as? HSVideo else {
+                Issue.record("Could not extract HSVideo from JS value")
+                return
+            }
+            #expect(video.player.items().count == 3)
+        }
+
+        @Test("loop(false) on a single-URL playlist that never enabled looping is a no-op")
+        func testLoopFalseNeverEnabledIsNoOp() {
+            let harness = JSTestHarness()
+            harness.eval("""
+                var v = HSVideo.fromURLs(["https://example.com/one.mp4"])
+                v.loop(false)
+            """)
+            #expect(!harness.hasException)
+            guard let video = harness.evalValue("v")?.toObjectOf(HSVideo.self) as? HSVideo else {
+                Issue.record("Could not extract HSVideo from JS value")
+                return
+            }
+            #expect(video.player.items().count == 1)
+        }
+
+        @Test("loop(true) then loop(false) on a single-URL playlist ends with exactly one item")
+        func testLoopToggleOnSingleItemPlaylistEndsWithOneItem() {
+            let harness = JSTestHarness()
+            harness.eval("""
+                var v = HSVideo.fromURLs(["https://example.com/one.mp4"])
+                v.loop(true)
+                v.loop(false)
+            """)
+            #expect(!harness.hasException)
+            guard let video = harness.evalValue("v")?.toObjectOf(HSVideo.self) as? HSVideo else {
+                Issue.record("Could not extract HSVideo from JS value")
+                return
+            }
+            #expect(video.player.items().count == 1)
+        }
+
+        @Test("loop(true) is a no-op with a warning for a multi-URL playlist")
+        func testLoopTrueOnMultiItemPlaylistIsRejected() {
+            let harness = JSTestHarness()
+            harness.eval("""
+                var v = HSVideo.fromURLs([
+                    "https://example.com/one.mp4",
+                    "https://example.com/two.mp4"
+                ])
+                v.loop(true)
+            """)
+            #expect(!harness.hasException)
+            guard let video = harness.evalValue("v")?.toObjectOf(HSVideo.self) as? HSVideo else {
+                Issue.record("Could not extract HSVideo from JS value")
+                return
+            }
+            #expect(video.player.items().count == 2)
         }
     }
 

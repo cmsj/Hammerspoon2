@@ -169,13 +169,28 @@ import AVFoundation
 
     @objc func loop(_ enabled: Bool) -> HSVideo {
         guard enabled else {
+            // Nothing to tear down: looper is only ever non-nil for a single-URL
+            // playlist, so skip the queue reset for multi-URL playlists (where it
+            // would discard every item but the first) and when loop was never enabled.
+            guard looper != nil else { return self }
             looper?.disableLooping()
             looper = nil
+
+            // Clear out anything that AVPlayerLooper added to the queue
+            player.removeAllItems()
+            if let item = items.first {
+                player.insert(item, after: nil)
+            }
             return self
         }
 
         guard items.count == 1, let templateItem = items.first else {
             AKWarning("HSVideo: loop() is only supported for a single-URL playlist")
+            return self
+        }
+
+        guard looper == nil else {
+            AKWarning("HSVideo: loop() already enabled")
             return self
         }
 
