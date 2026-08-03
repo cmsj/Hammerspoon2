@@ -10743,7 +10743,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 138
+          "lineNumber": 159
         },
         {
           "name": "virtualSources",
@@ -10765,7 +10765,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 148
+          "lineNumber": 169
         },
         {
           "name": "deviceCallback",
@@ -10792,7 +10792,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 162
+          "lineNumber": 183
         },
         {
           "name": "deviceNamed",
@@ -10822,7 +10822,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 175
+          "lineNumber": 196
         },
         {
           "name": "virtualSourceNamed",
@@ -10852,7 +10852,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 188
+          "lineNumber": 209
         }
       ],
       "properties": [
@@ -10871,7 +10871,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift",
-          "lineNumber": 130
+          "lineNumber": 151
         }
       ],
       "types": [
@@ -11137,8 +11137,8 @@
           ]
         }
       ],
-      "description": "A module for enumerating, watching, and communicating with MIDI devices.",
-      "rawDocumentation": "A module for enumerating, watching, and communicating with MIDI devices."
+      "description": "A module for enumerating, watching, and communicating with MIDI devices.\nIMPORTANT NOTE: This module has not had very much real-world testing yet. Please report positive or\nnegative feedback via GitHub Issues.",
+      "rawDocumentation": "A module for enumerating, watching, and communicating with MIDI devices.\nIMPORTANT NOTE: This module has not had very much real-world testing yet. Please report positive or\nnegative feedback via GitHub Issues."
     },
     {
       "name": "hs.mouse",
@@ -18450,7 +18450,7 @@
         {
           "name": "HSUIWindowAPI",
           "type": "typedef",
-          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback\n- **Images**: `image(imageValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback\n- **Images**: `image(imageValue)`\n- **Video**: `video(videoValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
           "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n## Building UI Elements\n## Modifying Elements\n## Examples\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
           "methods": [
             {
@@ -18468,7 +18468,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 73
+              "lineNumber": 74
             },
             {
               "name": "hide",
@@ -18482,7 +18482,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 76
+              "lineNumber": 77
             },
             {
               "name": "close",
@@ -18496,7 +18496,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 79
+              "lineNumber": 80
             },
             {
               "name": "titled",
@@ -18526,7 +18526,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 99
+              "lineNumber": 100
             },
             {
               "name": "closable",
@@ -18556,7 +18556,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 112
+              "lineNumber": 113
             },
             {
               "name": "miniaturizable",
@@ -18586,7 +18586,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 125
+              "lineNumber": 126
             },
             {
               "name": "allowResize",
@@ -18616,7 +18616,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 138
+              "lineNumber": 139
             },
             {
               "name": "windowTitle",
@@ -18646,7 +18646,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 151
+              "lineNumber": 152
             },
             {
               "name": "level",
@@ -18676,21 +18676,21 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 171
+              "lineNumber": 172
             },
             {
               "name": "backgroundColor",
-              "signature": "func backgroundColor(_ colorValue: HSColor) -> HSUIWindow",
+              "signature": "func backgroundColor(_ colorValue: JSValue) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Set the window's background color\n- Parameter colorValue: Color as an HSColor object\n- Returns: Self for chaining",
+              "rawDocumentation": "Set the window's background color\n- Parameter colorValue: {string | HSColor} A hex color string (e.g. \"#FF0000\") or an HSColor object\n- Returns: Self for chaining",
               "description": "Set the window's background color",
               "params": [
                 {
                   "name": "colorValue",
-                  "type": "HSColor",
-                  "description": "Color as an HSColor object",
+                  "type": "JSValue",
+                  "description": "A hex color string (e.g. \"#FF0000\") or an HSColor object",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "string | HSColor"
                 }
               ],
               "returns": {
@@ -18701,7 +18701,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 176
+              "lineNumber": 177
             },
             {
               "name": "rectangle",
@@ -18718,7 +18718,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 182
+              "lineNumber": 183
             },
             {
               "name": "circle",
@@ -18735,7 +18735,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 186
+              "lineNumber": 187
             },
             {
               "name": "text",
@@ -18760,7 +18760,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 192
+              "lineNumber": 193
             },
             {
               "name": "image",
@@ -18785,7 +18785,37 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 197
+              "lineNumber": 198
+            },
+            {
+              "name": "video",
+              "signature": "func video(_ videoValue: HSVideo) -> HSUIWindow",
+              "isStatic": false,
+              "rawDocumentation": "Add a video element\n\nRenders a SwiftUI `VideoPlayer` for the given `HSVideo`. Keep a reference to the\n`HSVideo` object to control playback (`play()`, `pause()`, `seek()`, `volume`) after\nthe window is shown.\n\n- Parameter videoValue: Video as an HSVideo object\n- Returns: Self for chaining (apply modifiers like `frame()`, `opacity()`)\n- Example:\n```js\nconst clip = HSVideo.fromURLs([\"~/Movies/clip.mp4\"])\nhs.ui.window({x: 100, y: 100, w: 640, h: 360})\n    .video(clip)\n        .frame({w: 640, h: 360})\n    .show()\n\nclip.play()\n```",
+              "description": "Add a video element\nRenders a SwiftUI `VideoPlayer` for the given `HSVideo`. Keep a reference to the\n`HSVideo` object to control playback (`play()`, `pause()`, `seek()`, `volume`) after\nthe window is shown.",
+              "params": [
+                {
+                  "name": "videoValue",
+                  "type": "HSVideo",
+                  "description": "Video as an HSVideo object",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining (apply modifiers like `frame()`, `opacity()`)"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const clip = HSVideo.fromURLs([\"~/Movies/clip.mp4\"])\nhs.ui.window({x: 100, y: 100, w: 640, h: 360})\n    .video(clip)\n        .frame({w: 640, h: 360})\n    .show()\n\nclip.play()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 218
             },
             {
               "name": "button",
@@ -18810,7 +18840,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 204
+              "lineNumber": 225
             },
             {
               "name": "vstack",
@@ -18827,7 +18857,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 210
+              "lineNumber": 231
             },
             {
               "name": "hstack",
@@ -18844,7 +18874,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 214
+              "lineNumber": 235
             },
             {
               "name": "zstack",
@@ -18861,7 +18891,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 218
+              "lineNumber": 239
             },
             {
               "name": "spacer",
@@ -18878,7 +18908,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 222
+              "lineNumber": 243
             },
             {
               "name": "webview",
@@ -18908,7 +18938,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 242
+              "lineNumber": 263
             },
             {
               "name": "end",
@@ -18925,21 +18955,21 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 246
+              "lineNumber": 267
             },
             {
               "name": "fill",
-              "signature": "func fill(_ colorValue: HSColor) -> HSUIWindow",
+              "signature": "func fill(_ colorValue: JSValue) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Fill a shape with a color\n- Parameter colorValue: Color as an HSColor\n- Returns: Self for chaining",
+              "rawDocumentation": "Fill a shape with a color\n- Parameter colorValue: {string | HSColor} A hex color string (e.g. \"#FF0000\") or an HSColor object\n- Returns: Self for chaining",
               "description": "Fill a shape with a color",
               "params": [
                 {
                   "name": "colorValue",
-                  "type": "HSColor",
-                  "description": "Color as an HSColor",
+                  "type": "JSValue",
+                  "description": "A hex color string (e.g. \"#FF0000\") or an HSColor object",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "string | HSColor"
                 }
               ],
               "returns": {
@@ -18950,21 +18980,21 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 253
+              "lineNumber": 274
             },
             {
               "name": "stroke",
-              "signature": "func stroke(_ colorValue: HSColor) -> HSUIWindow",
+              "signature": "func stroke(_ colorValue: JSValue) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Add a stroke (border) to a shape\n- Parameter colorValue: Color as an HSColor\n- Returns: Self for chaining",
+              "rawDocumentation": "Add a stroke (border) to a shape\n- Parameter colorValue: {string | HSColor} A hex color string (e.g. \"#FF0000\") or an HSColor object\n- Returns: Self for chaining",
               "description": "Add a stroke (border) to a shape",
               "params": [
                 {
                   "name": "colorValue",
-                  "type": "HSColor",
-                  "description": "Color as an HSColor",
+                  "type": "JSValue",
+                  "description": "A hex color string (e.g. \"#FF0000\") or an HSColor object",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "string | HSColor"
                 }
               ],
               "returns": {
@@ -18975,7 +19005,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 258
+              "lineNumber": 279
             },
             {
               "name": "strokeWidth",
@@ -19000,7 +19030,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 263
+              "lineNumber": 284
             },
             {
               "name": "cornerRadius",
@@ -19025,7 +19055,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 268
+              "lineNumber": 289
             },
             {
               "name": "frame",
@@ -19050,7 +19080,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 273
+              "lineNumber": 294
             },
             {
               "name": "opacity",
@@ -19075,7 +19105,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 278
+              "lineNumber": 299
             },
             {
               "name": "font",
@@ -19100,21 +19130,21 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 285
+              "lineNumber": 306
             },
             {
               "name": "foregroundColor",
-              "signature": "func foregroundColor(_ colorValue: HSColor) -> HSUIWindow",
+              "signature": "func foregroundColor(_ colorValue: JSValue) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Set the text color\n- Parameter colorValue: Color as HSColor\n- Returns: Self for chaining",
+              "rawDocumentation": "Set the text color\n- Parameter colorValue: {string | HSColor} A hex color string (e.g. \"#FF0000\") or an HSColor object\n- Returns: Self for chaining",
               "description": "Set the text color",
               "params": [
                 {
                   "name": "colorValue",
-                  "type": "HSColor",
-                  "description": "Color as HSColor",
+                  "type": "JSValue",
+                  "description": "A hex color string (e.g. \"#FF0000\") or an HSColor object",
                   "optional": false,
-                  "tsType": null
+                  "tsType": "string | HSColor"
                 }
               ],
               "returns": {
@@ -19125,7 +19155,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 290
+              "lineNumber": 311
             },
             {
               "name": "resizable",
@@ -19142,7 +19172,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 296
+              "lineNumber": 317
             },
             {
               "name": "aspectRatio",
@@ -19167,7 +19197,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 301
+              "lineNumber": 322
             },
             {
               "name": "padding",
@@ -19192,7 +19222,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 308
+              "lineNumber": 329
             },
             {
               "name": "spacing",
@@ -19217,7 +19247,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 313
+              "lineNumber": 334
             },
             {
               "name": "onClick",
@@ -19242,7 +19272,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 320
+              "lineNumber": 341
             },
             {
               "name": "onHover",
@@ -19267,7 +19297,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 325
+              "lineNumber": 346
             }
           ],
           "properties": []
@@ -23444,7 +23474,170 @@
       ],
       "category": "type",
       "types": []
+    },
+    {
+      "name": "HSVideoAPI",
+      "type": "typedef",
+      "rawDocumentation": "Bridge type for working with video playback in JavaScript\n\nHSVideo wraps an `AVQueuePlayer` and can be embedded in an `hs.ui.window` via `.video()`,\nor driven entirely from JavaScript with `play()`, `pause()`, `seek()`, `loop()`, and `volume`.\n\n## Loading Video\n\nEach entry may be a local file path (`~` is expanded) or a remote URL string. Multiple\nentries are queued and play back to back, in order.\n\n```javascript\n// A single local file\nconst clip = HSVideo.fromURLs([\"~/Movies/clip.mp4\"])\n\n// A playlist mixing a local file and a remote stream\nconst playlist = HSVideo.fromURLs([\"~/Movies/intro.mp4\", \"https://example.com/video.mp4\"])\n```\n\n## Playback Control\n\n```javascript\nconst clip = HSVideo.fromURLs([\"~/Movies/clip.mp4\"])\nclip.volume = 0.5\nclip.loop(true)\nclip.play()\n// ... later ...\nclip.seek(30)\nclip.pause()\n```\n\n## Looping\n\nGapless looping (via `AVPlayerLooper`) is only supported when the playlist contains a\nsingle URL. Calling `loop(true)` on a multi-URL playlist has no effect (the playlist just\nplays through once) and logs a warning.",
+      "description": "Bridge type for working with video playback in JavaScript\nHSVideo wraps an `AVQueuePlayer` and can be embedded in an `hs.ui.window` via `.video()`,\nor driven entirely from JavaScript with `play()`, `pause()`, `seek()`, `loop()`, and `volume`.\n## Loading Video\nEach entry may be a local file path (`~` is expanded) or a remote URL string. Multiple\nentries are queued and play back to back, in order.\n```javascript\n// A single local file\nconst clip = HSVideo.fromURLs([\"~/Movies/clip.mp4\"])\n\n// A playlist mixing a local file and a remote stream\nconst playlist = HSVideo.fromURLs([\"~/Movies/intro.mp4\", \"https://example.com/video.mp4\"])\n```\n## Playback Control\n```javascript\nconst clip = HSVideo.fromURLs([\"~/Movies/clip.mp4\"])\nclip.volume = 0.5\nclip.loop(true)\nclip.play()\n// ... later ...\nclip.seek(30)\nclip.pause()\n```\n## Looping\nGapless looping (via `AVPlayerLooper`) is only supported when the playlist contains a\nsingle URL. Calling `loop(true)` on a multi-URL playlist has no effect (the playlist just\nplays through once) and logs a warning.",
+      "methods": [
+        {
+          "name": "fromURLs",
+          "signature": "static func fromURLs(_ urls: [String]) -> HSVideo?",
+          "isStatic": true,
+          "rawDocumentation": "Load a playlist of videos to play back to back, in order\n- Parameter urls: {string[]} Each entry is a local file path (`~` is expanded) or a remote URL string\n- Returns: An HSVideo object, or null if the list is empty or an entry couldn't be resolved\n- Example:\n```js\nconst clip = HSVideo.fromURLs([\"~/Movies/clip.mp4\"])\nconst playlist = HSVideo.fromURLs([\"~/Movies/intro.mp4\", \"https://example.com/video.mp4\"])\n```",
+          "description": "Load a playlist of videos to play back to back, in order",
+          "params": [
+            {
+              "name": "urls",
+              "type": "Array<String>",
+              "description": "Each entry is a local file path (`~` is expanded) or a remote URL string",
+              "optional": false,
+              "tsType": "string[]"
+            }
+          ],
+          "returns": {
+            "type": "HSVideo",
+            "description": "An HSVideo object, or null if the list is empty or an entry couldn't be resolved"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const clip = HSVideo.fromURLs([\"~/Movies/clip.mp4\"])\nconst playlist = HSVideo.fromURLs([\"~/Movies/intro.mp4\", \"https://example.com/video.mp4\"])"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSVideo.swift",
+          "lineNumber": 60
+        },
+        {
+          "name": "play",
+          "signature": "func play() -> HSVideo",
+          "isStatic": false,
+          "rawDocumentation": "Start (or resume) playback\n- Returns: Self for chaining\n- Example:\n```js\nclip.play()\n```",
+          "description": "Start (or resume) playback",
+          "params": [],
+          "returns": {
+            "type": "HSVideo",
+            "description": "Self for chaining"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "clip.play()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSVideo.swift",
+          "lineNumber": 68
+        },
+        {
+          "name": "pause",
+          "signature": "func pause() -> HSVideo",
+          "isStatic": false,
+          "rawDocumentation": "Pause playback\n- Returns: Self for chaining\n- Example:\n```js\nclip.pause()\n```",
+          "description": "Pause playback",
+          "params": [],
+          "returns": {
+            "type": "HSVideo",
+            "description": "Self for chaining"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "clip.pause()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSVideo.swift",
+          "lineNumber": 76
+        },
+        {
+          "name": "seek",
+          "signature": "func seek(_ seconds: Double) -> HSVideo",
+          "isStatic": false,
+          "rawDocumentation": "Seek to a specific position\n- Parameter seconds: The position to seek to, in seconds\n- Returns: Self for chaining\n- Example:\n```js\nclip.seek(30)\n```",
+          "description": "Seek to a specific position",
+          "params": [
+            {
+              "name": "seconds",
+              "type": "number",
+              "description": "The position to seek to, in seconds",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSVideo",
+            "description": "Self for chaining"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "clip.seek(30)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSVideo.swift",
+          "lineNumber": 85
+        },
+        {
+          "name": "loop",
+          "signature": "func loop(_ enabled: Bool) -> HSVideo",
+          "isStatic": false,
+          "rawDocumentation": "Enable or disable gapless looping\n\nOnly supported when this HSVideo was created from a single-URL playlist. Enabling\nloop on a multi-URL playlist has no effect and logs a warning.\n\n- Parameter enabled: Pass `true` to loop playback indefinitely\n- Returns: Self for chaining\n- Example:\n```js\nHSVideo.fromURLs([\"~/Movies/clip.mp4\"]).loop(true).play()\n```",
+          "description": "Enable or disable gapless looping\nOnly supported when this HSVideo was created from a single-URL playlist. Enabling\nloop on a multi-URL playlist has no effect and logs a warning.",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean",
+              "description": "Pass `true` to loop playback indefinitely",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSVideo",
+            "description": "Self for chaining"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "HSVideo.fromURLs([\"~/Movies/clip.mp4\"]).loop(true).play()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSVideo.swift",
+          "lineNumber": 98
+        }
+      ],
+      "properties": [
+        {
+          "name": "volume",
+          "signature": "var volume: Double { get set }",
+          "rawDocumentation": "The playback volume, from 0.0 (silent) to 1.0 (full volume)\n- Example:\n```js\nclip.volume = 0.5\nconsole.log(clip.volume)\n```",
+          "description": "The playback volume, from 0.0 (silent) to 1.0 (full volume)",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "clip.volume = 0.5\nconsole.log(clip.volume)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSVideo.swift",
+          "lineNumber": 106
+        }
+      ],
+      "category": "type",
+      "types": []
     }
   ],
-  "generatedAt": "2026-07-31T14:18:32.031Z"
+  "generatedAt": "2026-08-03T10:51:14.396Z"
 }

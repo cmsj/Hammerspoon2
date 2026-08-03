@@ -113,6 +113,110 @@ struct HSUITests {
         }
     }
 
+    // MARK: - Suite 2: Builder color argument coercion
+    //
+    // fill(), stroke(), foregroundColor(), and backgroundColor() accept either a hex
+    // color string or an HSColor object via HSColor.fromJSValue(). Regression coverage
+    // for a bug where these were typed strictly to HSColor, so passing a plain string
+    // (as shown in this file's own docstring examples) raised
+    // "TypeError: Argument does not match Objective-C Class".
+
+    @Suite("hs.ui builder color arguments")
+    struct HSUIColorArgumentTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSUIModule.self, as: "ui")
+            return harness
+        }
+
+        @Test("fill() accepts a hex color string")
+        func testFillAcceptsHexString() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .rectangle()
+                        .fill("#4A90E2")
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("fill() accepts an HSColor object")
+        func testFillAcceptsHSColor() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .rectangle()
+                        .fill(HSColor.hex("#4A90E2"))
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("stroke() accepts a hex color string")
+        func testStrokeAcceptsHexString() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .rectangle()
+                        .stroke("#000000")
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("foregroundColor() accepts a hex color string")
+        func testForegroundColorAcceptsHexString() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .text("Dashboard")
+                        .foregroundColor("#FFFFFF")
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("backgroundColor() accepts a hex color string")
+        func testBackgroundColorAcceptsHexString() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .backgroundColor("#2C3E50")
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("fill() with an invalid argument logs an error but does not throw")
+        func testFillInvalidArgumentDoesNotThrow() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .rectangle()
+                        .fill(42)
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("HSUIWindow docstring dashboard example builds without throwing")
+        func testDashboardDocstringExample() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+                    .vstack()
+                        .spacing(10)
+                        .padding(20)
+                        .text("Dashboard")
+                            .font(HSFont.largeTitle())
+                            .foregroundColor("#FFFFFF")
+                        .rectangle()
+                            .fill("#4A90E2")
+                            .cornerRadius(10)
+                            .frame({w: "90%", h: 80})
+                    .end()
+                    .backgroundColor("#2C3E50")
+            """)
+            #expect(!harness.hasException)
+        }
+    }
+
     // MARK: - Memory Leak Tests
     //
     // HSUIWindow, HSUIAlert, and HSUIDialog register themselves in strong dictionaries

@@ -23,6 +23,7 @@ import SwiftUI
 /// - **Text**: `text(content)`
 /// - **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback
 /// - **Images**: `image(imageValue)`
+/// - **Video**: `video(videoValue)`
 /// - **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`
 ///
 /// ## Modifying Elements
@@ -171,9 +172,9 @@ import SwiftUI
     @objc func level(_ name: String) -> HSUIWindow
 
     /// Set the window's background color
-    /// - Parameter colorValue: Color as an HSColor object
+    /// - Parameter colorValue: {string | HSColor} A hex color string (e.g. "#FF0000") or an HSColor object
     /// - Returns: Self for chaining
-    @objc func backgroundColor(_ colorValue: HSColor) -> HSUIWindow
+    @objc func backgroundColor(_ colorValue: JSValue) -> HSUIWindow
 
     // MARK: Shape Elements
 
@@ -195,6 +196,26 @@ import SwiftUI
     /// - Parameter imageValue: Image as HSImage object
     /// - Returns: Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)
     @objc func image(_ imageValue: HSImage) -> HSUIWindow
+
+    /// Add a video element
+    ///
+    /// Renders a SwiftUI `VideoPlayer` for the given `HSVideo`. Keep a reference to the
+    /// `HSVideo` object to control playback (`play()`, `pause()`, `seek()`, `volume`) after
+    /// the window is shown.
+    ///
+    /// - Parameter videoValue: Video as an HSVideo object
+    /// - Returns: Self for chaining (apply modifiers like `frame()`, `opacity()`)
+    /// - Example:
+    /// ```js
+    /// const clip = HSVideo.fromURLs(["~/Movies/clip.mp4"])
+    /// hs.ui.window({x: 100, y: 100, w: 640, h: 360})
+    ///     .video(clip)
+    ///         .frame({w: 640, h: 360})
+    ///     .show()
+    ///
+    /// clip.play()
+    /// ```
+    @objc func video(_ videoValue: HSVideo) -> HSUIWindow
 
     /// Add a button element
     /// - Parameter label: {string | HSString} The button label — a plain JS string for static text,
@@ -248,14 +269,14 @@ import SwiftUI
     // MARK: Shape Modifiers
 
     /// Fill a shape with a color
-    /// - Parameter colorValue: Color as an HSColor
+    /// - Parameter colorValue: {string | HSColor} A hex color string (e.g. "#FF0000") or an HSColor object
     /// - Returns: Self for chaining
-    @objc func fill(_ colorValue: HSColor) -> HSUIWindow
+    @objc func fill(_ colorValue: JSValue) -> HSUIWindow
 
     /// Add a stroke (border) to a shape
-    /// - Parameter colorValue: Color as an HSColor
+    /// - Parameter colorValue: {string | HSColor} A hex color string (e.g. "#FF0000") or an HSColor object
     /// - Returns: Self for chaining
-    @objc func stroke(_ colorValue: HSColor) -> HSUIWindow
+    @objc func stroke(_ colorValue: JSValue) -> HSUIWindow
 
     /// Set the stroke width
     /// - Parameter width: Width in points
@@ -285,9 +306,9 @@ import SwiftUI
     @objc func font(_ font: HSFont) -> HSUIWindow
 
     /// Set the text color
-    /// - Parameter colorValue: Color as HSColor
+    /// - Parameter colorValue: {string | HSColor} A hex color string (e.g. "#FF0000") or an HSColor object
     /// - Returns: Self for chaining
-    @objc func foregroundColor(_ colorValue: HSColor) -> HSUIWindow
+    @objc func foregroundColor(_ colorValue: JSValue) -> HSUIWindow
 
     // MARK: Image Modifiers
 
@@ -498,8 +519,12 @@ import SwiftUI
 
     // MARK: - Background Styling
 
-    @objc func backgroundColor(_ colorValue: HSColor) -> HSUIWindow {
-        windowBackgroundColor = colorValue.color
+    @objc func backgroundColor(_ colorValue: JSValue) -> HSUIWindow {
+        if let hsColor = HSColor.fromJSValue(colorValue) {
+            windowBackgroundColor = hsColor.color
+        } else {
+            AKError("hs.ui.window: backgroundColor() requires a hex color string or HSColor object")
+        }
         return self
     }
 
@@ -531,6 +556,13 @@ import SwiftUI
         let imageElement = UIImage(hsImage: imageValue)
         currentElement = imageElement
         addToCurrentContainer(imageElement)
+        return self
+    }
+
+    @objc func video(_ videoValue: HSVideo) -> HSUIWindow {
+        let videoElement = UIVideo(hsVideo: videoValue)
+        currentElement = videoElement
+        addToCurrentContainer(videoElement)
         return self
     }
 
@@ -603,16 +635,24 @@ import SwiftUI
 
     // MARK: - Shape Modifiers
 
-    @objc func fill(_ colorValue: HSColor) -> HSUIWindow {
+    @objc func fill(_ colorValue: JSValue) -> HSUIWindow {
+        guard let hsColor = HSColor.fromJSValue(colorValue) else {
+            AKError("hs.ui: fill() requires a hex color string or HSColor object")
+            return self
+        }
         if let shapeable = currentElement as? any ShapeModifiable {
-            shapeable.fillColor = colorValue
+            shapeable.fillColor = hsColor
         }
         return self
     }
 
-    @objc func stroke(_ colorValue: HSColor) -> HSUIWindow {
+    @objc func stroke(_ colorValue: JSValue) -> HSUIWindow {
+        guard let hsColor = HSColor.fromJSValue(colorValue) else {
+            AKError("hs.ui: stroke() requires a hex color string or HSColor object")
+            return self
+        }
         if let shapeable = currentElement as? any ShapeModifiable {
-            shapeable.strokeColor = colorValue
+            shapeable.strokeColor = hsColor
         }
         return self
     }
@@ -655,9 +695,13 @@ import SwiftUI
         return self
     }
 
-    @objc func foregroundColor(_ colorValue: HSColor) -> HSUIWindow {
+    @objc func foregroundColor(_ colorValue: JSValue) -> HSUIWindow {
+        guard let hsColor = HSColor.fromJSValue(colorValue) else {
+            AKError("hs.ui: foregroundColor() requires a hex color string or HSColor object")
+            return self
+        }
         if let textable = currentElement as? any TextModifiable {
-            textable.foregroundColor = colorValue
+            textable.foregroundColor = hsColor
         }
         return self
     }
