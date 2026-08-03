@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.permissions - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.permissions</span>
+</nav>
+<div class="page-header">
+    <h1>hs.permissions</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Module for checking and requesting system permissions</p>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="checkAccessibility">
+        <h3><a href="#checkAccessibility">hs.permissions.checkAccessibility() -> boolean</a></h3>
+
+        <div class="description">Check if the app has Accessibility permission</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.checkAccessibility() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if permission is granted, false otherwise</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.permissions.checkAccessibility())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L22" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:22</a>
+        </div>
+    </div>
+    <div class="method" id="requestAccessibility">
+        <h3><a href="#requestAccessibility">hs.permissions.requestAccessibility() -> None</a></h3>
+
+        <div class="description">Request Accessibility permission (shows system dialog if not granted)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.requestAccessibility() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.permissions.requestAccessibility()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L29" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:29</a>
+        </div>
+    </div>
+    <div class="method" id="checkScreenRecording">
+        <h3><a href="#checkScreenRecording">hs.permissions.checkScreenRecording() -> boolean</a></h3>
+
+        <div class="description">Check if the app has Screen Recording permission</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.checkScreenRecording() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if permission is granted, false otherwise</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.permissions.checkScreenRecording())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L37" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:37</a>
+        </div>
+    </div>
+    <div class="method" id="requestScreenRecording">
+        <h3><a href="#requestScreenRecording">hs.permissions.requestScreenRecording() -> None</a></h3>
+
+        <div class="description">Request Screen Recording permission</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.requestScreenRecording() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">This will trigger a screen capture which prompts the system dialog</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.permissions.requestScreenRecording()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L45" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:45</a>
+        </div>
+    </div>
+    <div class="method" id="checkCamera">
+        <h3><a href="#checkCamera">hs.permissions.checkCamera() -> boolean</a></h3>
+
+        <div class="description">Check if the app has Camera permission</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.checkCamera() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if permission is granted, false otherwise</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.permissions.checkCamera())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L53" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:53</a>
+        </div>
+    </div>
+    <div class="method" id="requestCamera">
+        <h3><a href="#requestCamera">hs.permissions.requestCamera() -> Promise&lt;boolean&gt;</a></h3>
+
+        <div class="description">Request Camera permission (shows system dialog if not granted)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.requestCamera() -> Promise&lt;boolean&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;boolean&gt;</div>
+        <div class="return-desc">A Promise that resolves to true if granted, false if denied</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.permissions.requestCamera().then(granted =&gt; console.log(granted))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L61" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:61</a>
+        </div>
+    </div>
+    <div class="method" id="checkMicrophone">
+        <h3><a href="#checkMicrophone">hs.permissions.checkMicrophone() -> boolean</a></h3>
+
+        <div class="description">Check if the app has Microphone permission</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.checkMicrophone() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if permission is granted, false otherwise</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.permissions.checkMicrophone())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:69</a>
+        </div>
+    </div>
+    <div class="method" id="requestMicrophone">
+        <h3><a href="#requestMicrophone">hs.permissions.requestMicrophone() -> Promise&lt;boolean&gt;</a></h3>
+
+        <div class="description">Request Microphone permission (shows system dialog if not granted)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.requestMicrophone() -> Promise&lt;boolean&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;boolean&gt;</div>
+        <div class="return-desc">A Promise that resolves to true if granted, false if denied</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.permissions.requestMicrophone().then(granted =&gt; console.log(granted))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L77" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:77</a>
+        </div>
+    </div>
+    <div class="method" id="checkNotifications">
+        <h3><a href="#checkNotifications">hs.permissions.checkNotifications() -> boolean</a></h3>
+
+        <div class="description">Check if the app has permission to display notifications.
+The result is cached from the last request or check; the cache is refreshed asynchronously,
+so the very first call in a session may return `false` before the cached value is populated.
+Use `requestNotifications()` on first launch to ensure the result is accurate.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.checkNotifications() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if notification permission is granted</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.permissions.checkNotifications())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L89" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:89</a>
+        </div>
+    </div>
+    <div class="method" id="requestNotifications">
+        <h3><a href="#requestNotifications">hs.permissions.requestNotifications() -> Promise&lt;boolean&gt;</a></h3>
+
+        <div class="description">Request notification permission (shows the system dialog if the user has not yet decided).
+It is safe to call this on every launch — the dialog only appears once; subsequent calls
+resolve immediately with the previously granted or denied state.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.requestNotifications() -> Promise&lt;boolean&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;boolean&gt;</div>
+        <div class="return-desc">A Promise that resolves to true if granted, false if denied</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.permissions.requestNotifications().then(granted =&gt; console.log(granted))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L100" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:100</a>
+        </div>
+    </div>
+    <div class="method" id="checkLocation">
+        <h3><a href="#checkLocation">hs.permissions.checkLocation() -> boolean</a></h3>
+
+        <div class="description">Check if the app has Location permission.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.checkLocation() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if permission is granted, false otherwise</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(hs.permissions.checkLocation())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L108" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:108</a>
+        </div>
+    </div>
+    <div class="method" id="requestLocation">
+        <h3><a href="#requestLocation">hs.permissions.requestLocation() -> Promise&lt;boolean&gt;</a></h3>
+
+        <div class="description">Request Location permission (shows the system dialog if the user has not yet decided).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.permissions.requestLocation() -> Promise&lt;boolean&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;boolean&gt;</div>
+        <div class="return-desc">A Promise that resolves to true if granted, false if denied</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.permissions.requestLocation().then(granted =&gt; {
+    if (granted) console.log(hs.location.get())
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.permissions/HSPermissionsModule.swift#L118" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift:118</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.permissions');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

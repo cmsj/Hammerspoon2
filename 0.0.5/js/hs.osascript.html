@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.osascript - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.osascript</span>
+</nav>
+<div class="page-header">
+    <h1>hs.osascript</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Run AppleScript and OSA JavaScript from Hammerspoon scripts.</p>
+<p>Script execution is isolated in a separate XPC helper process
+(<code>HammerspoonOSAScriptHelper</code>). If a script crashes or deadlocks, only the
+helper is affected — the main app remains stable and the next call
+reconnects automatically.</p>
+<h2>Async API (Promise-based)</h2>
+<p>Every async function returns a <code>Promise</code> that <strong>always resolves</strong> (never rejects)
+with an object containing three fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>success</code></td>
+<td><code>Boolean</code></td>
+<td><code>true</code> if the script ran without error</td>
+</tr>
+<tr>
+<td><code>result</code></td>
+<td><code>any</code></td>
+<td>Parsed return value of the script, or <code>null</code> on failure</td>
+</tr>
+<tr>
+<td><code>raw</code></td>
+<td><code>String</code></td>
+<td>Raw string representation of the result, or the error message on failure</td>
+</tr>
+</tbody></table>
+<h2>Sync API</h2>
+<p>The <code>*Sync</code> variants block until the script completes and return the same
+<code>{ success, result, raw }</code> object directly.  Use these only when a Promise
+chain is impractical; they block the JS thread for the duration of the call.</p>
+<p>The <code>result</code> field is typed based on what the script returned: strings,
+numbers, booleans, lists, and records are all mapped to their JavaScript
+equivalents. <code>null</code> is used for AppleScript&#39;s <code>missing value</code> and for any
+failure case.</p>
+<h2>Examples</h2>
+<p><strong>Return a string (async):</strong></p>
+<pre><code class="language-javascript">hs.osascript.applescript(&#39;return &quot;hello&quot;&#39;)
+  .then(r =&gt; console.log(r.result));  // &quot;hello&quot;
+</code></pre>
+<p><strong>Return a string (sync):</strong></p>
+<pre><code class="language-javascript">const r = hs.osascript.applescriptSync(&#39;return &quot;hello&quot;&#39;);
+console.log(r.result);  // &quot;hello&quot;
+</code></pre>
+<p><strong>Interact with an application:</strong></p>
+<pre><code class="language-javascript">hs.osascript.applescript(&#39;tell application &quot;Finder&quot; to get name of home&#39;)
+  .then(r =&gt; console.log(r.result));  // e.g. &quot;cmsj&quot;
+</code></pre>
+<p><strong>Handle errors (the Promise never rejects — check <code>success</code>):</strong></p>
+<pre><code class="language-javascript">hs.osascript.applescript(&#39;this is not valid&#39;)
+  .then(r =&gt; {
+    if (!r.success) console.log(&quot;Error:&quot;, r.raw);
+  });
+</code></pre>
+<p><strong>OSA JavaScript:</strong></p>
+<pre><code class="language-javascript">hs.osascript.javascript(&#39;Application(&quot;Finder&quot;).name()&#39;)
+  .then(r =&gt; console.log(r.result));  // &quot;Finder&quot;
+</code></pre>
+<p><strong>Run a script from a file:</strong></p>
+<pre><code class="language-javascript">hs.osascript.applescriptFromFile(&#39;/Users/me/scripts/notify.applescript&#39;)
+  .then(r =&gt; console.log(r.success));
+</code></pre>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="applescript">
+        <h3><a href="#applescript">hs.osascript.applescript(source) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Run an AppleScript source string.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript.applescript(source) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The AppleScript source code to compile and execute.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `{ success, result, raw }`.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.osascript.applescript(&#39;return &quot;hello&quot;&#39;).then(r =&gt; console.log(r.result))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L88" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:88</a>
+        </div>
+    </div>
+    <div class="method" id="javascript">
+        <h3><a href="#javascript">hs.osascript.javascript(source) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Run an OSA JavaScript source string.
+OSA JavaScript is Apple&#39;s Open Scripting Architecture dialect of
+JavaScript, distinct from the JavaScriptCore engine that runs
+Hammerspoon scripts themselves.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript.javascript(source) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The OSA JavaScript source code to compile and execute.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `{ success, result, raw }`.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.osascript.javascript(&#39;Application(&quot;Finder&quot;).name()&#39;).then(r =&gt; console.log(r.result))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L102" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:102</a>
+        </div>
+    </div>
+    <div class="method" id="applescriptFromFile">
+        <h3><a href="#applescriptFromFile">hs.osascript.applescriptFromFile(path) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Read a file from disk and execute its contents as AppleScript.
+The file is read in the main process before being sent to the XPC
+helper. If the file cannot be read the promise resolves immediately
+with `{ success: false, result: null, raw: &quot;Failed to read file: &lt;path&gt;&quot; }`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript.applescriptFromFile(path) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Absolute path to the AppleScript source file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `{ success, result, raw }`.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.osascript.applescriptFromFile(&quot;/Users/me/scripts/notify.applescript&quot;)
+    .then(r =&gt; console.log(r.success))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:117</a>
+        </div>
+    </div>
+    <div class="method" id="javascriptFromFile">
+        <h3><a href="#javascriptFromFile">hs.osascript.javascriptFromFile(path) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Read a file from disk and execute its contents as OSA JavaScript.
+The file is read in the main process before being sent to the XPC
+helper. If the file cannot be read the promise resolves immediately
+with `{ success: false, result: null, raw: &quot;Failed to read file: &lt;path&gt;&quot; }`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript.javascriptFromFile(path) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Absolute path to the OSA JavaScript source file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `{ success, result, raw }`.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.osascript.javascriptFromFile(&quot;/Users/me/scripts/foo.jxa&quot;)
+    .then(r =&gt; console.log(r.result))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L132" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:132</a>
+        </div>
+    </div>
+    <div class="method" id="_execute">
+        <h3><a href="#_execute">hs.osascript._execute(source, language) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Low-level execution entry point used by the higher-level helpers.
+Prefer `applescript()` or `javascript()` over calling this directly.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript._execute(source, language) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The script source code.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">language</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The OSA language name — must be `&quot;AppleScript&quot;` or `&quot;JavaScript&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `{ success, result, raw }`.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.osascript._execute(&#39;return 1&#39;, &quot;AppleScript&quot;).then(r =&gt; console.log(r.result))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L146" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:146</a>
+        </div>
+    </div>
+    <div class="method" id="applescriptSync">
+        <h3><a href="#applescriptSync">hs.osascript.applescriptSync(source) -> [String: Any]</a></h3>
+
+        <div class="description">Run an AppleScript source string synchronously.
+Blocks the JS thread until the script completes.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript.applescriptSync(source) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The AppleScript source code to compile and execute.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">An object `{ success, result, raw }`, or `null` on XPC failure.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.osascript.applescriptSync(&#39;return &quot;hello&quot;&#39;)
+console.log(r.result)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L161" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:161</a>
+        </div>
+    </div>
+    <div class="method" id="javascriptSync">
+        <h3><a href="#javascriptSync">hs.osascript.javascriptSync(source) -> [String: Any]</a></h3>
+
+        <div class="description">Run an OSA JavaScript source string synchronously.
+Blocks the JS thread until the script completes.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript.javascriptSync(source) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The OSA JavaScript source code to compile and execute.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">An object `{ success, result, raw }`, or `null` on XPC failure.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.osascript.javascriptSync(&#39;Application(&quot;Finder&quot;).name()&#39;)
+console.log(r.result)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L174" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:174</a>
+        </div>
+    </div>
+    <div class="method" id="applescriptSyncFromFile">
+        <h3><a href="#applescriptSyncFromFile">hs.osascript.applescriptSyncFromFile(path) -> [String: Any]</a></h3>
+
+        <div class="description">Read a file from disk and execute its contents as AppleScript synchronously.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript.applescriptSyncFromFile(path) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Absolute path to the AppleScript source file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">An object `{ success, result, raw }`, or `null` on XPC failure.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.osascript.applescriptSyncFromFile(&quot;/Users/me/foo.applescript&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L184" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:184</a>
+        </div>
+    </div>
+    <div class="method" id="javascriptSyncFromFile">
+        <h3><a href="#javascriptSyncFromFile">hs.osascript.javascriptSyncFromFile(path) -> [String: Any]</a></h3>
+
+        <div class="description">Read a file from disk and execute its contents as OSA JavaScript synchronously.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript.javascriptSyncFromFile(path) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Absolute path to the OSA JavaScript source file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">An object `{ success, result, raw }`, or `null` on XPC failure.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.osascript.javascriptSyncFromFile(&quot;/Users/me/foo.jxa&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L194" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:194</a>
+        </div>
+    </div>
+    <div class="method" id="_executeSync">
+        <h3><a href="#_executeSync">hs.osascript._executeSync(source, language) -> [String: Any]</a></h3>
+
+        <div class="description">Low-level synchronous execution entry point.
+Prefer `applescriptSync()` or `javascriptSync()` over calling this directly.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.osascript._executeSync(source, language) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">source</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The script source code.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">language</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The OSA language name — must be `&quot;AppleScript&quot;` or `&quot;JavaScript&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">An object `{ success, result, raw }`, or `null` on XPC failure.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const r = hs.osascript._executeSync(&#39;return 1&#39;, &quot;AppleScript&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.osascript/HSOSAScriptModule.swift#L208" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.osascript/HSOSAScriptModule.swift:208</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.osascript');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
