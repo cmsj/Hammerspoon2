@@ -57,7 +57,9 @@
     <span class="page-badge">Module</span>
 </div>
 
-<div class="module-description"><p>A module for enumerating, watching, and communicating with MIDI devices.</p>
+<div class="module-description"><p>A module for enumerating, watching, and communicating with MIDI devices.
+IMPORTANT NOTE: This module has not had very much real-world testing yet. Please report positive or
+negative feedback via GitHub Issues.</p>
 </div>
 
 <h2 class="section-heading">Types</h2>
@@ -74,7 +76,7 @@
         <div class="prop-type">{[key: string]: number}</div>
         <div class="description">A table mapping each MIDI command type name to a stable numeric identifier.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L130" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:130</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L151" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:151</a>
         </div>
     </div>
 
@@ -97,7 +99,7 @@
         <pre><code class="language-js">console.log(hs.midi.devices())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:138</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L159" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:159</a>
         </div>
     </div>
     <div class="method" id="virtualSources">
@@ -120,7 +122,7 @@ belonging to a physical device.</div>
         <pre><code class="language-js">console.log(hs.midi.virtualSources())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L148" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:148</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L169" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:169</a>
         </div>
     </div>
     <div class="method" id="deviceCallback">
@@ -162,7 +164,7 @@ current result of `virtualSources()`.</div>
 })</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L162" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:162</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L183" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:183</a>
         </div>
     </div>
     <div class="method" id="deviceNamed">
@@ -202,7 +204,7 @@ Objective-C&#39;s ARC ownership conventions.</div>
         <pre><code class="language-js">const kb = hs.midi.deviceNamed(hs.midi.devices()[0])</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L175" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:175</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L196" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:196</a>
         </div>
     </div>
     <div class="method" id="virtualSourceNamed">
@@ -242,7 +244,7 @@ the same ARC-related reason as `deviceNamed()`.</div>
         <pre><code class="language-js">const iac = hs.midi.virtualSourceNamed(hs.midi.virtualSources()[0])</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L188" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:188</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.midi_/HSMIDIModule.swift#L209" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.midi_/HSMIDIModule.swift:209</a>
         </div>
     </div>
         </main>

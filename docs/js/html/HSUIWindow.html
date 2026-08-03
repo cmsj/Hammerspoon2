@@ -67,6 +67,7 @@ declarative syntax. Build interfaces using shapes, text, images, and layout cont
 <li><strong>Text</strong>: <code>text(content)</code></li>
 <li><strong>Buttons</strong>: <code>button(label)</code> — uses SwiftUI&#39;s native Button for press-state feedback</li>
 <li><strong>Images</strong>: <code>image(imageValue)</code></li>
+<li><strong>Video</strong>: <code>video(videoValue)</code></li>
 <li><strong>Layout</strong>: <code>vstack()</code>, <code>hstack()</code>, <code>zstack()</code>, <code>spacer()</code></li>
 </ul>
 <h2>Modifying Elements</h2>
@@ -129,7 +130,7 @@ hs.ui.window({x: 100, y: 100, w: 400, h: 300})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L73" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:73</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L74" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:74</a>
         </div>
     </div>
     <div class="method" id="hide">
@@ -149,7 +150,7 @@ hs.ui.window({x: 100, y: 100, w: 400, h: 300})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L76" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:76</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L77" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:77</a>
         </div>
     </div>
     <div class="method" id="close">
@@ -169,7 +170,7 @@ hs.ui.window({x: 100, y: 100, w: 400, h: 300})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:79</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L80" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:80</a>
         </div>
     </div>
     <div class="method" id="titled">
@@ -216,7 +217,7 @@ hs.ui.window({x: 100, y: 100, w: 400, h: 300})
     .show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L99" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:99</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L100" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:100</a>
         </div>
     </div>
     <div class="method" id="closable">
@@ -258,7 +259,7 @@ Requires `.titled(true)` to be visible. Enabled by default.</div>
     .closable(false).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:112</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L113" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:113</a>
         </div>
     </div>
     <div class="method" id="miniaturizable">
@@ -300,7 +301,7 @@ Requires `.titled(true)` to be visible. Enabled by default.</div>
     .miniaturizable(false).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L125" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:125</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L126" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:126</a>
         </div>
     </div>
     <div class="method" id="allowResize">
@@ -342,7 +343,7 @@ Enabled by default. Only has a visual effect when `.titled(true)` is also set.</
     .allowResize(false).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:138</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L139" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:139</a>
         </div>
     </div>
     <div class="method" id="windowTitle">
@@ -384,7 +385,7 @@ Only visible when `.titled(true)` is set (the default).</div>
     .windowTitle(&quot;My Browser&quot;).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L151" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:151</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L152" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:152</a>
         </div>
     </div>
     <div class="method" id="level">
@@ -426,7 +427,7 @@ Controls where this window sits in the macOS window hierarchy.</div>
     .level(&quot;floating&quot;).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L171" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:171</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L172" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:172</a>
         </div>
     </div>
     <div class="method" id="backgroundColor">
@@ -451,8 +452,8 @@ Controls where this window sits in the macOS window hierarchy.</div>
             <tbody>
                 <tr>
                     <td class="param-name">colorValue</td>
-                    <td class="param-type">HSColor</td>
-                    <td class="param-desc">Color as an HSColor object</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A hex color string (e.g. &quot;#FF0000&quot;) or an HSColor object</td>
                 </tr>
             </tbody>
         </table>
@@ -464,7 +465,7 @@ Controls where this window sits in the macOS window hierarchy.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:176</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L177" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:177</a>
         </div>
     </div>
     <div class="method" id="rectangle">
@@ -485,7 +486,7 @@ Controls where this window sits in the macOS window hierarchy.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L182" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:182</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L183" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:183</a>
         </div>
     </div>
     <div class="method" id="circle">
@@ -506,7 +507,7 @@ Controls where this window sits in the macOS window hierarchy.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L186" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:186</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L187" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:187</a>
         </div>
     </div>
     <div class="method" id="text">
@@ -545,7 +546,7 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L192" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:192</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L193" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:193</a>
         </div>
     </div>
     <div class="method" id="image">
@@ -583,7 +584,56 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L197" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:197</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L198" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:198</a>
+        </div>
+    </div>
+    <div class="method" id="video">
+        <h3>
+<a href="#video">video(videoValue) -> HSUIWindow</a>
+        </h3>
+
+        <div class="description">Add a video element
+Renders a SwiftUI `VideoPlayer` for the given `HSVideo`. Keep a reference to the
+`HSVideo` object to control playback (`play()`, `pause()`, `seek()`, `volume`) after
+the window is shown.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">video(videoValue) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">videoValue</td>
+                    <td class="param-type">HSVideo</td>
+                    <td class="param-desc">Video as an HSVideo object</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">Self for chaining (apply modifiers like `frame()`, `opacity()`)</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const clip = HSVideo.fromURLs([&quot;~/Movies/clip.mp4&quot;])
+hs.ui.window({x: 100, y: 100, w: 640, h: 360})
+    .video(clip)
+        .frame({w: 640, h: 360})
+    .show()
+
+clip.play()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L218" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:218</a>
         </div>
     </div>
     <div class="method" id="button">
@@ -622,7 +672,7 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L204" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:204</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L225" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:225</a>
         </div>
     </div>
     <div class="method" id="vstack">
@@ -643,7 +693,7 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:210</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L231" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:231</a>
         </div>
     </div>
     <div class="method" id="hstack">
@@ -664,7 +714,7 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L214" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:214</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L235" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:235</a>
         </div>
     </div>
     <div class="method" id="zstack">
@@ -685,7 +735,7 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L218" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:218</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L239" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:239</a>
         </div>
     </div>
     <div class="method" id="spacer">
@@ -706,7 +756,7 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L222" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:222</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L243" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:243</a>
         </div>
     </div>
     <div class="method" id="webview">
@@ -754,7 +804,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
     .show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L242" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:242</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L263" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:263</a>
         </div>
     </div>
     <div class="method" id="end">
@@ -775,7 +825,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L246" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:246</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L267" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:267</a>
         </div>
     </div>
     <div class="method" id="fill">
@@ -800,8 +850,8 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
             <tbody>
                 <tr>
                     <td class="param-name">colorValue</td>
-                    <td class="param-type">HSColor</td>
-                    <td class="param-desc">Color as an HSColor</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A hex color string (e.g. &quot;#FF0000&quot;) or an HSColor object</td>
                 </tr>
             </tbody>
         </table>
@@ -813,7 +863,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L253" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:253</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L274" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:274</a>
         </div>
     </div>
     <div class="method" id="stroke">
@@ -838,8 +888,8 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
             <tbody>
                 <tr>
                     <td class="param-name">colorValue</td>
-                    <td class="param-type">HSColor</td>
-                    <td class="param-desc">Color as an HSColor</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A hex color string (e.g. &quot;#FF0000&quot;) or an HSColor object</td>
                 </tr>
             </tbody>
         </table>
@@ -851,7 +901,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L258" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:258</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L279" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:279</a>
         </div>
     </div>
     <div class="method" id="strokeWidth">
@@ -889,7 +939,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L263" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:263</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L284" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:284</a>
         </div>
     </div>
     <div class="method" id="cornerRadius">
@@ -927,7 +977,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L268" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:268</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L289" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:289</a>
         </div>
     </div>
     <div class="method" id="frame">
@@ -965,7 +1015,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L273" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:273</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L294" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:294</a>
         </div>
     </div>
     <div class="method" id="opacity">
@@ -1003,7 +1053,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L278" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:278</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L299" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:299</a>
         </div>
     </div>
     <div class="method" id="font">
@@ -1041,7 +1091,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L285" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:285</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L306" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:306</a>
         </div>
     </div>
     <div class="method" id="foregroundColor">
@@ -1066,8 +1116,8 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
             <tbody>
                 <tr>
                     <td class="param-name">colorValue</td>
-                    <td class="param-type">HSColor</td>
-                    <td class="param-desc">Color as HSColor</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A hex color string (e.g. &quot;#FF0000&quot;) or an HSColor object</td>
                 </tr>
             </tbody>
         </table>
@@ -1079,7 +1129,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L290" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:290</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L311" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:311</a>
         </div>
     </div>
     <div class="method" id="resizable">
@@ -1100,7 +1150,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L296" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:296</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L317" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:317</a>
         </div>
     </div>
     <div class="method" id="aspectRatio">
@@ -1138,7 +1188,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L301" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:301</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L322" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:322</a>
         </div>
     </div>
     <div class="method" id="padding">
@@ -1176,7 +1226,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L308" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:308</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L329" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:329</a>
         </div>
     </div>
     <div class="method" id="spacing">
@@ -1214,7 +1264,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L313" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:313</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L334" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:334</a>
         </div>
     </div>
     <div class="method" id="onClick">
@@ -1252,7 +1302,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L320" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:320</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L341" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:341</a>
         </div>
     </div>
     <div class="method" id="onHover">
@@ -1290,7 +1340,7 @@ hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L325" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:325</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L346" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:346</a>
         </div>
     </div>
         </main>

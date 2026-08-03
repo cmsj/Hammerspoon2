@@ -383,6 +383,78 @@ declare class HSString {
 
 }
 
+/**
+ * Bridge type for working with video playback in JavaScript
+HSVideo wraps an `AVQueuePlayer` and can be embedded in an `hs.ui.window` via `.video()`,
+or driven entirely from JavaScript with `play()`, `pause()`, `seek()`, `loop()`, and `volume`.
+## Loading Video
+Each entry may be a local file path (`~` is expanded) or a remote URL string. Multiple
+entries are queued and play back to back, in order.
+```javascript
+// A single local file
+const clip = HSVideo.fromURLs(["~/Movies/clip.mp4"])
+
+// A playlist mixing a local file and a remote stream
+const playlist = HSVideo.fromURLs(["~/Movies/intro.mp4", "https://example.com/video.mp4"])
+```
+## Playback Control
+```javascript
+const clip = HSVideo.fromURLs(["~/Movies/clip.mp4"])
+clip.volume = 0.5
+clip.loop(true)
+clip.play()
+// ... later ...
+clip.seek(30)
+clip.pause()
+```
+## Looping
+Gapless looping (via `AVPlayerLooper`) is only supported when the playlist contains a
+single URL. Calling `loop(true)` on a multi-URL playlist has no effect (the playlist just
+plays through once) and logs a warning.
+ */
+declare class HSVideo {
+    /**
+     * Load a playlist of videos to play back to back, in order
+     * @param urls Each entry is a local file path (`~` is expanded) or a remote URL string
+     * @returns An HSVideo object, or null if the list is empty or an entry couldn't be resolved
+     */
+    static fromURLs(urls: string[]): HSVideo | null;
+
+    /**
+     * Start (or resume) playback
+     * @returns Self for chaining
+     */
+    play(): HSVideo;
+
+    /**
+     * Pause playback
+     * @returns Self for chaining
+     */
+    pause(): HSVideo;
+
+    /**
+     * Seek to a specific position
+     * @param seconds The position to seek to, in seconds
+     * @returns Self for chaining
+     */
+    seek(seconds: number): HSVideo;
+
+    /**
+     * Enable or disable gapless looping
+Only supported when this HSVideo was created from a single-URL playlist. Enabling
+loop on a multi-URL playlist has no effect and logs a warning.
+     * @param enabled Pass `true` to loop playback indefinitely
+     * @returns Self for chaining
+     */
+    loop(enabled: boolean): HSVideo;
+
+    /**
+     * The playback volume, from 0.0 (silent) to 1.0 (full volume)
+     */
+    volume: number;
+
+}
+
 // ========================================
 // Modules
 // ========================================
@@ -3930,6 +4002,8 @@ if you only want to temporarily remove the item without freeing it.
 
 /**
  * A module for enumerating, watching, and communicating with MIDI devices.
+IMPORTANT NOTE: This module has not had very much real-world testing yet. Please report positive or
+negative feedback via GitHub Issues.
  */
 declare namespace hs.midi {
     /**
@@ -7108,10 +7182,10 @@ Controls where this window sits in the macOS window hierarchy.
 
     /**
      * Set the window's background color
-     * @param colorValue Color as an HSColor object
+     * @param colorValue A hex color string (e.g. "#FF0000") or an HSColor object
      * @returns Self for chaining
      */
-    backgroundColor(colorValue: HSColor): HSUIWindow;
+    backgroundColor(colorValue: string | HSColor): HSUIWindow;
 
     /**
      * Add a rectangle shape
@@ -7139,6 +7213,16 @@ or an `HSString` object (from `hs.ui.string()`) for reactive text
      * @returns Self for chaining (apply modifiers like `resizable()`, `aspectRatio()`, `frame()`)
      */
     image(imageValue: HSImage): HSUIWindow;
+
+    /**
+     * Add a video element
+Renders a SwiftUI `VideoPlayer` for the given `HSVideo`. Keep a reference to the
+`HSVideo` object to control playback (`play()`, `pause()`, `seek()`, `volume`) after
+the window is shown.
+     * @param videoValue Video as an HSVideo object
+     * @returns Self for chaining (apply modifiers like `frame()`, `opacity()`)
+     */
+    video(videoValue: HSVideo): HSUIWindow;
 
     /**
      * Add a button element
@@ -7189,17 +7273,17 @@ Keep a reference to the element to call navigation methods after the window is s
 
     /**
      * Fill a shape with a color
-     * @param colorValue Color as an HSColor
+     * @param colorValue A hex color string (e.g. "#FF0000") or an HSColor object
      * @returns Self for chaining
      */
-    fill(colorValue: HSColor): HSUIWindow;
+    fill(colorValue: string | HSColor): HSUIWindow;
 
     /**
      * Add a stroke (border) to a shape
-     * @param colorValue Color as an HSColor
+     * @param colorValue A hex color string (e.g. "#FF0000") or an HSColor object
      * @returns Self for chaining
      */
-    stroke(colorValue: HSColor): HSUIWindow;
+    stroke(colorValue: string | HSColor): HSUIWindow;
 
     /**
      * Set the stroke width
@@ -7238,10 +7322,10 @@ Keep a reference to the element to call navigation methods after the window is s
 
     /**
      * Set the text color
-     * @param colorValue Color as HSColor
+     * @param colorValue A hex color string (e.g. "#FF0000") or an HSColor object
      * @returns Self for chaining
      */
-    foregroundColor(colorValue: HSColor): HSUIWindow;
+    foregroundColor(colorValue: string | HSColor): HSUIWindow;
 
     /**
      * Make an image resizable (allows it to scale with frame size)

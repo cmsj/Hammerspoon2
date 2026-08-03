@@ -5,6 +5,7 @@
 
 import Testing
 import JavaScriptCore
+import AVFoundation
 @testable import Hammerspoon_2
 
 @Suite("hs.ui tests", .serialized)
@@ -110,6 +111,190 @@ struct HSUITests {
             harness.eval("var d = hs.ui.dialog('Test')")
             #expect(harness.evalTypeOf("d") == "object")
             #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Suite 2: Builder color argument coercion
+    //
+    // fill(), stroke(), foregroundColor(), and backgroundColor() accept either a hex
+    // color string or an HSColor object via HSColor.fromJSValue(). Regression coverage
+    // for a bug where these were typed strictly to HSColor, so passing a plain string
+    // (as shown in this file's own docstring examples) raised
+    // "TypeError: Argument does not match Objective-C Class".
+
+    @Suite("hs.ui builder color arguments")
+    struct HSUIColorArgumentTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSUIModule.self, as: "ui")
+            return harness
+        }
+
+        @Test("fill() accepts a hex color string")
+        func testFillAcceptsHexString() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .rectangle()
+                        .fill("#4A90E2")
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("fill() accepts an HSColor object")
+        func testFillAcceptsHSColor() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .rectangle()
+                        .fill(HSColor.hex("#4A90E2"))
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("stroke() accepts a hex color string")
+        func testStrokeAcceptsHexString() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .rectangle()
+                        .stroke("#000000")
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("foregroundColor() accepts a hex color string")
+        func testForegroundColorAcceptsHexString() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .text("Dashboard")
+                        .foregroundColor("#FFFFFF")
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("backgroundColor() accepts a hex color string")
+        func testBackgroundColorAcceptsHexString() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .backgroundColor("#2C3E50")
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("fill() with an invalid argument logs an error but does not throw")
+        func testFillInvalidArgumentDoesNotThrow() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .rectangle()
+                        .fill(42)
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("HSUIWindow docstring dashboard example builds without throwing")
+        func testDashboardDocstringExample() {
+            let harness = makeHarness()
+            harness.eval("""
+                hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+                    .vstack()
+                        .spacing(10)
+                        .padding(20)
+                        .text("Dashboard")
+                            .font(HSFont.largeTitle())
+                            .foregroundColor("#FFFFFF")
+                        .rectangle()
+                            .fill("#4A90E2")
+                            .cornerRadius(10)
+                            .frame({w: "90%", h: 80})
+                    .end()
+                    .backgroundColor("#2C3E50")
+            """)
+            #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Suite 3: HSVideo loop() queue management
+    //
+    // Regression coverage for a bug where loop(false) unconditionally reset the
+    // AVQueuePlayer's queue down to just the first item — correct cleanup for the
+    // single-URL case where AVPlayerLooper had actually been enabled, but destructive
+    // for a multi-URL playlist (where looping is not supported at all), silently
+    // discarding every item but the first.
+
+    @Suite("HSVideo loop() tests")
+    struct HSVideoLoopTests {
+
+        @Test("loop(false) on a multi-URL playlist preserves all queued items")
+        func testLoopFalsePreservesMultiItemQueue() {
+            let harness = JSTestHarness()
+            harness.eval("""
+                var v = HSVideo.fromURLs([
+                    "https://example.com/one.mp4",
+                    "https://example.com/two.mp4",
+                    "https://example.com/three.mp4"
+                ])
+                v.loop(false)
+            """)
+            #expect(!harness.hasException)
+            guard let video = harness.evalValue("v")?.toObjectOf(HSVideo.self) as? HSVideo else {
+                Issue.record("Could not extract HSVideo from JS value")
+                return
+            }
+            #expect(video.player.items().count == 3)
+        }
+
+        @Test("loop(false) on a single-URL playlist that never enabled looping is a no-op")
+        func testLoopFalseNeverEnabledIsNoOp() {
+            let harness = JSTestHarness()
+            harness.eval("""
+                var v = HSVideo.fromURLs(["https://example.com/one.mp4"])
+                v.loop(false)
+            """)
+            #expect(!harness.hasException)
+            guard let video = harness.evalValue("v")?.toObjectOf(HSVideo.self) as? HSVideo else {
+                Issue.record("Could not extract HSVideo from JS value")
+                return
+            }
+            #expect(video.player.items().count == 1)
+        }
+
+        @Test("loop(true) then loop(false) on a single-URL playlist ends with exactly one item")
+        func testLoopToggleOnSingleItemPlaylistEndsWithOneItem() {
+            let harness = JSTestHarness()
+            harness.eval("""
+                var v = HSVideo.fromURLs(["https://example.com/one.mp4"])
+                v.loop(true)
+                v.loop(false)
+            """)
+            #expect(!harness.hasException)
+            guard let video = harness.evalValue("v")?.toObjectOf(HSVideo.self) as? HSVideo else {
+                Issue.record("Could not extract HSVideo from JS value")
+                return
+            }
+            #expect(video.player.items().count == 1)
+        }
+
+        @Test("loop(true) is a no-op with a warning for a multi-URL playlist")
+        func testLoopTrueOnMultiItemPlaylistIsRejected() {
+            let harness = JSTestHarness()
+            harness.eval("""
+                var v = HSVideo.fromURLs([
+                    "https://example.com/one.mp4",
+                    "https://example.com/two.mp4"
+                ])
+                v.loop(true)
+            """)
+            #expect(!harness.hasException)
+            guard let video = harness.evalValue("v")?.toObjectOf(HSVideo.self) as? HSVideo else {
+                Issue.record("Could not extract HSVideo from JS value")
+                return
+            }
+            #expect(video.player.items().count == 2)
         }
     }
 
