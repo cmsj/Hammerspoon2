@@ -154,6 +154,12 @@ import SwiftUI
     // MARK: - Display
 
     @objc func show() -> HSUIAlert {
+        // Reset closed/stacked state so re-showing after close() works correctly
+        isClosed = false
+        isStacked = false
+        dismissTask?.cancel()
+        dismissTask = nil
+
         module?.register(self, id: alertID)
 
         if position != nil {
