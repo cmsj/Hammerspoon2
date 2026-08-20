@@ -7374,7 +7374,9 @@ Keep a reference to the element to call navigation methods after the window is s
  * # HSUIAlert
 **A temporary on-screen notification**
 Displays a message that automatically fades out after a specified duration.
-Positioned in the center of the screen with a semi-transparent background.
+Without an explicit `.position()`, multiple alerts stack vertically and
+stay centered as they appear and disappear. With `.position()`, the alert
+appears at the given coordinates regardless of other alerts.
 ## Example
 ```javascript
 hs.ui.alert("Task completed!")
@@ -7408,6 +7410,9 @@ declare class HSUIAlert {
 
     /**
      * Set a custom position for the alert
+When a position is set, the alert is shown at those coordinates and will not
+be stacked with other alerts. Coordinates are in points from the top-left of
+the visible screen area (below the menu bar), with y increasing downward.
      * @param dict Dictionary with `x` and `y` coordinates
      * @returns Self for chaining
      */
