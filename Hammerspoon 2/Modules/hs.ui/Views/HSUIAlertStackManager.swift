@@ -17,6 +17,7 @@ final class HSUIAlertStackManager {
     var isEmpty: Bool { alerts.isEmpty }
 
     func add(_ alert: HSUIAlert) {
+        guard !alerts.contains(where: { $0 === alert }) else { return }
         withAnimation(.linear(duration: 0.2)) {
             alerts.append(alert)
         }
