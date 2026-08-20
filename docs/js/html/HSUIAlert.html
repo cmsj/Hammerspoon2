@@ -60,9 +60,7 @@
 <div class="module-description"><h1>HSUIAlert</h1>
 <p><strong>A temporary on-screen notification</strong></p>
 <p>Displays a message that automatically fades out after a specified duration.
-Without an explicit <code>.position()</code>, multiple alerts stack vertically and
-stay centered as they appear and disappear. With <code>.position()</code>, the alert
-appears at the given coordinates regardless of other alerts.</p>
+Positioned in the center of the screen with a semi-transparent background.</p>
 <h2>Example</h2>
 <pre><code class="language-javascript">hs.ui.alert(&quot;Task completed!&quot;)
     .font(HSFont.headline())
@@ -113,7 +111,7 @@ appears at the given coordinates regardless of other alerts.</p>
         <pre><code class="language-js">hs.ui.alert(&quot;Hello&quot;).font(HSFont.headline()).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L39" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:39</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L37" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:37</a>
         </div>
     </div>
     <div class="method" id="duration">
@@ -153,7 +151,7 @@ appears at the given coordinates regardless of other alerts.</p>
         <pre><code class="language-js">hs.ui.alert(&quot;Hello&quot;).duration(3).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L48" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:48</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:46</a>
         </div>
     </div>
     <div class="method" id="padding">
@@ -193,7 +191,7 @@ appears at the given coordinates regardless of other alerts.</p>
         <pre><code class="language-js">hs.ui.alert(&quot;Hello&quot;).padding(30).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L57" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:57</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L55" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:55</a>
         </div>
     </div>
     <div class="method" id="position">
@@ -201,10 +199,7 @@ appears at the given coordinates regardless of other alerts.</p>
 <a href="#position">position(dict) -> HSUIAlert</a>
         </h3>
 
-        <div class="description">Set a custom position for the alert
-When a position is set, the alert is shown at those coordinates and will not
-be stacked with other alerts. Coordinates are in points from the top-left of
-the visible screen area (below the menu bar), with y increasing downward.</div>
+        <div class="description">Set a custom position for the alert</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">position(dict) -> HSUIAlert</code></pre>
@@ -236,7 +231,7 @@ the visible screen area (below the menu bar), with y increasing downward.</div>
         <pre><code class="language-js">hs.ui.alert(&quot;Hello&quot;).position({x: 100, y: 100}).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L71" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:71</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:64</a>
         </div>
     </div>
     <div class="method" id="show">
@@ -259,7 +254,7 @@ the visible screen area (below the menu bar), with y increasing downward.</div>
         <pre><code class="language-js">hs.ui.alert(&quot;Hello&quot;).show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:79</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L72" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:72</a>
         </div>
     </div>
     <div class="method" id="close">
@@ -282,7 +277,7 @@ the visible screen area (below the menu bar), with y increasing downward.</div>
 a.close()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L87" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:87</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Dialogs/HSUIAlert.swift#L80" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift:80</a>
         </div>
     </div>
         </main>

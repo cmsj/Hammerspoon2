@@ -18278,7 +18278,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
-          "lineNumber": 280
+          "lineNumber": 279
         },
         {
           "name": "alert",
@@ -18308,7 +18308,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
-          "lineNumber": 295
+          "lineNumber": 294
         },
         {
           "name": "dialog",
@@ -18338,7 +18338,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
-          "lineNumber": 313
+          "lineNumber": 312
         },
         {
           "name": "textPrompt",
@@ -18368,7 +18368,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
-          "lineNumber": 330
+          "lineNumber": 329
         },
         {
           "name": "string",
@@ -18398,7 +18398,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
-          "lineNumber": 349
+          "lineNumber": 348
         },
         {
           "name": "filePicker",
@@ -18420,7 +18420,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
-          "lineNumber": 367
+          "lineNumber": 366
         },
         {
           "name": "webview",
@@ -18442,7 +18442,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ui/HSUIModule.swift",
-          "lineNumber": 390
+          "lineNumber": 389
         }
       ],
       "properties": [],
@@ -19305,8 +19305,8 @@
         {
           "name": "HSUIAlertAPI",
           "type": "typedef",
-          "rawDocumentation": "# HSUIAlert\n\n**A temporary on-screen notification**\n\nDisplays a message that automatically fades out after a specified duration.\nWithout an explicit `.position()`, multiple alerts stack vertically and\nstay centered as they appear and disappear. With `.position()`, the alert\nappears at the given coordinates regardless of other alerts.\n\n## Example\n\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .show();\n```",
-          "description": "# HSUIAlert\n**A temporary on-screen notification**\nDisplays a message that automatically fades out after a specified duration.\nWithout an explicit `.position()`, multiple alerts stack vertically and\nstay centered as they appear and disappear. With `.position()`, the alert\nappears at the given coordinates regardless of other alerts.\n## Example\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .show();\n```",
+          "rawDocumentation": "# HSUIAlert\n\n**A temporary on-screen notification**\n\nDisplays a message that automatically fades out after a specified duration.\nPositioned in the center of the screen with a semi-transparent background.\n\n## Example\n\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .show();\n```",
+          "description": "# HSUIAlert\n**A temporary on-screen notification**\nDisplays a message that automatically fades out after a specified duration.\nPositioned in the center of the screen with a semi-transparent background.\n## Example\n```javascript\nhs.ui.alert(\"Task completed!\")\n    .font(HSFont.headline())\n    .duration(5)\n    .padding(30)\n    .show();\n```",
           "methods": [
             {
               "name": "font",
@@ -19336,7 +19336,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
-              "lineNumber": 39
+              "lineNumber": 37
             },
             {
               "name": "duration",
@@ -19366,7 +19366,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
-              "lineNumber": 48
+              "lineNumber": 46
             },
             {
               "name": "padding",
@@ -19396,14 +19396,14 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
-              "lineNumber": 57
+              "lineNumber": 55
             },
             {
               "name": "position",
               "signature": "func position(_ dict: [String: Any]) -> HSUIAlert",
               "isStatic": false,
-              "rawDocumentation": "Set a custom position for the alert\n\nWhen a position is set, the alert is shown at those coordinates and will not\nbe stacked with other alerts. Coordinates are in points from the top-left of\nthe visible screen area (below the menu bar), with y increasing downward.\n\n- Parameter dict: Dictionary with `x` and `y` coordinates\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.alert(\"Hello\").position({x: 100, y: 100}).show()\n```",
-              "description": "Set a custom position for the alert\nWhen a position is set, the alert is shown at those coordinates and will not\nbe stacked with other alerts. Coordinates are in points from the top-left of\nthe visible screen area (below the menu bar), with y increasing downward.",
+              "rawDocumentation": "Set a custom position for the alert\n- Parameter dict: Dictionary with `x` and `y` coordinates\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.alert(\"Hello\").position({x: 100, y: 100}).show()\n```",
+              "description": "Set a custom position for the alert",
               "params": [
                 {
                   "name": "dict",
@@ -19426,7 +19426,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
-              "lineNumber": 71
+              "lineNumber": 64
             },
             {
               "name": "show",
@@ -19448,7 +19448,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
-              "lineNumber": 79
+              "lineNumber": 72
             },
             {
               "name": "close",
@@ -19467,7 +19467,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Dialogs/HSUIAlert.swift",
-              "lineNumber": 87
+              "lineNumber": 80
             }
           ],
           "properties": []
@@ -23639,5 +23639,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-20T20:37:31.307Z"
+  "generatedAt": "2026-08-03T11:09:05.512Z"
 }
