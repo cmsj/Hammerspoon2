@@ -100,10 +100,9 @@ import SwiftUI
     private var nsWindow: NSWindow?
     let alertID: UUID = UUID()
     private var isStacked = false
-    private var isClosed = false
+    private var isShowing = false
     private var dismissTask: Task<Void, Never>?
     private weak var module: HSUIModule?
-    private var dismissTimer: Timer?
 
     init(message: String, module: HSUIModule) {
         self.message = message
@@ -154,11 +153,8 @@ import SwiftUI
     // MARK: - Display
 
     @objc func show() -> HSUIAlert {
-        // Reset closed/stacked state so re-showing after close() works correctly
-        isClosed = false
-        isStacked = false
-        dismissTask?.cancel()
-        dismissTask = nil
+        guard !isShowing else { return self }
+        isShowing = true
 
         module?.register(self, id: alertID)
 
@@ -210,12 +206,13 @@ import SwiftUI
     }
 
     @objc func close() {
-        guard !isClosed else { return }
-        isClosed = true
+        guard isShowing else { return }
+        isShowing = false
         dismissTask?.cancel()
         dismissTask = nil
 
         if isStacked {
+            isStacked = false
             module?.removeAlertFromStack(self)
             // Keep the module reference alive during the fade-out so unregister fires after animation
             let capturedModule = module
