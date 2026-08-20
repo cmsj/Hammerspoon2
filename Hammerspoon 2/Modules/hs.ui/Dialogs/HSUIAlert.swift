@@ -214,14 +214,8 @@ import SwiftUI
 
         if isStacked {
             isStacked = false
+            module?.unregister(alert: alertID)
             module?.removeAlertFromStack(self)
-            // Keep the module reference alive during the fade-out so unregister fires after animation
-            let capturedModule = module
-            let capturedID = alertID
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(0.2))
-                capturedModule?.unregister(alert: capturedID)
-            }
         } else {
             module?.unregister(alert: alertID)
             nsWindow?.delegate = nil
