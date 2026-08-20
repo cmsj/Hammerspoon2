@@ -170,9 +170,9 @@ import SwiftUI
             dismissDelay = duration - 0.2
         }
 
-        dismissTask = Task { @MainActor in
+        dismissTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(dismissDelay))
-            self.close()
+            self?.close()
         }
 
         return self
