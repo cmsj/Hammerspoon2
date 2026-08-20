@@ -158,15 +158,21 @@ import SwiftUI
 
         module?.register(self, id: alertID)
 
+        let dismissDelay: Double
         if position != nil {
             showStandalone()
+            dismissDelay = duration
         } else {
             isStacked = true
             module?.showAlertInStack(self)
-            dismissTask = Task { @MainActor in
-                try? await Task.sleep(for: .seconds(self.duration - 0.2))
-                self.close()
-            }
+            // Stacked alerts rely on close() triggering the SwiftUI transition for the
+            // final 0.2s of fade-out, so the dismiss fires 0.2s earlier than standalone.
+            dismissDelay = duration - 0.2
+        }
+
+        dismissTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(dismissDelay))
+            self.close()
         }
 
         return self
@@ -198,11 +204,6 @@ import SwiftUI
         window.orderFrontRegardless()
 
         self.nsWindow = window
-
-        dismissTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(self.duration))
-            self.close()
-        }
     }
 
     @objc func close() {
