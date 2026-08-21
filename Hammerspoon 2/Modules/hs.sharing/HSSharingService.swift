@@ -82,6 +82,7 @@ import AppKit
     /// `HSImage` objects.
     /// - Parameter items: {Array<string|HSImage>} The items to check
     /// - Returns: true if this service can share all of the given items
+    /// - Note: Unsupported items will be ignored
     /// - Example:
     /// ```js
     /// if (share.canShareItems(['hello'])) { ... }
@@ -95,6 +96,7 @@ import AppKit
     /// — use `setCallback()` to find out when it completes.
     /// - Parameter items: {Array<string|HSImage>} The items to share
     /// - Returns: true if the share was started
+    /// - Note: Unsupported items will be ignored
     /// - Example:
     /// ```js
     /// share.shareItems(['Check this out', 'https://www.hammerspoon.org'])
