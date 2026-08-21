@@ -15713,6 +15713,336 @@
       "rawDocumentation": "Communicate with devices connected to serial ports (RS-232, USB-serial adapters, etc).\n\nIMPORTANT NOTE: This module is not currently very well tested with real hardware. Please provide feedback\n(positive or negative!) via GitHub Issues.\n\nEnumerate available ports with `availablePortNames()`/`availablePortPaths()`, then create a\nport object with `createPortNamed()`/`createPortAtPath()`. The returned object is not open\nuntil you call `open()` on it.\n\n- Example:\n```js\nconst port = hs.serial.createPortNamed(hs.serial.availablePortNames()[0])\nport.baudRate = 9600\nport.setCallback((event, data) => {\n    if (event === \"received\") {\n        console.log(\"Received: \" + data)\n    }\n}).open()\nport.sendData(\"AT\\r\\n\")\n```"
     },
     {
+      "name": "hs.sharing",
+      "methods": [
+        {
+          "name": "createShare",
+          "signature": "func createShare(_ name: String) -> HSSharingService?",
+          "isStatic": false,
+          "rawDocumentation": "Creates a sharing service for the given name.\n- Parameter name: A service identifier — one of `hs.sharing.builtinServices`'s values\n- Returns: An `HSSharingService`, or null if `name` isn't recognized or the service is unavailable on this system\n- Example:\n```js\nconst share = hs.sharing.createShare(hs.sharing.builtinServices.mail)\n```",
+          "description": "Creates a sharing service for the given name.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "A service identifier — one of `hs.sharing.builtinServices`'s values",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSSharingService",
+            "description": "An `HSSharingService`, or null if `name` isn't recognized or the service is unavailable on this system"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const share = hs.sharing.createShare(hs.sharing.builtinServices.mail)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingModule.swift",
+          "lineNumber": 74
+        },
+        {
+          "name": "servicesFor",
+          "signature": "func servicesFor(_ items: [Any]) -> [HSSharingService]",
+          "isStatic": false,
+          "rawDocumentation": "Finds every sharing service — built-in and third-party (e.g. Notes, Reminders,\ninstalled apps' Share Extensions) — that can handle the given items.\n- Parameter items: {Array<string|HSImage>} The items to find services for\n- Returns: An array of ready-to-use `HSSharingService` objects\n- Note: This uses functionality that was deprecated in macOS 13, it may be removed in a future release\n- Example:\n```js\nconst services = hs.sharing.servicesFor(['hello world'])\nservices.forEach(s => console.log(s.title))\n```",
+          "description": "Finds every sharing service — built-in and third-party (e.g. Notes, Reminders,\ninstalled apps' Share Extensions) — that can handle the given items.",
+          "params": [
+            {
+              "name": "items",
+              "type": "Array<Any>",
+              "description": "The items to find services for",
+              "optional": false,
+              "tsType": "Array<string|HSImage>"
+            }
+          ],
+          "returns": {
+            "type": "Array<HSSharingService>",
+            "description": "An array of ready-to-use `HSSharingService` objects"
+          },
+          "notes": [
+            "This uses functionality that was deprecated in macOS 13, it may be removed in a future release"
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const services = hs.sharing.servicesFor(['hello world'])\nservices.forEach(s => console.log(s.title))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingModule.swift",
+          "lineNumber": 86
+        }
+      ],
+      "properties": [
+        {
+          "name": "builtinServices",
+          "signature": "var builtinServices: [String: String] { get }",
+          "rawDocumentation": "A table of shortcut names for the sharing services that are still functional on\nmodern macOS, mapped to the raw service identifiers `createShare()` expects.\n\n| Key | Service |\n|-----|---------|\n| `mail` | Compose an email in Mail |\n| `message` | Compose a message in Messages |\n| `airdrop` | Send via AirDrop |\n| `safariReadingList` | Add to Safari's Reading List |\n| `photos` | Add to the Photos library |\n| `desktopPicture` | Use as the desktop picture |\n\n- Example:\n```js\nhs.sharing.createShare(hs.sharing.builtinServices.airdrop)\n```",
+          "description": "A table of shortcut names for the sharing services that are still functional on\nmodern macOS, mapped to the raw service identifiers `createShare()` expects.\n| Key | Service |\n|-----|---------|\n| `mail` | Compose an email in Mail |\n| `message` | Compose a message in Messages |\n| `airdrop` | Send via AirDrop |\n| `safariReadingList` | Add to Safari's Reading List |\n| `photos` | Add to the Photos library |\n| `desktopPicture` | Use as the desktop picture |",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.sharing.createShare(hs.sharing.builtinServices.airdrop)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingModule.swift",
+          "lineNumber": 65
+        }
+      ],
+      "types": [
+        {
+          "name": "HSSharingServiceAPI",
+          "type": "typedef",
+          "rawDocumentation": "A configured sharing service, wrapping `NSSharingService`.\n\nCreate instances via `hs.sharing.createShare()` or `hs.sharing.servicesFor()`.\nConfigure with `setCallback()`, `recipients`, and `subject` as needed, then call\n`shareItems()`.\n\n- Example:\n```js\nhs.sharing.createShare(hs.sharing.builtinServices.mail)\n    .setCallback((event, items, error) => {\n        if (event === 'didShare') console.log('Shared!')\n        else if (event === 'didFail') console.error('Failed: ' + error)\n    })\n    .shareItems(['Check this out', 'https://www.hammerspoon.org'])\n```",
+          "description": "A configured sharing service, wrapping `NSSharingService`.\nCreate instances via `hs.sharing.createShare()` or `hs.sharing.servicesFor()`.\nConfigure with `setCallback()`, `recipients`, and `subject` as needed, then call\n`shareItems()`.",
+          "methods": [
+            {
+              "name": "canShareItems",
+              "signature": "func canShareItems(_ items: [Any]) -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Checks whether this service can share the given items.\n\nItems may be strings (treated as a web/mailto URL if they parse as one, a file\npath if they start with `/` or `~` and the file exists, otherwise plain text) or\n`HSImage` objects.\n- Parameter items: {Array<string|HSImage>} The items to check\n- Returns: true if this service can share all of the given items\n- Example:\n```js\nif (share.canShareItems(['hello'])) { ... }\n```",
+              "description": "Checks whether this service can share the given items.\nItems may be strings (treated as a web/mailto URL if they parse as one, a file\npath if they start with `/` or `~` and the file exists, otherwise plain text) or\n`HSImage` objects.",
+              "params": [
+                {
+                  "name": "items",
+                  "type": "Array<Any>",
+                  "description": "The items to check",
+                  "optional": false,
+                  "tsType": "Array<string|HSImage>"
+                }
+              ],
+              "returns": {
+                "type": "boolean",
+                "description": "true if this service can share all of the given items"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "if (share.canShareItems(['hello'])) { ... }"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 89
+            },
+            {
+              "name": "shareItems",
+              "signature": "func shareItems(_ items: [Any]) -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Attempts to share the given items with this service.\n\nIf the service cannot handle the items, this logs a warning and returns `false`\nwithout doing anything further. Otherwise the share is started; it is asynchronous\n— use `setCallback()` to find out when it completes.\n- Parameter items: {Array<string|HSImage>} The items to share\n- Returns: true if the share was started\n- Example:\n```js\nshare.shareItems(['Check this out', 'https://www.hammerspoon.org'])\n```",
+              "description": "Attempts to share the given items with this service.\nIf the service cannot handle the items, this logs a warning and returns `false`\nwithout doing anything further. Otherwise the share is started; it is asynchronous\n— use `setCallback()` to find out when it completes.",
+              "params": [
+                {
+                  "name": "items",
+                  "type": "Array<Any>",
+                  "description": "The items to share",
+                  "optional": false,
+                  "tsType": "Array<string|HSImage>"
+                }
+              ],
+              "returns": {
+                "type": "boolean",
+                "description": "true if the share was started"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "share.shareItems(['Check this out', 'https://www.hammerspoon.org'])"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 102
+            },
+            {
+              "name": "setCallback",
+              "signature": "func setCallback(_ fn: JSFunction) -> HSSharingService",
+              "isStatic": false,
+              "rawDocumentation": "Registers a callback for share lifecycle events.\n\nThe callback is called with:\n- `event` (string): one of `\"willShare\"`, `\"didShare\"`, `\"didFail\"`\n- `items` (array): the items involved\n- `error` (string, `\"didFail\"` only): a description of the failure\n- Parameter fn: {(event: string, items: any[], error?: string) => void} Called with the lifecycle event name, items, and optional error message\n- Returns: this share object, for chaining\n- Example:\n```js\nshare.setCallback((event, items, error) => console.log(event))\n```",
+              "description": "Registers a callback for share lifecycle events.",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSFunction",
+                  "description": "Called with the lifecycle event name, items, and optional error message",
+                  "optional": false,
+                  "tsType": "(event: string, items: any[], error?: string) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSSharingService",
+                "description": "this share object, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "share.setCallback((event, items, error) => console.log(event))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 116
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "A unique identifier for this share object (UUID string).",
+              "description": "A unique identifier for this share object (UUID string).",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 30
+            },
+            {
+              "name": "title",
+              "signature": "var title: String { get }",
+              "rawDocumentation": "The user-visible title of the service, e.g. \"Mail\" or \"AirDrop\".\n- Example:\n```js\nconsole.log(share.title)  // \"Mail\"\n```",
+              "description": "The user-visible title of the service, e.g. \"Mail\" or \"AirDrop\".",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "console.log(share.title)  // \"Mail\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 37
+            },
+            {
+              "name": "image",
+              "signature": "var image: HSImage { get }",
+              "rawDocumentation": "The service's icon.\n- Example:\n```js\nconst icon = share.image\n```",
+              "description": "The service's icon.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const icon = share.image"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 44
+            },
+            {
+              "name": "alternateImage",
+              "signature": "var alternateImage: HSImage? { get }",
+              "rawDocumentation": "An alternate icon for the service, if one is provided, otherwise null.",
+              "description": "An alternate icon for the service, if one is provided, otherwise null.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 47
+            },
+            {
+              "name": "recipients",
+              "signature": "var recipients: [String] { get set }",
+              "rawDocumentation": "Recipients (e.g. email addresses) for services that support them, such as Mail or Messages.\n- Example:\n```js\nshare.recipients = ['someone@example.com']\n```",
+              "description": "Recipients (e.g. email addresses) for services that support them, such as Mail or Messages.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "share.recipients = ['someone@example.com']"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 54
+            },
+            {
+              "name": "subject",
+              "signature": "var subject: String { get set }",
+              "rawDocumentation": "The subject line, for services that support one, such as Mail.\n- Example:\n```js\nshare.subject = 'Look at this'\n```",
+              "description": "The subject line, for services that support one, such as Mail.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "share.subject = 'Look at this'"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 61
+            },
+            {
+              "name": "messageBody",
+              "signature": "var messageBody: String? { get }",
+              "rawDocumentation": "The message body, populated once the share is in progress. Empty until then.",
+              "description": "The message body, populated once the share is in progress. Empty until then.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 64
+            },
+            {
+              "name": "permanentLink",
+              "signature": "var permanentLink: String? { get }",
+              "rawDocumentation": "A permanent link to the shared content, if the service provides one. Populated once\nthe share is in progress; otherwise null.",
+              "description": "A permanent link to the shared content, if the service provides one. Populated once\nthe share is in progress; otherwise null.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 68
+            },
+            {
+              "name": "accountName",
+              "signature": "var accountName: String? { get }",
+              "rawDocumentation": "The account name used to perform the share, if applicable. Populated once the share\nis in progress; otherwise null.",
+              "description": "The account name used to perform the share, if applicable. Populated once the share\nis in progress; otherwise null.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 72
+            },
+            {
+              "name": "attachments",
+              "signature": "var attachments: [String] { get }",
+              "rawDocumentation": "File paths of any attachments included in the share, populated once the share\ncompletes. Empty until then.",
+              "description": "File paths of any attachments included in the share, populated once the share\ncompletes. Empty until then.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
+              "lineNumber": 76
+            }
+          ]
+        }
+      ],
+      "description": "Share data with other people and apps via macOS sharing services (Mail, Messages,\nAirDrop, and more).\n`hs.sharing` wraps `NSSharingService`. Some services from older macOS/Hammerspoon\nAperture (discontinued in 2015) and the built-in Facebook/Twitter/Sina Weibo/Tencent\nWeibo/LinkedIn posting and profile-image services (removed in macOS 10.14).\nItems to share can be plain strings — treated as a web/mailto URL if they parse as\none, a file path if they start with `/` or `~` and the file exists, otherwise plain\ntext — or `HSImage` objects.\n## Quick start\n```js\nhs.sharing.createShare(hs.sharing.builtinServices.mail)\n    .setCallback((event) => {\n        if (event === 'didShare') console.log('Sent!')\n    })\n    .shareItems(['Check this out', 'https://www.hammerspoon.org'])\n```\n## Sharing a file via AirDrop\n```js\nhs.sharing.createShare(hs.sharing.builtinServices.airdrop)\n    .shareItems(['~/Desktop/photo.jpg'])\n```\n## Discovering what can handle an item\n```js\nconst services = hs.sharing.servicesFor(['https://www.hammerspoon.org'])\nservices.forEach(s => console.log(s.title))\n```",
+      "rawDocumentation": "Share data with other people and apps via macOS sharing services (Mail, Messages,\nAirDrop, and more).\n\n`hs.sharing` wraps `NSSharingService`. Some services from older macOS/Hammerspoon\nversions are no longer offered here because Apple removed them from the system:\nAperture (discontinued in 2015) and the built-in Facebook/Twitter/Sina Weibo/Tencent\nWeibo/LinkedIn posting and profile-image services (removed in macOS 10.14).\n\nItems to share can be plain strings — treated as a web/mailto URL if they parse as\none, a file path if they start with `/` or `~` and the file exists, otherwise plain\ntext — or `HSImage` objects.\n\n## Quick start\n\n```js\nhs.sharing.createShare(hs.sharing.builtinServices.mail)\n    .setCallback((event) => {\n        if (event === 'didShare') console.log('Sent!')\n    })\n    .shareItems(['Check this out', 'https://www.hammerspoon.org'])\n```\n\n## Sharing a file via AirDrop\n\n```js\nhs.sharing.createShare(hs.sharing.builtinServices.airdrop)\n    .shareItems(['~/Desktop/photo.jpg'])\n```\n\n## Discovering what can handle an item\n\n```js\nconst services = hs.sharing.servicesFor(['https://www.hammerspoon.org'])\nservices.forEach(s => console.log(s.title))\n```"
+    },
+    {
       "name": "hs.shortcuts",
       "methods": [
         {
@@ -23639,5 +23969,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-21T00:53:50.562Z"
+  "generatedAt": "2026-08-21T13:41:59.487Z"
 }

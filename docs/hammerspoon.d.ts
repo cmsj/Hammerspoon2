@@ -5875,6 +5875,156 @@ as a `"received"` event, simulating local echo. Default is `false`.
 }
 
 /**
+ * Share data with other people and apps via macOS sharing services (Mail, Messages,
+AirDrop, and more).
+`hs.sharing` wraps `NSSharingService`. Some services from older macOS/Hammerspoon
+Aperture (discontinued in 2015) and the built-in Facebook/Twitter/Sina Weibo/Tencent
+Weibo/LinkedIn posting and profile-image services (removed in macOS 10.14).
+Items to share can be plain strings — treated as a web/mailto URL if they parse as
+one, a file path if they start with `/` or `~` and the file exists, otherwise plain
+text — or `HSImage` objects.
+## Quick start
+```js
+hs.sharing.createShare(hs.sharing.builtinServices.mail)
+    .setCallback((event) => {
+        if (event === 'didShare') console.log('Sent!')
+    })
+    .shareItems(['Check this out', 'https://www.hammerspoon.org'])
+```
+## Sharing a file via AirDrop
+```js
+hs.sharing.createShare(hs.sharing.builtinServices.airdrop)
+    .shareItems(['~/Desktop/photo.jpg'])
+```
+## Discovering what can handle an item
+```js
+const services = hs.sharing.servicesFor(['https://www.hammerspoon.org'])
+services.forEach(s => console.log(s.title))
+```
+ */
+declare namespace hs.sharing {
+    /**
+     * Creates a sharing service for the given name.
+     * @param name A service identifier — one of `hs.sharing.builtinServices`'s values
+     * @returns An `HSSharingService`, or null if `name` isn't recognized or the service is unavailable on this system
+     */
+    function createShare(name: string): HSSharingService | null;
+
+    /**
+     * Finds every sharing service — built-in and third-party (e.g. Notes, Reminders,
+installed apps' Share Extensions) — that can handle the given items.
+     * @remarks This uses functionality that was deprecated in macOS 13, it may be removed in a future release
+     * @param items The items to find services for
+     * @returns An array of ready-to-use `HSSharingService` objects
+     */
+    function servicesFor(items: Array<string|HSImage>): HSSharingService[];
+
+    /**
+     * A table of shortcut names for the sharing services that are still functional on
+modern macOS, mapped to the raw service identifiers `createShare()` expects.
+| Key | Service |
+|-----|---------|
+| `mail` | Compose an email in Mail |
+| `message` | Compose a message in Messages |
+| `airdrop` | Send via AirDrop |
+| `safariReadingList` | Add to Safari's Reading List |
+| `photos` | Add to the Photos library |
+| `desktopPicture` | Use as the desktop picture |
+     */
+    const builtinServices: Record<string, string>;
+
+}
+
+/**
+ * A configured sharing service, wrapping `NSSharingService`.
+Create instances via `hs.sharing.createShare()` or `hs.sharing.servicesFor()`.
+Configure with `setCallback()`, `recipients`, and `subject` as needed, then call
+`shareItems()`.
+ */
+declare class HSSharingService {
+    /**
+     * Checks whether this service can share the given items.
+Items may be strings (treated as a web/mailto URL if they parse as one, a file
+path if they start with `/` or `~` and the file exists, otherwise plain text) or
+`HSImage` objects.
+     * @param items The items to check
+     * @returns true if this service can share all of the given items
+     */
+    canShareItems(items: Array<string|HSImage>): boolean;
+
+    /**
+     * Attempts to share the given items with this service.
+If the service cannot handle the items, this logs a warning and returns `false`
+without doing anything further. Otherwise the share is started; it is asynchronous
+— use `setCallback()` to find out when it completes.
+     * @param items The items to share
+     * @returns true if the share was started
+     */
+    shareItems(items: Array<string|HSImage>): boolean;
+
+    /**
+     * Registers a callback for share lifecycle events.
+     * @param fn Called with the lifecycle event name, items, and optional error message
+     * @returns this share object, for chaining
+     */
+    setCallback(fn: (event: string, items: any[], error?: string) => void): HSSharingService;
+
+    /**
+     * A unique identifier for this share object (UUID string).
+     */
+    readonly identifier: string;
+
+    /**
+     * The user-visible title of the service, e.g. "Mail" or "AirDrop".
+     */
+    readonly title: string;
+
+    /**
+     * The service's icon.
+     */
+    readonly image: HSImage;
+
+    /**
+     * An alternate icon for the service, if one is provided, otherwise null.
+     */
+    readonly alternateImage: HSImage | null;
+
+    /**
+     * Recipients (e.g. email addresses) for services that support them, such as Mail or Messages.
+     */
+    recipients: string[];
+
+    /**
+     * The subject line, for services that support one, such as Mail.
+     */
+    subject: string;
+
+    /**
+     * The message body, populated once the share is in progress. Empty until then.
+     */
+    readonly messageBody: string | null;
+
+    /**
+     * A permanent link to the shared content, if the service provides one. Populated once
+the share is in progress; otherwise null.
+     */
+    readonly permanentLink: string | null;
+
+    /**
+     * The account name used to perform the share, if applicable. Populated once the share
+is in progress; otherwise null.
+     */
+    readonly accountName: string | null;
+
+    /**
+     * File paths of any attachments included in the share, populated once the share
+completes. Empty until then.
+     */
+    readonly attachments: string[];
+
+}
+
+/**
  * Run and interact with macOS Shortcuts from JavaScript.
 This module bridges to the Shortcuts app, letting you enumerate available
 shortcuts and run them from your Hammerspoon configuration.
