@@ -493,6 +493,8 @@ extension JSTestHarness {
                 loadModule(HSWindowModule.self, as: name)
             case "spotlight":
                 loadModule(HSSpotlightModule.self, as: name)
+            case "sharing":
+                loadModule(HSSharingModule.self, as: name)
             case "menubar":
                 loadModule(HSMenuBarModule.self, as: name)
             case "midi":

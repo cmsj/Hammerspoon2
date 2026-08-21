@@ -76,6 +76,7 @@ import JavaScriptCoreExtras
     @objc var permissions: HSPermissionsModule { get }
     @objc var screen: HSScreenModule { get }
     @objc var serial: HSSerialModule { get }
+    @objc var sharing: HSSharingModule { get }
     @objc var spotlight: HSSpotlightModule { get }
     @objc var task: HSTaskModule { get }
     @objc var power: HSPowerModule { get }
@@ -193,6 +194,7 @@ import JavaScriptCoreExtras
     @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
     @objc var screen: HSScreenModule { get { getOrCreate(name: "screen", type: HSScreenModule.self)}}
     @objc var serial: HSSerialModule { get { getOrCreate(name: "serial", type: HSSerialModule.self)}}
+    @objc var sharing: HSSharingModule { get { getOrCreate(name: "sharing", type: HSSharingModule.self)}}
     @objc var spotlight: HSSpotlightModule { get { getOrCreate(name: "spotlight", type: HSSpotlightModule.self)}}
     @objc var task: HSTaskModule { get { getOrCreate(name: "task", type: HSTaskModule.self)}}
     @objc var power: HSPowerModule { get { getOrCreate(name: "power", type: HSPowerModule.self)}}
