@@ -7,25 +7,21 @@
 
 import SwiftUI
 
-/// SwiftUI view for displaying alerts
+/// Full-screen host view for an explicitly-positioned (standalone) alert.
+/// Positions the bubble at the coordinates stored in `alert.position`,
+/// falling back to center when no position is set.
 struct UIAlertView: View {
     let alert: HSUIAlert
 
     @State private var viewOpacity = 0.0
 
     var body: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                Text(alert.message)
-                    .font(alert.font)
-                    .multilineTextAlignment(.center)
-                    .padding(alert.padding ?? 20)
-                    .optionalGlassEffect()
-                Spacer()
-            }
-            Spacer()
+        GeometryReader { geometry in
+            UIAlertBubble(alert: alert)
+                .position(
+                    x: alert.position?.x ?? geometry.size.width / 2,
+                    y: alert.position?.y ?? geometry.size.height / 2
+                )
         }
         .opacity(viewOpacity)
         .task {
@@ -39,5 +35,18 @@ struct UIAlertView: View {
                 viewOpacity = 0.0
             }
         }
+    }
+}
+
+/// The visual pill shared by both UIAlertView and HSUIAlertStackView.
+struct UIAlertBubble: View {
+    let alert: HSUIAlert
+
+    var body: some View {
+        Text(alert.message)
+            .font(alert.font)
+            .multilineTextAlignment(.center)
+            .padding(alert.padding ?? 20)
+            .optionalGlassEffect()
     }
 }

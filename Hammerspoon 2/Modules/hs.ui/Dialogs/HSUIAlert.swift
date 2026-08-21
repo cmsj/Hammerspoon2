@@ -15,7 +15,9 @@ import SwiftUI
 /// **A temporary on-screen notification**
 ///
 /// Displays a message that automatically fades out after a specified duration.
-/// Positioned in the center of the screen with a semi-transparent background.
+/// Without an explicit `.position()`, multiple alerts stack vertically and
+/// stay centered as they appear and disappear. With `.position()`, the alert
+/// appears at the given coordinates regardless of other alerts.
 ///
 /// ## Example
 ///
@@ -55,6 +57,11 @@ import SwiftUI
     @objc func padding(_ points: Double) -> HSUIAlert
 
     /// Set a custom position for the alert
+    ///
+    /// When a position is set, the alert is shown at those coordinates and will not
+    /// be stacked with other alerts. Coordinates are in points from the top-left of
+    /// the visible screen area (below the menu bar), with y increasing downward.
+    ///
     /// - Parameter dict: Dictionary with `x` and `y` coordinates
     /// - Returns: Self for chaining
     /// - Example:
@@ -86,14 +93,16 @@ import SwiftUI
 
     var message: String
     var font: Font = .title
-    var duration: Double = 5.0  // Match hs.alert default
+    var duration: Double = 5.0
     var padding: CGFloat?
     var position: CGPoint?
 
     private var nsWindow: NSWindow?
-    private let alertID: UUID = UUID()
+    let alertID: UUID = UUID()
+    private var isStacked = false
+    private var isShowing = false
+    private var dismissTask: Task<Void, Never>?
     private weak var module: HSUIModule?
-    private var dismissTimer: Timer?
 
     init(message: String, module: HSUIModule) {
         self.message = message
@@ -144,9 +153,35 @@ import SwiftUI
     // MARK: - Display
 
     @objc func show() -> HSUIAlert {
+        guard !isShowing else { return self }
+        isShowing = true
+
+        module?.register(self, id: alertID)
+
+        let dismissDelay: Double
+        if position != nil {
+            showStandalone()
+            dismissDelay = duration
+        } else {
+            isStacked = true
+            module?.showAlertInStack(self)
+            // Stacked alerts rely on close() triggering the SwiftUI transition for the
+            // final 0.2s of fade-out, so the dismiss fires 0.2s earlier than standalone.
+            dismissDelay = duration - 0.2
+        }
+
+        dismissTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(dismissDelay))
+            self?.close()
+        }
+
+        return self
+    }
+
+    private func showStandalone() {
         guard let screen = NSScreen.main else {
             AKError("hs.ui.alert: Unable to find main screen")
-            return self
+            return
         }
 
         let window = NSWindow(
@@ -169,42 +204,30 @@ import SwiftUI
         window.orderFrontRegardless()
 
         self.nsWindow = window
-
-        // Register with module to prevent premature deallocation
-        module?.register(self, id: alertID)
-
-        // Auto-dismiss after duration. Timer uses [weak self] so it does NOT keep the
-        // alert alive — if the alert is closed early the timer fires harmlessly on nil.
-        // assumeIsolated is safe because scheduledTimer adds to RunLoop.current (main).
-        dismissTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated { self?.close() }
-        }
-
-        return self
     }
 
     @objc func close() {
-        guard nsWindow != nil else { return } // Already closed
+        guard isShowing else { return }
+        isShowing = false
+        dismissTask?.cancel()
+        dismissTask = nil
 
-        dismissTimer?.invalidate()
-        dismissTimer = nil
-
-        // Unregister from module
-        module?.unregister(alert: alertID)
-
-        // Explicitly nil the contentView so UIAlertView (which holds a strong ref back
-        // to self) is released synchronously before AppKit's async window cleanup runs.
-        nsWindow?.contentView = nil
-        nsWindow?.delegate = nil
-        nsWindow?.orderOut(nil)
-        nsWindow?.close()
-        nsWindow = nil
+        if isStacked {
+            isStacked = false
+            module?.unregister(alert: alertID)
+            module?.removeAlertFromStack(self)
+        } else {
+            module?.unregister(alert: alertID)
+            nsWindow?.delegate = nil
+            nsWindow?.orderOut(nil)
+            nsWindow?.close()
+            nsWindow = nil
+        }
     }
 
     // MARK: - NSWindowDelegate
 
     nonisolated func windowWillClose(_ notification: Notification) {
-        // Window is being closed (shouldn't normally happen for alerts, but handle it)
         Task { @MainActor in
             self.close()
         }

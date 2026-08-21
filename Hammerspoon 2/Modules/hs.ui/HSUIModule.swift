@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import AppKit
+import SwiftUI
 
 // MARK: - Declare our JavaScript API
 
@@ -402,6 +403,10 @@ import AppKit
     private var activeAlerts: [UUID: HSUIAlert] = [:]
     private var activeDialogs: [UUID: HSUIDialog] = [:]
 
+    // Single shared window for auto-positioned (stacked) alerts
+    private let alertStackManager = HSUIAlertStackManager()
+    private var alertStackWindow: NSWindow?
+
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -410,6 +415,11 @@ import AppKit
     }
 
     func shutdown() {
+        // Close stack window immediately (no animation needed on shutdown)
+        alertStackWindow?.close()
+        alertStackWindow = nil
+        alertStackManager.alerts.removeAll()
+
         // Close all windows
         for window in activeWindows.values {
             window.close()
@@ -457,6 +467,44 @@ import AppKit
 
     func unregister(dialog id: UUID) {
         activeDialogs.removeValue(forKey: id)
+    }
+
+    // MARK: - Alert Stack Management
+
+    func showAlertInStack(_ alert: HSUIAlert) {
+        if alertStackWindow == nil {
+            guard let screen = NSScreen.main else { return }
+
+            let window = NSWindow(
+                contentRect: screen.visibleFrame,
+                styleMask: [.borderless],
+                backing: .buffered,
+                defer: false
+            )
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.ignoresMouseEvents = true
+            window.level = .screenSaver
+            window.isReleasedWhenClosed = false
+            window.contentView = NSHostingView(rootView: HSUIAlertStackView(manager: alertStackManager))
+            window.orderFrontRegardless()
+            alertStackWindow = window
+        }
+
+        alertStackManager.add(alert)
+    }
+
+    func removeAlertFromStack(_ alert: HSUIAlert) {
+        alertStackManager.remove(alert)
+
+        // Close the shared window after the fade-out animation completes, if the stack is now empty
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(0.2))
+            guard let self, self.alertStackManager.isEmpty, let win = self.alertStackWindow else { return }
+            win.orderOut(nil)
+            win.close()
+            self.alertStackWindow = nil
+        }
     }
 
     // MARK: - Factory Methods
