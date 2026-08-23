@@ -447,16 +447,30 @@ struct HSAXTests {
         """)
         }
 
-        @Test("Finder application element children() length is a non-negative integer")
-        func testFinderChildrenLengthIsNonNegative() {
+        @Test("Finder application element children() returns bridged elements")
+        func testFinderChildrenAreBridgedElements() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
                 var finder = hs.application.matchingBundleID('com.apple.finder');
                 var elem = hs.ax.applicationElement(finder);
                 if (!elem) return false;
-                // Length may be 0 when no Finder windows are open; that is valid.
-                return elem.children().length >= 0;
+                var children = elem.children();
+                return children.length > 0 && children.every(function(child) {
+                    return typeof child.role === 'string' && typeof child.children === 'function';
+                });
+            })()
+        """)
+        }
+
+        @Test("Finder menu items are readable")
+        func testFinderMenuItemsAreReadable() {
+            let harness = makeHarness()
+            harness.expectTrue("""
+            (function() {
+                var finder = hs.application.matchingBundleID('com.apple.finder');
+                var items = finder.getMenuItems();
+                return Array.isArray(items) && items.length > 0;
             })()
         """)
         }

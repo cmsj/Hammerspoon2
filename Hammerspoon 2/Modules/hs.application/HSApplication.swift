@@ -352,7 +352,7 @@ import AXSwift
             AKError("hs.application.getMenuItems: Failed to get menu bar for \(self.title ?? "unknown")")
             return nil
         }
-        guard let menuBarItems: [UIElement] = try? menuBar.attribute(.children) else {
+        guard let menuBarItems: [UIElement] = try? menuBar.arrayAttribute(.children) else {
             return []
         }
         return menuBarItems.compactMap { menuBarItemToDict($0) }
@@ -380,7 +380,7 @@ import AXSwift
 
     private func menuBarItems() -> [UIElement]? {
         guard let menuBar: UIElement = try? axUIElement?.attribute(.menuBar) else { return nil }
-        return try? menuBar.attribute(.children)
+        return try? menuBar.arrayAttribute(.children)
     }
 
     private func findMenuElement(byName name: String) -> UIElement? {
@@ -417,7 +417,7 @@ import AXSwift
     }
 
     private func searchMenuElement(withTitle title: String, in element: UIElement) -> UIElement? {
-        guard let children: [UIElement] = try? element.attribute(.children) else { return nil }
+        guard let children: [UIElement] = try? element.arrayAttribute(.children) else { return nil }
         for child in children {
             let childTitle = ((try? child.attribute(.title) as String?) ?? "").lowercased()
             if childTitle == title { return child }
@@ -427,7 +427,7 @@ import AXSwift
     }
 
     private func navigateMenuPath(_ path: [String], from element: UIElement) -> UIElement? {
-        guard let children: [UIElement] = try? element.attribute(.children) else { return nil }
+        guard let children: [UIElement] = try? element.arrayAttribute(.children) else { return nil }
         let target = path[0].lowercased()
         for child in children {
             let childTitle = ((try? child.attribute(.title) as String?) ?? "").lowercased()
@@ -441,9 +441,9 @@ import AXSwift
     private func menuBarItemToDict(_ element: UIElement) -> [String: Any]? {
         let title: String = (try? element.attribute(.title)) ?? ""
         var dict: [String: Any] = ["title": title]
-        if let children: [UIElement] = try? element.attribute(.children),
+        if let children: [UIElement] = try? element.arrayAttribute(.children),
            let menu = children.first,
-           let items: [UIElement] = try? menu.attribute(.children) {
+           let items: [UIElement] = try? menu.arrayAttribute(.children) {
             dict["items"] = items.compactMap { menuItemToDict($0) }
         }
         return dict
@@ -456,9 +456,9 @@ import AXSwift
         let title: String = (try? element.attribute(.title)) ?? ""
         let enabled: Bool = (try? element.attribute(.enabled)) ?? false
         var dict: [String: Any] = ["title": title, "enabled": enabled]
-        if let children: [UIElement] = try? element.attribute(.children),
+        if let children: [UIElement] = try? element.arrayAttribute(.children),
            let submenu = children.first,
-           let submenuItems: [UIElement] = try? submenu.attribute(.children) {
+           let submenuItems: [UIElement] = try? submenu.arrayAttribute(.children) {
             dict["items"] = submenuItems.compactMap { menuItemToDict($0) }
         }
         return dict

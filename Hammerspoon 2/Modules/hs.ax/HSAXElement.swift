@@ -326,7 +326,7 @@ import AXSwift
     }
 
     @objc func children() -> [HSAXElement] {
-        guard let childElements: [UIElement] = try? element.attribute(.children) else {
+        guard let childElements: [UIElement] = try? element.arrayAttribute(.children) else {
             return []
         }
         return childElements.map { HSAXElement(element: $0) }
