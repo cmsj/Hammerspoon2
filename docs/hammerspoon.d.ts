@@ -3564,6 +3564,75 @@ a terminal with `sudo`.
 }
 
 /**
+ * Module for querying and controlling CapsLock state, and for enumerating attached keyboards
+and controlling their LEDs individually.
+ */
+declare namespace hs.keyboard {
+    /**
+     * Checks the system-wide state of CapsLock.
+This reflects a single, global lock state shared by every attached keyboard — macOS has
+no public API to query the functional (character-affecting) CapsLock state independently
+per keyboard. For a genuinely per-keyboard signal, see `keyboardCapsLockState()`, which
+reads each keyboard's own CapsLock LED.
+     * @returns true if CapsLock is currently on, false otherwise
+     */
+    function capsLockState(): boolean;
+
+    /**
+     * Sets the system-wide state of CapsLock.
+     * @param state true to turn CapsLock on, false to turn it off
+     * @returns The new state, or false if the change could not be applied
+     */
+    function setCapsLockState(state: boolean): boolean;
+
+    /**
+     * Toggles the system-wide state of CapsLock.
+     * @returns The new state, or false if the change could not be applied
+     */
+    function toggleCapsLockState(): boolean;
+
+    /**
+     * Sets a keyboard LED on every attached keyboard that has one.
+     * @remarks Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.
+     * @param name The LED to set — one of `"caps"`, `"scroll"`, or `"num"`
+     * @param state true to turn the LED on, false to turn it off
+     * @returns true if the LED was successfully set on at least one keyboard
+     */
+    function setLED(name: string, state: boolean): boolean;
+
+    /**
+     * Returns all currently attached keyboard HID devices.
+Each object has `keyboardID` (number — pass to `keyboardCapsLockState()`/`setKeyboardLED()`),
+`productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number).
+`serialNumber` (string) and `locationID` (number) are included when available.
+     * @returns An array of objects describing each attached keyboard
+     */
+    function attachedKeyboards(): Record<string, any>[];
+
+    /**
+     * Checks a specific keyboard's own CapsLock LED state.
+Unlike `capsLockState()`, this queries the individual keyboard identified by `keyboardID`
+(from `attachedKeyboards()`), reflecting how modern macOS tracks CapsLock independently per
+physical keyboard.
+     * @remarks Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.
+     * @param keyboardID A keyboard identifier, as returned by `attachedKeyboards()`
+     * @returns true if that keyboard's CapsLock LED is on, false if it is off, unavailable, or the keyboard was not found
+     */
+    function keyboardCapsLockState(keyboardID: number): boolean;
+
+    /**
+     * Sets a specific keyboard's LED, leaving all other attached keyboards untouched.
+     * @remarks Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.
+     * @param keyboardID A keyboard identifier, as returned by `attachedKeyboards()`
+     * @param name The LED to set — one of `"caps"`, `"scroll"`, or `"num"`
+     * @param state true to turn the LED on, false to turn it off
+     * @returns true if the LED was successfully set
+     */
+    function setKeyboardLED(keyboardID: number, name: string, state: boolean): boolean;
+
+}
+
+/**
  * Access information about the current keyboard layout and input sources, and respond to changes.
 ## Reading the current layout
 ```js
@@ -5270,6 +5339,19 @@ resolve immediately with the previously granted or denied state.
      */
     function requestLocation(): Promise<boolean>;
 
+    /**
+     * Check if the app has Input Monitoring permission.
+Input Monitoring is required for `hs.keyboard` to query and control CapsLock state and LEDs on a
+per-keyboard basis.
+     * @returns true if permission is granted, false otherwise
+     */
+    function checkInputMonitoring(): boolean;
+
+    /**
+     * Request Input Monitoring permission (shows the system dialog if the user has not yet decided).
+     */
+    function requestInputMonitoring(): void;
+
 }
 
 /**
@@ -5947,6 +6029,7 @@ declare class HSSharingService {
 Items may be strings (treated as a web/mailto URL if they parse as one, a file
 path if they start with `/` or `~` and the file exists, otherwise plain text) or
 `HSImage` objects.
+     * @remarks Unsupported items will be ignored
      * @param items The items to check
      * @returns true if this service can share all of the given items
      */
@@ -5957,6 +6040,7 @@ path if they start with `/` or `~` and the file exists, otherwise plain text) or
 If the service cannot handle the items, this logs a warning and returns `false`
 without doing anything further. Otherwise the share is started; it is asynchronous
 — use `setCallback()` to find out when it completes.
+     * @remarks Unsupported items will be ignored
      * @param items The items to share
      * @returns true if the share was started
      */

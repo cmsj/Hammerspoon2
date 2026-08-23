@@ -10,6 +10,7 @@ import Foundation
 import AVFoundation
 import CoreLocation
 import UserNotifications
+import IOKit.hid
 
 @_documentation(visibility: private)
 enum PermissionsState: Int {
@@ -26,6 +27,7 @@ enum PermissionsType: Int, CaseIterable {
     case notifications
     case screencapture
     case location
+    case inputMonitoring
 
     var displayName: String {
         switch self {
@@ -35,6 +37,7 @@ enum PermissionsType: Int, CaseIterable {
         case .notifications:  return "Notifications"
         case .screencapture:  return "Screen Recording"
         case .location:       return "Location"
+        case .inputMonitoring: return "Input Monitoring"
         }
     }
 
@@ -46,6 +49,7 @@ enum PermissionsType: Int, CaseIterable {
         case .notifications:  return "Allows displaying system notifications"
         case .screencapture:  return "Allows capturing screen content"
         case .location:       return "Allows accessing this computer's location"
+        case .inputMonitoring: return "Allows per-keyboard access to modifier key state and LEDs"
         }
     }
 
@@ -58,6 +62,7 @@ enum PermissionsType: Int, CaseIterable {
         case .notifications:  return URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!
         case .screencapture:  path = "Privacy_ScreenCapture"
         case .location:       path = "Privacy_LocationServices"
+        case .inputMonitoring: path = "Privacy_ListenEvent"
         }
         // swiftlint:disable:next force_unwrapping
         return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(path)")!
@@ -122,6 +127,12 @@ class PermissionsManager: NSObject {
             case .notDetermined:                 return .unknown
             default:                             return .notTrusted
             }
+        case .inputMonitoring:
+            switch IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) {
+            case kIOHIDAccessTypeGranted:  return .trusted
+            case kIOHIDAccessTypeDenied:   return .notTrusted
+            default:                       return .unknown
+            }
         }
     }
 
@@ -141,6 +152,8 @@ class PermissionsManager: NSObject {
         case .location:
             let status = CLLocationManager().authorizationStatus
             return status == .authorized || status == .authorizedAlways
+        case .inputMonitoring:
+            return IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted
         }
     }
 
@@ -199,6 +212,9 @@ class PermissionsManager: NSObject {
             default:
                 callback?(false)
             }
+        case .inputMonitoring:
+            let granted = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
+            callback?(granted)
         }
     }
 }
