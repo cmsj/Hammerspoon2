@@ -9560,7 +9560,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
-          "lineNumber": 171
+          "lineNumber": 174
         },
         {
           "name": "setCapsLockState",
@@ -9590,7 +9590,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
-          "lineNumber": 180
+          "lineNumber": 183
         },
         {
           "name": "toggleCapsLockState",
@@ -9612,7 +9612,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
-          "lineNumber": 188
+          "lineNumber": 191
         },
         {
           "name": "setLED",
@@ -9651,7 +9651,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
-          "lineNumber": 199
+          "lineNumber": 202
         },
         {
           "name": "attachedKeyboards",
@@ -9673,7 +9673,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
-          "lineNumber": 212
+          "lineNumber": 215
         },
         {
           "name": "keyboardCapsLockState",
@@ -9705,7 +9705,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
-          "lineNumber": 229
+          "lineNumber": 232
         },
         {
           "name": "setKeyboardLED",
@@ -9751,7 +9751,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
-          "lineNumber": 244
+          "lineNumber": 247
         }
       ],
       "properties": [],
@@ -24236,5 +24236,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-23T14:50:56.533Z"
+  "generatedAt": "2026-08-23T19:50:15.320Z"
 }

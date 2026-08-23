@@ -461,6 +461,25 @@ struct HSAXTests {
         """)
         }
 
+        @Test("AXMenuBar children() returns a non-empty array")
+        func testMenuBarChildrenIsNonEmpty() {
+            // Regression test: children() previously used a whole-array `as?` cast
+            // (`element.attribute(.children)`) which always fails for AX array
+            // attributes and silently returns []. AXMenuBar always has items
+            // regardless of window state, so this is a reliable, deterministic check.
+            let harness = makeHarness()
+            harness.expectTrue("""
+            (function() {
+                var finder = hs.application.matchingBundleID('com.apple.finder');
+                var appElem = hs.ax.applicationElement(finder);
+                if (!appElem) return false;
+                var menuBar = appElem.attributeValue('AXMenuBar');
+                if (!menuBar) return false;
+                return menuBar.children().length > 0;
+            })()
+        """)
+        }
+
         @Test("AXWindow child has a non-null position when Finder has a window open")
         func testWindowChildPositionWhenPresent() {
             let harness = makeHarness()
