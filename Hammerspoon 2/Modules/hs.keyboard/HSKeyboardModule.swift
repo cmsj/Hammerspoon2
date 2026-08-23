@@ -80,6 +80,9 @@ private func withKeyboardManager<T>(_ body: (IOHIDManager) -> T) -> T {
         kIOHIDDeviceUsageKey as String: kHIDUsage_GD_Keyboard
     ]
     IOHIDManagerSetDeviceMatching(manager, matching as CFDictionary)
+    // IOHIDManagerOpen() opens both currently-matched and future devices on the manager's
+    // behalf, so individual IOHIDDeviceOpen() calls are not needed before
+    // IOHIDDeviceGetValue()/IOHIDDeviceSetValue() below.
     _ = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
     defer { IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone)) }
     return body(manager)
