@@ -9538,6 +9538,228 @@
       "rawDocumentation": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\n\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects via XPC and evaluates JavaScript\ninteractively, with optional live log streaming.\n\nCommunication is secured with a same-team code-signing requirement in release builds,\nso only binaries signed with the same Team ID can connect.\n\n## Quick start\n\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n\nInstall the CLI tool once:\n```js\nhs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs\n```\n\nThen in a terminal:\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n\nRun with live log output:\n```bash\nhs --log-level info\n```"
     },
     {
+      "name": "hs.keyboard",
+      "methods": [
+        {
+          "name": "capsLockState",
+          "signature": "func capsLockState() -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks the system-wide state of CapsLock.\n\nThis reflects a single, global lock state shared by every attached keyboard — macOS has\nno public API to query the functional (character-affecting) CapsLock state independently\nper keyboard. For a genuinely per-keyboard signal, see `keyboardCapsLockState()`, which\nreads each keyboard's own CapsLock LED.\n- Returns: true if CapsLock is currently on, false otherwise\n- Example:\n```js\nconsole.log(hs.keyboard.capsLockState())\n```",
+          "description": "Checks the system-wide state of CapsLock.\nThis reflects a single, global lock state shared by every attached keyboard — macOS has\nno public API to query the functional (character-affecting) CapsLock state independently\nper keyboard. For a genuinely per-keyboard signal, see `keyboardCapsLockState()`, which\nreads each keyboard's own CapsLock LED.",
+          "params": [],
+          "returns": {
+            "type": "boolean",
+            "description": "true if CapsLock is currently on, false otherwise"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.keyboard.capsLockState())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 171
+        },
+        {
+          "name": "setCapsLockState",
+          "signature": "func setCapsLockState(_ state: Bool) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Sets the system-wide state of CapsLock.\n- Parameter state: true to turn CapsLock on, false to turn it off\n- Returns: The new state, or false if the change could not be applied\n- Example:\n```js\nhs.keyboard.setCapsLockState(true)\n```",
+          "description": "Sets the system-wide state of CapsLock.",
+          "params": [
+            {
+              "name": "state",
+              "type": "boolean",
+              "description": "true to turn CapsLock on, false to turn it off",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "The new state, or false if the change could not be applied"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keyboard.setCapsLockState(true)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 180
+        },
+        {
+          "name": "toggleCapsLockState",
+          "signature": "func toggleCapsLockState() -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Toggles the system-wide state of CapsLock.\n- Returns: The new state, or false if the change could not be applied\n- Example:\n```js\nhs.keyboard.toggleCapsLockState()\n```",
+          "description": "Toggles the system-wide state of CapsLock.",
+          "params": [],
+          "returns": {
+            "type": "boolean",
+            "description": "The new state, or false if the change could not be applied"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keyboard.toggleCapsLockState()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 188
+        },
+        {
+          "name": "setLED",
+          "signature": "func setLED(_ name: String, _ state: Bool) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Sets a keyboard LED on every attached keyboard that has one.\n- Parameter name: The LED to set — one of `\"caps\"`, `\"scroll\"`, or `\"num\"`\n- Parameter state: true to turn the LED on, false to turn it off\n- Returns: true if the LED was successfully set on at least one keyboard\n- Note: Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.\n- Example:\n```js\nhs.keyboard.setLED(\"caps\", true)\n```",
+          "description": "Sets a keyboard LED on every attached keyboard that has one.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The LED to set — one of `\"caps\"`, `\"scroll\"`, or `\"num\"`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "state",
+              "type": "boolean",
+              "description": "true to turn the LED on, false to turn it off",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if the LED was successfully set on at least one keyboard"
+          },
+          "notes": [
+            "Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`."
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keyboard.setLED(\"caps\", true)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 199
+        },
+        {
+          "name": "attachedKeyboards",
+          "signature": "func attachedKeyboards() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns all currently attached keyboard HID devices.\n\nEach object has `keyboardID` (number — pass to `keyboardCapsLockState()`/`setKeyboardLED()`),\n`productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number).\n`serialNumber` (string) and `locationID` (number) are included when available.\n- Returns: An array of objects describing each attached keyboard\n- Example:\n```js\nconst keyboards = hs.keyboard.attachedKeyboards()\nkeyboards.forEach(k => console.log(k.vendorName + \" \" + k.productName))\n```",
+          "description": "Returns all currently attached keyboard HID devices.\nEach object has `keyboardID` (number — pass to `keyboardCapsLockState()`/`setKeyboardLED()`),\n`productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number).\n`serialNumber` (string) and `locationID` (number) are included when available.",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of objects describing each attached keyboard"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const keyboards = hs.keyboard.attachedKeyboards()\nkeyboards.forEach(k => console.log(k.vendorName + \" \" + k.productName))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 212
+        },
+        {
+          "name": "keyboardCapsLockState",
+          "signature": "func keyboardCapsLockState(_ keyboardID: Double) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks a specific keyboard's own CapsLock LED state.\n\nUnlike `capsLockState()`, this queries the individual keyboard identified by `keyboardID`\n(from `attachedKeyboards()`), reflecting how modern macOS tracks CapsLock independently per\nphysical keyboard.\n- Parameter keyboardID: A keyboard identifier, as returned by `attachedKeyboards()`\n- Returns: true if that keyboard's CapsLock LED is on, false if it is off, unavailable, or the keyboard was not found\n- Note: Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.\n- Example:\n```js\nconst keyboards = hs.keyboard.attachedKeyboards()\nif (keyboards.length > 0) {\n  console.log(hs.keyboard.keyboardCapsLockState(keyboards[0].keyboardID))\n}\n```",
+          "description": "Checks a specific keyboard's own CapsLock LED state.\nUnlike `capsLockState()`, this queries the individual keyboard identified by `keyboardID`\n(from `attachedKeyboards()`), reflecting how modern macOS tracks CapsLock independently per\nphysical keyboard.",
+          "params": [
+            {
+              "name": "keyboardID",
+              "type": "number",
+              "description": "A keyboard identifier, as returned by `attachedKeyboards()`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if that keyboard's CapsLock LED is on, false if it is off, unavailable, or the keyboard was not found"
+          },
+          "notes": [
+            "Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`."
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const keyboards = hs.keyboard.attachedKeyboards()\nif (keyboards.length > 0) {\n  console.log(hs.keyboard.keyboardCapsLockState(keyboards[0].keyboardID))\n}"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 229
+        },
+        {
+          "name": "setKeyboardLED",
+          "signature": "func setKeyboardLED(_ keyboardID: Double, _ name: String, _ state: Bool) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Sets a specific keyboard's LED, leaving all other attached keyboards untouched.\n- Parameter keyboardID: A keyboard identifier, as returned by `attachedKeyboards()`\n- Parameter name: The LED to set — one of `\"caps\"`, `\"scroll\"`, or `\"num\"`\n- Parameter state: true to turn the LED on, false to turn it off\n- Returns: true if the LED was successfully set\n- Note: Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.\n- Example:\n```js\nconst keyboards = hs.keyboard.attachedKeyboards()\nif (keyboards.length > 0) {\n  hs.keyboard.setKeyboardLED(keyboards[0].keyboardID, \"caps\", true)\n}\n```",
+          "description": "Sets a specific keyboard's LED, leaving all other attached keyboards untouched.",
+          "params": [
+            {
+              "name": "keyboardID",
+              "type": "number",
+              "description": "A keyboard identifier, as returned by `attachedKeyboards()`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The LED to set — one of `\"caps\"`, `\"scroll\"`, or `\"num\"`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "state",
+              "type": "boolean",
+              "description": "true to turn the LED on, false to turn it off",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if the LED was successfully set"
+          },
+          "notes": [
+            "Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`."
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const keyboards = hs.keyboard.attachedKeyboards()\nif (keyboards.length > 0) {\n  hs.keyboard.setKeyboardLED(keyboards[0].keyboardID, \"caps\", true)\n}"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 244
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Module for querying and controlling CapsLock state, and for enumerating attached keyboards\nand controlling their LEDs individually.",
+      "rawDocumentation": "Module for querying and controlling CapsLock state, and for enumerating attached keyboards\nand controlling their LEDs individually."
+    },
+    {
       "name": "hs.keycodes",
       "methods": [
         {
@@ -13929,6 +14151,47 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 118
+        },
+        {
+          "name": "checkInputMonitoring",
+          "signature": "func checkInputMonitoring() -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Check if the app has Input Monitoring permission.\n\nInput Monitoring is required for `hs.keyboard` to query and control CapsLock state and LEDs on a\nper-keyboard basis.\n- Returns: true if permission is granted, false otherwise\n- Example:\n```js\nconsole.log(hs.permissions.checkInputMonitoring())\n```",
+          "description": "Check if the app has Input Monitoring permission.\nInput Monitoring is required for `hs.keyboard` to query and control CapsLock state and LEDs on a\nper-keyboard basis.",
+          "params": [],
+          "returns": {
+            "type": "boolean",
+            "description": "true if permission is granted, false otherwise"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.permissions.checkInputMonitoring())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
+          "lineNumber": 129
+        },
+        {
+          "name": "requestInputMonitoring",
+          "signature": "func requestInputMonitoring()",
+          "isStatic": false,
+          "rawDocumentation": "Request Input Monitoring permission (shows the system dialog if the user has not yet decided).\n- Example:\n```js\nhs.permissions.requestInputMonitoring()\n```",
+          "description": "Request Input Monitoring permission (shows the system dialog if the user has not yet decided).",
+          "params": [],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.permissions.requestInputMonitoring()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
+          "lineNumber": 136
         }
       ],
       "properties": [],
@@ -15808,7 +16071,7 @@
               "name": "canShareItems",
               "signature": "func canShareItems(_ items: [Any]) -> Bool",
               "isStatic": false,
-              "rawDocumentation": "Checks whether this service can share the given items.\n\nItems may be strings (treated as a web/mailto URL if they parse as one, a file\npath if they start with `/` or `~` and the file exists, otherwise plain text) or\n`HSImage` objects.\n- Parameter items: {Array<string|HSImage>} The items to check\n- Returns: true if this service can share all of the given items\n- Example:\n```js\nif (share.canShareItems(['hello'])) { ... }\n```",
+              "rawDocumentation": "Checks whether this service can share the given items.\n\nItems may be strings (treated as a web/mailto URL if they parse as one, a file\npath if they start with `/` or `~` and the file exists, otherwise plain text) or\n`HSImage` objects.\n- Parameter items: {Array<string|HSImage>} The items to check\n- Returns: true if this service can share all of the given items\n- Note: Unsupported items will be ignored\n- Example:\n```js\nif (share.canShareItems(['hello'])) { ... }\n```",
               "description": "Checks whether this service can share the given items.\nItems may be strings (treated as a web/mailto URL if they parse as one, a file\npath if they start with `/` or `~` and the file exists, otherwise plain text) or\n`HSImage` objects.",
               "params": [
                 {
@@ -15823,7 +16086,9 @@
                 "type": "boolean",
                 "description": "true if this service can share all of the given items"
               },
-              "notes": [],
+              "notes": [
+                "Unsupported items will be ignored"
+              ],
               "examples": [
                 {
                   "lang": "js",
@@ -15832,13 +16097,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
-              "lineNumber": 89
+              "lineNumber": 90
             },
             {
               "name": "shareItems",
               "signature": "func shareItems(_ items: [Any]) -> Bool",
               "isStatic": false,
-              "rawDocumentation": "Attempts to share the given items with this service.\n\nIf the service cannot handle the items, this logs a warning and returns `false`\nwithout doing anything further. Otherwise the share is started; it is asynchronous\n— use `setCallback()` to find out when it completes.\n- Parameter items: {Array<string|HSImage>} The items to share\n- Returns: true if the share was started\n- Example:\n```js\nshare.shareItems(['Check this out', 'https://www.hammerspoon.org'])\n```",
+              "rawDocumentation": "Attempts to share the given items with this service.\n\nIf the service cannot handle the items, this logs a warning and returns `false`\nwithout doing anything further. Otherwise the share is started; it is asynchronous\n— use `setCallback()` to find out when it completes.\n- Parameter items: {Array<string|HSImage>} The items to share\n- Returns: true if the share was started\n- Note: Unsupported items will be ignored\n- Example:\n```js\nshare.shareItems(['Check this out', 'https://www.hammerspoon.org'])\n```",
               "description": "Attempts to share the given items with this service.\nIf the service cannot handle the items, this logs a warning and returns `false`\nwithout doing anything further. Otherwise the share is started; it is asynchronous\n— use `setCallback()` to find out when it completes.",
               "params": [
                 {
@@ -15853,7 +16118,9 @@
                 "type": "boolean",
                 "description": "true if the share was started"
               },
-              "notes": [],
+              "notes": [
+                "Unsupported items will be ignored"
+              ],
               "examples": [
                 {
                   "lang": "js",
@@ -15862,7 +16129,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
-              "lineNumber": 102
+              "lineNumber": 104
             },
             {
               "name": "setCallback",
@@ -15892,7 +16159,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
-              "lineNumber": 116
+              "lineNumber": 118
             }
           ],
           "properties": [
@@ -23969,5 +24236,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-21T13:41:59.487Z"
+  "generatedAt": "2026-08-23T14:50:56.533Z"
 }

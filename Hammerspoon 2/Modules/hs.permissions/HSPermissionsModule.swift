@@ -116,6 +116,24 @@ import AVFoundation
     /// })
     /// ```
     @objc func requestLocation() -> JSPromise?
+
+    /// Check if the app has Input Monitoring permission.
+    ///
+    /// Input Monitoring is required for `hs.keyboard` to query and control CapsLock state and LEDs on a
+    /// per-keyboard basis.
+    /// - Returns: true if permission is granted, false otherwise
+    /// - Example:
+    /// ```js
+    /// console.log(hs.permissions.checkInputMonitoring())
+    /// ```
+    @objc func checkInputMonitoring() -> Bool
+
+    /// Request Input Monitoring permission (shows the system dialog if the user has not yet decided).
+    /// - Example:
+    /// ```js
+    /// hs.permissions.requestInputMonitoring()
+    /// ```
+    @objc func requestInputMonitoring()
 }
 
 // MARK: - Implementation
@@ -216,5 +234,15 @@ import AVFoundation
                 Task { @MainActor in holder.resolveWith(result) }
             }
         }
+    }
+
+    // MARK: - Input Monitoring
+
+    @objc func checkInputMonitoring() -> Bool {
+        return PermissionsManager.shared.check(.inputMonitoring)
+    }
+
+    @objc func requestInputMonitoring() {
+        PermissionsManager.shared.request(.inputMonitoring)
     }
 }
