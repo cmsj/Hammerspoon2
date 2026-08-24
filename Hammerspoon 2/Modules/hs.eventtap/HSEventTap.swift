@@ -208,8 +208,8 @@ import CoreGraphics
     // Delivery is always on the main run loop thread (we use CFRunLoopGetMain()).
     private static let tapCallback: CGEventTapCallBack = { _, type, event, userInfo in
         guard let userInfo = unsafe userInfo else {
-            // CGEventTapCallBack receives a non-optional CGEvent; pass it through retained.
-            return unsafe Unmanaged.passRetained(event)
+            // Pass the event through unowned — we did not create it, so no retain is needed.
+            return unsafe Unmanaged.passUnretained(event)
         }
         let tap = unsafe Unmanaged<HSEventTap>.fromOpaque(userInfo).takeUnretainedValue()
         return unsafe tap.handleEvent(type: type, event: event)
@@ -222,20 +222,20 @@ import CoreGraphics
                 CGEvent.tapEnable(tap: port, enable: true)
             }
             AKWarning("hs.eventtap: tap \(identifier) was disabled by system — re-enabled")
-            return unsafe Unmanaged.passRetained(event)
+            return unsafe Unmanaged.passUnretained(event)
         }
 
         if let handler = swiftHandler {
             let result = handler(type, event)
             // For listen-only taps the OS ignores the return value; pass the event through
             // explicitly for clarity. For modify taps, nil return consumes the event.
-            if listenOnly { return unsafe Unmanaged.passRetained(event) }
-            if let result { return unsafe Unmanaged.passRetained(result) }
+            if listenOnly { return unsafe Unmanaged.passUnretained(event) }
+            if let result { return unsafe Unmanaged.passUnretained(result) }
             return nil
         }
 
         guard let callbackFn = callback?.value, !callbackFn.isNull else {
-            return unsafe Unmanaged.passRetained(event)
+            return unsafe Unmanaged.passUnretained(event)
         }
 
         let wrapper = HSEventTapEvent(cgEvent: event)
@@ -247,7 +247,7 @@ import CoreGraphics
         }
 
         // For listen-only taps the OS ignores the return value; always pass through.
-        if listenOnly { return unsafe Unmanaged.passRetained(event) }
+        if listenOnly { return unsafe Unmanaged.passUnretained(event) }
 
         // Warn once per modify tap if the callback does not explicitly return a boolean.
         if !hasWarnedAboutReturnValue, result?.isBoolean != true {
@@ -261,6 +261,7 @@ import CoreGraphics
         }
 
         // Return the event from the wrapper in case the callback modified any properties.
-        return unsafe Unmanaged.passRetained(wrapper.cgEvent)
+        // Still the same CGEvent we were given, so no retain is needed.
+        return unsafe Unmanaged.passUnretained(wrapper.cgEvent)
     }
 }
