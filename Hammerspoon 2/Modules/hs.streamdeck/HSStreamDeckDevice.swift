@@ -472,7 +472,7 @@ nonisolated private func hsStreamDeckInputReportCallback(
 
     private func writeFeatureReport(_ bytes: [UInt8]) {
         guard let reportID = bytes.first else { return }
-        let result = unsafe bytes.withUnsafeBufferPointer { ptr -> IOReturn in
+        let result = bytes.withUnsafeBufferPointer { ptr -> IOReturn in
             guard let base = ptr.baseAddress else { return kIOReturnError }
             return unsafe IOHIDDeviceSetReport(device, kIOHIDReportTypeFeature, CFIndex(reportID), base, ptr.count)
         }
@@ -493,7 +493,7 @@ nonisolated private func hsStreamDeckInputReportCallback(
         let totalLength = resultLength + readOffset
         var buffer = [UInt8](repeating: 0, count: totalLength)
         var actualLength = CFIndex(totalLength)
-        let status = unsafe buffer.withUnsafeMutableBufferPointer { ptr -> IOReturn in
+        let status = buffer.withUnsafeMutableBufferPointer { ptr -> IOReturn in
             guard let base = ptr.baseAddress else { return kIOReturnError }
             return unsafe IOHIDDeviceGetReport(device, kIOHIDReportTypeFeature, CFIndex(reportID), base, &actualLength)
         }
@@ -507,7 +507,7 @@ nonisolated private func hsStreamDeckInputReportCallback(
 
     private func writeOutputReport(_ bytes: [UInt8]) {
         guard let reportID = bytes.first else { return }
-        let result = unsafe bytes.withUnsafeBufferPointer { ptr -> IOReturn in
+        let result = bytes.withUnsafeBufferPointer { ptr -> IOReturn in
             guard let base = ptr.baseAddress else { return kIOReturnError }
             return unsafe IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, CFIndex(reportID), base, ptr.count)
         }
