@@ -7313,6 +7313,11 @@ Keep a reference to call navigation methods after the window is shown.
 **A custom window with declarative UI building**
 `HSUIWindow` allows you to create custom windows with a SwiftUI-like
 declarative syntax. Build interfaces using shapes, text, images, and layout containers.
+** Note: ** Clicking the macOS close button only **hides** the window (firing `onHide()`,
+not `onDestroy()`) — it does not destroy the window while you hold a reference to it in
+JavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)
+if you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the
+full set of lifecycle callbacks.
 ## Building UI Elements
 ## Modifying Elements
 ## Examples
@@ -7360,9 +7365,40 @@ declare class HSUIWindow {
     hide(): void;
 
     /**
-     * Close and destroy the window
+     * Destroy the window
      */
-    close(): void;
+    destroy(): void;
+
+    /**
+     * Set a callback to fire after the window is shown
+     * @param callback A JavaScript function called after the window becomes visible
+     * @returns Self for chaining
+     */
+    onShow(callback: () => void): HSUIWindow;
+
+    /**
+     * Set a callback to fire when the window is hidden
+Fires when `hide()` is called, **and** when the user clicks the macOS close
+button — clicking that button only hides the window from Hammerspoon's
+perspective (see the class-level note above), so this is the callback that reacts
+to it. Does not fire when the window is destroyed via `destroy()` — use
+`onDestroy()` for that.
+     * @param callback A JavaScript function called after the window is hidden
+     * @returns Self for chaining
+     */
+    onHide(callback: () => void): HSUIWindow;
+
+    /**
+     * Set a callback to fire after the window is destroyed via `destroy()`
+Only fires when `destroy()` is called explicitly — whether directly, or from
+within an `onHide()` handler. It does **not** fire when the user clicks the macOS
+close button by itself; that only hides the window, so use `onHide()` to react to
+the button click, and call `destroy()` from that handler if you also want to
+release the window.
+     * @param callback A JavaScript function called after the window is destroyed
+     * @returns Self for chaining
+     */
+    onDestroy(callback: () => void): HSUIWindow;
 
     /**
      * Show or hide the window's title bar

@@ -17,6 +17,12 @@ import SwiftUI
 /// `HSUIWindow` allows you to create custom windows with a SwiftUI-like
 /// declarative syntax. Build interfaces using shapes, text, images, and layout containers.
 ///
+/// ** Note: ** Clicking the macOS close button only **hides** the window (firing the `onHide()`
+/// callback, if you have one configured) — it does not destroy the window while you hold a reference to it in
+/// JavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)
+/// if you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the
+/// full set of lifecycle callbacks.
+///
 /// ## Building UI Elements
 ///
 /// - **Shapes**: `rectangle()`, `circle()`
@@ -76,8 +82,59 @@ import SwiftUI
     /// Hide the window (keeps it in memory)
     @objc func hide()
 
-    /// Close and destroy the window
-    @objc func close()
+    /// Destroy the window
+    @objc func destroy()
+
+    /// Set a callback to fire after the window is shown
+    /// - Parameter callback: {() => void} A JavaScript function called after the window becomes visible
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+    ///     .text("Hello")
+    ///     .onShow(() => console.log("Window shown"))
+    ///     .show()
+    /// ```
+    @objc func onShow(_ callback: JSFunction) -> HSUIWindow
+
+    /// Set a callback to fire when the window is hidden
+    ///
+    /// Fires when `hide()` is called, **and** when the user clicks the macOS close
+    /// button — clicking that button only hides the window from Hammerspoon's
+    /// perspective (see the class-level note above), so this is the callback that reacts
+    /// to it. Does not fire when the window is destroyed via `destroy()` — use
+    /// `onDestroy()` for that.
+    ///
+    /// - Parameter callback: {() => void} A JavaScript function called after the window is hidden
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+    ///     .text("Hello")
+    ///     .onHide(() => console.log("Window hidden (via hide() or the close button)"))
+    ///     .show()
+    /// ```
+    @objc func onHide(_ callback: JSFunction) -> HSUIWindow
+
+    /// Set a callback to fire after the window is destroyed via `destroy()`
+    ///
+    /// Only fires when `destroy()` is called explicitly — whether directly, or from
+    /// within an `onHide()` handler. It does **not** fire when the user clicks the macOS
+    /// close button by itself; that only hides the window, so use `onHide()` to react to
+    /// the button click, and call `destroy()` from that handler if you also want to
+    /// release the window.
+    ///
+    /// - Parameter callback: {() => void} A JavaScript function called after the window is destroyed
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+    ///     .text("Hello")
+    ///     .onDestroy(() => console.log("Window destroyed"))
+    ///     .show()
+    /// win.destroy()
+    /// ```
+    @objc func onDestroy(_ callback: JSFunction) -> HSUIWindow
 
     // MARK: Window Styling
 
@@ -349,6 +406,7 @@ import SwiftUI
 @MainActor
 @objc class HSUIWindow: NSObject, HSUIWindowAPI, NSWindowDelegate {
     @objc var typeName = "HSUIWindow"
+    @objc let identifier = UUID().uuidString
 
     // Window properties
     private var windowFrame: CGRect
@@ -365,12 +423,17 @@ import SwiftUI
     private var windowTitleText: String = ""
     private var windowLevelName: String = "normal"
 
+    // Lifecycle callbacks
+    private var showCallback: JSCallback?
+    private var hideCallback: JSCallback?
+    private var destroyCallback: JSCallback?
+
     // Element tree
     private var rootElement: (any HSUIElement)?
     private var currentElement: (any HSUIElement)?
     private var containerStack: [any UIContainer] = []
 
-    // Type-erased refs to UIWebView elements (macOS 26+) for eager resource cleanup on close.
+    // Type-erased refs to UIWebView elements (macOS 26+) for eager resource cleanup on destroy.
     private var embeddedWebViews: [AnyObject] = []
 
     // Initialization
@@ -389,10 +452,12 @@ import SwiftUI
         self.init(frame: CGRect(x: x, y: y, width: w, height: h), module: module)
     }
 
-    deinit {
-        // In the normal shutdown path close() has already been called, so nsWindow and
+    isolated deinit {
+        AKDebug("deinit of HSUIWindow(\(identifier))")
+
+        // In the normal shutdown path destroy() has already been called, so nsWindow and
         // rootElement are nil and this is a no-op. In the unexpected edge case where the
-        // object is freed without close() being called, dispatch AppKit cleanup to the
+        // object is freed without destroy() being called, dispatch AppKit cleanup to the
         // main thread without retaining self (capturing only the NSWindow and UUID values).
         guard let window = nsWindow else { return }
         let id = windowID
@@ -443,15 +508,19 @@ import SwiftUI
         // Register with module to prevent premature deallocation
         module?.register(self, id: windowID)
 
+        _ = showCallback?.call(withArguments: [])
+
         return self
     }
 
     @objc func hide() {
+        guard nsWindow != nil else { return }
         nsWindow?.orderOut(nil)
+        _ = hideCallback?.call(withArguments: [])
     }
 
-    @objc func close() {
-        guard nsWindow != nil || rootElement != nil else { return } // Already closed
+    @objc func destroy() {
+        guard nsWindow != nil || rootElement != nil else { return } // Already destroyed
 
         // Destroy embedded web views first to release their JS callbacks before the element
         // tree is released. This breaks JSValue → JSContext chains so the context can be freed.
@@ -474,14 +543,47 @@ import SwiftUI
         nsWindow?.delegate = nil
         nsWindow?.close()
         nsWindow = nil
+
+        // Fire the onDestroy callback while still attached, then detach all lifecycle
+        // callbacks to release the JSValues (and the JSContext they hold alive).
+        _ = destroyCallback?.call(withArguments: [])
+        showCallback?.detach(from: self)
+        hideCallback?.detach(from: self)
+        destroyCallback?.detach(from: self)
+        showCallback = nil
+        hideCallback = nil
+        destroyCallback = nil
+    }
+
+    // MARK: - Lifecycle Callbacks
+
+    @objc func onShow(_ callback: JSFunction) -> HSUIWindow {
+        showCallback?.detach(from: self)
+        showCallback = JSCallback(value: callback, owner: self)
+        return self
+    }
+
+    @objc func onHide(_ callback: JSFunction) -> HSUIWindow {
+        hideCallback?.detach(from: self)
+        hideCallback = JSCallback(value: callback, owner: self)
+        return self
+    }
+
+    @objc func onDestroy(_ callback: JSFunction) -> HSUIWindow {
+        destroyCallback?.detach(from: self)
+        destroyCallback = JSCallback(value: callback, owner: self)
+        return self
     }
 
     // MARK: - NSWindowDelegate
 
     nonisolated func windowWillClose(_ notification: Notification) {
-        // Window is being closed (by user or system)
+        // The user clicked the macOS close button. This only hides the window from
+        // Hammerspoon's perspective — it does not destroy it — so it is analogous to
+        // hide(), and we notify via onHide, not onDestroy.
         Task { @MainActor in
-            self.close()
+            // This is defered to a later tick of the runloop to run after the window has closed.
+            _ = self.hideCallback?.call(withArguments: [])
         }
     }
 

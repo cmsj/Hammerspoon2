@@ -501,7 +501,7 @@ final class UIWebViewToolbarEntry: Identifiable {
     }
 
     // MARK: Destroy
-    // Called by HSUIWindow.close() to eagerly release JS resources before the element
+    // Called by HSUIWindow.destroy() to eagerly release JS resources before the element
     // tree is released. Also called from isolated deinit as a safety net.
 
     func destroy() {
