@@ -3,8 +3,8 @@
 <code>HSUIWindow</code> allows you to create custom windows with a SwiftUI-like
 declarative syntax. Build interfaces using shapes, text, images, and layout containers.</p>
 <ul>
-<li>Note: ** Clicking the macOS close button only <strong>hides</strong> the window (firing <code>onHide()</code>,
-not <code>onDestroy()</code>) — it does not destroy the window while you hold a reference to it in
+<li>Note: ** Clicking the macOS close button only <strong>hides</strong> the window (firing the <code>onHide()</code>
+callback, if you have one configured) — it does not destroy the window while you hold a reference to it in
 JavaScript. Call <code>destroy()</code> explicitly (for example from within an <code>onHide()</code> handler)
 if you want to release it. See <code>onShow()</code>, <code>onHide()</code>, and <code>onDestroy()</code> below for the
 full set of lifecycle callbacks.</li>

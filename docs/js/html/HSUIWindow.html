@@ -61,8 +61,8 @@
 <p><strong>A custom window with declarative UI building</strong></p>
 <p><code>HSUIWindow</code> allows you to create custom windows with a SwiftUI-like
 declarative syntax. Build interfaces using shapes, text, images, and layout containers.</p>
-<p>** Note: ** Clicking the macOS close button only <strong>hides</strong> the window (firing <code>onHide()</code>,
-not <code>onDestroy()</code>) — it does not destroy the window while you hold a reference to it in
+<p>** Note: ** Clicking the macOS close button only <strong>hides</strong> the window (firing the <code>onHide()</code>
+callback, if you have one configured) — it does not destroy the window while you hold a reference to it in
 JavaScript. Call <code>destroy()</code> explicitly (for example from within an <code>onHide()</code> handler)
 if you want to release it. See <code>onShow()</code>, <code>onHide()</code>, and <code>onDestroy()</code> below for the
 full set of lifecycle callbacks.</p>
@@ -262,8 +262,8 @@ to it. Does not fire when the window is destroyed via `destroy()` — use
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})
     .text(&quot;Hello&quot;)
-win.onHide(() =&gt; console.log(&quot;Window hidden (via hide() or the close button)&quot;))
-win.show()</code></pre>
+    .onHide(() =&gt; console.log(&quot;Window hidden (via hide() or the close button)&quot;))
+    .show()</code></pre>
 
         <div class="source-link">
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Core/HSUIWindow.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift:117</a>
@@ -310,8 +310,8 @@ release the window.</div>
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})
     .text(&quot;Hello&quot;)
-win.onDestroy(() =&gt; console.log(&quot;Window destroyed&quot;))
-win.show()
+    .onDestroy(() =&gt; console.log(&quot;Window destroyed&quot;))
+    .show()
 win.destroy()</code></pre>
 
         <div class="source-link">
