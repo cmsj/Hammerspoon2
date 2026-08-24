@@ -19047,8 +19047,8 @@
         {
           "name": "HSUIWindowAPI",
           "type": "typedef",
-          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback\n- **Images**: `image(imageValue)`\n- **Video**: `video(videoValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
-          "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n## Building UI Elements\n## Modifying Elements\n## Examples\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n** Note: ** Clicking the macOS close button only **hides** the window (firing `onHide()`,\nnot `onDestroy()`) — it does not destroy the window while you hold a reference to it in\nJavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)\nif you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the\nfull set of lifecycle callbacks.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback\n- **Images**: `image(imageValue)`\n- **Video**: `video(videoValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n** Note: ** Clicking the macOS close button only **hides** the window (firing `onHide()`,\nnot `onDestroy()`) — it does not destroy the window while you hold a reference to it in\nJavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)\nif you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the\nfull set of lifecycle callbacks.\n## Building UI Elements\n## Modifying Elements\n## Examples\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
           "methods": [
             {
               "name": "show",
@@ -19065,7 +19065,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 74
+              "lineNumber": 80
             },
             {
               "name": "hide",
@@ -19079,7 +19079,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 77
+              "lineNumber": 83
             },
             {
               "name": "destroy",
@@ -19093,7 +19093,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 80
+              "lineNumber": 86
             },
             {
               "name": "onShow",
@@ -19123,14 +19123,14 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 92
+              "lineNumber": 98
             },
             {
               "name": "onHide",
               "signature": "func onHide(_ callback: JSFunction) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Set a callback to fire after the window is hidden\n\nFires when `hide()` is called. Does not fire when the window is destroyed via\n`destroy()`, or when the user clicks the macOS close button — use `onClose()` for that.\n\n- Parameter callback: {() => void} A JavaScript function called after the window is hidden\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onHide(() => console.log(\"Window hidden\"))\n    .show()\n```",
-              "description": "Set a callback to fire after the window is hidden\nFires when `hide()` is called. Does not fire when the window is destroyed via\n`destroy()`, or when the user clicks the macOS close button — use `onClose()` for that.",
+              "rawDocumentation": "Set a callback to fire when the window is hidden\n\nFires when `hide()` is called, **and** when the user clicks the macOS close\nbutton — clicking that button only hides the window from Hammerspoon's\nperspective (see the class-level note above), so this is the callback that reacts\nto it. Does not fire when the window is destroyed via `destroy()` — use\n`onDestroy()` for that.\n\n- Parameter callback: {() => void} A JavaScript function called after the window is hidden\n- Returns: Self for chaining\n- Example:\n```js\nconst win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\nwin.onHide(() => console.log(\"Window hidden (via hide() or the close button)\"))\nwin.show()\n```",
+              "description": "Set a callback to fire when the window is hidden\nFires when `hide()` is called, **and** when the user clicks the macOS close\nbutton — clicking that button only hides the window from Hammerspoon's\nperspective (see the class-level note above), so this is the callback that reacts\nto it. Does not fire when the window is destroyed via `destroy()` — use\n`onDestroy()` for that.",
               "params": [
                 {
                   "name": "callback",
@@ -19148,24 +19148,24 @@
               "examples": [
                 {
                   "lang": "js",
-                  "code": "hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onHide(() => console.log(\"Window hidden\"))\n    .show()"
+                  "code": "const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\nwin.onHide(() => console.log(\"Window hidden (via hide() or the close button)\"))\nwin.show()"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 108
+              "lineNumber": 117
             },
             {
-              "name": "onClose",
-              "signature": "func onClose(_ callback: JSFunction) -> HSUIWindow",
+              "name": "onDestroy",
+              "signature": "func onDestroy(_ callback: JSFunction) -> HSUIWindow",
               "isStatic": false,
-              "rawDocumentation": "Set a callback to fire when the window is destroyed, or when the user clicks the\nmacOS close button\n\nCalling `destroy()` tears the window down (releasing its content and unregistering\nit) and then fires this callback. Clicking the macOS close button only fires this\ncallback — the window itself is **not** destroyed on the Hammerspoon side; call\n`destroy()` from within the handler if you also want to release it.\n\n- Parameter callback: {() => void} A JavaScript function called when the window closes\n- Returns: Self for chaining\n- Example:\n```js\nconst win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\nwin.onClose(() => {\n    console.log(\"Window closed\")\n    win.destroy()\n})\nwin.show()\n```",
-              "description": "Set a callback to fire when the window is destroyed, or when the user clicks the\nmacOS close button\nCalling `destroy()` tears the window down (releasing its content and unregistering\nit) and then fires this callback. Clicking the macOS close button only fires this\ncallback — the window itself is **not** destroyed on the Hammerspoon side; call\n`destroy()` from within the handler if you also want to release it.",
+              "rawDocumentation": "Set a callback to fire after the window is destroyed via `destroy()`\n\nOnly fires when `destroy()` is called explicitly — whether directly, or from\nwithin an `onHide()` handler. It does **not** fire when the user clicks the macOS\nclose button by itself; that only hides the window, so use `onHide()` to react to\nthe button click, and call `destroy()` from that handler if you also want to\nrelease the window.\n\n- Parameter callback: {() => void} A JavaScript function called after the window is destroyed\n- Returns: Self for chaining\n- Example:\n```js\nconst win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\nwin.onDestroy(() => console.log(\"Window destroyed\"))\nwin.show()\nwin.destroy()\n```",
+              "description": "Set a callback to fire after the window is destroyed via `destroy()`\nOnly fires when `destroy()` is called explicitly — whether directly, or from\nwithin an `onHide()` handler. It does **not** fire when the user clicks the macOS\nclose button by itself; that only hides the window, so use `onHide()` to react to\nthe button click, and call `destroy()` from that handler if you also want to\nrelease the window.",
               "params": [
                 {
                   "name": "callback",
                   "type": "JSFunction",
-                  "description": "A JavaScript function called when the window closes",
+                  "description": "A JavaScript function called after the window is destroyed",
                   "optional": false,
                   "tsType": "() => void"
                 }
@@ -19178,12 +19178,12 @@
               "examples": [
                 {
                   "lang": "js",
-                  "code": "const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\nwin.onClose(() => {\n    console.log(\"Window closed\")\n    win.destroy()\n})\nwin.show()"
+                  "code": "const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\nwin.onDestroy(() => console.log(\"Window destroyed\"))\nwin.show()\nwin.destroy()"
                 }
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 130
+              "lineNumber": 137
             },
             {
               "name": "titled",
@@ -19213,7 +19213,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 150
+              "lineNumber": 157
             },
             {
               "name": "closable",
@@ -19243,7 +19243,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 163
+              "lineNumber": 170
             },
             {
               "name": "miniaturizable",
@@ -19273,7 +19273,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 176
+              "lineNumber": 183
             },
             {
               "name": "allowResize",
@@ -19303,7 +19303,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 189
+              "lineNumber": 196
             },
             {
               "name": "windowTitle",
@@ -19333,7 +19333,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 202
+              "lineNumber": 209
             },
             {
               "name": "level",
@@ -19363,7 +19363,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 222
+              "lineNumber": 229
             },
             {
               "name": "backgroundColor",
@@ -19388,7 +19388,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 227
+              "lineNumber": 234
             },
             {
               "name": "rectangle",
@@ -19405,7 +19405,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 233
+              "lineNumber": 240
             },
             {
               "name": "circle",
@@ -19422,7 +19422,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 237
+              "lineNumber": 244
             },
             {
               "name": "text",
@@ -19447,7 +19447,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 243
+              "lineNumber": 250
             },
             {
               "name": "image",
@@ -19472,7 +19472,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 248
+              "lineNumber": 255
             },
             {
               "name": "video",
@@ -19502,7 +19502,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 268
+              "lineNumber": 275
             },
             {
               "name": "button",
@@ -19527,7 +19527,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 275
+              "lineNumber": 282
             },
             {
               "name": "vstack",
@@ -19544,7 +19544,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 281
+              "lineNumber": 288
             },
             {
               "name": "hstack",
@@ -19561,7 +19561,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 285
+              "lineNumber": 292
             },
             {
               "name": "zstack",
@@ -19578,7 +19578,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 289
+              "lineNumber": 296
             },
             {
               "name": "spacer",
@@ -19595,7 +19595,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 293
+              "lineNumber": 300
             },
             {
               "name": "webview",
@@ -19625,7 +19625,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 313
+              "lineNumber": 320
             },
             {
               "name": "end",
@@ -19642,7 +19642,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 317
+              "lineNumber": 324
             },
             {
               "name": "fill",
@@ -19667,7 +19667,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 324
+              "lineNumber": 331
             },
             {
               "name": "stroke",
@@ -19692,7 +19692,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 329
+              "lineNumber": 336
             },
             {
               "name": "strokeWidth",
@@ -19717,7 +19717,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 334
+              "lineNumber": 341
             },
             {
               "name": "cornerRadius",
@@ -19742,7 +19742,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 339
+              "lineNumber": 346
             },
             {
               "name": "frame",
@@ -19767,7 +19767,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 344
+              "lineNumber": 351
             },
             {
               "name": "opacity",
@@ -19792,7 +19792,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 349
+              "lineNumber": 356
             },
             {
               "name": "font",
@@ -19817,7 +19817,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 356
+              "lineNumber": 363
             },
             {
               "name": "foregroundColor",
@@ -19842,7 +19842,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 361
+              "lineNumber": 368
             },
             {
               "name": "resizable",
@@ -19859,7 +19859,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 367
+              "lineNumber": 374
             },
             {
               "name": "aspectRatio",
@@ -19884,7 +19884,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 372
+              "lineNumber": 379
             },
             {
               "name": "padding",
@@ -19909,7 +19909,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 379
+              "lineNumber": 386
             },
             {
               "name": "spacing",
@@ -19934,7 +19934,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 384
+              "lineNumber": 391
             },
             {
               "name": "onClick",
@@ -19959,7 +19959,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 391
+              "lineNumber": 398
             },
             {
               "name": "onHover",
@@ -19984,7 +19984,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 396
+              "lineNumber": 403
             }
           ],
           "properties": []
@@ -24326,5 +24326,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-24T08:55:32.141Z"
+  "generatedAt": "2026-08-24T12:10:46.827Z"
 }

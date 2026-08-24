@@ -275,45 +275,16 @@ struct HSUITests {
             #expect(!harness.hasException)
         }
 
-        @Test("onClose fires after destroy()")
-        func testOnCloseFires() {
+        @Test("Clicking the close button (windowWillClose) fires onHide, not onDestroy")
+        func testCloseButtonFiresOnHideNotOnDestroy() async {
             let harness = makeHarness()
             harness.eval("""
-                var closed = false
+                var hideCount = 0
+                var destroyCount = 0
                 var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
                     .text("Test")
-                    .onClose(() => { closed = true })
-                w.show()
-                w.destroy()
-            """)
-            #expect(harness.evalBool("closed") == true)
-            #expect(!harness.hasException)
-        }
-
-        @Test("onClose does not fire on hide()")
-        func testOnCloseDoesNotFireOnHide() {
-            let harness = makeHarness()
-            harness.eval("""
-                var closed = false
-                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
-                    .text("Test")
-                    .onClose(() => { closed = true })
-                w.show()
-                w.hide()
-            """)
-            #expect(harness.evalBool("closed") == false)
-            #expect(!harness.hasException)
-            harness.eval("w.destroy()")
-        }
-
-        @Test("Clicking the close button (windowWillClose) fires onClose")
-        func testCloseButtonFiresOnClose() async {
-            let harness = makeHarness()
-            harness.eval("""
-                var closeCount = 0
-                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
-                    .text("Test")
-                    .onClose(() => { closeCount++ })
+                    .onHide(() => { hideCount++ })
+                    .onDestroy(() => { destroyCount++ })
                 w.show()
             """)
             guard let win = harness.evalValue("w")?.toObjectOf(HSUIWindow.self) as? HSUIWindow else {
@@ -321,20 +292,55 @@ struct HSUITests {
                 return
             }
             // Simulates AppKit notifying the delegate that the user clicked the
-            // traffic-light close button. windowWillClose defers to a MainActor Task,
-            // so this needs an async wait rather than firing synchronously.
+            // traffic-light close button. Clicking that button only hides the window
+            // from Hammerspoon's perspective, so it should fire onHide, not onDestroy.
+            // windowWillClose defers to a MainActor Task, so this needs an async wait
+            // rather than firing synchronously.
             win.windowWillClose(Notification(name: NSWindow.willCloseNotification))
-            let fired = await harness.waitForAsync { harness.evalInt("closeCount") == 1 }
+            let fired = await harness.waitForAsync { harness.evalInt("hideCount") == 1 }
             #expect(fired)
+            #expect(harness.evalInt("destroyCount") == 0)
+            harness.eval("w.destroy()")
         }
 
-        @Test("onShow/onHide/onClose return the window for chaining")
+        @Test("onDestroy fires after destroy()")
+        func testOnDestroyFires() {
+            let harness = makeHarness()
+            harness.eval("""
+                var destroyed = false
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .text("Test")
+                    .onDestroy(() => { destroyed = true })
+                w.show()
+                w.destroy()
+            """)
+            #expect(harness.evalBool("destroyed") == true)
+            #expect(!harness.hasException)
+        }
+
+        @Test("onDestroy does not fire on hide()")
+        func testOnDestroyDoesNotFireOnHide() {
+            let harness = makeHarness()
+            harness.eval("""
+                var destroyed = false
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    .text("Test")
+                    .onDestroy(() => { destroyed = true })
+                w.show()
+                w.hide()
+            """)
+            #expect(harness.evalBool("destroyed") == false)
+            #expect(!harness.hasException)
+            harness.eval("w.destroy()")
+        }
+
+        @Test("onShow/onHide/onDestroy return the window for chaining")
         func testLifecycleCallbacksReturnWindow() {
             let harness = makeHarness()
             harness.eval("""
                 var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
                     .text("Test")
-                var chained = w.onShow(() => {}).onHide(() => {}).onClose(() => {})
+                var chained = w.onShow(() => {}).onHide(() => {}).onDestroy(() => {})
             """)
             #expect(harness.evalTypeOf("chained") == "object")
             #expect(!harness.hasException)
