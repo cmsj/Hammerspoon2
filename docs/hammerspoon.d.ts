@@ -6619,6 +6619,192 @@ Returns an empty array if `setValueListAttributes()` was not called.
 }
 
 /**
+ * Direct hardware control of Elgato Stream Deck devices — buttons, encoders, and the
+LCD touch strip on the Stream Deck Plus.
+## Enumerating devices
+```javascript
+const decks = hs.streamdeck.all()
+decks.forEach(d => console.log(d.deckType + " — " + d.serialNumber))
+```
+## Watching for connect / disconnect events
+```javascript
+hs.streamdeck.addWatcher((event, device) => {
+    if (event === "connected") console.log("Connected: " + device.deckType)
+    if (event === "disconnected") console.log("Disconnected: " + device.deckType)
+})
+```
+## Driving a device
+```javascript
+const deck = hs.streamdeck.all()[0]
+deck.setBrightness(50)
+deck.setButtonColor(1, HSColor.named("red"))
+deck.buttonCallback((device, button, isDown) => {
+    console.log("button " + button + (isDown ? " down" : " up"))
+})
+```
+ */
+declare namespace hs.streamdeck {
+    /**
+     * All Stream Deck devices currently connected to the system.
+     * @returns An array of `HSStreamDeckDevice` objects
+     */
+    function all(): HSStreamDeckDevice[];
+
+    /**
+     * Find the connected device with the given serial number.
+     * @param serialNumber The serial number to search for
+     * @returns An `HSStreamDeckDevice` if found, `null` otherwise
+     */
+    function findBySerialNumber(serialNumber: string): HSStreamDeckDevice | null;
+
+    /**
+     * Register a listener for Stream Deck connect/disconnect events.
+     * @param listener A JavaScript function called with the event name and the affected device
+     */
+    function addWatcher(listener: (event: string, device: HSStreamDeckDevice) => void): void;
+
+    /**
+     * Remove a previously registered connect/disconnect listener.
+     * @param listener The function originally passed to ``addWatcher(_:)``
+     */
+    function removeWatcher(listener: (...args: any[]) => any): void;
+
+}
+
+/**
+ * A Stream Deck device, obtained via `hs.streamdeck.all()` or a discovery watcher — do
+not instantiate directly.
+ */
+declare class HSStreamDeckDevice {
+    /**
+     * Sets the device's brightness.
+     * @param brightness A whole number 0-100, the percentage brightness level
+     * @returns self, for chaining
+     */
+    setBrightness(brightness: number): HSStreamDeckDevice;
+
+    /**
+     * Resets the device to its power-on state (clears all button images).
+     * @returns self, for chaining
+     */
+    reset(): HSStreamDeckDevice;
+
+    /**
+     * Sets a button's image.
+     * @param button The button number, from `1` to `keyCount`
+     * @param image An `HSImage` to display on the button. It is resized to fit.
+     * @returns self, for chaining
+     */
+    setButtonImage(button: number, image: HSImage): HSStreamDeckDevice;
+
+    /**
+     * Sets a button to a solid color.
+     * @param button The button number, from `1` to `keyCount`
+     * @param color An `HSColor`
+     * @returns self, for chaining
+     */
+    setButtonColor(button: number, color: HSColor): HSStreamDeckDevice;
+
+    /**
+     * Sets the LCD strip image above one encoder (Stream Deck Plus only; a no-op on other models).
+     * @param encoder The encoder number, from `1` to `encoderColumns`
+     * @param image An `HSImage` to display. It is resized to fit.
+     * @returns self, for chaining
+     */
+    setScreenImage(encoder: number, image: HSImage): HSStreamDeckDevice;
+
+    /**
+     * Sets the callback for button press/release events. Replaces any previously set callback.
+The callback receives: this device, the button number, and whether it is now pressed.
+     * @param fn The function to call on button events
+     * @returns self, for chaining
+     */
+    buttonCallback(fn: (device: HSStreamDeckDevice, button: number, isDown: boolean) => void): HSStreamDeckDevice;
+
+    /**
+     * Sets the callback for encoder press/release/rotation events (Stream Deck Plus only).
+Replaces any previously set callback.
+The callback receives: this device, the encoder number, whether it is now pressed,
+and two booleans indicating rotation direction (at most one is `true` per call).
+     * @param fn The function to call on encoder events
+     * @returns self, for chaining
+     */
+    encoderCallback(fn: (device: HSStreamDeckDevice, encoder: number, isDown: boolean, turningLeft: boolean, turningRight: boolean) => void): HSStreamDeckDevice;
+
+    /**
+     * Sets the callback for LCD touch-screen events (Stream Deck Plus only). Replaces any
+previously set callback.
+The callback receives: this device, the event type (`"shortPress"`, `"longPress"`, or
+`"swipe"`), and the start/end X/Y coordinates (end coordinates are `0` unless swiping).
+     * @param fn The function to call on screen events
+     * @returns self, for chaining
+     */
+    screenCallback(fn: (device: HSStreamDeckDevice, eventType: string, startX: number, startY: number, endX: number, endY: number) => void): HSStreamDeckDevice;
+
+    /**
+     * Stops delivering events and releases all callbacks. Called automatically when the
+device is disconnected or the module shuts down.
+     */
+    destroy(): void;
+
+    /**
+     * The unique identifier assigned to this device object.
+     */
+    readonly identifier: string;
+
+    /**
+     * A human-readable description of the device model (e.g. `"Elgato Stream Deck (XL)"`).
+     */
+    readonly deckType: string;
+
+    /**
+     * The device's serial number.
+     */
+    readonly serialNumber: string;
+
+    /**
+     * The device's firmware version. Reads live from the hardware on every access.
+     */
+    readonly firmwareVersion: string;
+
+    /**
+     * The number of button columns.
+     */
+    readonly keyColumns: number;
+
+    /**
+     * The number of button rows.
+     */
+    readonly keyRows: number;
+
+    /**
+     * The total number of buttons (`keyColumns * keyRows`).
+     */
+    readonly keyCount: number;
+
+    /**
+     * The number of rotary encoders (Stream Deck Plus only; `0` on other models).
+     */
+    readonly encoderColumns: number;
+
+    /**
+     * The number of encoder rows (Stream Deck Plus only; `0` on other models).
+     */
+    readonly encoderRows: number;
+
+    /**
+     * The total number of encoders (`encoderColumns * encoderRows`).
+     */
+    readonly encoderCount: number;
+
+    /**
+     * The pixel dimensions required for button images.
+     */
+    readonly imageSize: HSSize;
+
+}
+
+/**
  * Module for running external processes
  */
 declare namespace hs.task {
@@ -7313,8 +7499,8 @@ Keep a reference to call navigation methods after the window is shown.
 **A custom window with declarative UI building**
 `HSUIWindow` allows you to create custom windows with a SwiftUI-like
 declarative syntax. Build interfaces using shapes, text, images, and layout containers.
-** Note: ** Clicking the macOS close button only **hides** the window (firing `onHide()`,
-not `onDestroy()`) — it does not destroy the window while you hold a reference to it in
+** Note: ** Clicking the macOS close button only **hides** the window (firing the `onHide()`
+callback, if you have one configured) — it does not destroy the window while you hold a reference to it in
 JavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)
 if you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the
 full set of lifecycle callbacks.

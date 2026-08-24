@@ -78,6 +78,7 @@ import JavaScriptCoreExtras
     @objc var serial: HSSerialModule { get }
     @objc var sharing: HSSharingModule { get }
     @objc var spotlight: HSSpotlightModule { get }
+    @objc var streamdeck: HSStreamDeckModule { get }
     @objc var task: HSTaskModule { get }
     @objc var power: HSPowerModule { get }
     @objc var timer: HSTimerModule { get }
@@ -197,6 +198,7 @@ import JavaScriptCoreExtras
     @objc var serial: HSSerialModule { get { getOrCreate(name: "serial", type: HSSerialModule.self)}}
     @objc var sharing: HSSharingModule { get { getOrCreate(name: "sharing", type: HSSharingModule.self)}}
     @objc var spotlight: HSSpotlightModule { get { getOrCreate(name: "spotlight", type: HSSpotlightModule.self)}}
+    @objc var streamdeck: HSStreamDeckModule { get { getOrCreate(name: "streamdeck", type: HSStreamDeckModule.self)}}
     @objc var task: HSTaskModule { get { getOrCreate(name: "task", type: HSTaskModule.self)}}
     @objc var power: HSPowerModule { get { getOrCreate(name: "power", type: HSPowerModule.self)}}
     @objc var timer: HSTimerModule { get { getOrCreate(name: "timer", type: HSTimerModule.self)}}
