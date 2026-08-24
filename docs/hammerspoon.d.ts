@@ -7360,9 +7360,37 @@ declare class HSUIWindow {
     hide(): void;
 
     /**
-     * Close and destroy the window
+     * Destroy the window
      */
-    close(): void;
+    destroy(): void;
+
+    /**
+     * Set a callback to fire after the window is shown
+     * @param callback A JavaScript function called after the window becomes visible
+     * @returns Self for chaining
+     */
+    onShow(callback: () => void): HSUIWindow;
+
+    /**
+     * Set a callback to fire after the window is hidden
+Fires when `hide()` is called. Does not fire when the window is destroyed via
+`destroy()`, or when the user clicks the macOS close button — use `onClose()` for that.
+     * @param callback A JavaScript function called after the window is hidden
+     * @returns Self for chaining
+     */
+    onHide(callback: () => void): HSUIWindow;
+
+    /**
+     * Set a callback to fire when the window is destroyed, or when the user clicks the
+macOS close button
+Calling `destroy()` tears the window down (releasing its content and unregistering
+it) and then fires this callback. Clicking the macOS close button only fires this
+callback — the window itself is **not** destroyed on the Hammerspoon side; call
+`destroy()` from within the handler if you also want to release it.
+     * @param callback A JavaScript function called when the window closes
+     * @returns Self for chaining
+     */
+    onClose(callback: () => void): HSUIWindow;
 
     /**
      * Show or hide the window's title bar

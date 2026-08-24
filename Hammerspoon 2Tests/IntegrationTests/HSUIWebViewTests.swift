@@ -470,7 +470,7 @@ struct HSUIWebViewTests {
                     .onLoadChange(() => { called = true })
                 var win = hs.ui.window({x: 0, y: 0, w: 800, h: 600})
                 win.webview(wv)
-                win.close()
+                win.destroy()
             """)
             #expect(!harness.hasException)
         }

@@ -19082,11 +19082,11 @@
               "lineNumber": 77
             },
             {
-              "name": "close",
-              "signature": "func close()",
+              "name": "destroy",
+              "signature": "func destroy()",
               "isStatic": false,
-              "rawDocumentation": "Close and destroy the window",
-              "description": "Close and destroy the window",
+              "rawDocumentation": "Destroy the window",
+              "description": "Destroy the window",
               "params": [],
               "returns": null,
               "notes": [],
@@ -19094,6 +19094,96 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
               "lineNumber": 80
+            },
+            {
+              "name": "onShow",
+              "signature": "func onShow(_ callback: JSFunction) -> HSUIWindow",
+              "isStatic": false,
+              "rawDocumentation": "Set a callback to fire after the window is shown\n- Parameter callback: {() => void} A JavaScript function called after the window becomes visible\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onShow(() => console.log(\"Window shown\"))\n    .show()\n```",
+              "description": "Set a callback to fire after the window is shown",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "A JavaScript function called after the window becomes visible",
+                  "optional": false,
+                  "tsType": "() => void"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onShow(() => console.log(\"Window shown\"))\n    .show()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 92
+            },
+            {
+              "name": "onHide",
+              "signature": "func onHide(_ callback: JSFunction) -> HSUIWindow",
+              "isStatic": false,
+              "rawDocumentation": "Set a callback to fire after the window is hidden\n\nFires when `hide()` is called. Does not fire when the window is destroyed via\n`destroy()`, or when the user clicks the macOS close button — use `onClose()` for that.\n\n- Parameter callback: {() => void} A JavaScript function called after the window is hidden\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onHide(() => console.log(\"Window hidden\"))\n    .show()\n```",
+              "description": "Set a callback to fire after the window is hidden\nFires when `hide()` is called. Does not fire when the window is destroyed via\n`destroy()`, or when the user clicks the macOS close button — use `onClose()` for that.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "A JavaScript function called after the window is hidden",
+                  "optional": false,
+                  "tsType": "() => void"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onHide(() => console.log(\"Window hidden\"))\n    .show()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 108
+            },
+            {
+              "name": "onClose",
+              "signature": "func onClose(_ callback: JSFunction) -> HSUIWindow",
+              "isStatic": false,
+              "rawDocumentation": "Set a callback to fire when the window is destroyed, or when the user clicks the\nmacOS close button\n\nCalling `destroy()` tears the window down (releasing its content and unregistering\nit) and then fires this callback. Clicking the macOS close button only fires this\ncallback — the window itself is **not** destroyed on the Hammerspoon side; call\n`destroy()` from within the handler if you also want to release it.\n\n- Parameter callback: {() => void} A JavaScript function called when the window closes\n- Returns: Self for chaining\n- Example:\n```js\nconst win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\nwin.onClose(() => {\n    console.log(\"Window closed\")\n    win.destroy()\n})\nwin.show()\n```",
+              "description": "Set a callback to fire when the window is destroyed, or when the user clicks the\nmacOS close button\nCalling `destroy()` tears the window down (releasing its content and unregistering\nit) and then fires this callback. Clicking the macOS close button only fires this\ncallback — the window itself is **not** destroyed on the Hammerspoon side; call\n`destroy()` from within the handler if you also want to release it.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "A JavaScript function called when the window closes",
+                  "optional": false,
+                  "tsType": "() => void"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\nwin.onClose(() => {\n    console.log(\"Window closed\")\n    win.destroy()\n})\nwin.show()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 130
             },
             {
               "name": "titled",
@@ -19123,7 +19213,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 100
+              "lineNumber": 150
             },
             {
               "name": "closable",
@@ -19153,7 +19243,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 113
+              "lineNumber": 163
             },
             {
               "name": "miniaturizable",
@@ -19183,7 +19273,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 126
+              "lineNumber": 176
             },
             {
               "name": "allowResize",
@@ -19213,7 +19303,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 139
+              "lineNumber": 189
             },
             {
               "name": "windowTitle",
@@ -19243,7 +19333,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 152
+              "lineNumber": 202
             },
             {
               "name": "level",
@@ -19273,7 +19363,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 172
+              "lineNumber": 222
             },
             {
               "name": "backgroundColor",
@@ -19298,7 +19388,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 177
+              "lineNumber": 227
             },
             {
               "name": "rectangle",
@@ -19315,7 +19405,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 183
+              "lineNumber": 233
             },
             {
               "name": "circle",
@@ -19332,7 +19422,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 187
+              "lineNumber": 237
             },
             {
               "name": "text",
@@ -19357,7 +19447,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 193
+              "lineNumber": 243
             },
             {
               "name": "image",
@@ -19382,7 +19472,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 198
+              "lineNumber": 248
             },
             {
               "name": "video",
@@ -19412,7 +19502,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 218
+              "lineNumber": 268
             },
             {
               "name": "button",
@@ -19437,7 +19527,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 225
+              "lineNumber": 275
             },
             {
               "name": "vstack",
@@ -19454,7 +19544,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 231
+              "lineNumber": 281
             },
             {
               "name": "hstack",
@@ -19471,7 +19561,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 235
+              "lineNumber": 285
             },
             {
               "name": "zstack",
@@ -19488,7 +19578,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 239
+              "lineNumber": 289
             },
             {
               "name": "spacer",
@@ -19505,7 +19595,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 243
+              "lineNumber": 293
             },
             {
               "name": "webview",
@@ -19535,7 +19625,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 263
+              "lineNumber": 313
             },
             {
               "name": "end",
@@ -19552,7 +19642,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 267
+              "lineNumber": 317
             },
             {
               "name": "fill",
@@ -19577,7 +19667,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 274
+              "lineNumber": 324
             },
             {
               "name": "stroke",
@@ -19602,7 +19692,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 279
+              "lineNumber": 329
             },
             {
               "name": "strokeWidth",
@@ -19627,7 +19717,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 284
+              "lineNumber": 334
             },
             {
               "name": "cornerRadius",
@@ -19652,7 +19742,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 289
+              "lineNumber": 339
             },
             {
               "name": "frame",
@@ -19677,7 +19767,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 294
+              "lineNumber": 344
             },
             {
               "name": "opacity",
@@ -19702,7 +19792,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 299
+              "lineNumber": 349
             },
             {
               "name": "font",
@@ -19727,7 +19817,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 306
+              "lineNumber": 356
             },
             {
               "name": "foregroundColor",
@@ -19752,7 +19842,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 311
+              "lineNumber": 361
             },
             {
               "name": "resizable",
@@ -19769,7 +19859,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 317
+              "lineNumber": 367
             },
             {
               "name": "aspectRatio",
@@ -19794,7 +19884,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 322
+              "lineNumber": 372
             },
             {
               "name": "padding",
@@ -19819,7 +19909,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 329
+              "lineNumber": 379
             },
             {
               "name": "spacing",
@@ -19844,7 +19934,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 334
+              "lineNumber": 384
             },
             {
               "name": "onClick",
@@ -19869,7 +19959,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 341
+              "lineNumber": 391
             },
             {
               "name": "onHover",
@@ -19894,7 +19984,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 346
+              "lineNumber": 396
             }
           ],
           "properties": []
@@ -24236,5 +24326,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-23T19:50:15.320Z"
+  "generatedAt": "2026-08-24T08:55:32.141Z"
 }
