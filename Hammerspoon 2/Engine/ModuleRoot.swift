@@ -78,6 +78,7 @@ import JavaScriptCoreExtras
     @objc var serial: HSSerialModule { get }
     @objc var sharing: HSSharingModule { get }
     @objc var spotlight: HSSpotlightModule { get }
+    @objc var streamdeck: HSStreamDeckModule { get }
     @objc var task: HSTaskModule { get }
     @objc var power: HSPowerModule { get }
     @objc var timer: HSTimerModule { get }
@@ -86,6 +87,7 @@ import JavaScriptCoreExtras
     @objc var urlevent: HSURLEventModule { get }
     @objc var ipc: HSIPCModule { get }
     @objc var usb: HSUSBModule { get }
+    @objc var keyboard: HSKeyboardModule { get }
     @objc var shortcuts: HSShortcutsModule { get }
     @objc var sound: HSSoundModule { get }
     @objc var network: HSNetworkModule { get }
@@ -196,6 +198,7 @@ import JavaScriptCoreExtras
     @objc var serial: HSSerialModule { get { getOrCreate(name: "serial", type: HSSerialModule.self)}}
     @objc var sharing: HSSharingModule { get { getOrCreate(name: "sharing", type: HSSharingModule.self)}}
     @objc var spotlight: HSSpotlightModule { get { getOrCreate(name: "spotlight", type: HSSpotlightModule.self)}}
+    @objc var streamdeck: HSStreamDeckModule { get { getOrCreate(name: "streamdeck", type: HSStreamDeckModule.self)}}
     @objc var task: HSTaskModule { get { getOrCreate(name: "task", type: HSTaskModule.self)}}
     @objc var power: HSPowerModule { get { getOrCreate(name: "power", type: HSPowerModule.self)}}
     @objc var timer: HSTimerModule { get { getOrCreate(name: "timer", type: HSTimerModule.self)}}
@@ -204,6 +207,7 @@ import JavaScriptCoreExtras
     @objc var ipc: HSIPCModule { get { getOrCreate(name: "ipc", type: HSIPCModule.self)}}
     @objc var urlevent: HSURLEventModule { get { getOrCreate(name: "urlevent", type: HSURLEventModule.self)}}
     @objc var usb: HSUSBModule { get { getOrCreate(name: "usb", type: HSUSBModule.self)}}
+    @objc var keyboard: HSKeyboardModule { get { getOrCreate(name: "keyboard", type: HSKeyboardModule.self)}}
     @objc var shortcuts: HSShortcutsModule { get { getOrCreate(name: "shortcuts", type: HSShortcutsModule.self)}}
     @objc var sound: HSSoundModule { get { getOrCreate(name: "sound", type: HSSoundModule.self)}}
     @objc var network: HSNetworkModule { get { getOrCreate(name: "network", type: HSNetworkModule.self)}}

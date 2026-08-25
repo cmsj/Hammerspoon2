@@ -9538,6 +9538,228 @@
       "rawDocumentation": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\n\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects via XPC and evaluates JavaScript\ninteractively, with optional live log streaming.\n\nCommunication is secured with a same-team code-signing requirement in release builds,\nso only binaries signed with the same Team ID can connect.\n\n## Quick start\n\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n\nInstall the CLI tool once:\n```js\nhs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs\n```\n\nThen in a terminal:\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n\nRun with live log output:\n```bash\nhs --log-level info\n```"
     },
     {
+      "name": "hs.keyboard",
+      "methods": [
+        {
+          "name": "capsLockState",
+          "signature": "func capsLockState() -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks the system-wide state of CapsLock.\n\nThis reflects a single, global lock state shared by every attached keyboard — macOS has\nno public API to query the functional (character-affecting) CapsLock state independently\nper keyboard. For a genuinely per-keyboard signal, see `keyboardCapsLockState()`, which\nreads each keyboard's own CapsLock LED.\n- Returns: true if CapsLock is currently on, false otherwise\n- Example:\n```js\nconsole.log(hs.keyboard.capsLockState())\n```",
+          "description": "Checks the system-wide state of CapsLock.\nThis reflects a single, global lock state shared by every attached keyboard — macOS has\nno public API to query the functional (character-affecting) CapsLock state independently\nper keyboard. For a genuinely per-keyboard signal, see `keyboardCapsLockState()`, which\nreads each keyboard's own CapsLock LED.",
+          "params": [],
+          "returns": {
+            "type": "boolean",
+            "description": "true if CapsLock is currently on, false otherwise"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.keyboard.capsLockState())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 174
+        },
+        {
+          "name": "setCapsLockState",
+          "signature": "func setCapsLockState(_ state: Bool) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Sets the system-wide state of CapsLock.\n- Parameter state: true to turn CapsLock on, false to turn it off\n- Returns: The new state, or false if the change could not be applied\n- Example:\n```js\nhs.keyboard.setCapsLockState(true)\n```",
+          "description": "Sets the system-wide state of CapsLock.",
+          "params": [
+            {
+              "name": "state",
+              "type": "boolean",
+              "description": "true to turn CapsLock on, false to turn it off",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "The new state, or false if the change could not be applied"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keyboard.setCapsLockState(true)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 183
+        },
+        {
+          "name": "toggleCapsLockState",
+          "signature": "func toggleCapsLockState() -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Toggles the system-wide state of CapsLock.\n- Returns: The new state, or false if the change could not be applied\n- Example:\n```js\nhs.keyboard.toggleCapsLockState()\n```",
+          "description": "Toggles the system-wide state of CapsLock.",
+          "params": [],
+          "returns": {
+            "type": "boolean",
+            "description": "The new state, or false if the change could not be applied"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keyboard.toggleCapsLockState()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 191
+        },
+        {
+          "name": "setLED",
+          "signature": "func setLED(_ name: String, _ state: Bool) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Sets a keyboard LED on every attached keyboard that has one.\n- Parameter name: The LED to set — one of `\"caps\"`, `\"scroll\"`, or `\"num\"`\n- Parameter state: true to turn the LED on, false to turn it off\n- Returns: true if the LED was successfully set on at least one keyboard\n- Note: Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.\n- Example:\n```js\nhs.keyboard.setLED(\"caps\", true)\n```",
+          "description": "Sets a keyboard LED on every attached keyboard that has one.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The LED to set — one of `\"caps\"`, `\"scroll\"`, or `\"num\"`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "state",
+              "type": "boolean",
+              "description": "true to turn the LED on, false to turn it off",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if the LED was successfully set on at least one keyboard"
+          },
+          "notes": [
+            "Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`."
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.keyboard.setLED(\"caps\", true)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 202
+        },
+        {
+          "name": "attachedKeyboards",
+          "signature": "func attachedKeyboards() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Returns all currently attached keyboard HID devices.\n\nEach object has `keyboardID` (number — pass to `keyboardCapsLockState()`/`setKeyboardLED()`),\n`productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number).\n`serialNumber` (string) and `locationID` (number) are included when available.\n- Returns: An array of objects describing each attached keyboard\n- Example:\n```js\nconst keyboards = hs.keyboard.attachedKeyboards()\nkeyboards.forEach(k => console.log(k.vendorName + \" \" + k.productName))\n```",
+          "description": "Returns all currently attached keyboard HID devices.\nEach object has `keyboardID` (number — pass to `keyboardCapsLockState()`/`setKeyboardLED()`),\n`productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number).\n`serialNumber` (string) and `locationID` (number) are included when available.",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of objects describing each attached keyboard"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const keyboards = hs.keyboard.attachedKeyboards()\nkeyboards.forEach(k => console.log(k.vendorName + \" \" + k.productName))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 215
+        },
+        {
+          "name": "keyboardCapsLockState",
+          "signature": "func keyboardCapsLockState(_ keyboardID: Double) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks a specific keyboard's own CapsLock LED state.\n\nUnlike `capsLockState()`, this queries the individual keyboard identified by `keyboardID`\n(from `attachedKeyboards()`), reflecting how modern macOS tracks CapsLock independently per\nphysical keyboard.\n- Parameter keyboardID: A keyboard identifier, as returned by `attachedKeyboards()`\n- Returns: true if that keyboard's CapsLock LED is on, false if it is off, unavailable, or the keyboard was not found\n- Note: Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.\n- Example:\n```js\nconst keyboards = hs.keyboard.attachedKeyboards()\nif (keyboards.length > 0) {\n  console.log(hs.keyboard.keyboardCapsLockState(keyboards[0].keyboardID))\n}\n```",
+          "description": "Checks a specific keyboard's own CapsLock LED state.\nUnlike `capsLockState()`, this queries the individual keyboard identified by `keyboardID`\n(from `attachedKeyboards()`), reflecting how modern macOS tracks CapsLock independently per\nphysical keyboard.",
+          "params": [
+            {
+              "name": "keyboardID",
+              "type": "number",
+              "description": "A keyboard identifier, as returned by `attachedKeyboards()`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if that keyboard's CapsLock LED is on, false if it is off, unavailable, or the keyboard was not found"
+          },
+          "notes": [
+            "Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`."
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const keyboards = hs.keyboard.attachedKeyboards()\nif (keyboards.length > 0) {\n  console.log(hs.keyboard.keyboardCapsLockState(keyboards[0].keyboardID))\n}"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 232
+        },
+        {
+          "name": "setKeyboardLED",
+          "signature": "func setKeyboardLED(_ keyboardID: Double, _ name: String, _ state: Bool) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Sets a specific keyboard's LED, leaving all other attached keyboards untouched.\n- Parameter keyboardID: A keyboard identifier, as returned by `attachedKeyboards()`\n- Parameter name: The LED to set — one of `\"caps\"`, `\"scroll\"`, or `\"num\"`\n- Parameter state: true to turn the LED on, false to turn it off\n- Returns: true if the LED was successfully set\n- Note: Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.\n- Example:\n```js\nconst keyboards = hs.keyboard.attachedKeyboards()\nif (keyboards.length > 0) {\n  hs.keyboard.setKeyboardLED(keyboards[0].keyboardID, \"caps\", true)\n}\n```",
+          "description": "Sets a specific keyboard's LED, leaving all other attached keyboards untouched.",
+          "params": [
+            {
+              "name": "keyboardID",
+              "type": "number",
+              "description": "A keyboard identifier, as returned by `attachedKeyboards()`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The LED to set — one of `\"caps\"`, `\"scroll\"`, or `\"num\"`",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "state",
+              "type": "boolean",
+              "description": "true to turn the LED on, false to turn it off",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "true if the LED was successfully set"
+          },
+          "notes": [
+            "Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`."
+          ],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const keyboards = hs.keyboard.attachedKeyboards()\nif (keyboards.length > 0) {\n  hs.keyboard.setKeyboardLED(keyboards[0].keyboardID, \"caps\", true)\n}"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.keyboard/HSKeyboardModule.swift",
+          "lineNumber": 247
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "Module for querying and controlling CapsLock state, and for enumerating attached keyboards\nand controlling their LEDs individually.",
+      "rawDocumentation": "Module for querying and controlling CapsLock state, and for enumerating attached keyboards\nand controlling their LEDs individually."
+    },
+    {
       "name": "hs.keycodes",
       "methods": [
         {
@@ -13929,6 +14151,47 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
           "lineNumber": 118
+        },
+        {
+          "name": "checkInputMonitoring",
+          "signature": "func checkInputMonitoring() -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Check if the app has Input Monitoring permission.\n\nInput Monitoring is required for `hs.keyboard` to query and control CapsLock state and LEDs on a\nper-keyboard basis.\n- Returns: true if permission is granted, false otherwise\n- Example:\n```js\nconsole.log(hs.permissions.checkInputMonitoring())\n```",
+          "description": "Check if the app has Input Monitoring permission.\nInput Monitoring is required for `hs.keyboard` to query and control CapsLock state and LEDs on a\nper-keyboard basis.",
+          "params": [],
+          "returns": {
+            "type": "boolean",
+            "description": "true if permission is granted, false otherwise"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.permissions.checkInputMonitoring())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
+          "lineNumber": 129
+        },
+        {
+          "name": "requestInputMonitoring",
+          "signature": "func requestInputMonitoring()",
+          "isStatic": false,
+          "rawDocumentation": "Request Input Monitoring permission (shows the system dialog if the user has not yet decided).\n- Example:\n```js\nhs.permissions.requestInputMonitoring()\n```",
+          "description": "Request Input Monitoring permission (shows the system dialog if the user has not yet decided).",
+          "params": [],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.permissions.requestInputMonitoring()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.permissions/HSPermissionsModule.swift",
+          "lineNumber": 136
         }
       ],
       "properties": [],
@@ -15808,7 +16071,7 @@
               "name": "canShareItems",
               "signature": "func canShareItems(_ items: [Any]) -> Bool",
               "isStatic": false,
-              "rawDocumentation": "Checks whether this service can share the given items.\n\nItems may be strings (treated as a web/mailto URL if they parse as one, a file\npath if they start with `/` or `~` and the file exists, otherwise plain text) or\n`HSImage` objects.\n- Parameter items: {Array<string|HSImage>} The items to check\n- Returns: true if this service can share all of the given items\n- Example:\n```js\nif (share.canShareItems(['hello'])) { ... }\n```",
+              "rawDocumentation": "Checks whether this service can share the given items.\n\nItems may be strings (treated as a web/mailto URL if they parse as one, a file\npath if they start with `/` or `~` and the file exists, otherwise plain text) or\n`HSImage` objects.\n- Parameter items: {Array<string|HSImage>} The items to check\n- Returns: true if this service can share all of the given items\n- Note: Unsupported items will be ignored\n- Example:\n```js\nif (share.canShareItems(['hello'])) { ... }\n```",
               "description": "Checks whether this service can share the given items.\nItems may be strings (treated as a web/mailto URL if they parse as one, a file\npath if they start with `/` or `~` and the file exists, otherwise plain text) or\n`HSImage` objects.",
               "params": [
                 {
@@ -15823,7 +16086,9 @@
                 "type": "boolean",
                 "description": "true if this service can share all of the given items"
               },
-              "notes": [],
+              "notes": [
+                "Unsupported items will be ignored"
+              ],
               "examples": [
                 {
                   "lang": "js",
@@ -15832,13 +16097,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
-              "lineNumber": 89
+              "lineNumber": 90
             },
             {
               "name": "shareItems",
               "signature": "func shareItems(_ items: [Any]) -> Bool",
               "isStatic": false,
-              "rawDocumentation": "Attempts to share the given items with this service.\n\nIf the service cannot handle the items, this logs a warning and returns `false`\nwithout doing anything further. Otherwise the share is started; it is asynchronous\n— use `setCallback()` to find out when it completes.\n- Parameter items: {Array<string|HSImage>} The items to share\n- Returns: true if the share was started\n- Example:\n```js\nshare.shareItems(['Check this out', 'https://www.hammerspoon.org'])\n```",
+              "rawDocumentation": "Attempts to share the given items with this service.\n\nIf the service cannot handle the items, this logs a warning and returns `false`\nwithout doing anything further. Otherwise the share is started; it is asynchronous\n— use `setCallback()` to find out when it completes.\n- Parameter items: {Array<string|HSImage>} The items to share\n- Returns: true if the share was started\n- Note: Unsupported items will be ignored\n- Example:\n```js\nshare.shareItems(['Check this out', 'https://www.hammerspoon.org'])\n```",
               "description": "Attempts to share the given items with this service.\nIf the service cannot handle the items, this logs a warning and returns `false`\nwithout doing anything further. Otherwise the share is started; it is asynchronous\n— use `setCallback()` to find out when it completes.",
               "params": [
                 {
@@ -15853,7 +16118,9 @@
                 "type": "boolean",
                 "description": "true if the share was started"
               },
-              "notes": [],
+              "notes": [
+                "Unsupported items will be ignored"
+              ],
               "examples": [
                 {
                   "lang": "js",
@@ -15862,7 +16129,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
-              "lineNumber": 102
+              "lineNumber": 104
             },
             {
               "name": "setCallback",
@@ -15892,7 +16159,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.sharing/HSSharingService.swift",
-              "lineNumber": 116
+              "lineNumber": 118
             }
           ],
           "properties": [
@@ -17173,6 +17440,541 @@
       ],
       "description": "Query the macOS Spotlight metadata database.\n`hs.spotlight` wraps `NSMetadataQuery` to let you search for files and other\nmetadata objects indexed by Spotlight. Queries use `NSPredicate` syntax with\n`kMDItem*` attribute keys (see `hs.spotlight.attribute` for common shortcuts).\n## Quick start\n```js\n// Find all PDFs in the home directory and log their paths\nconst q = hs.spotlight.create()\nq.setQuery(\"kMDItemContentType == 'com.adobe.pdf'\")\n .setScopes([hs.spotlight.scope.home])\n .setCallback((event) => {\n     if (event === 'didFinish') {\n         console.log('Found ' + q.count + ' PDFs')\n         q.results().forEach(item =>\n             console.log(item.valueForAttribute(hs.spotlight.attribute.path))\n         )\n         q.stop()\n     }\n })\n .start()\n```\n## One-shot search convenience\n```js\nconst q = hs.spotlight.search(\n    \"kMDItemDisplayName BEGINSWITH 'Invoice'\",\n    (event) => {\n        if (event === 'didFinish') {\n            console.log('Found ' + q.count + ' invoices')\n            q.stop()\n        }\n    }\n)\n```\n## Grouping results by attribute\n```js\nconst q = hs.spotlight.create()\nq.setQuery(\"kMDItemContentTypeTree == 'public.image'\")\n .setScopes([hs.spotlight.scope.home])\n .setGroupingAttributes([hs.spotlight.attribute.kind])\n .setCallback((event) => {\n     if (event === 'didFinish') {\n         q.groups().forEach(g =>\n             console.log(g.value() + ': ' + g.count + ' images')\n         )\n         q.stop()\n     }\n })\n .start()\n```\n## Monitoring for live changes\n```js\n// Keep the query running to receive live-update events\nconst q = hs.spotlight.create()\nq.setQuery(\"kMDItemContentType == 'com.apple.application-bundle'\")\n .setScopes(['/Applications'])\n .setCallback((event, update) => {\n     if (event === 'didFinish') {\n         console.log('Initial scan: ' + q.count + ' apps')\n     } else if (event === 'didUpdate') {\n         console.log('App list changed — now ' + q.count + ' apps')\n         if (update) console.log('Added: ' + update.added.length)\n     }\n })\n .start()\n// Call q.stop() when you no longer want live updates\n```",
       "rawDocumentation": "Query the macOS Spotlight metadata database.\n\n`hs.spotlight` wraps `NSMetadataQuery` to let you search for files and other\nmetadata objects indexed by Spotlight. Queries use `NSPredicate` syntax with\n`kMDItem*` attribute keys (see `hs.spotlight.attribute` for common shortcuts).\n\n## Quick start\n\n```js\n// Find all PDFs in the home directory and log their paths\nconst q = hs.spotlight.create()\nq.setQuery(\"kMDItemContentType == 'com.adobe.pdf'\")\n .setScopes([hs.spotlight.scope.home])\n .setCallback((event) => {\n     if (event === 'didFinish') {\n         console.log('Found ' + q.count + ' PDFs')\n         q.results().forEach(item =>\n             console.log(item.valueForAttribute(hs.spotlight.attribute.path))\n         )\n         q.stop()\n     }\n })\n .start()\n```\n\n## One-shot search convenience\n\n```js\nconst q = hs.spotlight.search(\n    \"kMDItemDisplayName BEGINSWITH 'Invoice'\",\n    (event) => {\n        if (event === 'didFinish') {\n            console.log('Found ' + q.count + ' invoices')\n            q.stop()\n        }\n    }\n)\n```\n\n## Grouping results by attribute\n\n```js\nconst q = hs.spotlight.create()\nq.setQuery(\"kMDItemContentTypeTree == 'public.image'\")\n .setScopes([hs.spotlight.scope.home])\n .setGroupingAttributes([hs.spotlight.attribute.kind])\n .setCallback((event) => {\n     if (event === 'didFinish') {\n         q.groups().forEach(g =>\n             console.log(g.value() + ': ' + g.count + ' images')\n         )\n         q.stop()\n     }\n })\n .start()\n```\n\n## Monitoring for live changes\n\n```js\n// Keep the query running to receive live-update events\nconst q = hs.spotlight.create()\nq.setQuery(\"kMDItemContentType == 'com.apple.application-bundle'\")\n .setScopes(['/Applications'])\n .setCallback((event, update) => {\n     if (event === 'didFinish') {\n         console.log('Initial scan: ' + q.count + ' apps')\n     } else if (event === 'didUpdate') {\n         console.log('App list changed — now ' + q.count + ' apps')\n         if (update) console.log('Added: ' + update.added.length)\n     }\n })\n .start()\n// Call q.stop() when you no longer want live updates\n```"
+    },
+    {
+      "name": "hs.streamdeck",
+      "methods": [
+        {
+          "name": "all",
+          "signature": "func all() -> [HSStreamDeckDevice]",
+          "isStatic": false,
+          "rawDocumentation": "All Stream Deck devices currently connected to the system.\n- Returns: An array of `HSStreamDeckDevice` objects\n- Example:\n```js\nhs.streamdeck.all().forEach(d => console.log(d.deckType))\n```",
+          "description": "All Stream Deck devices currently connected to the system.",
+          "params": [],
+          "returns": {
+            "type": "Array<HSStreamDeckDevice>",
+            "description": "An array of `HSStreamDeckDevice` objects"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.streamdeck.all().forEach(d => console.log(d.deckType))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckModule.swift",
+          "lineNumber": 60
+        },
+        {
+          "name": "findBySerialNumber",
+          "signature": "func findBySerialNumber(_ serialNumber: String) -> HSStreamDeckDevice?",
+          "isStatic": false,
+          "rawDocumentation": "Find the connected device with the given serial number.\n- Parameter serialNumber: The serial number to search for\n- Returns: An `HSStreamDeckDevice` if found, `null` otherwise\n- Example:\n```js\nconst deck = hs.streamdeck.findBySerialNumber(\"AL12K1A00000\")\n```",
+          "description": "Find the connected device with the given serial number.",
+          "params": [
+            {
+              "name": "serialNumber",
+              "type": "string",
+              "description": "The serial number to search for",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSStreamDeckDevice",
+            "description": "An `HSStreamDeckDevice` if found, `null` otherwise"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const deck = hs.streamdeck.findBySerialNumber(\"AL12K1A00000\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckModule.swift",
+          "lineNumber": 69
+        },
+        {
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Register a listener for Stream Deck connect/disconnect events.\n\nThe listener is called with two arguments:\n- `event` — either `\"connected\"` or `\"disconnected\"`\n- `device` — an `HSStreamDeckDevice` representing the affected device\n- Parameter listener: {(event: string, device: HSStreamDeckDevice) => void} A JavaScript function called with the event name and the affected device\n- Example:\n```js\nhs.streamdeck.addWatcher((event, device) => console.log(event + \": \" + device.deckType))\n```",
+          "description": "Register a listener for Stream Deck connect/disconnect events.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "A JavaScript function called with the event name and the affected device",
+              "optional": false,
+              "tsType": "(event: string, device: HSStreamDeckDevice) => void"
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.streamdeck.addWatcher((event, device) => console.log(event + \": \" + device.deckType))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckModule.swift",
+          "lineNumber": 81
+        },
+        {
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ listener: JSFunction)",
+          "isStatic": false,
+          "rawDocumentation": "Remove a previously registered connect/disconnect listener.\n- Parameter listener: The function originally passed to ``addWatcher(_:)``\n- Example:\n```js\nhs.streamdeck.removeWatcher(myHandler)\n```",
+          "description": "Remove a previously registered connect/disconnect listener.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSFunction",
+              "description": "The function originally passed to ``addWatcher(_:)``",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.streamdeck.removeWatcher(myHandler)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckModule.swift",
+          "lineNumber": 89
+        }
+      ],
+      "properties": [],
+      "types": [
+        {
+          "name": "HSStreamDeckDeviceAPI",
+          "type": "typedef",
+          "rawDocumentation": "A Stream Deck device, obtained via `hs.streamdeck.all()` or a discovery watcher — do\nnot instantiate directly.\n\n- Example:\n```js\nconst deck = hs.streamdeck.all()[0]\ndeck.setBrightness(50)\ndeck.buttonCallback((device, button, isDown) => {\n    if (isDown) device.setButtonColor(button, HSColor.named(\"red\"))\n})\n```",
+          "description": "A Stream Deck device, obtained via `hs.streamdeck.all()` or a discovery watcher — do\nnot instantiate directly.",
+          "methods": [
+            {
+              "name": "setBrightness",
+              "signature": "func setBrightness(_ brightness: Int) -> HSStreamDeckDevice",
+              "isStatic": false,
+              "rawDocumentation": "Sets the device's brightness.\n- Parameter brightness: A whole number 0-100, the percentage brightness level\n- Returns: self, for chaining\n- Example:\n```js\nhs.streamdeck.all()[0].setBrightness(75)\n```",
+              "description": "Sets the device's brightness.",
+              "params": [
+                {
+                  "name": "brightness",
+                  "type": "number",
+                  "description": "A whole number 0-100, the percentage brightness level",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSStreamDeckDevice",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.streamdeck.all()[0].setBrightness(75)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 98
+            },
+            {
+              "name": "reset",
+              "signature": "func reset() -> HSStreamDeckDevice",
+              "isStatic": false,
+              "rawDocumentation": "Resets the device to its power-on state (clears all button images).\n- Returns: self, for chaining\n- Example:\n```js\nhs.streamdeck.all()[0].reset()\n```",
+              "description": "Resets the device to its power-on state (clears all button images).",
+              "params": [],
+              "returns": {
+                "type": "HSStreamDeckDevice",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.streamdeck.all()[0].reset()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 106
+            },
+            {
+              "name": "setButtonImage",
+              "signature": "func setButtonImage(_ button: Int, _ image: HSImage) -> HSStreamDeckDevice",
+              "isStatic": false,
+              "rawDocumentation": "Sets a button's image.\n- Parameter button: The button number, from `1` to `keyCount`\n- Parameter image: An `HSImage` to display on the button. It is resized to fit.\n- Returns: self, for chaining\n- Example:\n```js\nconst deck = hs.streamdeck.all()[0]\ndeck.setButtonImage(1, HSImage.fromPath(\"/path/to/icon.png\"))\n```",
+              "description": "Sets a button's image.",
+              "params": [
+                {
+                  "name": "button",
+                  "type": "number",
+                  "description": "The button number, from `1` to `keyCount`",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "image",
+                  "type": "HSImage",
+                  "description": "An `HSImage` to display on the button. It is resized to fit.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSStreamDeckDevice",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const deck = hs.streamdeck.all()[0]\ndeck.setButtonImage(1, HSImage.fromPath(\"/path/to/icon.png\"))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 117
+            },
+            {
+              "name": "setButtonColor",
+              "signature": "func setButtonColor(_ button: Int, _ color: HSColor) -> HSStreamDeckDevice",
+              "isStatic": false,
+              "rawDocumentation": "Sets a button to a solid color.\n- Parameter button: The button number, from `1` to `keyCount`\n- Parameter color: An `HSColor`\n- Returns: self, for chaining\n- Example:\n```js\nhs.streamdeck.all()[0].setButtonColor(1, HSColor.named(\"red\"))\n```",
+              "description": "Sets a button to a solid color.",
+              "params": [
+                {
+                  "name": "button",
+                  "type": "number",
+                  "description": "The button number, from `1` to `keyCount`",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "color",
+                  "type": "HSColor",
+                  "description": "An `HSColor`",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSStreamDeckDevice",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.streamdeck.all()[0].setButtonColor(1, HSColor.named(\"red\"))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 127
+            },
+            {
+              "name": "setScreenImage",
+              "signature": "func setScreenImage(_ encoder: Int, _ image: HSImage) -> HSStreamDeckDevice",
+              "isStatic": false,
+              "rawDocumentation": "Sets the LCD strip image above one encoder (Stream Deck Plus only; a no-op on other models).\n- Parameter encoder: The encoder number, from `1` to `encoderColumns`\n- Parameter image: An `HSImage` to display. It is resized to fit.\n- Returns: self, for chaining\n- Example:\n```js\nhs.streamdeck.all()[0].setScreenImage(1, HSImage.fromPath(\"/path/to/icon.png\"))\n```",
+              "description": "Sets the LCD strip image above one encoder (Stream Deck Plus only; a no-op on other models).",
+              "params": [
+                {
+                  "name": "encoder",
+                  "type": "number",
+                  "description": "The encoder number, from `1` to `encoderColumns`",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "image",
+                  "type": "HSImage",
+                  "description": "An `HSImage` to display. It is resized to fit.",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSStreamDeckDevice",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.streamdeck.all()[0].setScreenImage(1, HSImage.fromPath(\"/path/to/icon.png\"))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 137
+            },
+            {
+              "name": "buttonCallback",
+              "signature": "func buttonCallback(_ fn: JSFunction) -> HSStreamDeckDevice",
+              "isStatic": false,
+              "rawDocumentation": "Sets the callback for button press/release events. Replaces any previously set callback.\n\nThe callback receives: this device, the button number, and whether it is now pressed.\n- Parameter fn: {(device: HSStreamDeckDevice, button: number, isDown: boolean) => void} The function to call on button events\n- Returns: self, for chaining\n- Example:\n```js\nhs.streamdeck.all()[0].buttonCallback((device, button, isDown) => {\n    console.log(\"button \" + button + (isDown ? \" pressed\" : \" released\"))\n})\n```",
+              "description": "Sets the callback for button press/release events. Replaces any previously set callback.\nThe callback receives: this device, the button number, and whether it is now pressed.",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSFunction",
+                  "description": "The function to call on button events",
+                  "optional": false,
+                  "tsType": "(device: HSStreamDeckDevice, button: number, isDown: boolean) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSStreamDeckDevice",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.streamdeck.all()[0].buttonCallback((device, button, isDown) => {\n    console.log(\"button \" + button + (isDown ? \" pressed\" : \" released\"))\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 150
+            },
+            {
+              "name": "encoderCallback",
+              "signature": "func encoderCallback(_ fn: JSFunction) -> HSStreamDeckDevice",
+              "isStatic": false,
+              "rawDocumentation": "Sets the callback for encoder press/release/rotation events (Stream Deck Plus only).\nReplaces any previously set callback.\n\nThe callback receives: this device, the encoder number, whether it is now pressed,\nand two booleans indicating rotation direction (at most one is `true` per call).\n- Parameter fn: {(device: HSStreamDeckDevice, encoder: number, isDown: boolean, turningLeft: boolean, turningRight: boolean) => void} The function to call on encoder events\n- Returns: self, for chaining\n- Example:\n```js\nhs.streamdeck.all()[0].encoderCallback((device, encoder, isDown, left, right) => {\n    if (left) console.log(\"encoder \" + encoder + \" turned left\")\n})\n```",
+              "description": "Sets the callback for encoder press/release/rotation events (Stream Deck Plus only).\nReplaces any previously set callback.\nThe callback receives: this device, the encoder number, whether it is now pressed,\nand two booleans indicating rotation direction (at most one is `true` per call).",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSFunction",
+                  "description": "The function to call on encoder events",
+                  "optional": false,
+                  "tsType": "(device: HSStreamDeckDevice, encoder: number, isDown: boolean, turningLeft: boolean, turningRight: boolean) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSStreamDeckDevice",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.streamdeck.all()[0].encoderCallback((device, encoder, isDown, left, right) => {\n    if (left) console.log(\"encoder \" + encoder + \" turned left\")\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 165
+            },
+            {
+              "name": "screenCallback",
+              "signature": "func screenCallback(_ fn: JSFunction) -> HSStreamDeckDevice",
+              "isStatic": false,
+              "rawDocumentation": "Sets the callback for LCD touch-screen events (Stream Deck Plus only). Replaces any\npreviously set callback.\n\nThe callback receives: this device, the event type (`\"shortPress\"`, `\"longPress\"`, or\n`\"swipe\"`), and the start/end X/Y coordinates (end coordinates are `0` unless swiping).\n- Parameter fn: {(device: HSStreamDeckDevice, eventType: string, startX: number, startY: number, endX: number, endY: number) => void} The function to call on screen events\n- Returns: self, for chaining\n- Example:\n```js\nhs.streamdeck.all()[0].screenCallback((device, eventType, startX, startY, endX, endY) => {\n    console.log(eventType + \" at \" + startX + \",\" + startY)\n})\n```",
+              "description": "Sets the callback for LCD touch-screen events (Stream Deck Plus only). Replaces any\npreviously set callback.\nThe callback receives: this device, the event type (`\"shortPress\"`, `\"longPress\"`, or\n`\"swipe\"`), and the start/end X/Y coordinates (end coordinates are `0` unless swiping).",
+              "params": [
+                {
+                  "name": "fn",
+                  "type": "JSFunction",
+                  "description": "The function to call on screen events",
+                  "optional": false,
+                  "tsType": "(device: HSStreamDeckDevice, eventType: string, startX: number, startY: number, endX: number, endY: number) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSStreamDeckDevice",
+                "description": "self, for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.streamdeck.all()[0].screenCallback((device, eventType, startX, startY, endX, endY) => {\n    console.log(eventType + \" at \" + startX + \",\" + startY)\n})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 180
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Stops delivering events and releases all callbacks. Called automatically when the\ndevice is disconnected or the module shuts down.\n- Example:\n```js\nhs.streamdeck.all()[0].destroy()\n```",
+              "description": "Stops delivering events and releases all callbacks. Called automatically when the\ndevice is disconnected or the module shuts down.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.streamdeck.all()[0].destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 188
+            }
+          ],
+          "properties": [
+            {
+              "name": "identifier",
+              "signature": "var identifier: String { get }",
+              "rawDocumentation": "The unique identifier assigned to this device object.",
+              "description": "The unique identifier assigned to this device object.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 54
+            },
+            {
+              "name": "deckType",
+              "signature": "var deckType: String { get }",
+              "rawDocumentation": "A human-readable description of the device model (e.g. `\"Elgato Stream Deck (XL)\"`).",
+              "description": "A human-readable description of the device model (e.g. `\"Elgato Stream Deck (XL)\"`).",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 57
+            },
+            {
+              "name": "serialNumber",
+              "signature": "var serialNumber: String { get }",
+              "rawDocumentation": "The device's serial number.",
+              "description": "The device's serial number.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 60
+            },
+            {
+              "name": "firmwareVersion",
+              "signature": "var firmwareVersion: String { get }",
+              "rawDocumentation": "The device's firmware version. Reads live from the hardware on every access.",
+              "description": "The device's firmware version. Reads live from the hardware on every access.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 63
+            },
+            {
+              "name": "keyColumns",
+              "signature": "var keyColumns: Int { get }",
+              "rawDocumentation": "The number of button columns.",
+              "description": "The number of button columns.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 66
+            },
+            {
+              "name": "keyRows",
+              "signature": "var keyRows: Int { get }",
+              "rawDocumentation": "The number of button rows.",
+              "description": "The number of button rows.",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 69
+            },
+            {
+              "name": "keyCount",
+              "signature": "var keyCount: Int { get }",
+              "rawDocumentation": "The total number of buttons (`keyColumns * keyRows`).",
+              "description": "The total number of buttons (`keyColumns * keyRows`).",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 72
+            },
+            {
+              "name": "encoderColumns",
+              "signature": "var encoderColumns: Int { get }",
+              "rawDocumentation": "The number of rotary encoders (Stream Deck Plus only; `0` on other models).",
+              "description": "The number of rotary encoders (Stream Deck Plus only; `0` on other models).",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 75
+            },
+            {
+              "name": "encoderRows",
+              "signature": "var encoderRows: Int { get }",
+              "rawDocumentation": "The number of encoder rows (Stream Deck Plus only; `0` on other models).",
+              "description": "The number of encoder rows (Stream Deck Plus only; `0` on other models).",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 78
+            },
+            {
+              "name": "encoderCount",
+              "signature": "var encoderCount: Int { get }",
+              "rawDocumentation": "The total number of encoders (`encoderColumns * encoderRows`).",
+              "description": "The total number of encoders (`encoderColumns * encoderRows`).",
+              "tsType": null,
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 81
+            },
+            {
+              "name": "imageSize",
+              "signature": "var imageSize: HSSize { get }",
+              "rawDocumentation": "The pixel dimensions required for button images.\n- Example:\n```js\nconst size = hs.streamdeck.all()[0].imageSize\nconsole.log(size.w, size.h)\n```",
+              "description": "The pixel dimensions required for button images.",
+              "tsType": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const size = hs.streamdeck.all()[0].imageSize\nconsole.log(size.w, size.h)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
+              "lineNumber": 89
+            }
+          ]
+        }
+      ],
+      "description": "Direct hardware control of Elgato Stream Deck devices — buttons, encoders, and the\nLCD touch strip on the Stream Deck Plus.\n## Enumerating devices\n```javascript\nconst decks = hs.streamdeck.all()\ndecks.forEach(d => console.log(d.deckType + \" — \" + d.serialNumber))\n```\n## Watching for connect / disconnect events\n```javascript\nhs.streamdeck.addWatcher((event, device) => {\n    if (event === \"connected\") console.log(\"Connected: \" + device.deckType)\n    if (event === \"disconnected\") console.log(\"Disconnected: \" + device.deckType)\n})\n```\n## Driving a device\n```javascript\nconst deck = hs.streamdeck.all()[0]\ndeck.setBrightness(50)\ndeck.setButtonColor(1, HSColor.named(\"red\"))\ndeck.buttonCallback((device, button, isDown) => {\n    console.log(\"button \" + button + (isDown ? \" down\" : \" up\"))\n})\n```",
+      "rawDocumentation": "Direct hardware control of Elgato Stream Deck devices — buttons, encoders, and the\nLCD touch strip on the Stream Deck Plus.\n\n## Enumerating devices\n\n```javascript\nconst decks = hs.streamdeck.all()\ndecks.forEach(d => console.log(d.deckType + \" — \" + d.serialNumber))\n```\n\n## Watching for connect / disconnect events\n\n```javascript\nhs.streamdeck.addWatcher((event, device) => {\n    if (event === \"connected\") console.log(\"Connected: \" + device.deckType)\n    if (event === \"disconnected\") console.log(\"Disconnected: \" + device.deckType)\n})\n```\n\n## Driving a device\n\n```javascript\nconst deck = hs.streamdeck.all()[0]\ndeck.setBrightness(50)\ndeck.setButtonColor(1, HSColor.named(\"red\"))\ndeck.buttonCallback((device, button, isDown) => {\n    console.log(\"button \" + button + (isDown ? \" down\" : \" up\"))\n})\n```"
     },
     {
       "name": "hs.task",
@@ -18780,8 +19582,8 @@
         {
           "name": "HSUIWindowAPI",
           "type": "typedef",
-          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback\n- **Images**: `image(imageValue)`\n- **Video**: `video(videoValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
-          "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n## Building UI Elements\n## Modifying Elements\n## Examples\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "rawDocumentation": "# HSUIWindow\n\n**A custom window with declarative UI building**\n\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n\n** Note: ** Clicking the macOS close button only **hides** the window (firing the `onHide()`\ncallback, if you have one configured) — it does not destroy the window while you hold a reference to it in\nJavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)\nif you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the\nfull set of lifecycle callbacks.\n\n## Building UI Elements\n\n- **Shapes**: `rectangle()`, `circle()`\n- **Text**: `text(content)`\n- **Buttons**: `button(label)` — uses SwiftUI's native Button for press-state feedback\n- **Images**: `image(imageValue)`\n- **Video**: `video(videoValue)`\n- **Layout**: `vstack()`, `hstack()`, `zstack()`, `spacer()`\n\n## Modifying Elements\n\n- **Shape modifiers**: `fill()`, `stroke()`, `strokeWidth()`, `cornerRadius()`\n- **Text modifiers**: `font()`, `foregroundColor()`\n- **Image modifiers**: `resizable()`, `aspectRatio(mode)`\n- **Layout modifiers**: `frame()`, `opacity()`, `padding()`, `spacing()`\n\n## Examples\n\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
+          "description": "# HSUIWindow\n**A custom window with declarative UI building**\n`HSUIWindow` allows you to create custom windows with a SwiftUI-like\ndeclarative syntax. Build interfaces using shapes, text, images, and layout containers.\n** Note: ** Clicking the macOS close button only **hides** the window (firing the `onHide()`\ncallback, if you have one configured) — it does not destroy the window while you hold a reference to it in\nJavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)\nif you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the\nfull set of lifecycle callbacks.\n## Building UI Elements\n## Modifying Elements\n## Examples\n**Simple window with text and shapes:**\n```javascript\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .vstack()\n        .spacing(10)\n        .padding(20)\n        .text(\"Dashboard\")\n            .font(HSFont.largeTitle())\n            .foregroundColor(\"#FFFFFF\")\n        .rectangle()\n            .fill(\"#4A90E2\")\n            .cornerRadius(10)\n            .frame({w: \"90%\", h: 80})\n    .end()\n    .backgroundColor(\"#2C3E50\")\n    .show();\n```\n**Window with image:**\n```javascript\nconst img = HSImage.fromPath(\"~/Pictures/photo.jpg\")\nhs.ui.window({x: 100, y: 100, w: 400, h: 300})\n    .vstack()\n        .padding(20)\n        .image(img)\n            .resizable()\n            .aspectRatio(\"fit\")\n            .frame({w: 360, h: 240})\n    .end()\n    .show();\n```",
           "methods": [
             {
               "name": "show",
@@ -18798,7 +19600,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 74
+              "lineNumber": 80
             },
             {
               "name": "hide",
@@ -18812,21 +19614,111 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 77
+              "lineNumber": 83
             },
             {
-              "name": "close",
-              "signature": "func close()",
+              "name": "destroy",
+              "signature": "func destroy()",
               "isStatic": false,
-              "rawDocumentation": "Close and destroy the window",
-              "description": "Close and destroy the window",
+              "rawDocumentation": "Destroy the window",
+              "description": "Destroy the window",
               "params": [],
               "returns": null,
               "notes": [],
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 80
+              "lineNumber": 86
+            },
+            {
+              "name": "onShow",
+              "signature": "func onShow(_ callback: JSFunction) -> HSUIWindow",
+              "isStatic": false,
+              "rawDocumentation": "Set a callback to fire after the window is shown\n- Parameter callback: {() => void} A JavaScript function called after the window becomes visible\n- Returns: Self for chaining\n- Example:\n```js\nhs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onShow(() => console.log(\"Window shown\"))\n    .show()\n```",
+              "description": "Set a callback to fire after the window is shown",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "A JavaScript function called after the window becomes visible",
+                  "optional": false,
+                  "tsType": "() => void"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onShow(() => console.log(\"Window shown\"))\n    .show()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 98
+            },
+            {
+              "name": "onHide",
+              "signature": "func onHide(_ callback: JSFunction) -> HSUIWindow",
+              "isStatic": false,
+              "rawDocumentation": "Set a callback to fire when the window is hidden\n\nFires when `hide()` is called, **and** when the user clicks the macOS close\nbutton — clicking that button only hides the window from Hammerspoon's\nperspective (see the class-level note above), so this is the callback that reacts\nto it. Does not fire when the window is destroyed via `destroy()` — use\n`onDestroy()` for that.\n\n- Parameter callback: {() => void} A JavaScript function called after the window is hidden\n- Returns: Self for chaining\n- Example:\n```js\nconst win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onHide(() => console.log(\"Window hidden (via hide() or the close button)\"))\n    .show()\n```",
+              "description": "Set a callback to fire when the window is hidden\nFires when `hide()` is called, **and** when the user clicks the macOS close\nbutton — clicking that button only hides the window from Hammerspoon's\nperspective (see the class-level note above), so this is the callback that reacts\nto it. Does not fire when the window is destroyed via `destroy()` — use\n`onDestroy()` for that.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "A JavaScript function called after the window is hidden",
+                  "optional": false,
+                  "tsType": "() => void"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onHide(() => console.log(\"Window hidden (via hide() or the close button)\"))\n    .show()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 117
+            },
+            {
+              "name": "onDestroy",
+              "signature": "func onDestroy(_ callback: JSFunction) -> HSUIWindow",
+              "isStatic": false,
+              "rawDocumentation": "Set a callback to fire after the window is destroyed via `destroy()`\n\nOnly fires when `destroy()` is called explicitly — whether directly, or from\nwithin an `onHide()` handler. It does **not** fire when the user clicks the macOS\nclose button by itself; that only hides the window, so use `onHide()` to react to\nthe button click, and call `destroy()` from that handler if you also want to\nrelease the window.\n\n- Parameter callback: {() => void} A JavaScript function called after the window is destroyed\n- Returns: Self for chaining\n- Example:\n```js\nconst win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onDestroy(() => console.log(\"Window destroyed\"))\n    .show()\nwin.destroy()\n```",
+              "description": "Set a callback to fire after the window is destroyed via `destroy()`\nOnly fires when `destroy()` is called explicitly — whether directly, or from\nwithin an `onHide()` handler. It does **not** fire when the user clicks the macOS\nclose button by itself; that only hides the window, so use `onHide()` to react to\nthe button click, and call `destroy()` from that handler if you also want to\nrelease the window.",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "A JavaScript function called after the window is destroyed",
+                  "optional": false,
+                  "tsType": "() => void"
+                }
+              ],
+              "returns": {
+                "type": "HSUIWindow",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const win = hs.ui.window({x: 100, y: 100, w: 300, h: 200})\n    .text(\"Hello\")\n    .onDestroy(() => console.log(\"Window destroyed\"))\n    .show()\nwin.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
+              "lineNumber": 137
             },
             {
               "name": "titled",
@@ -18856,7 +19748,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 100
+              "lineNumber": 157
             },
             {
               "name": "closable",
@@ -18886,7 +19778,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 113
+              "lineNumber": 170
             },
             {
               "name": "miniaturizable",
@@ -18916,7 +19808,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 126
+              "lineNumber": 183
             },
             {
               "name": "allowResize",
@@ -18946,7 +19838,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 139
+              "lineNumber": 196
             },
             {
               "name": "windowTitle",
@@ -18976,7 +19868,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 152
+              "lineNumber": 209
             },
             {
               "name": "level",
@@ -19006,7 +19898,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 172
+              "lineNumber": 229
             },
             {
               "name": "backgroundColor",
@@ -19031,7 +19923,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 177
+              "lineNumber": 234
             },
             {
               "name": "rectangle",
@@ -19048,7 +19940,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 183
+              "lineNumber": 240
             },
             {
               "name": "circle",
@@ -19065,7 +19957,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 187
+              "lineNumber": 244
             },
             {
               "name": "text",
@@ -19090,7 +19982,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 193
+              "lineNumber": 250
             },
             {
               "name": "image",
@@ -19115,7 +20007,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 198
+              "lineNumber": 255
             },
             {
               "name": "video",
@@ -19145,7 +20037,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 218
+              "lineNumber": 275
             },
             {
               "name": "button",
@@ -19170,7 +20062,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 225
+              "lineNumber": 282
             },
             {
               "name": "vstack",
@@ -19187,7 +20079,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 231
+              "lineNumber": 288
             },
             {
               "name": "hstack",
@@ -19204,7 +20096,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 235
+              "lineNumber": 292
             },
             {
               "name": "zstack",
@@ -19221,7 +20113,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 239
+              "lineNumber": 296
             },
             {
               "name": "spacer",
@@ -19238,7 +20130,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 243
+              "lineNumber": 300
             },
             {
               "name": "webview",
@@ -19268,7 +20160,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 263
+              "lineNumber": 320
             },
             {
               "name": "end",
@@ -19285,7 +20177,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 267
+              "lineNumber": 324
             },
             {
               "name": "fill",
@@ -19310,7 +20202,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 274
+              "lineNumber": 331
             },
             {
               "name": "stroke",
@@ -19335,7 +20227,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 279
+              "lineNumber": 336
             },
             {
               "name": "strokeWidth",
@@ -19360,7 +20252,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 284
+              "lineNumber": 341
             },
             {
               "name": "cornerRadius",
@@ -19385,7 +20277,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 289
+              "lineNumber": 346
             },
             {
               "name": "frame",
@@ -19410,7 +20302,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 294
+              "lineNumber": 351
             },
             {
               "name": "opacity",
@@ -19435,7 +20327,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 299
+              "lineNumber": 356
             },
             {
               "name": "font",
@@ -19460,7 +20352,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 306
+              "lineNumber": 363
             },
             {
               "name": "foregroundColor",
@@ -19485,7 +20377,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 311
+              "lineNumber": 368
             },
             {
               "name": "resizable",
@@ -19502,7 +20394,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 317
+              "lineNumber": 374
             },
             {
               "name": "aspectRatio",
@@ -19527,7 +20419,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 322
+              "lineNumber": 379
             },
             {
               "name": "padding",
@@ -19552,7 +20444,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 329
+              "lineNumber": 386
             },
             {
               "name": "spacing",
@@ -19577,7 +20469,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 334
+              "lineNumber": 391
             },
             {
               "name": "onClick",
@@ -19602,7 +20494,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 341
+              "lineNumber": 398
             },
             {
               "name": "onHover",
@@ -19627,7 +20519,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Core/HSUIWindow.swift",
-              "lineNumber": 346
+              "lineNumber": 403
             }
           ],
           "properties": []
@@ -23969,5 +24861,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-21T13:41:59.487Z"
+  "generatedAt": "2026-08-24T14:41:29.489Z"
 }

@@ -493,6 +493,8 @@ extension JSTestHarness {
                 loadModule(HSWindowModule.self, as: name)
             case "spotlight":
                 loadModule(HSSpotlightModule.self, as: name)
+            case "streamdeck":
+                loadModule(HSStreamDeckModule.self, as: name)
             case "sharing":
                 loadModule(HSSharingModule.self, as: name)
             case "menubar":
@@ -517,6 +519,8 @@ extension JSTestHarness {
                 loadModule(HSHotkeyModule.self, as: name)
             case "usb":
                 loadModule(HSUSBModule.self, as: name)
+            case "keyboard":
+                loadModule(HSKeyboardModule.self, as: name)
             case "serial":
                 loadModule(HSSerialModule.self, as: name)
             case "sound":

@@ -380,6 +380,67 @@ struct HSApplicationTests {
         }
     }
 
+    // MARK: - Menu Traversal Tests
+
+    /// Tests menu bar traversal via the accessibility APIs. Uses Finder as the target
+    /// application because it is always running on macOS, including GitHub macOS runners.
+    @Suite(
+        "hs.application menu traversal tests", .serialized,
+        .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted")
+    )
+    struct HSApplicationMenuTraversalTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            return harness
+        }
+
+        @Test("getMenuItems returns a non-empty menu tree for Finder")
+        func testGetMenuItemsReturnsNonEmptyTree() {
+            // Regression test: getMenuItems previously used a whole-array `as?` cast
+            // (`menuBar.attribute(.children)`) which always fails for AX array
+            // attributes and silently returns [].
+            let harness = makeHarness()
+            harness.eval("""
+            var finder = hs.application.matchingBundleID('com.apple.finder');
+            var items = finder.getMenuItems();
+            var titles = items ? items.map(function(i) { return i.title; }) : [];
+            """)
+
+            harness.expectTrue("Array.isArray(items) && items.length > 0")
+            harness.expectTrue("titles.indexOf('File') !== -1")
+        }
+
+        @Test("findMenuItemByName finds a top-level menu item")
+        func testFindMenuItemByName() {
+            let harness = makeHarness()
+            harness.eval("""
+            var finder = hs.application.matchingBundleID('com.apple.finder');
+            var item = finder.findMenuItemByName('New Tab');
+            """)
+
+            harness.expectTrue("item !== null && item !== undefined")
+            harness.expectEqual("item.title", "New Tab")
+        }
+
+        @Test("findMenuItemByPath finds a nested menu item via its path")
+        func testFindMenuItemByPath() {
+            // Regression test: navigateMenuPath previously searched an element's direct
+            // children for each path segment, but a menu bar item's actual items sit one
+            // level deeper behind an intermediate AXMenu container, so any path beyond
+            // the top level always failed to resolve.
+            let harness = makeHarness()
+            harness.eval("""
+            var finder = hs.application.matchingBundleID('com.apple.finder');
+            var item = finder.findMenuItemByPath(['File', 'New Tab']);
+            """)
+
+            harness.expectTrue("item !== null && item !== undefined")
+            harness.expectEqual("item.title", "New Tab")
+        }
+    }
+
     // MARK: - Watcher Structure Tests
 
     /// Tests the watcher API surface and lifecycle mechanics — no application events need to fire.

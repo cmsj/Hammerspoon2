@@ -3564,6 +3564,75 @@ a terminal with `sudo`.
 }
 
 /**
+ * Module for querying and controlling CapsLock state, and for enumerating attached keyboards
+and controlling their LEDs individually.
+ */
+declare namespace hs.keyboard {
+    /**
+     * Checks the system-wide state of CapsLock.
+This reflects a single, global lock state shared by every attached keyboard — macOS has
+no public API to query the functional (character-affecting) CapsLock state independently
+per keyboard. For a genuinely per-keyboard signal, see `keyboardCapsLockState()`, which
+reads each keyboard's own CapsLock LED.
+     * @returns true if CapsLock is currently on, false otherwise
+     */
+    function capsLockState(): boolean;
+
+    /**
+     * Sets the system-wide state of CapsLock.
+     * @param state true to turn CapsLock on, false to turn it off
+     * @returns The new state, or false if the change could not be applied
+     */
+    function setCapsLockState(state: boolean): boolean;
+
+    /**
+     * Toggles the system-wide state of CapsLock.
+     * @returns The new state, or false if the change could not be applied
+     */
+    function toggleCapsLockState(): boolean;
+
+    /**
+     * Sets a keyboard LED on every attached keyboard that has one.
+     * @remarks Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.
+     * @param name The LED to set — one of `"caps"`, `"scroll"`, or `"num"`
+     * @param state true to turn the LED on, false to turn it off
+     * @returns true if the LED was successfully set on at least one keyboard
+     */
+    function setLED(name: string, state: boolean): boolean;
+
+    /**
+     * Returns all currently attached keyboard HID devices.
+Each object has `keyboardID` (number — pass to `keyboardCapsLockState()`/`setKeyboardLED()`),
+`productName` (string), `vendorName` (string), `productID` (number), and `vendorID` (number).
+`serialNumber` (string) and `locationID` (number) are included when available.
+     * @returns An array of objects describing each attached keyboard
+     */
+    function attachedKeyboards(): Record<string, any>[];
+
+    /**
+     * Checks a specific keyboard's own CapsLock LED state.
+Unlike `capsLockState()`, this queries the individual keyboard identified by `keyboardID`
+(from `attachedKeyboards()`), reflecting how modern macOS tracks CapsLock independently per
+physical keyboard.
+     * @remarks Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.
+     * @param keyboardID A keyboard identifier, as returned by `attachedKeyboards()`
+     * @returns true if that keyboard's CapsLock LED is on, false if it is off, unavailable, or the keyboard was not found
+     */
+    function keyboardCapsLockState(keyboardID: number): boolean;
+
+    /**
+     * Sets a specific keyboard's LED, leaving all other attached keyboards untouched.
+     * @remarks Requires Input Monitoring permission — see `hs.permissions.requestInputMonitoring()`.
+     * @param keyboardID A keyboard identifier, as returned by `attachedKeyboards()`
+     * @param name The LED to set — one of `"caps"`, `"scroll"`, or `"num"`
+     * @param state true to turn the LED on, false to turn it off
+     * @returns true if the LED was successfully set
+     */
+    function setKeyboardLED(keyboardID: number, name: string, state: boolean): boolean;
+
+}
+
+/**
  * Access information about the current keyboard layout and input sources, and respond to changes.
 ## Reading the current layout
 ```js
@@ -5270,6 +5339,19 @@ resolve immediately with the previously granted or denied state.
      */
     function requestLocation(): Promise<boolean>;
 
+    /**
+     * Check if the app has Input Monitoring permission.
+Input Monitoring is required for `hs.keyboard` to query and control CapsLock state and LEDs on a
+per-keyboard basis.
+     * @returns true if permission is granted, false otherwise
+     */
+    function checkInputMonitoring(): boolean;
+
+    /**
+     * Request Input Monitoring permission (shows the system dialog if the user has not yet decided).
+     */
+    function requestInputMonitoring(): void;
+
 }
 
 /**
@@ -5947,6 +6029,7 @@ declare class HSSharingService {
 Items may be strings (treated as a web/mailto URL if they parse as one, a file
 path if they start with `/` or `~` and the file exists, otherwise plain text) or
 `HSImage` objects.
+     * @remarks Unsupported items will be ignored
      * @param items The items to check
      * @returns true if this service can share all of the given items
      */
@@ -5957,6 +6040,7 @@ path if they start with `/` or `~` and the file exists, otherwise plain text) or
 If the service cannot handle the items, this logs a warning and returns `false`
 without doing anything further. Otherwise the share is started; it is asynchronous
 — use `setCallback()` to find out when it completes.
+     * @remarks Unsupported items will be ignored
      * @param items The items to share
      * @returns true if the share was started
      */
@@ -6531,6 +6615,192 @@ Returns an empty array if `setValueListAttributes()` was not called.
 `true` from `"didStart"` until `"didFinish"`; `false` thereafter while live-monitoring.
      */
     readonly isGathering: boolean;
+
+}
+
+/**
+ * Direct hardware control of Elgato Stream Deck devices — buttons, encoders, and the
+LCD touch strip on the Stream Deck Plus.
+## Enumerating devices
+```javascript
+const decks = hs.streamdeck.all()
+decks.forEach(d => console.log(d.deckType + " — " + d.serialNumber))
+```
+## Watching for connect / disconnect events
+```javascript
+hs.streamdeck.addWatcher((event, device) => {
+    if (event === "connected") console.log("Connected: " + device.deckType)
+    if (event === "disconnected") console.log("Disconnected: " + device.deckType)
+})
+```
+## Driving a device
+```javascript
+const deck = hs.streamdeck.all()[0]
+deck.setBrightness(50)
+deck.setButtonColor(1, HSColor.named("red"))
+deck.buttonCallback((device, button, isDown) => {
+    console.log("button " + button + (isDown ? " down" : " up"))
+})
+```
+ */
+declare namespace hs.streamdeck {
+    /**
+     * All Stream Deck devices currently connected to the system.
+     * @returns An array of `HSStreamDeckDevice` objects
+     */
+    function all(): HSStreamDeckDevice[];
+
+    /**
+     * Find the connected device with the given serial number.
+     * @param serialNumber The serial number to search for
+     * @returns An `HSStreamDeckDevice` if found, `null` otherwise
+     */
+    function findBySerialNumber(serialNumber: string): HSStreamDeckDevice | null;
+
+    /**
+     * Register a listener for Stream Deck connect/disconnect events.
+     * @param listener A JavaScript function called with the event name and the affected device
+     */
+    function addWatcher(listener: (event: string, device: HSStreamDeckDevice) => void): void;
+
+    /**
+     * Remove a previously registered connect/disconnect listener.
+     * @param listener The function originally passed to ``addWatcher(_:)``
+     */
+    function removeWatcher(listener: (...args: any[]) => any): void;
+
+}
+
+/**
+ * A Stream Deck device, obtained via `hs.streamdeck.all()` or a discovery watcher — do
+not instantiate directly.
+ */
+declare class HSStreamDeckDevice {
+    /**
+     * Sets the device's brightness.
+     * @param brightness A whole number 0-100, the percentage brightness level
+     * @returns self, for chaining
+     */
+    setBrightness(brightness: number): HSStreamDeckDevice;
+
+    /**
+     * Resets the device to its power-on state (clears all button images).
+     * @returns self, for chaining
+     */
+    reset(): HSStreamDeckDevice;
+
+    /**
+     * Sets a button's image.
+     * @param button The button number, from `1` to `keyCount`
+     * @param image An `HSImage` to display on the button. It is resized to fit.
+     * @returns self, for chaining
+     */
+    setButtonImage(button: number, image: HSImage): HSStreamDeckDevice;
+
+    /**
+     * Sets a button to a solid color.
+     * @param button The button number, from `1` to `keyCount`
+     * @param color An `HSColor`
+     * @returns self, for chaining
+     */
+    setButtonColor(button: number, color: HSColor): HSStreamDeckDevice;
+
+    /**
+     * Sets the LCD strip image above one encoder (Stream Deck Plus only; a no-op on other models).
+     * @param encoder The encoder number, from `1` to `encoderColumns`
+     * @param image An `HSImage` to display. It is resized to fit.
+     * @returns self, for chaining
+     */
+    setScreenImage(encoder: number, image: HSImage): HSStreamDeckDevice;
+
+    /**
+     * Sets the callback for button press/release events. Replaces any previously set callback.
+The callback receives: this device, the button number, and whether it is now pressed.
+     * @param fn The function to call on button events
+     * @returns self, for chaining
+     */
+    buttonCallback(fn: (device: HSStreamDeckDevice, button: number, isDown: boolean) => void): HSStreamDeckDevice;
+
+    /**
+     * Sets the callback for encoder press/release/rotation events (Stream Deck Plus only).
+Replaces any previously set callback.
+The callback receives: this device, the encoder number, whether it is now pressed,
+and two booleans indicating rotation direction (at most one is `true` per call).
+     * @param fn The function to call on encoder events
+     * @returns self, for chaining
+     */
+    encoderCallback(fn: (device: HSStreamDeckDevice, encoder: number, isDown: boolean, turningLeft: boolean, turningRight: boolean) => void): HSStreamDeckDevice;
+
+    /**
+     * Sets the callback for LCD touch-screen events (Stream Deck Plus only). Replaces any
+previously set callback.
+The callback receives: this device, the event type (`"shortPress"`, `"longPress"`, or
+`"swipe"`), and the start/end X/Y coordinates (end coordinates are `0` unless swiping).
+     * @param fn The function to call on screen events
+     * @returns self, for chaining
+     */
+    screenCallback(fn: (device: HSStreamDeckDevice, eventType: string, startX: number, startY: number, endX: number, endY: number) => void): HSStreamDeckDevice;
+
+    /**
+     * Stops delivering events and releases all callbacks. Called automatically when the
+device is disconnected or the module shuts down.
+     */
+    destroy(): void;
+
+    /**
+     * The unique identifier assigned to this device object.
+     */
+    readonly identifier: string;
+
+    /**
+     * A human-readable description of the device model (e.g. `"Elgato Stream Deck (XL)"`).
+     */
+    readonly deckType: string;
+
+    /**
+     * The device's serial number.
+     */
+    readonly serialNumber: string;
+
+    /**
+     * The device's firmware version. Reads live from the hardware on every access.
+     */
+    readonly firmwareVersion: string;
+
+    /**
+     * The number of button columns.
+     */
+    readonly keyColumns: number;
+
+    /**
+     * The number of button rows.
+     */
+    readonly keyRows: number;
+
+    /**
+     * The total number of buttons (`keyColumns * keyRows`).
+     */
+    readonly keyCount: number;
+
+    /**
+     * The number of rotary encoders (Stream Deck Plus only; `0` on other models).
+     */
+    readonly encoderColumns: number;
+
+    /**
+     * The number of encoder rows (Stream Deck Plus only; `0` on other models).
+     */
+    readonly encoderRows: number;
+
+    /**
+     * The total number of encoders (`encoderColumns * encoderRows`).
+     */
+    readonly encoderCount: number;
+
+    /**
+     * The pixel dimensions required for button images.
+     */
+    readonly imageSize: HSSize;
 
 }
 
@@ -7229,6 +7499,11 @@ Keep a reference to call navigation methods after the window is shown.
 **A custom window with declarative UI building**
 `HSUIWindow` allows you to create custom windows with a SwiftUI-like
 declarative syntax. Build interfaces using shapes, text, images, and layout containers.
+** Note: ** Clicking the macOS close button only **hides** the window (firing the `onHide()`
+callback, if you have one configured) — it does not destroy the window while you hold a reference to it in
+JavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)
+if you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the
+full set of lifecycle callbacks.
 ## Building UI Elements
 ## Modifying Elements
 ## Examples
@@ -7276,9 +7551,40 @@ declare class HSUIWindow {
     hide(): void;
 
     /**
-     * Close and destroy the window
+     * Destroy the window
      */
-    close(): void;
+    destroy(): void;
+
+    /**
+     * Set a callback to fire after the window is shown
+     * @param callback A JavaScript function called after the window becomes visible
+     * @returns Self for chaining
+     */
+    onShow(callback: () => void): HSUIWindow;
+
+    /**
+     * Set a callback to fire when the window is hidden
+Fires when `hide()` is called, **and** when the user clicks the macOS close
+button — clicking that button only hides the window from Hammerspoon's
+perspective (see the class-level note above), so this is the callback that reacts
+to it. Does not fire when the window is destroyed via `destroy()` — use
+`onDestroy()` for that.
+     * @param callback A JavaScript function called after the window is hidden
+     * @returns Self for chaining
+     */
+    onHide(callback: () => void): HSUIWindow;
+
+    /**
+     * Set a callback to fire after the window is destroyed via `destroy()`
+Only fires when `destroy()` is called explicitly — whether directly, or from
+within an `onHide()` handler. It does **not** fire when the user clicks the macOS
+close button by itself; that only hides the window, so use `onHide()` to react to
+the button click, and call `destroy()` from that handler if you also want to
+release the window.
+     * @param callback A JavaScript function called after the window is destroyed
+     * @returns Self for chaining
+     */
+    onDestroy(callback: () => void): HSUIWindow;
 
     /**
      * Show or hide the window's title bar

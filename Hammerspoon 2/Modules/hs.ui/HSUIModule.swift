@@ -420,9 +420,9 @@ import SwiftUI
         alertStackWindow = nil
         alertStackManager.alerts.removeAll()
 
-        // Close all windows
+        // Destroy all windows
         for window in activeWindows.values {
-            window.close()
+            window.destroy()
         }
         activeWindows.removeAll()
 

@@ -438,6 +438,16 @@ import AXSwift
         return nil
     }
 
+    /// Menu bar items and menu items with submenus expose their actual items one level below
+    /// their direct children, behind an intermediate `AXMenu` container.
+    private func submenuElements(of element: UIElement) -> [UIElement] {
+        guard let children: [UIElement] = try? element.arrayAttribute(.children) else { return [] }
+        guard let menu = children.first, let items: [UIElement] = try? menu.arrayAttribute(.children) else {
+            return children
+        }
+        return items
+    }
+
     private func menuBarItemToDict(_ element: UIElement) -> [String: Any]? {
         let title: String = (try? element.attribute(.title)) ?? ""
         var dict: [String: Any] = ["title": title]
