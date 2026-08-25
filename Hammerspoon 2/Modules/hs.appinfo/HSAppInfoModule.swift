@@ -177,7 +177,7 @@ struct HSAppInfoData {
 @_documentation(visibility: private)
 @MainActor
 @objc class HSAppInfoModule: NSObject, HSModuleAPI, HSAppInfoModuleAPI {
-    var name = "hs.appinfo"
+    var moduleName = "hs.appinfo"
     let engineID: UUID
 
     // MARK: - Module lifecycle
@@ -209,13 +209,21 @@ struct HSAppInfoData {
         _ramAmount = appData.ramAmount
 
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {}
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): \(_appName) v\(_version) (\(_build))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Private storage

@@ -87,7 +87,7 @@ struct TaskTracker {
 @_documentation(visibility: private)
 @MainActor
 @objc class HSTaskModule: NSObject, HSModuleAPI, HSTaskModuleAPI {
-    var name = "hs.task"
+    var moduleName = "hs.task"
     let engineID: UUID
 
     // Weak refs: running tasks stay alive via their Process termination handler closure;
@@ -109,7 +109,7 @@ struct TaskTracker {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -127,7 +127,16 @@ struct TaskTracker {
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = tasks.allObjects.count
+        return "<hs.task: \(n) running task\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Task Tracking (for testing)

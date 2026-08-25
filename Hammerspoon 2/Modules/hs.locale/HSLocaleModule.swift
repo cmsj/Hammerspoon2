@@ -217,7 +217,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
 @_documentation(visibility: private)
 @MainActor
 @objc class HSLocaleModule: NSObject, HSModuleAPI, HSLocaleModuleAPI {
-    var name = "hs.locale"
+    var moduleName = "hs.locale"
     let engineID: UUID
 
     // MARK: - Watcher (Pattern A)
@@ -230,7 +230,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -239,7 +239,15 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<hs.locale: \(current())>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - HSLocaleModuleAPI

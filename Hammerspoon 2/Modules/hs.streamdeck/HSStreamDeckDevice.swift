@@ -257,6 +257,17 @@ nonisolated private func hsStreamDeckInputReportCallback(
         selfRetain = nil
     }
 
+    @objc func toString() -> String {
+        "<\(typeName): \(model.deckType)>"
+    }
+
+    // NSObject's `description` requirement is nonisolated, but this class is @MainActor;
+    // -description is only ever invoked from JS (main thread) or the console's REPL echo
+    // path, both already on the main thread, so assumeIsolated is safe here.
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     // MARK: - Properties
 
     @objc var deckType: String { model.deckType }

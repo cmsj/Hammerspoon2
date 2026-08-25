@@ -91,6 +91,14 @@ import SwiftUI
 @objc class HSUIAlert: NSObject, HSUIAlertAPI, NSWindowDelegate {
     @objc var typeName = "HSUIAlert"
 
+    @objc func toString() -> String {
+        return "<HSUIAlert: \(message)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     var message: String
     var font: Font = .title
     var duration: Double = 5.0

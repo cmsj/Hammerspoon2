@@ -118,6 +118,14 @@ import JavaScriptCore
 @objc class HSMenuBarItem: NSObject, HSMenuBarItemAPI {
     @objc var typeName = "HSMenuBarItem"
 
+    @objc func toString() -> String {
+        return "<HSMenuBarItem: \(_title ?? "untitled")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     private var statusItem: NSStatusItem?
     private var _title: String?
     private var _icon: NSImage?

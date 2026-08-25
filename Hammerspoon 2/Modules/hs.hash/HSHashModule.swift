@@ -120,20 +120,28 @@ import CryptoKit
 @_documentation(visibility: private)
 @MainActor
 @objc class HSHashModule: NSObject, HSModuleAPI, HSHashModuleAPI {
-    var name = "hs.hash"
+    var moduleName = "hs.hash"
     let engineID: UUID
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {}
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<hs.hash: hashing & encoding utilities>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Base64 encoding

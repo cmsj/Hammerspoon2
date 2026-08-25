@@ -109,6 +109,14 @@ import AVFoundation
 @objc class HSVideo: NSObject, HSVideoAPI {
     @objc var typeName = "HSVideo"
 
+    @objc func toString() -> String {
+        return "<HSVideo: \(items.count) item\(items.count == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     let player: AVQueuePlayer
     private let items: [AVPlayerItem]
     private var looper: AVPlayerLooper?

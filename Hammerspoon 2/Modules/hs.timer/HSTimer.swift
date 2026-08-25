@@ -81,6 +81,14 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @objc class HSTimer: NSObject, HSTimerAPI {
     @objc var typeName = "HSTimer"
+
+    @objc func toString() -> String {
+        return "<HSTimer: \(interval)s\(repeats ? ", repeating" : "")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     private var timer: Timer?
     private var callback: JSCallback?
     private let continueOnError: Bool

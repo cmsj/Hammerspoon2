@@ -149,7 +149,7 @@ import JavaScriptCore
 @safe @_documentation(visibility: private)
 @MainActor
 @objc class HSAudioDeviceModule: NSObject, HSModuleAPI, HSAudioDeviceModuleAPI {
-    var name = "hs.audiodevice"
+    var moduleName = "hs.audiodevice"
     let engineID: UUID
 
     // MARK: - Module lifecycle
@@ -157,7 +157,7 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -167,7 +167,16 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = all().count
+        return "<\(moduleName): \(n) device\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Device enumeration

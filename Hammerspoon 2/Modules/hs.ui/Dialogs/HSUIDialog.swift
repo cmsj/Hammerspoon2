@@ -92,6 +92,14 @@ import SwiftUI
 @objc class HSUIDialog: NSObject, HSUIDialogAPI, NSWindowDelegate {
     @objc var typeName = "HSUIDialog"
 
+    @objc func toString() -> String {
+        return "<HSUIDialog: \(message)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     var message: String
     var informativeText: String?
     var buttons: [String] = ["OK"]

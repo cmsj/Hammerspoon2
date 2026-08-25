@@ -81,6 +81,14 @@ import AppKit
 @objc class HSUITextPrompt: NSObject, HSUITextPromptAPI {
     @objc var typeName = "HSUITextPrompt"
 
+    @objc func toString() -> String {
+        return "<HSUITextPrompt: \(message)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     var message: String
     var informativeText: String?
     var defaultText: String = ""

@@ -474,6 +474,14 @@ private func caDataSourceName(_ objectID: AudioObjectID,
 @objc class HSAudioDevice: NSObject, HSAudioDeviceAPI {
     @objc var typeName = "HSAudioDevice"
 
+    @objc func toString() -> String {
+        return "<\(typeName): '\(name)'>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     let objectID: AudioObjectID
 
     init(objectID: AudioObjectID) {

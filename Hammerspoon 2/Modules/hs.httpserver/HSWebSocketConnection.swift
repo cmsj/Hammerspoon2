@@ -65,6 +65,14 @@ struct ParsedWebSocketFrame {
 @MainActor
 @objc class HSWebSocketConnection: NSObject, HSWebSocketConnectionAPI {
     @objc var typeName = "HSWebSocketConnection"
+
+    @objc func toString() -> String {
+        return "<HSWebSocketConnection: \(isClosed ? "closed" : "open")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     // Strong reference to the NWConnection so the connection stays alive while JS holds

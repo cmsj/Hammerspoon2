@@ -69,7 +69,7 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSDocsModule: NSObject, HSModuleAPI, HSDocsModuleAPI {
-    var name = "hs.docs"
+    var moduleName = "hs.docs"
     let engineID: UUID
 
     private var cachedModules: [[String: Any]]? = nil
@@ -77,11 +77,19 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): API documentation viewer>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     func shutdown() {

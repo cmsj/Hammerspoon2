@@ -147,6 +147,14 @@ import Darwin
 @MainActor
 @objc class HSBonjourService: NSObject, HSBonjourServiceAPI, NetServiceDelegate {
     @objc var typeName = "HSBonjourService"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(name) (\(type))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     let service: NetService

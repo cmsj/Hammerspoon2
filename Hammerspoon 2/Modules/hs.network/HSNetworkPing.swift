@@ -256,6 +256,14 @@ private func readICMPReply(fd: Int32, family: Int32,
 @objc final class HSNetworkPing: NSObject, HSNetworkPingAPI {
     @objc var typeName = "HSNetworkPing"
 
+    @objc func toString() -> String {
+        return "<HSNetworkPing: \(server), \(sent) sent>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     // MARK: Immutable config (set in init)
     private let _server: String
     private let _interval: TimeInterval

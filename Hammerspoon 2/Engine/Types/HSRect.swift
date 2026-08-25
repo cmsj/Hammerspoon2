@@ -44,6 +44,14 @@ import CoreGraphics
 
 @objc class HSRect: NSObject, HSRectAPI {
     @objc var typeName = "HSRect"
+
+    @objc func toString() -> String {
+        return "<HSRect: (\(x), \(y)) \(w)x\(h)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     var rect: CGRect
 
     var x: Double {

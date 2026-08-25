@@ -164,6 +164,14 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
 @MainActor
 @objc class HSMIDIDevice: NSObject, HSMIDIDeviceAPI {
     @objc var typeName = "HSMIDIDevice"
+
+    @objc func toString() -> String {
+        return "<HSMIDIDevice: \(name)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private weak var module: HSMIDIModule?

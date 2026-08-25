@@ -101,7 +101,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 @safe @_documentation(visibility: private)
 @MainActor
 @objc class HSStreamDeckModule: NSObject, HSModuleAPI, HSStreamDeckModuleAPI {
-    var name = "hs.streamdeck"
+    var moduleName = "hs.streamdeck"
     let engineID: UUID
 
     private let ioHIDManager: IOHIDManager
@@ -142,7 +142,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
         IOHIDManagerScheduleWithRunLoop(ioHIDManager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
         IOHIDManagerOpen(ioHIDManager, IOOptionBits(kIOHIDOptionsTypeNone))
 
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -166,7 +166,16 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 
     isolated deinit {
         shutdown()
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = devices.count
+        return "<hs.streamdeck: \(n) connected device\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Device enumeration

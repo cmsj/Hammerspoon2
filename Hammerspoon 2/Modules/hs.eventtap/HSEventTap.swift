@@ -92,6 +92,14 @@ import CoreGraphics
 @safe
 @objc class HSEventTap: NSObject, HSEventTapAPI {
     @objc var typeName = "HSEventTap"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(running ? "running" : "stopped")\(listenOnly ? ", listen-only" : "")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private let eventMask: CGEventMask

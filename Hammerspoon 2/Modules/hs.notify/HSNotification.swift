@@ -56,6 +56,14 @@ import JavaScriptCore
 @objc class HSNotification: NSObject, HSNotificationAPI {
     @objc var typeName = "HSNotification"
 
+    @objc func toString() -> String {
+        return "<HSNotification: \(content.title)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     @objc let identifier: String
 
     fileprivate let content: UNMutableNotificationContent

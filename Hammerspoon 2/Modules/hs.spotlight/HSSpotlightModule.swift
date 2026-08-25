@@ -187,7 +187,7 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSSpotlightModule: NSObject, HSModuleAPI, HSSpotlightModuleAPI {
-    var name = "hs.spotlight"
+    var moduleName = "hs.spotlight"
     let engineID: UUID
 
     private var queries = HSWeakObjectSet<HSSpotlightQuery>()
@@ -195,17 +195,26 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = queries.allObjects.count
+        return "<hs.spotlight: \(n) active quer\(n == 1 ? "y" : "ies")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     func shutdown() {
         queries.allObjects.forEach { q in q.destroy() }
         queries.removeAllObjects()
-        AKDebug("Shutdown of \(name): \(engineID)")
+        AKDebug("Shutdown of \(moduleName): \(engineID)")
     }
 
     // MARK: - HSSpotlightModuleAPI

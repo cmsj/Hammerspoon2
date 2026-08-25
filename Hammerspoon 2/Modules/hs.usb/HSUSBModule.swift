@@ -105,7 +105,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 @safe @MainActor
 @_documentation(visibility: private)
 @objc class HSUSBModule: NSObject, HSModuleAPI, HSUSBModuleAPI {
-    var name = "hs.usb"
+    var moduleName = "hs.usb"
     let engineID: UUID
 
     @objc var _watcherEmitter: JSValue? = nil
@@ -120,7 +120,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -130,7 +130,16 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
     isolated deinit {
         shutdown()
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = attachedDevices().count
+        return "<hs.usb: \(n) attached device\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Public API

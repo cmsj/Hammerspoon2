@@ -214,7 +214,7 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
 @safe @MainActor
 @_documentation(visibility: private)
 @objc class HSMIDIModule: NSObject, HSModuleAPI, HSMIDIModuleAPI {
-    var name = "hs.midi"
+    var moduleName = "hs.midi"
     let engineID: UUID
 
     @objc var commandTypes: [String: Int] { midiCommandTypeNumbers }
@@ -227,7 +227,7 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -251,7 +251,16 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
 
     isolated deinit {
         shutdown()
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = children.allObjects.count
+        return "<hs.midi: \(n) device\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Public API

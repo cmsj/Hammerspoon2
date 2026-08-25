@@ -103,6 +103,14 @@ import CoreServices
 @MainActor
 @objc class HSPathWatcher: NSObject, HSPathWatcherAPI {
     @objc var typeName = "HSPathWatcher"
+
+    @objc func toString() -> String {
+        return "<HSPathWatcher: \(watchedPath)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     static let eventsQueue = DispatchQueue(label: "hs.pathwatcher.events", qos: .utility)

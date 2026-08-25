@@ -138,7 +138,7 @@ import CoreLocation
 @_documentation(visibility: private)
 @MainActor
 @objc class HSLocationModule: NSObject, HSModuleAPI, HSLocationModuleAPI, CLLocationManagerDelegate {
-    var name = "hs.location"
+    var moduleName = "hs.location"
     let engineID: UUID
     private let _geocoder = HSLocationGeocoder()
     private var locationManager: CLLocationManager
@@ -154,7 +154,7 @@ import CoreLocation
         locationManager = CLLocationManager()
         super.init()
         locationManager.delegate = self
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -165,8 +165,17 @@ import CoreLocation
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
         shutdown()
+    }
+
+    @objc func toString() -> String {
+        let n = watchers.allObjects.count
+        return "<hs.location: \(n) watcher\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: CLLocationManagerDelegate (for get())

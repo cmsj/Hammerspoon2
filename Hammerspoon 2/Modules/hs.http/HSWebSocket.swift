@@ -136,6 +136,14 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
 @MainActor
 @objc class HSWebSocket: NSObject, HSWebSocketAPI {
     @objc var typeName = "HSWebSocket"
+
+    @objc func toString() -> String {
+        return "<HSWebSocket: \(url.absoluteString), state \(readyState)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private let url: URL

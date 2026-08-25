@@ -51,6 +51,15 @@ import JavaScriptCore
 @MainActor
 @objc class HSSpotlightItem: NSObject, HSSpotlightItemAPI {
     @objc var typeName = "HSSpotlightItem"
+
+    @objc func toString() -> String {
+        let displayName = (item.value(forAttribute: NSMetadataItemDisplayNameKey) as? String) ?? identifier
+        return "<HSSpotlightItem: \(displayName)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private let item: NSMetadataItem

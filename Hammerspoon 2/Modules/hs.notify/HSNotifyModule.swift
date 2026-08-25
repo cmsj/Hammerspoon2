@@ -168,7 +168,7 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSNotifyModule: NSObject, HSModuleAPI, HSNotifyModuleAPI {
-    var name = "hs.notify"
+    var moduleName = "hs.notify"
     let engineID: UUID
 
     private var callbacks: [String: JSCallback] = [:]
@@ -180,7 +180,7 @@ import JavaScriptCore
         self.engineID = engineID
         super.init()
         UNUserNotificationCenter.current().delegate = self
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -192,8 +192,17 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
         shutdown()
+    }
+
+    @objc func toString() -> String {
+        let n = callbacks.count
+        return "<hs.notify: \(n) pending notification\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Internal callback registration

@@ -150,6 +150,14 @@ import JavaScriptCoreExtras
 @objc class HSTask: NSObject, HSTaskAPI {
     @objc var typeName = "HSTask"
 
+    @objc func toString() -> String {
+        return "<HSTask: \(launchPath)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     private let launchPath: String
     private let arguments: [String]
     private var _environment: [String: String]

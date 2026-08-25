@@ -54,6 +54,14 @@ import JavaScriptCore
 @MainActor
 @objc class HSTranslationSession: NSObject, HSTranslationSessionAPI {
     @objc var typeName = "HSTranslationSession"
+
+    @objc func toString() -> String {
+        return "<HSTranslationSession: \(sourceLanguage) -> \(targetLanguage)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let sourceLanguage: String
     @objc let targetLanguage: String
 

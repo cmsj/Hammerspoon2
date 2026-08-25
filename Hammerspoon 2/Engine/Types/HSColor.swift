@@ -52,6 +52,18 @@ import Observation
 @objc class HSColor: NSObject, HSColorAPI {
     @objc var typeName = "HSColor"
 
+    @objc func toString() -> String {
+        let ns = NSColor(color).usingColorSpace(.sRGB) ?? NSColor(color)
+        let r = Int(ns.redComponent * 255)
+        let g = Int(ns.greenComponent * 255)
+        let b = Int(ns.blueComponent * 255)
+        return unsafe "<HSColor: #\(String(format: "%02X%02X%02X", r, g, b))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     var color: Color
 
     init(color: Color) {

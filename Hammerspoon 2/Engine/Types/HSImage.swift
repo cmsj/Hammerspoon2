@@ -196,6 +196,14 @@ import Observation
 @objc class HSImage: NSObject, HSImageAPI {
     @objc var typeName = "HSImage"
 
+    @objc func toString() -> String {
+        return "<HSImage: \(Int(image.size.width))x\(Int(image.size.height))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     var image: NSImage
 
     init(image: NSImage) {

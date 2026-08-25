@@ -82,6 +82,14 @@ import AppKit
 @MainActor
 @objc class HSVolumeWatcher: NSObject, HSVolumeWatcherAPI {
     @objc var typeName = "HSVolumeWatcher"
+
+    @objc func toString() -> String {
+        return "<HSVolumeWatcher: \(isRunning ? "running" : "stopped")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
     private var callback: JSCallback?
     private var isRunning = false

@@ -30,6 +30,14 @@ import CoreGraphics
 
 @objc class HSSize: NSObject, HSSizeAPI {
     @objc var typeName = "HSSize"
+
+    @objc func toString() -> String {
+        return "<HSSize: \(w)x\(h)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     var size: CGSize
 
     var w: Double {

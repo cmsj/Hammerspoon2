@@ -50,14 +50,14 @@ import AppKit
 @_documentation(visibility: private)
 @MainActor
 @objc class HSSoundModule: NSObject, HSModuleAPI, HSSoundModuleAPI {
-    var name = "hs.sound"
+    var moduleName = "hs.sound"
     let engineID: UUID
     private var sounds = HSWeakObjectSet<HSSound>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -68,7 +68,16 @@ import AppKit
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = sounds.allObjects.count
+        return "<hs.sound: \(n) loaded sound\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - HSSoundModuleAPI

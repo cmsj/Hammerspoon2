@@ -82,14 +82,14 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSHTTPServerModule: NSObject, HSModuleAPI, HSHTTPServerModuleAPI {
-    var name = "hs.httpserver"
+    var moduleName = "hs.httpserver"
     let engineID: UUID
     private var servers = HSWeakObjectSet<HSHTTPServer>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -100,7 +100,16 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = servers.allObjects.count
+        return "<hs.httpserver: \(n) running server\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     @objc func create() -> HSHTTPServer {

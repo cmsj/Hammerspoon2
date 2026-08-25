@@ -135,14 +135,14 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSHTTPModule: NSObject, HSModuleAPI, HSHTTPModuleAPI {
-    var name = "hs.http"
+    var moduleName = "hs.http"
     let engineID: UUID
     private var webSockets = HSWeakObjectSet<HSWebSocket>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -151,7 +151,16 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = webSockets.allObjects.count
+        return "<hs.http: \(n) open WebSocket\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Private

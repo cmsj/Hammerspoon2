@@ -147,6 +147,14 @@ private func pathToString(_ path: NWPath) -> String {
 @objc final class HSNetworkReachability: NSObject, HSNetworkReachabilityAPI {
     @objc var typeName = "HSNetworkReachability"
 
+    @objc func toString() -> String {
+        return "<HSNetworkReachability: \(statusString())>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     private let monitor = NWPathMonitor()
     private var lastKnownPath: NWPath?
     private var _callback: JSCallback?

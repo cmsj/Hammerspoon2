@@ -406,6 +406,14 @@ import SwiftUI
 @MainActor
 @objc class HSUIWindow: NSObject, HSUIWindowAPI, NSWindowDelegate {
     @objc var typeName = "HSUIWindow"
+
+    @objc func toString() -> String {
+        return "<HSUIWindow: \(windowTitleText.isEmpty ? "untitled" : windowTitleText)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     // Window properties

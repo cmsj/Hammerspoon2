@@ -196,7 +196,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
 @safe @MainActor
 @_documentation(visibility: private)
 @objc class HSSerialModule: NSObject, HSModuleAPI, HSSerialModuleAPI {
-    var name = "hs.serial"
+    var moduleName = "hs.serial"
     let engineID: UUID
     private var ports = HSWeakObjectSet<HSSerialPort>()
 
@@ -212,7 +212,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -226,7 +226,16 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
 
     isolated deinit {
         shutdown()
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = ports.allObjects.count
+        return "<hs.serial: \(n) open port\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Public API

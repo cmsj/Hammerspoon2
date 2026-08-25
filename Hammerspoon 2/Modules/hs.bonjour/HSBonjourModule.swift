@@ -142,7 +142,7 @@ import dnssd
 @_documentation(visibility: private)
 @MainActor
 @objc class HSBonjourModule: NSObject, HSModuleAPI, HSBonjourModuleAPI {
-    var name = "hs.bonjour"
+    var moduleName = "hs.bonjour"
     let engineID: UUID
 
     @objc var serviceTypes: [String: String] = [
@@ -179,7 +179,7 @@ import dnssd
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -192,7 +192,17 @@ import dnssd
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let s = searches.allObjects.count
+        let a = advertisedServices.count
+        return "<\(moduleName): \(s) search\(s == 1 ? "" : "es"), \(a) advertised service\(a == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - HSBonjourModuleAPI

@@ -141,20 +141,28 @@ import AVFoundation
 @_documentation(visibility: private)
 @MainActor
 @objc class HSPermissionsModule: NSObject, HSModuleAPI, HSPermissionsModuleAPI {
-    var name = "hs.permissions"
+    var moduleName = "hs.permissions"
     let engineID: UUID
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {}
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<hs.permissions: accessibility \(checkAccessibility() ? "granted" : "not granted")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Accessibility

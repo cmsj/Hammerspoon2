@@ -316,6 +316,14 @@ private extension CGDisplayMode {
 @_documentation(visibility: private)
 @objc class HSScreen: NSObject, HSScreenAPI {
     @objc var typeName = "HSScreen"
+
+    @objc func toString() -> String {
+        return "<HSScreen: \(name)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     let screen: NSScreen
 
     init(screen: NSScreen) {

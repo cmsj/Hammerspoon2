@@ -97,7 +97,7 @@ extension SBApplication: ShortcutsBridgeApp {}
 @_documentation(visibility: private)
 @MainActor
 @objc class HSShortcutsModule: NSObject, HSModuleAPI, HSShortcutsModuleAPI {
-    var name = "hs.shortcuts"
+    var moduleName = "hs.shortcuts"
     let engineID: UUID
     private var runningProcesses: [Process] = []
     private var isShutdown = false
@@ -105,7 +105,7 @@ extension SBApplication: ShortcutsBridgeApp {}
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -115,7 +115,16 @@ extension SBApplication: ShortcutsBridgeApp {}
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = runningProcesses.count
+        return "<hs.shortcuts: \(n) running process\(n == 1 ? "" : "es")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Public API
