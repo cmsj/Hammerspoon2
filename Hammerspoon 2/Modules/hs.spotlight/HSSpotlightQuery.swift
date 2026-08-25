@@ -263,6 +263,14 @@ import JavaScriptCore
 @MainActor
 @objc class HSSpotlightQuery: NSObject, HSSpotlightQueryAPI {
     @objc var typeName = "HSSpotlightQuery"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(isRunning ? "running" : "stopped"), \(count) result\(count == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private let query = NSMetadataQuery()

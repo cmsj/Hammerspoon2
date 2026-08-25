@@ -213,7 +213,7 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSOSAScriptModule: NSObject, HSModuleAPI, HSOSAScriptModuleAPI {
-    var name = "hs.osascript"
+    var moduleName = "hs.osascript"
     let engineID: UUID
 
     private let runner = HSOSAScriptRunner()
@@ -223,7 +223,7 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -231,7 +231,15 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): AppleScript & JavaScript execution>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Public API

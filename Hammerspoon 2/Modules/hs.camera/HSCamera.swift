@@ -161,6 +161,14 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
 @objc class HSCamera: NSObject, HSCameraAPI {
     @objc var typeName = "HSCamera"
 
+    @objc func toString() -> String {
+        return "<\(typeName): \(name)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     let device: AVCaptureDevice
 
     init(device: AVCaptureDevice) {

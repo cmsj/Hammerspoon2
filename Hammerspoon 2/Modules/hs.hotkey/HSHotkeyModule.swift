@@ -87,7 +87,7 @@ import Carbon
 @_documentation(visibility: private)
 @MainActor
 @objc class HSHotkeyModule: NSObject, HSModuleAPI, HSHotkeyModuleAPI {
-    var name = "hs.hotkey"
+    var moduleName = "hs.hotkey"
     let engineID: UUID
 
     // Weak refs: disabled/dropped hotkeys can be GC'd.
@@ -101,7 +101,7 @@ import Carbon
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -114,7 +114,16 @@ import Carbon
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = activeHotkeys.allObjects.count
+        return "<\(moduleName): \(n) bound hotkey\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Hotkey binding

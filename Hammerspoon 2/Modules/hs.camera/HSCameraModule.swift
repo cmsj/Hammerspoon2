@@ -121,7 +121,7 @@ import AVFoundation
 @_documentation(visibility: private)
 @MainActor
 @objc class HSCameraModule: NSObject, HSModuleAPI, HSCameraModuleAPI {
-    var name = "hs.camera"
+    var moduleName = "hs.camera"
     let engineID: UUID
 
     private var cameraCache: [String: HSCamera] = [:]
@@ -131,7 +131,7 @@ import AVFoundation
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -144,7 +144,16 @@ import AVFoundation
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = all().count
+        return "<\(moduleName): \(n) \(n == 1 ? "camera" : "cameras")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Device Enumeration

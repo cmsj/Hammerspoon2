@@ -83,14 +83,14 @@ import AXSwift
 @_documentation(visibility: private)
 @MainActor
 @objc class HSWindowModule: NSObject, HSModuleAPI, HSWindowModuleAPI {
-    var name = "hs.window"
+    var moduleName = "hs.window"
     let engineID: UUID
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -98,7 +98,15 @@ import AXSwift
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): focused '\(focusedWindow()?.title ?? "none")'>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Helper Methods

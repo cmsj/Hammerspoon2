@@ -239,6 +239,14 @@ import AXSwift
 @_documentation(visibility: private)
 @objc class HSApplication: NSObject, HSApplicationAPI {
     @objc var typeName = "HSApplication"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(title ?? "unknown") (pid \(pid))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     let runningApplication: NSRunningApplication
     let axUIElement: Application?
 

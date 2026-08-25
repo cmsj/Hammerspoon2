@@ -64,7 +64,7 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSMenuBarModule: NSObject, HSModuleAPI, HSMenuBarModuleAPI {
-    var name = "hs.menubar"
+    var moduleName = "hs.menubar"
     let engineID: UUID
 
     private var items = HSWeakObjectSet<HSMenuBarItem>()
@@ -72,7 +72,7 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -83,7 +83,16 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = items.allObjects.count
+        return "<\(moduleName): \(n) menu bar item\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     @objc func create(_ hidden: Bool) -> HSMenuBarItem {

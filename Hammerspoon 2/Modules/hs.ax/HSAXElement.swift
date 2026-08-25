@@ -202,6 +202,14 @@ import AXSwift
 @_documentation(visibility: private)
 @objc class HSAXElement: NSObject, HSAXElementAPI {
     @objc var typeName = "HSAXElement"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(role ?? "unknown role")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     let element: UIElement
 
     init(element: UIElement) {

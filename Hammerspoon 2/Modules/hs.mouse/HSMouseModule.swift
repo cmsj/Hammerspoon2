@@ -234,19 +234,28 @@ private func openHIDEventDriver() -> io_connect_t {
 @_documentation(visibility: private)
 @MainActor
 @objc class HSMouseModule: NSObject, HSModuleAPI, HSMouseModuleAPI {
-    var name = "hs.mouse"
+    var moduleName = "hs.mouse"
     let engineID: UUID
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {}
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let pos = absolutePosition()
+        return "<\(moduleName): (\(Int(pos["x"] ?? 0)), \(Int(pos["y"] ?? 0)))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Position

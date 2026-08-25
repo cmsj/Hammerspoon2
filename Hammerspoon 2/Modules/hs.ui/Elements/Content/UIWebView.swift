@@ -455,6 +455,14 @@ final class UIWebViewToolbarEntry: Identifiable {
 @objc class UIWebView: NSObject, UIWebViewAPI, HSUIElement {
     @objc var typeName = "UIWebView"
 
+    @objc func toString() -> String {
+        return "<\(typeName): \(url ?? "about:blank")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     // MARK: Internal State
     // (internal access level so the private SwiftUI views below can read them)
 

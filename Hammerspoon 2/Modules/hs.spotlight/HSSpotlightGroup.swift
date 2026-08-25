@@ -76,6 +76,14 @@ import JavaScriptCore
 @MainActor
 @objc class HSSpotlightGroup: NSObject, HSSpotlightGroupAPI {
     @objc var typeName = "HSSpotlightGroup"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(attribute), \(count) result\(count == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private let group: NSMetadataQueryResultGroup

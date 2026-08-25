@@ -377,6 +377,19 @@ struct HSStreamDeckTests {
             harness.expectEqual("hs.streamdeck.all()[0].typeName", "HSStreamDeckDevice")
         }
 
+        @Test("toString() and console.log() describe the device instead of the default JS object tag")
+        func testToString() {
+            harness.expectTrue("""
+            (function() {
+                const d = hs.streamdeck.all()[0];
+                const s = String(d);
+                return s === d.toString() &&
+                       s.startsWith('<HSStreamDeckDevice: ') && s.endsWith('>') &&
+                       s.includes(d.deckType);
+            })()
+        """)
+        }
+
         @Test("findBySerialNumber() round-trips through all()")
         func testFindBySerialNumberRoundTrip() {
             harness.expectTrue("""

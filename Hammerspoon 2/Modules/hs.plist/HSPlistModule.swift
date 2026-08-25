@@ -96,19 +96,27 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSPlistModule: NSObject, HSModuleAPI, HSPlistModuleAPI {
-    var name = "hs.plist"
+    var moduleName = "hs.plist"
     let engineID: UUID
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {}
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<hs.plist: property list serialization>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Reading

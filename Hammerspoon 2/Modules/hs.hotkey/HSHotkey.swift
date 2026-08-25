@@ -69,6 +69,14 @@ import Carbon
 @safe
 @objc class HSHotkey: NSObject, HSHotkeyAPI {
     @objc var typeName = "HSHotkey"
+
+    @objc func toString() -> String {
+        return "<\(typeName): keyCode \(keyCode), modifiers \(modifiers)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     private let keyCode: UInt32
     private let modifiers: UInt32
     private var _callbackPressed: JSCallback?

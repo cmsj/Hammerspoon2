@@ -91,7 +91,7 @@ import AppKit
 @_documentation(visibility: private)
 @MainActor
 @objc class HSSharingModule: NSObject, HSModuleAPI, HSSharingModuleAPI {
-    var name = "hs.sharing"
+    var moduleName = "hs.sharing"
     let engineID: UUID
 
     private var shares = HSWeakObjectSet<HSSharingService>()
@@ -102,11 +102,20 @@ import AppKit
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = shares.allObjects.count
+        return "<\(moduleName): \(n) active share\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     func shutdown() {

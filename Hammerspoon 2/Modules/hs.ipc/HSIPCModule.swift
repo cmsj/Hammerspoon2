@@ -123,7 +123,7 @@ import JavaScriptCore
 @safe @MainActor
 @_documentation(visibility: private)
 @objc class HSIPCModule: NSObject, HSModuleAPI, HSIPCModuleAPI {
-    var name = "hs.ipc"
+    var moduleName = "hs.ipc"
     let engineID: UUID
 
     private var server: HSIPCServer?
@@ -131,7 +131,7 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -141,7 +141,15 @@ import JavaScriptCore
 
     isolated deinit {
         shutdown()
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): \(isListening ? "listening" : "not listening")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - HSIPCModuleAPI

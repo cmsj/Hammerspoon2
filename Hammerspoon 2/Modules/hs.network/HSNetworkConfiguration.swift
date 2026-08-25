@@ -106,6 +106,14 @@ private nonisolated func scConfigWatcherCallback(
 @objc final class HSNetworkConfigurationWatcher: NSObject, HSNetworkConfigurationWatcherAPI {
     @objc var typeName = "HSNetworkConfigurationWatcher"
 
+    @objc func toString() -> String {
+        return "<\(typeName): \(_isWatching ? "watching" : "idle")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     private var store: SCDynamicStore?
     private var _callback: JSCallback?
     private var _isWatching = false

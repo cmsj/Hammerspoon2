@@ -88,7 +88,7 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSTranslationModule: NSObject, HSModuleAPI, HSTranslationModuleAPI {
-    var name = "hs.translation"
+    var moduleName = "hs.translation"
     let engineID: UUID
 
     // Weak refs: sessions are released when JS GC drops them.
@@ -98,7 +98,7 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -107,7 +107,16 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = sessions.allObjects.count
+        return "<\(moduleName): \(n) active session\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - HSTranslationModuleAPI

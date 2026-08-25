@@ -149,7 +149,7 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSTimerModule: NSObject, HSModuleAPI, HSTimerModuleAPI {
-    var name = "hs.timer"
+    var moduleName = "hs.timer"
     let engineID: UUID
 
     // Weak refs: running timers stay alive via the Foundation run loop (Timer target);
@@ -160,7 +160,7 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -175,7 +175,16 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = timers.allObjects.count
+        return "<\(moduleName): \(n) active timer\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Swift-retained storage for JS-defined functions

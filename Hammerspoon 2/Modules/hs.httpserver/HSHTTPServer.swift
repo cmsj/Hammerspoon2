@@ -267,6 +267,14 @@ struct ParsedHTTPRequest {
 @MainActor
 @objc class HSHTTPServer: NSObject, HSHTTPServerAPI {
     @objc var typeName = "HSHTTPServer"
+
+    @objc func toString() -> String {
+        return "<\(typeName): port \(_port), \(isRunning ? "running" : "stopped")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     // Configuration

@@ -252,19 +252,27 @@ private func writeLEDState(_ usage: Int, _ state: Bool, on device: IOHIDDevice) 
 @_documentation(visibility: private)
 @MainActor
 @objc class HSKeyboardModule: NSObject, HSModuleAPI, HSKeyboardModuleAPI {
-    var name = "hs.keyboard"
+    var moduleName = "hs.keyboard"
     let engineID: UUID
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {}
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): capsLock \(capsLockState() ? "on" : "off")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Global CapsLock state

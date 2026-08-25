@@ -207,6 +207,14 @@ private let ioctlIOSSIOSPEED: UInt = {
 @MainActor
 @objc class HSSerialPort: NSObject, HSSerialPortAPI {
     @objc var typeName = "HSSerialPort"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(path), \(isOpen ? "open" : "closed")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
     @objc let name: String
     @objc let path: String

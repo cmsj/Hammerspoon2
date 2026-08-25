@@ -406,7 +406,7 @@ import AppKit
 @_documentation(visibility: private)
 @MainActor
 @objc class HSEventTapModule: NSObject, HSModuleAPI, HSEventTapModuleAPI, EventTapHotkeyCoordinator {
-    var name = "hs.eventtap"
+    var moduleName = "hs.eventtap"
     let engineID: UUID
     // Strong references: started taps keep themselves alive via selfRetain, so weak refs
     // would be nil'd after JS GC — shutdown() would never find them to call destroy().
@@ -422,7 +422,7 @@ import AppKit
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -438,7 +438,15 @@ import AppKit
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): \(taps.count) active tap\(taps.count == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Constants

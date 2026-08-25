@@ -72,6 +72,14 @@ protocol EventTapHotkeyCoordinator: AnyObject {
 @objc class HSEventTapHotkey: NSObject, HSEventTapHotkeyAPI {
     @objc var typeName = "HSEventTapHotkey"
 
+    @objc func toString() -> String {
+        return "<\(typeName): keyCode \(keyCode), \(_isEnabled ? "enabled" : "disabled")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     let keyCode: CGKeyCode
     /// Device-independent modifier flags (maskCommand, maskShift, etc.) that must be active.
     let requiredFlags: CGEventFlags

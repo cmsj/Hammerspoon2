@@ -327,7 +327,7 @@ import AppKit
 @_documentation(visibility: private)
 @MainActor
 @objc class HSPasteboardModule: NSObject, HSModuleAPI, HSPasteboardModuleAPI {
-    var name = "hs.pasteboard"
+    var moduleName = "hs.pasteboard"
     let engineID: UUID
 
     @objc var watcherInterval: Double = 0.5
@@ -340,7 +340,7 @@ import AppKit
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -349,8 +349,16 @@ import AppKit
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
         shutdown()
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): change count \(NSPasteboard.general.changeCount)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Reading

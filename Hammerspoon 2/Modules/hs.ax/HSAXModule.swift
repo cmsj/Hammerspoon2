@@ -167,7 +167,7 @@ import AXSwift
 @_documentation(visibility: private)
 @MainActor
 @objc class HSAXModule: NSObject, HSModuleAPI, HSAXModuleAPI {
-    var name = "hs.ax"
+    var moduleName = "hs.ax"
     let engineID: UUID
 
     // Store observers by PID
@@ -199,7 +199,7 @@ import AXSwift
             _notificationTypes[name] = notificationType.rawValue
         }
         super.init()
-        AKDebug("Init of \(self.name)")
+        AKDebug("Init of \(self.moduleName)")
     }
 
     func shutdown() {
@@ -233,8 +233,17 @@ import AXSwift
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
         shutdown()
+    }
+
+    @objc func toString() -> String {
+        let n = watchers.count
+        return "<\(moduleName): \(n) watcher\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - API Implementation

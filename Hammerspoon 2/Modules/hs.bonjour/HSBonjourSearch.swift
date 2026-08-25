@@ -126,6 +126,14 @@ import JavaScriptCore
 @MainActor
 @objc class HSBonjourSearch: NSObject, HSBonjourSearchAPI, NetServiceBrowserDelegate {
     @objc var typeName = "HSBonjourSearch"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(serviceTable.count) discovered service\(serviceTable.count == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private let servicesBrowser = NetServiceBrowser()

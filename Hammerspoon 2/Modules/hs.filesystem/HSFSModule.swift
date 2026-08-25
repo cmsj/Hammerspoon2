@@ -684,13 +684,13 @@ import UniformTypeIdentifiers
 @_documentation(visibility: private)
 @MainActor
 @objc class HSFSModule: NSObject, HSModuleAPI, HSFSModuleAPI {
-    var name = "hs.fs"
+    var moduleName = "hs.fs"
     let engineID: UUID
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     private var volumeWatchers = HSWeakObjectSet<HSVolumeWatcher>()
@@ -704,7 +704,17 @@ import UniformTypeIdentifiers
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let v = volumeWatchers.allObjects.count
+        let p = pathWatchers.allObjects.count
+        return "<\(moduleName): \(v) volume watcher\(v == 1 ? "" : "s"), \(p) path watcher\(p == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Private helpers

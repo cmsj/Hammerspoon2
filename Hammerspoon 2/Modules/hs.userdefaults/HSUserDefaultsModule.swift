@@ -122,7 +122,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
 @_documentation(visibility: private)
 @MainActor
 @objc class HSUserDefaultsModule: NSObject, HSModuleAPI, HSUserDefaultsModuleAPI {
-    var name = "hs.userdefaults"
+    var moduleName = "hs.userdefaults"
     let engineID: UUID
 
     private let suite: UserDefaults?
@@ -137,7 +137,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
         if suite == nil {
             AKError("hs.userdefaults: Failed to create UserDefaults suite '\(hsUserDefaultsSuiteName)'. This module will not function.")
         }
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -151,8 +151,17 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
         shutdown()
+    }
+
+    @objc func toString() -> String {
+        let n = watcherCallbacks.count
+        return "<\(moduleName): \(n) watched key\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Storage

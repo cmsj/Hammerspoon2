@@ -82,18 +82,27 @@ import JavaScriptCore
 @_documentation(visibility: private)
 @MainActor
 @objc class HSChooserModule: NSObject, HSModuleAPI, HSChooserModuleAPI {
-    var name: String = "hs.chooser"
+    var moduleName: String = "hs.chooser"
     let engineID: UUID
     private var choosers = HSWeakObjectSet<HSChooser>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = choosers.allObjects.count
+        return "<\(moduleName): \(n) active chooser\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     func shutdown() {
@@ -101,7 +110,7 @@ import JavaScriptCore
             chooser.destroy()
         }
         choosers.removeAllObjects()
-        AKDebug("\(name) shutdown: \(engineID)")
+        AKDebug("\(moduleName) shutdown: \(engineID)")
     }
 
     @objc func create() -> HSChooser {

@@ -124,6 +124,14 @@ import AppKit
 @MainActor
 @objc class HSSharingService: NSObject, HSSharingServiceAPI, NSSharingServiceDelegate {
     @objc var typeName = "HSSharingService"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(title)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     let service: NSSharingService

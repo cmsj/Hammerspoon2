@@ -199,7 +199,7 @@ import AppKit
 @_documentation(visibility: private)
 @MainActor
 @objc class HSKeycodesModule: NSObject, HSModuleAPI, HSKeycodesModuleAPI {
-    var name = "hs.keycodes"
+    var moduleName = "hs.keycodes"
     let engineID: UUID
 
     // MARK: - Key map
@@ -228,7 +228,7 @@ import AppKit
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.inputSourceDidChange() }
         }
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -241,7 +241,15 @@ import AppKit
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): \(map.count) key mapping\(map.count == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Key map

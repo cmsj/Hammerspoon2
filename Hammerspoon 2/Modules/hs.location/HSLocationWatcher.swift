@@ -93,6 +93,14 @@ import CoreLocation
 @MainActor
 @objc class HSLocationWatcher: NSObject, HSLocationWatcherAPI, CLLocationManagerDelegate {
     @objc var typeName = "HSLocationWatcher"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(_lastLocation != nil ? "has location" : "no location yet")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
     private let manager = CLLocationManager()
     private var callback: JSCallback?

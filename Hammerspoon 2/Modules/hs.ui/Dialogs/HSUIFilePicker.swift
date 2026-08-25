@@ -135,6 +135,14 @@ import UniformTypeIdentifiers
 @objc class HSUIFilePicker: NSObject, HSUIFilePickerAPI {
     @objc var typeName = "HSUIFilePicker"
 
+    @objc func toString() -> String {
+        return "<\(typeName): \(message ?? "Choose a file")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     var message: String?
     var defaultPath: String?
     var canChooseFiles: Bool = true

@@ -276,7 +276,7 @@ import IOKit.pwr_mgt
 @safe @_documentation(visibility: private)
 @MainActor
 @objc class HSPowerModule: NSObject, HSModuleAPI, HSPowerModuleAPI {
-    var name = "hs.power"
+    var moduleName = "hs.power"
     let engineID: UUID
 
     private var sleepAssertions: [String: IOPMAssertionID] = [:]
@@ -312,7 +312,7 @@ import IOKit.pwr_mgt
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -326,7 +326,16 @@ import IOKit.pwr_mgt
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = sleepAssertions.count
+        return "<\(moduleName): \(n) sleep assertion\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Sleep Prevention

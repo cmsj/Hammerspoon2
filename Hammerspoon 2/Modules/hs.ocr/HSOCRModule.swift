@@ -137,21 +137,29 @@ private struct RawObservation: Sendable {
 @_documentation(visibility: private)
 @MainActor
 @objc class HSOCRModule: NSObject, HSModuleAPI, HSOCRModuleAPI {
-    var name = "hs.ocr"
+    var moduleName = "hs.ocr"
     let engineID: UUID
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): text recognition>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     func shutdown() {
-        AKDebug("Shutdown of \(name): \(engineID)")
+        AKDebug("Shutdown of \(moduleName): \(engineID)")
     }
 
     // MARK: - HSOCRModuleAPI

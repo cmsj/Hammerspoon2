@@ -290,7 +290,7 @@ private enum HSWifiError: LocalizedError {
 @_documentation(visibility: private)
 @MainActor
 @objc class HSWifiModule: NSObject, HSModuleAPI, HSWifiModuleAPI, CWEventDelegate {
-    var name = "hs.wifi"
+    var moduleName = "hs.wifi"
     let engineID: UUID
 
     private let client = CWWiFiClient()
@@ -301,7 +301,7 @@ private enum HSWifiError: LocalizedError {
         self.engineID = engineID
         super.init()
         client.delegate = self
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -313,8 +313,17 @@ private enum HSWifiError: LocalizedError {
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
         shutdown()
+    }
+
+    @objc func toString() -> String {
+        let n = watchers.allObjects.count
+        return "<\(moduleName): \(n) watcher\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - HSWifiModuleAPI

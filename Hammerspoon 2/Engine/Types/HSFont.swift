@@ -77,6 +77,14 @@ import SwiftUI
 
 @objc class HSFont: NSObject, HSFontAPI {
     @objc var typeName = "HSFont"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(String(describing: font))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     var font: Font
 
     private init(font: Font) {

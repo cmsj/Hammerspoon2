@@ -174,7 +174,7 @@ import JavaScriptCoreExtras
 @_documentation(visibility: private)
 @MainActor
 @objc class HSURLEventModule: NSObject, HSModuleAPI, HSURLEventModuleAPI {
-    var name = "hs.urlevent"
+    var moduleName = "hs.urlevent"
     let engineID: UUID
 
     private var bindings: [String: JSCallback] = [:]
@@ -187,7 +187,7 @@ import JavaScriptCoreExtras
         URLEventDispatcher.shared.setHandler { [weak self] url in
             self?.handleURL(url)
         }
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -198,11 +198,20 @@ import JavaScriptCoreExtras
         _httpCallback = nil
         _mailtoCallback?.detach(from: self)
         _mailtoCallback = nil
-        AKDebug("Shutdown of \(name): \(engineID)")
+        AKDebug("Shutdown of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = bindings.count
+        return "<\(moduleName): \(n) bound event\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Internal URL dispatch

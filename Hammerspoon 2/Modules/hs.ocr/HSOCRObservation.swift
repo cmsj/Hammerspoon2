@@ -83,6 +83,15 @@ import JavaScriptCore
 @MainActor
 @objc class HSOCRObservation: NSObject, HSOCRObservationAPI {
     @objc var typeName = "HSOCRObservation"
+
+    @objc func toString() -> String {
+        let snippet = text.count > 30 ? String(text.prefix(30)) + "…" : text
+        return "<\(typeName): '\(snippet)'>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let text: String
     @objc let confidence: Double
     @objc let bounds: HSRect

@@ -30,6 +30,14 @@ import CoreGraphics
 
 @objc class HSPoint: NSObject, HSPointAPI {
     @objc var typeName = "HSPoint"
+
+    @objc func toString() -> String {
+        return "<\(typeName): (\(x), \(y))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     var point: CGPoint
 
     var x: Double {

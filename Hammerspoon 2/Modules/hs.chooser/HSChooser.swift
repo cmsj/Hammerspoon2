@@ -242,6 +242,14 @@ import SwiftUI
 @MainActor
 @objc class HSChooser: NSObject, HSChooserAPI {
     @objc var typeName = "HSChooser"
+
+    @objc func toString() -> String {
+        return "<\(typeName): query '\(query)'>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private let viewModel = ChooserViewModel()

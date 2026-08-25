@@ -102,6 +102,14 @@ let wifiWatcherValidEvents: Set<String> = [
 @MainActor
 @objc class HSWifiWatcher: NSObject, HSWifiWatcherAPI {
     @objc var typeName = "HSWifiWatcher"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(isRunning ? "running" : "stopped"), events \(_events.joined(separator: ", "))>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
     weak var module: HSWifiModule?
     private var callback: JSCallback?

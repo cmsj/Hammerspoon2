@@ -355,7 +355,7 @@ private func queryPrimaryInterface() -> String? {
 @safe @MainActor
 @_documentation(visibility: private)
 @objc class HSNetworkModule: NSObject, HSModuleAPI, HSNetworkModuleAPI {
-    var name = "hs.network"
+    var moduleName = "hs.network"
     let engineID: UUID
     private var pings = HSWeakObjectSet<HSNetworkPing>()
     private var reachabilityObjects = HSWeakObjectSet<HSNetworkReachability>()
@@ -364,11 +364,11 @@ private func queryPrimaryInterface() -> String? {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
-        AKDebug("Shutdown of \(name): \(engineID)")
+        AKDebug("Shutdown of \(moduleName): \(engineID)")
         for ping in pings.allObjects {
             ping.cancel()
         }
@@ -384,7 +384,16 @@ private func queryPrimaryInterface() -> String? {
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        let n = pings.allObjects.count + reachabilityObjects.allObjects.count + configurationWatchers.allObjects.count
+        return "<\(moduleName): \(n) active watcher\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - HSNetworkModuleAPI

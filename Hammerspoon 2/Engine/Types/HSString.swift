@@ -28,6 +28,15 @@ import Observation
 @objc class HSString: NSObject, HSStringAPI {
     @objc var typeName = "HSString"
 
+    @objc func toString() -> String {
+        let snippet = _value.count > 40 ? String(_value.prefix(40)) + "…" : _value
+        return "<\(typeName): '\(snippet)'>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     // @Observable can't track @objc stored properties, so _value is the
     // Observable-tracked backing store and the @objc computed property
     // forwards to it. SwiftUI sees the dependency chain: value → _value.

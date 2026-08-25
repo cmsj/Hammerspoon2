@@ -395,7 +395,7 @@ import SwiftUI
 @_documentation(visibility: private)
 @MainActor
 @objc class HSUIModule: NSObject, HSModuleAPI, HSUIModuleAPI {
-    var name = "hs.ui"
+    var moduleName = "hs.ui"
     let engineID: UUID
 
     // Keep strong references to active windows to prevent premature deallocation
@@ -411,7 +411,7 @@ import SwiftUI
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -440,7 +440,15 @@ import SwiftUI
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
+    }
+
+    @objc func toString() -> String {
+        return "<\(moduleName): \(activeWindows.count) window(s), \(activeAlerts.count) alert(s), \(activeDialogs.count) dialog(s)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - Object Registration (called by UI objects when shown/closed)

@@ -139,6 +139,14 @@ import CoreGraphics
 @objc class HSEventTapEvent: NSObject, HSEventTapEventAPI {
     @objc var typeName = "HSEventTapEvent"
 
+    @objc func toString() -> String {
+        return "<\(typeName): type \(type)>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
+
     // The wrapped CGEvent. Mutable so property setters can update it.
     var cgEvent: CGEvent
 

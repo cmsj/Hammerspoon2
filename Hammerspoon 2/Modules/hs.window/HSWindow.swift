@@ -207,6 +207,14 @@ let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "
 @_documentation(visibility: private)
 @objc class HSWindow: NSObject, HSWindowAPI {
     @objc var typeName = "HSWindow"
+
+    @objc func toString() -> String {
+        return "<\(typeName): \(title ?? "untitled")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     let element: UIElement
     let app: NSRunningApplication
     var id: Int = -1

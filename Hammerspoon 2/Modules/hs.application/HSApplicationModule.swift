@@ -182,7 +182,7 @@ class HSApplicationWatcherObject {
 @_documentation(visibility: private)
 @MainActor
 @objc class HSApplicationModule: NSObject, HSModuleAPI, HSApplicationModuleAPI {
-    var name = "hs.application"
+    var moduleName = "hs.application"
     let engineID: UUID
     private var watcher: HSApplicationWatcherObject? = nil
 
@@ -193,7 +193,7 @@ class HSApplicationWatcherObject {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(name): \(engineID)")
+        AKDebug("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -202,8 +202,17 @@ class HSApplicationWatcherObject {
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(name): \(engineID)")
+        AKDebug("Deinit of \(moduleName): \(engineID)")
         shutdown()
+    }
+
+    @objc func toString() -> String {
+        let n = runningApplications().count
+        return "<\(moduleName): \(n) running app\(n == 1 ? "" : "s")>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
     }
 
     // MARK: - API relating to running applications

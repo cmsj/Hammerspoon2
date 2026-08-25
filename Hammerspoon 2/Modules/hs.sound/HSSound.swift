@@ -145,6 +145,14 @@ import AppKit
 @MainActor
 @objc class HSSound: NSObject, HSSoundAPI {
     @objc var typeName = "HSSound"
+
+    @objc func toString() -> String {
+        return unsafe "<\(typeName): \(_name ?? "unnamed"), \(String(format: "%.1f", duration))s>"
+    }
+
+    nonisolated override var description: String {
+        MainActor.assumeIsolated { toString() }
+    }
     @objc let identifier = UUID().uuidString
 
     private let sound: NSSound
