@@ -231,7 +231,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
 
     @objc func toString() -> String {
         let n = ports.allObjects.count
-        return "<hs.serial: \(n) open port\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) open port\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

@@ -442,7 +442,7 @@ import AppKit
     }
 
     @objc func toString() -> String {
-        return "<hs.eventtap: \(taps.count) active tap\(taps.count == 1 ? "" : "s")>"
+        return "<\(moduleName): \(taps.count) active tap\(taps.count == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

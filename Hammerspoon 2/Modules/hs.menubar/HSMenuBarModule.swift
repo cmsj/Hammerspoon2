@@ -88,7 +88,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let n = items.allObjects.count
-        return "<hs.menubar: \(n) menu bar item\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) menu bar item\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

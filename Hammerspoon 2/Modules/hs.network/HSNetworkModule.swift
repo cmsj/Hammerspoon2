@@ -389,7 +389,7 @@ private func queryPrimaryInterface() -> String? {
 
     @objc func toString() -> String {
         let n = pings.allObjects.count + reachabilityObjects.allObjects.count + configurationWatchers.allObjects.count
-        return "<hs.network: \(n) active watcher\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) active watcher\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

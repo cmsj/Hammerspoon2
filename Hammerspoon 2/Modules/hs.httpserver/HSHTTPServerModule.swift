@@ -105,7 +105,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let n = servers.allObjects.count
-        return "<hs.httpserver: \(n) running server\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) running server\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

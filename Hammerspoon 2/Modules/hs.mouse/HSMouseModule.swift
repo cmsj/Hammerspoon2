@@ -251,7 +251,7 @@ private func openHIDEventDriver() -> io_connect_t {
 
     @objc func toString() -> String {
         let pos = absolutePosition()
-        return "<hs.mouse: (\(Int(pos["x"] ?? 0)), \(Int(pos["y"] ?? 0)))>"
+        return "<\(moduleName): (\(Int(pos["x"] ?? 0)), \(Int(pos["y"] ?? 0)))>"
     }
 
     nonisolated override var description: String {

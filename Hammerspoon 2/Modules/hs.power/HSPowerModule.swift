@@ -331,7 +331,7 @@ import IOKit.pwr_mgt
 
     @objc func toString() -> String {
         let n = sleepAssertions.count
-        return "<hs.power: \(n) sleep assertion\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) sleep assertion\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

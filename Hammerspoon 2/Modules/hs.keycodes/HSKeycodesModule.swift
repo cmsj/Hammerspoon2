@@ -245,7 +245,7 @@ import AppKit
     }
 
     @objc func toString() -> String {
-        return "<hs.keycodes: \(map.count) key mapping\(map.count == 1 ? "" : "s")>"
+        return "<\(moduleName): \(map.count) key mapping\(map.count == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

@@ -145,7 +145,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        return "<hs.ipc: \(isListening ? "listening" : "not listening")>"
+        return "<\(moduleName): \(isListening ? "listening" : "not listening")>"
     }
 
     nonisolated override var description: String {

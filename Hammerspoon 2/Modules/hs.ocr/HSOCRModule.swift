@@ -151,7 +151,7 @@ private struct RawObservation: Sendable {
     }
 
     @objc func toString() -> String {
-        return "<hs.ocr: text recognition>"
+        return "<\(moduleName): text recognition>"
     }
 
     nonisolated override var description: String {

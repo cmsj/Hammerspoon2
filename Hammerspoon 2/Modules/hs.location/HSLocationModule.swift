@@ -171,7 +171,7 @@ import CoreLocation
 
     @objc func toString() -> String {
         let n = watchers.allObjects.count
-        return "<hs.location: \(n) watcher\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) watcher\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

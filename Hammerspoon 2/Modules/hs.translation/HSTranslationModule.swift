@@ -112,7 +112,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let n = sessions.allObjects.count
-        return "<hs.translation: \(n) active session\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) active session\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

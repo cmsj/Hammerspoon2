@@ -137,7 +137,7 @@ import CryptoKit
     }
 
     @objc func toString() -> String {
-        return "<hs.hash: hashing & encoding utilities>"
+        return "<\(moduleName): hashing & encoding utilities>"
     }
 
     nonisolated override var description: String {

@@ -444,7 +444,7 @@ import SwiftUI
     }
 
     @objc func toString() -> String {
-        return "<hs.ui: \(activeWindows.count) window(s), \(activeAlerts.count) alert(s), \(activeDialogs.count) dialog(s)>"
+        return "<\(moduleName): \(activeWindows.count) window(s), \(activeAlerts.count) alert(s), \(activeDialogs.count) dialog(s)>"
     }
 
     nonisolated override var description: String {

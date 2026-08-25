@@ -84,7 +84,7 @@ import AppKit
     @objc var typeName = "HSVolumeWatcher"
 
     @objc func toString() -> String {
-        return "<HSVolumeWatcher: \(isRunning ? "running" : "stopped")>"
+        return "<\(typeName): \(isRunning ? "running" : "stopped")>"
     }
 
     nonisolated override var description: String {

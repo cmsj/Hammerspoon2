@@ -268,7 +268,7 @@ private func writeLEDState(_ usage: Int, _ state: Bool, on device: IOHIDDevice) 
     }
 
     @objc func toString() -> String {
-        return "<hs.keyboard: capsLock \(capsLockState() ? "on" : "off")>"
+        return "<\(moduleName): capsLock \(capsLockState() ? "on" : "off")>"
     }
 
     nonisolated override var description: String {

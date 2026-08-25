@@ -120,7 +120,7 @@ extension SBApplication: ShortcutsBridgeApp {}
 
     @objc func toString() -> String {
         let n = runningProcesses.count
-        return "<hs.shortcuts: \(n) running process\(n == 1 ? "" : "es")>"
+        return "<\(moduleName): \(n) running process\(n == 1 ? "" : "es")>"
     }
 
     nonisolated override var description: String {

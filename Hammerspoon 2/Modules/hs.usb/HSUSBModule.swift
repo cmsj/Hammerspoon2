@@ -135,7 +135,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
     @objc func toString() -> String {
         let n = attachedDevices().count
-        return "<hs.usb: \(n) attached device\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) attached device\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

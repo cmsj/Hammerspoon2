@@ -73,7 +73,7 @@ import AppKit
 
     @objc func toString() -> String {
         let n = sounds.allObjects.count
-        return "<hs.sound: \(n) loaded sound\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) loaded sound\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

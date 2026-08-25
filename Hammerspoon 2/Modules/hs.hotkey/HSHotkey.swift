@@ -71,7 +71,7 @@ import Carbon
     @objc var typeName = "HSHotkey"
 
     @objc func toString() -> String {
-        return "<HSHotkey: keyCode \(keyCode), modifiers \(modifiers)>"
+        return "<\(typeName): keyCode \(keyCode), modifiers \(modifiers)>"
     }
 
     nonisolated override var description: String {

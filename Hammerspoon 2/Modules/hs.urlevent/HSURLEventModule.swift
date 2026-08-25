@@ -207,7 +207,7 @@ import JavaScriptCoreExtras
 
     @objc func toString() -> String {
         let n = bindings.count
-        return "<hs.urlevent: \(n) bound event\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) bound event\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

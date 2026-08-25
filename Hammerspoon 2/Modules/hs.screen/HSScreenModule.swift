@@ -96,7 +96,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let n = all().count
-        return "<hs.screen: \(n) display\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) display\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

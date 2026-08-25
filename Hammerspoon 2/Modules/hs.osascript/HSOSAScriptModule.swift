@@ -235,7 +235,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        return "<hs.osascript: AppleScript & JavaScript execution>"
+        return "<\(moduleName): AppleScript & JavaScript execution>"
     }
 
     nonisolated override var description: String {

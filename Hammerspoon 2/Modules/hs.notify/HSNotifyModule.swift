@@ -198,7 +198,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let n = callbacks.count
-        return "<hs.notify: \(n) pending notification\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) pending notification\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

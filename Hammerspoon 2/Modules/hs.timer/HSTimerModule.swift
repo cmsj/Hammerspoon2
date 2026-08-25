@@ -180,7 +180,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let n = timers.allObjects.count
-        return "<hs.timer: \(n) active timer\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) active timer\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

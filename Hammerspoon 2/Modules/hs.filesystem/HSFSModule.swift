@@ -710,7 +710,7 @@ import UniformTypeIdentifiers
     @objc func toString() -> String {
         let v = volumeWatchers.allObjects.count
         let p = pathWatchers.allObjects.count
-        return "<hs.fs: \(v) volume watcher\(v == 1 ? "" : "s"), \(p) path watcher\(p == 1 ? "" : "s")>"
+        return "<\(moduleName): \(v) volume watcher\(v == 1 ? "" : "s"), \(p) path watcher\(p == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

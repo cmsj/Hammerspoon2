@@ -105,7 +105,7 @@ import CoreServices
     @objc var typeName = "HSPathWatcher"
 
     @objc func toString() -> String {
-        return "<HSPathWatcher: \(watchedPath)>"
+        return "<\(typeName): \(watchedPath)>"
     }
 
     nonisolated override var description: String {

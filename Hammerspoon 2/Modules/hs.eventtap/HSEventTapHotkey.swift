@@ -73,7 +73,7 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     @objc var typeName = "HSEventTapHotkey"
 
     @objc func toString() -> String {
-        return "<HSEventTapHotkey: keyCode \(keyCode), \(_isEnabled ? "enabled" : "disabled")>"
+        return "<\(typeName): keyCode \(keyCode), \(_isEnabled ? "enabled" : "disabled")>"
     }
 
     nonisolated override var description: String {

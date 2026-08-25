@@ -158,7 +158,7 @@ import AVFoundation
     }
 
     @objc func toString() -> String {
-        return "<hs.permissions: accessibility \(checkAccessibility() ? "granted" : "not granted")>"
+        return "<\(moduleName): accessibility \(checkAccessibility() ? "granted" : "not granted")>"
     }
 
     nonisolated override var description: String {

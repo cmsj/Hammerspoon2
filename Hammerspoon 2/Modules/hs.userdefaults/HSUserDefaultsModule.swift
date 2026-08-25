@@ -157,7 +157,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
 
     @objc func toString() -> String {
         let n = watcherCallbacks.count
-        return "<hs.userdefaults: \(n) watched key\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) watched key\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

@@ -243,7 +243,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     }
 
     @objc func toString() -> String {
-        return "<hs.locale: \(current())>"
+        return "<\(moduleName): \(current())>"
     }
 
     nonisolated override var description: String {

@@ -119,7 +119,7 @@ import Carbon
 
     @objc func toString() -> String {
         let n = activeHotkeys.allObjects.count
-        return "<hs.hotkey: \(n) bound hotkey\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) bound hotkey\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

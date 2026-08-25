@@ -156,7 +156,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let n = webSockets.allObjects.count
-        return "<hs.http: \(n) open WebSocket\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) open WebSocket\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

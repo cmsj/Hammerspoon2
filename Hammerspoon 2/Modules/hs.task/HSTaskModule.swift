@@ -132,7 +132,7 @@ struct TaskTracker {
 
     @objc func toString() -> String {
         let n = tasks.allObjects.count
-        return "<hs.task: \(n) running task\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) running task\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

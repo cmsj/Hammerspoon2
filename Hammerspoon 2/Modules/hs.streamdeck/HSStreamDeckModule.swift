@@ -171,7 +171,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 
     @objc func toString() -> String {
         let n = devices.count
-        return "<hs.streamdeck: \(n) connected device\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) connected device\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

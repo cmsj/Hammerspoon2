@@ -256,7 +256,7 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
 
     @objc func toString() -> String {
         let n = children.allObjects.count
-        return "<hs.midi: \(n) device\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) device\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

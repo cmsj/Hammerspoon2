@@ -111,7 +111,7 @@ import AppKit
 
     @objc func toString() -> String {
         let n = shares.allObjects.count
-        return "<hs.sharing: \(n) active share\(n == 1 ? "" : "s")>"
+        return "<\(moduleName): \(n) active share\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

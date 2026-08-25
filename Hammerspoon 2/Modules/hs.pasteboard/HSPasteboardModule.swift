@@ -354,7 +354,7 @@ import AppKit
     }
 
     @objc func toString() -> String {
-        return "<hs.pasteboard: change count \(NSPasteboard.general.changeCount)>"
+        return "<\(moduleName): change count \(NSPasteboard.general.changeCount)>"
     }
 
     nonisolated override var description: String {

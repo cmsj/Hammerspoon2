@@ -102,7 +102,7 @@ import AXSwift
     }
 
     @objc func toString() -> String {
-        return "<hs.window: focused '\(focusedWindow()?.title ?? "none")'>"
+        return "<\(moduleName): focused '\(focusedWindow()?.title ?? "none")'>"
     }
 
     nonisolated override var description: String {

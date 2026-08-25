@@ -204,7 +204,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let n = queries.allObjects.count
-        return "<hs.spotlight: \(n) active quer\(n == 1 ? "y" : "ies")>"
+        return "<\(moduleName): \(n) active quer\(n == 1 ? "y" : "ies")>"
     }
 
     nonisolated override var description: String {
