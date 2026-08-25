@@ -18,6 +18,10 @@ class MockFileSystem: FileSystemProtocol {
     var shouldThrowOnContentsOf: Bool = false
     var contentsOfError: Error?
 
+    // Call tracking
+    var createdDirectories: [URL] = []
+    var copiedItems: [(src: URL, dst: URL)] = []
+
     func fileExists(atPath path: String) -> Bool {
         return existingFiles.contains(path) || existingDirectories.contains(path)
     }
@@ -79,11 +83,39 @@ class MockFileSystem: FileSystemProtocol {
         existingDirectories.insert(path)
     }
 
+    func createDirectory(at url: URL, withIntermediateDirectories: Bool) throws {
+        createdDirectories.append(url)
+        existingDirectories.insert(url.path)
+    }
+
+    func copyItem(at srcURL: URL, to dstURL: URL) throws {
+        guard existingFiles.contains(srcURL.path) else {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoSuchFileError, userInfo: [
+                NSLocalizedDescriptionKey: "File not found: \(srcURL.path)"
+            ])
+        }
+        copiedItems.append((src: srcURL, dst: dstURL))
+        addFile(at: dstURL, contents: fileContents[srcURL] ?? "")
+    }
+
+    func contentsOfDirectory(at url: URL) throws -> [URL] {
+        guard existingDirectories.contains(url.path) else {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoSuchFileError, userInfo: [
+                NSLocalizedDescriptionKey: "Directory not found: \(url.path)"
+            ])
+        }
+        return existingFiles
+            .map { URL(fileURLWithPath: $0) }
+            .filter { $0.deletingLastPathComponent().path == url.path }
+    }
+
     func reset() {
         existingFiles.removeAll()
         existingDirectories.removeAll()
         fileContents.removeAll()
         shouldThrowOnContentsOf = false
         contentsOfError = nil
+        createdDirectories.removeAll()
+        copiedItems.removeAll()
     }
 }

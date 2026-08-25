@@ -75,4 +75,28 @@ class ManagerManager {
         engine.shutdown()
         NSApp.terminate(self)
     }
+
+    /// Finishes first-run onboarding: creates the chosen config directory if
+    /// needed, seeds it with the bundled default config files (without
+    /// overwriting anything already there), points settings at it, and boots.
+    /// - Parameter configDirectory: The directory the user chose to store their config in
+    func completeOnboarding(configDirectory: URL) throws {
+        if !fileSystem.fileExists(atPath: configDirectory.path) {
+            try fileSystem.createDirectory(at: configDirectory, withIntermediateDirectories: true)
+        }
+
+        if let templateDirectory = Bundle.main.resourceURL?.appendingPathComponent("DefaultConfig"),
+           let templateFiles = try? fileSystem.contentsOfDirectory(at: templateDirectory) {
+            for templateFile in templateFiles {
+                let destination = configDirectory.appendingPathComponent(templateFile.lastPathComponent)
+                if !fileSystem.fileExists(atPath: destination.path) {
+                    try fileSystem.copyItem(at: templateFile, to: destination)
+                }
+            }
+        }
+
+        settings.configLocation = configDirectory.appendingPathComponent("init.js")
+        settings.hasCompletedOnboarding = true
+        try boot()
+    }
 }

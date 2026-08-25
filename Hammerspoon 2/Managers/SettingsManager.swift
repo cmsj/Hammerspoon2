@@ -119,6 +119,7 @@ final class SettingsManager {
         case consoleHistoryLength
         case relaunchOnReload
         case dockMenuBehaviour
+        case hasCompletedOnboarding
 
         var id: String { "\(self)" }
 
@@ -132,6 +133,8 @@ final class SettingsManager {
                 return false
             case .dockMenuBehaviour:
                 return DockMenubarType.both.rawValue
+            case .hasCompletedOnboarding:
+                return false
             }
         }
     }
@@ -160,6 +163,12 @@ final class SettingsManager {
             notifyDelegates()
         }
     }
+    var hasCompletedOnboarding: Bool {
+        didSet {
+            UserDefaults.standard.set(hasCompletedOnboarding, forKey: Keys.hasCompletedOnboarding.rawValue)
+            notifyDelegates()
+        }
+    }
 
     @ObservationIgnored
     private var defaultsObserver: (any NSObjectProtocol)?
@@ -169,12 +178,14 @@ final class SettingsManager {
             Keys.configLocation.rawValue: Keys.configLocation.defaultValue,
             Keys.consoleHistoryLength.rawValue: Keys.consoleHistoryLength.defaultValue,
             Keys.relaunchOnReload.rawValue: Keys.relaunchOnReload.defaultValue,
-            Keys.dockMenuBehaviour.rawValue: Keys.dockMenuBehaviour.defaultValue
+            Keys.dockMenuBehaviour.rawValue: Keys.dockMenuBehaviour.defaultValue,
+            Keys.hasCompletedOnboarding.rawValue: Keys.hasCompletedOnboarding.defaultValue
         ])
         configLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
             ?? (Keys.configLocation.defaultValue as! URL)
         consoleHistoryLength = UserDefaults.standard.integer(forKey: Keys.consoleHistoryLength.rawValue)
         relaunchOnReload = UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
+        hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding.rawValue)
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
         dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
@@ -211,6 +222,9 @@ final class SettingsManager {
                 dockMenuBehaviour = behaviour
             }
         }
+
+        let newHasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding.rawValue)
+        if newHasCompletedOnboarding != hasCompletedOnboarding { hasCompletedOnboarding = newHasCompletedOnboarding }
     }
 }
 

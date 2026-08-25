@@ -6748,13 +6748,6 @@ device is disconnected or the module shuts down.
     destroy(): void;
 
     /**
-     * A short, human-readable summary of the device, used by `console.log()`, string
-coercion (e.g. template literals), and the console's REPL echo.
-     * @returns A string such as `"<HSStreamDeckDevice: Elgato Stream Deck (XL)>"`
-     */
-    toString(): string;
-
-    /**
      * The unique identifier assigned to this device object.
      */
     readonly identifier: string;

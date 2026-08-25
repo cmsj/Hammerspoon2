@@ -13,6 +13,7 @@ class MockSettingsManager: SettingsManagerProtocol {
     var configLocation: URL = URL(fileURLWithPath: "/mock/config/init.js")
     var consoleHistoryLength: Int = 100
     var relaunchOnReload: Bool = false
+    var hasCompletedOnboarding: Bool = false
 
     var resetToDefaultsCalls: Int = 0
 
@@ -29,5 +30,6 @@ class MockSettingsManager: SettingsManagerProtocol {
         configLocation = URL(fileURLWithPath: "/mock/config/init.js")
         consoleHistoryLength = 100
         relaunchOnReload = false
+        hasCompletedOnboarding = false
     }
 }
