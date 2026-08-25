@@ -79,7 +79,7 @@ import SwiftUI
     @objc var typeName = "HSFont"
 
     @objc func toString() -> String {
-        return "<HSFont: \(String(describing: font))>"
+        return "<\(typeName): \(String(describing: font))>"
     }
 
     nonisolated override var description: String {

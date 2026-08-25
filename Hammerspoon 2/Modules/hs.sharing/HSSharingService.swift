@@ -126,7 +126,7 @@ import AppKit
     @objc var typeName = "HSSharingService"
 
     @objc func toString() -> String {
-        return "<HSSharingService: \(title)>"
+        return "<\(typeName): \(title)>"
     }
 
     nonisolated override var description: String {

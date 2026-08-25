@@ -67,7 +67,7 @@ struct ParsedWebSocketFrame {
     @objc var typeName = "HSWebSocketConnection"
 
     @objc func toString() -> String {
-        return "<HSWebSocketConnection: \(isClosed ? "closed" : "open")>"
+        return "<\(typeName): \(isClosed ? "closed" : "open")>"
     }
 
     nonisolated override var description: String {

@@ -56,7 +56,7 @@ import JavaScriptCore
     @objc var typeName = "HSTranslationSession"
 
     @objc func toString() -> String {
-        return "<HSTranslationSession: \(sourceLanguage) -> \(targetLanguage)>"
+        return "<\(typeName): \(sourceLanguage) -> \(targetLanguage)>"
     }
 
     nonisolated override var description: String {

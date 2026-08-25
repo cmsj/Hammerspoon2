@@ -92,7 +92,7 @@ import SwiftUI
     @objc var typeName = "HSUIAlert"
 
     @objc func toString() -> String {
-        return "<HSUIAlert: \(message)>"
+        return "<\(typeName): \(message)>"
     }
 
     nonisolated override var description: String {

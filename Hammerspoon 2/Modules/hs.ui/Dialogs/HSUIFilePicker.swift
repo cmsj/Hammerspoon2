@@ -136,7 +136,7 @@ import UniformTypeIdentifiers
     @objc var typeName = "HSUIFilePicker"
 
     @objc func toString() -> String {
-        return "<HSUIFilePicker: \(message ?? "Choose a file")>"
+        return "<\(typeName): \(message ?? "Choose a file")>"
     }
 
     nonisolated override var description: String {

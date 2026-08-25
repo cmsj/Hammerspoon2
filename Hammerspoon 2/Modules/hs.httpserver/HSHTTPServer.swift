@@ -269,7 +269,7 @@ struct ParsedHTTPRequest {
     @objc var typeName = "HSHTTPServer"
 
     @objc func toString() -> String {
-        return "<HSHTTPServer: port \(_port), \(isRunning ? "running" : "stopped")>"
+        return "<\(typeName): port \(_port), \(isRunning ? "running" : "stopped")>"
     }
 
     nonisolated override var description: String {

@@ -138,7 +138,7 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
     @objc var typeName = "HSWebSocket"
 
     @objc func toString() -> String {
-        return "<HSWebSocket: \(url.absoluteString), state \(readyState)>"
+        return "<\(typeName): \(url.absoluteString), state \(readyState)>"
     }
 
     nonisolated override var description: String {

@@ -86,7 +86,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let snippet = text.count > 30 ? String(text.prefix(30)) + "…" : text
-        return "<HSOCRObservation: '\(snippet)'>"
+        return "<\(typeName): '\(snippet)'>"
     }
 
     nonisolated override var description: String {

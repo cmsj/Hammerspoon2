@@ -83,7 +83,7 @@ import JavaScriptCore
     @objc var typeName = "HSTimer"
 
     @objc func toString() -> String {
-        return "<HSTimer: \(interval)s\(repeats ? ", repeating" : "")>"
+        return "<\(typeName): \(interval)s\(repeats ? ", repeating" : "")>"
     }
 
     nonisolated override var description: String {

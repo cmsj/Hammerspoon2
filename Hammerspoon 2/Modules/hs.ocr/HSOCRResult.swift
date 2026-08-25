@@ -72,7 +72,7 @@ import JavaScriptCore
     @objc var typeName = "HSOCRResult"
 
     @objc func toString() -> String {
-        return "<HSOCRResult: \(observations.count) observation\(observations.count == 1 ? "" : "s")>"
+        return "<\(typeName): \(observations.count) observation\(observations.count == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

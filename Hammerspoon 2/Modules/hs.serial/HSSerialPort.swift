@@ -209,7 +209,7 @@ private let ioctlIOSSIOSPEED: UInt = {
     @objc var typeName = "HSSerialPort"
 
     @objc func toString() -> String {
-        return "<HSSerialPort: \(path), \(isOpen ? "open" : "closed")>"
+        return "<\(typeName): \(path), \(isOpen ? "open" : "closed")>"
     }
 
     nonisolated override var description: String {

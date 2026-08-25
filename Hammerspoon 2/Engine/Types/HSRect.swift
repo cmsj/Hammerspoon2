@@ -46,7 +46,7 @@ import CoreGraphics
     @objc var typeName = "HSRect"
 
     @objc func toString() -> String {
-        return "<HSRect: (\(x), \(y)) \(w)x\(h)>"
+        return "<\(typeName): (\(x), \(y)) \(w)x\(h)>"
     }
 
     nonisolated override var description: String {

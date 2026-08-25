@@ -408,7 +408,7 @@ import SwiftUI
     @objc var typeName = "HSUIWindow"
 
     @objc func toString() -> String {
-        return "<HSUIWindow: \(windowTitleText.isEmpty ? "untitled" : windowTitleText)>"
+        return "<\(typeName): \(windowTitleText.isEmpty ? "untitled" : windowTitleText)>"
     }
 
     nonisolated override var description: String {

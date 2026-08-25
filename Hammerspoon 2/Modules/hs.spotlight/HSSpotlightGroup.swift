@@ -78,7 +78,7 @@ import JavaScriptCore
     @objc var typeName = "HSSpotlightGroup"
 
     @objc func toString() -> String {
-        return "<HSSpotlightGroup: \(attribute), \(count) result\(count == 1 ? "" : "s")>"
+        return "<\(typeName): \(attribute), \(count) result\(count == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

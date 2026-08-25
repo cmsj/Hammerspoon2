@@ -148,7 +148,7 @@ private func pathToString(_ path: NWPath) -> String {
     @objc var typeName = "HSNetworkReachability"
 
     @objc func toString() -> String {
-        return "<HSNetworkReachability: \(statusString())>"
+        return "<\(typeName): \(statusString())>"
     }
 
     nonisolated override var description: String {

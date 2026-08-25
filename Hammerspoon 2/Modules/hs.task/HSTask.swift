@@ -151,7 +151,7 @@ import JavaScriptCoreExtras
     @objc var typeName = "HSTask"
 
     @objc func toString() -> String {
-        return "<HSTask: \(launchPath)>"
+        return "<\(typeName): \(launchPath)>"
     }
 
     nonisolated override var description: String {

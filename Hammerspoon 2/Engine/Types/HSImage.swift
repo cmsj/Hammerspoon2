@@ -197,7 +197,7 @@ import Observation
     @objc var typeName = "HSImage"
 
     @objc func toString() -> String {
-        return "<HSImage: \(Int(image.size.width))x\(Int(image.size.height))>"
+        return "<\(typeName): \(Int(image.size.width))x\(Int(image.size.height))>"
     }
 
     nonisolated override var description: String {

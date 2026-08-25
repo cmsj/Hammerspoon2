@@ -166,7 +166,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     @objc var typeName = "HSMIDIDevice"
 
     @objc func toString() -> String {
-        return "<HSMIDIDevice: \(name)>"
+        return "<\(typeName): \(name)>"
     }
 
     nonisolated override var description: String {

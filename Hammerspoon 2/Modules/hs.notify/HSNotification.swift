@@ -57,7 +57,7 @@ import JavaScriptCore
     @objc var typeName = "HSNotification"
 
     @objc func toString() -> String {
-        return "<HSNotification: \(content.title)>"
+        return "<\(typeName): \(content.title)>"
     }
 
     nonisolated override var description: String {

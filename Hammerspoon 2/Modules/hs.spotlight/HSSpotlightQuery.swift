@@ -265,7 +265,7 @@ import JavaScriptCore
     @objc var typeName = "HSSpotlightQuery"
 
     @objc func toString() -> String {
-        return "<HSSpotlightQuery: \(isRunning ? "running" : "stopped"), \(count) result\(count == 1 ? "" : "s")>"
+        return "<\(typeName): \(isRunning ? "running" : "stopped"), \(count) result\(count == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

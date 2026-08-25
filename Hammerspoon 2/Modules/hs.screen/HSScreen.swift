@@ -318,7 +318,7 @@ private extension CGDisplayMode {
     @objc var typeName = "HSScreen"
 
     @objc func toString() -> String {
-        return "<HSScreen: \(name)>"
+        return "<\(typeName): \(name)>"
     }
 
     nonisolated override var description: String {

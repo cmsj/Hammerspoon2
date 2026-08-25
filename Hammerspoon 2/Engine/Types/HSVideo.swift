@@ -110,7 +110,7 @@ import AVFoundation
     @objc var typeName = "HSVideo"
 
     @objc func toString() -> String {
-        return "<HSVideo: \(items.count) item\(items.count == 1 ? "" : "s")>"
+        return "<\(typeName): \(items.count) item\(items.count == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {

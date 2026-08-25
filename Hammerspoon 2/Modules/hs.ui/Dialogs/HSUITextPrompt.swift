@@ -82,7 +82,7 @@ import AppKit
     @objc var typeName = "HSUITextPrompt"
 
     @objc func toString() -> String {
-        return "<HSUITextPrompt: \(message)>"
+        return "<\(typeName): \(message)>"
     }
 
     nonisolated override var description: String {

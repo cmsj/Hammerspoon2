@@ -107,7 +107,7 @@ private nonisolated func scConfigWatcherCallback(
     @objc var typeName = "HSNetworkConfigurationWatcher"
 
     @objc func toString() -> String {
-        return "<HSNetworkConfigurationWatcher: \(_isWatching ? "watching" : "idle")>"
+        return "<\(typeName): \(_isWatching ? "watching" : "idle")>"
     }
 
     nonisolated override var description: String {

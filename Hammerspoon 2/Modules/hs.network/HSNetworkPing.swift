@@ -257,7 +257,7 @@ private func readICMPReply(fd: Int32, family: Int32,
     @objc var typeName = "HSNetworkPing"
 
     @objc func toString() -> String {
-        return "<HSNetworkPing: \(server), \(sent) sent>"
+        return "<\(typeName): \(server), \(sent) sent>"
     }
 
     nonisolated override var description: String {

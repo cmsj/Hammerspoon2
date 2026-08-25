@@ -456,7 +456,7 @@ final class UIWebViewToolbarEntry: Identifiable {
     @objc var typeName = "UIWebView"
 
     @objc func toString() -> String {
-        return "<UIWebView: \(url ?? "about:blank")>"
+        return "<\(typeName): \(url ?? "about:blank")>"
     }
 
     nonisolated override var description: String {

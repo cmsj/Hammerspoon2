@@ -54,7 +54,7 @@ import JavaScriptCore
 
     @objc func toString() -> String {
         let displayName = (item.value(forAttribute: NSMetadataItemDisplayNameKey) as? String) ?? identifier
-        return "<HSSpotlightItem: \(displayName)>"
+        return "<\(typeName): \(displayName)>"
     }
 
     nonisolated override var description: String {

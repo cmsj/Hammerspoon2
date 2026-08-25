@@ -104,7 +104,7 @@ let wifiWatcherValidEvents: Set<String> = [
     @objc var typeName = "HSWifiWatcher"
 
     @objc func toString() -> String {
-        return "<HSWifiWatcher: \(isRunning ? "running" : "stopped"), events \(_events.joined(separator: ", "))>"
+        return "<\(typeName): \(isRunning ? "running" : "stopped"), events \(_events.joined(separator: ", "))>"
     }
 
     nonisolated override var description: String {

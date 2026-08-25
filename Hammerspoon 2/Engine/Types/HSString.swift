@@ -30,7 +30,7 @@ import Observation
 
     @objc func toString() -> String {
         let snippet = _value.count > 40 ? String(_value.prefix(40)) + "…" : _value
-        return "<HSString: '\(snippet)'>"
+        return "<\(typeName): '\(snippet)'>"
     }
 
     nonisolated override var description: String {

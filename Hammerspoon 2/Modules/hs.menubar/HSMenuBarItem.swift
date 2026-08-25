@@ -119,7 +119,7 @@ import JavaScriptCore
     @objc var typeName = "HSMenuBarItem"
 
     @objc func toString() -> String {
-        return "<HSMenuBarItem: \(_title ?? "untitled")>"
+        return "<\(typeName): \(_title ?? "untitled")>"
     }
 
     nonisolated override var description: String {

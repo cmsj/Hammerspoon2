@@ -57,7 +57,7 @@ import Observation
         let r = Int(ns.redComponent * 255)
         let g = Int(ns.greenComponent * 255)
         let b = Int(ns.blueComponent * 255)
-        return unsafe "<HSColor: #\(String(format: "%02X%02X%02X", r, g, b))>"
+        return unsafe "<\(typeName): #\(String(format: "%02X%02X%02X", r, g, b))>"
     }
 
     nonisolated override var description: String {

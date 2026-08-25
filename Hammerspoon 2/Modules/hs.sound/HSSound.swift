@@ -147,7 +147,7 @@ import AppKit
     @objc var typeName = "HSSound"
 
     @objc func toString() -> String {
-        return unsafe "<HSSound: \(_name ?? "unnamed"), \(String(format: "%.1f", duration))s>"
+        return unsafe "<\(typeName): \(_name ?? "unnamed"), \(String(format: "%.1f", duration))s>"
     }
 
     nonisolated override var description: String {

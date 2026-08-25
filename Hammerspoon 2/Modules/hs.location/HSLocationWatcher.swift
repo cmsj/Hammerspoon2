@@ -95,7 +95,7 @@ import CoreLocation
     @objc var typeName = "HSLocationWatcher"
 
     @objc func toString() -> String {
-        return "<HSLocationWatcher: \(_lastLocation != nil ? "has location" : "no location yet")>"
+        return "<\(typeName): \(_lastLocation != nil ? "has location" : "no location yet")>"
     }
 
     nonisolated override var description: String {

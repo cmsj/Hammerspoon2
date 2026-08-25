@@ -209,7 +209,7 @@ let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "
     @objc var typeName = "HSWindow"
 
     @objc func toString() -> String {
-        return "<HSWindow: \(title ?? "untitled")>"
+        return "<\(typeName): \(title ?? "untitled")>"
     }
 
     nonisolated override var description: String {

@@ -32,7 +32,7 @@ import CoreGraphics
     @objc var typeName = "HSPoint"
 
     @objc func toString() -> String {
-        return "<HSPoint: (\(x), \(y))>"
+        return "<\(typeName): (\(x), \(y))>"
     }
 
     nonisolated override var description: String {
