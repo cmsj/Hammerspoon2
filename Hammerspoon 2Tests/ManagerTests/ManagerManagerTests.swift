@@ -246,4 +246,181 @@ struct ManagerManagerTests {
         #expect(mockEngine.evalFromURLCalls[0].url.path == firstConfig, "First boot should use first config")
         #expect(mockEngine.evalFromURLCalls[1].url.path == secondConfig, "Second boot should use second config")
     }
+
+    // MARK: - Onboarding Tests
+
+    /// The bundled default-config folder that `completeOnboarding` looks for, mirroring
+    /// production's `Bundle.main.resourceURL` lookup so tests can seed it via `MockFileSystem`.
+    private func templateDirectory() -> URL {
+        Bundle.main.resourceURL!.appendingPathComponent("DefaultConfig")
+    }
+
+    @Test("Completing onboarding creates a missing config directory")
+    func testCompleteOnboardingCreatesMissingDirectory() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+
+        let configDir = URL(fileURLWithPath: "/new/config/dir")
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+
+        try manager.completeOnboarding(configDirectory: configDir)
+
+        #expect(mockFileSystem.createdDirectories == [configDir], "Missing config directory should be created")
+    }
+
+    @Test("Completing onboarding does not recreate an existing config directory")
+    func testCompleteOnboardingSkipsExistingDirectory() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+
+        let configDir = URL(fileURLWithPath: "/existing/config/dir")
+        mockFileSystem.addDirectory(atPath: configDir.path)
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+
+        try manager.completeOnboarding(configDirectory: configDir)
+
+        #expect(mockFileSystem.createdDirectories.isEmpty, "Existing config directory should not be recreated")
+    }
+
+    @Test("Completing onboarding points settings at the chosen directory and marks onboarding done")
+    func testCompleteOnboardingUpdatesSettings() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+
+        let configDir = URL(fileURLWithPath: "/chosen/config/dir")
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+
+        try manager.completeOnboarding(configDirectory: configDir)
+
+        #expect(mockSettings.configLocation == configDir.appendingPathComponent("init.js"), "Config location should point at init.js in the chosen directory")
+        #expect(mockSettings.hasCompletedOnboarding == true, "Onboarding should be marked complete")
+        #expect(mockEngine.resetContextCalls == 1, "Completing onboarding should boot the engine")
+    }
+
+    @Test("Completing onboarding copies bundled default config files into a fresh directory")
+    func testCompleteOnboardingCopiesDefaultFiles() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+
+        let templateDir = templateDirectory()
+        mockFileSystem.addDirectory(atPath: templateDir.path)
+        mockFileSystem.addFile(at: templateDir.appendingPathComponent("init.js"), contents: "// default config")
+
+        let configDir = URL(fileURLWithPath: "/fresh/config/dir")
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+
+        try manager.completeOnboarding(configDirectory: configDir)
+
+        #expect(mockFileSystem.copiedItems.count == 1, "The bundled template file should be copied once")
+        #expect(mockFileSystem.copiedItems.first?.dst == configDir.appendingPathComponent("init.js"), "Template file should land at init.js in the chosen directory")
+    }
+
+    @Test("Completing onboarding does not overwrite an existing config file")
+    func testCompleteOnboardingDoesNotOverwriteExistingFile() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+
+        let templateDir = templateDirectory()
+        mockFileSystem.addDirectory(atPath: templateDir.path)
+        mockFileSystem.addFile(at: templateDir.appendingPathComponent("init.js"), contents: "// default config")
+
+        let configDir = URL(fileURLWithPath: "/existing/config/dir")
+        mockFileSystem.addDirectory(atPath: configDir.path)
+        mockFileSystem.addFile(at: configDir.appendingPathComponent("init.js"), contents: "// user's own config")
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+
+        try manager.completeOnboarding(configDirectory: configDir)
+
+        #expect(mockFileSystem.copiedItems.isEmpty, "Existing config files should not be overwritten")
+    }
+
+    @Test("Completing onboarding surfaces a useful error when the config directory can't be created")
+    func testCompleteOnboardingDirectoryCreationError() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+        mockFileSystem.shouldThrowOnCreateDirectory = true
+
+        let configDir = URL(fileURLWithPath: "/no-permission/config/dir")
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+
+        var thrownError: Error?
+        do {
+            try manager.completeOnboarding(configDirectory: configDir)
+        } catch {
+            thrownError = error
+        }
+
+        guard case .directoryCreationFailed(let path, _) = thrownError as? OnboardingError else {
+            Issue.record("Expected OnboardingError.directoryCreationFailed, got \(String(describing: thrownError))")
+            return
+        }
+        #expect(path == configDir.path, "Error should identify which directory failed to be created")
+        #expect(mockSettings.hasCompletedOnboarding == false, "Onboarding should not be marked complete when directory creation fails")
+    }
+
+    @Test("Completing onboarding surfaces a useful error when a default config file can't be copied")
+    func testCompleteOnboardingCopyError() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+
+        let templateDir = templateDirectory()
+        mockFileSystem.addDirectory(atPath: templateDir.path)
+        mockFileSystem.addFile(at: templateDir.appendingPathComponent("init.js"), contents: "// default config")
+        mockFileSystem.shouldThrowOnCopyItem = true
+
+        let configDir = URL(fileURLWithPath: "/fresh/config/dir")
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+
+        var thrownError: Error?
+        do {
+            try manager.completeOnboarding(configDirectory: configDir)
+        } catch {
+            thrownError = error
+        }
+
+        guard case .configCopyFailed(let fileName, _) = thrownError as? OnboardingError else {
+            Issue.record("Expected OnboardingError.configCopyFailed, got \(String(describing: thrownError))")
+            return
+        }
+        #expect(fileName == "init.js", "Error should identify which file failed to copy")
+        #expect(mockSettings.hasCompletedOnboarding == false, "Onboarding should not be marked complete when copying a default config file fails")
+    }
+
+    @Test("Completing onboarding surfaces a useful error when booting the new config fails")
+    func testCompleteOnboardingBootError() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+        mockEngine.shouldThrowOnReset = true
+
+        let configDir = URL(fileURLWithPath: "/fresh/config/dir")
+
+        let manager = ManagerManager(engine: mockEngine, settings: mockSettings, fileSystem: mockFileSystem)
+
+        var thrownError: Error?
+        do {
+            try manager.completeOnboarding(configDirectory: configDir)
+        } catch {
+            thrownError = error
+        }
+
+        guard case .bootFailed = thrownError as? OnboardingError else {
+            Issue.record("Expected OnboardingError.bootFailed, got \(String(describing: thrownError))")
+            return
+        }
+    }
 }

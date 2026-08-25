@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F40387346E3F191717B23E5 /* DefaultConfig in Resources */ = {isa = PBXBuildFile; fileRef = 4FBAC53B433E2BE28A375D63 /* DefaultConfig */; };
 		4F463EA02EA7A669000A2135 /* AXSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4F463E9F2EA7A669000A2135 /* AXSwift */; };
 		4F488B302E97E79800A2B5F4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4F488B2F2E97E79800A2B5F4 /* Sparkle */; };
 		4F59E3502EFC986100954462 /* hammerspoon.d.ts in Resources */ = {isa = PBXBuildFile; fileRef = 4F59E34F2EFC985500954462 /* hammerspoon.d.ts */; };
@@ -90,6 +91,7 @@
 		4F973B132EF9523A006A6709 /* index.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = index.njk; sourceTree = "<group>"; };
 		4F973B142EF9523A006A6709 /* module.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = module.njk; sourceTree = "<group>"; };
 		4F973B152EF9523A006A6709 /* type.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = type.njk; sourceTree = "<group>"; };
+		4FBAC53B433E2BE28A375D63 /* DefaultConfig */ = {isa = PBXFileReference; lastKnownFileType = folder; path = DefaultConfig; sourceTree = "<group>"; };
 		4FBB01012F70123400DEAD01 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		4FE4C0012F00000000000001 /* hs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -190,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				4F59E34D2EFC983500954462 /* Docs Artifacts */,
+				4FBAC53B433E2BE28A375D63 /* DefaultConfig */,
 				4F973B112EF89EE6006A6709 /* scripts */,
 				4F5641852E8333830099EB4C /* Hammerspoon 2 */,
 				4F5641932E8333840099EB4C /* Hammerspoon 2Tests */,
@@ -419,6 +422,7 @@
 				4F59E3512EFC986100954462 /* api.json in Resources */,
 				4F59E3522EFC986200954462 /* js in Resources */,
 				4F59E3542EFC986200954462 /* ts in Resources */,
+				4F40387346E3F191717B23E5 /* DefaultConfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

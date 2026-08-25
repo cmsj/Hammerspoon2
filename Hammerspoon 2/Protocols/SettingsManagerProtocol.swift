@@ -9,7 +9,7 @@ import Foundation
 
 /// Protocol abstraction for settings management to enable dependency injection and testability
 @_documentation(visibility: private)
-protocol SettingsManagerProtocol {
+protocol SettingsManagerProtocol: AnyObject {
     /// The location of the user's configuration file
     var configLocation: URL { get set }
 
@@ -19,6 +19,9 @@ protocol SettingsManagerProtocol {
     /// Whether `hs.reload()` and the Reload Config menu item relaunch the app
     /// process rather than resetting only the JavaScript context
     var relaunchOnReload: Bool { get set }
+
+    /// Whether the user has completed the first-run onboarding flow
+    var hasCompletedOnboarding: Bool { get set }
 
     /// Resets all settings to their default values
     func resetToDefaults()

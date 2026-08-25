@@ -17830,28 +17830,6 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
               "lineNumber": 188
-            },
-            {
-              "name": "toString",
-              "signature": "func toString() -> String",
-              "isStatic": false,
-              "rawDocumentation": "A short, human-readable summary of the device, used by `console.log()`, string\ncoercion (e.g. template literals), and the console's REPL echo.\n- Returns: A string such as `\"<HSStreamDeckDevice: Elgato Stream Deck (XL)>\"`\n- Example:\n```js\nconsole.log(hs.streamdeck.all()[0]) // \"<HSStreamDeckDevice: Elgato Stream Deck (XL)>\"\n```",
-              "description": "A short, human-readable summary of the device, used by `console.log()`, string\ncoercion (e.g. template literals), and the console's REPL echo.",
-              "params": [],
-              "returns": {
-                "type": "string",
-                "description": "A string such as `\"<HSStreamDeckDevice: Elgato Stream Deck (XL)>\"`"
-              },
-              "notes": [],
-              "examples": [
-                {
-                  "lang": "js",
-                  "code": "console.log(hs.streamdeck.all()[0]) // \"<HSStreamDeckDevice: Elgato Stream Deck (XL)>\""
-                }
-              ],
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.streamdeck/HSStreamDeckDevice.swift",
-              "lineNumber": 197
             }
           ],
           "properties": [
@@ -24883,5 +24861,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-24T22:57:09.871Z"
+  "generatedAt": "2026-08-25T21:01:44.611Z"
 }

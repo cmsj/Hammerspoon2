@@ -111,5 +111,14 @@ struct Hammerspoon_2App: App {
         Settings() {
             SettingsView()
         }
+        .restorationBehavior(.disabled)
+
+        Window("Welcome to Hammerspoon 2", id: "onboarding") {
+            OnboardingView()
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(settingsManager.hasCompletedOnboarding ? .suppressed : .presented)
+        .restorationBehavior(.disabled)
+        .handlesExternalEvents(matching: [])
     }
 }
