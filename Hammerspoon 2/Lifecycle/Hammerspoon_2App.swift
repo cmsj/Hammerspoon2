@@ -29,6 +29,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         for url in urls {
             URLEventDispatcher.shared.dispatch(url)
         }
+        NSApp.setActivationPolicy(SettingsManager.shared.dockMenuBehaviour.activationPolicy)
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        NSApp.setActivationPolicy(SettingsManager.shared.dockMenuBehaviour.activationPolicy)
+        return true
     }
 }
 
