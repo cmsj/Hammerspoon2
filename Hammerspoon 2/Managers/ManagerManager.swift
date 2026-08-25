@@ -8,6 +8,23 @@
 import Foundation
 import AppKit
 
+enum OnboardingError: LocalizedError {
+    case directoryCreationFailed(path: String, underlying: Error)
+    case configCopyFailed(fileName: String, underlying: Error)
+    case bootFailed(underlying: Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .directoryCreationFailed(let path, let underlying):
+            return "Couldn't create \(path): \(underlying.localizedDescription)"
+        case .configCopyFailed(let fileName, let underlying):
+            return "Couldn't copy \(fileName) into your config directory: \(underlying.localizedDescription)"
+        case .bootFailed(let underlying):
+            return "Your config directory is set up, but loading it failed: \(underlying.localizedDescription)"
+        }
+    }
+}
+
 @_documentation(visibility: private)
 class ManagerManager {
     // Singleton instance using default dependencies
@@ -82,7 +99,11 @@ class ManagerManager {
     /// - Parameter configDirectory: The directory the user chose to store their config in
     func completeOnboarding(configDirectory: URL) throws {
         if !fileSystem.fileExists(atPath: configDirectory.path) {
-            try fileSystem.createDirectory(at: configDirectory, withIntermediateDirectories: true)
+            do {
+                try fileSystem.createDirectory(at: configDirectory, withIntermediateDirectories: true)
+            } catch {
+                throw OnboardingError.directoryCreationFailed(path: configDirectory.path, underlying: error)
+            }
         }
 
         if let templateDirectory = Bundle.main.resourceURL?.appendingPathComponent("DefaultConfig"),
@@ -90,13 +111,22 @@ class ManagerManager {
             for templateFile in templateFiles {
                 let destination = configDirectory.appendingPathComponent(templateFile.lastPathComponent)
                 if !fileSystem.fileExists(atPath: destination.path) {
-                    try fileSystem.copyItem(at: templateFile, to: destination)
+                    do {
+                        try fileSystem.copyItem(at: templateFile, to: destination)
+                    } catch {
+                        throw OnboardingError.configCopyFailed(fileName: templateFile.lastPathComponent, underlying: error)
+                    }
                 }
             }
         }
 
         settings.configLocation = configDirectory.appendingPathComponent("init.js")
         settings.hasCompletedOnboarding = true
-        try boot()
+
+        do {
+            try boot()
+        } catch {
+            throw OnboardingError.bootFailed(underlying: error)
+        }
     }
 }

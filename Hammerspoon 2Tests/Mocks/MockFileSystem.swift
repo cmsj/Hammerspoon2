@@ -17,6 +17,8 @@ class MockFileSystem: FileSystemProtocol {
     // Configure behavior
     var shouldThrowOnContentsOf: Bool = false
     var contentsOfError: Error?
+    var shouldThrowOnCreateDirectory: Bool = false
+    var shouldThrowOnCopyItem: Bool = false
 
     // Call tracking
     var createdDirectories: [URL] = []
@@ -84,11 +86,21 @@ class MockFileSystem: FileSystemProtocol {
     }
 
     func createDirectory(at url: URL, withIntermediateDirectories: Bool) throws {
+        if shouldThrowOnCreateDirectory {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileWriteNoPermissionError, userInfo: [
+                NSLocalizedDescriptionKey: "Mock error creating directory"
+            ])
+        }
         createdDirectories.append(url)
         existingDirectories.insert(url.path)
     }
 
     func copyItem(at srcURL: URL, to dstURL: URL) throws {
+        if shouldThrowOnCopyItem {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileWriteNoPermissionError, userInfo: [
+                NSLocalizedDescriptionKey: "Mock error copying file"
+            ])
+        }
         guard existingFiles.contains(srcURL.path) else {
             throw NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoSuchFileError, userInfo: [
                 NSLocalizedDescriptionKey: "File not found: \(srcURL.path)"
@@ -115,6 +127,8 @@ class MockFileSystem: FileSystemProtocol {
         fileContents.removeAll()
         shouldThrowOnContentsOf = false
         contentsOfError = nil
+        shouldThrowOnCreateDirectory = false
+        shouldThrowOnCopyItem = false
         createdDirectories.removeAll()
         copiedItems.removeAll()
     }

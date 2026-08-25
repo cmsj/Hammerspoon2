@@ -53,7 +53,7 @@ struct OnboardingView: View {
             Link("Open the API documentation", destination: docsURL)
 
             if let errorMessage {
-                Text(errorMessage)
+                Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -79,6 +79,7 @@ struct OnboardingView: View {
     }
 
     private func getStarted() {
+        errorMessage = nil
         do {
             try ManagerManager.shared.completeOnboarding(configDirectory: configDirectory)
             dismissWindow(id: "onboarding")
