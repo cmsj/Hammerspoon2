@@ -585,7 +585,7 @@ struct HSUIWebViewTests {
             // withKnownIssue keeps this from failing CI while still surfacing loudly
             // (as an unexpected pass) if WebKit or UIWebView's implementation changes
             // to actually fix it.
-            await withKnownIssue("""
+            withKnownIssue("""
                 hs.ui.webview leaks WebPage/WKWebView after a loaded page's window is \
                 destroyed, once onLoadChange/onTitleChange/onNavigate has started the \
                 observation Task: WebPage.navigations and its Observable properties \
