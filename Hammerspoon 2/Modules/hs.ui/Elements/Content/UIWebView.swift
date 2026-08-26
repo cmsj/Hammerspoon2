@@ -375,6 +375,7 @@ final class UIWebViewToolbarEntry: Identifiable {
     ///
     /// - Parameter callback: {(isLoading: boolean, url: string | null, title: string, progress: number) => void} Called with current loading state
     /// - Returns: Self for chaining
+    /// - Note: If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger
     /// - Example:
     /// ```js
     /// wv.onLoadChange((loading, url, title, progress) => {
@@ -387,6 +388,7 @@ final class UIWebViewToolbarEntry: Identifiable {
     ///
     /// - Parameter callback: {(url: string) => void} Called with the final URL
     /// - Returns: Self for chaining
+    /// - Note: If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger
     /// - Example:
     /// ```js
     /// wv.onNavigate((url) => console.log("Navigated to: " + url))
@@ -397,6 +399,7 @@ final class UIWebViewToolbarEntry: Identifiable {
     ///
     /// - Parameter callback: {(title: string) => void} Called with the new title
     /// - Returns: Self for chaining
+    /// - Note: If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger
     /// - Example:
     /// ```js
     /// wv.onTitleChange((title) => console.log("New title: " + title))
@@ -493,7 +496,6 @@ final class UIWebViewToolbarEntry: Identifiable {
         super.init()
         self.navigationDecider = UIWebViewNavigationDecider(owner: self)
         self.page = WebPage(navigationDecider: self.navigationDecider)
-        startObservation()
         AKDebug("Init of UIWebView")
     }
 
@@ -659,18 +661,21 @@ final class UIWebViewToolbarEntry: Identifiable {
     @objc func onLoadChange(_ callback: JSFunction) -> UIWebView {
         onLoadChangeCallback?.detach(from: self)
         onLoadChangeCallback = JSCallback(value: callback, owner: self)
+        ensureStateObservationStarted()
         return self
     }
 
     @objc func onNavigate(_ callback: JSFunction) -> UIWebView {
         onNavigateCallback?.detach(from: self)
         onNavigateCallback = JSCallback(value: callback, owner: self)
+        ensureNavigationEventObservationStarted()
         return self
     }
 
     @objc func onTitleChange(_ callback: JSFunction) -> UIWebView {
         onTitleChangeCallback?.detach(from: self)
         onTitleChangeCallback = JSCallback(value: callback, owner: self)
+        ensureStateObservationStarted()
         return self
     }
 
@@ -713,9 +718,23 @@ final class UIWebViewToolbarEntry: Identifiable {
     }
 
     // MARK: Private Observation
+    //
+    // Both observation Tasks are started lazily, only when a JS caller actually
+    // registers a callback that needs them (onNavigate for navigationEventTask;
+    // onLoadChange/onTitleChange for stateObservationTask) rather than unconditionally
+    // in init(). Once a page has loaded, these Tasks currently cannot be reliably
+    // torn down again on destroy() — see the KNOWN ISSUE comment in
+    // HSUIWebViewTests.swift's Memory Leak Tests section — so a webview that never
+    // has these callbacks registered avoids that leak entirely instead of paying for
+    // observation machinery nobody is listening to.
 
-    private func startObservation() {
+    private func ensureNavigationEventObservationStarted() {
+        guard navigationEventTask == nil else { return }
         startNavigationEventObservation()
+    }
+
+    private func ensureStateObservationStarted() {
+        guard stateObservationTask == nil else { return }
         startStateObservation()
     }
 

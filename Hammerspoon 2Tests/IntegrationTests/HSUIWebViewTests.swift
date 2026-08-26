@@ -501,7 +501,8 @@ struct HSUIWebViewTests {
     // guidance on flaky network-dependent tests — so loadHTML() is used instead, which
     // still exercises the full WebPage/WebKit navigation and rendering pipeline.
     //
-    // KNOWN ISSUE (wrapped in withKnownIssue below, not fixed): once a page has loaded,
+    // KNOWN ISSUE (wrapped in withKnownIssue below, not fixed): once a page has loaded
+    // AND a caller has registered onLoadChange/onTitleChange/onNavigate,
     // UIWebView.startNavigationEventObservation()'s `for try await event in
     // self.page.navigations` and startStateObservation()'s withObservationTracking/
     // withCheckedContinuation loop both suspend permanently waiting for their next
@@ -511,16 +512,24 @@ struct HSUIWebViewTests {
     // (confirmed via `swift-api-digester -dump-sdk -module WebKit`'s full member list),
     // so there is no way from Hammerspoon's code to force these to terminate. This
     // leaks the UIWebView Swift object *and* the underlying WebPage/WKWebView content
-    // process for any hs.ui.webview() that has loaded a page before being destroyed.
-    // Revisit if a future WebKit release changes this behavior, or if UIWebView moves
-    // off AsyncSequence/Observations-based bridging for this state.
+    // process for any hs.ui.webview() that has loaded a page, had one of those
+    // callbacks registered, and is then destroyed. Revisit if a future WebKit release
+    // changes this behavior, or if UIWebView moves off AsyncSequence/Observations-based
+    // bridging for this state.
+    //
+    // MITIGATION: UIWebView.ensureNavigationEventObservationStarted()/
+    // ensureStateObservationStarted() only start these Tasks lazily, the first time a
+    // relevant callback is actually registered, rather than unconditionally in init().
+    // A webview that never registers onLoadChange/onTitleChange/onNavigate never starts
+    // the un-cancellable Tasks in the first place, so it doesn't leak — see
+    // testWebViewWithoutObservationCallbacksDoesNotLeak below.
 
     @Suite("Memory leak tests")
     struct MemoryLeakTests {
 
         @available(macOS 26.0, *)
-        @Test("Embedded UIWebView is released after window destroy, having loaded a page")
-        func testWebViewDoesNotLeakAfterWindowDestroy() async {
+        @Test("Embedded UIWebView with onLoadChange registered leaks after window destroy, having loaded a page")
+        func testWebViewWithLoadObservationLeaksAfterWindowDestroy() async {
             let tracker = WeakLeakTracker()
             let harness = JSTestHarness()
             harness.loadModule(HSUIModule.self, as: "ui")
@@ -532,10 +541,12 @@ struct HSUIWebViewTests {
             // unreleased would keep the whole bridge (and this element) alive.
             autoreleasepool {
                 harness.eval("""
-                    var wv = hs.ui.webview().loadHTML(
-                        "<html><head><title>HS2 Leak Test</title></head>" +
-                        "<body><h1>Hello from Hammerspoon!</h1></body></html>"
-                    )
+                    var wv = hs.ui.webview()
+                        .onLoadChange(() => {})
+                        .loadHTML(
+                            "<html><head><title>HS2 Leak Test</title></head>" +
+                            "<body><h1>Hello from Hammerspoon!</h1></body></html>"
+                        )
                     var win = hs.ui.window({x: 0, y: 0, w: 800, h: 600}).webview(wv)
                     win.show()
                 """)
@@ -576,12 +587,62 @@ struct HSUIWebViewTests {
             // to actually fix it.
             await withKnownIssue("""
                 hs.ui.webview leaks WebPage/WKWebView after a loaded page's window is \
-                destroyed: WebPage.navigations and its Observable properties don't \
-                respond to Task cancellation once suspended, and WebPage exposes no \
-                public close()/invalidate() API to force them to terminate.
+                destroyed, once onLoadChange/onTitleChange/onNavigate has started the \
+                observation Task: WebPage.navigations and its Observable properties \
+                don't respond to Task cancellation once suspended, and WebPage exposes \
+                no public close()/invalidate() API to force them to terminate.
                 """) {
                 tracker.assertNoLeaks(timeout: 2.0)
             }
+        }
+
+        @available(macOS 26.0, *)
+        @Test("Embedded UIWebView without observation callbacks does not leak after window destroy, having loaded a page")
+        func testWebViewWithoutObservationCallbacksDoesNotLeak() async {
+            let tracker = WeakLeakTracker()
+            let harness = JSTestHarness()
+            harness.loadModule(HSUIModule.self, as: "ui")
+
+            var webView: UIWebView?
+            autoreleasepool {
+                harness.eval("""
+                    var wv = hs.ui.webview().loadHTML(
+                        "<html><head><title>HS2 Leak Test</title></head>" +
+                        "<body><h1>Hello from Hammerspoon!</h1></body></html>"
+                    )
+                    var win = hs.ui.window({x: 0, y: 0, w: 800, h: 600}).webview(wv)
+                    win.show()
+                """)
+                #expect(!harness.hasException)
+                if let obj = harness.evalValue("wv")?.toObjectOf(UIWebView.self) as? UIWebView {
+                    tracker.track(obj)
+                    webView = obj
+                }
+            }
+
+            guard webView != nil else {
+                Issue.record("Could not resolve UIWebView from JS value")
+                return
+            }
+
+            // No onLoadChange/onTitleChange/onNavigate is registered here, so neither
+            // observation Task should ever start (see ensureStateObservationStarted /
+            // ensureNavigationEventObservationStarted in UIWebView.swift). Poll the
+            // Swift object's properties directly rather than via eval() — url/title/
+            // isLoading read the underlying WebPage regardless of whether anything is
+            // observing it, and this avoids autoreleasing JSValues outside the pool
+            // above while awaiting (see the comment on the previous test).
+            let loaded = await harness.waitForAsync(timeout: 5.0) {
+                webView?.title == "HS2 Leak Test" && webView?.isLoading == false
+            }
+            #expect(loaded, "Page should finish loading before checking for leaks")
+
+            autoreleasepool {
+                harness.eval("wv = null; win = null")
+                harness.shutdownForLeakTest()
+            }
+            webView = nil
+            tracker.assertNoLeaks(timeout: 2.0)
         }
     }
 }
