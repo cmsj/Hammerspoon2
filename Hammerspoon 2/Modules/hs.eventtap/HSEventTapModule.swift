@@ -594,20 +594,18 @@ import AppKit
         }
         let flags = CGEventFlags.from(modifierNames: mods)
 
-        Task.detached(name: "keyStroke", priority: .userInitiated) {
-            let source = CGEventSource(stateID: .hidSystemState)
+        let source = CGEventSource(stateID: .hidSystemState)
 
-            if let downEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true) {
-                downEvent.flags = flags
-                downEvent.post(tap: .cghidEventTap)
-            }
+        if let downEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true) {
+            downEvent.flags = flags
+            downEvent.post(tap: .cghidEventTap)
+        }
 
-            try? await Task.sleep(for: .milliseconds(50))
+        usleep(50000)
 
-            if let upEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) {
-                upEvent.flags = flags
-                upEvent.post(tap: .cghidEventTap)
-            }
+        if let upEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) {
+            upEvent.flags = flags
+            upEvent.post(tap: .cghidEventTap)
         }
     }
 
@@ -631,12 +629,9 @@ import AppKit
             }
         }
 
-        // Post the events from a separate thread, with a brief pause between them
-        Task.detached(name: "keyStrokes", priority: .userInitiated) {
-            for event in events {
-                event.post(tap: .cghidEventTap)
-                try? await Task.sleep(for: .milliseconds(50))
-            }
+        for event in events {
+            event.post(tap: .cghidEventTap)
+            usleep(50000)
         }
     }
 
