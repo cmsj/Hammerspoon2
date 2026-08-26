@@ -8287,6 +8287,7 @@ Pass `false` to make the web view background transparent. Enabled (visible) by d
     /**
      * Register a callback that fires when loading state or progress changes
 Called whenever `isLoading`, `url`, `title`, or `estimatedProgress` changes.
+     * @remarks If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger
      * @param callback Called with current loading state
      * @returns Self for chaining
      */
@@ -8294,6 +8295,7 @@ Called whenever `isLoading`, `url`, `title`, or `estimatedProgress` changes.
 
     /**
      * Register a callback that fires when navigation to a new page completes
+     * @remarks If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger
      * @param callback Called with the final URL
      * @returns Self for chaining
      */
@@ -8301,6 +8303,7 @@ Called whenever `isLoading`, `url`, `title`, or `estimatedProgress` changes.
 
     /**
      * Register a callback that fires when the page title changes
+     * @remarks If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger
      * @param callback Called with the new title
      * @returns Self for chaining
      */

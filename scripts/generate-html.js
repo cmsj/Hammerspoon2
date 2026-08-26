@@ -11,13 +11,14 @@
 const fs = require('fs');
 const path = require('path');
 const nunjucks = require('nunjucks');
-const { marked } = require('marked');
+const { marked, Renderer } = require('marked');
 const hljs = require('highlight.js');
 
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'js', 'html');
 const COMBINED_DIR = path.join(JSON_DIR, 'combined');
 const TEMPLATES_DIR = path.join(__dirname, 'templates');
+const MIGRATION_GUIDE_PATH = path.join(__dirname, '..', 'docs', 'migration-guide.md');
 
 // Configure marked with highlight.js
 marked.setOptions({
@@ -237,6 +238,54 @@ function generateTypePage(typeName, protocol, isGlobal = false) {
 }
 
 /**
+ * Generate the "Migrating from Hammerspoon 1" guide page from a standalone
+ * Markdown source file. Returns a search index entry for the guide, or null
+ * if no guide source file exists.
+ */
+function generateGuidePage() {
+    if (!fs.existsSync(MIGRATION_GUIDE_PATH)) {
+        return null;
+    }
+
+    const markdownSource = fs.readFileSync(MIGRATION_GUIDE_PATH, 'utf8');
+    const pageTitle = 'Migrating from Hammerspoon 1';
+
+    // marked doesn't assign heading ids by default; the guide's internal
+    // cross-reference links depend on GitHub-style slugs, so generate them here.
+    const usedSlugs = new Map();
+    const renderer = new Renderer();
+    renderer.heading = function(token) {
+        const text = this.parser.parseInline(token.tokens, this.parser.textRenderer);
+        let slug = token.text
+            .toLowerCase()
+            .replace(/[^\p{L}\p{N}\p{Pc}\- ]+/gu, '')
+            .replace(/ /g, '-');
+        const count = usedSlugs.get(slug) || 0;
+        usedSlugs.set(slug, count + 1);
+        if (count > 0) slug = `${slug}-${count}`;
+        return `<h${token.depth} id="${slug}">${text}</h${token.depth}>\n`;
+    };
+
+    const html = nunjucks.render('guide.njk', {
+        title: pageTitle,
+        currentPage: 'migration-guide',
+        pageTitle: pageTitle,
+        contentHtml: marked(markdownSource, { renderer })
+    });
+
+    const outputPath = path.join(OUTPUT_DIR, 'migration-guide.html');
+    fs.writeFileSync(outputPath, html);
+    console.log(`  ✓ Generated migration-guide.html`);
+
+    return {
+        fullName: pageTitle,
+        description: 'A guide for Hammerspoon 1 users on what changed, what moved, and what was removed in Hammerspoon 2.',
+        url: 'migration-guide.html',
+        kind: 'guide'
+    };
+}
+
+/**
  * Generate index page
  */
 function generateIndexPage(modules, types) {
@@ -434,6 +483,14 @@ function main() {
 
     // Build search index from collected data
     const searchIndex = buildSearchIndex(allModuleData, allTypeEntries);
+
+    // Generate the migration guide page, if a source file is present, and
+    // fold it into the search index
+    console.log('\nGenerating guides:');
+    const guideEntry = generateGuidePage();
+    if (guideEntry) {
+        searchIndex.unshift(guideEntry);
+    }
 
     // Generate index page
     console.log('\nGenerating index and assets:');

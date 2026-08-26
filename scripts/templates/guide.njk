@@ -1,0 +1,18 @@
+{% extends "base.njk" %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">{{ pageTitle }}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ pageTitle }}</h1>
+    <span class="page-badge">Guide</span>
+</div>
+
+<div class="guide-content">{{ contentHtml | safe }}</div>
+{% endblock %}

@@ -21650,7 +21650,7 @@
               "name": "onLoadChange",
               "signature": "func onLoadChange(_ callback: JSFunction) -> UIWebView",
               "isStatic": false,
-              "rawDocumentation": "Register a callback that fires when loading state or progress changes\n\nCalled whenever `isLoading`, `url`, `title`, or `estimatedProgress` changes.\n\n- Parameter callback: {(isLoading: boolean, url: string | null, title: string, progress: number) => void} Called with current loading state\n- Returns: Self for chaining\n- Example:\n```js\nwv.onLoadChange((loading, url, title, progress) => {\n    if (!loading) console.log(\"Finished loading: \" + url)\n})\n```",
+              "rawDocumentation": "Register a callback that fires when loading state or progress changes\n\nCalled whenever `isLoading`, `url`, `title`, or `estimatedProgress` changes.\n\n- Parameter callback: {(isLoading: boolean, url: string | null, title: string, progress: number) => void} Called with current loading state\n- Returns: Self for chaining\n- Note: If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger\n- Example:\n```js\nwv.onLoadChange((loading, url, title, progress) => {\n    if (!loading) console.log(\"Finished loading: \" + url)\n})\n```",
               "description": "Register a callback that fires when loading state or progress changes\nCalled whenever `isLoading`, `url`, `title`, or `estimatedProgress` changes.",
               "params": [
                 {
@@ -21665,7 +21665,9 @@
                 "type": "UIWebView",
                 "description": "Self for chaining"
               },
-              "notes": [],
+              "notes": [
+                "If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger"
+              ],
               "examples": [
                 {
                   "lang": "js",
@@ -21674,13 +21676,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift",
-              "lineNumber": 384
+              "lineNumber": 385
             },
             {
               "name": "onNavigate",
               "signature": "func onNavigate(_ callback: JSFunction) -> UIWebView",
               "isStatic": false,
-              "rawDocumentation": "Register a callback that fires when navigation to a new page completes\n\n- Parameter callback: {(url: string) => void} Called with the final URL\n- Returns: Self for chaining\n- Example:\n```js\nwv.onNavigate((url) => console.log(\"Navigated to: \" + url))\n```",
+              "rawDocumentation": "Register a callback that fires when navigation to a new page completes\n\n- Parameter callback: {(url: string) => void} Called with the final URL\n- Returns: Self for chaining\n- Note: If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger\n- Example:\n```js\nwv.onNavigate((url) => console.log(\"Navigated to: \" + url))\n```",
               "description": "Register a callback that fires when navigation to a new page completes",
               "params": [
                 {
@@ -21695,7 +21697,9 @@
                 "type": "UIWebView",
                 "description": "Self for chaining"
               },
-              "notes": [],
+              "notes": [
+                "If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger"
+              ],
               "examples": [
                 {
                   "lang": "js",
@@ -21704,13 +21708,13 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift",
-              "lineNumber": 394
+              "lineNumber": 396
             },
             {
               "name": "onTitleChange",
               "signature": "func onTitleChange(_ callback: JSFunction) -> UIWebView",
               "isStatic": false,
-              "rawDocumentation": "Register a callback that fires when the page title changes\n\n- Parameter callback: {(title: string) => void} Called with the new title\n- Returns: Self for chaining\n- Example:\n```js\nwv.onTitleChange((title) => console.log(\"New title: \" + title))\n```",
+              "rawDocumentation": "Register a callback that fires when the page title changes\n\n- Parameter callback: {(title: string) => void} Called with the new title\n- Returns: Self for chaining\n- Note: If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger\n- Example:\n```js\nwv.onTitleChange((title) => console.log(\"New title: \" + title))\n```",
               "description": "Register a callback that fires when the page title changes",
               "params": [
                 {
@@ -21725,7 +21729,9 @@
                 "type": "UIWebView",
                 "description": "Self for chaining"
               },
-              "notes": [],
+              "notes": [
+                "If you register a callback here, it is no longer possible to automatically release the webview via JS garbage collection. You will need to manually call `.destroy()` and also cause this callback to trigger"
+              ],
               "examples": [
                 {
                   "lang": "js",
@@ -21734,7 +21740,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift",
-              "lineNumber": 404
+              "lineNumber": 407
             },
             {
               "name": "onNavigationDecision",
@@ -21764,7 +21770,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift",
-              "lineNumber": 418
+              "lineNumber": 421
             },
             {
               "name": "execJS",
@@ -21794,7 +21800,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift",
-              "lineNumber": 429
+              "lineNumber": 432
             },
             {
               "name": "evalJSResult",
@@ -21831,7 +21837,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift",
-              "lineNumber": 447
+              "lineNumber": 450
             }
           ],
           "properties": [
@@ -24861,5 +24867,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-25T21:01:44.611Z"
+  "generatedAt": "2026-08-26T20:17:15.845Z"
 }
