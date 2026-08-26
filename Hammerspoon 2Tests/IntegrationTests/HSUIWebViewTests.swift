@@ -487,4 +487,76 @@ struct HSUIWebViewTests {
             #expect(!harness.hasException)
         }
     }
+
+    // MARK: - Memory Leak Tests
+    //
+    // UIWebView is embedded into a window's element tree (not registered in a strong
+    // module-level dictionary like HSUIWindow/HSUIAlert/HSUIDialog), so its release
+    // depends entirely on HSUIWindow.destroy() eagerly calling UIWebView.destroy() to
+    // detach callbacks and cancel its two long-lived MainActor observation Tasks (see
+    // HSUIWindow.destroy() and UIWebView.destroy()). This loads real page content
+    // (rather than an inert, never-navigated element) so those observation Tasks are
+    // actually driven by a live WebPage before verifying they don't keep the element
+    // alive. Network-backed loadURL() is deliberately avoided here — see HSTests skill
+    // guidance on flaky network-dependent tests — so loadHTML() is used instead, which
+    // still exercises the full WebPage/WebKit navigation and rendering pipeline.
+
+    @Suite("Memory leak tests")
+    struct MemoryLeakTests {
+
+        @available(macOS 26.0, *)
+        @Test("Embedded UIWebView is released after window destroy, having loaded a page")
+        func testWebViewDoesNotLeakAfterWindowDestroy() async {
+            let tracker = WeakLeakTracker()
+            let harness = JSTestHarness()
+            harness.loadModule(HSUIModule.self, as: "ui")
+
+            var webView: UIWebView?
+            // See HSUITests.testWindowDoesNotLeakAfterReload (HSUIIntegrationTests.swift)
+            // for why autoreleasepool {} (not do {}) is required around eval()-produced
+            // JSValues: each holds a strong reference to its JSContext, so leaving any
+            // unreleased would keep the whole bridge (and this element) alive.
+            autoreleasepool {
+                harness.eval("""
+                    var wv = hs.ui.webview().loadHTML(
+                        "<html><head><title>HS2 Leak Test</title></head>" +
+                        "<body><h1>Hello from Hammerspoon!</h1></body></html>"
+                    )
+                    var win = hs.ui.window({x: 0, y: 0, w: 800, h: 600}).webview(wv)
+                    win.show()
+                """)
+                #expect(!harness.hasException)
+                if let obj = harness.evalValue("wv")?.toObjectOf(UIWebView.self) as? UIWebView {
+                    tracker.track(obj)
+                    webView = obj
+                }
+            }
+
+            guard webView != nil else {
+                Issue.record("Could not resolve UIWebView from JS value")
+                return
+            }
+
+            // Wait for the page to actually finish loading by polling the Swift object's
+            // properties directly rather than through further eval() calls, so no
+            // additional JSValues are autoreleased outside the pool above while awaiting
+            // (JSValue's autorelease semantics require calls with eval() to be in a
+            // pool that closes before assertNoLeaks() runs, which an async condition
+            // closure inside autoreleasepool {} cannot express — autoreleasepool only
+            // accepts a synchronous closure).
+            let loaded = await harness.waitForAsync(timeout: 5.0) {
+                webView?.title == "HS2 Leak Test" && webView?.isLoading == false
+            }
+            #expect(loaded, "Page should finish loading before checking for leaks")
+
+            autoreleasepool {
+                harness.eval("wv = null; win = null")
+                harness.shutdownForLeakTest()
+            }
+            // Drop the test's own strong reference used for polling above — otherwise
+            // this local would itself be the "leak" assertNoLeaks() reports.
+            webView = nil
+            tracker.assertNoLeaks(timeout: 2.0)
+        }
+    }
 }
