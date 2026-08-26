@@ -89,10 +89,10 @@ the spoons.hammerspoon.org repository have no v2 counterpart — see
 <a href="#removed-with-no-equivalent">Removed with no equivalent</a>.</li>
 <li><strong>Watchers are usually <code>addWatcher()</code>/<code>removeWatcher()</code> on the main module now,</strong> not a
 separate <code>.watcher</code> submodule you construct and <code>:start()</code>. This pattern is consistent
-across <code>hs.audiodevice</code>, <code>hs.camera</code>, <code>hs.eventtap</code>, <code>hs.keycodes</code>, <code>hs.mouse</code>, <code>hs.serial</code>,
-<code>hs.streamdeck</code>, <code>hs.usb</code>, <code>hs.wifi</code>, <code>hs.pasteboard</code>, <code>hs.power</code>, <code>hs.fs</code>, and more. If a v1
-module you&#39;re porting had a <code>.watcher</code> submodule and you don&#39;t see it mentioned below,
-check for <code>addWatcher()</code> on the parent module first.</li>
+across <code>hs.audiodevice</code>, <code>hs.camera</code>, <code>hs.eventtap</code>, <code>hs.keycodes</code>, <code>hs.mouse</code>, <code>hs.screen</code>,
+<code>hs.serial</code>, <code>hs.streamdeck</code>, <code>hs.usb</code>, <code>hs.wifi</code>, <code>hs.pasteboard</code>, <code>hs.power</code>, <code>hs.fs</code>, and
+more. If a v1 module you&#39;re porting had a <code>.watcher</code> submodule and you don&#39;t see it
+mentioned below, check for <code>addWatcher()</code> on the parent module first.</li>
 <li><strong>Async is Promise-based, not callback-based.</strong> <code>hs.http</code>, <code>hs.osascript</code>, <code>hs.network</code>,
 <code>hs.shortcuts</code>, <code>hs.application.launchOrFocus()</code>, and others now return Promises you
 <code>.then()</code> rather than taking a completion-callback argument. A few (<code>hs.osascript</code>) always
@@ -452,8 +452,8 @@ for what changed within it.</p>
 </tr>
 <tr>
 <td><code>hs.screen</code> (+<code>.watcher</code>)</td>
-<td>Present, watcher gone</td>
-<td><a href="#hsscreen">details</a></td>
+<td>Present</td>
+<td>watcher folded in, see <a href="#hsscreen">details</a></td>
 </tr>
 <tr>
 <td><code>hs.serial</code></td>
@@ -827,11 +827,14 @@ as v1, and cover the same displays v1 did (the built-in panel plus Apple/LG disp
 expose software brightness); v1 never did true DDC/CI brightness control of arbitrary
 third-party monitors over I2C either, so there&#39;s no loss of scope there, just a swap of
 private API underneath (v1&#39;s IOKit <code>IODisplay</code> calls don&#39;t work on Apple Silicon, so v2 talks
-to <code>DisplayServices.framework</code> instead). The one real gap: <strong>there is no
-display-configuration-change watcher anywhere in v2.</strong> <code>hs.screen.watcher</code> (monitor
-connected/disconnected, resolution/layout changed) has no home — not on <code>hs.screen</code>, not
-anywhere else. If your config reacted to monitors being plugged in or rearranged, there&#39;s
-currently no way to do that.</p>
+to <code>DisplayServices.framework</code> instead). <code>hs.screen.watcher</code> also carries over: it&#39;s
+<code>hs.screen.addWatcher(fn)</code>/<code>removeWatcher(fn)</code> directly on the main module now (no separate
+watcher object to construct/<code>:start()</code>), and the callback still takes no arguments — call
+<code>all()</code>/<code>main()</code>/<code>primary()</code> inside it to inspect the new configuration. There&#39;s no v2
+equivalent of <code>newWithActiveScreen()</code>&#39;s active-display-changed variant (it relied on an
+undocumented <code>NSWorkspace</code> notification); if your config used that specifically to detect
+Mission Control&#39;s per-display Spaces switching focus, that distinction isn&#39;t available —
+only the general &quot;layout changed&quot; event is.</p>
 <h2 id="rebuilding-ui-with-hsui">Rebuilding UI with hs.ui</h2>
 <p>This is the biggest single change in the whole migration. <code>hs.alert</code>, <code>hs.canvas</code>
 (+<code>.matrix</code>), <code>hs.dialog</code> (+<code>.color</code>), <code>hs.drawing</code> (+<code>.color</code>), <code>hs.image</code>, <code>hs.styledtext</code>,
