@@ -187,8 +187,8 @@ for what changed within it.</p>
 </tr>
 <tr>
 <td><code>hs.brightness</code></td>
-<td>Gone</td>
-<td>no display-brightness API anywhere</td>
+<td>→ <code>hs.screen</code></td>
+<td><code>getBrightness()</code>/<code>setBrightness()</code>, see <a href="#hsscreen">details</a></td>
 </tr>
 <tr>
 <td><code>hs.caffeinate</code> (+<code>.watcher</code>)</td>
@@ -821,10 +821,16 @@ system-wide default output as a workaround, but not per-sound routing), and
 <code>getAudioEffectNames()</code>/file-type introspection helpers.</p>
 <h3 id="hsscreen">hs.screen</h3>
 <p>Display enumeration, mode setting, and screenshots (<code>snapshot()</code>, now Promise-based via
-ScreenCaptureKit) all carry over, plus new <code>ambientLight</code> sensor access. The one real gap:
-<strong>there is no display-configuration-change watcher anywhere in v2.</strong> <code>hs.screen.watcher</code>
-(monitor connected/disconnected, resolution/layout changed) has no home — not on <code>hs.screen</code>,
-not anywhere else. If your config reacted to monitors being plugged in or rearranged, there&#39;s
+ScreenCaptureKit) all carry over, plus new <code>ambientLight</code> sensor access. Brightness control
+is also back — <code>getBrightness()</code>/<code>setBrightness()</code> are the same names and same 0.0–1.0 scale
+as v1, and cover the same displays v1 did (the built-in panel plus Apple/LG displays that
+expose software brightness); v1 never did true DDC/CI brightness control of arbitrary
+third-party monitors over I2C either, so there&#39;s no loss of scope there, just a swap of
+private API underneath (v1&#39;s IOKit <code>IODisplay</code> calls don&#39;t work on Apple Silicon, so v2 talks
+to <code>DisplayServices.framework</code> instead). The one real gap: <strong>there is no
+display-configuration-change watcher anywhere in v2.</strong> <code>hs.screen.watcher</code> (monitor
+connected/disconnected, resolution/layout changed) has no home — not on <code>hs.screen</code>, not
+anywhere else. If your config reacted to monitors being plugged in or rearranged, there&#39;s
 currently no way to do that.</p>
 <h2 id="rebuilding-ui-with-hsui">Rebuilding UI with hs.ui</h2>
 <p>This is the biggest single change in the whole migration. <code>hs.alert</code>, <code>hs.canvas</code>
@@ -923,7 +929,7 @@ use <code>hs.application</code>/<code>hs.window</code> directly), <code>hs.docki
 salvageable from the JS enhancement layer&#39;s stub helpers.</p>
 <p><strong>System monitoring:</strong> idle time, live CPU/memory usage, GPU VRAM, and light/dark-mode
 interface style — see <a href="#hshost">hs.host</a> for the full breakdown of what did and didn&#39;t find a
-new home. <code>hs.brightness</code> (no display-brightness control anywhere).</p>
+new home.</p>
 <p><strong>Third-party hardware:</strong> <code>hs.milight</code>, <code>hs.razer</code>, <code>hs.tangent</code> — niche peripherals, not
 ported.</p>
 <p><strong>Third-party app remote control:</strong> <code>hs.deezer</code>, <code>hs.itunes</code>, <code>hs.messages</code>, <code>hs.spotify</code>,

@@ -66,7 +66,7 @@ for what changed within it.
 | `hs.base64` | → `hs.hash` | `base64Encode`/`base64Decode` |
 | `hs.battery` (+`.watcher`) | → `hs.power` | [details](#hspower) |
 | `hs.bonjour` (+`.service`) | Present | `.service` objects returned inline, not a submodule |
-| `hs.brightness` | Gone | no display-brightness API anywhere |
+| `hs.brightness` | → `hs.screen` | `getBrightness()`/`setBrightness()`, see [details](#hsscreen) |
 | `hs.caffeinate` (+`.watcher`) | → `hs.power` | [details](#hspower) |
 | `hs.camera` | Present | watcher folded in |
 | `hs.canvas` (+`.matrix`) | → `hs.ui` | [details](#rebuilding-ui-with-hsui); matrix/transform math gone |
@@ -373,10 +373,16 @@ system-wide default output as a workaround, but not per-sound routing), and
 ### hs.screen
 
 Display enumeration, mode setting, and screenshots (`snapshot()`, now Promise-based via
-ScreenCaptureKit) all carry over, plus new `ambientLight` sensor access. The one real gap:
-**there is no display-configuration-change watcher anywhere in v2.** `hs.screen.watcher`
-(monitor connected/disconnected, resolution/layout changed) has no home — not on `hs.screen`,
-not anywhere else. If your config reacted to monitors being plugged in or rearranged, there's
+ScreenCaptureKit) all carry over, plus new `ambientLight` sensor access. Brightness control
+is also back — `getBrightness()`/`setBrightness()` are the same names and same 0.0–1.0 scale
+as v1, and cover the same displays v1 did (the built-in panel plus Apple/LG displays that
+expose software brightness); v1 never did true DDC/CI brightness control of arbitrary
+third-party monitors over I2C either, so there's no loss of scope there, just a swap of
+private API underneath (v1's IOKit `IODisplay` calls don't work on Apple Silicon, so v2 talks
+to `DisplayServices.framework` instead). The one real gap: **there is no
+display-configuration-change watcher anywhere in v2.** `hs.screen.watcher` (monitor
+connected/disconnected, resolution/layout changed) has no home — not on `hs.screen`, not
+anywhere else. If your config reacted to monitors being plugged in or rearranged, there's
 currently no way to do that.
 
 ## Rebuilding UI with hs.ui
@@ -485,7 +491,7 @@ salvageable from the JS enhancement layer's stub helpers.
 
 **System monitoring:** idle time, live CPU/memory usage, GPU VRAM, and light/dark-mode
 interface style — see [hs.host](#hshost) for the full breakdown of what did and didn't find a
-new home. `hs.brightness` (no display-brightness control anywhere).
+new home.
 
 **Third-party hardware:** `hs.milight`, `hs.razer`, `hs.tangent` — niche peripherals, not
 ported.
