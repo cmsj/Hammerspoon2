@@ -5717,6 +5717,21 @@ The result origin is relative to this screen's top-left corner.
     localToAbsolute(rect: HSRect): HSRect;
 
     /**
+     * The current brightness of this display, from `0.0` (darkest) to `1.0` (brightest).
+Returns `null` if the display does not support software brightness control (e.g.
+most third-party monitors, which are controlled via DDC rather than software).
+     * @returns A number from `0.0` to `1.0`, or `null` if unsupported.
+     */
+    getBrightness(): number | null;
+
+    /**
+     * Set the brightness of this display.
+     * @param brightness The desired brightness, from `0.0` (darkest) to `1.0` (brightest).
+     * @returns `true` on success, `false` if the display does not support software brightness control.
+     */
+    setBrightness(brightness: number): boolean;
+
+    /**
      * Unique display identifier (matches `CGDirectDisplayID`).
      */
     readonly id: number;

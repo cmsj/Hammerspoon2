@@ -15218,6 +15218,58 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
               "lineNumber": 271
+            },
+            {
+              "name": "getBrightness",
+              "signature": "func getBrightness() -> number?",
+              "isStatic": false,
+              "rawDocumentation": "The current brightness of this display, from `0.0` (darkest) to `1.0` (brightest).\n\nReturns `null` if the display does not support software brightness control (e.g.\nmost third-party monitors, which are controlled via DDC rather than software).\n\n- Returns: A number from `0.0` to `1.0`, or `null` if unsupported.\n- Example:\n```js\nconst level = hs.screen.main().getBrightness()\nif (level !== null) console.log(\"Brightness: \" + level)\n```",
+              "description": "The current brightness of this display, from `0.0` (darkest) to `1.0` (brightest).\nReturns `null` if the display does not support software brightness control (e.g.\nmost third-party monitors, which are controlled via DDC rather than software).",
+              "params": [],
+              "returns": {
+                "type": "number",
+                "description": "A number from `0.0` to `1.0`, or `null` if unsupported."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const level = hs.screen.main().getBrightness()\nif (level !== null) console.log(\"Brightness: \" + level)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+              "lineNumber": 312
+            },
+            {
+              "name": "setBrightness",
+              "signature": "func setBrightness(_ brightness: Double) -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Set the brightness of this display.\n\n- Parameter brightness: The desired brightness, from `0.0` (darkest) to `1.0` (brightest).\n- Returns: `true` on success, `false` if the display does not support software brightness control.\n- Example:\n```js\nhs.screen.main().setBrightness(0.5)\n```",
+              "description": "Set the brightness of this display.",
+              "params": [
+                {
+                  "name": "brightness",
+                  "type": "number",
+                  "description": "The desired brightness, from `0.0` (darkest) to `1.0` (brightest).",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "boolean",
+                "description": "`true` on success, `false` if the display does not support software brightness control."
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "hs.screen.main().setBrightness(0.5)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.screen/HSScreen.swift",
+              "lineNumber": 322
             }
           ],
           "properties": [
@@ -24867,5 +24919,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-26T20:17:15.845Z"
+  "generatedAt": "2026-08-26T20:59:48.387Z"
 }

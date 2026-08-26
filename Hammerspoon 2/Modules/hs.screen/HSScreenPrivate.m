@@ -4,6 +4,8 @@
 //
 
 #import "HSScreenPrivate.h"
+#import <dlfcn.h>
+#import <math.h>
 
 // MARK: - Rotation
 
@@ -78,4 +80,50 @@ NSNumber *_Nullable HSScreenAmbientLight(CGDirectDisplayID displayID) {
 
     if (![result isKindOfClass:[NSNumber class]]) return nil;
     return (NSNumber *)result;
+}
+
+// MARK: - Brightness
+
+// DisplayServicesGetBrightness/SetBrightness are plain C functions exported by
+// DisplayServices.framework, so they are resolved with dlopen/dlsym rather than the
+// ObjC message-based approach used above for the ambient light sensor.
+typedef int (*DSGetBrightnessFn)(CGDirectDisplayID, float *);
+typedef int (*DSSetBrightnessFn)(CGDirectDisplayID, float);
+
+static void HSScreenLoadBrightnessSymbols(DSGetBrightnessFn *getFn, DSSetBrightnessFn *setFn) {
+    static DSGetBrightnessFn dsGetBrightness = NULL;
+    static DSSetBrightnessFn dsSetBrightness = NULL;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        void *handle = dlopen("/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices", RTLD_LAZY);
+        if (!handle) return;
+        dsGetBrightness = (DSGetBrightnessFn)dlsym(handle, "DisplayServicesGetBrightness");
+        dsSetBrightness = (DSSetBrightnessFn)dlsym(handle, "DisplayServicesSetBrightness");
+    });
+    *getFn = dsGetBrightness;
+    *setFn = dsSetBrightness;
+}
+
+double HSScreenGetBrightness(CGDirectDisplayID displayID) {
+    DSGetBrightnessFn getFn = NULL;
+    DSSetBrightnessFn setFn = NULL;
+    HSScreenLoadBrightnessSymbols(&getFn, &setFn);
+    if (!getFn) return NAN;
+
+    float brightness = 0;
+    if (getFn(displayID, &brightness) != 0) return NAN;
+    return (double)brightness;
+}
+
+BOOL HSScreenSetBrightness(CGDirectDisplayID displayID, double brightness) {
+    DSGetBrightnessFn getFn = NULL;
+    DSSetBrightnessFn setFn = NULL;
+    HSScreenLoadBrightnessSymbols(&getFn, &setFn);
+    if (!setFn) return NO;
+
+    double clampedDouble = brightness;
+    if (clampedDouble < 0.0) clampedDouble = 0.0;
+    if (clampedDouble > 1.0) clampedDouble = 1.0;
+    float clamped = (float)clampedDouble;
+    return setFn(displayID, clamped) == 0;
 }

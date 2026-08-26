@@ -613,6 +613,72 @@ const abs = s.localToAbsolute({x: 10, y: 10, w: 100, h: 100})</code></pre>
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L271" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:271</a>
         </div>
     </div>
+    <div class="method" id="getBrightness">
+        <h3>
+<a href="#getBrightness">getBrightness() -> NSNumber</a>
+        </h3>
+
+        <div class="description">The current brightness of this display, from `0.0` (darkest) to `1.0` (brightest).
+Returns `null` if the display does not support software brightness control (e.g.
+most third-party monitors, which are controlled via DDC rather than software).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">getBrightness() -> NSNumber</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">NSNumber</div>
+        <div class="return-desc">A number from `0.0` to `1.0`, or `null` if unsupported.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const level = hs.screen.main().getBrightness()
+if (level !== null) console.log(&quot;Brightness: &quot; + level)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L312" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:312</a>
+        </div>
+    </div>
+    <div class="method" id="setBrightness">
+        <h3>
+<a href="#setBrightness">setBrightness(brightness) -> boolean</a>
+        </h3>
+
+        <div class="description">Set the brightness of this display.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setBrightness(brightness) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">brightness</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The desired brightness, from `0.0` (darkest) to `1.0` (brightest).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` if the display does not support software brightness control.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.screen.main().setBrightness(0.5)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L322" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:322</a>
+        </div>
+    </div>
         </main>
 
         <!-- Right TOC sidebar -->

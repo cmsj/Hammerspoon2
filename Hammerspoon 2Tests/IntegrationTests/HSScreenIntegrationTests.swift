@@ -389,6 +389,51 @@ struct HSScreenIntegrationTests {
         #expect(!harness.hasException)
     }
 
+    // MARK: - Brightness
+
+    @Test("getBrightness() returns a number or null", .disabled(if: !hasScreens(), "No screens available"))
+    func testGetBrightness() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("var b = hs.screen.primary().getBrightness();")
+        harness.expectTrue("b == null || (typeof b === 'number' && b >= 0 && b <= 1)")
+        #expect(!harness.hasException)
+    }
+
+    @Test("getBrightness() is consistent across repeated reads", .disabled(if: !hasScreens(), "No screens available"))
+    func testGetBrightnessConsistency() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("""
+        var s = hs.screen.primary();
+        var a = s.getBrightness();
+        var b = s.getBrightness();
+        var bothNull = (a == null && b == null);
+        var bothNumbers = (typeof a === 'number' && typeof b === 'number');
+        var consistent = bothNull || bothNumbers;
+        """)
+        harness.expectTrue("consistent")
+        #expect(!harness.hasException)
+    }
+
+    // Re-applying the current brightness is a harmless no-op and avoids disrupting the
+    // developer's desktop, matching the approach used for the rotation setter test above.
+    @Test("setting brightness to the current value does not throw", .disabled(if: !hasScreens(), "No screens available"))
+    func testSetBrightnessNoOp() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("""
+        var s = hs.screen.primary();
+        var b = s.getBrightness();
+        var result = (b == null) ? null : s.setBrightness(b);
+        """)
+        #expect(!harness.hasException, "Setting brightness to its current value should not throw a JS exception")
+        harness.expectTrue("result === null || typeof result === 'boolean'")
+    }
+
     // MARK: - Desktop Image
 
     @Test("desktopImage returns a string or null")

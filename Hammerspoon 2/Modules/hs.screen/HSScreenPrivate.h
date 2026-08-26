@@ -25,3 +25,20 @@ BOOL HSScreenSetRotation(CGDirectDisplayID displayID, int degrees);
 /// @param displayID  The CGDirectDisplayID of the display to query.
 /// @return The lux reading as an @c NSNumber, or @c nil if unsupported or unavailable.
 NSNumber *_Nullable HSScreenAmbientLight(CGDirectDisplayID displayID);
+
+/// Returns the current software brightness of the given display, from 0.0 to 1.0.
+///
+/// Uses DisplayServices.framework's @c DisplayServicesGetBrightness, which (unlike the
+/// deprecated IOKit @c IODisplay approach used on Intel Macs) works on Apple Silicon's
+/// built-in displays and Apple/LG displays that support software brightness.
+///
+/// @param displayID  The CGDirectDisplayID of the display to query.
+/// @return The brightness as a value from 0.0 to 1.0, or @c NAN if unsupported or unavailable.
+double HSScreenGetBrightness(CGDirectDisplayID displayID);
+
+/// Sets the software brightness of the given display.
+///
+/// @param displayID   The CGDirectDisplayID of the display to change.
+/// @param brightness  The desired brightness, from 0.0 to 1.0.
+/// @return @c YES on success, @c NO if unsupported or the call failed.
+BOOL HSScreenSetBrightness(CGDirectDisplayID displayID, double brightness);

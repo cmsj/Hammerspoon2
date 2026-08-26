@@ -295,6 +295,31 @@ import ScreenCaptureKit
     /// if (lux !== null) console.log("Ambient light: " + lux + " lux")
     /// ```
     @objc var ambientLight: NSNumber? { get }
+
+    // MARK: - Brightness
+
+    /// The current brightness of this display, from `0.0` (darkest) to `1.0` (brightest).
+    ///
+    /// Returns `null` if the display does not support software brightness control (e.g.
+    /// most third-party monitors, which are controlled via DDC rather than software).
+    ///
+    /// - Returns: A number from `0.0` to `1.0`, or `null` if unsupported.
+    /// - Example:
+    /// ```js
+    /// const level = hs.screen.main().getBrightness()
+    /// if (level !== null) console.log("Brightness: " + level)
+    /// ```
+    @objc func getBrightness() -> NSNumber?
+
+    /// Set the brightness of this display.
+    ///
+    /// - Parameter brightness: The desired brightness, from `0.0` (darkest) to `1.0` (brightest).
+    /// - Returns: `true` on success, `false` if the display does not support software brightness control.
+    /// - Example:
+    /// ```js
+    /// hs.screen.main().setBrightness(0.5)
+    /// ```
+    @objc func setBrightness(_ brightness: Double) -> Bool
 }
 
 // MARK: - CGDisplayMode helpers
@@ -577,6 +602,17 @@ private extension CGDisplayMode {
 
     @objc var ambientLight: NSNumber? {
         HSScreenAmbientLight(displayID)
+    }
+
+    // MARK: - Brightness
+
+    @objc func getBrightness() -> NSNumber? {
+        let value = HSScreenGetBrightness(displayID)
+        return value.isNaN ? nil : NSNumber(value: value)
+    }
+
+    @objc func setBrightness(_ brightness: Double) -> Bool {
+        HSScreenSetBrightness(displayID, brightness)
     }
 
     // MARK: - Desktop
