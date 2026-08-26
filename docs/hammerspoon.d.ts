@@ -5578,6 +5578,12 @@ s.setMode(1920, 1080, 1, 60);
 const img = await hs.screen.main().snapshot();
 img.saveToFile("/tmp/screen.png");
 ```
+## Watching for display changes
+```javascript
+hs.screen.addWatcher(() => {
+    console.log("Display configuration changed:", hs.screen.all().length, "screens");
+});
+```
  */
 declare namespace hs.screen {
     /**
@@ -5598,6 +5604,24 @@ with the keyboard focus if no window is focused.
      * @returns An HSScreen object or `null` if no primary screen can be determined.
      */
     function primary(): HSScreen | null;
+
+    /**
+     * Registers a listener that fires whenever the display configuration changes —
+monitors connected/disconnected, resolution or arrangement changed, or the
+menu bar moved to a different display.
+The listener receives no arguments; call `all()`/`main()`/`primary()` inside
+the callback to inspect the new configuration.
+The OS notification subscription starts lazily on the first listener and
+is released automatically when the last listener is removed.
+     * @param listener A function called with no arguments when the display configuration changes.
+     */
+    function addWatcher(listener: () => void): void;
+
+    /**
+     * Removes a previously registered display-configuration listener.
+     * @param listener The function originally passed to `addWatcher`.
+     */
+    function removeWatcher(listener: (...args: any[]) => any): void;
 
 }
 

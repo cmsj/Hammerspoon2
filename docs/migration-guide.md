@@ -26,10 +26,10 @@ diving into specifics:
   [Removed with no equivalent](#removed-with-no-equivalent).
 - **Watchers are usually `addWatcher()`/`removeWatcher()` on the main module now,** not a
   separate `.watcher` submodule you construct and `:start()`. This pattern is consistent
-  across `hs.audiodevice`, `hs.camera`, `hs.eventtap`, `hs.keycodes`, `hs.mouse`, `hs.serial`,
-  `hs.streamdeck`, `hs.usb`, `hs.wifi`, `hs.pasteboard`, `hs.power`, `hs.fs`, and more. If a v1
-  module you're porting had a `.watcher` submodule and you don't see it mentioned below,
-  check for `addWatcher()` on the parent module first.
+  across `hs.audiodevice`, `hs.camera`, `hs.eventtap`, `hs.keycodes`, `hs.mouse`, `hs.screen`,
+  `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.wifi`, `hs.pasteboard`, `hs.power`, `hs.fs`, and
+  more. If a v1 module you're porting had a `.watcher` submodule and you don't see it
+  mentioned below, check for `addWatcher()` on the parent module first.
 - **Async is Promise-based, not callback-based.** `hs.http`, `hs.osascript`, `hs.network`,
   `hs.shortcuts`, `hs.application.launchOrFocus()`, and others now return Promises you
   `.then()` rather than taking a completion-callback argument. A few (`hs.osascript`) always
@@ -119,7 +119,7 @@ for what changed within it.
 | `hs.plist` | Present | close to a direct port |
 | `hs.razer` | Gone | niche hardware |
 | `hs.redshift` | Gone | macOS Night Shift covers this now |
-| `hs.screen` (+`.watcher`) | Present, watcher gone | [details](#hsscreen) |
+| `hs.screen` (+`.watcher`) | Present | watcher folded in, see [details](#hsscreen) |
 | `hs.serial` | Present | lightly tested; watcher folded in |
 | `hs.settings` | → `hs.userdefaults` | gained a watcher |
 | `hs.sharing` | Present | close to a direct port |
@@ -379,11 +379,14 @@ as v1, and cover the same displays v1 did (the built-in panel plus Apple/LG disp
 expose software brightness); v1 never did true DDC/CI brightness control of arbitrary
 third-party monitors over I2C either, so there's no loss of scope there, just a swap of
 private API underneath (v1's IOKit `IODisplay` calls don't work on Apple Silicon, so v2 talks
-to `DisplayServices.framework` instead). The one real gap: **there is no
-display-configuration-change watcher anywhere in v2.** `hs.screen.watcher` (monitor
-connected/disconnected, resolution/layout changed) has no home — not on `hs.screen`, not
-anywhere else. If your config reacted to monitors being plugged in or rearranged, there's
-currently no way to do that.
+to `DisplayServices.framework` instead). `hs.screen.watcher` also carries over: it's
+`hs.screen.addWatcher(fn)`/`removeWatcher(fn)` directly on the main module now (no separate
+watcher object to construct/`:start()`), and the callback still takes no arguments — call
+`all()`/`main()`/`primary()` inside it to inspect the new configuration. There's no v2
+equivalent of `newWithActiveScreen()`'s active-display-changed variant (it relied on an
+undocumented `NSWorkspace` notification); if your config used that specifically to detect
+Mission Control's per-display Spaces switching focus, that distinction isn't available —
+only the general "layout changed" event is.
 
 ## Rebuilding UI with hs.ui
 

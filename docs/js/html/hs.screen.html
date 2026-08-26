@@ -84,6 +84,11 @@ s.setMode(1920, 1080, 1, 60);
 <pre><code class="language-javascript">const img = await hs.screen.main().snapshot();
 img.saveToFile(&quot;/tmp/screen.png&quot;);
 </code></pre>
+<h2>Watching for display changes</h2>
+<pre><code class="language-javascript">hs.screen.addWatcher(() =&gt; {
+    console.log(&quot;Display configuration changed:&quot;, hs.screen.all().length, &quot;screens&quot;);
+});
+</code></pre>
 </div>
 
 <h2 class="section-heading">Types</h2>
@@ -117,7 +122,7 @@ img.saveToFile(&quot;/tmp/screen.png&quot;);
 screens.forEach(s =&gt; console.log(s.name))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreenModule.swift#L53" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift:53</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreenModule.swift#L61" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift:61</a>
         </div>
     </div>
     <div class="method" id="main">
@@ -140,7 +145,7 @@ with the keyboard focus if no window is focused.</div>
 console.log(main &amp;&amp; main.name)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreenModule.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift:64</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreenModule.swift#L72" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift:72</a>
         </div>
     </div>
     <div class="method" id="primary">
@@ -162,7 +167,91 @@ console.log(main &amp;&amp; main.name)</code></pre>
 console.log(s &amp;&amp; s.frame)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreenModule.swift#L74" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift:74</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreenModule.swift#L82" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift:82</a>
+        </div>
+    </div>
+    <div class="method" id="addWatcher">
+        <h3><a href="#addWatcher">hs.screen.addWatcher(listener) -> None</a></h3>
+
+        <div class="description">Registers a listener that fires whenever the display configuration changes —
+monitors connected/disconnected, resolution or arrangement changed, or the
+menu bar moved to a different display.
+The listener receives no arguments; call `all()`/`main()`/`primary()` inside
+the callback to inspect the new configuration.
+The OS notification subscription starts lazily on the first listener and
+is released automatically when the last listener is removed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.screen.addWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">A function called with no arguments when the display configuration changes.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.screen.addWatcher(() =&gt; {
+    console.log(&quot;Screens changed, now: &quot; + hs.screen.all().length)
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreenModule.swift#L102" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift:102</a>
+        </div>
+    </div>
+    <div class="method" id="removeWatcher">
+        <h3><a href="#removeWatcher">hs.screen.removeWatcher(listener) -> None</a></h3>
+
+        <div class="description">Removes a previously registered display-configuration listener.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.screen.removeWatcher(listener) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">listener</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">The function originally passed to `addWatcher`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const handler = () =&gt; console.log(&quot;screens changed&quot;)
+hs.screen.addWatcher(handler)
+hs.screen.removeWatcher(handler)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreenModule.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreenModule.swift:112</a>
         </div>
     </div>
         </main>
