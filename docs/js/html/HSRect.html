@@ -169,6 +169,509 @@
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L42" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:42</a>
         </div>
     </div>
+    <div class="method" id="angleTo">
+        <h3>
+<a href="#angleTo">angleTo(other) -> number</a>
+        </h3>
+
+        <div class="description">Returns the angle between the positive x axis and the vector from this rect&#39;s center to another point or rect&#39;s center</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">angleTo(other) -> number</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">other</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">An HSPoint, or an HSRect (whose center will be used)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">A number containing the angle in radians, or 0 if `other` is not an HSPoint or HSRect</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 2, 2).angleTo(new HSPoint(2, 2)) // 0.7853981633974483</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L51" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:51</a>
+        </div>
+    </div>
+    <div class="method" id="distance">
+        <h3>
+<a href="#distance">distance(other) -> number</a>
+        </h3>
+
+        <div class="description">Finds the distance between this rect&#39;s center and another point or rect&#39;s center</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">distance(other) -> number</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">other</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">An HSPoint, or an HSRect (whose center will be used)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">A number containing the distance, or 0 if `other` is not an HSPoint or HSRect</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 2, 2).distance(new HSPoint(4, 5)) // 5.0</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L60" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:60</a>
+        </div>
+    </div>
+    <div class="method" id="equals">
+        <h3>
+<a href="#equals">equals(other) -> boolean</a>
+        </h3>
+
+        <div class="description">Checks if this rect is equal to another rect</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">equals(other) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">other</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An HSRect to compare against</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if both rects have the same origin and size, otherwise `false`</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 10, 10).equals(new HSRect(0, 0, 10, 10)) // true</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:69</a>
+        </div>
+    </div>
+    <div class="method" id="fit">
+        <h3>
+<a href="#fit">fit(bounds) -> HSRect</a>
+        </h3>
+
+        <div class="description">Ensures this rect is fully inside `bounds`, scaling it down (preserving aspect ratio) if it&#39;s larger, and moving it if necessary</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fit(bounds) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">bounds</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An HSRect describing the bounds to fit within</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">A new HSRect that fits fully inside `bounds`</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 200, 100).fit(new HSRect(0, 0, 100, 100)) // new HSRect(0, 0, 100, 50)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L78" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:78</a>
+        </div>
+    </div>
+    <div class="method" id="floor">
+        <h3>
+<a href="#floor">floor() -> HSRect</a>
+        </h3>
+
+        <div class="description">Truncates the origin and size of this rect towards negative infinity</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">floor() -> HSRect</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">A new HSRect with the x, y, w and h values floored to the nearest integer</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(1.7, 1.2, 10.9, 10.1).floor() // new HSRect(1, 1, 10, 10)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L86" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:86</a>
+        </div>
+    </div>
+    <div class="method" id="fromUnitRect">
+        <h3>
+<a href="#fromUnitRect">fromUnitRect(frame) -> HSRect</a>
+        </h3>
+
+        <div class="description">Converts a unit rect (coordinates and dimensions between 0 and 1) within a given frame into absolute coordinates</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fromUnitRect(frame) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">frame</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An HSRect describing the frame this unit rect is relative to</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">A new HSRect with coordinates and dimensions converted from the 0-1 range into absolute values within `frame`</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0.5, 0.5, 0.5, 0.5).fromUnitRect(new HSRect(0, 0, 100, 100)) // new HSRect(50, 50, 50, 50)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L95" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:95</a>
+        </div>
+    </div>
+    <div class="method" id="inside">
+        <h3>
+<a href="#inside">inside(rect) -> boolean</a>
+        </h3>
+
+        <div class="description">Checks if this rect lies fully inside another rect</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">inside(rect) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rect</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An HSRect to check against</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if this rect lies fully within the bounds of `rect`, otherwise `false`</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(1, 1, 5, 5).inside(new HSRect(0, 0, 10, 10)) // true</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L104" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:104</a>
+        </div>
+    </div>
+    <div class="method" id="intersect">
+        <h3>
+<a href="#intersect">intersect(rect) -> HSRect</a>
+        </h3>
+
+        <div class="description">Returns the intersection of this rect and another rect</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">intersect(rect) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rect</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An HSRect to intersect with</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">A new HSRect describing the overlapping area, or a zero-sized HSRect if they don&#39;t overlap</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 10, 10).intersect(new HSRect(5, 5, 10, 10)) // new HSRect(5, 5, 5, 5)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L113" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:113</a>
+        </div>
+    </div>
+    <div class="method" id="move">
+        <h3>
+<a href="#move">move(offset) -> HSRect</a>
+        </h3>
+
+        <div class="description">Moves this rect by an offset</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">move(offset) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">offset</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">An HSPoint (using its x/y), or an HSSize (using its w/h)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">A new HSRect moved by the given offset, or an unchanged copy of this rect if `offset` is not an HSPoint or HSSize</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 10, 10).move(new HSPoint(5, 5)) // new HSRect(5, 5, 10, 10)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L122" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:122</a>
+        </div>
+    </div>
+    <div class="method" id="scale">
+        <h3>
+<a href="#scale">scale(factor) -> HSRect</a>
+        </h3>
+
+        <div class="description">Scales the size of this rect, keeping its center constant</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">scale(factor) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">factor</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A number to scale both dimensions uniformly, or an HSSize/HSPoint to scale the width and height independently</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">A new HSRect scaled by the given factor, or an unchanged copy of this rect if `factor` is not a positive number, HSSize or HSPoint</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 10, 10).scale(2) // new HSRect(-5, -5, 20, 20)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L131" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:131</a>
+        </div>
+    </div>
+    <div class="method" id="toUnitRect">
+        <h3>
+<a href="#toUnitRect">toUnitRect(frame) -> HSRect</a>
+        </h3>
+
+        <div class="description">Converts this rect into a unit rect (coordinates and dimensions between 0 and 1) within a given frame</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toUnitRect(frame) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">frame</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An HSRect describing the frame this rect is relative to</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">A new HSRect with coordinates and dimensions normalized to the 0-1 range within `frame`</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(50, 50, 50, 50).toUnitRect(new HSRect(0, 0, 100, 100)) // new HSRect(0.5, 0.5, 0.5, 0.5)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L140" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:140</a>
+        </div>
+    </div>
+    <div class="method" id="union">
+        <h3>
+<a href="#union">union(rect) -> HSRect</a>
+        </h3>
+
+        <div class="description">Returns the smallest rect that encloses both this rect and another rect</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">union(rect) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rect</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An HSRect to union with</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">A new HSRect that fully encloses both rects</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 10, 10).union(new HSRect(5, 5, 10, 10)) // new HSRect(0, 0, 15, 15)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L149" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:149</a>
+        </div>
+    </div>
+    <div class="method" id="vector">
+        <h3>
+<a href="#vector">vector(other) -> HSPoint</a>
+        </h3>
+
+        <div class="description">Returns the vector from this rect&#39;s center to another point or rect&#39;s center</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">vector(other) -> HSPoint</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">other</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">An HSPoint, or an HSRect (whose center will be used)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSPoint</div>
+        <div class="return-desc">A new HSPoint representing the vector, or `new HSPoint(0, 0)` if `other` is not an HSPoint or HSRect</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSRect(0, 0, 2, 2).vector(new HSPoint(4, 5)) // new HSPoint(3, 4)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSRect.swift#L158" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSRect.swift:158</a>
+        </div>
+    </div>
         </main>
 
         <!-- Right TOC sidebar -->

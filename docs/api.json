@@ -24540,6 +24540,319 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
           "lineNumber": 28
+        },
+        {
+          "name": "angle",
+          "signature": "func angle() -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Returns the angle between the positive x axis and this point, treated as a vector\n- Returns: A number containing the angle in radians\n- Example:\n```\nnew HSPoint(1, 1).angle() // 0.7853981633974483 (pi/4)\n```",
+          "description": "Returns the angle between the positive x axis and this point, treated as a vector",
+          "params": [],
+          "returns": {
+            "type": "number",
+            "description": "A number containing the angle in radians"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(1, 1).angle() // 0.7853981633974483 (pi/4)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 36
+        },
+        {
+          "name": "angleTo",
+          "signature": "func angleTo(_ other: JSValue) -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Returns the angle between the positive x axis and the vector from this point to another point or rect's center\n- Parameter other: {HSPoint | HSRect} An HSPoint, or an HSRect (whose center will be used)\n- Returns: A number containing the angle in radians, or 0 if `other` is not an HSPoint or HSRect\n- Example:\n```\nnew HSPoint(0, 0).angleTo(new HSPoint(1, 1)) // 0.7853981633974483\n```",
+          "description": "Returns the angle between the positive x axis and the vector from this point to another point or rect's center",
+          "params": [
+            {
+              "name": "other",
+              "type": "JSValue",
+              "description": "An HSPoint, or an HSRect (whose center will be used)",
+              "optional": false,
+              "tsType": "HSPoint | HSRect"
+            }
+          ],
+          "returns": {
+            "type": "number",
+            "description": "A number containing the angle in radians, or 0 if `other` is not an HSPoint or HSRect"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(0, 0).angleTo(new HSPoint(1, 1)) // 0.7853981633974483"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 45
+        },
+        {
+          "name": "distance",
+          "signature": "func distance(_ other: JSValue) -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Finds the distance between this point and another point or rect's center\n- Parameter other: {HSPoint | HSRect} An HSPoint, or an HSRect (whose center will be used)\n- Returns: A number containing the distance, or 0 if `other` is not an HSPoint or HSRect\n- Example:\n```\nnew HSPoint(0, 0).distance(new HSPoint(3, 4)) // 5.0\n```",
+          "description": "Finds the distance between this point and another point or rect's center",
+          "params": [
+            {
+              "name": "other",
+              "type": "JSValue",
+              "description": "An HSPoint, or an HSRect (whose center will be used)",
+              "optional": false,
+              "tsType": "HSPoint | HSRect"
+            }
+          ],
+          "returns": {
+            "type": "number",
+            "description": "A number containing the distance, or 0 if `other` is not an HSPoint or HSRect"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(0, 0).distance(new HSPoint(3, 4)) // 5.0"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 54
+        },
+        {
+          "name": "equals",
+          "signature": "func equals(_ other: HSPoint) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks if this point is equal to another point\n- Parameter other: An HSPoint to compare against\n- Returns: `true` if both points have the same x and y coordinates, otherwise `false`\n- Example:\n```\nnew HSPoint(1, 2).equals(new HSPoint(1, 2)) // true\n```",
+          "description": "Checks if this point is equal to another point",
+          "params": [
+            {
+              "name": "other",
+              "type": "HSPoint",
+              "description": "An HSPoint to compare against",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if both points have the same x and y coordinates, otherwise `false`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(1, 2).equals(new HSPoint(1, 2)) // true"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 63
+        },
+        {
+          "name": "floor",
+          "signature": "func floor() -> HSPoint",
+          "isStatic": false,
+          "rawDocumentation": "Truncates the coordinates of this point towards negative infinity\n- Returns: A new HSPoint with the x and y coordinates floored to the nearest integer\n- Example:\n```\nnew HSPoint(1.7, -1.2).floor() // new HSPoint(1, -2)\n```",
+          "description": "Truncates the coordinates of this point towards negative infinity",
+          "params": [],
+          "returns": {
+            "type": "HSPoint",
+            "description": "A new HSPoint with the x and y coordinates floored to the nearest integer"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(1.7, -1.2).floor() // new HSPoint(1, -2)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 71
+        },
+        {
+          "name": "inside",
+          "signature": "func inside(_ rect: HSRect) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks if this point lies inside a given rect\n- Parameter rect: An HSRect to check against\n- Returns: `true` if this point lies within the bounds of `rect`, otherwise `false`\n- Example:\n```\nnew HSPoint(5, 5).inside(new HSRect(0, 0, 10, 10)) // true\n```",
+          "description": "Checks if this point lies inside a given rect",
+          "params": [
+            {
+              "name": "rect",
+              "type": "HSRect",
+              "description": "An HSRect to check against",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if this point lies within the bounds of `rect`, otherwise `false`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(5, 5).inside(new HSRect(0, 0, 10, 10)) // true"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 80
+        },
+        {
+          "name": "move",
+          "signature": "func move(_ offset: JSValue) -> HSPoint",
+          "isStatic": false,
+          "rawDocumentation": "Moves this point by an offset\n- Parameter offset: {HSPoint | HSSize} An HSPoint (using its x/y), or an HSSize (using its w/h)\n- Returns: A new HSPoint moved by the given offset, or an unchanged copy of this point if `offset` is not an HSPoint or HSSize\n- Example:\n```\nnew HSPoint(1, 1).move(new HSPoint(2, 3)) // new HSPoint(3, 4)\n```",
+          "description": "Moves this point by an offset",
+          "params": [
+            {
+              "name": "offset",
+              "type": "JSValue",
+              "description": "An HSPoint (using its x/y), or an HSSize (using its w/h)",
+              "optional": false,
+              "tsType": "HSPoint | HSSize"
+            }
+          ],
+          "returns": {
+            "type": "HSPoint",
+            "description": "A new HSPoint moved by the given offset, or an unchanged copy of this point if `offset` is not an HSPoint or HSSize"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(1, 1).move(new HSPoint(2, 3)) // new HSPoint(3, 4)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 89
+        },
+        {
+          "name": "normalize",
+          "signature": "func normalize() -> HSPoint",
+          "isStatic": false,
+          "rawDocumentation": "Normalizes this point, treated as a vector, to a length of 1\n- Returns: A new HSPoint with the same direction as this point but a length of 1, or `new HSPoint(0, 0)` if this point has zero length\n- Example:\n```\nnew HSPoint(3, 4).normalize() // new HSPoint(0.6, 0.8)\n```",
+          "description": "Normalizes this point, treated as a vector, to a length of 1",
+          "params": [],
+          "returns": {
+            "type": "HSPoint",
+            "description": "A new HSPoint with the same direction as this point but a length of 1, or `new HSPoint(0, 0)` if this point has zero length"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(3, 4).normalize() // new HSPoint(0.6, 0.8)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 97
+        },
+        {
+          "name": "rotateCCW",
+          "signature": "func rotateCCW(_ aroundPoint: HSPoint, _ times: Int) -> HSPoint",
+          "isStatic": false,
+          "rawDocumentation": "Rotates this point counter-clockwise around another point\n- Parameters:\n  - aroundPoint: The HSPoint to rotate around\n  - times: The number of 90 degree counter-clockwise rotations to perform\n- Returns: A new HSPoint containing the rotated coordinates\n- Example:\n```\nnew HSPoint(1, 0).rotateCCW(new HSPoint(0, 0), 1) // new HSPoint(0, 1)\n```",
+          "description": "Rotates this point counter-clockwise around another point",
+          "params": [
+            {
+              "name": "aroundPoint",
+              "type": "HSPoint",
+              "description": "The HSPoint to rotate around",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "times",
+              "type": "number",
+              "description": "The number of 90 degree counter-clockwise rotations to perform",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSPoint",
+            "description": "A new HSPoint containing the rotated coordinates"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(1, 0).rotateCCW(new HSPoint(0, 0), 1) // new HSPoint(0, 1)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 108
+        },
+        {
+          "name": "scale",
+          "signature": "func scale(_ factor: JSValue) -> HSPoint",
+          "isStatic": false,
+          "rawDocumentation": "Scales this point, treated as a vector\n- Parameter factor: {number | HSSize | HSPoint} A number to scale both coordinates uniformly, or an HSSize/HSPoint to scale the x and y coordinates independently\n- Returns: A new HSPoint scaled by the given factor, or an unchanged copy of this point if `factor` is not a number, HSSize or HSPoint\n- Example:\n```\nnew HSPoint(2, 3).scale(2) // new HSPoint(4, 6)\n```",
+          "description": "Scales this point, treated as a vector",
+          "params": [
+            {
+              "name": "factor",
+              "type": "JSValue",
+              "description": "A number to scale both coordinates uniformly, or an HSSize/HSPoint to scale the x and y coordinates independently",
+              "optional": false,
+              "tsType": "number | HSSize | HSPoint"
+            }
+          ],
+          "returns": {
+            "type": "HSPoint",
+            "description": "A new HSPoint scaled by the given factor, or an unchanged copy of this point if `factor` is not a number, HSSize or HSPoint"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(2, 3).scale(2) // new HSPoint(4, 6)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 117
+        },
+        {
+          "name": "vector",
+          "signature": "func vector(_ other: JSValue) -> HSPoint",
+          "isStatic": false,
+          "rawDocumentation": "Returns the vector from this point to another point or rect's center\n- Parameter other: {HSPoint | HSRect} An HSPoint, or an HSRect (whose center will be used)\n- Returns: A new HSPoint representing the vector, or `new HSPoint(0, 0)` if `other` is not an HSPoint or HSRect\n- Example:\n```\nnew HSPoint(1, 1).vector(new HSPoint(4, 5)) // new HSPoint(3, 4)\n```",
+          "description": "Returns the vector from this point to another point or rect's center",
+          "params": [
+            {
+              "name": "other",
+              "type": "JSValue",
+              "description": "An HSPoint, or an HSRect (whose center will be used)",
+              "optional": false,
+              "tsType": "HSPoint | HSRect"
+            }
+          ],
+          "returns": {
+            "type": "HSPoint",
+            "description": "A new HSPoint representing the vector, or `new HSPoint(0, 0)` if `other` is not an HSPoint or HSRect"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSPoint(1, 1).vector(new HSPoint(4, 5)) // new HSPoint(3, 4)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSPoint.swift",
+          "lineNumber": 126
         }
       ],
       "properties": [
@@ -24619,6 +24932,388 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
           "lineNumber": 42
+        },
+        {
+          "name": "angleTo",
+          "signature": "func angleTo(_ other: JSValue) -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Returns the angle between the positive x axis and the vector from this rect's center to another point or rect's center\n- Parameter other: {HSPoint | HSRect} An HSPoint, or an HSRect (whose center will be used)\n- Returns: A number containing the angle in radians, or 0 if `other` is not an HSPoint or HSRect\n- Example:\n```\nnew HSRect(0, 0, 2, 2).angleTo(new HSPoint(2, 2)) // 0.7853981633974483\n```",
+          "description": "Returns the angle between the positive x axis and the vector from this rect's center to another point or rect's center",
+          "params": [
+            {
+              "name": "other",
+              "type": "JSValue",
+              "description": "An HSPoint, or an HSRect (whose center will be used)",
+              "optional": false,
+              "tsType": "HSPoint | HSRect"
+            }
+          ],
+          "returns": {
+            "type": "number",
+            "description": "A number containing the angle in radians, or 0 if `other` is not an HSPoint or HSRect"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 2, 2).angleTo(new HSPoint(2, 2)) // 0.7853981633974483"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 51
+        },
+        {
+          "name": "distance",
+          "signature": "func distance(_ other: JSValue) -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Finds the distance between this rect's center and another point or rect's center\n- Parameter other: {HSPoint | HSRect} An HSPoint, or an HSRect (whose center will be used)\n- Returns: A number containing the distance, or 0 if `other` is not an HSPoint or HSRect\n- Example:\n```\nnew HSRect(0, 0, 2, 2).distance(new HSPoint(4, 5)) // 5.0\n```",
+          "description": "Finds the distance between this rect's center and another point or rect's center",
+          "params": [
+            {
+              "name": "other",
+              "type": "JSValue",
+              "description": "An HSPoint, or an HSRect (whose center will be used)",
+              "optional": false,
+              "tsType": "HSPoint | HSRect"
+            }
+          ],
+          "returns": {
+            "type": "number",
+            "description": "A number containing the distance, or 0 if `other` is not an HSPoint or HSRect"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 2, 2).distance(new HSPoint(4, 5)) // 5.0"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 60
+        },
+        {
+          "name": "equals",
+          "signature": "func equals(_ other: HSRect) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks if this rect is equal to another rect\n- Parameter other: An HSRect to compare against\n- Returns: `true` if both rects have the same origin and size, otherwise `false`\n- Example:\n```\nnew HSRect(0, 0, 10, 10).equals(new HSRect(0, 0, 10, 10)) // true\n```",
+          "description": "Checks if this rect is equal to another rect",
+          "params": [
+            {
+              "name": "other",
+              "type": "HSRect",
+              "description": "An HSRect to compare against",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if both rects have the same origin and size, otherwise `false`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 10, 10).equals(new HSRect(0, 0, 10, 10)) // true"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 69
+        },
+        {
+          "name": "fit",
+          "signature": "func fit(_ bounds: HSRect) -> HSRect",
+          "isStatic": false,
+          "rawDocumentation": "Ensures this rect is fully inside `bounds`, scaling it down (preserving aspect ratio) if it's larger, and moving it if necessary\n- Parameter bounds: An HSRect describing the bounds to fit within\n- Returns: A new HSRect that fits fully inside `bounds`\n- Example:\n```\nnew HSRect(0, 0, 200, 100).fit(new HSRect(0, 0, 100, 100)) // new HSRect(0, 0, 100, 50)\n```",
+          "description": "Ensures this rect is fully inside `bounds`, scaling it down (preserving aspect ratio) if it's larger, and moving it if necessary",
+          "params": [
+            {
+              "name": "bounds",
+              "type": "HSRect",
+              "description": "An HSRect describing the bounds to fit within",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSRect",
+            "description": "A new HSRect that fits fully inside `bounds`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 200, 100).fit(new HSRect(0, 0, 100, 100)) // new HSRect(0, 0, 100, 50)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 78
+        },
+        {
+          "name": "floor",
+          "signature": "func floor() -> HSRect",
+          "isStatic": false,
+          "rawDocumentation": "Truncates the origin and size of this rect towards negative infinity\n- Returns: A new HSRect with the x, y, w and h values floored to the nearest integer\n- Example:\n```\nnew HSRect(1.7, 1.2, 10.9, 10.1).floor() // new HSRect(1, 1, 10, 10)\n```",
+          "description": "Truncates the origin and size of this rect towards negative infinity",
+          "params": [],
+          "returns": {
+            "type": "HSRect",
+            "description": "A new HSRect with the x, y, w and h values floored to the nearest integer"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(1.7, 1.2, 10.9, 10.1).floor() // new HSRect(1, 1, 10, 10)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 86
+        },
+        {
+          "name": "fromUnitRect",
+          "signature": "func fromUnitRect(_ frame: HSRect) -> HSRect",
+          "isStatic": false,
+          "rawDocumentation": "Converts a unit rect (coordinates and dimensions between 0 and 1) within a given frame into absolute coordinates\n- Parameter frame: An HSRect describing the frame this unit rect is relative to\n- Returns: A new HSRect with coordinates and dimensions converted from the 0-1 range into absolute values within `frame`\n- Example:\n```\nnew HSRect(0.5, 0.5, 0.5, 0.5).fromUnitRect(new HSRect(0, 0, 100, 100)) // new HSRect(50, 50, 50, 50)\n```",
+          "description": "Converts a unit rect (coordinates and dimensions between 0 and 1) within a given frame into absolute coordinates",
+          "params": [
+            {
+              "name": "frame",
+              "type": "HSRect",
+              "description": "An HSRect describing the frame this unit rect is relative to",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSRect",
+            "description": "A new HSRect with coordinates and dimensions converted from the 0-1 range into absolute values within `frame`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0.5, 0.5, 0.5, 0.5).fromUnitRect(new HSRect(0, 0, 100, 100)) // new HSRect(50, 50, 50, 50)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 95
+        },
+        {
+          "name": "inside",
+          "signature": "func inside(_ rect: HSRect) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks if this rect lies fully inside another rect\n- Parameter rect: An HSRect to check against\n- Returns: `true` if this rect lies fully within the bounds of `rect`, otherwise `false`\n- Example:\n```\nnew HSRect(1, 1, 5, 5).inside(new HSRect(0, 0, 10, 10)) // true\n```",
+          "description": "Checks if this rect lies fully inside another rect",
+          "params": [
+            {
+              "name": "rect",
+              "type": "HSRect",
+              "description": "An HSRect to check against",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if this rect lies fully within the bounds of `rect`, otherwise `false`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(1, 1, 5, 5).inside(new HSRect(0, 0, 10, 10)) // true"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 104
+        },
+        {
+          "name": "intersect",
+          "signature": "func intersect(_ rect: HSRect) -> HSRect",
+          "isStatic": false,
+          "rawDocumentation": "Returns the intersection of this rect and another rect\n- Parameter rect: An HSRect to intersect with\n- Returns: A new HSRect describing the overlapping area, or a zero-sized HSRect if they don't overlap\n- Example:\n```\nnew HSRect(0, 0, 10, 10).intersect(new HSRect(5, 5, 10, 10)) // new HSRect(5, 5, 5, 5)\n```",
+          "description": "Returns the intersection of this rect and another rect",
+          "params": [
+            {
+              "name": "rect",
+              "type": "HSRect",
+              "description": "An HSRect to intersect with",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSRect",
+            "description": "A new HSRect describing the overlapping area, or a zero-sized HSRect if they don't overlap"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 10, 10).intersect(new HSRect(5, 5, 10, 10)) // new HSRect(5, 5, 5, 5)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 113
+        },
+        {
+          "name": "move",
+          "signature": "func move(_ offset: JSValue) -> HSRect",
+          "isStatic": false,
+          "rawDocumentation": "Moves this rect by an offset\n- Parameter offset: {HSPoint | HSSize} An HSPoint (using its x/y), or an HSSize (using its w/h)\n- Returns: A new HSRect moved by the given offset, or an unchanged copy of this rect if `offset` is not an HSPoint or HSSize\n- Example:\n```\nnew HSRect(0, 0, 10, 10).move(new HSPoint(5, 5)) // new HSRect(5, 5, 10, 10)\n```",
+          "description": "Moves this rect by an offset",
+          "params": [
+            {
+              "name": "offset",
+              "type": "JSValue",
+              "description": "An HSPoint (using its x/y), or an HSSize (using its w/h)",
+              "optional": false,
+              "tsType": "HSPoint | HSSize"
+            }
+          ],
+          "returns": {
+            "type": "HSRect",
+            "description": "A new HSRect moved by the given offset, or an unchanged copy of this rect if `offset` is not an HSPoint or HSSize"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 10, 10).move(new HSPoint(5, 5)) // new HSRect(5, 5, 10, 10)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 122
+        },
+        {
+          "name": "scale",
+          "signature": "func scale(_ factor: JSValue) -> HSRect",
+          "isStatic": false,
+          "rawDocumentation": "Scales the size of this rect, keeping its center constant\n- Parameter factor: {number | HSSize | HSPoint} A number to scale both dimensions uniformly, or an HSSize/HSPoint to scale the width and height independently\n- Returns: A new HSRect scaled by the given factor, or an unchanged copy of this rect if `factor` is not a positive number, HSSize or HSPoint\n- Example:\n```\nnew HSRect(0, 0, 10, 10).scale(2) // new HSRect(-5, -5, 20, 20)\n```",
+          "description": "Scales the size of this rect, keeping its center constant",
+          "params": [
+            {
+              "name": "factor",
+              "type": "JSValue",
+              "description": "A number to scale both dimensions uniformly, or an HSSize/HSPoint to scale the width and height independently",
+              "optional": false,
+              "tsType": "number | HSSize | HSPoint"
+            }
+          ],
+          "returns": {
+            "type": "HSRect",
+            "description": "A new HSRect scaled by the given factor, or an unchanged copy of this rect if `factor` is not a positive number, HSSize or HSPoint"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 10, 10).scale(2) // new HSRect(-5, -5, 20, 20)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 131
+        },
+        {
+          "name": "toUnitRect",
+          "signature": "func toUnitRect(_ frame: HSRect) -> HSRect",
+          "isStatic": false,
+          "rawDocumentation": "Converts this rect into a unit rect (coordinates and dimensions between 0 and 1) within a given frame\n- Parameter frame: An HSRect describing the frame this rect is relative to\n- Returns: A new HSRect with coordinates and dimensions normalized to the 0-1 range within `frame`\n- Example:\n```\nnew HSRect(50, 50, 50, 50).toUnitRect(new HSRect(0, 0, 100, 100)) // new HSRect(0.5, 0.5, 0.5, 0.5)\n```",
+          "description": "Converts this rect into a unit rect (coordinates and dimensions between 0 and 1) within a given frame",
+          "params": [
+            {
+              "name": "frame",
+              "type": "HSRect",
+              "description": "An HSRect describing the frame this rect is relative to",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSRect",
+            "description": "A new HSRect with coordinates and dimensions normalized to the 0-1 range within `frame`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(50, 50, 50, 50).toUnitRect(new HSRect(0, 0, 100, 100)) // new HSRect(0.5, 0.5, 0.5, 0.5)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 140
+        },
+        {
+          "name": "union",
+          "signature": "func union(_ rect: HSRect) -> HSRect",
+          "isStatic": false,
+          "rawDocumentation": "Returns the smallest rect that encloses both this rect and another rect\n- Parameter rect: An HSRect to union with\n- Returns: A new HSRect that fully encloses both rects\n- Example:\n```\nnew HSRect(0, 0, 10, 10).union(new HSRect(5, 5, 10, 10)) // new HSRect(0, 0, 15, 15)\n```",
+          "description": "Returns the smallest rect that encloses both this rect and another rect",
+          "params": [
+            {
+              "name": "rect",
+              "type": "HSRect",
+              "description": "An HSRect to union with",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "HSRect",
+            "description": "A new HSRect that fully encloses both rects"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 10, 10).union(new HSRect(5, 5, 10, 10)) // new HSRect(0, 0, 15, 15)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 149
+        },
+        {
+          "name": "vector",
+          "signature": "func vector(_ other: JSValue) -> HSPoint",
+          "isStatic": false,
+          "rawDocumentation": "Returns the vector from this rect's center to another point or rect's center\n- Parameter other: {HSPoint | HSRect} An HSPoint, or an HSRect (whose center will be used)\n- Returns: A new HSPoint representing the vector, or `new HSPoint(0, 0)` if `other` is not an HSPoint or HSRect\n- Example:\n```\nnew HSRect(0, 0, 2, 2).vector(new HSPoint(4, 5)) // new HSPoint(3, 4)\n```",
+          "description": "Returns the vector from this rect's center to another point or rect's center",
+          "params": [
+            {
+              "name": "other",
+              "type": "JSValue",
+              "description": "An HSPoint, or an HSRect (whose center will be used)",
+              "optional": false,
+              "tsType": "HSPoint | HSRect"
+            }
+          ],
+          "returns": {
+            "type": "HSPoint",
+            "description": "A new HSPoint representing the vector, or `new HSPoint(0, 0)` if `other` is not an HSPoint or HSRect"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSRect(0, 0, 2, 2).vector(new HSPoint(4, 5)) // new HSPoint(3, 4)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSRect.swift",
+          "lineNumber": 158
         }
       ],
       "properties": [
@@ -24732,6 +25427,110 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/Types/HSSize.swift",
           "lineNumber": 28
+        },
+        {
+          "name": "angle",
+          "signature": "func angle() -> Double",
+          "isStatic": false,
+          "rawDocumentation": "Returns the angle between the positive x axis and this size, treated as a vector of (w, h)\n- Returns: A number containing the angle in radians\n- Example:\n```\nnew HSSize(1, 1).angle() // 0.7853981633974483 (pi/4)\n```",
+          "description": "Returns the angle between the positive x axis and this size, treated as a vector of (w, h)",
+          "params": [],
+          "returns": {
+            "type": "number",
+            "description": "A number containing the angle in radians"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSSize(1, 1).angle() // 0.7853981633974483 (pi/4)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSSize.swift",
+          "lineNumber": 36
+        },
+        {
+          "name": "equals",
+          "signature": "func equals(_ other: HSSize) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Checks if this size is equal to another size\n- Parameter other: An HSSize to compare against\n- Returns: `true` if both sizes have the same width and height, otherwise `false`\n- Example:\n```\nnew HSSize(10, 20).equals(new HSSize(10, 20)) // true\n```",
+          "description": "Checks if this size is equal to another size",
+          "params": [
+            {
+              "name": "other",
+              "type": "HSSize",
+              "description": "An HSSize to compare against",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` if both sizes have the same width and height, otherwise `false`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSSize(10, 20).equals(new HSSize(10, 20)) // true"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSSize.swift",
+          "lineNumber": 45
+        },
+        {
+          "name": "floor",
+          "signature": "func floor() -> HSSize",
+          "isStatic": false,
+          "rawDocumentation": "Truncates the width and height of this size towards negative infinity\n- Returns: A new HSSize with the w and h values floored to the nearest integer\n- Example:\n```\nnew HSSize(10.9, 20.1).floor() // new HSSize(10, 20)\n```",
+          "description": "Truncates the width and height of this size towards negative infinity",
+          "params": [],
+          "returns": {
+            "type": "HSSize",
+            "description": "A new HSSize with the w and h values floored to the nearest integer"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSSize(10.9, 20.1).floor() // new HSSize(10, 20)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSSize.swift",
+          "lineNumber": 53
+        },
+        {
+          "name": "scale",
+          "signature": "func scale(_ factor: JSValue) -> HSSize",
+          "isStatic": false,
+          "rawDocumentation": "Scales this size\n- Parameter factor: {number | HSSize | HSPoint} A number to scale both dimensions uniformly, or an HSSize/HSPoint to scale the width and height independently\n- Returns: A new HSSize scaled by the given factor, or an unchanged copy of this size if `factor` is not a number, HSSize or HSPoint\n- Example:\n```\nnew HSSize(10, 20).scale(2) // new HSSize(20, 40)\n```",
+          "description": "Scales this size",
+          "params": [
+            {
+              "name": "factor",
+              "type": "JSValue",
+              "description": "A number to scale both dimensions uniformly, or an HSSize/HSPoint to scale the width and height independently",
+              "optional": false,
+              "tsType": "number | HSSize | HSPoint"
+            }
+          ],
+          "returns": {
+            "type": "HSSize",
+            "description": "A new HSSize scaled by the given factor, or an unchanged copy of this size if `factor` is not a number, HSSize or HSPoint"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "new HSSize(10, 20).scale(2) // new HSSize(20, 40)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/Types/HSSize.swift",
+          "lineNumber": 62
         }
       ],
       "properties": [
@@ -24973,5 +25772,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-26T23:02:21.932Z"
+  "generatedAt": "2026-08-27T09:40:37.929Z"
 }

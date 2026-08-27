@@ -127,6 +127,132 @@
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSSize.swift#L28" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSSize.swift:28</a>
         </div>
     </div>
+    <div class="method" id="angle">
+        <h3>
+<a href="#angle">angle() -> number</a>
+        </h3>
+
+        <div class="description">Returns the angle between the positive x axis and this size, treated as a vector of (w, h)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">angle() -> number</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number</div>
+        <div class="return-desc">A number containing the angle in radians</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSSize(1, 1).angle() // 0.7853981633974483 (pi/4)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSSize.swift#L36" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSSize.swift:36</a>
+        </div>
+    </div>
+    <div class="method" id="equals">
+        <h3>
+<a href="#equals">equals(other) -> boolean</a>
+        </h3>
+
+        <div class="description">Checks if this size is equal to another size</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">equals(other) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">other</td>
+                    <td class="param-type">HSSize</td>
+                    <td class="param-desc">An HSSize to compare against</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if both sizes have the same width and height, otherwise `false`</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSSize(10, 20).equals(new HSSize(10, 20)) // true</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSSize.swift#L45" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSSize.swift:45</a>
+        </div>
+    </div>
+    <div class="method" id="floor">
+        <h3>
+<a href="#floor">floor() -> HSSize</a>
+        </h3>
+
+        <div class="description">Truncates the width and height of this size towards negative infinity</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">floor() -> HSSize</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSize</div>
+        <div class="return-desc">A new HSSize with the w and h values floored to the nearest integer</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSSize(10.9, 20.1).floor() // new HSSize(10, 20)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSSize.swift#L53" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSSize.swift:53</a>
+        </div>
+    </div>
+    <div class="method" id="scale">
+        <h3>
+<a href="#scale">scale(factor) -> HSSize</a>
+        </h3>
+
+        <div class="description">Scales this size</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">scale(factor) -> HSSize</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">factor</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A number to scale both dimensions uniformly, or an HSSize/HSPoint to scale the width and height independently</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSSize</div>
+        <div class="return-desc">A new HSSize scaled by the given factor, or an unchanged copy of this size if `factor` is not a number, HSSize or HSPoint</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">new HSSize(10, 20).scale(2) // new HSSize(20, 40)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSSize.swift#L62" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSSize.swift:62</a>
+        </div>
+    </div>
         </main>
 
         <!-- Right TOC sidebar -->

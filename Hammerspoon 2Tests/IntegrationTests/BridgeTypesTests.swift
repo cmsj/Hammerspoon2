@@ -404,4 +404,294 @@ struct BridgeTypesTests {
         harness.expectEqual("point.x", 10000.0)
         harness.expectEqual("size.w", 99999.0)
     }
+
+    // MARK: - HSPoint Geometry Method Tests
+
+    @Test("HSPoint angle() returns the angle from the positive x axis")
+    func testHSPointAngle() throws {
+        let harness = JSTestHarness()
+        #expect(harness.evalDouble("new HSPoint(1, 0).angle()") == 0.0)
+        let angle = try #require(harness.evalDouble("new HSPoint(0, 1).angle()"))
+        #expect(abs(angle - .pi / 2) < 0.0001)
+    }
+
+    @Test("HSPoint angleTo() measures the angle to another point or rect's center")
+    func testHSPointAngleTo() throws {
+        let harness = JSTestHarness()
+        let toPoint = try #require(harness.evalDouble("new HSPoint(0, 0).angleTo(new HSPoint(1, 1))"))
+        #expect(abs(toPoint - .pi / 4) < 0.0001)
+
+        let toRect = try #require(harness.evalDouble("new HSPoint(0, 0).angleTo(new HSRect(0, 0, 2, 2))"))
+        #expect(abs(toRect - .pi / 4) < 0.0001)
+
+        #expect(harness.evalDouble("new HSPoint(0, 0).angleTo(42)") == 0.0)
+    }
+
+    @Test("HSPoint distance() measures distance to another point or rect's center")
+    func testHSPointDistance() {
+        let harness = JSTestHarness()
+        #expect(harness.evalDouble("new HSPoint(0, 0).distance(new HSPoint(3, 4))") == 5.0)
+        #expect(harness.evalDouble("new HSPoint(0, 0).distance(new HSRect(2, 3, 2, 2))") == 5.0)
+        #expect(harness.evalDouble("new HSPoint(0, 0).distance('nope')") == 0.0)
+    }
+
+    @Test("HSPoint equals() compares coordinates")
+    func testHSPointEquals() {
+        let harness = JSTestHarness()
+        #expect(harness.evalBool("new HSPoint(1, 2).equals(new HSPoint(1, 2))") == true)
+        #expect(harness.evalBool("new HSPoint(1, 2).equals(new HSPoint(1, 3))") == false)
+    }
+
+    @Test("HSPoint floor() truncates towards negative infinity")
+    func testHSPointFloor() {
+        let harness = JSTestHarness()
+        harness.eval("var p = new HSPoint(1.7, -1.2).floor()")
+        #expect(harness.evalDouble("p.x") == 1.0)
+        #expect(harness.evalDouble("p.y") == -2.0)
+    }
+
+    @Test("HSPoint inside() checks containment within a rect")
+    func testHSPointInside() {
+        let harness = JSTestHarness()
+        #expect(harness.evalBool("new HSPoint(5, 5).inside(new HSRect(0, 0, 10, 10))") == true)
+        #expect(harness.evalBool("new HSPoint(15, 5).inside(new HSRect(0, 0, 10, 10))") == false)
+    }
+
+    @Test("HSPoint move() offsets by a point or size")
+    func testHSPointMove() {
+        let harness = JSTestHarness()
+        harness.eval("var p1 = new HSPoint(1, 1).move(new HSPoint(2, 3))")
+        #expect(harness.evalDouble("p1.x") == 3.0)
+        #expect(harness.evalDouble("p1.y") == 4.0)
+
+        harness.eval("var p2 = new HSPoint(1, 1).move(new HSSize(2, 3))")
+        #expect(harness.evalDouble("p2.x") == 3.0)
+        #expect(harness.evalDouble("p2.y") == 4.0)
+
+        harness.eval("var p3 = new HSPoint(1, 1).move('nope')")
+        #expect(harness.evalDouble("p3.x") == 1.0)
+        #expect(harness.evalDouble("p3.y") == 1.0)
+    }
+
+    @Test("HSPoint normalize() produces a unit-length vector")
+    func testHSPointNormalize() throws {
+        let harness = JSTestHarness()
+        harness.eval("var n = new HSPoint(3, 4).normalize()")
+        #expect(abs(try #require(harness.evalDouble("n.x")) - 0.6) < 0.0001)
+        #expect(abs(try #require(harness.evalDouble("n.y")) - 0.8) < 0.0001)
+
+        harness.eval("var zero = new HSPoint(0, 0).normalize()")
+        #expect(harness.evalDouble("zero.x") == 0.0)
+        #expect(harness.evalDouble("zero.y") == 0.0)
+    }
+
+    @Test("HSPoint rotateCCW() rotates around another point")
+    func testHSPointRotateCCW() throws {
+        let harness = JSTestHarness()
+        harness.eval("var r1 = new HSPoint(1, 0).rotateCCW(new HSPoint(0, 0), 1)")
+        #expect(abs(try #require(harness.evalDouble("r1.x")) - 0.0) < 0.0001)
+        #expect(abs(try #require(harness.evalDouble("r1.y")) - 1.0) < 0.0001)
+
+        harness.eval("var r2 = new HSPoint(1, 0).rotateCCW(new HSPoint(0, 0), 2)")
+        #expect(abs(try #require(harness.evalDouble("r2.x")) - (-1.0)) < 0.0001)
+        #expect(abs(try #require(harness.evalDouble("r2.y")) - 0.0) < 0.0001)
+    }
+
+    @Test("HSPoint scale() scales uniformly or per-axis")
+    func testHSPointScale() {
+        let harness = JSTestHarness()
+        harness.eval("var s1 = new HSPoint(2, 3).scale(2)")
+        #expect(harness.evalDouble("s1.x") == 4.0)
+        #expect(harness.evalDouble("s1.y") == 6.0)
+
+        harness.eval("var s2 = new HSPoint(2, 3).scale(new HSSize(2, 3))")
+        #expect(harness.evalDouble("s2.x") == 4.0)
+        #expect(harness.evalDouble("s2.y") == 9.0)
+    }
+
+    @Test("HSPoint vector() returns the displacement to another point or rect's center")
+    func testHSPointVector() {
+        let harness = JSTestHarness()
+        harness.eval("var v = new HSPoint(1, 1).vector(new HSPoint(4, 5))")
+        #expect(harness.evalDouble("v.x") == 3.0)
+        #expect(harness.evalDouble("v.y") == 4.0)
+    }
+
+    // MARK: - HSSize Geometry Method Tests
+
+    @Test("HSSize angle() treats width/height as a vector")
+    func testHSSizeAngle() throws {
+        let harness = JSTestHarness()
+        #expect(harness.evalDouble("new HSSize(1, 0).angle()") == 0.0)
+        let angle = try #require(harness.evalDouble("new HSSize(0, 1).angle()"))
+        #expect(abs(angle - .pi / 2) < 0.0001)
+    }
+
+    @Test("HSSize equals() compares width and height")
+    func testHSSizeEquals() {
+        let harness = JSTestHarness()
+        #expect(harness.evalBool("new HSSize(10, 20).equals(new HSSize(10, 20))") == true)
+        #expect(harness.evalBool("new HSSize(10, 20).equals(new HSSize(10, 21))") == false)
+    }
+
+    @Test("HSSize floor() truncates towards negative infinity")
+    func testHSSizeFloor() {
+        let harness = JSTestHarness()
+        harness.eval("var s = new HSSize(10.9, -20.1).floor()")
+        #expect(harness.evalDouble("s.w") == 10.0)
+        #expect(harness.evalDouble("s.h") == -21.0)
+    }
+
+    @Test("HSSize scale() scales uniformly or per-axis")
+    func testHSSizeScale() {
+        let harness = JSTestHarness()
+        harness.eval("var s1 = new HSSize(10, 20).scale(2)")
+        #expect(harness.evalDouble("s1.w") == 20.0)
+        #expect(harness.evalDouble("s1.h") == 40.0)
+
+        harness.eval("var s2 = new HSSize(10, 20).scale('nope')")
+        #expect(harness.evalDouble("s2.w") == 10.0)
+        #expect(harness.evalDouble("s2.h") == 20.0)
+    }
+
+    // MARK: - HSRect Geometry Method Tests
+
+    @Test("HSRect angleTo(), distance() and vector() use the rect's center")
+    func testHSRectCenterMethods() throws {
+        let harness = JSTestHarness()
+        harness.eval("var r = new HSRect(0, 0, 2, 2)") // center is (1, 1)
+
+        let angle = try #require(harness.evalDouble("r.angleTo(new HSPoint(2, 2))"))
+        #expect(abs(angle - .pi / 4) < 0.0001)
+
+        #expect(harness.evalDouble("r.distance(new HSPoint(4, 5))") == 5.0)
+
+        harness.eval("var v = r.vector(new HSPoint(4, 5))")
+        #expect(harness.evalDouble("v.x") == 3.0)
+        #expect(harness.evalDouble("v.y") == 4.0)
+    }
+
+    @Test("HSRect equals() compares origin and size")
+    func testHSRectEquals() {
+        let harness = JSTestHarness()
+        #expect(harness.evalBool("new HSRect(0, 0, 10, 10).equals(new HSRect(0, 0, 10, 10))") == true)
+        #expect(harness.evalBool("new HSRect(0, 0, 10, 10).equals(new HSRect(0, 0, 10, 11))") == false)
+    }
+
+    @Test("HSRect fit() preserves aspect ratio when shrinking to bounds")
+    func testHSRectFitShrinks() {
+        let harness = JSTestHarness()
+        harness.eval("var f = new HSRect(0, 0, 200, 100).fit(new HSRect(0, 0, 100, 100))")
+        #expect(harness.evalDouble("f.w") == 100.0)
+        #expect(harness.evalDouble("f.h") == 50.0)
+    }
+
+    @Test("HSRect fit() leaves a rect unchanged if it already fits")
+    func testHSRectFitAlreadyFits() {
+        let harness = JSTestHarness()
+        harness.eval("var f = new HSRect(10, 10, 50, 50).fit(new HSRect(0, 0, 100, 100))")
+        #expect(harness.evalDouble("f.x") == 10.0)
+        #expect(harness.evalDouble("f.y") == 10.0)
+        #expect(harness.evalDouble("f.w") == 50.0)
+        #expect(harness.evalDouble("f.h") == 50.0)
+    }
+
+    @Test("HSRect fit() repositions a rect that overflows bounds")
+    func testHSRectFitRepositions() {
+        let harness = JSTestHarness()
+        harness.eval("var f = new HSRect(50, 50, 50, 50).fit(new HSRect(0, 0, 100, 100))")
+        #expect(harness.evalDouble("f.x") == 50.0)
+        #expect(harness.evalDouble("f.y") == 50.0)
+        #expect(harness.evalDouble("f.w") == 50.0)
+        #expect(harness.evalDouble("f.h") == 50.0)
+
+        harness.eval("var f2 = new HSRect(80, 80, 50, 50).fit(new HSRect(0, 0, 100, 100))")
+        #expect(harness.evalDouble("f2.x") == 50.0)
+        #expect(harness.evalDouble("f2.y") == 50.0)
+    }
+
+    @Test("HSRect floor() truncates towards negative infinity")
+    func testHSRectFloor() {
+        let harness = JSTestHarness()
+        harness.eval("var r = new HSRect(1.7, 1.2, 10.9, 10.1).floor()")
+        #expect(harness.evalDouble("r.x") == 1.0)
+        #expect(harness.evalDouble("r.y") == 1.0)
+        #expect(harness.evalDouble("r.w") == 10.0)
+        #expect(harness.evalDouble("r.h") == 10.0)
+    }
+
+    @Test("HSRect fromUnitRect() converts normalized coordinates into a frame")
+    func testHSRectFromUnitRect() {
+        let harness = JSTestHarness()
+        harness.eval("var r = new HSRect(0.5, 0.5, 0.5, 0.5).fromUnitRect(new HSRect(0, 0, 100, 100))")
+        #expect(harness.evalDouble("r.x") == 50.0)
+        #expect(harness.evalDouble("r.y") == 50.0)
+        #expect(harness.evalDouble("r.w") == 50.0)
+        #expect(harness.evalDouble("r.h") == 50.0)
+    }
+
+    @Test("HSRect inside() checks full containment within another rect")
+    func testHSRectInside() {
+        let harness = JSTestHarness()
+        #expect(harness.evalBool("new HSRect(1, 1, 5, 5).inside(new HSRect(0, 0, 10, 10))") == true)
+        #expect(harness.evalBool("new HSRect(5, 5, 10, 10).inside(new HSRect(0, 0, 10, 10))") == false)
+    }
+
+    @Test("HSRect intersect() returns the overlapping area")
+    func testHSRectIntersect() {
+        let harness = JSTestHarness()
+        harness.eval("var r = new HSRect(0, 0, 10, 10).intersect(new HSRect(5, 5, 10, 10))")
+        #expect(harness.evalDouble("r.x") == 5.0)
+        #expect(harness.evalDouble("r.y") == 5.0)
+        #expect(harness.evalDouble("r.w") == 5.0)
+        #expect(harness.evalDouble("r.h") == 5.0)
+
+        harness.eval("var empty = new HSRect(0, 0, 5, 5).intersect(new HSRect(20, 20, 5, 5))")
+        #expect(harness.evalDouble("empty.w") == 0.0)
+        #expect(harness.evalDouble("empty.h") == 0.0)
+    }
+
+    @Test("HSRect move() offsets the origin, keeping size constant")
+    func testHSRectMove() {
+        let harness = JSTestHarness()
+        harness.eval("var r = new HSRect(0, 0, 10, 10).move(new HSPoint(5, 5))")
+        #expect(harness.evalDouble("r.x") == 5.0)
+        #expect(harness.evalDouble("r.y") == 5.0)
+        #expect(harness.evalDouble("r.w") == 10.0)
+        #expect(harness.evalDouble("r.h") == 10.0)
+    }
+
+    @Test("HSRect scale() scales size while keeping the center constant")
+    func testHSRectScale() {
+        let harness = JSTestHarness()
+        harness.eval("var r = new HSRect(0, 0, 10, 10).scale(2)")
+        #expect(harness.evalDouble("r.x") == -5.0)
+        #expect(harness.evalDouble("r.y") == -5.0)
+        #expect(harness.evalDouble("r.w") == 20.0)
+        #expect(harness.evalDouble("r.h") == 20.0)
+
+        harness.eval("var unchanged = new HSRect(0, 0, 10, 10).scale(-1)")
+        #expect(harness.evalDouble("unchanged.w") == 10.0)
+        #expect(harness.evalDouble("unchanged.h") == 10.0)
+    }
+
+    @Test("HSRect toUnitRect() normalizes coordinates within a frame")
+    func testHSRectToUnitRect() {
+        let harness = JSTestHarness()
+        harness.eval("var r = new HSRect(50, 50, 50, 50).toUnitRect(new HSRect(0, 0, 100, 100))")
+        #expect(harness.evalDouble("r.x") == 0.5)
+        #expect(harness.evalDouble("r.y") == 0.5)
+        #expect(harness.evalDouble("r.w") == 0.5)
+        #expect(harness.evalDouble("r.h") == 0.5)
+    }
+
+    @Test("HSRect union() returns the smallest enclosing rect")
+    func testHSRectUnion() {
+        let harness = JSTestHarness()
+        harness.eval("var r = new HSRect(0, 0, 10, 10).union(new HSRect(5, 5, 10, 10))")
+        #expect(harness.evalDouble("r.x") == 0.0)
+        #expect(harness.evalDouble("r.y") == 0.0)
+        #expect(harness.evalDouble("r.w") == 15.0)
+        #expect(harness.evalDouble("r.h") == 15.0)
+    }
 }
