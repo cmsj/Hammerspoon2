@@ -273,7 +273,7 @@ for what changed within it.</p>
 <tr>
 <td><code>hs.geometry</code></td>
 <td>→ <code>HSPoint</code>/<code>HSRect</code>/<code>HSSize</code></td>
-<td>plain value types, no math helpers — see <a href="#hsgeometry">details</a></td>
+<td>value types with math methods built in — see <a href="#hsgeometry">details</a></td>
 </tr>
 <tr>
 <td><code>hs.grid</code></td>
@@ -791,11 +791,17 @@ deadlocking script no longer takes the whole app down with it. Important behavio
 the async functions <strong>always resolve</strong>, never reject — check the <code>success</code> field of the
 resolved <code>{success, result, raw}</code> object rather than using <code>.catch()</code>.</p>
 <h3 id="hsgeometry">hs.geometry</h3>
-<p>There is no <code>hs.geometry</code> module or constructor function. <code>HSPoint</code>, <code>HSRect</code>, and <code>HSSize</code>
-are plain value types (used across <code>hs.screen</code>, <code>hs.window</code>, <code>hs.ax</code>, etc.) with simple
-<code>{x, y}</code> / <code>{x, y, w, h}</code> / <code>{w, h}</code> shapes, but <strong>no math library</strong> — no <code>union</code>,
-<code>intersect</code>, <code>inside</code>, <code>distance</code>, <code>area</code>, or similar helpers. If your v1 config did rect math
-via <code>hs.geometry</code>, you&#39;ll need to reimplement it by hand against the plain object shape.</p>
+<p>There is no <code>hs.geometry</code> module or constructor function. Construct <code>HSPoint</code>, <code>HSRect</code>, and
+<code>HSSize</code> directly with <code>new HSPoint(x, y)</code> / <code>new HSRect(x, y, w, h)</code> / <code>new HSSize(w, h)</code>
+(used across <code>hs.screen</code>, <code>hs.window</code>, <code>hs.ax</code>, etc.) — the same <code>{x, y}</code> / <code>{x, y, w, h}</code> /
+<code>{w, h}</code> shapes as v1. v1&#39;s <code>hs.geometry</code> math methods are now instance methods on these
+types directly, applied to whichever type they make sense for: <code>equals</code>, <code>floor</code>, and <code>scale</code>
+work on all three; <code>angle</code>, <code>inside</code>, <code>move</code>, <code>normalize</code>, <code>rotateCCW</code>, and <code>vector</code> are on
+<code>HSPoint</code>; <code>angleTo</code> and <code>distance</code> are on <code>HSPoint</code>/<code>HSRect</code>; and <code>fit</code>, <code>fromUnitRect</code>,
+<code>inside</code>, <code>intersect</code>, <code>toUnitRect</code>, and <code>union</code> are on <code>HSRect</code>. <code>type()</code> isn&#39;t present —
+use the <code>typeName</code> property instead. There&#39;s no free-standing <code>hs.geometry.new()</code>/coercion
+function either, so build the object you need directly rather than passing loose numbers or
+tables around.</p>
 <h3 id="hsnetwork">hs.network</h3>
 <p><code>hs.network.configuration</code>, <code>.host</code>, <code>.ping</code> (+<code>.echoRequest</code>), and <code>.reachability</code> all fold
 into one <strong><code>hs.network</code></strong> module — a real consolidation, not a cut-down module. Reachability

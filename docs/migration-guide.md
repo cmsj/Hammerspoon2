@@ -83,7 +83,7 @@ for what changed within it.
 | `hs.expose` | Gone | no window-overlay/hint-code equivalent |
 | `hs.fnutils` | Gone | native JS array methods |
 | `hs.fs` (+`.volume`,`.xattr`) | Present | comprehensive; see below |
-| `hs.geometry` | → `HSPoint`/`HSRect`/`HSSize` | plain value types, no math helpers — see [details](#hsgeometry) |
+| `hs.geometry` | → `HSPoint`/`HSRect`/`HSSize` | value types with math methods built in — see [details](#hsgeometry) |
 | `hs.grid` | Gone | see [Window management](#window-management) |
 | `hs.hash` | Present | absorbed base64, gained HMAC variants |
 | `hs.hid` (+`.led`) | → `hs.keyboard` | [details](#hshid--hskeyboard) |
@@ -335,11 +335,17 @@ resolved `{success, result, raw}` object rather than using `.catch()`.
 
 ### hs.geometry
 
-There is no `hs.geometry` module or constructor function. `HSPoint`, `HSRect`, and `HSSize`
-are plain value types (used across `hs.screen`, `hs.window`, `hs.ax`, etc.) with simple
-`{x, y}` / `{x, y, w, h}` / `{w, h}` shapes, but **no math library** — no `union`,
-`intersect`, `inside`, `distance`, `area`, or similar helpers. If your v1 config did rect math
-via `hs.geometry`, you'll need to reimplement it by hand against the plain object shape.
+There is no `hs.geometry` module or constructor function. Construct `HSPoint`, `HSRect`, and
+`HSSize` directly with `new HSPoint(x, y)` / `new HSRect(x, y, w, h)` / `new HSSize(w, h)`
+(used across `hs.screen`, `hs.window`, `hs.ax`, etc.) — the same `{x, y}` / `{x, y, w, h}` /
+`{w, h}` shapes as v1. v1's `hs.geometry` math methods are now instance methods on these
+types directly, applied to whichever type they make sense for: `equals`, `floor`, and `scale`
+work on all three; `angle`, `inside`, `move`, `normalize`, `rotateCCW`, and `vector` are on
+`HSPoint`; `angleTo` and `distance` are on `HSPoint`/`HSRect`; and `fit`, `fromUnitRect`,
+`inside`, `intersect`, `toUnitRect`, and `union` are on `HSRect`. `type()` isn't present —
+use the `typeName` property instead. There's no free-standing `hs.geometry.new()`/coercion
+function either, so build the object you need directly rather than passing loose numbers or
+tables around.
 
 ### hs.network
 

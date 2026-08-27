@@ -286,6 +286,81 @@ declare class HSPoint {
     constructor(x: number, y: number);
 
     /**
+     * Returns the angle between the positive x axis and this point, treated as a vector
+     * @returns A number containing the angle in radians
+     */
+    angle(): number;
+
+    /**
+     * Returns the angle between the positive x axis and the vector from this point to another point or rect's center
+     * @param other An HSPoint, or an HSRect (whose center will be used)
+     * @returns A number containing the angle in radians, or 0 if `other` is not an HSPoint or HSRect
+     */
+    angleTo(other: HSPoint | HSRect): number;
+
+    /**
+     * Finds the distance between this point and another point or rect's center
+     * @param other An HSPoint, or an HSRect (whose center will be used)
+     * @returns A number containing the distance, or 0 if `other` is not an HSPoint or HSRect
+     */
+    distance(other: HSPoint | HSRect): number;
+
+    /**
+     * Checks if this point is equal to another point
+     * @param other An HSPoint to compare against
+     * @returns `true` if both points have the same x and y coordinates, otherwise `false`
+     */
+    equals(other: HSPoint): boolean;
+
+    /**
+     * Truncates the coordinates of this point towards negative infinity
+     * @returns A new HSPoint with the x and y coordinates floored to the nearest integer
+     */
+    floor(): HSPoint;
+
+    /**
+     * Checks if this point lies inside a given rect
+     * @param rect An HSRect to check against
+     * @returns `true` if this point lies within the bounds of `rect`, otherwise `false`
+     */
+    inside(rect: HSRect): boolean;
+
+    /**
+     * Moves this point by an offset
+     * @param offset An HSPoint (using its x/y), or an HSSize (using its w/h)
+     * @returns A new HSPoint moved by the given offset, or an unchanged copy of this point if `offset` is not an HSPoint or HSSize
+     */
+    move(offset: HSPoint | HSSize): HSPoint;
+
+    /**
+     * Normalizes this point, treated as a vector, to a length of 1
+     * @returns A new HSPoint with the same direction as this point but a length of 1, or `new HSPoint(0, 0)` if this point has zero length
+     */
+    normalize(): HSPoint;
+
+    /**
+     * Rotates this point counter-clockwise around another point
+     * @param aroundPoint The HSPoint to rotate around
+     * @param times The number of 90 degree counter-clockwise rotations to perform
+     * @returns A new HSPoint containing the rotated coordinates
+     */
+    rotateCCW(aroundPoint: HSPoint, times: number): HSPoint;
+
+    /**
+     * Scales this point, treated as a vector
+     * @param factor A number to scale both coordinates uniformly, or an HSSize/HSPoint to scale the x and y coordinates independently
+     * @returns A new HSPoint scaled by the given factor, or an unchanged copy of this point if `factor` is not a number, HSSize or HSPoint
+     */
+    scale(factor: number | HSSize | HSPoint): HSPoint;
+
+    /**
+     * Returns the vector from this point to another point or rect's center
+     * @param other An HSPoint, or an HSRect (whose center will be used)
+     * @returns A new HSPoint representing the vector, or `new HSPoint(0, 0)` if `other` is not an HSPoint or HSRect
+     */
+    vector(other: HSPoint | HSRect): HSPoint;
+
+    /**
      * A coordinate for the x-axis position of this point
      */
     x: number;
@@ -309,6 +384,96 @@ declare class HSRect {
      * @param h The height of the rectangle
      */
     constructor(x: number, y: number, w: number, h: number);
+
+    /**
+     * Returns the angle between the positive x axis and the vector from this rect's center to another point or rect's center
+     * @param other An HSPoint, or an HSRect (whose center will be used)
+     * @returns A number containing the angle in radians, or 0 if `other` is not an HSPoint or HSRect
+     */
+    angleTo(other: HSPoint | HSRect): number;
+
+    /**
+     * Finds the distance between this rect's center and another point or rect's center
+     * @param other An HSPoint, or an HSRect (whose center will be used)
+     * @returns A number containing the distance, or 0 if `other` is not an HSPoint or HSRect
+     */
+    distance(other: HSPoint | HSRect): number;
+
+    /**
+     * Checks if this rect is equal to another rect
+     * @param other An HSRect to compare against
+     * @returns `true` if both rects have the same origin and size, otherwise `false`
+     */
+    equals(other: HSRect): boolean;
+
+    /**
+     * Ensures this rect is fully inside `bounds`, scaling it down (preserving aspect ratio) if it's larger, and moving it if necessary
+     * @param bounds An HSRect describing the bounds to fit within
+     * @returns A new HSRect that fits fully inside `bounds`
+     */
+    fit(bounds: HSRect): HSRect;
+
+    /**
+     * Truncates the origin and size of this rect towards negative infinity
+     * @returns A new HSRect with the x, y, w and h values floored to the nearest integer
+     */
+    floor(): HSRect;
+
+    /**
+     * Converts a unit rect (coordinates and dimensions between 0 and 1) within a given frame into absolute coordinates
+     * @param frame An HSRect describing the frame this unit rect is relative to
+     * @returns A new HSRect with coordinates and dimensions converted from the 0-1 range into absolute values within `frame`
+     */
+    fromUnitRect(frame: HSRect): HSRect;
+
+    /**
+     * Checks if this rect lies fully inside another rect
+     * @param rect An HSRect to check against
+     * @returns `true` if this rect lies fully within the bounds of `rect`, otherwise `false`
+     */
+    inside(rect: HSRect): boolean;
+
+    /**
+     * Returns the intersection of this rect and another rect
+     * @param rect An HSRect to intersect with
+     * @returns A new HSRect describing the overlapping area, or a zero-sized HSRect if they don't overlap
+     */
+    intersect(rect: HSRect): HSRect;
+
+    /**
+     * Moves this rect by an offset
+     * @param offset An HSPoint (using its x/y), or an HSSize (using its w/h)
+     * @returns A new HSRect moved by the given offset, or an unchanged copy of this rect if `offset` is not an HSPoint or HSSize
+     */
+    move(offset: HSPoint | HSSize): HSRect;
+
+    /**
+     * Scales the size of this rect, keeping its center constant
+     * @param factor A number to scale both dimensions uniformly, or an HSSize/HSPoint to scale the width and height independently
+     * @returns A new HSRect scaled by the given factor, or an unchanged copy of this rect if `factor` is not a positive number, HSSize or HSPoint
+     */
+    scale(factor: number | HSSize | HSPoint): HSRect;
+
+    /**
+     * Converts this rect into a unit rect (coordinates and dimensions between 0 and 1) within a given frame
+     * @param frame An HSRect describing the frame this rect is relative to
+     * @returns A new HSRect with coordinates and dimensions normalized to the 0-1 range within `frame`
+     */
+    toUnitRect(frame: HSRect): HSRect;
+
+    /**
+     * Returns the smallest rect that encloses both this rect and another rect
+     * @param rect An HSRect to union with
+     * @returns A new HSRect that fully encloses both rects
+     */
+    union(rect: HSRect): HSRect;
+
+    /**
+     * Returns the vector from this rect's center to another point or rect's center
+     * @param other An HSPoint, or an HSRect (whose center will be used)
+     * @returns A new HSPoint representing the vector, or `new HSPoint(0, 0)` if `other` is not an HSPoint or HSRect
+     */
+    vector(other: HSPoint | HSRect): HSPoint;
 
     /**
      * An x-axis coordinate for the top-left point of the rectangle
@@ -352,6 +517,32 @@ declare class HSSize {
      * @param h The height of the rectangle
      */
     constructor(w: number, h: number);
+
+    /**
+     * Returns the angle between the positive x axis and this size, treated as a vector of (w, h)
+     * @returns A number containing the angle in radians
+     */
+    angle(): number;
+
+    /**
+     * Checks if this size is equal to another size
+     * @param other An HSSize to compare against
+     * @returns `true` if both sizes have the same width and height, otherwise `false`
+     */
+    equals(other: HSSize): boolean;
+
+    /**
+     * Truncates the width and height of this size towards negative infinity
+     * @returns A new HSSize with the w and h values floored to the nearest integer
+     */
+    floor(): HSSize;
+
+    /**
+     * Scales this size
+     * @param factor A number to scale both dimensions uniformly, or an HSSize/HSPoint to scale the width and height independently
+     * @returns A new HSSize scaled by the given factor, or an unchanged copy of this size if `factor` is not a number, HSSize or HSPoint
+     */
+    scale(factor: number | HSSize | HSPoint): HSSize;
 
     /**
      * The width of the rectangle
