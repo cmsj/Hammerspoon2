@@ -72,14 +72,10 @@ jobs:
           path: TestResults.xcresult
           show-passed-tests: false
           show-code-coverage: false
-          title: Test Results
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: |
-            TestResults.xcresult
-            xcodebuild.log
+          path: xcodebuild.log
           retention-days: 30
