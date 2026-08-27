@@ -54,6 +54,12 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run tests
+        env:
+          # xcodebuild does NOT forward the job's own CI=true into the test host
+          # process — only vars prefixed TEST_RUNNER_ are passed through (with the
+          # prefix stripped). This is how HSUIWebViewTests.MemoryLeakTests detects CI
+          # to skip the WebKit CVDisplayLink crash that's specific to this runner.
+          TEST_RUNNER_CI: true
         run: |
           set -o pipefail && xcodebuild test \
             -scheme Development \
