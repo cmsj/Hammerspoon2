@@ -18,7 +18,22 @@ const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'js', 'html');
 const COMBINED_DIR = path.join(JSON_DIR, 'combined');
 const TEMPLATES_DIR = path.join(__dirname, 'templates');
-const MIGRATION_GUIDE_PATH = path.join(__dirname, '..', 'docs', 'migration-guide.md');
+const GUIDES = [
+    {
+        sourcePath: path.join(__dirname, '..', 'docs', 'getting-started.md'),
+        outputName: 'getting-started.html',
+        slug: 'getting-started',
+        pageTitle: 'Getting Started',
+        searchDescription: 'A guide to your first Hammerspoon 2 config: hotkeys, object lifecycle, watchers, and hs.ui.'
+    },
+    {
+        sourcePath: path.join(__dirname, '..', 'docs', 'migration-guide.md'),
+        outputName: 'migration-guide.html',
+        slug: 'migration-guide',
+        pageTitle: 'Migrating from Hammerspoon 1',
+        searchDescription: 'A guide for Hammerspoon 1 users on what changed, what moved, and what was removed in Hammerspoon 2.'
+    }
+];
 
 // Configure marked with highlight.js
 marked.setOptions({
@@ -238,19 +253,18 @@ function generateTypePage(typeName, protocol, isGlobal = false) {
 }
 
 /**
- * Generate the "Migrating from Hammerspoon 1" guide page from a standalone
- * Markdown source file. Returns a search index entry for the guide, or null
- * if no guide source file exists.
+ * Generate one standalone guide page (e.g. "Getting Started", "Migrating from
+ * Hammerspoon 1") from a Markdown source file. Returns a search index entry
+ * for the guide, or null if its source file doesn't exist.
  */
-function generateGuidePage() {
-    if (!fs.existsSync(MIGRATION_GUIDE_PATH)) {
+function generateGuidePage(guide) {
+    if (!fs.existsSync(guide.sourcePath)) {
         return null;
     }
 
-    const markdownSource = fs.readFileSync(MIGRATION_GUIDE_PATH, 'utf8');
-    const pageTitle = 'Migrating from Hammerspoon 1';
+    const markdownSource = fs.readFileSync(guide.sourcePath, 'utf8');
 
-    // marked doesn't assign heading ids by default; the guide's internal
+    // marked doesn't assign heading ids by default; guides' internal
     // cross-reference links depend on GitHub-style slugs, so generate them here.
     const usedSlugs = new Map();
     const renderer = new Renderer();
@@ -267,20 +281,20 @@ function generateGuidePage() {
     };
 
     const html = nunjucks.render('guide.njk', {
-        title: pageTitle,
-        currentPage: 'migration-guide',
-        pageTitle: pageTitle,
+        title: guide.pageTitle,
+        currentPage: guide.slug,
+        pageTitle: guide.pageTitle,
         contentHtml: marked(markdownSource, { renderer })
     });
 
-    const outputPath = path.join(OUTPUT_DIR, 'migration-guide.html');
+    const outputPath = path.join(OUTPUT_DIR, guide.outputName);
     fs.writeFileSync(outputPath, html);
-    console.log(`  ✓ Generated migration-guide.html`);
+    console.log(`  ✓ Generated ${guide.outputName}`);
 
     return {
-        fullName: pageTitle,
-        description: 'A guide for Hammerspoon 1 users on what changed, what moved, and what was removed in Hammerspoon 2.',
-        url: 'migration-guide.html',
+        fullName: guide.pageTitle,
+        description: guide.searchDescription,
+        url: guide.outputName,
         kind: 'guide'
     };
 }
@@ -484,12 +498,14 @@ function main() {
     // Build search index from collected data
     const searchIndex = buildSearchIndex(allModuleData, allTypeEntries);
 
-    // Generate the migration guide page, if a source file is present, and
-    // fold it into the search index
+    // Generate each guide page, if its source file is present, and fold it
+    // into the search index
     console.log('\nGenerating guides:');
-    const guideEntry = generateGuidePage();
-    if (guideEntry) {
-        searchIndex.unshift(guideEntry);
+    for (const guide of GUIDES) {
+        const guideEntry = generateGuidePage(guide);
+        if (guideEntry) {
+            searchIndex.unshift(guideEntry);
+        }
     }
 
     // Generate index page
