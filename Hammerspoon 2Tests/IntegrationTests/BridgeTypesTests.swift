@@ -683,6 +683,12 @@ struct BridgeTypesTests {
         #expect(harness.evalDouble("r.y") == 0.5)
         #expect(harness.evalDouble("r.w") == 0.5)
         #expect(harness.evalDouble("r.h") == 0.5)
+
+        harness.eval("var empty = new HSRect(200, 200, 50, 50).toUnitRect(new HSRect(0, 0, 100, 100))")
+        #expect(harness.evalDouble("empty.x") == 0.0)
+        #expect(harness.evalDouble("empty.y") == 0.0)
+        #expect(harness.evalDouble("empty.w") == 0.0)
+        #expect(harness.evalDouble("empty.h") == 0.0)
     }
 
     @Test("HSRect union() returns the smallest enclosing rect")

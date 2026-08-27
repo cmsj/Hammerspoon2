@@ -291,11 +291,14 @@ import CoreGraphics
             AKError("HSRect: toUnitRect() requires a frame with a non-zero width and height")
             return HSRect(x: x, y: y, w: w, h: h)
         }
-        let clamped = intersect(frame)
-        return HSRect(x: (clamped.x - frame.x) / frame.w,
-                      y: (clamped.y - frame.y) / frame.h,
-                      w: clamped.w / frame.w,
-                      h: clamped.h / frame.h)
+        let clamped = CGRect(from: self).intersection(CGRect(from: frame))
+        guard !clamped.isNull else {
+            return HSRect(x: 0, y: 0, w: 0, h: 0)
+        }
+        return HSRect(x: (clamped.minX - frame.x) / frame.w,
+                      y: (clamped.minY - frame.y) / frame.h,
+                      w: clamped.width / frame.w,
+                      h: clamped.height / frame.h)
     }
 
     @objc func union(_ rect: HSRect) -> HSRect {
