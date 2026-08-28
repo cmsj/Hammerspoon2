@@ -99,6 +99,7 @@ class JSEngine {
             context.globalObject.deleteProperty("_hs_fileExists")
             context.globalObject.deleteProperty("_hs_expandPath")
             context.globalObject.deleteProperty("_hs_eval")
+            context.globalObject.deleteProperty("_hs_configDir")
 
             // Force a synchronous full GC cycle (mark → sweep → finalize) before
             // tearing down the VM. JSC's concurrent GC defers ObjC bridge finalizers
@@ -205,7 +206,7 @@ extension JSEngine: JSEngineProtocol {
 
 struct RequireInstaller: JSContextInstallable {
     func install(in context: JSContext) throws {
-        // Four primitives used by require.js. They are captured in its IIFE closure
+        // Five primitives used by require.js. They are captured in its IIFE closure
         // and then deleted from global scope, so user code cannot reach them.
 
         let readFile: @convention(block) (String) -> String? = { path in
@@ -233,6 +234,10 @@ struct RequireInstaller: JSContextInstallable {
         context.setObject(fileExists, forKeyedSubscript: "_hs_fileExists" as NSString)
         context.setObject(expandPath, forKeyedSubscript: "_hs_expandPath" as NSString)
         context.setObject(evalScript, forKeyedSubscript: "_hs_eval"       as NSString)
+
+        // The directory containing the user's config file, wherever they chose to put it.
+        let configDir = SettingsManager.shared.configLocation.deletingLastPathComponent().path
+        context.setObject(configDir, forKeyedSubscript: "_hs_configDir" as NSString)
 
         guard let requireURL = Bundle.main.url(forResource: "require", withExtension: "js") else {
             throw HammerspoonError(.vmCreation, msg: "require.js not found in bundle")

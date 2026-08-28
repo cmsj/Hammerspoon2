@@ -2,11 +2,11 @@
 
 // Hammerspoon 2 — CommonJS module system
 //
-// Four primitives are installed by Swift before this file is evaluated.
+// Five primitives are installed by Swift before this file is evaluated.
 // They are captured in the IIFE closure and then deleted from global scope
 // so user code cannot reach or replace them.
 //
-// Spoons are packages installed to ~/.config/hammerspoon2/Spoons/<Name>/
+// Spoons are packages installed to <configDir>/Spoons/<Name>/
 // and loaded with require('Name') or require('Name/lib/something').
 
 (function () {
@@ -14,13 +14,15 @@
     const _fileExists = globalThis._hs_fileExists;
     const _expandPath = globalThis._hs_expandPath;
     const _evalScript = globalThis._hs_eval;
+    const _configDir  = globalThis._hs_configDir;
 
     delete globalThis._hs_readFile;
     delete globalThis._hs_fileExists;
     delete globalThis._hs_expandPath;
     delete globalThis._hs_eval;
+    delete globalThis._hs_configDir;
 
-    const SPOONS_DIR = _expandPath("~/.config/hammerspoon2/Spoons");
+    const SPOONS_DIR = _configDir + "/Spoons";
 
     // Resolved absolute path → { exports, loaded, filename, id }
     const _cache = Object.create(null);
@@ -147,7 +149,7 @@
         return require;
     }
 
-    // The top-level require treats ~/.config/hammerspoon2/ as the base directory so that
-    // require('./utils') in a user's init.js resolves to ~/.config/hammerspoon2/utils.js.
-    globalThis.require = makeRequire(_expandPath("~/.config/hammerspoon2") + "/<init>");
+    // The top-level require treats the user's config directory as the base directory so
+    // that require('./utils') in init.js resolves to <configDir>/utils.js.
+    globalThis.require = makeRequire(_configDir + "/<init>");
 }());
