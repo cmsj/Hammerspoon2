@@ -130,11 +130,13 @@ import JavaScriptCoreExtras
 @objc class ModuleRoot: NSObject, ModuleRootAPI {
     let engineID: UUID
     let settings: SettingsManagerProtocol
+    let spoonManager: SpoonManager
     @objc var modules: [String: HSModuleAPI] = [:]
 
-    init(engineID: UUID, settings: SettingsManagerProtocol = SettingsManager.shared) {
+    init(engineID: UUID, settings: SettingsManagerProtocol = SettingsManager.shared, spoonManager: SpoonManager = .shared) {
         self.engineID = engineID
         self.settings = settings
+        self.spoonManager = spoonManager
         super.init()
     }
 
@@ -201,17 +203,6 @@ import JavaScriptCoreExtras
 
     // MARK: - Spoons
 
-    private struct SpoonMetadata: Decodable {
-        let name: String
-        let author: String
-        let version: String
-        let description: String
-
-        var hasNonEmptyFields: Bool {
-            [name, author, version, description].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-        }
-    }
-
     // Backing store for the `spoons` namespace, created lazily on first use so a config that
     // never loads a Spoon never allocates it. Kept as one persistent JSValue (not rebuilt from
     // a Swift dictionary) so its object identity is stable across accesses.
@@ -241,26 +232,12 @@ import JavaScriptCoreExtras
             .deletingLastPathComponent()
             .appendingPathComponent("Spoons")
             .appendingPathComponent(name)
-        let spoonJSONURL = spoonDir.appendingPathComponent("spoon.json")
         let initJSURL = spoonDir.appendingPathComponent("init.js")
 
-        guard let spoonJSONData = try? Data(contentsOf: spoonJSONURL) else {
-            return fail("'\(name)' has no spoon.json at \(spoonJSONURL.path)")
-        }
-
-        let metadata: SpoonMetadata
         do {
-            metadata = try JSONDecoder().decode(SpoonMetadata.self, from: spoonJSONData)
+            _ = try spoonManager.validateSpoon(at: spoonDir)
         } catch {
-            return fail("'\(name)' has an invalid spoon.json (must contain name, author, version, and description): \(error.localizedDescription)")
-        }
-
-        guard metadata.hasNonEmptyFields else {
-            return fail("'\(name)' has an invalid spoon.json (name, author, version, and description must all be non-empty)")
-        }
-
-        guard FileManager.default.fileExists(atPath: initJSURL.path) else {
-            return fail("'\(name)' has no init.js at \(initJSURL.path)")
+            return fail("'\(name)' \(error.localizedDescription)")
         }
 
         guard let requireFn = context.globalObject.objectForKeyedSubscript("require"), !requireFn.isUndefined else {

@@ -27,8 +27,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
-            URLEventDispatcher.shared.dispatch(url)
+            if url.isFileURL, url.pathExtension.lowercased() == "spoon2" {
+                importSpoon(at: url)
+            } else {
+                URLEventDispatcher.shared.dispatch(url)
+            }
         }
+    }
+
+    private func importSpoon(at url: URL) {
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+
+        do {
+            let (name, metadata) = try SpoonManager.shared.importSpoon(from: url)
+            AKDebug("Imported Spoon '\(name)' from \(url.path)")
+            alert.alertStyle = .informational
+            alert.messageText = "Spoon Installed"
+            alert.informativeText = """
+                "\(metadata.name)" by \(metadata.author) was installed as "\(name)".
+
+                Add hs.loadSpoon("\(name)") to your config to use it, then reload.
+                """
+        } catch {
+            AKError("Failed to import Spoon from \(url.path): \(error.localizedDescription)")
+            alert.alertStyle = .warning
+            alert.messageText = "Couldn't Install Spoon"
+            alert.informativeText = "\"\(url.lastPathComponent)\" \(error.localizedDescription)"
+        }
+
+        alert.runModal()
     }
 }
 
