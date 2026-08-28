@@ -198,4 +198,61 @@ struct HSLoadSpoonTests {
             #expect(ctx.hadException)
         }
     }
+
+    @Suite("hs.spoons namespace")
+    struct SpoonsNamespaceTests {
+
+        @Test("a loaded Spoon is reachable at hs.spoons.NAME with the same exports object")
+        func testSpoonRegisteredInNamespace() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { marker: 'unique-value' };")
+            ctx.eval("hs.loadSpoon('TestSpoon')")
+            let result = ctx.eval("hs.spoons.TestSpoon.marker")
+            #expect(result?.toString() == "unique-value")
+            #expect(!ctx.hadException)
+        }
+
+        @Test("hs.spoons.NAME is the identical object returned by loadSpoon(), not a copy")
+        func testSpoonsNamespaceHoldsSameIdentity() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { count: 0 };")
+            ctx.eval("""
+                var loaded = hs.loadSpoon('TestSpoon');
+                hs.spoons.TestSpoon.count = 42;
+            """)
+            let result = ctx.eval("loaded.count")
+            #expect(result?.toInt32() == 42)
+            #expect(!ctx.hadException)
+        }
+
+        @Test("a Spoon that fails to load is not registered in hs.spoons")
+        func testFailedLoadDoesNotRegister() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "BrokenSpoon")
+            // No init.js written, so this load fails.
+            ctx.eval("try { hs.loadSpoon('BrokenSpoon') } catch (e) {}")
+            let result = ctx.eval("typeof hs.spoons.BrokenSpoon")
+            #expect(result?.toString() == "undefined")
+        }
+
+        @Test("multiple loaded Spoons are all reachable independently under hs.spoons")
+        func testMultipleSpoonsCoexistInNamespace() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "SpoonA")
+            try ctx.writeSpoonInit(spoon: "SpoonA", "module.exports = { which: 'A' };")
+            try ctx.writeSpoonJSON(spoon: "SpoonB")
+            try ctx.writeSpoonInit(spoon: "SpoonB", "module.exports = { which: 'B' };")
+            ctx.eval("""
+                hs.loadSpoon('SpoonA');
+                hs.loadSpoon('SpoonB');
+            """)
+            let a = ctx.eval("hs.spoons.SpoonA.which")
+            let b = ctx.eval("hs.spoons.SpoonB.which")
+            #expect(a?.toString() == "A")
+            #expect(b?.toString() == "B")
+            #expect(!ctx.hadException)
+        }
+    }
 }

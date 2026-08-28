@@ -54,14 +54,28 @@ import JavaScriptCoreExtras
     /// `spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)
     /// and an `init.js`, or loading fails with an exception. `init.js` is loaded through the
     /// same `require()` used for the rest of your config, so it can itself `require()`
-    /// further files from within the Spoon's own directory using relative paths.
+    /// further files from within the Spoon's own directory using relative paths. On success,
+    /// the Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other
+    /// code can reach an already-loaded Spoon without needing to call `loadSpoon()` again.
     /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`
     /// - Returns: Whatever the Spoon's `init.js` assigned to `module.exports`
     /// - Example:
     /// ```js
     /// const MySpoon = hs.loadSpoon("MySpoon")
+    /// // ...later, from anywhere...
+    /// hs.spoons.MySpoon.doSomething()
     /// ```
     @objc func loadSpoon(_ name: String) -> JSValue?
+
+    /// A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -
+    /// e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
+    /// `hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.
+    /// - Example:
+    /// ```js
+    /// hs.loadSpoon("MySpoon")
+    /// hs.spoons.MySpoon.doSomething()
+    /// ```
+    @objc var spoons: JSValue? { get }
 
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
@@ -198,6 +212,23 @@ import JavaScriptCoreExtras
         }
     }
 
+    // Backing store for the `spoons` namespace, created lazily on first use so a config that
+    // never loads a Spoon never allocates it. Kept as one persistent JSValue (not rebuilt from
+    // a Swift dictionary) so its object identity is stable across accesses.
+    private var _spoons: JSValue?
+
+    private func spoonsObject(in context: JSContext) -> JSValue {
+        if let existing = _spoons { return existing }
+        let obj = JSValue(newObjectIn: context)!
+        _spoons = obj
+        return obj
+    }
+
+    @objc var spoons: JSValue? {
+        guard let context = JSContext.current() else { return nil }
+        return spoonsObject(in: context)
+    }
+
     @objc func loadSpoon(_ name: String) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
 
@@ -237,8 +268,12 @@ import JavaScriptCoreExtras
         }
 
         // If init.js itself throws, require() already leaves context.exception set - leave it
-        // as-is rather than overwriting it with our own message.
-        return requireFn.call(withArguments: [initJSURL.path])
+        // as-is rather than overwriting it with our own message, and skip populating spoons.
+        let result = requireFn.call(withArguments: [initJSURL.path])
+        if context.exception == nil, let result, !result.isUndefined {
+            spoonsObject(in: context).setValue(result, forProperty: name)
+        }
+        return result
     }
 
     // Modules

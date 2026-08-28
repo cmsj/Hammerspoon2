@@ -224,8 +224,8 @@
           "name": "loadSpoon",
           "signature": "func loadSpoon(_ name: String) -> JSValue?",
           "isStatic": false,
-          "rawDocumentation": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths.\n- Parameter name: The Spoon's name, matching its directory name under `Spoons/`\n- Returns: Whatever the Spoon's `init.js` assigned to `module.exports`\n- Example:\n```js\nconst MySpoon = hs.loadSpoon(\"MySpoon\")\n```",
-          "description": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths.",
+          "rawDocumentation": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths. On success,\nthe Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other\ncode can reach an already-loaded Spoon without needing to call `loadSpoon()` again.\n- Parameter name: The Spoon's name, matching its directory name under `Spoons/`\n- Returns: Whatever the Spoon's `init.js` assigned to `module.exports`\n- Example:\n```js\nconst MySpoon = hs.loadSpoon(\"MySpoon\")\n// ...later, from anywhere...\nhs.spoons.MySpoon.doSomething()\n```",
+          "description": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths. On success,\nthe Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other\ncode can reach an already-loaded Spoon without needing to call `loadSpoon()` again.",
           "params": [
             {
               "name": "name",
@@ -243,15 +243,33 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const MySpoon = hs.loadSpoon(\"MySpoon\")"
+              "code": "const MySpoon = hs.loadSpoon(\"MySpoon\")\n// ...later, from anywhere...\nhs.spoons.MySpoon.doSomething()"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
-          "lineNumber": 64
+          "lineNumber": 68
         }
       ],
-      "properties": [],
+      "properties": [
+        {
+          "name": "spoons",
+          "signature": "var spoons: JSValue? { get }",
+          "rawDocumentation": "A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -\ne.g. a Spoon loaded with `hs.loadSpoon(\"MySpoon\")` is also reachable as\n`hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.\n- Example:\n```js\nhs.loadSpoon(\"MySpoon\")\nhs.spoons.MySpoon.doSomething()\n```",
+          "description": "A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -\ne.g. a Spoon loaded with `hs.loadSpoon(\"MySpoon\")` is also reachable as\n`hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.loadSpoon(\"MySpoon\")\nhs.spoons.MySpoon.doSomething()"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
+          "lineNumber": 78
+        }
+      ],
       "types": []
     },
     {
@@ -25802,5 +25820,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-28T22:05:28.876Z"
+  "generatedAt": "2026-08-28T22:37:53.210Z"
 }
