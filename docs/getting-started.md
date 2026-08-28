@@ -268,19 +268,32 @@ module — the same shape as Node's `require()`: give it something to hand back 
 
 ```js
 // window-management.js
+const LEFT_HALF = new HSRect(0, 0, 0.5, 1)  // a unit rect: left half of whichever screen it's applied to
+
 function centerFocused() {
     const win = hs.window.focusedWindow()
     if (win) win.centerOnScreen()
 }
 
-module.exports = { centerFocused }
+function snapLeft() {
+    const win = hs.window.focusedWindow()
+    if (win) win.frame = LEFT_HALF.fromUnitRect(win.screen.frame)
+}
+
+module.exports = { centerFocused, snapLeft, LEFT_HALF }
 ```
 
 ```js
 // init.js
-const { centerFocused } = require("./window-management.js")
+const { centerFocused, snapLeft } = require("./window-management.js")
 hs.hotkey.bind(["cmd", "alt"], "c", centerFocused)
+hs.hotkey.bind(["cmd", "alt"], "left", snapLeft)
 ```
+
+`module.exports` isn't limited to functions — it's a plain object, so export whatever a
+caller needs: functions, constants, config objects, `HSRect`/`HSColor` values, anything. The
+example above exports two functions and a reusable `HSRect` constant (`LEFT_HALF`) side by
+side, and `init.js` picks out only the pieces it wants via destructuring.
 
 A few things worth knowing about how paths resolve:
 

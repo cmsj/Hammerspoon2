@@ -267,17 +267,29 @@ mean losing the ability to update it later, or the timer/window disappearing und
 module — the same shape as Node&#39;s <code>require()</code>: give it something to hand back by setting
 <code>module.exports</code> (or individual properties on <code>exports</code>), and that&#39;s what the caller gets back.</p>
 <pre><code class="language-js">// window-management.js
+const LEFT_HALF = new HSRect(0, 0, 0.5, 1)  // a unit rect: left half of whichever screen it&#39;s applied to
+
 function centerFocused() {
     const win = hs.window.focusedWindow()
     if (win) win.centerOnScreen()
 }
 
-module.exports = { centerFocused }
+function snapLeft() {
+    const win = hs.window.focusedWindow()
+    if (win) win.frame = LEFT_HALF.fromUnitRect(win.screen.frame)
+}
+
+module.exports = { centerFocused, snapLeft, LEFT_HALF }
 </code></pre>
 <pre><code class="language-js">// init.js
-const { centerFocused } = require(&quot;./window-management.js&quot;)
+const { centerFocused, snapLeft } = require(&quot;./window-management.js&quot;)
 hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;c&quot;, centerFocused)
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;left&quot;, snapLeft)
 </code></pre>
+<p><code>module.exports</code> isn&#39;t limited to functions — it&#39;s a plain object, so export whatever a
+caller needs: functions, constants, config objects, <code>HSRect</code>/<code>HSColor</code> values, anything. The
+example above exports two functions and a reusable <code>HSRect</code> constant (<code>LEFT_HALF</code>) side by
+side, and <code>init.js</code> picks out only the pieces it wants via destructuring.</p>
 <p>A few things worth knowing about how paths resolve:</p>
 <ul>
 <li><strong>Local files need an explicit <code>./</code> or <code>../</code> prefix.</strong> <code>require(&quot;foo.js&quot;)</code> — no prefix — is
