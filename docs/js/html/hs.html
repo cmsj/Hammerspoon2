@@ -172,6 +172,49 @@
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L50" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:50</a>
         </div>
     </div>
+    <div class="method" id="loadSpoon">
+        <h3><a href="#loadSpoon">hs.loadSpoon(name) -> JSValue</a></h3>
+
+        <div class="description">Load a Spoon - a packaged, reusable piece of configuration - by name, from the
+`Spoons` directory inside your config directory. A Spoon must contain a well-formed
+`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)
+and an `init.js`, or loading fails with an exception. `init.js` is loaded through the
+same `require()` used for the rest of your config, so it can itself `require()`
+further files from within the Spoon&#39;s own directory using relative paths.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.loadSpoon(name) -> JSValue</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The Spoon&#39;s name, matching its directory name under `Spoons/`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">JSValue</div>
+        <div class="return-desc">Whatever the Spoon&#39;s `init.js` assigned to `module.exports`</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const MySpoon = hs.loadSpoon(&quot;MySpoon&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:64</a>
+        </div>
+    </div>
         </main>
 
         <!-- Right TOC sidebar -->

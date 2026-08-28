@@ -6,8 +6,11 @@
 // They are captured in the IIFE closure and then deleted from global scope
 // so user code cannot reach or replace them.
 //
-// Spoons are packages installed to <configDir>/Spoons/<Name>/
-// and loaded with require('Name') or require('Name/lib/something').
+// This is a plain CommonJS loader with no Hammerspoon-specific behavior - it doesn't know
+// anything about Spoons. Spoons are loaded by hs.loadSpoon(), which validates a Spoon
+// directory and then hands its init.js to this same require() by absolute path; the module
+// wrapper below (see makeRequire) gives that file its own require() bound to its own
+// directory automatically, the same way it does for any other file.
 
 (function () {
     const _readFile   = globalThis._hs_readFile;
@@ -21,8 +24,6 @@
     delete globalThis._hs_expandPath;
     delete globalThis._hs_eval;
     delete globalThis._hs_configDir;
-
-    const SPOONS_DIR = _configDir + "/Spoons";
 
     // Resolved absolute path → { exports, loaded, filename, id }
     const _cache = Object.create(null);
@@ -52,25 +53,6 @@
         return null;
     }
 
-    // Bare specifier: look up ~/.config/hammerspoon2/Spoons/<id>/
-    function resolveSpoon(id) {
-        const spoonDir = SPOONS_DIR + '/' + id;
-        const spoonJson = spoonDir + '/spoon.json';
-        if (_fileExists(spoonJson)) {
-            const src = _readFile(spoonJson);
-            if (src) {
-                try {
-                    const meta = JSON.parse(src);
-                    if (meta.main) {
-                        const resolved = tryExtensions(spoonDir + '/' + meta.main);
-                        if (resolved) return resolved;
-                    }
-                } catch (_) {}
-            }
-        }
-        return tryExtensions(spoonDir + '/index') || tryExtensions(spoonDir);
-    }
-
     function resolvePath(id, fromFile) {
         if (id.startsWith('/')) {
             return tryExtensions(id);
@@ -81,7 +63,9 @@
         if (id.startsWith('~/')) {
             return tryExtensions(_expandPath(id));
         }
-        return resolveSpoon(id);
+        // No bare-specifier resolution (no npm/node_modules-style package lookup exists yet) -
+        // every id must be absolute, ~-relative, or explicitly ./ or ../ relative.
+        return null;
     }
 
     function makeRequire(currentFile) {

@@ -49,6 +49,20 @@ import JavaScriptCoreExtras
     /// ```
     @objc func clearConsole()
 
+    /// Load a Spoon - a packaged, reusable piece of configuration - by name, from the
+    /// `Spoons` directory inside your config directory. A Spoon must contain a well-formed
+    /// `spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)
+    /// and an `init.js`, or loading fails with an exception. `init.js` is loaded through the
+    /// same `require()` used for the rest of your config, so it can itself `require()`
+    /// further files from within the Spoon's own directory using relative paths.
+    /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`
+    /// - Returns: Whatever the Spoon's `init.js` assigned to `module.exports`
+    /// - Example:
+    /// ```js
+    /// const MySpoon = hs.loadSpoon("MySpoon")
+    /// ```
+    @objc func loadSpoon(_ name: String) -> JSValue?
+
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
     @objc var application: HSApplicationModule { get }
@@ -101,10 +115,12 @@ import JavaScriptCoreExtras
 @_documentation(visibility: private)
 @objc class ModuleRoot: NSObject, ModuleRootAPI {
     let engineID: UUID
+    let settings: SettingsManagerProtocol
     @objc var modules: [String: HSModuleAPI] = [:]
 
-    init(engineID: UUID) {
+    init(engineID: UUID, settings: SettingsManagerProtocol = SettingsManager.shared) {
         self.engineID = engineID
+        self.settings = settings
         super.init()
     }
 
@@ -167,6 +183,62 @@ import JavaScriptCoreExtras
         Task { @MainActor in
             HammerspoonLog.shared.clearLog()
         }
+    }
+
+    // MARK: - Spoons
+
+    private struct SpoonMetadata: Decodable {
+        let name: String
+        let author: String
+        let version: String
+        let description: String
+
+        var hasNonEmptyFields: Bool {
+            [name, author, version, description].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        }
+    }
+
+    @objc func loadSpoon(_ name: String) -> JSValue? {
+        guard let context = JSContext.current() else { return nil }
+
+        func fail(_ message: String) -> JSValue? {
+            context.exception = JSValue(newErrorFromMessage: "hs.loadSpoon(): \(message)", in: context)
+            return nil
+        }
+
+        let spoonDir = settings.configLocation
+            .deletingLastPathComponent()
+            .appendingPathComponent("Spoons")
+            .appendingPathComponent(name)
+        let spoonJSONURL = spoonDir.appendingPathComponent("spoon.json")
+        let initJSURL = spoonDir.appendingPathComponent("init.js")
+
+        guard let spoonJSONData = try? Data(contentsOf: spoonJSONURL) else {
+            return fail("'\(name)' has no spoon.json at \(spoonJSONURL.path)")
+        }
+
+        let metadata: SpoonMetadata
+        do {
+            metadata = try JSONDecoder().decode(SpoonMetadata.self, from: spoonJSONData)
+        } catch {
+            return fail("'\(name)' has an invalid spoon.json (must contain name, author, version, and description): \(error.localizedDescription)")
+        }
+
+        guard metadata.hasNonEmptyFields else {
+            return fail("'\(name)' has an invalid spoon.json (name, author, version, and description must all be non-empty)")
+        }
+
+        guard FileManager.default.fileExists(atPath: initJSURL.path) else {
+            return fail("'\(name)' has no init.js at \(initJSURL.path)")
+        }
+
+        guard let requireFn = context.globalObject.objectForKeyedSubscript("require"), !requireFn.isUndefined else {
+            return fail("require() is not available")
+        }
+
+        // If init.js itself throws, require() already leaves context.exception set - leave it
+        // as-is rather than overwriting it with our own message.
+        return requireFn.call(withArguments: [initJSURL.path])
     }
 
     // Modules

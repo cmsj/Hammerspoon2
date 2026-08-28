@@ -219,6 +219,36 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
           "lineNumber": 50
+        },
+        {
+          "name": "loadSpoon",
+          "signature": "func loadSpoon(_ name: String) -> JSValue?",
+          "isStatic": false,
+          "rawDocumentation": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths.\n- Parameter name: The Spoon's name, matching its directory name under `Spoons/`\n- Returns: Whatever the Spoon's `init.js` assigned to `module.exports`\n- Example:\n```js\nconst MySpoon = hs.loadSpoon(\"MySpoon\")\n```",
+          "description": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The Spoon's name, matching its directory name under `Spoons/`",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSValue",
+            "description": "Whatever the Spoon's `init.js` assigned to `module.exports`"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const MySpoon = hs.loadSpoon(\"MySpoon\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Engine/ModuleRoot.swift",
+          "lineNumber": 64
         }
       ],
       "properties": [],
@@ -25772,5 +25802,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-28T14:20:51.606Z"
+  "generatedAt": "2026-08-28T22:05:28.876Z"
 }

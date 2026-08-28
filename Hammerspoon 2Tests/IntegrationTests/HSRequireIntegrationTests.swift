@@ -172,6 +172,13 @@ struct HSRequireTests {
             #expect(abs((result?.toDouble() ?? 0) - 3.14159) < 0.001)
             #expect(!ctx.hadException)
         }
+
+        @Test("a bare specifier with no prefix is not resolvable")
+        func testBareSpecifierThrows() throws {
+            let ctx = try RequireContext()
+            ctx.eval("require('some-package')")
+            #expect(ctx.hadException)
+        }
     }
 
     // MARK: - JSON support
@@ -370,44 +377,6 @@ struct HSRequireTests {
             ctx.eval("try { require('\(path)') } catch(e) {}")
             let inCache = ctx.eval("require.cache['\(path)'] !== undefined")
             #expect(inCache?.toBool() == false)
-        }
-    }
-
-    // MARK: - Spoon resolution
-
-    @Suite("Spoon resolution")
-    struct SpoonTests {
-
-        @Test("spoon.json main field is used as the entry point")
-        func testSpoonJsonMainField() throws {
-            let ctx = try RequireContext()
-            // Build a fake Spoon directory in temp and point SPOONS_DIR at it
-            // by requiring the entry file directly (we test the spoon.json parsing
-            // logic indirectly: write a module that reads its own spoon.json).
-            let spoonDir = ctx.tempDir.appendingPathComponent("Spoons/TestSpoon")
-            try FileManager.default.createDirectory(at: spoonDir, withIntermediateDirectories: true)
-            let spoonJson = spoonDir.appendingPathComponent("spoon.json")
-            try """
-                { "name": "TestSpoon", "version": "1.0.0", "main": "src/init.js" }
-            """.write(to: spoonJson, atomically: true, encoding: .utf8)
-            try FileManager.default.createDirectory(
-                at: spoonDir.appendingPathComponent("src"),
-                withIntermediateDirectories: true
-            )
-            try "module.exports = { spoon: true };".write(
-                to: spoonDir.appendingPathComponent("src/init.js"),
-                atomically: true,
-                encoding: .utf8
-            )
-
-            // Require via absolute path to the Spoon dir (not bare-name resolution,
-            // which depends on ~/.hammerspoon/Spoons — not stable in tests).
-            // tryExtensions("/…/TestSpoon") → checks /…/TestSpoon/index.js then
-            // gives up. We use the main entry directly to verify spoon.json parsing.
-            let mainPath = spoonDir.appendingPathComponent("src/init.js").path
-            let result = ctx.eval("require('\(mainPath)').spoon")
-            #expect(result?.toBool() == true)
-            #expect(!ctx.hadException)
         }
     }
 }
