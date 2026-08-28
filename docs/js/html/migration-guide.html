@@ -129,6 +129,17 @@ const { centerFocused } = require(&quot;./utils.js&quot;)
 <p>Requiring the same file twice returns the identical cached <code>exports</code> object both times, same
 as v1 — it isn&#39;t re-evaluated on every call. <code>.json</code> files are also <code>require()</code>-able directly,
 returning the parsed object rather than a string.</p>
+<p>One more thing worth flagging if a v1 config leaned on implicit globals: Lua chunks loaded via
+<code>require()</code> already gave <code>local</code> declarations their own scope, but a top-level Lua function or
+variable declared <em>without</em> <code>local</code> became a genuine Lua global, visible from every other
+file — an easy trap to fall into, and some v1 configs used it deliberately to share helpers
+across files. v2 has no equivalent escape hatch: every required file&#39;s top-level code runs
+inside its own function regardless of <code>var</code>/<code>let</code>/<code>const</code>, so nothing it declares is visible
+elsewhere. The one exception is <code>init.js</code> itself, which runs at true global scope (so the
+hotkeys/timers/watchers it creates stay alive) — required files can read what <code>init.js</code>
+declared at its own top level, but never the reverse, and never between two required files. If
+a v1 config shared state across files through un-<code>local</code>&#39;d globals, route it through
+<code>module.exports</code> in v2 instead.</p>
 <h2 id="quick-reference">Quick reference</h2>
 <p>Every v1 module, alphabetically. <strong>Gone</strong> means there is no v2 equivalent at all. <strong>→ hs.x</strong>
 means the functionality now lives under that v2 module (in full or in part — see the linked

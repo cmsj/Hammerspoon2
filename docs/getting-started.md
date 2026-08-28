@@ -308,6 +308,16 @@ A few things worth knowing about how paths resolve:
 - **Modules are cached by resolved path.** Requiring the same file twice from anywhere in your
   config returns the identical `exports` object both times rather than re-evaluating it.
 
+**Scope:** each required file's top-level code runs inside its own private function, not
+global scope — a `var`/`let`/`const`/function declared at the top of `window-management.js` is
+invisible everywhere else, including `init.js`; `module.exports` is the only way to hand
+anything back. `init.js` itself is the one exception — it runs unwrapped at true global scope,
+specifically so hotkeys/timers/watchers it creates
+[stay alive](#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time) — so a
+required file *can* read whatever `init.js` declared at its own top level, but not the other
+way around, and two required files can't see each other's declarations either. Don't lean on
+that asymmetry deliberately; pass values between files through `module.exports` instead.
+
 ## Where to go from here
 
 The [API reference](index.html) covers every module and type in full, with parameters and

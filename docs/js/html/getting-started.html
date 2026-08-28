@@ -303,6 +303,15 @@ object, not a string.</li>
 <li><strong>Modules are cached by resolved path.</strong> Requiring the same file twice from anywhere in your
 config returns the identical <code>exports</code> object both times rather than re-evaluating it.</li>
 </ul>
+<p><strong>Scope:</strong> each required file&#39;s top-level code runs inside its own private function, not
+global scope — a <code>var</code>/<code>let</code>/<code>const</code>/function declared at the top of <code>window-management.js</code> is
+invisible everywhere else, including <code>init.js</code>; <code>module.exports</code> is the only way to hand
+anything back. <code>init.js</code> itself is the one exception — it runs unwrapped at true global scope,
+specifically so hotkeys/timers/watchers it creates
+<a href="#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time">stay alive</a> — so a
+required file <em>can</em> read whatever <code>init.js</code> declared at its own top level, but not the other
+way around, and two required files can&#39;t see each other&#39;s declarations either. Don&#39;t lean on
+that asymmetry deliberately; pass values between files through <code>module.exports</code> instead.</p>
 <h2 id="where-to-go-from-here">Where to go from here</h2>
 <p>The <a href="index.html">API reference</a> covers every module and type in full, with parameters and
 examples for each method — this guide only scratched the surface of what&#39;s available.

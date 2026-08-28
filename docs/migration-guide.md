@@ -72,6 +72,18 @@ Requiring the same file twice returns the identical cached `exports` object both
 as v1 — it isn't re-evaluated on every call. `.json` files are also `require()`-able directly,
 returning the parsed object rather than a string.
 
+One more thing worth flagging if a v1 config leaned on implicit globals: Lua chunks loaded via
+`require()` already gave `local` declarations their own scope, but a top-level Lua function or
+variable declared *without* `local` became a genuine Lua global, visible from every other
+file — an easy trap to fall into, and some v1 configs used it deliberately to share helpers
+across files. v2 has no equivalent escape hatch: every required file's top-level code runs
+inside its own function regardless of `var`/`let`/`const`, so nothing it declares is visible
+elsewhere. The one exception is `init.js` itself, which runs at true global scope (so the
+hotkeys/timers/watchers it creates stay alive) — required files can read what `init.js`
+declared at its own top level, but never the reverse, and never between two required files. If
+a v1 config shared state across files through un-`local`'d globals, route it through
+`module.exports` in v2 instead.
+
 ## Quick reference
 
 Every v1 module, alphabetically. **Gone** means there is no v2 equivalent at all. **→ hs.x**
