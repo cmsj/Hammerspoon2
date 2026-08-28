@@ -107,6 +107,28 @@ erroring — a config that assumed a field was always present can fail quietly.<
 <li><strong>The URL scheme changed.</strong> <code>hammerspoon://</code> is now <code>hammerspoon2://</code> — update any external
 scripts, launchers, or Shortcuts that invoke your config via <code>hs.urlevent</code>.</li>
 </ul>
+<h2 id="splitting-configs-across-multiple-files">Splitting configs across multiple files</h2>
+<p>v1&#39;s <code>require()</code> is Lua&#39;s built-in module system: it searches <code>package.path</code> and returns
+whatever the file <code>return</code>s, typically a table of functions. v2&#39;s <code>require()</code> serves the same
+purpose but follows JavaScript&#39;s CommonJS conventions instead, which look different in two
+ways: export something by setting <code>module.exports</code> (or individual properties on <code>exports</code>)
+rather than ending the file with a <code>return</code>, and paths must be explicit —
+<code>require(&quot;./utils.js&quot;)</code>, <code>require(&quot;./utils&quot;)</code>, <code>../</code>, or <code>~/...</code> — a bare <code>require(&quot;utils&quot;)</code>
+the way Lua&#39;s <code>package.path</code> search allowed won&#39;t find a sibling file in your config directory.</p>
+<pre><code class="language-js">// utils.js
+module.exports = {
+    centerFocused: function () {
+        const win = hs.window.focusedWindow()
+        if (win) win.centerOnScreen()
+    }
+}
+</code></pre>
+<pre><code class="language-js">// init.js
+const { centerFocused } = require(&quot;./utils.js&quot;)
+</code></pre>
+<p>Requiring the same file twice returns the identical cached <code>exports</code> object both times, same
+as v1 — it isn&#39;t re-evaluated on every call. <code>.json</code> files are also <code>require()</code>-able directly,
+returning the parsed object rather than a string.</p>
 <h2 id="quick-reference">Quick reference</h2>
 <p>Every v1 module, alphabetically. <strong>Gone</strong> means there is no v2 equivalent at all. <strong>→ hs.x</strong>
 means the functionality now lives under that v2 module (in full or in part — see the linked

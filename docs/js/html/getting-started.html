@@ -263,15 +263,34 @@ separate objects this example relies on staying alive, and dropping any one of t
 building <code>clockText</code> inline inside the <code>.text()</code> call instead of assigning it first) would
 mean losing the ability to update it later, or the timer/window disappearing under GC.</p>
 <h2 id="splitting-a-growing-config-into-multiple-files">Splitting a growing config into multiple files</h2>
-<p><code>init.js</code> doesn&#39;t have to hold everything. A global <code>require(path)</code> function reads and
-evaluates another JS file — paths are resolved relative to your config directory (or you can
-use <code>~</code>), and it works like a straightforward <code>eval</code> of that file&#39;s contents, not a real module
-system: there&#39;s no caching and no <code>module.exports</code>, so use it for organizing code by feature,
-not for building a dependency graph.</p>
-<pre><code class="language-js">// init.js
-require(&quot;./window-management.js&quot;)
-require(&quot;./menubar-widgets.js&quot;)
+<p><code>init.js</code> doesn&#39;t have to hold everything. <code>require(path)</code> loads another JS file as its own
+module — the same shape as Node&#39;s <code>require()</code>: give it something to hand back by setting
+<code>module.exports</code> (or individual properties on <code>exports</code>), and that&#39;s what the caller gets back.</p>
+<pre><code class="language-js">// window-management.js
+function centerFocused() {
+    const win = hs.window.focusedWindow()
+    if (win) win.centerOnScreen()
+}
+
+module.exports = { centerFocused }
 </code></pre>
+<pre><code class="language-js">// init.js
+const { centerFocused } = require(&quot;./window-management.js&quot;)
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;c&quot;, centerFocused)
+</code></pre>
+<p>A few things worth knowing about how paths resolve:</p>
+<ul>
+<li><strong>Local files need an explicit <code>./</code> or <code>../</code> prefix.</strong> <code>require(&quot;foo.js&quot;)</code> — no prefix — is
+not the same as <code>require(&quot;./foo.js&quot;)</code> and won&#39;t find a file sitting next to <code>init.js</code>.
+Absolute paths and <code>~/...</code> paths also work directly.</li>
+<li><strong>The <code>.js</code> extension is optional</strong> — <code>require(&quot;./utils&quot;)</code> and <code>require(&quot;./utils.js&quot;)</code> are
+equivalent.</li>
+<li><strong>Requiring a directory looks for <code>index.js</code></strong> inside it.</li>
+<li><strong><code>.json</code> files are parsed automatically</strong> — <code>require(&quot;./settings.json&quot;)</code> returns the parsed
+object, not a string.</li>
+<li><strong>Modules are cached by resolved path.</strong> Requiring the same file twice from anywhere in your
+config returns the identical <code>exports</code> object both times rather than re-evaluating it.</li>
+</ul>
 <h2 id="where-to-go-from-here">Where to go from here</h2>
 <p>The <a href="index.html">API reference</a> covers every module and type in full, with parameters and
 examples for each method — this guide only scratched the surface of what&#39;s available.

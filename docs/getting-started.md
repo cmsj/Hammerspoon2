@@ -262,17 +262,38 @@ mean losing the ability to update it later, or the timer/window disappearing und
 
 ## Splitting a growing config into multiple files
 
-`init.js` doesn't have to hold everything. A global `require(path)` function reads and
-evaluates another JS file — paths are resolved relative to your config directory (or you can
-use `~`), and it works like a straightforward `eval` of that file's contents, not a real module
-system: there's no caching and no `module.exports`, so use it for organizing code by feature,
-not for building a dependency graph.
+`init.js` doesn't have to hold everything. `require(path)` loads another JS file as its own
+module — the same shape as Node's `require()`: give it something to hand back by setting
+`module.exports` (or individual properties on `exports`), and that's what the caller gets back.
+
+```js
+// window-management.js
+function centerFocused() {
+    const win = hs.window.focusedWindow()
+    if (win) win.centerOnScreen()
+}
+
+module.exports = { centerFocused }
+```
 
 ```js
 // init.js
-require("./window-management.js")
-require("./menubar-widgets.js")
+const { centerFocused } = require("./window-management.js")
+hs.hotkey.bind(["cmd", "alt"], "c", centerFocused)
 ```
+
+A few things worth knowing about how paths resolve:
+
+- **Local files need an explicit `./` or `../` prefix.** `require("foo.js")` — no prefix — is
+  not the same as `require("./foo.js")` and won't find a file sitting next to `init.js`.
+  Absolute paths and `~/...` paths also work directly.
+- **The `.js` extension is optional** — `require("./utils")` and `require("./utils.js")` are
+  equivalent.
+- **Requiring a directory looks for `index.js`** inside it.
+- **`.json` files are parsed automatically** — `require("./settings.json")` returns the parsed
+  object, not a string.
+- **Modules are cached by resolved path.** Requiring the same file twice from anywhere in your
+  config returns the identical `exports` object both times rather than re-evaluating it.
 
 ## Where to go from here
 

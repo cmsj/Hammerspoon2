@@ -43,6 +43,35 @@ diving into specifics:
 - **The URL scheme changed.** `hammerspoon://` is now `hammerspoon2://` — update any external
   scripts, launchers, or Shortcuts that invoke your config via `hs.urlevent`.
 
+## Splitting configs across multiple files
+
+v1's `require()` is Lua's built-in module system: it searches `package.path` and returns
+whatever the file `return`s, typically a table of functions. v2's `require()` serves the same
+purpose but follows JavaScript's CommonJS conventions instead, which look different in two
+ways: export something by setting `module.exports` (or individual properties on `exports`)
+rather than ending the file with a `return`, and paths must be explicit —
+`require("./utils.js")`, `require("./utils")`, `../`, or `~/...` — a bare `require("utils")`
+the way Lua's `package.path` search allowed won't find a sibling file in your config directory.
+
+```js
+// utils.js
+module.exports = {
+    centerFocused: function () {
+        const win = hs.window.focusedWindow()
+        if (win) win.centerOnScreen()
+    }
+}
+```
+
+```js
+// init.js
+const { centerFocused } = require("./utils.js")
+```
+
+Requiring the same file twice returns the identical cached `exports` object both times, same
+as v1 — it isn't re-evaluated on every call. `.json` files are also `require()`-able directly,
+returning the parsed object rather than a string.
+
 ## Quick reference
 
 Every v1 module, alphabetically. **Gone** means there is no v2 equivalent at all. **→ hs.x**
