@@ -21,11 +21,12 @@ diving into specifics:
   replaced by one SwiftUI-backed declarative UI module. This is the single biggest
   programming-model change in the whole migration — see [Rebuilding UI with hs.ui](#rebuilding-ui-with-hsui)
   below.
-- **Spoons exist in v2, but reshaped.** `hs.loadSpoon()` is back, and Spoons install as
-  `.spoon2` bundles (not `.spoon`) — but the object lifecycle is simpler (no automatic
-  `:init()` call) and there's no spoons.hammerspoon.org-equivalent repository yet. See the
-  [Spoons guide](spoons-guide.html) for the full picture, or
-  [hs.spoons and Spoons](#hsspoons-and-spoons) below for what specifically changed from v1.
+- **Spoons exist in v2, but reshaped.** `hs.loadSpoon()` is back, `init()` is still called
+  automatically, and Spoons install as `.spoon2` bundles (not `.spoon`) — but `start()`/`stop()`/
+  `bindHotkeys()` are conventions now rather than a built-in lifecycle, and there's no
+  spoons.hammerspoon.org-equivalent repository yet. See the [Spoons guide](spoons-guide.html)
+  for the full picture, or [hs.spoons and Spoons](#hsspoons-and-spoons) below for what
+  specifically changed from v1.
 - **Watchers are usually `addWatcher()`/`removeWatcher()` on the main module now,** not a
   separate `.watcher` submodule you construct and `:start()`. This pattern is consistent
   across `hs.audiodevice`, `hs.camera`, `hs.eventtap`, `hs.keycodes`, `hs.mouse`, `hs.screen`,
@@ -524,11 +525,13 @@ them:
 - **Bundles are `.spoon2`, not `.spoon`** — a deliberate rename, since the two formats aren't
   interchangeable and both might be installed side by side during a transition. A v1 `.spoon`
   (Lua) won't load in v2; it needs rewriting in JavaScript.
-- **No automatic `:init()` call, and no built-in `:start()`/`:bindHotkeys()` lifecycle.** v1
-  called a Spoon's `:init()` automatically and had framework-level hotkey-binding helpers.
-  v2 calls nothing automatically — `module.exports` is used as-is — and `start()`/
-  `bindHotkeys()` are just conventions a Spoon's own code can choose to implement, not
-  something the runtime provides or invokes.
+- **`init()` is still called automatically, but that's as far as the built-in lifecycle goes.**
+  v1 called a Spoon's `:init()` automatically and had framework-level hotkey-binding helpers.
+  v2 does the same for `init()` (called on the returned object, after metadata injection) - but
+  `start()`/`stop()`/`bindHotkeys()` are just conventions a Spoon's own code can choose to
+  implement, not something the runtime provides or invokes. One behavioral difference: v2's
+  `require()` caches `init.js` itself, but re-runs `init()` on every `hs.loadSpoon()` call for
+  an already-loaded Spoon - write it to tolerate being called more than once.
 - **Metadata moved to `spoon.json`, off the returned object,** and gained enforcement: v1's
   `name`/`version`/`author`/`license` (+ optional `homepage`) were properties a Spoon's Lua
   table needed to set itself, checked by convention rather than by Hammerspoon. v2 requires a

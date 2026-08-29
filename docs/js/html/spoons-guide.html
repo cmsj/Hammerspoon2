@@ -72,10 +72,12 @@ example. If you haven&#39;t read the <a href="getting-started.html">Getting Star
 its section on <a href="getting-started.html#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time">object lifecycle</a>
 and <a href="getting-started.html#splitting-a-growing-config-into-multiple-files">splitting a config across multiple files</a>,
 start there — everything below builds on it.</p>
-<p>This part of Hammerspoon 2 is newer and smaller in scope than the rest of the app; the
-conventions below (<code>start()</code>/<code>stop()</code>, <code>bindHotkeys()</code>) are recommended patterns for Spoon
-authors to follow, not things the runtime enforces or calls automatically the way Hammerspoon 1
-did for <code>:init()</code>.</p>
+<p>This part of Hammerspoon 2 is newer and smaller in scope than the rest of the app. One piece of
+Hammerspoon 1 lifecycle <em>is</em> built in - <code>init()</code> is called automatically, same as v1&#39;s <code>:init()</code></p>
+<ul>
+<li>but <code>start()</code>/<code>stop()</code> and <code>bindHotkeys()</code> below are recommended patterns for Spoon authors to
+follow, not things the runtime calls for you.</li>
+</ul>
 <h2 id="installing-a-spoon">Installing a Spoon</h2>
 <p>A Spoon is distributed as a <code>.spoon2</code> bundle — a folder that macOS treats as a single
 double-clickable item, the same way it treats <code>.app</code>. Double-clicking one (or dragging it onto
@@ -145,10 +147,21 @@ Spoon simple enough not to need a <code>start()</code>/<code>stop()</code> split
 whatever method actually needs them). This mirrors the <a href="getting-started.html#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time">same lifecycle habit</a>
 that applies everywhere else in Hammerspoon 2 — something needs to keep a reference alive for as
 long as it should keep running.</p>
+<p><strong>If the returned object has an <code>init()</code> method, it&#39;s called automatically</strong> — matching
+Hammerspoon 1, where <code>:init()</code> ran the same way. Use it for setup that needs to happen once the
+object exists but shouldn&#39;t wait for <code>start()</code> — reading a config file, computing a derived
+value, and so on. <code>this</code> inside <code>init()</code> refers to the object itself, and by the time it runs,
+<code>author</code>/<code>description</code>/<code>version</code> are already set on <code>this</code>, since metadata injection happens
+first. A thrown exception inside <code>init()</code> fails the whole load: <code>hs.loadSpoon()</code> throws, and
+nothing is stored on <code>hs.spoons</code>.</p>
+<p>One subtlety worth knowing: <code>init.js</code>&#39;s own top level only ever runs once (<code>require()</code> caches
+the module), but <code>init()</code> runs again every time <code>hs.loadSpoon()</code> is called for that Spoon, since
+the same cached object is handed back each time. Write <code>init()</code> to be safe to call more than
+once — or better, do true one-time setup directly at <code>init.js</code>&#39;s top level, and reserve <code>init()</code>
+for things that are genuinely fine to redo.</p>
 <h2 id="conventions-worth-following">Conventions worth following</h2>
-<p>Hammerspoon 2 doesn&#39;t call any method on your Spoon automatically — no auto-invoked <code>init()</code>
-the way v1 had. Two conventions are still worth following for consistency with how other Spoons
-will likely behave, even though nothing enforces them:</p>
+<p>Two further conventions are worth following for consistency with how other Spoons will likely
+behave, even though — unlike <code>init()</code> — nothing in the runtime calls them for you:</p>
 <p><strong><code>start()</code> / <code>stop()</code></strong> for a Spoon that does anything ongoing (timers, watchers, hotkeys bound
 persistently). Build the object and its configuration in <code>init.js</code>, but don&#39;t activate anything
 until <code>start()</code> runs:</p>
@@ -195,6 +208,13 @@ function setMessage(newMessage) {
     return module.exports          // returning `this`-equivalent enables chaining
 }
 
+function init() {
+    // Called automatically by hs.loadSpoon(). author/description/version are already set on
+    // `this` by this point - safe to log or read, but this could run more than once, so avoid
+    // anything that shouldn&#39;t happen twice.
+    console.log(`[Greeter] v${this.version} initialized`)
+}
+
 function start() {
     if (timer) return
     timer = hs.timer.doEvery(3600, show)
@@ -212,7 +232,7 @@ function bindHotkeys(mapping) {
     }
 }
 
-module.exports = { show, setMessage, start, stop, bindHotkeys }
+module.exports = { show, setMessage, init, start, stop, bindHotkeys }
 </code></pre>
 <pre><code class="language-json">// Greeter/spoon.json
 {
@@ -243,8 +263,10 @@ aren&#39;t interchangeable, and existing v1 Spoons won&#39;t load in v2 unless r
 <li><strong><code>spoon.json</code>, not fields on the returned table.</strong> Required fields are <code>name</code>, <code>author</code>,
 <code>version</code>, <code>description</code> — v1 required <code>name</code>, <code>author</code>, <code>version</code>, <code>license</code> (with
 <code>homepage</code> optional). v2 doesn&#39;t currently check for a license field at all.</li>
-<li><strong>No automatic <code>:init()</code> call.</strong> v1 called a Spoon&#39;s <code>:init()</code> method automatically if present;
-v2 calls nothing — <code>module.exports</code> is used as-is once <code>init.js</code> finishes running.</li>
+<li><strong><code>init()</code> is called automatically, same as v1.</strong> One difference worth knowing: v2&#39;s <code>require()</code>
+caches <code>init.js</code>&#39;s top-level code (it only ever runs once), but <code>init()</code> itself runs again on
+every <code>hs.loadSpoon()</code> call for that Spoon — see <a href="#anatomy-of-a-spoon">above</a> for what that
+means for what you put in it.</li>
 <li><strong><code>hs.spoons</code> is a plain namespace, not a module.</strong> v1&#39;s <code>hs.spoons</code> was a real module with
 helpers like <code>resourcePath()</code>, <code>scriptPath()</code>, and <code>bindHotkeysToSpec()</code>. v2&#39;s <code>hs.spoons</code> only
 holds loaded Spoons by name — use <code>__dirname</code> (built into <code>require()</code>) in place of

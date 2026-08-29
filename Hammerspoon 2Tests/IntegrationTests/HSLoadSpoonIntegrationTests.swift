@@ -197,6 +197,20 @@ struct HSLoadSpoonTests {
             ctx.eval("hs.loadSpoon('TestSpoon')")
             #expect(ctx.hadException)
         }
+
+        @Test("the caller of loadSpoon() sees the real error message from a throwing init.js, not a generic one")
+        func testSpoonInitThrowingPropagatesRealMessage() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "throw new Error('a very specific failure');")
+            let caughtMessage = ctx.eval("""
+                (function () {
+                    try { hs.loadSpoon('TestSpoon'); return null; }
+                    catch (e) { return e.message; }
+                })()
+            """)
+            #expect(caughtMessage?.toString()?.contains("a very specific failure") == true)
+        }
     }
 
     @Suite("spoon.json metadata injection")
@@ -266,6 +280,107 @@ struct HSLoadSpoonTests {
             ctx.eval("try { hs.loadSpoon('TestSpoon') } catch (e) {}")
             let result = ctx.eval("typeof hs.spoons.TestSpoon")
             #expect(result?.toString() == "undefined")
+        }
+    }
+
+    @Suite("automatic init() call")
+    struct AutoInitTests {
+
+        @Test("init() is called automatically if the Spoon defines one")
+        func testInitCalledAutomatically() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", """
+                module.exports = {
+                    initCalled: false,
+                    init: function () { this.initCalled = true; }
+                };
+            """)
+            let result = ctx.eval("hs.loadSpoon('TestSpoon').initCalled")
+            #expect(result?.toBool() == true)
+            #expect(!ctx.hadException)
+        }
+
+        @Test("init() runs after metadata injection, so it can read author/description/version via this")
+        func testInitSeesInjectedMetadata() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", version: "7.1.0")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", """
+                module.exports = {
+                    versionSeenDuringInit: null,
+                    init: function () { this.versionSeenDuringInit = this.version; }
+                };
+            """)
+            let result = ctx.eval("hs.loadSpoon('TestSpoon').versionSeenDuringInit")
+            #expect(result?.toString() == "7.1.0")
+            #expect(!ctx.hadException)
+        }
+
+        @Test("loading succeeds normally when the Spoon defines no init()")
+        func testNoInitMethodIsFine() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = { works: true };")
+            let result = ctx.eval("hs.loadSpoon('TestSpoon').works")
+            #expect(result?.toBool() == true)
+            #expect(!ctx.hadException)
+        }
+
+        @Test("an exception thrown from init() fails the load and is not registered in hs.spoons")
+        func testInitThrowingFailsLoad() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", """
+                module.exports = { init: function () { throw new Error('init boom'); } };
+            """)
+            ctx.eval("try { hs.loadSpoon('TestSpoon') } catch (e) {}")
+            let result = ctx.eval("typeof hs.spoons.TestSpoon")
+            #expect(result?.toString() == "undefined")
+        }
+
+        @Test("hs.loadSpoon() itself throws when init() throws")
+        func testLoadSpoonThrowsWhenInitThrows() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", """
+                module.exports = { init: function () { throw new Error('init boom'); } };
+            """)
+            ctx.eval("hs.loadSpoon('TestSpoon')")
+            #expect(ctx.hadException)
+        }
+
+        @Test("init()'s return value is ignored - loadSpoon() still returns module.exports")
+        func testInitReturnValueIsIgnored() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", """
+                module.exports = {
+                    marker: 'original',
+                    init: function () { return { marker: 'replaced' }; }
+                };
+            """)
+            let result = ctx.eval("hs.loadSpoon('TestSpoon').marker")
+            #expect(result?.toString() == "original")
+            #expect(!ctx.hadException)
+        }
+
+        @Test("calling loadSpoon() twice for the same Spoon calls init() again on the cached object each time")
+        func testInitCalledAgainOnRepeatLoad() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", """
+                module.exports = {
+                    initCallCount: 0,
+                    init: function () { this.initCallCount++; }
+                };
+            """)
+            ctx.eval("""
+                hs.loadSpoon('TestSpoon');
+                hs.loadSpoon('TestSpoon');
+            """)
+            let result = ctx.eval("hs.loadSpoon('TestSpoon').initCallCount")
+            #expect(result?.toInt32() == 3)
+            #expect(!ctx.hadException)
         }
     }
 

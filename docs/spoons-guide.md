@@ -6,10 +6,10 @@ its section on [object lifecycle](getting-started.html#object-lifecycle-the-one-
 and [splitting a config across multiple files](getting-started.html#splitting-a-growing-config-into-multiple-files),
 start there — everything below builds on it.
 
-This part of Hammerspoon 2 is newer and smaller in scope than the rest of the app; the
-conventions below (`start()`/`stop()`, `bindHotkeys()`) are recommended patterns for Spoon
-authors to follow, not things the runtime enforces or calls automatically the way Hammerspoon 1
-did for `:init()`.
+This part of Hammerspoon 2 is newer and smaller in scope than the rest of the app. One piece of
+Hammerspoon 1 lifecycle *is* built in - `init()` is called automatically, same as v1's `:init()`
+- but `start()`/`stop()` and `bindHotkeys()` below are recommended patterns for Spoon authors to
+follow, not things the runtime calls for you.
 
 ## Installing a Spoon
 
@@ -108,11 +108,24 @@ whatever method actually needs them). This mirrors the [same lifecycle habit](ge
 that applies everywhere else in Hammerspoon 2 — something needs to keep a reference alive for as
 long as it should keep running.
 
+**If the returned object has an `init()` method, it's called automatically** — matching
+Hammerspoon 1, where `:init()` ran the same way. Use it for setup that needs to happen once the
+object exists but shouldn't wait for `start()` — reading a config file, computing a derived
+value, and so on. `this` inside `init()` refers to the object itself, and by the time it runs,
+`author`/`description`/`version` are already set on `this`, since metadata injection happens
+first. A thrown exception inside `init()` fails the whole load: `hs.loadSpoon()` throws, and
+nothing is stored on `hs.spoons`.
+
+One subtlety worth knowing: `init.js`'s own top level only ever runs once (`require()` caches
+the module), but `init()` runs again every time `hs.loadSpoon()` is called for that Spoon, since
+the same cached object is handed back each time. Write `init()` to be safe to call more than
+once — or better, do true one-time setup directly at `init.js`'s top level, and reserve `init()`
+for things that are genuinely fine to redo.
+
 ## Conventions worth following
 
-Hammerspoon 2 doesn't call any method on your Spoon automatically — no auto-invoked `init()`
-the way v1 had. Two conventions are still worth following for consistency with how other Spoons
-will likely behave, even though nothing enforces them:
+Two further conventions are worth following for consistency with how other Spoons will likely
+behave, even though — unlike `init()` — nothing in the runtime calls them for you:
 
 **`start()` / `stop()`** for a Spoon that does anything ongoing (timers, watchers, hotkeys bound
 persistently). Build the object and its configuration in `init.js`, but don't activate anything
@@ -174,6 +187,13 @@ function setMessage(newMessage) {
     return module.exports          // returning `this`-equivalent enables chaining
 }
 
+function init() {
+    // Called automatically by hs.loadSpoon(). author/description/version are already set on
+    // `this` by this point - safe to log or read, but this could run more than once, so avoid
+    // anything that shouldn't happen twice.
+    console.log(`[Greeter] v${this.version} initialized`)
+}
+
 function start() {
     if (timer) return
     timer = hs.timer.doEvery(3600, show)
@@ -191,7 +211,7 @@ function bindHotkeys(mapping) {
     }
 }
 
-module.exports = { show, setMessage, start, stop, bindHotkeys }
+module.exports = { show, setMessage, init, start, stop, bindHotkeys }
 ```
 
 ```json
@@ -230,8 +250,10 @@ If you're coming from v1, the shape is familiar but several specifics changed:
 - **`spoon.json`, not fields on the returned table.** Required fields are `name`, `author`,
   `version`, `description` — v1 required `name`, `author`, `version`, `license` (with
   `homepage` optional). v2 doesn't currently check for a license field at all.
-- **No automatic `:init()` call.** v1 called a Spoon's `:init()` method automatically if present;
-  v2 calls nothing — `module.exports` is used as-is once `init.js` finishes running.
+- **`init()` is called automatically, same as v1.** One difference worth knowing: v2's `require()`
+  caches `init.js`'s top-level code (it only ever runs once), but `init()` itself runs again on
+  every `hs.loadSpoon()` call for that Spoon — see [above](#anatomy-of-a-spoon) for what that
+  means for what you put in it.
 - **`hs.spoons` is a plain namespace, not a module.** v1's `hs.spoons` was a real module with
   helpers like `resourcePath()`, `scriptPath()`, and `bindHotkeysToSpec()`. v2's `hs.spoons` only
   holds loaded Spoons by name — use `__dirname` (built into `require()`) in place of

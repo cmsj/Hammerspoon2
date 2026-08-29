@@ -86,11 +86,12 @@ array methods (<code>.map</code>/<code>.filter</code>/<code>.reduce</code>/...) 
 replaced by one SwiftUI-backed declarative UI module. This is the single biggest
 programming-model change in the whole migration — see <a href="#rebuilding-ui-with-hsui">Rebuilding UI with hs.ui</a>
 below.</li>
-<li><strong>Spoons exist in v2, but reshaped.</strong> <code>hs.loadSpoon()</code> is back, and Spoons install as
-<code>.spoon2</code> bundles (not <code>.spoon</code>) — but the object lifecycle is simpler (no automatic
-<code>:init()</code> call) and there&#39;s no spoons.hammerspoon.org-equivalent repository yet. See the
-<a href="spoons-guide.html">Spoons guide</a> for the full picture, or
-<a href="#hsspoons-and-spoons">hs.spoons and Spoons</a> below for what specifically changed from v1.</li>
+<li><strong>Spoons exist in v2, but reshaped.</strong> <code>hs.loadSpoon()</code> is back, <code>init()</code> is still called
+automatically, and Spoons install as <code>.spoon2</code> bundles (not <code>.spoon</code>) — but <code>start()</code>/<code>stop()</code>/
+<code>bindHotkeys()</code> are conventions now rather than a built-in lifecycle, and there&#39;s no
+spoons.hammerspoon.org-equivalent repository yet. See the <a href="spoons-guide.html">Spoons guide</a>
+for the full picture, or <a href="#hsspoons-and-spoons">hs.spoons and Spoons</a> below for what
+specifically changed from v1.</li>
 <li><strong>Watchers are usually <code>addWatcher()</code>/<code>removeWatcher()</code> on the main module now,</strong> not a
 separate <code>.watcher</code> submodule you construct and <code>:start()</code>. This pattern is consistent
 across <code>hs.audiodevice</code>, <code>hs.camera</code>, <code>hs.eventtap</code>, <code>hs.keycodes</code>, <code>hs.mouse</code>, <code>hs.screen</code>,
@@ -961,11 +962,13 @@ them:</p>
 <li><strong>Bundles are <code>.spoon2</code>, not <code>.spoon</code></strong> — a deliberate rename, since the two formats aren&#39;t
 interchangeable and both might be installed side by side during a transition. A v1 <code>.spoon</code>
 (Lua) won&#39;t load in v2; it needs rewriting in JavaScript.</li>
-<li><strong>No automatic <code>:init()</code> call, and no built-in <code>:start()</code>/<code>:bindHotkeys()</code> lifecycle.</strong> v1
-called a Spoon&#39;s <code>:init()</code> automatically and had framework-level hotkey-binding helpers.
-v2 calls nothing automatically — <code>module.exports</code> is used as-is — and <code>start()</code>/
-<code>bindHotkeys()</code> are just conventions a Spoon&#39;s own code can choose to implement, not
-something the runtime provides or invokes.</li>
+<li><strong><code>init()</code> is still called automatically, but that&#39;s as far as the built-in lifecycle goes.</strong>
+v1 called a Spoon&#39;s <code>:init()</code> automatically and had framework-level hotkey-binding helpers.
+v2 does the same for <code>init()</code> (called on the returned object, after metadata injection) - but
+<code>start()</code>/<code>stop()</code>/<code>bindHotkeys()</code> are just conventions a Spoon&#39;s own code can choose to
+implement, not something the runtime provides or invokes. One behavioral difference: v2&#39;s
+<code>require()</code> caches <code>init.js</code> itself, but re-runs <code>init()</code> on every <code>hs.loadSpoon()</code> call for
+an already-loaded Spoon - write it to tolerate being called more than once.</li>
 <li><strong>Metadata moved to <code>spoon.json</code>, off the returned object,</strong> and gained enforcement: v1&#39;s
 <code>name</code>/<code>version</code>/<code>author</code>/<code>license</code> (+ optional <code>homepage</code>) were properties a Spoon&#39;s Lua
 table needed to set itself, checked by convention rather than by Hammerspoon. v2 requires a

@@ -62,7 +62,13 @@ import JavaScriptCoreExtras
     /// objects too) - loading fails with an exception otherwise. Its `author`, `description`,
     /// and `version` properties are then set from `spoon.json`, overwriting any of the same
     /// name the Spoon's own `init.js` set, so that information is always present and always
-    /// reflects what's on disk.
+    /// reflects what's on disk. If the resulting object has an `init()` method, it's called
+    /// automatically (with `this` bound to the object) before `loadSpoon()` returns - matching
+    /// Hammerspoon 1's behavior. An exception thrown from `init()` fails the load: nothing is
+    /// stored on `hs.spoons`, and `loadSpoon()` throws. Unlike `init.js` itself (which
+    /// `require()` only ever evaluates once), `init()` runs again on every `loadSpoon()` call
+    /// for the same Spoon, since the same cached object is returned each time - write it to be
+    /// safe to call more than once, or do one-time setup at `init.js`'s top level instead.
     /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`
     /// - Returns: Whatever the Spoon's `init.js` assigned to `module.exports`
     /// - Example:
@@ -227,6 +233,29 @@ import JavaScriptCoreExtras
         return spoonsObject(in: context)
     }
 
+    /// Calls `body` and reports whether it raised a JS exception, leaving `context.exception`
+    /// set to it if so. `context.exception` itself cannot be polled for this directly: once a
+    /// JSContext has a custom `exceptionHandler` installed (as every context in this app does),
+    /// JSC clears `context.exception` immediately after invoking that handler, for both
+    /// `JSValue.call(withArguments:)` and `.invokeMethod(_:withArguments:)` - confirmed
+    /// empirically, not documented behavior. Temporarily wrapping the handler to capture the
+    /// exception ourselves, then setting `context.exception` to it fresh right before
+    /// returning, propagates it to our own caller the same way `fail()` below does.
+    private func callCapturingException(in context: JSContext, _ body: () -> JSValue?) -> JSValue? {
+        let previousHandler = context.exceptionHandler
+        var caught: JSValue?
+        context.exceptionHandler = { context, exception in
+            caught = exception
+            previousHandler?(context, exception)
+        }
+        let result = body()
+        context.exceptionHandler = previousHandler
+        if let caught {
+            context.exception = caught
+        }
+        return result
+    }
+
     @objc func loadSpoon(_ name: String) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
 
@@ -252,9 +281,11 @@ import JavaScriptCoreExtras
             return fail("require() is not available")
         }
 
-        // If init.js itself throws, require() already leaves context.exception set - leave it
-        // as-is rather than overwriting it with our own message.
-        let result = requireFn.call(withArguments: [initJSURL.path])
+        // If init.js itself throws, that's the exception we want visible to our caller -
+        // context.exception is already left set to it by callCapturingException.
+        let result = callCapturingException(in: context) {
+            requireFn.call(withArguments: [initJSURL.path])
+        }
         if context.exception != nil {
             return result
         }
@@ -268,6 +299,17 @@ import JavaScriptCoreExtras
         result.setValue(metadata.author, forProperty: "author")
         result.setValue(metadata.description, forProperty: "description")
         result.setValue(metadata.version, forProperty: "version")
+
+        // Matches v1: call init() automatically if the Spoon defines one.
+        if let initFn = result.objectForKeyedSubscript("init"), !initFn.isUndefined {
+            _ = callCapturingException(in: context) {
+                result.invokeMethod("init", withArguments: [])
+            }
+            if context.exception != nil {
+                return nil
+            }
+        }
+
         spoonsObject(in: context).setValue(result, forProperty: name)
         return result
     }
