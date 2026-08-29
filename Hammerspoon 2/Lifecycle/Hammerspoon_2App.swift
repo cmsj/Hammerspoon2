@@ -37,26 +37,71 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func importSpoon(at url: URL) {
         NSApplication.shared.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
 
         do {
-            let (name, metadata) = try SpoonManager.shared.importSpoon(from: url)
-            AKDebug("Imported Spoon '\(name)' from \(url.path)")
+            let plan = try SpoonManager.shared.planImport(from: url)
+
+            if !confirmOverwriteIfNeeded(plan) {
+                AKDebug("Import of Spoon from \(url.path) cancelled by user")
+                return
+            }
+
+            try SpoonManager.shared.performImport(plan)
+            AKDebug("Imported Spoon '\(plan.name)' from \(url.path)")
+
+            let alert = NSAlert()
             alert.alertStyle = .informational
             alert.messageText = "Spoon Installed"
             alert.informativeText = """
-                "\(metadata.name)" by \(metadata.author) was installed as "\(name)".
+                "\(plan.newMetadata.name)" by \(plan.newMetadata.author) was installed as "\(plan.name)".
 
-                Add hs.loadSpoon("\(name)") to your config to use it, then reload.
+                Add hs.loadSpoon("\(plan.name)") to your config to use it, then reload.
                 """
+            alert.runModal()
         } catch {
             AKError("Failed to import Spoon from \(url.path): \(error.localizedDescription)")
+            let alert = NSAlert()
             alert.alertStyle = .warning
             alert.messageText = "Couldn't Install Spoon"
             alert.informativeText = "\"\(url.lastPathComponent)\" \(error.localizedDescription)"
+            alert.runModal()
+        }
+    }
+
+    /// Shows a confirmation dialog if `plan` would overwrite something, comparing the
+    /// currently-installed Spoon's metadata against the one being imported.
+    /// - Returns: `true` if there's nothing to confirm, or the user confirmed the overwrite;
+    ///   `false` if the user cancelled
+    private func confirmOverwriteIfNeeded(_ plan: SpoonImportPlan) -> Bool {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+
+        switch plan.conflict {
+        case .none:
+            return true
+        case .existingSpoon(let existing):
+            alert.messageText = "Replace Existing Spoon?"
+            alert.informativeText = """
+                A Spoon named "\(plan.name)" is already installed.
+
+                Installed: "\(existing.name)" v\(existing.version) by \(existing.author)
+                New:       "\(plan.newMetadata.name)" v\(plan.newMetadata.version) by \(plan.newMetadata.author)
+
+                Replacing it cannot be undone.
+                """
+        case .existingUnreadable:
+            alert.messageText = "Replace Existing Item?"
+            alert.informativeText = """
+                Something already exists at the location "\(plan.name)" would be installed to, \
+                but it isn't a valid Spoon.
+
+                Replacing it cannot be undone.
+                """
         }
 
-        alert.runModal()
+        alert.addButton(withTitle: "Replace")
+        alert.addButton(withTitle: "Cancel")
+        return alert.runModal() == .alertFirstButtonReturn
     }
 }
 

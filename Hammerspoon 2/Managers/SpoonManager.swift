@@ -49,6 +49,28 @@ enum SpoonImportError: LocalizedError {
     }
 }
 
+/// What, if anything, already exists at the destination an import is about to write to
+enum SpoonImportConflict {
+    /// Nothing exists at the destination - safe to import directly
+    case none
+    /// A well-formed Spoon is already installed there
+    case existingSpoon(SpoonMetadata)
+    /// Something exists there, but it isn't a well-formed Spoon
+    case existingUnreadable
+}
+
+/// Describes what importing a .spoon2 bundle would do, without touching the filesystem.
+/// Produced by `planImport(from:)`; hand it to `performImport(_:)` to actually carry it out,
+/// after resolving `conflict` with the user if it isn't `.none`.
+struct SpoonImportPlan {
+    let bundleURL: URL
+    let spoonsDir: URL
+    let destination: URL
+    let name: String
+    let newMetadata: SpoonMetadata
+    let conflict: SpoonImportConflict
+}
+
 /// Validates well-formed Spoons and imports .spoon2 bundles into the user's config directory.
 ///
 /// Used from two places: `ModuleRoot.loadSpoon()` validates an already-installed Spoon before
@@ -104,19 +126,18 @@ class SpoonManager {
         return metadata
     }
 
-    /// Imports a .spoon2 bundle into `<configDir>/Spoons/`, creating that directory if needed
-    /// and overwriting any existing Spoon with the same name (so double-clicking an updated
-    /// .spoon2 reinstalls it). The bundle's own filename, minus the .spoon2 extension, becomes
-    /// the installed Spoon's name - the same name `hs.loadSpoon()` should be called with.
+    /// Validates a .spoon2 bundle and works out where it would be installed, without touching
+    /// the filesystem. If a Spoon (or anything else) already exists at that destination, it's
+    /// reported via `SpoonImportPlan.conflict` rather than acted on - the caller decides
+    /// whether to confirm with the user before calling `performImport(_:)`.
     /// - Parameter bundleURL: The .spoon2 bundle the user opened
-    /// - Returns: The name the Spoon was installed under, and its parsed spoon.json metadata
-    @discardableResult
-    func importSpoon(from bundleURL: URL) throws -> (name: String, metadata: SpoonMetadata) {
+    /// - Returns: A plan describing the would-be import
+    func planImport(from bundleURL: URL) throws -> SpoonImportPlan {
         guard bundleURL.pathExtension.lowercased() == "spoon2" else {
             throw SpoonImportError.notASpoon2Bundle
         }
 
-        let metadata = try validateSpoon(at: bundleURL)
+        let newMetadata = try validateSpoon(at: bundleURL)
 
         let spoonName = bundleURL.deletingPathExtension().lastPathComponent
         let spoonsDir = settings.configLocation
@@ -124,14 +145,36 @@ class SpoonManager {
             .appendingPathComponent("Spoons")
         let destination = spoonsDir.appendingPathComponent(spoonName)
 
-        if !fileSystem.fileExists(atPath: spoonsDir.path) {
-            try fileSystem.createDirectory(at: spoonsDir, withIntermediateDirectories: true)
+        let conflict: SpoonImportConflict
+        if !fileSystem.fileExists(atPath: destination.path) {
+            conflict = .none
+        } else if let existingMetadata = try? validateSpoon(at: destination) {
+            conflict = .existingSpoon(existingMetadata)
+        } else {
+            conflict = .existingUnreadable
         }
-        if fileSystem.fileExists(atPath: destination.path) {
-            try fileSystem.removeItem(at: destination)
-        }
-        try fileSystem.copyItem(at: bundleURL, to: destination)
 
-        return (spoonName, metadata)
+        return SpoonImportPlan(
+            bundleURL: bundleURL,
+            spoonsDir: spoonsDir,
+            destination: destination,
+            name: spoonName,
+            newMetadata: newMetadata,
+            conflict: conflict
+        )
+    }
+
+    /// Carries out a plan produced by `planImport(from:)`: creates `<configDir>/Spoons/` if
+    /// needed, removes anything already at the plan's destination, and copies the bundle in.
+    /// Call this only after resolving `plan.conflict` with the user, if it isn't `.none`.
+    /// - Parameter plan: A plan previously produced by `planImport(from:)`
+    func performImport(_ plan: SpoonImportPlan) throws {
+        if !fileSystem.fileExists(atPath: plan.spoonsDir.path) {
+            try fileSystem.createDirectory(at: plan.spoonsDir, withIntermediateDirectories: true)
+        }
+        if fileSystem.fileExists(atPath: plan.destination.path) {
+            try fileSystem.removeItem(at: plan.destination)
+        }
+        try fileSystem.copyItem(at: plan.bundleURL, to: plan.destination)
     }
 }

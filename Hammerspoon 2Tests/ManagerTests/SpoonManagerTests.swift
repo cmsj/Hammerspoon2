@@ -95,14 +95,14 @@ struct SpoonManagerTests {
         }
     }
 
-    // MARK: - importSpoon()
+    // MARK: - planImport()
 
-    @Suite("importSpoon()")
-    struct ImportSpoonTests {
+    @Suite("planImport()")
+    struct PlanImportTests {
 
-        private func wellFormedBundle(_ fs: MockFileSystem, at path: String) {
+        private func wellFormedBundle(_ fs: MockFileSystem, at path: String, name: String = "Foo", version: String = "1.0.0") {
             fs.addFile(atPath: "\(path)/spoon.json", contents: """
-                { "name": "Foo", "author": "Someone", "version": "1.0.0", "description": "A Spoon" }
+                { "name": "\(name)", "author": "Someone", "version": "\(version)", "description": "A Spoon" }
             """)
             fs.addFile(atPath: "\(path)/init.js", contents: "module.exports = {};")
         }
@@ -111,11 +111,10 @@ struct SpoonManagerTests {
         func testRejectsWrongExtension() throws {
             let fs = MockFileSystem()
             wellFormedBundle(fs, at: "/Downloads/Foo.zip")
-            let settings = MockSettingsManager()
-            let manager = SpoonManager(fileSystem: fs, settings: settings)
+            let manager = SpoonManager(fileSystem: fs, settings: MockSettingsManager())
 
             #expect(throws: SpoonImportError.self) {
-                try manager.importSpoon(from: URL(fileURLWithPath: "/Downloads/Foo.zip"))
+                try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.zip"))
             }
         }
 
@@ -123,12 +122,92 @@ struct SpoonManagerTests {
         func testPropagatesValidationError() throws {
             let fs = MockFileSystem()
             fs.addFile(atPath: "/Downloads/Foo.spoon2/init.js", contents: "module.exports = {};")
-            let settings = MockSettingsManager()
-            let manager = SpoonManager(fileSystem: fs, settings: settings)
+            let manager = SpoonManager(fileSystem: fs, settings: MockSettingsManager())
 
             #expect(throws: SpoonValidationError.self) {
-                try manager.importSpoon(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
+                try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
             }
+        }
+
+        @Test("computes the correct name and destination from the bundle's own filename")
+        func testComputesDestination() throws {
+            let fs = MockFileSystem()
+            wellFormedBundle(fs, at: "/Downloads/Foo.spoon2")
+            let settings = MockSettingsManager()
+            settings.configLocation = URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/init.js")
+            let manager = SpoonManager(fileSystem: fs, settings: settings)
+
+            let plan = try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
+
+            #expect(plan.name == "Foo")
+            #expect(plan.newMetadata.name == "Foo")
+            #expect(plan.destination == URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/Spoons/Foo"))
+        }
+
+        @Test("reports no conflict when nothing exists at the destination")
+        func testNoConflict() throws {
+            let fs = MockFileSystem()
+            wellFormedBundle(fs, at: "/Downloads/Foo.spoon2")
+            let settings = MockSettingsManager()
+            settings.configLocation = URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/init.js")
+            let manager = SpoonManager(fileSystem: fs, settings: settings)
+
+            let plan = try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
+
+            guard case .none = plan.conflict else {
+                Issue.record("Expected no conflict, got \(plan.conflict)")
+                return
+            }
+        }
+
+        @Test("reports the existing Spoon's metadata when one is already installed under the same name")
+        func testConflictWithExistingSpoon() throws {
+            let fs = MockFileSystem()
+            wellFormedBundle(fs, at: "/Downloads/Foo.spoon2", version: "2.0.0")
+            let settings = MockSettingsManager()
+            settings.configLocation = URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/init.js")
+            wellFormedBundle(fs, at: "/Users/test/.config/Hammerspoon2/Spoons/Foo", version: "1.0.0")
+            let manager = SpoonManager(fileSystem: fs, settings: settings)
+
+            let plan = try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
+
+            guard case .existingSpoon(let existing) = plan.conflict else {
+                Issue.record("Expected an existingSpoon conflict, got \(plan.conflict)")
+                return
+            }
+            #expect(existing.version == "1.0.0")
+            #expect(plan.newMetadata.version == "2.0.0")
+        }
+
+        @Test("reports an unreadable conflict when something non-Spoon already exists at the destination")
+        func testConflictWithUnreadableExisting() throws {
+            let fs = MockFileSystem()
+            wellFormedBundle(fs, at: "/Downloads/Foo.spoon2")
+            let settings = MockSettingsManager()
+            settings.configLocation = URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/init.js")
+            fs.addDirectory(atPath: "/Users/test/.config/Hammerspoon2/Spoons/Foo")
+            fs.addFile(atPath: "/Users/test/.config/Hammerspoon2/Spoons/Foo/random.txt", contents: "not a spoon")
+            let manager = SpoonManager(fileSystem: fs, settings: settings)
+
+            let plan = try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
+
+            guard case .existingUnreadable = plan.conflict else {
+                Issue.record("Expected an existingUnreadable conflict, got \(plan.conflict)")
+                return
+            }
+        }
+    }
+
+    // MARK: - performImport()
+
+    @Suite("performImport()")
+    struct PerformImportTests {
+
+        private func wellFormedBundle(_ fs: MockFileSystem, at path: String) {
+            fs.addFile(atPath: "\(path)/spoon.json", contents: """
+                { "name": "Foo", "author": "Someone", "version": "1.0.0", "description": "A Spoon" }
+            """)
+            fs.addFile(atPath: "\(path)/init.js", contents: "module.exports = {};")
         }
 
         @Test("creates the Spoons directory if it doesn't exist yet")
@@ -138,25 +217,25 @@ struct SpoonManagerTests {
             let settings = MockSettingsManager()
             settings.configLocation = URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/init.js")
             let manager = SpoonManager(fileSystem: fs, settings: settings)
+            let plan = try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
 
-            try manager.importSpoon(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
+            try manager.performImport(plan)
 
             let spoonsDir = URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/Spoons")
             #expect(fs.createdDirectories.contains(spoonsDir))
         }
 
-        @Test("copies the bundle to <configDir>/Spoons/<name>, using the bundle's own filename as the name")
-        func testCopiesToCorrectDestination() throws {
+        @Test("copies the bundle to the plan's destination")
+        func testCopiesToDestination() throws {
             let fs = MockFileSystem()
             wellFormedBundle(fs, at: "/Downloads/Foo.spoon2")
             let settings = MockSettingsManager()
             settings.configLocation = URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/init.js")
             let manager = SpoonManager(fileSystem: fs, settings: settings)
+            let plan = try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
 
-            let (name, metadata) = try manager.importSpoon(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
+            try manager.performImport(plan)
 
-            #expect(name == "Foo")
-            #expect(metadata.name == "Foo")
             #expect(fs.copiedItems.count == 1)
             #expect(fs.copiedItems.first?.src == URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
             #expect(fs.copiedItems.first?.dst == URL(fileURLWithPath: "/Users/test/.config/Hammerspoon2/Spoons/Foo"))
@@ -172,8 +251,9 @@ struct SpoonManagerTests {
             fs.addDirectory(atPath: existingDestination.path)
             fs.addFile(atPath: existingDestination.appendingPathComponent("init.js").path, contents: "old version")
             let manager = SpoonManager(fileSystem: fs, settings: settings)
+            let plan = try manager.planImport(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
 
-            try manager.importSpoon(from: URL(fileURLWithPath: "/Downloads/Foo.spoon2"))
+            try manager.performImport(plan)
 
             #expect(fs.removedItems.contains(existingDestination))
         }
