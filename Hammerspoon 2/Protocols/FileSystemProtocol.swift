@@ -47,6 +47,11 @@ protocol FileSystemProtocol {
     /// - Returns: The URLs of the items contained in the directory
     /// - Throws: Error if the directory cannot be read
     func contentsOfDirectory(at url: URL) throws -> [URL]
+
+    /// Removes a file or directory
+    /// - Parameter url: The URL of the item to remove
+    /// - Throws: Error if the item cannot be removed
+    func removeItem(at url: URL) throws
 }
 
 /// FileManager extension to conform to FileSystemProtocol

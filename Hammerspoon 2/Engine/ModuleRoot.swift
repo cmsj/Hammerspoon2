@@ -49,6 +49,47 @@ import JavaScriptCoreExtras
     /// ```
     @objc func clearConsole()
 
+    /// Load a Spoon - a packaged, reusable piece of configuration - by name, from the
+    /// `Spoons` directory inside your config directory. A Spoon must contain a well-formed
+    /// `spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)
+    /// and an `init.js`, or loading fails with an exception. `init.js` is loaded through the
+    /// same `require()` used for the rest of your config, so it can itself `require()`
+    /// further files from within the Spoon's own directory using relative paths. On success,
+    /// the Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other
+    /// code can reach an already-loaded Spoon without needing to call `loadSpoon()` again.
+    ///
+    /// `init.js` must set `module.exports` to an object (or a function, since functions are
+    /// objects too) - loading fails with an exception otherwise. Its `author`, `description`,
+    /// and `version` properties are then set from `spoon.json`, overwriting any of the same
+    /// name the Spoon's own `init.js` set, so that information is always present and always
+    /// reflects what's on disk. If the resulting object has an `init()` method, it's called
+    /// automatically (with `this` bound to the object) before `loadSpoon()` returns - matching
+    /// Hammerspoon 1's behavior. An exception thrown from `init()` fails the load: nothing is
+    /// stored on `hs.spoons`, and `loadSpoon()` throws. Unlike `init.js` itself (which
+    /// `require()` only ever evaluates once), `init()` runs again on every `loadSpoon()` call
+    /// for the same Spoon, since the same cached object is returned each time - write it to be
+    /// safe to call more than once, or do one-time setup at `init.js`'s top level instead.
+    /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`
+    /// - Returns: Whatever the Spoon's `init.js` assigned to `module.exports`
+    /// - Example:
+    /// ```js
+    /// const MySpoon = hs.loadSpoon("MySpoon")
+    /// console.log(MySpoon.version)
+    /// // ...later, from anywhere...
+    /// hs.spoons.MySpoon.doSomething()
+    /// ```
+    @objc func loadSpoon(_ name: String) -> JSValue?
+
+    /// A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -
+    /// e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
+    /// `hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.
+    /// - Example:
+    /// ```js
+    /// hs.loadSpoon("MySpoon")
+    /// hs.spoons.MySpoon.doSomething()
+    /// ```
+    @objc var spoons: JSValue? { get }
+
     // Modules
     @objc var appinfo: HSAppInfoModule { get }
     @objc var application: HSApplicationModule { get }
@@ -101,10 +142,14 @@ import JavaScriptCoreExtras
 @_documentation(visibility: private)
 @objc class ModuleRoot: NSObject, ModuleRootAPI {
     let engineID: UUID
+    let settings: SettingsManagerProtocol
+    let spoonManager: SpoonManager
     @objc var modules: [String: HSModuleAPI] = [:]
 
-    init(engineID: UUID) {
+    init(engineID: UUID, settings: SettingsManagerProtocol = SettingsManager.shared, spoonManager: SpoonManager = .shared) {
         self.engineID = engineID
+        self.settings = settings
+        self.spoonManager = spoonManager
         super.init()
     }
 
@@ -167,6 +212,106 @@ import JavaScriptCoreExtras
         Task { @MainActor in
             HammerspoonLog.shared.clearLog()
         }
+    }
+
+    // MARK: - Spoons
+
+    // Backing store for the `spoons` namespace, created lazily on first use so a config that
+    // never loads a Spoon never allocates it. Kept as one persistent JSValue (not rebuilt from
+    // a Swift dictionary) so its object identity is stable across accesses.
+    private var _spoons: JSValue?
+
+    private func spoonsObject(in context: JSContext) -> JSValue {
+        if let existing = _spoons { return existing }
+        let obj = JSValue(newObjectIn: context)!
+        _spoons = obj
+        return obj
+    }
+
+    @objc var spoons: JSValue? {
+        guard let context = JSContext.current() else { return nil }
+        return spoonsObject(in: context)
+    }
+
+    /// Calls `body` and reports whether it raised a JS exception, leaving `context.exception`
+    /// set to it if so. `context.exception` itself cannot be polled for this directly: once a
+    /// JSContext has a custom `exceptionHandler` installed (as every context in this app does),
+    /// JSC clears `context.exception` immediately after invoking that handler, for both
+    /// `JSValue.call(withArguments:)` and `.invokeMethod(_:withArguments:)` - confirmed
+    /// empirically, not documented behavior. Temporarily wrapping the handler to capture the
+    /// exception ourselves, then setting `context.exception` to it fresh right before
+    /// returning, propagates it to our own caller the same way `fail()` below does.
+    private func callCapturingException(in context: JSContext, _ body: () -> JSValue?) -> JSValue? {
+        let previousHandler = context.exceptionHandler
+        var caught: JSValue?
+        context.exceptionHandler = { context, exception in
+            caught = exception
+            previousHandler?(context, exception)
+        }
+        let result = body()
+        context.exceptionHandler = previousHandler
+        if let caught {
+            context.exception = caught
+        }
+        return result
+    }
+
+    @objc func loadSpoon(_ name: String) -> JSValue? {
+        guard let context = JSContext.current() else { return nil }
+
+        func fail(_ message: String) -> JSValue? {
+            context.exception = JSValue(newErrorFromMessage: "hs.loadSpoon(): \(message)", in: context)
+            return nil
+        }
+
+        let spoonDir = settings.configLocation
+            .deletingLastPathComponent()
+            .appendingPathComponent("Spoons")
+            .appendingPathComponent(name)
+        let initJSURL = spoonDir.appendingPathComponent("init.js")
+
+        let metadata: SpoonMetadata
+        do {
+            metadata = try spoonManager.validateSpoon(at: spoonDir)
+        } catch {
+            return fail("'\(name)' \(error.localizedDescription)")
+        }
+
+        guard let requireFn = context.globalObject.objectForKeyedSubscript("require"), !requireFn.isUndefined else {
+            return fail("require() is not available")
+        }
+
+        // If init.js itself throws, that's the exception we want visible to our caller -
+        // context.exception is already left set to it by callCapturingException.
+        let result = callCapturingException(in: context) {
+            requireFn.call(withArguments: [initJSURL.path])
+        }
+        if context.exception != nil {
+            return result
+        }
+
+        guard let result, result.isObject else {
+            return fail("'\(name)' must set module.exports to an object")
+        }
+
+        // Authoritative from spoon.json, so these always reflect it even if the Spoon's own
+        // init.js also happens to set properties of the same name.
+        result.setValue(metadata.author, forProperty: "author")
+        result.setValue(metadata.description, forProperty: "description")
+        result.setValue(metadata.version, forProperty: "version")
+
+        // Matches v1: call init() automatically if the Spoon defines one.
+        if let initFn = result.objectForKeyedSubscript("init"), !initFn.isUndefined {
+            _ = callCapturingException(in: context) {
+                result.invokeMethod("init", withArguments: [])
+            }
+            if context.exception != nil {
+                return nil
+            }
+        }
+
+        spoonsObject(in: context).setValue(result, forProperty: name)
+        return result
     }
 
     // Modules

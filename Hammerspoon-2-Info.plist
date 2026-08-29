@@ -19,5 +19,40 @@
 	<string>Hammerspoon 2 requires accessibility permissions to control your Mac</string>
 	<key>SUFeedURL</key>
 	<string>https://www.hammerspoon.org/appcast2.xml</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>net.tenshu.hammerspoon2.spoon</string>
+			<key>UTTypeDescription</key>
+			<string>Hammerspoon 2 Spoon</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.package</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>spoon2</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Hammerspoon 2 Spoon</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>net.tenshu.hammerspoon2.spoon</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

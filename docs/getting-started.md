@@ -262,21 +262,67 @@ mean losing the ability to update it later, or the timer/window disappearing und
 
 ## Splitting a growing config into multiple files
 
-`init.js` doesn't have to hold everything. A global `require(path)` function reads and
-evaluates another JS file — paths are resolved relative to your config directory (or you can
-use `~`), and it works like a straightforward `eval` of that file's contents, not a real module
-system: there's no caching and no `module.exports`, so use it for organizing code by feature,
-not for building a dependency graph.
+`init.js` doesn't have to hold everything. `require(path)` loads another JS file as its own
+module — the same shape as Node's `require()`: give it something to hand back by setting
+`module.exports` (or individual properties on `exports`), and that's what the caller gets back.
+
+```js
+// window-management.js
+const LEFT_HALF = new HSRect(0, 0, 0.5, 1)  // a unit rect: left half of whichever screen it's applied to
+
+function centerFocused() {
+    const win = hs.window.focusedWindow()
+    if (win) win.centerOnScreen()
+}
+
+function snapLeft() {
+    const win = hs.window.focusedWindow()
+    if (win) win.frame = LEFT_HALF.fromUnitRect(win.screen.frame)
+}
+
+module.exports = { centerFocused, snapLeft, LEFT_HALF }
+```
 
 ```js
 // init.js
-require("./window-management.js")
-require("./menubar-widgets.js")
+const { centerFocused, snapLeft } = require("./window-management.js")
+hs.hotkey.bind(["cmd", "alt"], "c", centerFocused)
+hs.hotkey.bind(["cmd", "alt"], "left", snapLeft)
 ```
+
+`module.exports` isn't limited to functions — it's a plain object, so export whatever a
+caller needs: functions, constants, config objects, `HSRect`/`HSColor` values, anything. The
+example above exports two functions and a reusable `HSRect` constant (`LEFT_HALF`) side by
+side, and `init.js` picks out only the pieces it wants via destructuring.
+
+A few things worth knowing about how paths resolve:
+
+- **Local files need an explicit `./` or `../` prefix.** `require("foo.js")` — no prefix — is
+  not the same as `require("./foo.js")` and won't find a file sitting next to `init.js`.
+  Absolute paths and `~/...` paths also work directly.
+- **The `.js` extension is optional** — `require("./utils")` and `require("./utils.js")` are
+  equivalent.
+- **Requiring a directory looks for `index.js`** inside it.
+- **`.json` files are parsed automatically** — `require("./settings.json")` returns the parsed
+  object, not a string.
+- **Modules are cached by resolved path.** Requiring the same file twice from anywhere in your
+  config returns the identical `exports` object both times rather than re-evaluating it.
+
+**Scope:** each required file's top-level code runs inside its own private function, not
+global scope — a `var`/`let`/`const`/function declared at the top of `window-management.js` is
+invisible everywhere else, including `init.js`; `module.exports` is the only way to hand
+anything back. `init.js` itself is the one exception — it runs unwrapped at true global scope,
+specifically so hotkeys/timers/watchers it creates
+[stay alive](#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time) — so a
+required file *can* read whatever `init.js` declared at its own top level, but not the other
+way around, and two required files can't see each other's declarations either. Don't lean on
+that asymmetry deliberately; pass values between files through `module.exports` instead.
 
 ## Where to go from here
 
 The [API reference](index.html) covers every module and type in full, with parameters and
-examples for each method — this guide only scratched the surface of what's available.
-Coming from Hammerspoon 1? See the [migration guide](migration-guide.html) for what moved,
-what changed shape, and what has no v2 equivalent yet.
+examples for each method — this guide only scratched the surface of what's available. Want to
+install someone else's packaged automation, or share your own? See the
+[Spoons guide](spoons-guide.html). Coming from Hammerspoon 1? See the
+[migration guide](migration-guide.html) for what moved, what changed shape, and what has no v2
+equivalent yet.

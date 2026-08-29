@@ -19,10 +19,12 @@ class MockFileSystem: FileSystemProtocol {
     var contentsOfError: Error?
     var shouldThrowOnCreateDirectory: Bool = false
     var shouldThrowOnCopyItem: Bool = false
+    var shouldThrowOnRemoveItem: Bool = false
 
     // Call tracking
     var createdDirectories: [URL] = []
     var copiedItems: [(src: URL, dst: URL)] = []
+    var removedItems: [URL] = []
 
     func fileExists(atPath path: String) -> Bool {
         return existingFiles.contains(path) || existingDirectories.contains(path)
@@ -101,7 +103,7 @@ class MockFileSystem: FileSystemProtocol {
                 NSLocalizedDescriptionKey: "Mock error copying file"
             ])
         }
-        guard existingFiles.contains(srcURL.path) else {
+        guard existingFiles.contains(srcURL.path) || existingDirectories.contains(srcURL.path) else {
             throw NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoSuchFileError, userInfo: [
                 NSLocalizedDescriptionKey: "File not found: \(srcURL.path)"
             ])
@@ -121,6 +123,23 @@ class MockFileSystem: FileSystemProtocol {
             .filter { $0.deletingLastPathComponent().path == url.path }
     }
 
+    func removeItem(at url: URL) throws {
+        if shouldThrowOnRemoveItem {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileWriteNoPermissionError, userInfo: [
+                NSLocalizedDescriptionKey: "Mock error removing item"
+            ])
+        }
+        guard existingFiles.contains(url.path) || existingDirectories.contains(url.path) else {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError, userInfo: [
+                NSLocalizedDescriptionKey: "File not found: \(url.path)"
+            ])
+        }
+        removedItems.append(url)
+        existingFiles.remove(url.path)
+        existingDirectories.remove(url.path)
+        fileContents.removeValue(forKey: url)
+    }
+
     func reset() {
         existingFiles.removeAll()
         existingDirectories.removeAll()
@@ -129,7 +148,9 @@ class MockFileSystem: FileSystemProtocol {
         contentsOfError = nil
         shouldThrowOnCreateDirectory = false
         shouldThrowOnCopyItem = false
+        shouldThrowOnRemoveItem = false
         createdDirectories.removeAll()
         copiedItems.removeAll()
+        removedItems.removeAll()
     }
 }

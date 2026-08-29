@@ -21,9 +21,12 @@ diving into specifics:
   replaced by one SwiftUI-backed declarative UI module. This is the single biggest
   programming-model change in the whole migration — see [Rebuilding UI with hs.ui](#rebuilding-ui-with-hsui)
   below.
-- **There is no Spoon/plugin ecosystem.** `hs.loadSpoon()`, the Spoon object lifecycle, and
-  the spoons.hammerspoon.org repository have no v2 counterpart — see
-  [Removed with no equivalent](#removed-with-no-equivalent).
+- **Spoons exist in v2, but reshaped.** `hs.loadSpoon()` is back, `init()` is still called
+  automatically, and Spoons install as `.spoon2` bundles (not `.spoon`) — but `start()`/`stop()`/
+  `bindHotkeys()` are conventions now rather than a built-in lifecycle, and there's no
+  spoons.hammerspoon.org-equivalent repository yet. See the [Spoons guide](spoons-guide.html)
+  for the full picture, or [hs.spoons and Spoons](#hsspoons-and-spoons) below for what
+  specifically changed from v1.
 - **Watchers are usually `addWatcher()`/`removeWatcher()` on the main module now,** not a
   separate `.watcher` submodule you construct and `:start()`. This pattern is consistent
   across `hs.audiodevice`, `hs.camera`, `hs.eventtap`, `hs.keycodes`, `hs.mouse`, `hs.screen`,
@@ -42,6 +45,47 @@ diving into specifics:
   erroring — a config that assumed a field was always present can fail quietly.
 - **The URL scheme changed.** `hammerspoon://` is now `hammerspoon2://` — update any external
   scripts, launchers, or Shortcuts that invoke your config via `hs.urlevent`.
+
+## Splitting configs across multiple files
+
+v1's `require()` is Lua's built-in module system: it searches `package.path` and returns
+whatever the file `return`s, typically a table of functions. v2's `require()` serves the same
+purpose but follows JavaScript's CommonJS conventions instead, which look different in two
+ways: export something by setting `module.exports` (or individual properties on `exports`)
+rather than ending the file with a `return`, and paths must be explicit —
+`require("./utils.js")`, `require("./utils")`, `../`, or `~/...` — a bare `require("utils")`
+the way Lua's `package.path` search allowed won't find a sibling file in your config directory.
+
+```js
+// utils.js
+module.exports = {
+    centerFocused: function () {
+        const win = hs.window.focusedWindow()
+        if (win) win.centerOnScreen()
+    }
+}
+```
+
+```js
+// init.js
+const { centerFocused } = require("./utils.js")
+```
+
+Requiring the same file twice returns the identical cached `exports` object both times, same
+as v1 — it isn't re-evaluated on every call. `.json` files are also `require()`-able directly,
+returning the parsed object rather than a string.
+
+One more thing worth flagging if a v1 config leaned on implicit globals: Lua chunks loaded via
+`require()` already gave `local` declarations their own scope, but a top-level Lua function or
+variable declared *without* `local` became a genuine Lua global, visible from every other
+file — an easy trap to fall into, and some v1 configs used it deliberately to share helpers
+across files. v2 has no equivalent escape hatch: every required file's top-level code runs
+inside its own function regardless of `var`/`let`/`const`, so nothing it declares is visible
+elsewhere. The one exception is `init.js` itself, which runs at true global scope (so the
+hotkeys/timers/watchers it creates stay alive) — required files can read what `init.js`
+declared at its own top level, but never the reverse, and never between two required files. If
+a v1 config shared state across files through un-`local`'d globals, route it through
+`module.exports` in v2 instead.
 
 ## Quick reference
 
@@ -128,7 +172,7 @@ for what changed within it.
 | `hs.sound` | Present | [details](#hssound) |
 | `hs.spaces` (+`.watcher`) | Gone | no public macOS API, never was reliable |
 | `hs.speech` (+`.listener`) | Gone | no TTS or speech recognition |
-| `hs.spoons` | Gone | [details](#hsspoons-and-the-plugin-ecosystem) |
+| `hs.spoons` | Present | [details](#hsspoons-and-spoons) |
 | `hs.spotify` | Gone | drive via `hs.osascript` instead |
 | `hs.spotlight` (+`.group`,`.item`) | Present | reshaped to a query-object/builder pattern |
 | `hs.sqlite3` | Gone | no embedded database |
@@ -471,17 +515,37 @@ Where each v1 module's job landed:
   the page can't proactively call back into your config. If you need that, poll page state
   with `.evalJSResult()` instead.
 
-## hs.spoons and the plugin ecosystem
+## hs.spoons and Spoons
 
-There is no plugin/extension-loading mechanism in v2: no `hs.loadSpoon()`, no `Spoon`
-directory convention, no `:init()`/`:start()`/`:bindHotkeys()` object lifecycle, and no
-package repository. Spoons were the primary way v1 users packaged and shared reusable
-automations — window management add-ons, hotkey bundles, app integrations — and that whole
-ecosystem has no v2 counterpart. If your config leans on third-party Spoons, expect to
-reimplement that functionality directly as plain JavaScript inside (or alongside) your
-`init.js`, rather than look for a drop-in replacement. There's currently no packaging or
-discovery mechanism if you want your own code to be reusable by others, either — sharing
-plain `.js` snippets is the only option today.
+`hs.loadSpoon()` exists in v2, but the surrounding ecosystem is smaller and reshaped — see the
+[Spoons guide](spoons-guide.html) for the full picture (installing, using, and writing one,
+with a worked example). The short version, if you're porting v1 Spoons or config that used
+them:
+
+- **Bundles are `.spoon2`, not `.spoon`** — a deliberate rename, since the two formats aren't
+  interchangeable and both might be installed side by side during a transition. A v1 `.spoon`
+  (Lua) won't load in v2; it needs rewriting in JavaScript.
+- **`init()` is still called automatically, but that's as far as the built-in lifecycle goes.**
+  v1 called a Spoon's `:init()` automatically and had framework-level hotkey-binding helpers.
+  v2 does the same for `init()` (called on the returned object, after metadata injection) - but
+  `start()`/`stop()`/`bindHotkeys()` are just conventions a Spoon's own code can choose to
+  implement, not something the runtime provides or invokes. One behavioral difference: v2's
+  `require()` caches `init.js` itself, but re-runs `init()` on every `hs.loadSpoon()` call for
+  an already-loaded Spoon - write it to tolerate being called more than once.
+- **Metadata moved to `spoon.json`, off the returned object,** and gained enforcement: v1's
+  `name`/`version`/`author`/`license` (+ optional `homepage`) were properties a Spoon's Lua
+  table needed to set itself, checked by convention rather than by Hammerspoon. v2 requires a
+  `spoon.json` with `name`/`author`/`version`/`description` (no `license` field currently) and
+  refuses to load a Spoon whose `spoon.json` is missing, malformed, or has an empty field. It
+  then injects `author`/`description`/`version` onto the loaded object for you.
+- **`hs.spoons` is a plain namespace now, not a module.** v1's `hs.spoons` provided helpers
+  (`resourcePath()`, `scriptPath()`, `bindHotkeysToSpec()`); v2's `hs.spoons` only holds loaded
+  Spoons by name (`hs.spoons.MySpoon`, after calling `hs.loadSpoon("MySpoon")`). `__dirname`
+  (built into `require()`) covers what `resourcePath()`/`scriptPath()` did.
+- **No repository or discovery mechanism yet.** Installation itself works (double-click a
+  `.spoon2` bundle, same UX as v1's `.spoon`), but there's nothing like spoons.hammerspoon.org
+  to browse or discover v2 Spoons from — sharing a bundle directly is the only distribution
+  path today.
 
 ## Removed with no equivalent
 

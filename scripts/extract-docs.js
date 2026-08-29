@@ -1012,11 +1012,14 @@ function processModuleRoot() {
 
     for (const protocol of protocols) {
         if (protocol.name === 'ModuleRootAPI') {
-            // Only include methods that have documentation; the module-accessor
-            // var declarations (appinfo, audiodevice, …) carry no doc comments
-            // and are intentionally excluded here.
+            // Only include methods/properties that have documentation; the module-accessor
+            // var declarations (appinfo, audiodevice, …) carry no doc comments and are
+            // intentionally excluded here - they're documented separately as their own modules.
             moduleData.methods.push(
                 ...protocol.methods.filter(m => m.rawDocumentation.trim())
+            );
+            moduleData.properties.push(
+                ...protocol.properties.filter(p => p.rawDocumentation.trim())
             );
         }
     }
