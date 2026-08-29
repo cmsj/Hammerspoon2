@@ -223,8 +223,8 @@ import JavaScriptCoreExtras
         self._environment = environment ?? ProcessInfo.processInfo.environment
         self.module = module
         super.init()
-        self.terminationCallback = terminationCallback.flatMap { JSCallback(value: $0, owner: self) }
-        self.streamingCallback = streamingCallback.flatMap { JSCallback(value: $0, owner: self) }
+        self.terminationCallback = terminationCallback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+        self.streamingCallback = streamingCallback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
     }
 
     isolated deinit {

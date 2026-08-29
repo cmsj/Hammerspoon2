@@ -158,7 +158,7 @@ import Carbon
         )
 
         guard hotkey.enable() else {
-            AKError("hs.hotkey.bindSpec(): failed to enable hotkey")
+            AKError("hs.hotkey.bindSpec(): failed to enable hotkey: " + mods.joined(separator: ",") + ", " + key)
             hotkey.destroy()
             return nil
         }
@@ -292,6 +292,7 @@ private struct KeyCodeMapper {
         "end": 0x77,
         "pageup": 0x74,
         "pagedown": 0x79,
+        "§": 0x0A,
 
         // Arrow keys
         "left": 0x7B,

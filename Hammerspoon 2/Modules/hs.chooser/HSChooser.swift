@@ -315,7 +315,7 @@ import SwiftUI
         get { _onSelect?.value }
         set {
             _onSelect?.detach(from: self)
-            _onSelect = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _onSelect = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 
@@ -323,7 +323,7 @@ import SwiftUI
         get { _onQueryChange?.value }
         set {
             _onQueryChange?.detach(from: self)
-            _onQueryChange = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _onQueryChange = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 
@@ -331,7 +331,7 @@ import SwiftUI
         get { _onShow?.value }
         set {
             _onShow?.detach(from: self)
-            _onShow = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _onShow = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 
@@ -339,7 +339,7 @@ import SwiftUI
         get { _onHide?.value }
         set {
             _onHide?.detach(from: self)
-            _onHide = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _onHide = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 
@@ -347,7 +347,7 @@ import SwiftUI
         get { _onInvalid?.value }
         set {
             _onInvalid?.detach(from: self)
-            _onInvalid = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _onInvalid = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 

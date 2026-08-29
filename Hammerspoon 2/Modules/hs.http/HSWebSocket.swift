@@ -235,25 +235,25 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
 
     @objc @discardableResult func setOpenCallback(_ callback: JSFunction?) -> HSWebSocket {
         _openCallback?.detach(from: self)
-        _openCallback = callback.flatMap { JSCallback(value: $0, owner: self) }
+        _openCallback = callback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         return self
     }
 
     @objc @discardableResult func setMessageCallback(_ callback: JSFunction?) -> HSWebSocket {
         _messageCallback?.detach(from: self)
-        _messageCallback = callback.flatMap { JSCallback(value: $0, owner: self) }
+        _messageCallback = callback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         return self
     }
 
     @objc @discardableResult func setCloseCallback(_ callback: JSFunction?) -> HSWebSocket {
         _closeCallback?.detach(from: self)
-        _closeCallback = callback.flatMap { JSCallback(value: $0, owner: self) }
+        _closeCallback = callback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         return self
     }
 
     @objc @discardableResult func setErrorCallback(_ callback: JSFunction?) -> HSWebSocket {
         _errorCallback?.detach(from: self)
-        _errorCallback = callback.flatMap { JSCallback(value: $0, owner: self) }
+        _errorCallback = callback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         return self
     }
 
