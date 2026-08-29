@@ -39,6 +39,7 @@
                 <div class="nav-section-label">GUIDES</div>
                 <div class="nav-guides">
                     <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
                     <a href="migration-guide.html" class="active">Migrating from v1</a>
                 </div>
             </div>
@@ -85,9 +86,11 @@ array methods (<code>.map</code>/<code>.filter</code>/<code>.reduce</code>/...) 
 replaced by one SwiftUI-backed declarative UI module. This is the single biggest
 programming-model change in the whole migration — see <a href="#rebuilding-ui-with-hsui">Rebuilding UI with hs.ui</a>
 below.</li>
-<li><strong>There is no Spoon/plugin ecosystem.</strong> <code>hs.loadSpoon()</code>, the Spoon object lifecycle, and
-the spoons.hammerspoon.org repository have no v2 counterpart — see
-<a href="#removed-with-no-equivalent">Removed with no equivalent</a>.</li>
+<li><strong>Spoons exist in v2, but reshaped.</strong> <code>hs.loadSpoon()</code> is back, and Spoons install as
+<code>.spoon2</code> bundles (not <code>.spoon</code>) — but the object lifecycle is simpler (no automatic
+<code>:init()</code> call) and there&#39;s no spoons.hammerspoon.org-equivalent repository yet. See the
+<a href="spoons-guide.html">Spoons guide</a> for the full picture, or
+<a href="#hsspoons-and-spoons">hs.spoons and Spoons</a> below for what specifically changed from v1.</li>
 <li><strong>Watchers are usually <code>addWatcher()</code>/<code>removeWatcher()</code> on the main module now,</strong> not a
 separate <code>.watcher</code> submodule you construct and <code>:start()</code>. This pattern is consistent
 across <code>hs.audiodevice</code>, <code>hs.camera</code>, <code>hs.eventtap</code>, <code>hs.keycodes</code>, <code>hs.mouse</code>, <code>hs.screen</code>,
@@ -531,8 +534,8 @@ for what changed within it.</p>
 </tr>
 <tr>
 <td><code>hs.spoons</code></td>
-<td>Gone</td>
-<td><a href="#hsspoons-and-the-plugin-ecosystem">details</a></td>
+<td>Present</td>
+<td><a href="#hsspoons-and-spoons">details</a></td>
 </tr>
 <tr>
 <td><code>hs.spotify</code></td>
@@ -949,16 +952,35 @@ and host-initiated only — Hammerspoon can push code into the page and read a r
 the page can&#39;t proactively call back into your config. If you need that, poll page state
 with <code>.evalJSResult()</code> instead.</li>
 </ul>
-<h2 id="hsspoons-and-the-plugin-ecosystem">hs.spoons and the plugin ecosystem</h2>
-<p>There is no plugin/extension-loading mechanism in v2: no <code>hs.loadSpoon()</code>, no <code>Spoon</code>
-directory convention, no <code>:init()</code>/<code>:start()</code>/<code>:bindHotkeys()</code> object lifecycle, and no
-package repository. Spoons were the primary way v1 users packaged and shared reusable
-automations — window management add-ons, hotkey bundles, app integrations — and that whole
-ecosystem has no v2 counterpart. If your config leans on third-party Spoons, expect to
-reimplement that functionality directly as plain JavaScript inside (or alongside) your
-<code>init.js</code>, rather than look for a drop-in replacement. There&#39;s currently no packaging or
-discovery mechanism if you want your own code to be reusable by others, either — sharing
-plain <code>.js</code> snippets is the only option today.</p>
+<h2 id="hsspoons-and-spoons">hs.spoons and Spoons</h2>
+<p><code>hs.loadSpoon()</code> exists in v2, but the surrounding ecosystem is smaller and reshaped — see the
+<a href="spoons-guide.html">Spoons guide</a> for the full picture (installing, using, and writing one,
+with a worked example). The short version, if you&#39;re porting v1 Spoons or config that used
+them:</p>
+<ul>
+<li><strong>Bundles are <code>.spoon2</code>, not <code>.spoon</code></strong> — a deliberate rename, since the two formats aren&#39;t
+interchangeable and both might be installed side by side during a transition. A v1 <code>.spoon</code>
+(Lua) won&#39;t load in v2; it needs rewriting in JavaScript.</li>
+<li><strong>No automatic <code>:init()</code> call, and no built-in <code>:start()</code>/<code>:bindHotkeys()</code> lifecycle.</strong> v1
+called a Spoon&#39;s <code>:init()</code> automatically and had framework-level hotkey-binding helpers.
+v2 calls nothing automatically — <code>module.exports</code> is used as-is — and <code>start()</code>/
+<code>bindHotkeys()</code> are just conventions a Spoon&#39;s own code can choose to implement, not
+something the runtime provides or invokes.</li>
+<li><strong>Metadata moved to <code>spoon.json</code>, off the returned object,</strong> and gained enforcement: v1&#39;s
+<code>name</code>/<code>version</code>/<code>author</code>/<code>license</code> (+ optional <code>homepage</code>) were properties a Spoon&#39;s Lua
+table needed to set itself, checked by convention rather than by Hammerspoon. v2 requires a
+<code>spoon.json</code> with <code>name</code>/<code>author</code>/<code>version</code>/<code>description</code> (no <code>license</code> field currently) and
+refuses to load a Spoon whose <code>spoon.json</code> is missing, malformed, or has an empty field. It
+then injects <code>author</code>/<code>description</code>/<code>version</code> onto the loaded object for you.</li>
+<li><strong><code>hs.spoons</code> is a plain namespace now, not a module.</strong> v1&#39;s <code>hs.spoons</code> provided helpers
+(<code>resourcePath()</code>, <code>scriptPath()</code>, <code>bindHotkeysToSpec()</code>); v2&#39;s <code>hs.spoons</code> only holds loaded
+Spoons by name (<code>hs.spoons.MySpoon</code>, after calling <code>hs.loadSpoon(&quot;MySpoon&quot;)</code>). <code>__dirname</code>
+(built into <code>require()</code>) covers what <code>resourcePath()</code>/<code>scriptPath()</code> did.</li>
+<li><strong>No repository or discovery mechanism yet.</strong> Installation itself works (double-click a
+<code>.spoon2</code> bundle, same UX as v1&#39;s <code>.spoon</code>), but there&#39;s nothing like spoons.hammerspoon.org
+to browse or discover v2 Spoons from — sharing a bundle directly is the only distribution
+path today.</li>
+</ul>
 <h2 id="removed-with-no-equivalent">Removed with no equivalent</h2>
 <p>Everything below has no v2 module and no meaningful coverage elsewhere. Grouped by theme:</p>
 <p><strong>Documentation, logging, and dev tooling:</strong> <code>hs.doc</code> (+<code>.builder</code>/<code>.hsdocs</code>/<code>.markdown</code> — the

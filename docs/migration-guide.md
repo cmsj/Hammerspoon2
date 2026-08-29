@@ -21,9 +21,11 @@ diving into specifics:
   replaced by one SwiftUI-backed declarative UI module. This is the single biggest
   programming-model change in the whole migration — see [Rebuilding UI with hs.ui](#rebuilding-ui-with-hsui)
   below.
-- **There is no Spoon/plugin ecosystem.** `hs.loadSpoon()`, the Spoon object lifecycle, and
-  the spoons.hammerspoon.org repository have no v2 counterpart — see
-  [Removed with no equivalent](#removed-with-no-equivalent).
+- **Spoons exist in v2, but reshaped.** `hs.loadSpoon()` is back, and Spoons install as
+  `.spoon2` bundles (not `.spoon`) — but the object lifecycle is simpler (no automatic
+  `:init()` call) and there's no spoons.hammerspoon.org-equivalent repository yet. See the
+  [Spoons guide](spoons-guide.html) for the full picture, or
+  [hs.spoons and Spoons](#hsspoons-and-spoons) below for what specifically changed from v1.
 - **Watchers are usually `addWatcher()`/`removeWatcher()` on the main module now,** not a
   separate `.watcher` submodule you construct and `:start()`. This pattern is consistent
   across `hs.audiodevice`, `hs.camera`, `hs.eventtap`, `hs.keycodes`, `hs.mouse`, `hs.screen`,
@@ -169,7 +171,7 @@ for what changed within it.
 | `hs.sound` | Present | [details](#hssound) |
 | `hs.spaces` (+`.watcher`) | Gone | no public macOS API, never was reliable |
 | `hs.speech` (+`.listener`) | Gone | no TTS or speech recognition |
-| `hs.spoons` | Gone | [details](#hsspoons-and-the-plugin-ecosystem) |
+| `hs.spoons` | Present | [details](#hsspoons-and-spoons) |
 | `hs.spotify` | Gone | drive via `hs.osascript` instead |
 | `hs.spotlight` (+`.group`,`.item`) | Present | reshaped to a query-object/builder pattern |
 | `hs.sqlite3` | Gone | no embedded database |
@@ -512,17 +514,35 @@ Where each v1 module's job landed:
   the page can't proactively call back into your config. If you need that, poll page state
   with `.evalJSResult()` instead.
 
-## hs.spoons and the plugin ecosystem
+## hs.spoons and Spoons
 
-There is no plugin/extension-loading mechanism in v2: no `hs.loadSpoon()`, no `Spoon`
-directory convention, no `:init()`/`:start()`/`:bindHotkeys()` object lifecycle, and no
-package repository. Spoons were the primary way v1 users packaged and shared reusable
-automations — window management add-ons, hotkey bundles, app integrations — and that whole
-ecosystem has no v2 counterpart. If your config leans on third-party Spoons, expect to
-reimplement that functionality directly as plain JavaScript inside (or alongside) your
-`init.js`, rather than look for a drop-in replacement. There's currently no packaging or
-discovery mechanism if you want your own code to be reusable by others, either — sharing
-plain `.js` snippets is the only option today.
+`hs.loadSpoon()` exists in v2, but the surrounding ecosystem is smaller and reshaped — see the
+[Spoons guide](spoons-guide.html) for the full picture (installing, using, and writing one,
+with a worked example). The short version, if you're porting v1 Spoons or config that used
+them:
+
+- **Bundles are `.spoon2`, not `.spoon`** — a deliberate rename, since the two formats aren't
+  interchangeable and both might be installed side by side during a transition. A v1 `.spoon`
+  (Lua) won't load in v2; it needs rewriting in JavaScript.
+- **No automatic `:init()` call, and no built-in `:start()`/`:bindHotkeys()` lifecycle.** v1
+  called a Spoon's `:init()` automatically and had framework-level hotkey-binding helpers.
+  v2 calls nothing automatically — `module.exports` is used as-is — and `start()`/
+  `bindHotkeys()` are just conventions a Spoon's own code can choose to implement, not
+  something the runtime provides or invokes.
+- **Metadata moved to `spoon.json`, off the returned object,** and gained enforcement: v1's
+  `name`/`version`/`author`/`license` (+ optional `homepage`) were properties a Spoon's Lua
+  table needed to set itself, checked by convention rather than by Hammerspoon. v2 requires a
+  `spoon.json` with `name`/`author`/`version`/`description` (no `license` field currently) and
+  refuses to load a Spoon whose `spoon.json` is missing, malformed, or has an empty field. It
+  then injects `author`/`description`/`version` onto the loaded object for you.
+- **`hs.spoons` is a plain namespace now, not a module.** v1's `hs.spoons` provided helpers
+  (`resourcePath()`, `scriptPath()`, `bindHotkeysToSpec()`); v2's `hs.spoons` only holds loaded
+  Spoons by name (`hs.spoons.MySpoon`, after calling `hs.loadSpoon("MySpoon")`). `__dirname`
+  (built into `require()`) covers what `resourcePath()`/`scriptPath()` did.
+- **No repository or discovery mechanism yet.** Installation itself works (double-click a
+  `.spoon2` bundle, same UX as v1's `.spoon`), but there's nothing like spoons.hammerspoon.org
+  to browse or discover v2 Spoons from — sharing a bundle directly is the only distribution
+  path today.
 
 ## Removed with no equivalent
 

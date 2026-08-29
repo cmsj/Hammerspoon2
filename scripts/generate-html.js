@@ -32,6 +32,13 @@ const GUIDES = [
         slug: 'migration-guide',
         pageTitle: 'Migrating from Hammerspoon 1',
         searchDescription: 'A guide for Hammerspoon 1 users on what changed, what moved, and what was removed in Hammerspoon 2.'
+    },
+    {
+        sourcePath: path.join(__dirname, '..', 'docs', 'spoons-guide.md'),
+        outputName: 'spoons-guide.html',
+        slug: 'spoons-guide',
+        pageTitle: 'Spoons',
+        searchDescription: 'How to install, use, and write Spoons - packaged, reusable pieces of Hammerspoon 2 configuration.'
     }
 ];
 
