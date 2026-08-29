@@ -9475,8 +9475,8 @@
           "name": "installBinary",
           "signature": "func installBinary(_ directory: JSValue) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Install the `hs` command-line tool to the given directory as a symlink.\n\nCreates a symlink in the target directory that points to the `hs` binary inside the\nHammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any\napp update without reinstalling. Any existing `hs` file at that path is replaced.\n\nThe directory must be on your `$PATH` for `hs` to work without a full path.\n\n**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.\nOn Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both\ndirectories require root — if this method returns `false`, run the logged command in\na terminal with `sudo`.\n\n- Parameter directory: {string} Directory to install into. Defaults to `/usr/local/bin`.\n- Returns: `true` on success, `false` on error (details logged to the console).\n- Example:\n```js\nhs.ipc.installBinary()                   // install to /usr/local/bin/hs\nhs.ipc.installBinary(\"/opt/homebrew/bin\") // install to /opt/homebrew/bin/hs\n```",
-          "description": "Install the `hs` command-line tool to the given directory as a symlink.\nCreates a symlink in the target directory that points to the `hs` binary inside the\nHammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any\napp update without reinstalling. Any existing `hs` file at that path is replaced.\nThe directory must be on your `$PATH` for `hs` to work without a full path.\n**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.\nOn Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both\ndirectories require root — if this method returns `false`, run the logged command in\na terminal with `sudo`.",
+          "rawDocumentation": "Install the `hs2` command-line tool to the given directory as a symlink.\n\nCreates a symlink in the target directory that points to the `hs2` binary inside the\nHammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any\napp update without reinstalling. Any existing `hs2` file at that path is replaced.\n\nThe directory must be on your `$PATH` for `hs2` to work without a full path.\n\n**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.\nOn Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both\ndirectories require root — if this method returns `false`, run the logged command in\na terminal with `sudo`.\n\n- Parameter directory: {string} Directory to install into. Defaults to `/usr/local/bin`.\n- Returns: `true` on success, `false` on error (details logged to the console).\n- Example:\n```js\nhs.ipc.installBinary()                   // install to /usr/local/bin/hs2\nhs.ipc.installBinary(\"/opt/homebrew/bin\") // install to /opt/homebrew/bin/hs2\n```",
+          "description": "Install the `hs2` command-line tool to the given directory as a symlink.\nCreates a symlink in the target directory that points to the `hs2` binary inside the\nHammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any\napp update without reinstalling. Any existing `hs2` file at that path is replaced.\nThe directory must be on your `$PATH` for `hs2` to work without a full path.\n**Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.\nOn Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both\ndirectories require root — if this method returns `false`, run the logged command in\na terminal with `sudo`.",
           "params": [
             {
               "name": "directory",
@@ -9494,7 +9494,7 @@
           "examples": [
             {
               "lang": "js",
-              "code": "hs.ipc.installBinary()                   // install to /usr/local/bin/hs\nhs.ipc.installBinary(\"/opt/homebrew/bin\") // install to /opt/homebrew/bin/hs"
+              "code": "hs.ipc.installBinary()                   // install to /usr/local/bin/hs2\nhs.ipc.installBinary(\"/opt/homebrew/bin\") // install to /opt/homebrew/bin/hs2"
             }
           ],
           "source": "swift",
@@ -9505,8 +9505,8 @@
           "name": "uninstallBinary",
           "signature": "func uninstallBinary(_ directory: JSValue) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Remove the `hs` command-line tool from the given directory.\n\n- Parameter directory: {string} Directory to remove from. Defaults to `/usr/local/bin`.\n- Returns: `true` on success, `false` if not found or on error.\n- Example:\n```js\nhs.ipc.uninstallBinary()\nhs.ipc.uninstallBinary(\"/opt/homebrew/bin\")\n```",
-          "description": "Remove the `hs` command-line tool from the given directory.",
+          "rawDocumentation": "Remove the `hs2` command-line tool from the given directory.\n\n- Parameter directory: {string} Directory to remove from. Defaults to `/usr/local/bin`.\n- Returns: `true` on success, `false` if not found or on error.\n- Example:\n```js\nhs.ipc.uninstallBinary()\nhs.ipc.uninstallBinary(\"/opt/homebrew/bin\")\n```",
+          "description": "Remove the `hs2` command-line tool from the given directory.",
           "params": [
             {
               "name": "directory",
@@ -9535,8 +9535,8 @@
           "name": "isBinaryInstalled",
           "signature": "func isBinaryInstalled(_ directory: JSValue) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Check whether the `hs` command-line tool exists at the given directory.\n\n- Parameter directory: {string} Directory to check. Defaults to `/usr/local/bin`.\n- Returns: `true` if an `hs` binary exists at that path.\n- Example:\n```js\nif (hs.ipc.isBinaryInstalled()) {\n    console.log(\"hs CLI is available\")\n}\n```",
-          "description": "Check whether the `hs` command-line tool exists at the given directory.",
+          "rawDocumentation": "Check whether the `hs2` command-line tool exists at the given directory.\n\n- Parameter directory: {string} Directory to check. Defaults to `/usr/local/bin`.\n- Returns: `true` if an `hs2` binary exists at that path.\n- Example:\n```js\nif (hs.ipc.isBinaryInstalled()) {\n    console.log(\"hs2 CLI is available\")\n}\n```",
+          "description": "Check whether the `hs2` command-line tool exists at the given directory.",
           "params": [
             {
               "name": "directory",
@@ -9548,13 +9548,13 @@
           ],
           "returns": {
             "type": "boolean",
-            "description": "`true` if an `hs` binary exists at that path."
+            "description": "`true` if an `hs2` binary exists at that path."
           },
           "notes": [],
           "examples": [
             {
               "lang": "js",
-              "code": "if (hs.ipc.isBinaryInstalled()) {\n    console.log(\"hs CLI is available\")\n}"
+              "code": "if (hs.ipc.isBinaryInstalled()) {\n    console.log(\"hs2 CLI is available\")\n}"
             }
           ],
           "source": "swift",
@@ -9582,8 +9582,8 @@
         }
       ],
       "types": [],
-      "description": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects via XPC and evaluates JavaScript\ninteractively, with optional live log streaming.\nCommunication is secured with a same-team code-signing requirement in release builds,\nso only binaries signed with the same Team ID can connect.\n## Quick start\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n```js\nhs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs\n```\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n```bash\nhs --log-level info\n```",
-      "rawDocumentation": "Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.\n\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs` command-line tool connects via XPC and evaluates JavaScript\ninteractively, with optional live log streaming.\n\nCommunication is secured with a same-team code-signing requirement in release builds,\nso only binaries signed with the same Team ID can connect.\n\n## Quick start\n\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n\nInstall the CLI tool once:\n```js\nhs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs\n```\n\nThen in a terminal:\n```bash\nhs\nhs> hs.reload()\nundefined\nhs> 2 + 2\n4\n```\n\nRun with live log output:\n```bash\nhs --log-level info\n```"
+      "description": "Module for enabling CLI access to Hammerspoon 2 via the `hs2` command-line tool.\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs2` command-line tool connects via XPC and evaluates JavaScript\ninteractively, with optional live log streaming.\nCommunication is secured with a same-team code-signing requirement in release builds,\nso only binaries signed with the same Team ID can connect.\n## Quick start\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n```js\nhs.ipc.installBinary()   // symlinks hs2 to /usr/local/bin/hs2\n```\n```bash\nhs2\nhs2> hs.reload()\nundefined\nhs2> 2 + 2\n4\n```\n```bash\nhs2 --log-level info\n```",
+      "rawDocumentation": "Module for enabling CLI access to Hammerspoon 2 via the `hs2` command-line tool.\n\nThe IPC server must be explicitly started from your configuration — it does not run by default.\nOnce started, the `hs2` command-line tool connects via XPC and evaluates JavaScript\ninteractively, with optional live log streaming.\n\nCommunication is secured with a same-team code-signing requirement in release builds,\nso only binaries signed with the same Team ID can connect.\n\n## Quick start\n\n```js\n// In your Hammerspoon 2 config (init.js):\nhs.ipc.start()\n```\n\nInstall the CLI tool once:\n```js\nhs.ipc.installBinary()   // symlinks hs2 to /usr/local/bin/hs2\n```\n\nThen in a terminal:\n```bash\nhs2\nhs2> hs.reload()\nundefined\nhs2> 2 + 2\n4\n```\n\nRun with live log output:\n```bash\nhs2 --log-level info\n```"
     },
     {
       "name": "hs.keyboard",
@@ -25820,5 +25820,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-29T11:14:11.149Z"
+  "generatedAt": "2026-08-29T21:58:02.660Z"
 }

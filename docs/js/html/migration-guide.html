@@ -651,7 +651,7 @@ with <code>consume</code> as a settable property on the watcher object.</p>
 there&#39;s no callback argument any more. A network failure <em>resolves</em> with <code>status: -1</code>, it
 doesn&#39;t reject — check <code>status</code> rather than relying on <code>.catch()</code>. Gained <code>openWebSocket()</code>
 for WebSocket clients (no dedicated WebSocket story existed in v1&#39;s <code>hs.http</code>).</p>
-<p><strong><code>hs.ipc</code></strong> — same purpose (the <code>hs</code> CLI talking to the running app), but the transport is
+<p><strong><code>hs.ipc</code></strong> — same purpose (the <code>hs2</code> CLI talking to the running app), but the transport is
 now XPC over a named Mach service rather than a bare process pipe, and you must call
 <code>hs.ipc.start()</code> explicitly — it doesn&#39;t auto-start the way v1&#39;s did. In release builds,
 connections are restricted to binaries signed with the same Team ID.</p>

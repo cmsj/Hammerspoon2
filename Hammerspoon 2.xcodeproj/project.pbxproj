@@ -19,7 +19,7 @@
 		4FACE0022F12345678900000 /* JavaScriptCoreExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 4FACE0032F12345678900000 /* JavaScriptCoreExtras */; };
 		4FBB01002F70123400DEAD01 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBB01012F70123400DEAD01 /* ScriptingBridge.framework */; };
 		4FCE0A032F00000000000003 /* CommandLineKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4FCE0A022F00000000000002 /* CommandLineKit */; };
-		4FE4C00C2F0000000000000C /* hs in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FE4C0012F00000000000001 /* hs */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		4FE4C00C2F0000000000000C /* hs2 in Embed Tools */ = {isa = PBXBuildFile; fileRef = 4FE4C0012F00000000000001 /* hs2 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,7 +42,7 @@
 			containerPortal = 4F56417B2E8333830099EB4C /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 4FE4C0032F00000000000003;
-			remoteInfo = hs;
+			remoteInfo = hs2;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -64,7 +64,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 6;
 			files = (
-				4FE4C00C2F0000000000000C /* hs in Embed Tools */,
+				4FE4C00C2F0000000000000C /* hs2 in Embed Tools */,
 			);
 			name = "Embed Tools";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,7 +93,7 @@
 		4F973B152EF9523A006A6709 /* type.njk */ = {isa = PBXFileReference; lastKnownFileType = text; path = type.njk; sourceTree = "<group>"; };
 		4FBAC53B433E2BE28A375D63 /* DefaultConfig */ = {isa = PBXFileReference; lastKnownFileType = folder; path = DefaultConfig; sourceTree = "<group>"; };
 		4FBB01012F70123400DEAD01 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
-		4FE4C0012F00000000000001 /* hs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs; sourceTree = BUILT_PRODUCTS_DIR; };
+		4FE4C0012F00000000000001 /* hs2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs2; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -143,9 +143,9 @@
 			path = HammerspoonOSAScriptHelper;
 			sourceTree = "<group>";
 		};
-		4FE4C0022F00000000000002 /* hs */ = {
+		4FE4C0022F00000000000002 /* hs2 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = hs;
+			path = hs2;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -197,7 +197,7 @@
 				4F5641852E8333830099EB4C /* Hammerspoon 2 */,
 				4F5641932E8333840099EB4C /* Hammerspoon 2Tests */,
 				4F947D882F563FCF00DD814E /* HammerspoonOSAScriptHelper */,
-				4FE4C0022F00000000000002 /* hs */,
+				4FE4C0022F00000000000002 /* hs2 */,
 				4F947DA42F56404F00DD814E /* Frameworks */,
 				4F5641842E8333830099EB4C /* Products */,
 			);
@@ -209,7 +209,7 @@
 				4F5641832E8333830099EB4C /* Hammerspoon 2.app */,
 				4F5641902E8333840099EB4C /* Hammerspoon 2Tests.xctest */,
 				4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */,
-				4FE4C0012F00000000000001 /* hs */,
+				4FE4C0012F00000000000001 /* hs2 */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -337,9 +337,9 @@
 			productReference = 4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */;
 			productType = "com.apple.product-type.xpc-service";
 		};
-		4FE4C0032F00000000000003 /* hs */ = {
+		4FE4C0032F00000000000003 /* hs2 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs" */;
+			buildConfigurationList = 4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs2" */;
 			buildPhases = (
 				4FE4C0042F00000000000004 /* Sources */,
 				4FE4C0052F00000000000005 /* Frameworks */,
@@ -350,14 +350,14 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4FE4C0022F00000000000002 /* hs */,
+				4FE4C0022F00000000000002 /* hs2 */,
 			);
-			name = hs;
+			name = hs2;
 			packageProductDependencies = (
 				4FCE0A022F00000000000002 /* CommandLineKit */,
 			);
-			productName = hs;
-			productReference = 4FE4C0012F00000000000001 /* hs */;
+			productName = hs2;
+			productReference = 4FE4C0012F00000000000001 /* hs2 */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -408,7 +408,7 @@
 				4F5641822E8333830099EB4C /* Hammerspoon 2 */,
 				4F56418F2E8333840099EB4C /* Hammerspoon 2Tests */,
 				4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */,
-				4FE4C0032F00000000000003 /* hs */,
+				4FE4C0032F00000000000003 /* hs2 */,
 			);
 		};
 /* End PBXProject section */
@@ -493,7 +493,7 @@
 		};
 		4FE4C00B2F0000000000000B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4FE4C0032F00000000000003 /* hs */;
+			target = 4FE4C0032F00000000000003 /* hs2 */;
 			targetProxy = 4FE4C00A2F0000000000000A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -887,7 +887,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs";
+				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -911,7 +911,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs";
+				PRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -962,7 +962,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs" */ = {
+		4FE4C0092F00000000000009 /* Build configuration list for PBXNativeTarget "hs2" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4FE4C0072F00000000000007 /* Debug */,

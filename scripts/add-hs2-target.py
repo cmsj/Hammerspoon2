@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Add the 'hs' command-line tool target to Hammerspoon 2.xcodeproj/project.pbxproj.
-Run from the repo root:  python3 scripts/add-hs-target.py
+Add the 'hs2' command-line tool target to Hammerspoon 2.xcodeproj/project.pbxproj.
+Run from the repo root:  python3 scripts/add-hs2-target.py
 """
 
 import os, sys, re, shutil
@@ -10,18 +10,18 @@ PBXPROJ = os.path.join(os.path.dirname(__file__), '..', 'Hammerspoon 2.xcodeproj
 PBXPROJ = os.path.normpath(PBXPROJ)
 
 # ── Fixed UUIDs for every new pbxproj object ─────────────────────────────────
-UUID_HS_PRODUCT         = '4FE4C0012F00000000000001'  # PBXFileReference: hs (tool)
-UUID_HS_FSSRG           = '4FE4C0022F00000000000002'  # PBXFileSystemSynchronizedRootGroup: hs/
-UUID_HS_TARGET          = '4FE4C0032F00000000000003'  # PBXNativeTarget: hs
+UUID_HS_PRODUCT         = '4FE4C0012F00000000000001'  # PBXFileReference: hs2 (tool)
+UUID_HS_FSSRG           = '4FE4C0022F00000000000002'  # PBXFileSystemSynchronizedRootGroup: hs2/
+UUID_HS_TARGET          = '4FE4C0032F00000000000003'  # PBXNativeTarget: hs2
 UUID_HS_SOURCES         = '4FE4C0042F00000000000004'  # PBXSourcesBuildPhase
 UUID_HS_FRAMEWORKS      = '4FE4C0052F00000000000005'  # PBXFrameworksBuildPhase
 UUID_HS_RESOURCES       = '4FE4C0062F00000000000006'  # PBXResourcesBuildPhase
 UUID_HS_DEBUG           = '4FE4C0072F00000000000007'  # XCBuildConfiguration Debug
 UUID_HS_RELEASE         = '4FE4C0082F00000000000008'  # XCBuildConfiguration Release
 UUID_HS_CONFIGLIST      = '4FE4C0092F00000000000009'  # XCConfigurationList
-UUID_PROXY_APP_TO_HS    = '4FE4C00A2F0000000000000A'  # PBXContainerItemProxy (app → hs)
+UUID_PROXY_APP_TO_HS    = '4FE4C00A2F0000000000000A'  # PBXContainerItemProxy (app → hs2)
 UUID_DEP_APP_TO_HS      = '4FE4C00B2F0000000000000B'  # PBXTargetDependency
-UUID_BF_HS_EMBED        = '4FE4C00C2F0000000000000C'  # PBXBuildFile (hs in embed tools)
+UUID_BF_HS_EMBED        = '4FE4C00C2F0000000000000C'  # PBXBuildFile (hs2 in embed tools)
 UUID_EMBED_TOOLS        = '4FE4C00D2F0000000000000D'  # PBXCopyFilesBuildPhase
 
 # Known UUIDs from existing project
@@ -47,13 +47,13 @@ def already_patched(content):
 # ── Snippet builders ──────────────────────────────────────────────────────────
 
 def pbx_build_file():
-    return f'\t\t{UUID_BF_HS_EMBED} /* hs in Embed Tools */ = {{isa = PBXBuildFile; fileRef = {UUID_HS_PRODUCT} /* hs */; settings = {{ATTRIBUTES = (CodeSignOnCopy, ); }}; }};\n'
+    return f'\t\t{UUID_BF_HS_EMBED} /* hs2 in Embed Tools */ = {{isa = PBXBuildFile; fileRef = {UUID_HS_PRODUCT} /* hs2 */; settings = {{ATTRIBUTES = (CodeSignOnCopy, ); }}; }};\n'
 
 def pbx_file_reference():
-    return f'\t\t{UUID_HS_PRODUCT} /* hs */ = {{isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs; sourceTree = BUILT_PRODUCTS_DIR; }};\n'
+    return f'\t\t{UUID_HS_PRODUCT} /* hs2 */ = {{isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hs2; sourceTree = BUILT_PRODUCTS_DIR; }};\n'
 
 def pbx_fssrg():
-    return f'\t\t{UUID_HS_FSSRG} /* hs */ = {{\n\t\t\tisa = PBXFileSystemSynchronizedRootGroup;\n\t\t\tpath = hs;\n\t\t\tsourceTree = "<group>";\n\t\t}};\n'
+    return f'\t\t{UUID_HS_FSSRG} /* hs2 */ = {{\n\t\t\tisa = PBXFileSystemSynchronizedRootGroup;\n\t\t\tpath = hs2;\n\t\t\tsourceTree = "<group>";\n\t\t}};\n'
 
 def pbx_frameworks_phase():
     return (
@@ -68,9 +68,9 @@ def pbx_frameworks_phase():
 
 def pbx_native_target():
     return (
-        f'\t\t{UUID_HS_TARGET} /* hs */ = {{\n'
+        f'\t\t{UUID_HS_TARGET} /* hs2 */ = {{\n'
         f'\t\t\tisa = PBXNativeTarget;\n'
-        f'\t\t\tbuildConfigurationList = {UUID_HS_CONFIGLIST} /* Build configuration list for PBXNativeTarget "hs" */;\n'
+        f'\t\t\tbuildConfigurationList = {UUID_HS_CONFIGLIST} /* Build configuration list for PBXNativeTarget "hs2" */;\n'
         f'\t\t\tbuildPhases = (\n'
         f'\t\t\t\t{UUID_HS_SOURCES} /* Sources */,\n'
         f'\t\t\t\t{UUID_HS_FRAMEWORKS} /* Frameworks */,\n'
@@ -81,13 +81,13 @@ def pbx_native_target():
         f'\t\t\tdependencies = (\n'
         f'\t\t\t);\n'
         f'\t\t\tfileSystemSynchronizedGroups = (\n'
-        f'\t\t\t\t{UUID_HS_FSSRG} /* hs */,\n'
+        f'\t\t\t\t{UUID_HS_FSSRG} /* hs2 */,\n'
         f'\t\t\t);\n'
-        f'\t\t\tname = hs;\n'
+        f'\t\t\tname = hs2;\n'
         f'\t\t\tpackageProductDependencies = (\n'
         f'\t\t\t);\n'
-        f'\t\t\tproductName = hs;\n'
-        f'\t\t\tproductReference = {UUID_HS_PRODUCT} /* hs */;\n'
+        f'\t\t\tproductName = hs2;\n'
+        f'\t\t\tproductReference = {UUID_HS_PRODUCT} /* hs2 */;\n'
         f'\t\t\tproductType = "com.apple.product-type.tool";\n'
         f'\t\t}};\n'
     )
@@ -99,7 +99,7 @@ def pbx_container_proxy():
         f'\t\t\tcontainerPortal = 4F56417B2E8333830099EB4C /* Project object */;\n'
         f'\t\t\tproxyType = 1;\n'
         f'\t\t\tremoteGlobalIDString = {UUID_HS_TARGET};\n'
-        f'\t\t\tremoteInfo = hs;\n'
+        f'\t\t\tremoteInfo = hs2;\n'
         f'\t\t}};\n'
     )
 
@@ -107,7 +107,7 @@ def pbx_target_dependency():
     return (
         f'\t\t{UUID_DEP_APP_TO_HS} /* PBXTargetDependency */ = {{\n'
         f'\t\t\tisa = PBXTargetDependency;\n'
-        f'\t\t\ttarget = {UUID_HS_TARGET} /* hs */;\n'
+        f'\t\t\ttarget = {UUID_HS_TARGET} /* hs2 */;\n'
         f'\t\t\ttargetProxy = {UUID_PROXY_APP_TO_HS} /* PBXContainerItemProxy */;\n'
         f'\t\t}};\n'
     )
@@ -148,7 +148,7 @@ def xc_build_config_debug():
         f'\t\t\t\tGENERATE_INFOPLIST_FILE = YES;\n'
         f'\t\t\t\tMACOSX_DEPLOYMENT_TARGET = 15.6;\n'
         f'\t\t\t\tMARKETING_VERSION = 1.0;\n'
-        f'\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs";\n'
+        f'\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs2";\n'
         f'\t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";\n'
         f'\t\t\t\tSKIP_INSTALL = YES;\n'
         f'\t\t\t\tSTRING_CATALOG_GENERATE_SYMBOLS = NO;\n'
@@ -177,7 +177,7 @@ def xc_build_config_release():
         f'\t\t\t\tGENERATE_INFOPLIST_FILE = YES;\n'
         f'\t\t\t\tMACOSX_DEPLOYMENT_TARGET = 15.6;\n'
         f'\t\t\t\tMARKETING_VERSION = 1.0;\n'
-        f'\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs";\n'
+        f'\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = "net.tenshu.Hammerspoon-2.hs2";\n'
         f'\t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";\n'
         f'\t\t\t\tSKIP_INSTALL = YES;\n'
         f'\t\t\t\tSTRING_CATALOG_GENERATE_SYMBOLS = NO;\n'
@@ -194,7 +194,7 @@ def xc_build_config_release():
 
 def xc_config_list():
     return (
-        f'\t\t{UUID_HS_CONFIGLIST} /* Build configuration list for PBXNativeTarget "hs" */ = {{\n'
+        f'\t\t{UUID_HS_CONFIGLIST} /* Build configuration list for PBXNativeTarget "hs2" */ = {{\n'
         f'\t\t\tisa = XCConfigurationList;\n'
         f'\t\t\tbuildConfigurations = (\n'
         f'\t\t\t\t{UUID_HS_DEBUG} /* Debug */,\n'
@@ -213,7 +213,7 @@ def embed_tools_phase():
         f'\t\t\tdstPath = "";\n'
         f'\t\t\tdstSubfolderSpec = 6;\n'
         f'\t\t\tfiles = (\n'
-        f'\t\t\t\t{UUID_BF_HS_EMBED} /* hs in Embed Tools */,\n'
+        f'\t\t\t\t{UUID_BF_HS_EMBED} /* hs2 in Embed Tools */,\n'
         f'\t\t\t);\n'
         f'\t\t\tname = "Embed Tools";\n'
         f'\t\t\trunOnlyForDeploymentPostprocessing = 0;\n'
@@ -278,12 +278,12 @@ def patch(content):
 
     # 7. Products group — add hs product reference
     products_marker = '\t\t\t\t4F947D872F563FCF00DD814E /* HammerspoonOSAScriptHelper.xpc */,'
-    hs_product_entry = f'\t\t\t\t{UUID_HS_PRODUCT} /* hs */,\n'
+    hs_product_entry = f'\t\t\t\t{UUID_HS_PRODUCT} /* hs2 */,\n'
     content = insert_after_marker(content, products_marker, hs_product_entry)
 
     # 8. Root group children — add hs directory group
     root_group_marker = '\t\t\t\t4F947D882F563FCF00DD814E /* HammerspoonOSAScriptHelper */,'
-    hs_group_entry = f'\t\t\t\t{UUID_HS_FSSRG} /* hs */,\n'
+    hs_group_entry = f'\t\t\t\t{UUID_HS_FSSRG} /* hs2 */,\n'
     content = insert_after_marker(content, root_group_marker, hs_group_entry)
 
     # 9. PBXNativeTarget section — add hs target
@@ -294,7 +294,7 @@ def patch(content):
     )
 
     # 10. PBXProject targets list — add hs target
-    existing_target_line = f'\t\t\t\t{UUID_HS_TARGET} /* hs */,\n'
+    existing_target_line = f'\t\t\t\t{UUID_HS_TARGET} /* hs2 */,\n'
     targets_marker = f'\t\t\t\t4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */,'
     content = insert_after_marker(content, targets_marker, existing_target_line)
 
@@ -372,12 +372,12 @@ def main():
         sys.exit(1)
 
     write(patched)
-    print('  Done. Open Xcode to verify the new "hs" target.')
+    print('  Done. Open Xcode to verify the new "hs2" target.')
     print()
     print('  Next steps in Xcode:')
-    print('  1. Select the "hs" target → General → verify deployment target is 15.6')
+    print('  1. Select the "hs2" target → General → verify deployment target is 15.6')
     print('  2. Select the "Hammerspoon 2" target → Build Phases → "Embed Tools"')
-    print('     Confirm "hs" is listed with Code Sign on Copy enabled.')
+    print('     Confirm "hs2" is listed with Code Sign on Copy enabled.')
     print('  3. Build both targets.')
 
 if __name__ == '__main__':
