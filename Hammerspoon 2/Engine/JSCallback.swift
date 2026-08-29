@@ -42,7 +42,8 @@ final class JSCallback {
     /// Creates a JSCallback for a value passed through the JS→Swift bridge.
     ///
     /// Returns nil if the value is not an object/function.
-    init?(value: JSValue, owner: AnyObject) {
+    init?(value: JSValue, owner: AnyObject, silentOnUndefined: Bool = false) {
+        if silentOnUndefined && value.isUndefined { return nil }
         guard value.isFunction else {
             AKError("Unable to create JSCallback: value is not a function")
             return nil

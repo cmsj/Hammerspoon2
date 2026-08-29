@@ -65,9 +65,9 @@
     <span class="page-badge">Module</span>
 </div>
 
-<div class="module-description"><p>Module for enabling CLI access to Hammerspoon 2 via the <code>hs</code> command-line tool.</p>
+<div class="module-description"><p>Module for enabling CLI access to Hammerspoon 2 via the <code>hs2</code> command-line tool.</p>
 <p>The IPC server must be explicitly started from your configuration — it does not run by default.
-Once started, the <code>hs</code> command-line tool connects via XPC and evaluates JavaScript
+Once started, the <code>hs2</code> command-line tool connects via XPC and evaluates JavaScript
 interactively, with optional live log streaming.</p>
 <p>Communication is secured with a same-team code-signing requirement in release builds,
 so only binaries signed with the same Team ID can connect.</p>
@@ -76,17 +76,17 @@ so only binaries signed with the same Team ID can connect.</p>
 hs.ipc.start()
 </code></pre>
 <p>Install the CLI tool once:</p>
-<pre><code class="language-js">hs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs
+<pre><code class="language-js">hs.ipc.installBinary()   // symlinks hs2 to /usr/local/bin/hs2
 </code></pre>
 <p>Then in a terminal:</p>
-<pre><code class="language-bash">hs
-hs&gt; hs.reload()
+<pre><code class="language-bash">hs2
+hs2&gt; hs.reload()
 undefined
-hs&gt; 2 + 2
+hs2&gt; 2 + 2
 4
 </code></pre>
 <p>Run with live log output:</p>
-<pre><code class="language-bash">hs --log-level info
+<pre><code class="language-bash">hs2 --log-level info
 </code></pre>
 </div>
 
@@ -148,11 +148,11 @@ Calling `start()` when already running logs a warning and does nothing.</div>
     <div class="method" id="installBinary">
         <h3><a href="#installBinary">hs.ipc.installBinary(directory) -> boolean</a></h3>
 
-        <div class="description">Install the `hs` command-line tool to the given directory as a symlink.
-Creates a symlink in the target directory that points to the `hs` binary inside the
+        <div class="description">Install the `hs2` command-line tool to the given directory as a symlink.
+Creates a symlink in the target directory that points to the `hs2` binary inside the
 Hammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any
-app update without reinstalling. Any existing `hs` file at that path is replaced.
-The directory must be on your `$PATH` for `hs` to work without a full path.
+app update without reinstalling. Any existing `hs2` file at that path is replaced.
+The directory must be on your `$PATH` for `hs2` to work without a full path.
 **Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.
 On Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both
 directories require root — if this method returns `false`, run the logged command in
@@ -185,8 +185,8 @@ a terminal with `sudo`.</div>
 
 
         <div class="card-section-label">Example</div>
-        <pre><code class="language-js">hs.ipc.installBinary()                   // install to /usr/local/bin/hs
-hs.ipc.installBinary(&quot;/opt/homebrew/bin&quot;) // install to /opt/homebrew/bin/hs</code></pre>
+        <pre><code class="language-js">hs.ipc.installBinary()                   // install to /usr/local/bin/hs2
+hs.ipc.installBinary(&quot;/opt/homebrew/bin&quot;) // install to /opt/homebrew/bin/hs2</code></pre>
 
         <div class="source-link">
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ipc/HSIPCModule.swift#L95" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ipc/HSIPCModule.swift:95</a>
@@ -195,7 +195,7 @@ hs.ipc.installBinary(&quot;/opt/homebrew/bin&quot;) // install to /opt/homebrew/
     <div class="method" id="uninstallBinary">
         <h3><a href="#uninstallBinary">hs.ipc.uninstallBinary(directory) -> boolean</a></h3>
 
-        <div class="description">Remove the `hs` command-line tool from the given directory.</div>
+        <div class="description">Remove the `hs2` command-line tool from the given directory.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.ipc.uninstallBinary(directory) -> boolean</code></pre>
@@ -234,7 +234,7 @@ hs.ipc.uninstallBinary(&quot;/opt/homebrew/bin&quot;)</code></pre>
     <div class="method" id="isBinaryInstalled">
         <h3><a href="#isBinaryInstalled">hs.ipc.isBinaryInstalled(directory) -> boolean</a></h3>
 
-        <div class="description">Check whether the `hs` command-line tool exists at the given directory.</div>
+        <div class="description">Check whether the `hs2` command-line tool exists at the given directory.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.ipc.isBinaryInstalled(directory) -> boolean</code></pre>
@@ -259,12 +259,12 @@ hs.ipc.uninstallBinary(&quot;/opt/homebrew/bin&quot;)</code></pre>
 
         <div class="card-section-label">Returns</div>
         <div class="return-type">boolean</div>
-        <div class="return-desc">`true` if an `hs` binary exists at that path.</div>
+        <div class="return-desc">`true` if an `hs2` binary exists at that path.</div>
 
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">if (hs.ipc.isBinaryInstalled()) {
-    console.log(&quot;hs CLI is available&quot;)
+    console.log(&quot;hs2 CLI is available&quot;)
 }</code></pre>
 
         <div class="source-link">

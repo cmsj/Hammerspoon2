@@ -86,14 +86,14 @@ import Carbon
         get { _callbackPressed?.value }
         set {
             _callbackPressed?.detach(from: self)
-            _callbackPressed = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _callbackPressed = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
     @objc var callbackReleased: JSFunction? {
         get { _callbackReleased?.value }
         set {
             _callbackReleased?.detach(from: self)
-            _callbackReleased = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _callbackReleased = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 

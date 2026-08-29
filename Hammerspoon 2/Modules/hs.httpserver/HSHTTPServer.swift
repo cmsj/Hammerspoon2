@@ -354,7 +354,7 @@ struct ParsedHTTPRequest {
 
     @objc @discardableResult func setCallback(_ callback: JSFunction?) -> HSHTTPServer {
         _callback?.detach(from: self)
-        _callback = callback.flatMap { JSCallback(value: $0, owner: self) }
+        _callback = callback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         return self
     }
 

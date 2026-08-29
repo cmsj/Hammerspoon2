@@ -716,6 +716,38 @@ declare namespace hs {
      */
     function clearConsole(): void;
 
+    /**
+     * Load a Spoon - a packaged, reusable piece of configuration - by name, from the
+`Spoons` directory inside your config directory. A Spoon must contain a well-formed
+`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)
+and an `init.js`, or loading fails with an exception. `init.js` is loaded through the
+same `require()` used for the rest of your config, so it can itself `require()`
+further files from within the Spoon's own directory using relative paths. On success,
+the Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other
+code can reach an already-loaded Spoon without needing to call `loadSpoon()` again.
+`init.js` must set `module.exports` to an object (or a function, since functions are
+objects too) - loading fails with an exception otherwise. Its `author`, `description`,
+and `version` properties are then set from `spoon.json`, overwriting any of the same
+name the Spoon's own `init.js` set, so that information is always present and always
+reflects what's on disk. If the resulting object has an `init()` method, it's called
+automatically (with `this` bound to the object) before `loadSpoon()` returns - matching
+Hammerspoon 1's behavior. An exception thrown from `init()` fails the load: nothing is
+stored on `hs.spoons`, and `loadSpoon()` throws. Unlike `init.js` itself (which
+`require()` only ever evaluates once), `init()` runs again on every `loadSpoon()` call
+for the same Spoon, since the same cached object is returned each time - write it to be
+safe to call more than once, or do one-time setup at `init.js`'s top level instead.
+     * @param name The Spoon's name, matching its directory name under `Spoons/`
+     * @returns Whatever the Spoon's `init.js` assigned to `module.exports`
+     */
+    function loadSpoon(name: string): JSValue | null;
+
+    /**
+     * A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -
+e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
+`hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.
+     */
+    const spoons: JSValue | null;
+
 }
 
 /**
@@ -3679,9 +3711,9 @@ Sends a WebSocket close frame and cancels the underlying TCP connection.
 }
 
 /**
- * Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.
+ * Module for enabling CLI access to Hammerspoon 2 via the `hs2` command-line tool.
 The IPC server must be explicitly started from your configuration — it does not run by default.
-Once started, the `hs` command-line tool connects via XPC and evaluates JavaScript
+Once started, the `hs2` command-line tool connects via XPC and evaluates JavaScript
 interactively, with optional live log streaming.
 Communication is secured with a same-team code-signing requirement in release builds,
 so only binaries signed with the same Team ID can connect.
@@ -3691,17 +3723,17 @@ so only binaries signed with the same Team ID can connect.
 hs.ipc.start()
 ```
 ```js
-hs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs
+hs.ipc.installBinary()   // symlinks hs2 to /usr/local/bin/hs2
 ```
 ```bash
-hs
-hs> hs.reload()
+hs2
+hs2> hs.reload()
 undefined
-hs> 2 + 2
+hs2> 2 + 2
 4
 ```
 ```bash
-hs --log-level info
+hs2 --log-level info
 ```
  */
 declare namespace hs.ipc {
@@ -3719,11 +3751,11 @@ Calling `start()` when already running logs a warning and does nothing.
     function stop(): void;
 
     /**
-     * Install the `hs` command-line tool to the given directory as a symlink.
-Creates a symlink in the target directory that points to the `hs` binary inside the
+     * Install the `hs2` command-line tool to the given directory as a symlink.
+Creates a symlink in the target directory that points to the `hs2` binary inside the
 Hammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any
-app update without reinstalling. Any existing `hs` file at that path is replaced.
-The directory must be on your `$PATH` for `hs` to work without a full path.
+app update without reinstalling. Any existing `hs2` file at that path is replaced.
+The directory must be on your `$PATH` for `hs2` to work without a full path.
 **Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.
 On Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both
 directories require root — if this method returns `false`, run the logged command in
@@ -3734,16 +3766,16 @@ a terminal with `sudo`.
     function installBinary(directory: string): boolean;
 
     /**
-     * Remove the `hs` command-line tool from the given directory.
+     * Remove the `hs2` command-line tool from the given directory.
      * @param directory Directory to remove from. Defaults to `/usr/local/bin`.
      * @returns `true` on success, `false` if not found or on error.
      */
     function uninstallBinary(directory: string): boolean;
 
     /**
-     * Check whether the `hs` command-line tool exists at the given directory.
+     * Check whether the `hs2` command-line tool exists at the given directory.
      * @param directory Directory to check. Defaults to `/usr/local/bin`.
-     * @returns `true` if an `hs` binary exists at that path.
+     * @returns `true` if an `hs2` binary exists at that path.
      */
     function isBinaryInstalled(directory: string): boolean;
 

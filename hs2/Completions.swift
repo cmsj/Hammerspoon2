@@ -1,6 +1,6 @@
 //
 //  Completions.swift
-//  hs — Hammerspoon 2 interactive REPL
+//  hs2 — Hammerspoon 2 interactive REPL
 //
 //  Parses api.json (module-level items only) to drive LineReader tab-completion and hints.
 //
@@ -165,7 +165,7 @@ nonisolated func findAPIJSON() -> URL? {
     let execURL = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
     let execDir = execURL.deletingLastPathComponent()
 
-    // App bundle: …/Contents/MacOS/hs → …/Contents/Resources/api.json
+    // App bundle: …/Contents/MacOS/hs2 → …/Contents/Resources/api.json
     let resources = execDir.deletingLastPathComponent().appendingPathComponent("Resources")
     let bundleCandidate = resources.appendingPathComponent("api.json")
     if FileManager.default.fileExists(atPath: bundleCandidate.path) { return bundleCandidate }

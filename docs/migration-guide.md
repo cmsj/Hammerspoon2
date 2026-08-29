@@ -220,7 +220,7 @@ there's no callback argument any more. A network failure *resolves* with `status
 doesn't reject — check `status` rather than relying on `.catch()`. Gained `openWebSocket()`
 for WebSocket clients (no dedicated WebSocket story existed in v1's `hs.http`).
 
-**`hs.ipc`** — same purpose (the `hs` CLI talking to the running app), but the transport is
+**`hs.ipc`** — same purpose (the `hs2` CLI talking to the running app), but the transport is
 now XPC over a named Mach service rather than a bare process pipe, and you must call
 `hs.ipc.start()` explicitly — it doesn't auto-start the way v1's did. In release builds,
 connections are restricted to binaries signed with the same Team ID.

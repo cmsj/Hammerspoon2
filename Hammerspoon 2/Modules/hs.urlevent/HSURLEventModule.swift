@@ -277,7 +277,7 @@ import JavaScriptCoreExtras
         get { _httpCallback?.value }
         set {
             _httpCallback?.detach(from: self)
-            _httpCallback = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _httpCallback = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 
@@ -285,7 +285,7 @@ import JavaScriptCoreExtras
         get { _mailtoCallback?.value }
         set {
             _mailtoCallback?.detach(from: self)
-            _mailtoCallback = newValue.flatMap { JSCallback(value: $0, owner: self) }
+            _mailtoCallback = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 

@@ -6,10 +6,10 @@
 import Foundation
 import JavaScriptCore
 
-/// Module for enabling CLI access to Hammerspoon 2 via the `hs` command-line tool.
+/// Module for enabling CLI access to Hammerspoon 2 via the `hs2` command-line tool.
 ///
 /// The IPC server must be explicitly started from your configuration — it does not run by default.
-/// Once started, the `hs` command-line tool connects via XPC and evaluates JavaScript
+/// Once started, the `hs2` command-line tool connects via XPC and evaluates JavaScript
 /// interactively, with optional live log streaming.
 ///
 /// Communication is secured with a same-team code-signing requirement in release builds,
@@ -24,21 +24,21 @@ import JavaScriptCore
 ///
 /// Install the CLI tool once:
 /// ```js
-/// hs.ipc.installBinary()   // symlinks hs to /usr/local/bin/hs
+/// hs.ipc.installBinary()   // symlinks hs2 to /usr/local/bin/hs2
 /// ```
 ///
 /// Then in a terminal:
 /// ```bash
-/// hs
-/// hs> hs.reload()
+/// hs2
+/// hs2> hs.reload()
 /// undefined
-/// hs> 2 + 2
+/// hs2> 2 + 2
 /// 4
 /// ```
 ///
 /// Run with live log output:
 /// ```bash
-/// hs --log-level info
+/// hs2 --log-level info
 /// ```
 @objc protocol HSIPCModuleAPI: JSExport {
 
@@ -72,13 +72,13 @@ import JavaScriptCore
     /// ```
     @objc func stop()
 
-    /// Install the `hs` command-line tool to the given directory as a symlink.
+    /// Install the `hs2` command-line tool to the given directory as a symlink.
     ///
-    /// Creates a symlink in the target directory that points to the `hs` binary inside the
+    /// Creates a symlink in the target directory that points to the `hs2` binary inside the
     /// Hammerspoon 2 app bundle. Using a symlink means the CLI automatically reflects any
-    /// app update without reinstalling. Any existing `hs` file at that path is replaced.
+    /// app update without reinstalling. Any existing `hs2` file at that path is replaced.
     ///
-    /// The directory must be on your `$PATH` for `hs` to work without a full path.
+    /// The directory must be on your `$PATH` for `hs2` to work without a full path.
     ///
     /// **Permissions:** `/usr/local/bin` is typically user-writable on Intel Macs with Homebrew.
     /// On Apple Silicon, prefer `/opt/homebrew/bin`. On a stock Mac (no Homebrew), both
@@ -89,12 +89,12 @@ import JavaScriptCore
     /// - Returns: `true` on success, `false` on error (details logged to the console).
     /// - Example:
     /// ```js
-    /// hs.ipc.installBinary()                   // install to /usr/local/bin/hs
-    /// hs.ipc.installBinary("/opt/homebrew/bin") // install to /opt/homebrew/bin/hs
+    /// hs.ipc.installBinary()                   // install to /usr/local/bin/hs2
+    /// hs.ipc.installBinary("/opt/homebrew/bin") // install to /opt/homebrew/bin/hs2
     /// ```
     @objc func installBinary(_ directory: JSValue) -> Bool
 
-    /// Remove the `hs` command-line tool from the given directory.
+    /// Remove the `hs2` command-line tool from the given directory.
     ///
     /// - Parameter directory: {string} Directory to remove from. Defaults to `/usr/local/bin`.
     /// - Returns: `true` on success, `false` if not found or on error.
@@ -105,14 +105,14 @@ import JavaScriptCore
     /// ```
     @objc func uninstallBinary(_ directory: JSValue) -> Bool
 
-    /// Check whether the `hs` command-line tool exists at the given directory.
+    /// Check whether the `hs2` command-line tool exists at the given directory.
     ///
     /// - Parameter directory: {string} Directory to check. Defaults to `/usr/local/bin`.
-    /// - Returns: `true` if an `hs` binary exists at that path.
+    /// - Returns: `true` if an `hs2` binary exists at that path.
     /// - Example:
     /// ```js
     /// if (hs.ipc.isBinaryInstalled()) {
-    ///     console.log("hs CLI is available")
+    ///     console.log("hs2 CLI is available")
     /// }
     /// ```
     @objc func isBinaryInstalled(_ directory: JSValue) -> Bool
@@ -172,11 +172,11 @@ import JavaScriptCore
         let directory = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
 
         guard let sourceURL = bundledHSBinaryURL() else {
-            AKError("hs.ipc.installBinary(): Cannot find 'hs' binary in the app bundle. Ensure the 'hs' target has been built.")
+            AKError("hs.ipc.installBinary(): Cannot find 'hs2' binary in the app bundle. Ensure the 'hs2' target has been built.")
             return false
         }
 
-        let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
+        let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs2")
         let fm = FileManager.default
 
         if (try? fm.attributesOfItem(atPath: destURL.path)) != nil {
@@ -201,7 +201,7 @@ import JavaScriptCore
 
     @objc func uninstallBinary(_ directoryVal: JSValue) -> Bool {
         let directory = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
-        let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
+        let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs2")
         let fm = FileManager.default
 
         guard let attrs = try? fm.attributesOfItem(atPath: destURL.path) else {
@@ -229,7 +229,7 @@ import JavaScriptCore
 
     @objc func isBinaryInstalled(_ directoryVal: JSValue) -> Bool {
         let directory = directoryVal.isString ? directoryVal.toString()! : "/usr/local/bin"
-        let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs")
+        let destURL = URL(fileURLWithPath: directory).appendingPathComponent("hs2")
         let fm = FileManager.default
 
         guard let attrs = try? fm.attributesOfItem(atPath: destURL.path),
@@ -247,11 +247,11 @@ import JavaScriptCore
     // MARK: - Private
 
     private func bundledHSBinaryURL() -> URL? {
-        if let url = Bundle.main.url(forAuxiliaryExecutable: "hs") {
+        if let url = Bundle.main.url(forAuxiliaryExecutable: "hs2") {
             return url
         }
         if let execURL = Bundle.main.executableURL {
-            let devURL = execURL.deletingLastPathComponent().appendingPathComponent("hs")
+            let devURL = execURL.deletingLastPathComponent().appendingPathComponent("hs2")
             if FileManager.default.fileExists(atPath: devURL.path) {
                 return devURL
             }

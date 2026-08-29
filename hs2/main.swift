@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  hs — Hammerspoon 2 interactive REPL
+//  hs2 — Hammerspoon 2 interactive REPL
 //
 //  Connects to Hammerspoon 2 via XPC (service name: net.tenshu.Hammerspoon-2.ipc),
 //  evaluates JavaScript, and optionally streams log messages with colour-coded levels.
@@ -128,7 +128,7 @@ private actor HSIPCClient {
 
 private var flags = Flags()
 private let logLevelFlag = flags.string("l", "log-level", description: "Show log messages at or above this level.\nLevels: trace  info  warning  error  javascript\nDefault: none (no log messages shown)")
-private let noPromptFlag = flags.option(nil, "no-prompt",   description: "Suppress 'hs> ' prompt (useful when piping input)")
+private let noPromptFlag = flags.option(nil, "no-prompt",   description: "Suppress 'hs2> ' prompt (useful when piping input)")
 private let helpFlag     = flags.option("h", "help",        description: "Show this help")
 
 if let failure = flags.parsingFailure() {
@@ -137,7 +137,7 @@ if let failure = flags.parsingFailure() {
 }
 
 if helpFlag.wasSet {
-    print(flags.usageDescription(usageName: "USAGE", synopsis: "hs [options]", optionsName: "OPTIONS"))
+    print(flags.usageDescription(usageName: "USAGE", synopsis: "hs2 [options]", optionsName: "OPTIONS"))
     print("""
 
     SETUP
@@ -146,7 +146,7 @@ if helpFlag.wasSet {
 
     INSTALL THE BINARY
       From the Hammerspoon 2 JavaScript console:
-        hs.ipc.installBinary()              // installs to /usr/local/bin/hs
+        hs.ipc.installBinary()              // installs to /usr/local/bin/hs2
         hs.ipc.installBinary("/opt/homebrew/bin")
     """)
     exit(0)
@@ -235,7 +235,7 @@ while true {
     if let lr = lineReader {
         do {
             rawLine = try lr.readLine(
-                prompt: "hs> ",
+                prompt: "hs2> ",
                 promptProperties: TextProperties(.blue, nil, .bold)
             )
         } catch LineReaderError.CTRLC {
