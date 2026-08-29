@@ -57,11 +57,18 @@ import JavaScriptCoreExtras
     /// further files from within the Spoon's own directory using relative paths. On success,
     /// the Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other
     /// code can reach an already-loaded Spoon without needing to call `loadSpoon()` again.
+    ///
+    /// `init.js` must set `module.exports` to an object (or a function, since functions are
+    /// objects too) - loading fails with an exception otherwise. Its `author`, `description`,
+    /// and `version` properties are then set from `spoon.json`, overwriting any of the same
+    /// name the Spoon's own `init.js` set, so that information is always present and always
+    /// reflects what's on disk.
     /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`
     /// - Returns: Whatever the Spoon's `init.js` assigned to `module.exports`
     /// - Example:
     /// ```js
     /// const MySpoon = hs.loadSpoon("MySpoon")
+    /// console.log(MySpoon.version)
     /// // ...later, from anywhere...
     /// hs.spoons.MySpoon.doSomething()
     /// ```
@@ -234,8 +241,9 @@ import JavaScriptCoreExtras
             .appendingPathComponent(name)
         let initJSURL = spoonDir.appendingPathComponent("init.js")
 
+        let metadata: SpoonMetadata
         do {
-            _ = try spoonManager.validateSpoon(at: spoonDir)
+            metadata = try spoonManager.validateSpoon(at: spoonDir)
         } catch {
             return fail("'\(name)' \(error.localizedDescription)")
         }
@@ -245,11 +253,22 @@ import JavaScriptCoreExtras
         }
 
         // If init.js itself throws, require() already leaves context.exception set - leave it
-        // as-is rather than overwriting it with our own message, and skip populating spoons.
+        // as-is rather than overwriting it with our own message.
         let result = requireFn.call(withArguments: [initJSURL.path])
-        if context.exception == nil, let result, !result.isUndefined {
-            spoonsObject(in: context).setValue(result, forProperty: name)
+        if context.exception != nil {
+            return result
         }
+
+        guard let result, result.isObject else {
+            return fail("'\(name)' must set module.exports to an object")
+        }
+
+        // Authoritative from spoon.json, so these always reflect it even if the Spoon's own
+        // init.js also happens to set properties of the same name.
+        result.setValue(metadata.author, forProperty: "author")
+        result.setValue(metadata.description, forProperty: "description")
+        result.setValue(metadata.version, forProperty: "version")
+        spoonsObject(in: context).setValue(result, forProperty: name)
         return result
     }
 

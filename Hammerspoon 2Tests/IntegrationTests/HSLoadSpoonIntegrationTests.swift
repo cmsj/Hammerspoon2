@@ -199,6 +199,76 @@ struct HSLoadSpoonTests {
         }
     }
 
+    @Suite("spoon.json metadata injection")
+    struct MetadataInjectionTests {
+
+        @Test("author, description, and version from spoon.json are injected onto module.exports")
+        func testMetadataInjectedOntoExports() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", author: "Jane Dev", version: "2.3.1", description: "Does a thing.")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = {};")
+            ctx.eval("var s = hs.loadSpoon('TestSpoon')")
+            #expect(ctx.eval("s.author")?.toString() == "Jane Dev")
+            #expect(ctx.eval("s.version")?.toString() == "2.3.1")
+            #expect(ctx.eval("s.description")?.toString() == "Does a thing.")
+            #expect(!ctx.hadException)
+        }
+
+        @Test("injected metadata overwrites properties the Spoon's own init.js already set")
+        func testMetadataOverwritesExistingProperties() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", author: "Real Author", version: "9.9.9", description: "Real description.")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", """
+                module.exports = { author: "wrong", version: "0.0.1", description: "wrong" };
+            """)
+            ctx.eval("var s = hs.loadSpoon('TestSpoon')")
+            #expect(ctx.eval("s.author")?.toString() == "Real Author")
+            #expect(ctx.eval("s.version")?.toString() == "9.9.9")
+            #expect(ctx.eval("s.description")?.toString() == "Real description.")
+            #expect(!ctx.hadException)
+        }
+
+        @Test("metadata is injected onto a function export, since functions are objects")
+        func testMetadataInjectedOntoFunctionExport() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon", version: "4.5.6")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = function () { return 42; };")
+            ctx.eval("var s = hs.loadSpoon('TestSpoon')")
+            #expect(ctx.eval("typeof s")?.toString() == "function")
+            #expect(ctx.eval("s.version")?.toString() == "4.5.6")
+            #expect(ctx.eval("s()")?.toInt32() == 42)
+            #expect(!ctx.hadException)
+        }
+
+        @Test("loading throws when module.exports is a primitive value")
+        func testThrowsForPrimitiveExport() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = 42;")
+            ctx.eval("hs.loadSpoon('TestSpoon')")
+            #expect(ctx.hadException)
+        }
+
+        @Test("loading throws when module.exports is explicitly set to undefined")
+        func testThrowsForUndefinedExport() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = undefined;")
+            ctx.eval("hs.loadSpoon('TestSpoon')")
+            #expect(ctx.hadException)
+        }
+
+        @Test("a non-object export is not registered in hs.spoons")
+        func testInvalidExportNotRegisteredInNamespace() throws {
+            let ctx = try LoadSpoonContext()
+            try ctx.writeSpoonJSON(spoon: "TestSpoon")
+            try ctx.writeSpoonInit(spoon: "TestSpoon", "module.exports = 42;")
+            ctx.eval("try { hs.loadSpoon('TestSpoon') } catch (e) {}")
+            let result = ctx.eval("typeof hs.spoons.TestSpoon")
+            #expect(result?.toString() == "undefined")
+        }
+    }
+
     @Suite("hs.spoons namespace")
     struct SpoonsNamespaceTests {
 
