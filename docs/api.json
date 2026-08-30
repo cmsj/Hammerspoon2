@@ -8298,13 +8298,13 @@
                 },
                 {
                   "name": "callbackPressed",
-                  "type": "Function",
+                  "type": "Function|null",
                   "rest": false,
-                  "description": "- Called when the hotkey is pressed"
+                  "description": "- Called when the hotkey is pressed, or null"
                 },
                 {
                   "name": "callbackReleased",
-                  "type": "Function",
+                  "type": "Function|null",
                   "rest": false,
                   "description": "- Called when the hotkey is released, or null"
                 }
@@ -26052,5 +26052,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-30T00:49:53.208Z"
+  "generatedAt": "2026-08-30T22:51:59.121Z"
 }

@@ -20,8 +20,8 @@ class HSHotkeyModal {
      * Bind a hotkey to this modal. The hotkey is only enabled while the modal is active.
      * @param {string[]} mods - Modifier keys for the hotkey (e.g. ["cmd", "shift"])
      * @param {string} key - Key name for the hotkey (e.g. "h")
-     * @param {Function} callbackPressed - Called when the hotkey is pressed
-     * @param {Function} callbackReleased - Called when the hotkey is released, or null
+     * @param {Function|null} callbackPressed - Called when the hotkey is pressed, or null
+     * @param {Function|null} callbackReleased - Called when the hotkey is released, or null
      * @returns {HSHotkeyModal} This modal, for chaining
      */
     bind(mods, key, callbackPressed, callbackReleased) {
