@@ -70,7 +70,7 @@ import JavaScriptCoreExtras
     /// for the same Spoon, since the same cached object is returned each time - write it to be
     /// safe to call more than once, or do one-time setup at `init.js`'s top level instead.
     /// - Parameter name: The Spoon's name, matching its directory name under `Spoons/`
-    /// - Returns: Whatever the Spoon's `init.js` assigned to `module.exports`
+    /// - Returns: {Object} Whatever the Spoon's `init.js` assigned to `module.exports`
     /// - Example:
     /// ```js
     /// const MySpoon = hs.loadSpoon("MySpoon")
@@ -80,8 +80,8 @@ import JavaScriptCoreExtras
     /// ```
     @objc func loadSpoon(_ name: String) -> JSValue?
 
-    /// A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -
-    /// e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
+    /// {Record<string, Object>} A namespace holding every Spoon loaded so far via `loadSpoon()`,
+    /// keyed by name - e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
     /// `hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.
     /// - Example:
     /// ```js

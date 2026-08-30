@@ -739,14 +739,14 @@ safe to call more than once, or do one-time setup at `init.js`'s top level inste
      * @param name The Spoon's name, matching its directory name under `Spoons/`
      * @returns Whatever the Spoon's `init.js` assigned to `module.exports`
      */
-    function loadSpoon(name: string): JSValue | null;
+    function loadSpoon(name: string): Object;
 
     /**
-     * A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -
-e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
+     * A namespace holding every Spoon loaded so far via `loadSpoon()`,
+keyed by name - e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
 `hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.
      */
-    const spoons: JSValue | null;
+    const spoons: Record<string, Object>;
 
 }
 

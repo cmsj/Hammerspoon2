@@ -71,8 +71,8 @@
     <div class="property" id="spoons">
         <h3><a href="#spoons">hs.spoons</a></h3>
         <div class="prop-type">JSValue</div>
-        <div class="description">A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -
-e.g. a Spoon loaded with `hs.loadSpoon(&quot;MySpoon&quot;)` is also reachable as
+        <div class="description">A namespace holding every Spoon loaded so far via `loadSpoon()`,
+keyed by name - e.g. a Spoon loaded with `hs.loadSpoon(&quot;MySpoon&quot;)` is also reachable as
 `hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.</div>
         <div class="source-link">
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/ModuleRoot.swift#L91" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/ModuleRoot.swift:91</a>
@@ -183,7 +183,7 @@ e.g. a Spoon loaded with `hs.loadSpoon(&quot;MySpoon&quot;)` is also reachable a
         </div>
     </div>
     <div class="method" id="loadSpoon">
-        <h3><a href="#loadSpoon">hs.loadSpoon(name) -> JSValue</a></h3>
+        <h3><a href="#loadSpoon">hs.loadSpoon(name) -> Object</a></h3>
 
         <div class="description">Load a Spoon - a packaged, reusable piece of configuration - by name, from the
 `Spoons` directory inside your config directory. A Spoon must contain a well-formed
@@ -206,7 +206,7 @@ for the same Spoon, since the same cached object is returned each time - write i
 safe to call more than once, or do one-time setup at `init.js`&#39;s top level instead.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.loadSpoon(name) -> JSValue</code></pre>
+        <pre><code class="language-javascript">hs.loadSpoon(name) -> Object</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -227,7 +227,7 @@ safe to call more than once, or do one-time setup at `init.js`&#39;s top level i
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">JSValue</div>
+        <div class="return-type">Object</div>
         <div class="return-desc">Whatever the Spoon&#39;s `init.js` assigned to `module.exports`</div>
 
 
