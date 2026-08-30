@@ -17,7 +17,7 @@
      * @param {Function} legacyStreamCallback - Legacy streaming callback (optional)
      * @example
      * hs.task.runAsync("/bin/echo", ["hi"]).then(r => console.log(r.stdout))
-     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
+     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result
      */
     hs.task.runAsync = function(launchPath, args, options, legacyStreamCallback) {
         return new Promise((resolve, reject) => {
@@ -94,7 +94,7 @@
      * @param {Object} options - Options (same as run)
      * @example
      * hs.task.shell("ls -la /tmp").then(r => console.log(r.stdout))
-     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
+     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The command's result
      */
     hs.task.shell = function(command, options) {
         return hs.task.runAsync('/bin/sh', ['-c', command], options);
@@ -102,7 +102,7 @@
 
     /**
      * Run multiple tasks in parallel
-     * @param {Array<{string, string[], Object|Function, Function}>} tasks - Array of task specifications: [{path, args, options}, ...]
+     * @param {Array<{path?: string, launchPath?: string, args?: string[], options?: Object}>} tasks - Array of task specifications: [{path, args, options}, ...]
      * @example
      * hs.task.parallel([
      *   ["/bin/echo", ["one"]],
@@ -137,7 +137,7 @@
      * @example
      *  const b = hs.task.builder().launchPath("/bin/echo").arguments(["hi"])
      *  b.build().start()
-     * @returns {TaskBuilder}
+     * @returns {TaskBuilder} A new task builder
      */
     hs.task.builder = function(launchPath) {
         return new TaskBuilder(launchPath);
@@ -158,7 +158,7 @@
         /**
          * Add arguments
          * @param {...string} args - Arguments to add
-         * @returns {TaskBuilder}
+         * @returns {TaskBuilder} This builder, for chaining
          */
         withArgs(...args) {
             this.args.push(...args);
@@ -168,7 +168,7 @@
         /**
          * Set environment variables
          * @param {Object} environment - Environment variables
-         * @returns {TaskBuilder}
+         * @returns {TaskBuilder} This builder, for chaining
          */
         withEnvironment(environment) {
             this.env = environment;
@@ -178,7 +178,7 @@
         /**
          * Set working directory
          * @param {string} directory - Working directory path
-         * @returns {TaskBuilder}
+         * @returns {TaskBuilder} This builder, for chaining
          */
         inDirectory(directory) {
             this.cwd = directory;
@@ -188,7 +188,7 @@
         /**
          * Set output callback
          * @param {Function} callback - Output callback (stream, data) => {}
-         * @returns {TaskBuilder}
+         * @returns {TaskBuilder} This builder, for chaining
          */
         onOutput(callback) {
             this.outputCallback = callback;
@@ -197,7 +197,7 @@
 
         /**
          * Build and run the task
-         * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
+         * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result
          */
         async run() {
             const options = {
@@ -210,7 +210,7 @@
 
         /**
          * Build the task without running
-         * @returns {HSTask}
+         * @returns {HSTask} The created task, not yet started
          */
         build() {
             let streamCallback = null;

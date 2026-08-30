@@ -758,6 +758,105 @@ function parseJavaScriptFile(filePath, moduleName = null, repoRoot = REPO_ROOT) 
 }
 
 /**
+ * Parse a class-level JSDoc block for its description and `@property {Type} name - desc`
+ * tags. There's no natural place to hang JSDoc on a class field initializer, so public
+ * fields are documented as a group on the class comment instead, mirroring the bullet-list
+ * `Parameters:` convention used elsewhere in this file.
+ */
+function parseClassDoc(docText) {
+    const lines = docText.split('\n').map(line => line.replace(/^\s*\*\s?/, '').trim());
+    const descLines = [];
+    const properties = [];
+
+    for (const line of lines) {
+        const propMatch = line.match(/^@property\s+\{([^}]+)\}\s+(\w+)\s*-?\s*(.*)$/);
+        if (propMatch) {
+            properties.push({
+                name: propMatch[2],
+                type: propMatch[1],
+                // Synthesize a Swift-style signature so this can reuse the same HTML
+                // rendering path (extractPropertyType filter) as Swift-derived properties.
+                signature: `var ${propMatch[2]}: ${propMatch[1]}`,
+                description: propMatch[3]
+            });
+        } else if (!line.startsWith('@') && line) {
+            descLines.push(line);
+        }
+    }
+
+    return { description: descLines.join(' '), properties };
+}
+
+/**
+ * Parse ES6 classes with JSDoc from a JavaScript file into typedef-like structures, so
+ * that ad hoc return shapes (e.g. a fluent builder) can be declared as real TypeScript
+ * types instead of silently falling back to `any`.
+ */
+function parseJavaScriptClasses(filePath, repoRoot = REPO_ROOT) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const relativePath = path.relative(repoRoot, filePath);
+    const classes = [];
+
+    const getLineNumber = (charPos) => content.substring(0, charPos).split('\n').length;
+
+    // The JSDoc block is required (not optional) — this file is full of internal
+    // implementation classes (e.g. one-to-many event emitters) documented only with
+    // plain `//` comments, which must NOT be treated as public API types.
+    const classStartRegex = /\/\*\*([^*]*(?:\*(?!\/)[^*]*)*)\*\/\s*class\s+(\w+)\s*\{/g;
+    let match;
+
+    while ((match = classStartRegex.exec(content)) !== null) {
+        const classDoc = match[1];
+        const className = match[2];
+        const bodyStart = match.index + match[0].length;
+
+        // Manually match braces (rather than regex) to find the end of the class body,
+        // since method bodies contain their own nested braces.
+        let depth = 1;
+        let i = bodyStart;
+        while (i < content.length && depth > 0) {
+            if (content[i] === '{') depth++;
+            else if (content[i] === '}') depth--;
+            i++;
+        }
+        const body = content.slice(bodyStart, i - 1);
+
+        const { description, properties } = parseClassDoc(classDoc);
+
+        const methods = [];
+        const methodRegex = /\/\*\*([^*]*(?:\*(?!\/)[^*]*)*)\*\/\s*(?:async\s+)?(\w+)\s*\(([^)]*)\)\s*\{/g;
+        let methodMatch;
+        while ((methodMatch = methodRegex.exec(body)) !== null) {
+            const methodName = methodMatch[2];
+            if (methodName === 'constructor') continue;
+
+            const parsed = parseJSDoc(methodMatch[1]);
+            methods.push({
+                name: methodName,
+                description: parsed.description,
+                params: parsed.params,
+                returns: parsed.returns,
+                source: 'javascript'
+            });
+        }
+
+        classes.push({
+            name: className,
+            type: 'jsclass',
+            description,
+            rawDocumentation: description,
+            properties,
+            methods,
+            source: 'javascript',
+            filePath: relativePath,
+            lineNumber: getLineNumber(match.index)
+        });
+    }
+
+    return classes;
+}
+
+/**
  * Extract a leading {Type} annotation with balanced braces, e.g. from
  * "{Promise<{exitCode: number, stdout: string}>} description text". A naive
  * [^}]+ regex would stop at the first inner `}` and mangle nested object/generic
@@ -862,15 +961,27 @@ function parseJSDoc(docText) {
     for (const line of lines) {
         if (line.startsWith('@param')) {
             currentSection = 'param';
-            // Use [\w.]+ to capture dotted names like options.environment (JSDoc property paths)
-            const paramMatch = line.match(/@param\s+(?:\{([^}]+)\}\s+)?([\w.]+)\s*(.*)/);
-            if (paramMatch && !paramMatch[2].includes('.')) {
+            // Balanced-brace type extraction (a plain [^}]+ regex mangles nested types like
+            // {Array<{a: string}>}), then [\w.]+ to capture dotted names like options.environment
+            // (JSDoc property paths)
+            const afterTag = line.replace(/^@param\s*/, '');
+            const { type: bracedType, rest: afterType } = extractBracedType(afterTag);
+            const nameMatch = afterType.match(/^([\w.]+)\s*(.*)$/);
+            if (nameMatch && !nameMatch[1].includes('.')) {
                 // Skip property-path docs (e.g. @param options.foo) — they document sub-fields of an
                 // existing param and must not appear as separate parameters in the TypeScript output.
+                let type = bracedType || 'any';
+                let rest = false;
+                if (type.startsWith('...')) {
+                    // JSDoc rest-param syntax, e.g. {...string} args -> a `string[]` rest parameter
+                    rest = true;
+                    type = `${type.slice(3)}[]`;
+                }
                 doc.params.push({
-                    name: paramMatch[2],
-                    type: paramMatch[1] || 'any',
-                    description: paramMatch[3]
+                    name: nameMatch[1],
+                    type,
+                    rest,
+                    description: nameMatch[2]
                 });
             }
         } else if (line.startsWith('@returns') || line.startsWith('@return')) {
@@ -1022,6 +1133,9 @@ function processModule(moduleName, modulePath) {
             const functions = parseJavaScriptFile(filePath, moduleName);
             // JavaScript functions are already in the correct format
             moduleData.methods.push(...functions);
+
+            const classes = parseJavaScriptClasses(filePath, REPO_ROOT);
+            moduleData.types.push(...classes);
         }
     }
 
