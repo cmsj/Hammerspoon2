@@ -19022,7 +19022,7 @@
         },
         {
           "name": "doUntil",
-          "rawDocumentation": "Repeat a function/lambda until a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the timer should continue. Return True to end the timer, False to continue it\n- actionFn: A function/lambda to call until the predicateFn returns true\n- checkInterval: How often, in seconds, to call actionFn\nReturns:\n- The HSTimer object driving this loop\nExample:\n```js\nlet count = 0\nhs.timer.doUntil(() => count >= 3, () => { count++; console.log(count) }, 1)\n```",
+          "rawDocumentation": "Repeat a function/lambda until a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the timer should continue. Return True to end the timer, False to continue it\n- actionFn: A function/lambda to call until the predicateFn returns true\n- checkInterval: How often, in seconds, to call actionFn\nReturns:\n- {HSTimer} The HSTimer object driving this loop\nExample:\n```js\nlet count = 0\nhs.timer.doUntil(() => count >= 3, () => { count++; console.log(count) }, 1)\n```",
           "description": "Repeat a function/lambda until a given predicate function/lambda returns true",
           "params": [
             {
@@ -19045,8 +19045,8 @@
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "- The HSTimer object driving this loop"
+            "type": "HSTimer",
+            "description": "The HSTimer object driving this loop"
           },
           "examples": [
             {
@@ -19061,7 +19061,7 @@
         },
         {
           "name": "doWhile",
-          "rawDocumentation": "Repeat a function/lambda while a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the timer should continue. Return True to continue the timer, False to end it\n- actionFn: A function/lambda to call while the predicateFn returns true\n- checkInterval: How often, in seconds, to call actionFn\nReturns:\n- The HSTimer object driving this loop\nExample:\n```js\nlet count = 0\nhs.timer.doWhile(() => count < 3, () => { count++; console.log(count) }, 1)\n```",
+          "rawDocumentation": "Repeat a function/lambda while a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the timer should continue. Return True to continue the timer, False to end it\n- actionFn: A function/lambda to call while the predicateFn returns true\n- checkInterval: How often, in seconds, to call actionFn\nReturns:\n- {HSTimer} The HSTimer object driving this loop\nExample:\n```js\nlet count = 0\nhs.timer.doWhile(() => count < 3, () => { count++; console.log(count) }, 1)\n```",
           "description": "Repeat a function/lambda while a given predicate function/lambda returns true",
           "params": [
             {
@@ -19084,8 +19084,8 @@
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "- The HSTimer object driving this loop"
+            "type": "HSTimer",
+            "description": "The HSTimer object driving this loop"
           },
           "examples": [
             {
@@ -19100,7 +19100,7 @@
         },
         {
           "name": "waitUntil",
-          "rawDocumentation": "Wait to call a function/lambda until a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the actionFn should be called. Return True to call the actionFn, False to continue waiting\n- actionFn: A function/lambda to call when the predicateFn returns true. This will only be called once and then the timer will stop.\n- checkInterval: How often, in seconds, to call predicateFn\nReturns:\n- The HSTimer object driving this loop",
+          "rawDocumentation": "Wait to call a function/lambda until a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the actionFn should be called. Return True to call the actionFn, False to continue waiting\n- actionFn: A function/lambda to call when the predicateFn returns true. This will only be called once and then the timer will stop.\n- checkInterval: How often, in seconds, to call predicateFn\nReturns:\n- {HSTimer} The HSTimer object driving this loop",
           "description": "Wait to call a function/lambda until a given predicate function/lambda returns true",
           "params": [
             {
@@ -19123,8 +19123,8 @@
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "- The HSTimer object driving this loop"
+            "type": "HSTimer",
+            "description": "The HSTimer object driving this loop"
           },
           "examples": [],
           "source": "javascript",
@@ -19134,7 +19134,7 @@
         },
         {
           "name": "waitWhile",
-          "rawDocumentation": "Wait to call a function/lambda until a given predicate function/lambda returns false\nParameters:\n- predicateFn: A function/lambda to test if the actionFn should be called. Return False to call the actionFn, True to continue waiting\n- actionFn: A function/lambda to call when the predicateFn returns False. This will only be called once and then the timer will stop.\n- checkInterval: How often, in seconds, to call predicateFn\nReturns:\n- The HSTimer object driving this loop",
+          "rawDocumentation": "Wait to call a function/lambda until a given predicate function/lambda returns false\nParameters:\n- predicateFn: A function/lambda to test if the actionFn should be called. Return False to call the actionFn, True to continue waiting\n- actionFn: A function/lambda to call when the predicateFn returns False. This will only be called once and then the timer will stop.\n- checkInterval: How often, in seconds, to call predicateFn\nReturns:\n- {HSTimer} The HSTimer object driving this loop",
           "description": "Wait to call a function/lambda until a given predicate function/lambda returns false",
           "params": [
             {
@@ -19157,8 +19157,8 @@
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "- The HSTimer object driving this loop"
+            "type": "HSTimer",
+            "description": "The HSTimer object driving this loop"
           },
           "examples": [],
           "source": "javascript",
@@ -25841,5 +25841,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-29T23:57:43.423Z"
+  "generatedAt": "2026-08-30T00:07:15.299Z"
 }

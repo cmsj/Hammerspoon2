@@ -524,12 +524,12 @@ hs.timer.doAt(9 * 3600, 86400, () =&gt; console.log(&quot;morning&quot;), false)
         </div>
     </div>
     <div class="method" id="doUntil">
-        <h3><a href="#doUntil">hs.timer.doUntil(predicateFn, actionFn, checkInterval) -> any</a></h3>
+        <h3><a href="#doUntil">hs.timer.doUntil(predicateFn, actionFn, checkInterval) -> HSTimer</a></h3>
 
         <div class="description">Repeat a function/lambda until a given predicate function/lambda returns true</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.timer.doUntil(predicateFn, actionFn, checkInterval) -> any</code></pre>
+        <pre><code class="language-javascript">hs.timer.doUntil(predicateFn, actionFn, checkInterval) -> HSTimer</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -560,8 +560,8 @@ hs.timer.doAt(9 * 3600, 86400, () =&gt; console.log(&quot;morning&quot;), false)
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">- The HSTimer object driving this loop</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">The HSTimer object driving this loop</div>
 
 
         <div class="card-section-label">Example</div>
@@ -573,12 +573,12 @@ hs.timer.doUntil(() =&gt; count &gt;= 3, () =&gt; { count++; console.log(count) 
         </div>
     </div>
     <div class="method" id="doWhile">
-        <h3><a href="#doWhile">hs.timer.doWhile(predicateFn, actionFn, checkInterval) -> any</a></h3>
+        <h3><a href="#doWhile">hs.timer.doWhile(predicateFn, actionFn, checkInterval) -> HSTimer</a></h3>
 
         <div class="description">Repeat a function/lambda while a given predicate function/lambda returns true</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.timer.doWhile(predicateFn, actionFn, checkInterval) -> any</code></pre>
+        <pre><code class="language-javascript">hs.timer.doWhile(predicateFn, actionFn, checkInterval) -> HSTimer</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -609,8 +609,8 @@ hs.timer.doUntil(() =&gt; count &gt;= 3, () =&gt; { count++; console.log(count) 
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">- The HSTimer object driving this loop</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">The HSTimer object driving this loop</div>
 
 
         <div class="card-section-label">Example</div>
@@ -622,12 +622,12 @@ hs.timer.doWhile(() =&gt; count &lt; 3, () =&gt; { count++; console.log(count) }
         </div>
     </div>
     <div class="method" id="waitUntil">
-        <h3><a href="#waitUntil">hs.timer.waitUntil(predicateFn, actionFn, checkInterval) -> any</a></h3>
+        <h3><a href="#waitUntil">hs.timer.waitUntil(predicateFn, actionFn, checkInterval) -> HSTimer</a></h3>
 
         <div class="description">Wait to call a function/lambda until a given predicate function/lambda returns true</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.timer.waitUntil(predicateFn, actionFn, checkInterval) -> any</code></pre>
+        <pre><code class="language-javascript">hs.timer.waitUntil(predicateFn, actionFn, checkInterval) -> HSTimer</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -658,8 +658,8 @@ hs.timer.doWhile(() =&gt; count &lt; 3, () =&gt; { count++; console.log(count) }
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">- The HSTimer object driving this loop</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">The HSTimer object driving this loop</div>
 
 
 
@@ -668,12 +668,12 @@ hs.timer.doWhile(() =&gt; count &lt; 3, () =&gt; { count++; console.log(count) }
         </div>
     </div>
     <div class="method" id="waitWhile">
-        <h3><a href="#waitWhile">hs.timer.waitWhile(predicateFn, actionFn, checkInterval) -> any</a></h3>
+        <h3><a href="#waitWhile">hs.timer.waitWhile(predicateFn, actionFn, checkInterval) -> HSTimer</a></h3>
 
         <div class="description">Wait to call a function/lambda until a given predicate function/lambda returns false</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.timer.waitWhile(predicateFn, actionFn, checkInterval) -> any</code></pre>
+        <pre><code class="language-javascript">hs.timer.waitWhile(predicateFn, actionFn, checkInterval) -> HSTimer</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -704,8 +704,8 @@ hs.timer.doWhile(() =&gt; count &lt; 3, () =&gt; { count++; console.log(count) }
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">- The HSTimer object driving this loop</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">The HSTimer object driving this loop</div>
 
 
 

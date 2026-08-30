@@ -7310,36 +7310,36 @@ declare namespace hs.timer {
      * @param predicateFn A function/lambda to test if the timer should continue. Return True to end the timer, False to continue it
      * @param actionFn A function/lambda to call until the predicateFn returns true
      * @param checkInterval How often, in seconds, to call actionFn
-     * @returns - The HSTimer object driving this loop
+     * @returns The HSTimer object driving this loop
      */
-    function doUntil(predicateFn: any, actionFn: any, checkInterval: any): any;
+    function doUntil(predicateFn: any, actionFn: any, checkInterval: any): HSTimer;
 
     /**
      * Repeat a function/lambda while a given predicate function/lambda returns true
      * @param predicateFn A function/lambda to test if the timer should continue. Return True to continue the timer, False to end it
      * @param actionFn A function/lambda to call while the predicateFn returns true
      * @param checkInterval How often, in seconds, to call actionFn
-     * @returns - The HSTimer object driving this loop
+     * @returns The HSTimer object driving this loop
      */
-    function doWhile(predicateFn: any, actionFn: any, checkInterval: any): any;
+    function doWhile(predicateFn: any, actionFn: any, checkInterval: any): HSTimer;
 
     /**
      * Wait to call a function/lambda until a given predicate function/lambda returns true
      * @param predicateFn A function/lambda to test if the actionFn should be called. Return True to call the actionFn, False to continue waiting
      * @param actionFn A function/lambda to call when the predicateFn returns true. This will only be called once and then the timer will stop.
      * @param checkInterval How often, in seconds, to call predicateFn
-     * @returns - The HSTimer object driving this loop
+     * @returns The HSTimer object driving this loop
      */
-    function waitUntil(predicateFn: any, actionFn: any, checkInterval: any): any;
+    function waitUntil(predicateFn: any, actionFn: any, checkInterval: any): HSTimer;
 
     /**
      * Wait to call a function/lambda until a given predicate function/lambda returns false
      * @param predicateFn A function/lambda to test if the actionFn should be called. Return False to call the actionFn, True to continue waiting
      * @param actionFn A function/lambda to call when the predicateFn returns False. This will only be called once and then the timer will stop.
      * @param checkInterval How often, in seconds, to call predicateFn
-     * @returns - The HSTimer object driving this loop
+     * @returns The HSTimer object driving this loop
      */
-    function waitWhile(predicateFn: any, actionFn: any, checkInterval: any): any;
+    function waitWhile(predicateFn: any, actionFn: any, checkInterval: any): HSTimer;
 
 }
 
