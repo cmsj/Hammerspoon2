@@ -15,6 +15,8 @@
 ///  - predicateFn: A function/lambda to test if the timer should continue. Return True to end the timer, False to continue it
 ///  - actionFn: A function/lambda to call until the predicateFn returns true
 ///  - checkInterval: How often, in seconds, to call actionFn
+/// Returns:
+///  - {HSTimer} The HSTimer object driving this loop
 /// Example:
 /// ```js
 /// let count = 0
@@ -39,7 +41,7 @@ hs.timer.doUntil = function(predicateFn, actionFn, checkInterval) {
         }
     });
 
-    timer.start();
+    return timer.start();
 };
 
 /// Repeat a function/lambda while a given predicate function/lambda returns true
@@ -47,6 +49,8 @@ hs.timer.doUntil = function(predicateFn, actionFn, checkInterval) {
 ///  - predicateFn: A function/lambda to test if the timer should continue. Return True to continue the timer, False to end it
 ///  - actionFn: A function/lambda to call while the predicateFn returns true
 ///  - checkInterval: How often, in seconds, to call actionFn
+/// Returns:
+///  - {HSTimer} The HSTimer object driving this loop
 /// Example:
 /// ```js
 /// let count = 0
@@ -70,7 +74,7 @@ hs.timer.doWhile = function(predicateFn, actionFn, checkInterval) {
         }
     });
 
-    timer.start();
+    return timer.start();
 };
 
 /// Wait to call a function/lambda until a given predicate function/lambda returns true
@@ -78,6 +82,8 @@ hs.timer.doWhile = function(predicateFn, actionFn, checkInterval) {
 ///  - predicateFn: A function/lambda to test if the actionFn should be called. Return True to call the actionFn, False to continue waiting
 ///  - actionFn: A function/lambda to call when the predicateFn returns true. This will only be called once and then the timer will stop.
 ///  - checkInterval: How often, in seconds, to call predicateFn
+/// Returns:
+///  - {HSTimer} The HSTimer object driving this loop
 hs.timer.waitUntil = function(predicateFn, actionFn, checkInterval) {
     if (typeof predicateFn !== 'function') {
         throw new Error("hs.timer.waitUntil(): predicate must be a function");
@@ -103,6 +109,8 @@ hs.timer.waitUntil = function(predicateFn, actionFn, checkInterval) {
 ///  - predicateFn: A function/lambda to test if the actionFn should be called. Return False to call the actionFn, True to continue waiting
 ///  - actionFn: A function/lambda to call when the predicateFn returns False. This will only be called once and then the timer will stop.
 ///  - checkInterval: How often, in seconds, to call predicateFn
+/// Returns:
+///  - {HSTimer} The HSTimer object driving this loop
 hs.timer.waitWhile = function(predicateFn, actionFn, checkInterval) {
     if (typeof predicateFn !== 'function') {
         throw new Error("hs.timer.waitWhile(): predicate must be a function");

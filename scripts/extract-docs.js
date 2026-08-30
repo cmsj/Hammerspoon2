@@ -791,12 +791,13 @@ function parseDocCStyleComment(docText) {
         });
     }
 
-    // Extract returns (with or without leading dash)
-    const returnsMatch = docText.match(/-?\s*Returns?:\s*(.+)/);
+    // Extract returns (with or without leading dash), with an optional {Type} override,
+    // e.g. "Returns: {HSTimer} The timer object" or "Returns:\n - {HSTimer} The timer object"
+    const returnsMatch = docText.match(/-?\s*Returns?:\s*(?:-\s*)?(?:\{([^}]+)\}\s*)?(.+)/);
     if (returnsMatch) {
         doc.returns = {
-            type: 'any',
-            description: returnsMatch[1].trim()
+            type: returnsMatch[1] || 'any',
+            description: returnsMatch[2].trim()
         };
     }
 

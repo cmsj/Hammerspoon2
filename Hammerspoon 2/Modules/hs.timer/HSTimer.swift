@@ -27,28 +27,31 @@ import JavaScriptCore
     @objc var repeats: Bool { get }
 
     /// Start the timer
+    /// - Returns: The HSTimer object, for chaining
     /// - Example:
     /// ```js
     /// const t = hs.timer.new(5, () => console.log("tick"), false)
     /// t.start()
     /// ```
-    @objc func start()
+    @objc @discardableResult func start() -> HSTimer
 
     /// Stop the timer
+    /// - Returns: The HSTimer object, for chaining
     /// - Example:
     /// ```js
     /// const t = hs.timer.doEvery(5, () => {})
     /// t.stop()
     /// ```
-    @objc func stop()
+    @objc @discardableResult func stop() -> HSTimer
 
     /// Immediately fire the timer's callback
+    /// - Returns: The HSTimer object, for chaining
     /// - Example:
     /// ```js
     /// const t = hs.timer.doEvery(5, () => console.log("tick"))
     /// t.fire()
     /// ```
-    @objc func fire()
+    @objc @discardableResult func fire() -> HSTimer
 
     /// Check if the timer is currently running
     /// - Returns: true if the timer is running, false otherwise
@@ -115,10 +118,10 @@ import JavaScriptCore
         callback = nil
     }
 
-    @objc func start() {
+    @objc @discardableResult func start() -> HSTimer {
         // If already running, don't create a new timer
         if timer?.isValid == true {
-            return
+            return self
         }
 
         timer = Timer.scheduledTimer(timeInterval: interval,
@@ -131,16 +134,20 @@ import JavaScriptCore
         if let timer {
             RunLoop.current.add(timer, forMode: .common)
         }
+
+        return self
     }
 
-    @objc func stop() {
+    @objc @discardableResult func stop() -> HSTimer {
         timer?.invalidate()
         timer = nil
+        return self
     }
 
-    @objc func fire() {
+    @objc @discardableResult func fire() -> HSTimer {
         // Fire immediately, bypassing the timer
         timerDidFire()
+        return self
     }
 
     @objc func running() -> Bool {

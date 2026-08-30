@@ -19022,7 +19022,7 @@
         },
         {
           "name": "doUntil",
-          "rawDocumentation": "Repeat a function/lambda until a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the timer should continue. Return True to end the timer, False to continue it\n- actionFn: A function/lambda to call until the predicateFn returns true\n- checkInterval: How often, in seconds, to call actionFn\nExample:\n```js\nlet count = 0\nhs.timer.doUntil(() => count >= 3, () => { count++; console.log(count) }, 1)\n```",
+          "rawDocumentation": "Repeat a function/lambda until a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the timer should continue. Return True to end the timer, False to continue it\n- actionFn: A function/lambda to call until the predicateFn returns true\n- checkInterval: How often, in seconds, to call actionFn\nReturns:\n- {HSTimer} The HSTimer object driving this loop\nExample:\n```js\nlet count = 0\nhs.timer.doUntil(() => count >= 3, () => { count++; console.log(count) }, 1)\n```",
           "description": "Repeat a function/lambda until a given predicate function/lambda returns true",
           "params": [
             {
@@ -19044,7 +19044,10 @@
               "optional": false
             }
           ],
-          "returns": null,
+          "returns": {
+            "type": "HSTimer",
+            "description": "The HSTimer object driving this loop"
+          },
           "examples": [
             {
               "lang": "js",
@@ -19053,12 +19056,12 @@
           ],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 23,
+          "lineNumber": 25,
           "type": "function"
         },
         {
           "name": "doWhile",
-          "rawDocumentation": "Repeat a function/lambda while a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the timer should continue. Return True to continue the timer, False to end it\n- actionFn: A function/lambda to call while the predicateFn returns true\n- checkInterval: How often, in seconds, to call actionFn\nExample:\n```js\nlet count = 0\nhs.timer.doWhile(() => count < 3, () => { count++; console.log(count) }, 1)\n```",
+          "rawDocumentation": "Repeat a function/lambda while a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the timer should continue. Return True to continue the timer, False to end it\n- actionFn: A function/lambda to call while the predicateFn returns true\n- checkInterval: How often, in seconds, to call actionFn\nReturns:\n- {HSTimer} The HSTimer object driving this loop\nExample:\n```js\nlet count = 0\nhs.timer.doWhile(() => count < 3, () => { count++; console.log(count) }, 1)\n```",
           "description": "Repeat a function/lambda while a given predicate function/lambda returns true",
           "params": [
             {
@@ -19080,7 +19083,10 @@
               "optional": false
             }
           ],
-          "returns": null,
+          "returns": {
+            "type": "HSTimer",
+            "description": "The HSTimer object driving this loop"
+          },
           "examples": [
             {
               "lang": "js",
@@ -19089,12 +19095,12 @@
           ],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 55,
+          "lineNumber": 59,
           "type": "function"
         },
         {
           "name": "waitUntil",
-          "rawDocumentation": "Wait to call a function/lambda until a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the actionFn should be called. Return True to call the actionFn, False to continue waiting\n- actionFn: A function/lambda to call when the predicateFn returns true. This will only be called once and then the timer will stop.\n- checkInterval: How often, in seconds, to call predicateFn",
+          "rawDocumentation": "Wait to call a function/lambda until a given predicate function/lambda returns true\nParameters:\n- predicateFn: A function/lambda to test if the actionFn should be called. Return True to call the actionFn, False to continue waiting\n- actionFn: A function/lambda to call when the predicateFn returns true. This will only be called once and then the timer will stop.\n- checkInterval: How often, in seconds, to call predicateFn\nReturns:\n- {HSTimer} The HSTimer object driving this loop",
           "description": "Wait to call a function/lambda until a given predicate function/lambda returns true",
           "params": [
             {
@@ -19116,16 +19122,19 @@
               "optional": false
             }
           ],
-          "returns": null,
+          "returns": {
+            "type": "HSTimer",
+            "description": "The HSTimer object driving this loop"
+          },
           "examples": [],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 81,
+          "lineNumber": 87,
           "type": "function"
         },
         {
           "name": "waitWhile",
-          "rawDocumentation": "Wait to call a function/lambda until a given predicate function/lambda returns false\nParameters:\n- predicateFn: A function/lambda to test if the actionFn should be called. Return False to call the actionFn, True to continue waiting\n- actionFn: A function/lambda to call when the predicateFn returns False. This will only be called once and then the timer will stop.\n- checkInterval: How often, in seconds, to call predicateFn",
+          "rawDocumentation": "Wait to call a function/lambda until a given predicate function/lambda returns false\nParameters:\n- predicateFn: A function/lambda to test if the actionFn should be called. Return False to call the actionFn, True to continue waiting\n- actionFn: A function/lambda to call when the predicateFn returns False. This will only be called once and then the timer will stop.\n- checkInterval: How often, in seconds, to call predicateFn\nReturns:\n- {HSTimer} The HSTimer object driving this loop",
           "description": "Wait to call a function/lambda until a given predicate function/lambda returns false",
           "params": [
             {
@@ -19147,11 +19156,14 @@
               "optional": false
             }
           ],
-          "returns": null,
+          "returns": {
+            "type": "HSTimer",
+            "description": "The HSTimer object driving this loop"
+          },
           "examples": [],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.timer/hs.timer.js",
-          "lineNumber": 106,
+          "lineNumber": 114,
           "type": "function"
         }
       ],
@@ -19165,12 +19177,15 @@
           "methods": [
             {
               "name": "start",
-              "signature": "func start()",
+              "signature": "func start() -> HSTimer",
               "isStatic": false,
-              "rawDocumentation": "Start the timer\n- Example:\n```js\nconst t = hs.timer.new(5, () => console.log(\"tick\"), false)\nt.start()\n```",
+              "rawDocumentation": "Start the timer\n- Returns: The HSTimer object, for chaining\n- Example:\n```js\nconst t = hs.timer.new(5, () => console.log(\"tick\"), false)\nt.start()\n```",
               "description": "Start the timer",
               "params": [],
-              "returns": null,
+              "returns": {
+                "type": "HSTimer",
+                "description": "The HSTimer object, for chaining"
+              },
               "notes": [],
               "examples": [
                 {
@@ -19180,16 +19195,19 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
-              "lineNumber": 35
+              "lineNumber": 36
             },
             {
               "name": "stop",
-              "signature": "func stop()",
+              "signature": "func stop() -> HSTimer",
               "isStatic": false,
-              "rawDocumentation": "Stop the timer\n- Example:\n```js\nconst t = hs.timer.doEvery(5, () => {})\nt.stop()\n```",
+              "rawDocumentation": "Stop the timer\n- Returns: The HSTimer object, for chaining\n- Example:\n```js\nconst t = hs.timer.doEvery(5, () => {})\nt.stop()\n```",
               "description": "Stop the timer",
               "params": [],
-              "returns": null,
+              "returns": {
+                "type": "HSTimer",
+                "description": "The HSTimer object, for chaining"
+              },
               "notes": [],
               "examples": [
                 {
@@ -19199,16 +19217,19 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
-              "lineNumber": 43
+              "lineNumber": 45
             },
             {
               "name": "fire",
-              "signature": "func fire()",
+              "signature": "func fire() -> HSTimer",
               "isStatic": false,
-              "rawDocumentation": "Immediately fire the timer's callback\n- Example:\n```js\nconst t = hs.timer.doEvery(5, () => console.log(\"tick\"))\nt.fire()\n```",
+              "rawDocumentation": "Immediately fire the timer's callback\n- Returns: The HSTimer object, for chaining\n- Example:\n```js\nconst t = hs.timer.doEvery(5, () => console.log(\"tick\"))\nt.fire()\n```",
               "description": "Immediately fire the timer's callback",
               "params": [],
-              "returns": null,
+              "returns": {
+                "type": "HSTimer",
+                "description": "The HSTimer object, for chaining"
+              },
               "notes": [],
               "examples": [
                 {
@@ -19218,7 +19239,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
-              "lineNumber": 51
+              "lineNumber": 54
             },
             {
               "name": "running",
@@ -19240,7 +19261,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
-              "lineNumber": 60
+              "lineNumber": 63
             },
             {
               "name": "nextTrigger",
@@ -19262,7 +19283,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
-              "lineNumber": 69
+              "lineNumber": 72
             },
             {
               "name": "setNextTrigger",
@@ -19289,7 +19310,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.timer/HSTimer.swift",
-              "lineNumber": 78
+              "lineNumber": 81
             }
           ],
           "properties": [
@@ -25820,5 +25841,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-29T21:58:02.660Z"
+  "generatedAt": "2026-08-30T00:07:15.299Z"
 }
