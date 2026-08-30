@@ -758,6 +758,35 @@ function parseJavaScriptFile(filePath, moduleName = null, repoRoot = REPO_ROOT) 
 }
 
 /**
+ * Extract a leading {Type} annotation with balanced braces, e.g. from
+ * "{Promise<{exitCode: number, stdout: string}>} description text". A naive
+ * [^}]+ regex would stop at the first inner `}` and mangle nested object/generic
+ * types, so braces are counted manually instead.
+ * Returns { type, rest }; type is null (and rest is the untouched input) if the
+ * input doesn't start with a balanced {...} annotation.
+ */
+function extractBracedType(text) {
+    if (!text.startsWith('{')) {
+        return { type: null, rest: text };
+    }
+
+    let depth = 0;
+    for (let i = 0; i < text.length; i++) {
+        if (text[i] === '{') {
+            depth++;
+        } else if (text[i] === '}') {
+            depth--;
+            if (depth === 0) {
+                return { type: text.slice(1, i), rest: text.slice(i + 1).trim() };
+            }
+        }
+    }
+
+    // Unbalanced braces - not a valid annotation
+    return { type: null, rest: text };
+}
+
+/**
  * Parse DocC-style comment (used in Swift and some JavaScript files)
  */
 function parseDocCStyleComment(docText) {
@@ -793,12 +822,22 @@ function parseDocCStyleComment(docText) {
 
     // Extract returns (with or without leading dash), with an optional {Type} override,
     // e.g. "Returns: {HSTimer} The timer object" or "Returns:\n - {HSTimer} The timer object"
-    const returnsMatch = docText.match(/-?\s*Returns?:\s*(?:-\s*)?(?:\{([^}]+)\}\s*)?(.+)/);
-    if (returnsMatch) {
+    for (let i = 0; i < lines.length; i++) {
+        const headerMatch = lines[i].match(/^-?\s*Returns?:\s*(.*)$/);
+        if (!headerMatch) continue;
+
+        let remainder = headerMatch[1].trim();
+        if (!remainder && i + 1 < lines.length) {
+            remainder = lines[i + 1];
+        }
+        remainder = remainder.replace(/^-\s*/, '');
+
+        const { type: typeAnnotation, rest: description } = extractBracedType(remainder);
         doc.returns = {
-            type: returnsMatch[1] || 'any',
-            description: returnsMatch[2].trim()
+            type: typeAnnotation || 'any',
+            description: description.trim()
         };
+        break;
     }
 
     return doc;
@@ -836,22 +875,21 @@ function parseJSDoc(docText) {
             }
         } else if (line.startsWith('@returns') || line.startsWith('@return')) {
             currentSection = 'returns';
-            const returnMatch = line.match(/@returns?\s+(?:\{([^}]+)\}\s+)?(.*)/);
-            if (returnMatch) {
-                const typeAnnotation = returnMatch[1] || 'any';
-                const result = {
-                    type: typeAnnotation,
-                    description: returnMatch[2]
-                };
+            const afterTag = line.replace(/^@returns?\s*/, '');
+            const { type: bracedType, rest: description } = extractBracedType(afterTag);
+            const typeAnnotation = bracedType || 'any';
+            const result = {
+                type: typeAnnotation,
+                description: description
+            };
 
-                // Check if this is a Promise type and extract the inner type
-                const promiseMatch = typeAnnotation.match(/^Promise<(.+)>$/);
-                if (promiseMatch) {
-                    result.promiseType = promiseMatch[1];
-                }
-
-                doc.returns = result;
+            // Check if this is a Promise type and extract the inner type
+            const promiseMatch = typeAnnotation.match(/^Promise<(.+)>$/);
+            if (promiseMatch) {
+                result.promiseType = promiseMatch[1];
             }
+
+            doc.returns = result;
         } else if (line.startsWith('@example')) {
             currentSection = 'example';
         } else if (currentSection === 'description' && line) {

@@ -7087,30 +7087,27 @@ declare namespace hs.task {
      * @param args - Array of arguments
      * @param options - Options object or legacy callback
      * @param legacyStreamCallback - Legacy streaming callback (optional)
-     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
      */
-    function runAsync(launchPath: string, args: string[], options: Object|Function, legacyStreamCallback: Function): any;
+    function runAsync(launchPath: string, args: string[], options: Object|Function, legacyStreamCallback: Function): Promise<{exitCode: number, stdout: string, stderr: string}>;
 
     /**
      * Run a shell command asynchronously
      * @param command - Shell command to execute
      * @param options - Options (same as run)
-     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
      */
-    function shell(command: string, options: Object): any;
+    function shell(command: string, options: Object): Promise<{exitCode: number, stdout: string, stderr: string}>;
 
     /**
      * Run multiple tasks in parallel
-     * @returns {Promise<Array<{exitCode: number, stdout: string, stderr: string}>>} Array of results
+     * @returns Array of results
      */
-    function parallel(): any;
+    function parallel(): Promise<Array<{exitCode: number, stdout: string, stderr: string}>>;
 
     /**
      * Create a task builder for fluent API
      * @param launchPath - Full path to the executable
-     * @returns {TaskBuilder}
      */
-    function builder(launchPath: string): any;
+    function builder(launchPath: string): TaskBuilder;
 
     /**
      * Run multiple tasks in sequence. Swift-retained storage for the JS implementation.
@@ -9018,13 +9015,13 @@ Parameter title: The window title to search for. All windows with titles that in
      * @param title The window title to search for. All windows with titles that include this string, will be matched
      * @returns An array of HSWindow objects with matching titles
      */
-    function findByTitle(title: any): any;
+    function findByTitle(title: any): HSWindow[];
 
     /**
      * Get all windows for the current application
      * @returns An array of HSWindow objects
      */
-    function currentWindows(): any;
+    function currentWindows(): HSWindow[];
 
     /**
      * Move a window to left half of screen
@@ -9032,7 +9029,7 @@ Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise False
      */
-    function moveToLeftHalf(win: any): any;
+    function moveToLeftHalf(win: any): boolean;
 
     /**
      * Move a window to right half of screen
@@ -9040,7 +9037,7 @@ Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise False
      */
-    function moveToRightHalf(win: any): any;
+    function moveToRightHalf(win: any): boolean;
 
     /**
      * Maximize a window
@@ -9048,7 +9045,7 @@ Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise false
      */
-    function maximize(win: any): any;
+    function maximize(win: any): boolean;
 
     /**
      * SKIP_DOCS

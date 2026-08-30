@@ -18218,8 +18218,9 @@
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "{Promise<{exitCode: number, stdout: string, stderr: string}>}"
+            "type": "Promise<{exitCode: number, stdout: string, stderr: string}>",
+            "description": "",
+            "promiseType": "{exitCode: number, stdout: string, stderr: string}"
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
@@ -18243,8 +18244,9 @@
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "{Promise<{exitCode: number, stdout: string, stderr: string}>}"
+            "type": "Promise<{exitCode: number, stdout: string, stderr: string}>",
+            "description": "",
+            "promiseType": "{exitCode: number, stdout: string, stderr: string}"
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
@@ -18257,8 +18259,9 @@
           "description": "Run multiple tasks in parallel",
           "params": [],
           "returns": {
-            "type": "any",
-            "description": "{Promise<Array<{exitCode: number, stdout: string, stderr: string}>>} Array of results"
+            "type": "Promise<Array<{exitCode: number, stdout: string, stderr: string}>>",
+            "description": "Array of results",
+            "promiseType": "Array<{exitCode: number, stdout: string, stderr: string}>"
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
@@ -18277,8 +18280,8 @@
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "{TaskBuilder}"
+            "type": "TaskBuilder",
+            "description": ""
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
@@ -23238,7 +23241,7 @@
         },
         {
           "name": "findByTitle",
-          "rawDocumentation": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched\nReturns: An array of HSWindow objects with matching titles",
+          "rawDocumentation": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched\nReturns: {HSWindow[]} An array of HSWindow objects with matching titles",
           "description": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched",
           "params": [
             {
@@ -23249,7 +23252,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "HSWindow[]",
             "description": "An array of HSWindow objects with matching titles"
           },
           "examples": [],
@@ -23260,11 +23263,11 @@
         },
         {
           "name": "currentWindows",
-          "rawDocumentation": "Get all windows for the current application\nReturns: An array of HSWindow objects",
+          "rawDocumentation": "Get all windows for the current application\nReturns: {HSWindow[]} An array of HSWindow objects",
           "description": "Get all windows for the current application",
           "params": [],
           "returns": {
-            "type": "any",
+            "type": "HSWindow[]",
             "description": "An array of HSWindow objects"
           },
           "examples": [],
@@ -23275,7 +23278,7 @@
         },
         {
           "name": "moveToLeftHalf",
-          "rawDocumentation": "Move a window to left half of screen\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise False",
+          "rawDocumentation": "Move a window to left half of screen\nParameter win: An HSWindow object\nReturns: {boolean} True if the operation was successful, otherwise False",
           "description": "Move a window to left half of screen\nParameter win: An HSWindow object",
           "params": [
             {
@@ -23286,7 +23289,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "boolean",
             "description": "True if the operation was successful, otherwise False"
           },
           "examples": [],
@@ -23297,7 +23300,7 @@
         },
         {
           "name": "moveToRightHalf",
-          "rawDocumentation": "Move a window to right half of screen\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise False",
+          "rawDocumentation": "Move a window to right half of screen\nParameter win: An HSWindow object\nReturns: {boolean} True if the operation was successful, otherwise False",
           "description": "Move a window to right half of screen\nParameter win: An HSWindow object",
           "params": [
             {
@@ -23308,7 +23311,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "boolean",
             "description": "True if the operation was successful, otherwise False"
           },
           "examples": [],
@@ -23319,7 +23322,7 @@
         },
         {
           "name": "maximize",
-          "rawDocumentation": "Maximize a window\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise false",
+          "rawDocumentation": "Maximize a window\nParameter win: An HSWindow object\nReturns: {boolean} True if the operation was successful, otherwise false",
           "description": "Maximize a window\nParameter win: An HSWindow object",
           "params": [
             {
@@ -23330,7 +23333,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "boolean",
             "description": "True if the operation was successful, otherwise false"
           },
           "examples": [],
@@ -25841,5 +25844,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-30T00:07:15.299Z"
+  "generatedAt": "2026-08-30T00:15:56.914Z"
 }
