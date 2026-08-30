@@ -74,6 +74,9 @@
     <li>
         <a href="HSTask.html">HSTask</a>
     </li>
+    <li>
+        <a href="TaskBuilder.html">TaskBuilder</a>
+    </li>
 </ul>
 
 <h2 class="section-heading">Properties</h2>
@@ -157,12 +160,12 @@ task.start()</code></pre>
         </div>
     </div>
     <div class="method" id="runAsync">
-        <h3><a href="#runAsync">hs.task.runAsync(launchPath, args, options, legacyStreamCallback) -> any</a></h3>
+        <h3><a href="#runAsync">hs.task.runAsync(launchPath, args, options, legacyStreamCallback) -> Promise<{exitCode: number, stdout: string, stderr: string}></a></h3>
 
         <div class="description">Create and run a task asynchronously</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.task.runAsync(launchPath, args, options, legacyStreamCallback) -> any</code></pre>
+        <pre><code class="language-javascript">hs.task.runAsync(launchPath, args, options, legacyStreamCallback) -> Promise<{exitCode: number, stdout: string, stderr: string}></code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -198,8 +201,8 @@ task.start()</code></pre>
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">{Promise&lt;{exitCode: number, stdout: string, stderr: string}&gt;}</div>
+        <div class="return-type">Promise<{exitCode: number, stdout: string, stderr: string}></div>
+        <div class="return-desc">The task&#39;s result</div>
 
 
 
@@ -208,12 +211,12 @@ task.start()</code></pre>
         </div>
     </div>
     <div class="method" id="shell">
-        <h3><a href="#shell">hs.task.shell(command, options) -> any</a></h3>
+        <h3><a href="#shell">hs.task.shell(command, options) -> Promise<{exitCode: number, stdout: string, stderr: string}></a></h3>
 
         <div class="description">Run a shell command asynchronously</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.task.shell(command, options) -> any</code></pre>
+        <pre><code class="language-javascript">hs.task.shell(command, options) -> Promise<{exitCode: number, stdout: string, stderr: string}></code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -239,8 +242,8 @@ task.start()</code></pre>
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">{Promise&lt;{exitCode: number, stdout: string, stderr: string}&gt;}</div>
+        <div class="return-type">Promise<{exitCode: number, stdout: string, stderr: string}></div>
+        <div class="return-desc">The command&#39;s result</div>
 
 
 
@@ -249,17 +252,34 @@ task.start()</code></pre>
         </div>
     </div>
     <div class="method" id="parallel">
-        <h3><a href="#parallel">hs.task.parallel() -> any</a></h3>
+        <h3><a href="#parallel">hs.task.parallel(tasks) -> Promise<Array<{exitCode: number, stdout: string, stderr: string}>></a></h3>
 
         <div class="description">Run multiple tasks in parallel</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.task.parallel() -> any</code></pre>
+        <pre><code class="language-javascript">hs.task.parallel(tasks) -> Promise<Array<{exitCode: number, stdout: string, stderr: string}>></code></pre>
 
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">tasks</td>
+                    <td class="param-type">Array&lt;{path?: string, launchPath?: string, args?: string[], options?: Object}&gt;</td>
+                    <td class="param-desc">- Array of task specifications: [{path, args, options}, ...]</td>
+                </tr>
+            </tbody>
+        </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">{Promise&lt;Array&lt;{exitCode: number, stdout: string, stderr: string}&gt;&gt;} Array of results</div>
+        <div class="return-type">Promise<Array<{exitCode: number, stdout: string, stderr: string}>></div>
+        <div class="return-desc">Array of results</div>
 
 
 
@@ -268,12 +288,12 @@ task.start()</code></pre>
         </div>
     </div>
     <div class="method" id="builder">
-        <h3><a href="#builder">hs.task.builder(launchPath) -> any</a></h3>
+        <h3><a href="#builder">hs.task.builder(launchPath) -> TaskBuilder</a></h3>
 
         <div class="description">Create a task builder for fluent API</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.task.builder(launchPath) -> any</code></pre>
+        <pre><code class="language-javascript">hs.task.builder(launchPath) -> TaskBuilder</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -294,8 +314,8 @@ task.start()</code></pre>
         </table>
 
         <div class="card-section-label">Returns</div>
-        <div class="return-type">any</div>
-        <div class="return-desc">{TaskBuilder}</div>
+        <div class="return-type">TaskBuilder</div>
+        <div class="return-desc">A new task builder</div>
 
 
 

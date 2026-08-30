@@ -8,7 +8,7 @@ hs.window.focused = hs.window.focusedWindow;
 // Filter windows by title
 /// Find windows by title
 /// Parameter title: The window title to search for. All windows with titles that include this string, will be matched
-/// Returns: An array of HSWindow objects with matching titles
+/// Returns: {HSWindow[]} An array of HSWindow objects with matching titles
 hs.window.findByTitle = function(title) {
     return hs.window.allWindows().filter(win => {
         return win.title && win.title.includes(title);
@@ -17,7 +17,7 @@ hs.window.findByTitle = function(title) {
 
 // Get windows for the current application
 /// Get all windows for the current application
-/// Returns: An array of HSWindow objects
+/// Returns: {HSWindow[]} An array of HSWindow objects
 hs.window.currentWindows = function() {
     const app = hs.application.frontmost();
     if (!app) {
@@ -28,7 +28,7 @@ hs.window.currentWindows = function() {
 
 /// Move a window to left half of screen
 /// Parameter win: An HSWindow object
-/// Returns: True if the operation was successful, otherwise False
+/// Returns: {boolean} True if the operation was successful, otherwise False
 hs.window.moveToLeftHalf = function(win) {
     win = win || hs.window.focusedWindow();
     if (!win) {
@@ -49,7 +49,7 @@ hs.window.moveToLeftHalf = function(win) {
 
 /// Move a window to right half of screen
 /// Parameter win: An HSWindow object
-/// Returns: True if the operation was successful, otherwise False
+/// Returns: {boolean} True if the operation was successful, otherwise False
 hs.window.moveToRightHalf = function(win) {
     win = win || hs.window.focusedWindow();
     if (!win) {
@@ -71,7 +71,7 @@ hs.window.moveToRightHalf = function(win) {
 
 /// Maximize a window
 /// Parameter win: An HSWindow object
-/// Returns: True if the operation was successful, otherwise false
+/// Returns: {boolean} True if the operation was successful, otherwise false
 hs.window.maximize = function(win) {
     win = win || hs.window.focusedWindow();
     if (!win) {

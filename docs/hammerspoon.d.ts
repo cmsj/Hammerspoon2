@@ -739,14 +739,14 @@ safe to call more than once, or do one-time setup at `init.js`'s top level inste
      * @param name The Spoon's name, matching its directory name under `Spoons/`
      * @returns Whatever the Spoon's `init.js` assigned to `module.exports`
      */
-    function loadSpoon(name: string): JSValue | null;
+    function loadSpoon(name: string): Object;
 
     /**
-     * A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -
-e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
+     * A namespace holding every Spoon loaded so far via `loadSpoon()`,
+keyed by name - e.g. a Spoon loaded with `hs.loadSpoon("MySpoon")` is also reachable as
 `hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.
      */
-    const spoons: JSValue | null;
+    const spoons: Record<string, Object>;
 
 }
 
@@ -3265,7 +3265,7 @@ declare namespace hs.hotkey {
      * @param key Key name for the trigger hotkey (e.g. "h"), or an empty string for no trigger
      * @returns A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and enterFn/exitFn callbacks
      */
-    function createModal(mods: any, key: any): any;
+    function createModal(mods: any, key: any): HSHotkeyModal;
 
 }
 
@@ -3304,6 +3304,54 @@ declare class HSHotkey {
      * The callback function to be called when the hotkey is released, or null to remove it
      */
     callbackReleased: (() => void) | null;
+
+}
+
+/**
+ * A modal hotkey group returned by hs.hotkey.createModal(). Hotkeys bound to the modal via bind() are only enabled while the modal is active (i.e. between enter() and exit()).
+ */
+declare class HSHotkeyModal {
+    /**
+     * Whether the modal is currently active
+     */
+    isActive: boolean;
+
+    /**
+     * Callback invoked when the modal is entered
+     */
+    enterFn: Function|null;
+
+    /**
+     * Callback invoked when the modal is exited
+     */
+    exitFn: Function|null;
+
+    /**
+     * Bind a hotkey to this modal. The hotkey is only enabled while the modal is active.
+     * @param mods - Modifier keys for the hotkey (e.g. ["cmd", "shift"])
+     * @param key - Key name for the hotkey (e.g. "h")
+     * @param callbackPressed - Called when the hotkey is pressed, or null
+     * @param callbackReleased - Called when the hotkey is released, or null
+     * @returns This modal, for chaining
+     */
+    bind(mods: string[], key: string, callbackPressed: Function|null, callbackReleased: Function|null): HSHotkeyModal;
+
+    /**
+     * Enter the modal: its trigger (if any) is disabled and its bound hotkeys are enabled.
+     * @returns This modal, for chaining
+     */
+    enter(): HSHotkeyModal;
+
+    /**
+     * Exit the modal: its bound hotkeys are disabled and its trigger (if any) is re-enabled.
+     * @returns This modal, for chaining
+     */
+    exit(): HSHotkeyModal;
+
+    /**
+     * Destroy the modal, along with its trigger and all hotkeys bound to it.
+     */
+    destroy(): void;
 
 }
 
@@ -7087,30 +7135,31 @@ declare namespace hs.task {
      * @param args - Array of arguments
      * @param options - Options object or legacy callback
      * @param legacyStreamCallback - Legacy streaming callback (optional)
-     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
+     * @returns The task's result
      */
-    function runAsync(launchPath: string, args: string[], options: Object|Function, legacyStreamCallback: Function): any;
+    function runAsync(launchPath: string, args: string[], options: Object|Function, legacyStreamCallback: Function): Promise<{exitCode: number, stdout: string, stderr: string}>;
 
     /**
      * Run a shell command asynchronously
      * @param command - Shell command to execute
      * @param options - Options (same as run)
-     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}
+     * @returns The command's result
      */
-    function shell(command: string, options: Object): any;
+    function shell(command: string, options: Object): Promise<{exitCode: number, stdout: string, stderr: string}>;
 
     /**
      * Run multiple tasks in parallel
-     * @returns {Promise<Array<{exitCode: number, stdout: string, stderr: string}>>} Array of results
+     * @param tasks - Array of task specifications: [{path, args, options}, ...]
+     * @returns Array of results
      */
-    function parallel(): any;
+    function parallel(tasks: Array<{path?: string, launchPath?: string, args?: string[], options?: Object}>): Promise<Array<{exitCode: number, stdout: string, stderr: string}>>;
 
     /**
      * Create a task builder for fluent API
      * @param launchPath - Full path to the executable
-     * @returns {TaskBuilder}
+     * @returns A new task builder
      */
-    function builder(launchPath: string): any;
+    function builder(launchPath: string): TaskBuilder;
 
     /**
      * Run multiple tasks in sequence. Swift-retained storage for the JS implementation.
@@ -7210,6 +7259,52 @@ declare class HSTask {
      * @remarks Returns a string describing why the task terminated, or nil if still running
      */
     readonly terminationReason: string | null;
+
+}
+
+/**
+ * TaskBuilder class for fluent task construction
+ */
+declare class TaskBuilder {
+    /**
+     * Add arguments
+     * @param args - Arguments to add
+     * @returns This builder, for chaining
+     */
+    withArgs(...args: string[]): TaskBuilder;
+
+    /**
+     * Set environment variables
+     * @param environment - Environment variables
+     * @returns This builder, for chaining
+     */
+    withEnvironment(environment: Object): TaskBuilder;
+
+    /**
+     * Set working directory
+     * @param directory - Working directory path
+     * @returns This builder, for chaining
+     */
+    inDirectory(directory: string): TaskBuilder;
+
+    /**
+     * Set output callback
+     * @param callback - Output callback (stream, data) => {}
+     * @returns This builder, for chaining
+     */
+    onOutput(callback: Function): TaskBuilder;
+
+    /**
+     * Build and run the task
+     * @returns The task's result
+     */
+    run(): Promise<{exitCode: number, stdout: string, stderr: string}>;
+
+    /**
+     * Build the task without running
+     * @returns The created task, not yet started
+     */
+    build(): HSTask;
 
 }
 
@@ -9018,13 +9113,13 @@ Parameter title: The window title to search for. All windows with titles that in
      * @param title The window title to search for. All windows with titles that include this string, will be matched
      * @returns An array of HSWindow objects with matching titles
      */
-    function findByTitle(title: any): any;
+    function findByTitle(title: any): HSWindow[];
 
     /**
      * Get all windows for the current application
      * @returns An array of HSWindow objects
      */
-    function currentWindows(): any;
+    function currentWindows(): HSWindow[];
 
     /**
      * Move a window to left half of screen
@@ -9032,7 +9127,7 @@ Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise False
      */
-    function moveToLeftHalf(win: any): any;
+    function moveToLeftHalf(win: any): boolean;
 
     /**
      * Move a window to right half of screen
@@ -9040,7 +9135,7 @@ Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise False
      */
-    function moveToRightHalf(win: any): any;
+    function moveToRightHalf(win: any): boolean;
 
     /**
      * Maximize a window
@@ -9048,7 +9143,7 @@ Parameter win: An HSWindow object
      * @param win An HSWindow object
      * @returns True if the operation was successful, otherwise false
      */
-    function maximize(win: any): any;
+    function maximize(win: any): boolean;
 
     /**
      * SKIP_DOCS

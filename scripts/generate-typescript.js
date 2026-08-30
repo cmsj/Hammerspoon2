@@ -162,9 +162,11 @@ function generateModuleDefinitions(moduleData) {
         }
         output += `     */\n`;
 
-        // Method signature — p.optional maps to TypeScript's optional parameter (name?: type)
+        // Method signature — p.optional maps to TypeScript's optional parameter (name?: type),
+        // p.rest to a rest parameter (...name: type)
         const params = (method.params || []).map(p => {
-            return `${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p, method.source === 'swift')}`;
+            const prefix = p.rest ? '...' : '';
+            return `${prefix}${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p, method.source === 'swift')}`;
         }).join(', ');
 
         const returnType = method.returns
@@ -194,9 +196,60 @@ function generateModuleDefinitions(moduleData) {
 
     // Type definitions for this module
     for (const typeDef of moduleData.types || []) {
-        output += generateTypeDefinition(typeDef);
+        output += typeDef.type === 'jsclass' ? generateJSClassDefinition(typeDef) : generateTypeDefinition(typeDef);
     }
 
+    return output;
+}
+
+/**
+ * Generate a TypeScript `declare class` for an ES6 class parsed out of a JS enhancement
+ * file (e.g. a fluent builder returned by a factory function). Unlike Swift-derived types,
+ * every type here is already TS-shaped (from JSDoc), so no swiftTypeToTS conversion is applied.
+ */
+function generateJSClassDefinition(cls) {
+    let output = '';
+
+    output += `/**\n`;
+    if (cls.description) {
+        output += ` * ${escapeDocComment(cls.description)}\n`;
+    }
+    output += ` */\n`;
+    output += `declare class ${cls.name} {\n`;
+
+    for (const prop of cls.properties || []) {
+        output += `    /**\n`;
+        if (prop.description) {
+            output += `     * ${escapeDocComment(prop.description)}\n`;
+        }
+        output += `     */\n`;
+        output += `    ${prop.name}: ${prop.type};\n\n`;
+    }
+
+    for (const method of cls.methods || []) {
+        output += `    /**\n`;
+        if (method.description) {
+            output += `     * ${escapeDocComment(method.description)}\n`;
+        }
+        for (const param of method.params || []) {
+            const desc = param.description ? ` ${escapeDocComment(param.description)}` : '';
+            output += `     * @param ${param.name}${desc}\n`;
+        }
+        if (method.returns && method.returns.description) {
+            output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
+        }
+        output += `     */\n`;
+
+        const params = (method.params || []).map(p => {
+            const prefix = p.rest ? '...' : '';
+            return `${prefix}${p.name}${p.optional ? '?' : ''}: ${p.type}`;
+        }).join(', ');
+
+        const returnType = method.returns ? method.returns.type : 'void';
+        output += `    ${method.name}(${params}): ${returnType};\n\n`;
+    }
+
+    output += `}\n\n`;
     return output;
 }
 

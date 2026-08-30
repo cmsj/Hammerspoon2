@@ -758,6 +758,134 @@ function parseJavaScriptFile(filePath, moduleName = null, repoRoot = REPO_ROOT) 
 }
 
 /**
+ * Parse a class-level JSDoc block for its description and `@property {Type} name - desc`
+ * tags. There's no natural place to hang JSDoc on a class field initializer, so public
+ * fields are documented as a group on the class comment instead, mirroring the bullet-list
+ * `Parameters:` convention used elsewhere in this file.
+ */
+function parseClassDoc(docText) {
+    const lines = docText.split('\n').map(line => line.replace(/^\s*\*\s?/, '').trim());
+    const descLines = [];
+    const properties = [];
+
+    for (const line of lines) {
+        const propMatch = line.match(/^@property\s+\{([^}]+)\}\s+(\w+)\s*-?\s*(.*)$/);
+        if (propMatch) {
+            properties.push({
+                name: propMatch[2],
+                type: propMatch[1],
+                // Synthesize a Swift-style signature so this can reuse the same HTML
+                // rendering path (extractPropertyType filter) as Swift-derived properties.
+                signature: `var ${propMatch[2]}: ${propMatch[1]}`,
+                description: propMatch[3]
+            });
+        } else if (!line.startsWith('@') && line) {
+            descLines.push(line);
+        }
+    }
+
+    return { description: descLines.join(' '), properties };
+}
+
+/**
+ * Parse ES6 classes with JSDoc from a JavaScript file into typedef-like structures, so
+ * that ad hoc return shapes (e.g. a fluent builder) can be declared as real TypeScript
+ * types instead of silently falling back to `any`.
+ */
+function parseJavaScriptClasses(filePath, repoRoot = REPO_ROOT) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const relativePath = path.relative(repoRoot, filePath);
+    const classes = [];
+
+    const getLineNumber = (charPos) => content.substring(0, charPos).split('\n').length;
+
+    // The JSDoc block is required (not optional) — this file is full of internal
+    // implementation classes (e.g. one-to-many event emitters) documented only with
+    // plain `//` comments, which must NOT be treated as public API types.
+    const classStartRegex = /\/\*\*([^*]*(?:\*(?!\/)[^*]*)*)\*\/\s*class\s+(\w+)\s*\{/g;
+    let match;
+
+    while ((match = classStartRegex.exec(content)) !== null) {
+        const classDoc = match[1];
+        const className = match[2];
+        const bodyStart = match.index + match[0].length;
+
+        // Manually match braces (rather than regex) to find the end of the class body,
+        // since method bodies contain their own nested braces.
+        let depth = 1;
+        let i = bodyStart;
+        while (i < content.length && depth > 0) {
+            if (content[i] === '{') depth++;
+            else if (content[i] === '}') depth--;
+            i++;
+        }
+        const body = content.slice(bodyStart, i - 1);
+
+        const { description, properties } = parseClassDoc(classDoc);
+
+        const methods = [];
+        const methodRegex = /\/\*\*([^*]*(?:\*(?!\/)[^*]*)*)\*\/\s*(?:async\s+)?(\w+)\s*\(([^)]*)\)\s*\{/g;
+        let methodMatch;
+        while ((methodMatch = methodRegex.exec(body)) !== null) {
+            const methodName = methodMatch[2];
+            if (methodName === 'constructor') continue;
+
+            const parsed = parseJSDoc(methodMatch[1]);
+            methods.push({
+                name: methodName,
+                description: parsed.description,
+                params: parsed.params,
+                returns: parsed.returns,
+                source: 'javascript'
+            });
+        }
+
+        classes.push({
+            name: className,
+            type: 'jsclass',
+            description,
+            rawDocumentation: description,
+            properties,
+            methods,
+            source: 'javascript',
+            filePath: relativePath,
+            lineNumber: getLineNumber(match.index)
+        });
+    }
+
+    return classes;
+}
+
+/**
+ * Extract a leading {Type} annotation with balanced braces, e.g. from
+ * "{Promise<{exitCode: number, stdout: string}>} description text". A naive
+ * [^}]+ regex would stop at the first inner `}` and mangle nested object/generic
+ * types, so braces are counted manually instead.
+ * Returns { type, rest }; type is null (and rest is the untouched input) if the
+ * input doesn't start with a balanced {...} annotation.
+ */
+function extractBracedType(text) {
+    if (!text.startsWith('{')) {
+        return { type: null, rest: text };
+    }
+
+    let depth = 0;
+    for (let i = 0; i < text.length; i++) {
+        if (text[i] === '{') {
+            depth++;
+        } else if (text[i] === '}') {
+            depth--;
+            if (depth === 0) {
+                return { type: text.slice(1, i), rest: text.slice(i + 1).trim() };
+            }
+        }
+    }
+
+    // Unbalanced braces - not a valid annotation
+    return { type: null, rest: text };
+}
+
+/**
  * Parse DocC-style comment (used in Swift and some JavaScript files)
  */
 function parseDocCStyleComment(docText) {
@@ -793,12 +921,22 @@ function parseDocCStyleComment(docText) {
 
     // Extract returns (with or without leading dash), with an optional {Type} override,
     // e.g. "Returns: {HSTimer} The timer object" or "Returns:\n - {HSTimer} The timer object"
-    const returnsMatch = docText.match(/-?\s*Returns?:\s*(?:-\s*)?(?:\{([^}]+)\}\s*)?(.+)/);
-    if (returnsMatch) {
+    for (let i = 0; i < lines.length; i++) {
+        const headerMatch = lines[i].match(/^-?\s*Returns?:\s*(.*)$/);
+        if (!headerMatch) continue;
+
+        let remainder = headerMatch[1].trim();
+        if (!remainder && i + 1 < lines.length) {
+            remainder = lines[i + 1];
+        }
+        remainder = remainder.replace(/^-\s*/, '');
+
+        const { type: typeAnnotation, rest: description } = extractBracedType(remainder);
         doc.returns = {
-            type: returnsMatch[1] || 'any',
-            description: returnsMatch[2].trim()
+            type: typeAnnotation || 'any',
+            description: description.trim()
         };
+        break;
     }
 
     return doc;
@@ -823,35 +961,46 @@ function parseJSDoc(docText) {
     for (const line of lines) {
         if (line.startsWith('@param')) {
             currentSection = 'param';
-            // Use [\w.]+ to capture dotted names like options.environment (JSDoc property paths)
-            const paramMatch = line.match(/@param\s+(?:\{([^}]+)\}\s+)?([\w.]+)\s*(.*)/);
-            if (paramMatch && !paramMatch[2].includes('.')) {
+            // Balanced-brace type extraction (a plain [^}]+ regex mangles nested types like
+            // {Array<{a: string}>}), then [\w.]+ to capture dotted names like options.environment
+            // (JSDoc property paths)
+            const afterTag = line.replace(/^@param\s*/, '');
+            const { type: bracedType, rest: afterType } = extractBracedType(afterTag);
+            const nameMatch = afterType.match(/^([\w.]+)\s*(.*)$/);
+            if (nameMatch && !nameMatch[1].includes('.')) {
                 // Skip property-path docs (e.g. @param options.foo) — they document sub-fields of an
                 // existing param and must not appear as separate parameters in the TypeScript output.
+                let type = bracedType || 'any';
+                let rest = false;
+                if (type.startsWith('...')) {
+                    // JSDoc rest-param syntax, e.g. {...string} args -> a `string[]` rest parameter
+                    rest = true;
+                    type = `${type.slice(3)}[]`;
+                }
                 doc.params.push({
-                    name: paramMatch[2],
-                    type: paramMatch[1] || 'any',
-                    description: paramMatch[3]
+                    name: nameMatch[1],
+                    type,
+                    rest,
+                    description: nameMatch[2]
                 });
             }
         } else if (line.startsWith('@returns') || line.startsWith('@return')) {
             currentSection = 'returns';
-            const returnMatch = line.match(/@returns?\s+(?:\{([^}]+)\}\s+)?(.*)/);
-            if (returnMatch) {
-                const typeAnnotation = returnMatch[1] || 'any';
-                const result = {
-                    type: typeAnnotation,
-                    description: returnMatch[2]
-                };
+            const afterTag = line.replace(/^@returns?\s*/, '');
+            const { type: bracedType, rest: description } = extractBracedType(afterTag);
+            const typeAnnotation = bracedType || 'any';
+            const result = {
+                type: typeAnnotation,
+                description: description
+            };
 
-                // Check if this is a Promise type and extract the inner type
-                const promiseMatch = typeAnnotation.match(/^Promise<(.+)>$/);
-                if (promiseMatch) {
-                    result.promiseType = promiseMatch[1];
-                }
-
-                doc.returns = result;
+            // Check if this is a Promise type and extract the inner type
+            const promiseMatch = typeAnnotation.match(/^Promise<(.+)>$/);
+            if (promiseMatch) {
+                result.promiseType = promiseMatch[1];
             }
+
+            doc.returns = result;
         } else if (line.startsWith('@example')) {
             currentSection = 'example';
         } else if (currentSection === 'description' && line) {
@@ -984,6 +1133,9 @@ function processModule(moduleName, modulePath) {
             const functions = parseJavaScriptFile(filePath, moduleName);
             // JavaScript functions are already in the correct format
             moduleData.methods.push(...functions);
+
+            const classes = parseJavaScriptClasses(filePath, REPO_ROOT);
+            moduleData.types.push(...classes);
         }
     }
 

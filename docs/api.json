@@ -224,7 +224,7 @@
           "name": "loadSpoon",
           "signature": "func loadSpoon(_ name: String) -> JSValue?",
           "isStatic": false,
-          "rawDocumentation": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths. On success,\nthe Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other\ncode can reach an already-loaded Spoon without needing to call `loadSpoon()` again.\n\n`init.js` must set `module.exports` to an object (or a function, since functions are\nobjects too) - loading fails with an exception otherwise. Its `author`, `description`,\nand `version` properties are then set from `spoon.json`, overwriting any of the same\nname the Spoon's own `init.js` set, so that information is always present and always\nreflects what's on disk. If the resulting object has an `init()` method, it's called\nautomatically (with `this` bound to the object) before `loadSpoon()` returns - matching\nHammerspoon 1's behavior. An exception thrown from `init()` fails the load: nothing is\nstored on `hs.spoons`, and `loadSpoon()` throws. Unlike `init.js` itself (which\n`require()` only ever evaluates once), `init()` runs again on every `loadSpoon()` call\nfor the same Spoon, since the same cached object is returned each time - write it to be\nsafe to call more than once, or do one-time setup at `init.js`'s top level instead.\n- Parameter name: The Spoon's name, matching its directory name under `Spoons/`\n- Returns: Whatever the Spoon's `init.js` assigned to `module.exports`\n- Example:\n```js\nconst MySpoon = hs.loadSpoon(\"MySpoon\")\nconsole.log(MySpoon.version)\n// ...later, from anywhere...\nhs.spoons.MySpoon.doSomething()\n```",
+          "rawDocumentation": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths. On success,\nthe Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other\ncode can reach an already-loaded Spoon without needing to call `loadSpoon()` again.\n\n`init.js` must set `module.exports` to an object (or a function, since functions are\nobjects too) - loading fails with an exception otherwise. Its `author`, `description`,\nand `version` properties are then set from `spoon.json`, overwriting any of the same\nname the Spoon's own `init.js` set, so that information is always present and always\nreflects what's on disk. If the resulting object has an `init()` method, it's called\nautomatically (with `this` bound to the object) before `loadSpoon()` returns - matching\nHammerspoon 1's behavior. An exception thrown from `init()` fails the load: nothing is\nstored on `hs.spoons`, and `loadSpoon()` throws. Unlike `init.js` itself (which\n`require()` only ever evaluates once), `init()` runs again on every `loadSpoon()` call\nfor the same Spoon, since the same cached object is returned each time - write it to be\nsafe to call more than once, or do one-time setup at `init.js`'s top level instead.\n- Parameter name: The Spoon's name, matching its directory name under `Spoons/`\n- Returns: {Object} Whatever the Spoon's `init.js` assigned to `module.exports`\n- Example:\n```js\nconst MySpoon = hs.loadSpoon(\"MySpoon\")\nconsole.log(MySpoon.version)\n// ...later, from anywhere...\nhs.spoons.MySpoon.doSomething()\n```",
           "description": "Load a Spoon - a packaged, reusable piece of configuration - by name, from the\n`Spoons` directory inside your config directory. A Spoon must contain a well-formed\n`spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)\nand an `init.js`, or loading fails with an exception. `init.js` is loaded through the\nsame `require()` used for the rest of your config, so it can itself `require()`\nfurther files from within the Spoon's own directory using relative paths. On success,\nthe Spoon's `module.exports` is also stored on `hs.spoons` under its name, so other\ncode can reach an already-loaded Spoon without needing to call `loadSpoon()` again.\n`init.js` must set `module.exports` to an object (or a function, since functions are\nobjects too) - loading fails with an exception otherwise. Its `author`, `description`,\nand `version` properties are then set from `spoon.json`, overwriting any of the same\nname the Spoon's own `init.js` set, so that information is always present and always\nreflects what's on disk. If the resulting object has an `init()` method, it's called\nautomatically (with `this` bound to the object) before `loadSpoon()` returns - matching\nHammerspoon 1's behavior. An exception thrown from `init()` fails the load: nothing is\nstored on `hs.spoons`, and `loadSpoon()` throws. Unlike `init.js` itself (which\n`require()` only ever evaluates once), `init()` runs again on every `loadSpoon()` call\nfor the same Spoon, since the same cached object is returned each time - write it to be\nsafe to call more than once, or do one-time setup at `init.js`'s top level instead.",
           "params": [
             {
@@ -236,7 +236,7 @@
             }
           ],
           "returns": {
-            "type": "JSValue",
+            "type": "Object",
             "description": "Whatever the Spoon's `init.js` assigned to `module.exports`"
           },
           "notes": [],
@@ -255,9 +255,9 @@
         {
           "name": "spoons",
           "signature": "var spoons: JSValue? { get }",
-          "rawDocumentation": "A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -\ne.g. a Spoon loaded with `hs.loadSpoon(\"MySpoon\")` is also reachable as\n`hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.\n- Example:\n```js\nhs.loadSpoon(\"MySpoon\")\nhs.spoons.MySpoon.doSomething()\n```",
-          "description": "A namespace holding every Spoon loaded so far via `loadSpoon()`, keyed by name -\ne.g. a Spoon loaded with `hs.loadSpoon(\"MySpoon\")` is also reachable as\n`hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.",
-          "tsType": null,
+          "rawDocumentation": "A namespace holding every Spoon loaded so far via `loadSpoon()`,\nkeyed by name - e.g. a Spoon loaded with `hs.loadSpoon(\"MySpoon\")` is also reachable as\n`hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.\n- Example:\n```js\nhs.loadSpoon(\"MySpoon\")\nhs.spoons.MySpoon.doSomething()\n```",
+          "description": "A namespace holding every Spoon loaded so far via `loadSpoon()`,\nkeyed by name - e.g. a Spoon loaded with `hs.loadSpoon(\"MySpoon\")` is also reachable as\n`hs.spoons.MySpoon`. Empty until at least one Spoon has been loaded.",
+          "tsType": "Record<string, Object>",
           "notes": [],
           "examples": [
             {
@@ -8094,7 +8094,7 @@
         },
         {
           "name": "createModal",
-          "rawDocumentation": "Create a new modal hotkey group, optionally entered via a trigger key combination\nParameters:\n- mods: Modifier keys for the trigger hotkey (e.g. [\"cmd\", \"shift\"]), or an empty array for no trigger\n- key: Key name for the trigger hotkey (e.g. \"h\"), or an empty string for no trigger\nReturns: A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and enterFn/exitFn callbacks\nExample:\n```js\nconst m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\nm.bind([], 'escape', () => m.exit(), null)\n```",
+          "rawDocumentation": "Create a new modal hotkey group, optionally entered via a trigger key combination\nParameters:\n- mods: Modifier keys for the trigger hotkey (e.g. [\"cmd\", \"shift\"]), or an empty array for no trigger\n- key: Key name for the trigger hotkey (e.g. \"h\"), or an empty string for no trigger\nReturns: {HSHotkeyModal} A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and enterFn/exitFn callbacks\nExample:\n```js\nconst m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\nm.bind([], 'escape', () => m.exit(), null)\n```",
           "description": "Create a new modal hotkey group, optionally entered via a trigger key combination",
           "params": [
             {
@@ -8111,7 +8111,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "HSHotkeyModal",
             "description": "A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and enterFn/exitFn callbacks"
           },
           "examples": [
@@ -8122,7 +8122,7 @@
           ],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
-          "lineNumber": 16,
+          "lineNumber": 94,
           "type": "function"
         }
       ],
@@ -8253,6 +8253,99 @@
               "lineNumber": 54
             }
           ]
+        },
+        {
+          "name": "HSHotkeyModal",
+          "type": "jsclass",
+          "description": "A modal hotkey group returned by hs.hotkey.createModal(). Hotkeys bound to the modal via bind() are only enabled while the modal is active (i.e. between enter() and exit()).",
+          "rawDocumentation": "A modal hotkey group returned by hs.hotkey.createModal(). Hotkeys bound to the modal via bind() are only enabled while the modal is active (i.e. between enter() and exit()).",
+          "properties": [
+            {
+              "name": "isActive",
+              "type": "boolean",
+              "signature": "var isActive: boolean",
+              "description": "Whether the modal is currently active"
+            },
+            {
+              "name": "enterFn",
+              "type": "Function|null",
+              "signature": "var enterFn: Function|null",
+              "description": "Callback invoked when the modal is entered"
+            },
+            {
+              "name": "exitFn",
+              "type": "Function|null",
+              "signature": "var exitFn: Function|null",
+              "description": "Callback invoked when the modal is exited"
+            }
+          ],
+          "methods": [
+            {
+              "name": "bind",
+              "description": "Bind a hotkey to this modal. The hotkey is only enabled while the modal is active.",
+              "params": [
+                {
+                  "name": "mods",
+                  "type": "string[]",
+                  "rest": false,
+                  "description": "- Modifier keys for the hotkey (e.g. [\"cmd\", \"shift\"])"
+                },
+                {
+                  "name": "key",
+                  "type": "string",
+                  "rest": false,
+                  "description": "- Key name for the hotkey (e.g. \"h\")"
+                },
+                {
+                  "name": "callbackPressed",
+                  "type": "Function|null",
+                  "rest": false,
+                  "description": "- Called when the hotkey is pressed, or null"
+                },
+                {
+                  "name": "callbackReleased",
+                  "type": "Function|null",
+                  "rest": false,
+                  "description": "- Called when the hotkey is released, or null"
+                }
+              ],
+              "returns": {
+                "type": "HSHotkeyModal",
+                "description": "This modal, for chaining"
+              },
+              "source": "javascript"
+            },
+            {
+              "name": "enter",
+              "description": "Enter the modal: its trigger (if any) is disabled and its bound hotkeys are enabled.",
+              "params": [],
+              "returns": {
+                "type": "HSHotkeyModal",
+                "description": "This modal, for chaining"
+              },
+              "source": "javascript"
+            },
+            {
+              "name": "exit",
+              "description": "Exit the modal: its bound hotkeys are disabled and its trigger (if any) is re-enabled.",
+              "params": [],
+              "returns": {
+                "type": "HSHotkeyModal",
+                "description": "This modal, for chaining"
+              },
+              "source": "javascript"
+            },
+            {
+              "name": "destroy",
+              "description": "Destroy the modal, along with its trigger and all hotkeys bound to it.",
+              "params": [],
+              "returns": null,
+              "source": "javascript"
+            }
+          ],
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
+          "lineNumber": 3
         }
       ],
       "description": "Module for creating and managing system-wide hotkeys",
@@ -18193,33 +18286,38 @@
         },
         {
           "name": "runAsync",
-          "rawDocumentation": "* Create and run a task asynchronously\n     * @param {string} launchPath - Full path to the executable\n     * @param {string[]} args - Array of arguments\n     * @param {Object|Function} options - Options object or legacy callback\n     * @param {Object} options.environment - Environment variables (optional)\n     * @param {string} options.workingDirectory - Working directory (optional)\n     * @param {Function} options.onOutput - Callback for streaming output: (stream, data) => {} (optional)\n     * @param {Function} legacyStreamCallback - Legacy streaming callback (optional)\n     * @example\n     * hs.task.runAsync(\"/bin/echo\", [\"hi\"]).then(r => console.log(r.stdout))\n     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}",
+          "rawDocumentation": "* Create and run a task asynchronously\n     * @param {string} launchPath - Full path to the executable\n     * @param {string[]} args - Array of arguments\n     * @param {Object|Function} options - Options object or legacy callback\n     * @param {Object} options.environment - Environment variables (optional)\n     * @param {string} options.workingDirectory - Working directory (optional)\n     * @param {Function} options.onOutput - Callback for streaming output: (stream, data) => {} (optional)\n     * @param {Function} legacyStreamCallback - Legacy streaming callback (optional)\n     * @example\n     * hs.task.runAsync(\"/bin/echo\", [\"hi\"]).then(r => console.log(r.stdout))\n     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The task's result",
           "description": "Create and run a task asynchronously",
           "params": [
             {
               "name": "launchPath",
               "type": "string",
+              "rest": false,
               "description": "- Full path to the executable"
             },
             {
               "name": "args",
               "type": "string[]",
+              "rest": false,
               "description": "- Array of arguments"
             },
             {
               "name": "options",
               "type": "Object|Function",
+              "rest": false,
               "description": "- Options object or legacy callback"
             },
             {
               "name": "legacyStreamCallback",
               "type": "Function",
+              "rest": false,
               "description": "- Legacy streaming callback (optional)"
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "{Promise<{exitCode: number, stdout: string, stderr: string}>}"
+            "type": "Promise<{exitCode: number, stdout: string, stderr: string}>",
+            "description": "The task's result",
+            "promiseType": "{exitCode: number, stdout: string, stderr: string}"
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
@@ -18228,23 +18326,26 @@
         },
         {
           "name": "shell",
-          "rawDocumentation": "* Run a shell command asynchronously\n     * @param {string} command - Shell command to execute\n     * @param {Object} options - Options (same as run)\n     * @example\n     * hs.task.shell(\"ls -la /tmp\").then(r => console.log(r.stdout))\n     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>}",
+          "rawDocumentation": "* Run a shell command asynchronously\n     * @param {string} command - Shell command to execute\n     * @param {Object} options - Options (same as run)\n     * @example\n     * hs.task.shell(\"ls -la /tmp\").then(r => console.log(r.stdout))\n     * @returns {Promise<{exitCode: number, stdout: string, stderr: string}>} The command's result",
           "description": "Run a shell command asynchronously",
           "params": [
             {
               "name": "command",
               "type": "string",
+              "rest": false,
               "description": "- Shell command to execute"
             },
             {
               "name": "options",
               "type": "Object",
+              "rest": false,
               "description": "- Options (same as run)"
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "{Promise<{exitCode: number, stdout: string, stderr: string}>}"
+            "type": "Promise<{exitCode: number, stdout: string, stderr: string}>",
+            "description": "The command's result",
+            "promiseType": "{exitCode: number, stdout: string, stderr: string}"
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
@@ -18253,12 +18354,20 @@
         },
         {
           "name": "parallel",
-          "rawDocumentation": "* Run multiple tasks in parallel\n     * @param {Array<{string, string[], Object|Function, Function}>} tasks - Array of task specifications: [{path, args, options}, ...]\n     * @example\n     * hs.task.parallel([\n     *   [\"/bin/echo\", [\"one\"]],\n     *   [\"/bin/echo\", [\"two\"]]\n     * ]).then(results => console.log(results))\n     * @returns {Promise<Array<{exitCode: number, stdout: string, stderr: string}>>} Array of results",
+          "rawDocumentation": "* Run multiple tasks in parallel\n     * @param {Array<{path?: string, launchPath?: string, args?: string[], options?: Object}>} tasks - Array of task specifications: [{path, args, options}, ...]\n     * @example\n     * hs.task.parallel([\n     *   [\"/bin/echo\", [\"one\"]],\n     *   [\"/bin/echo\", [\"two\"]]\n     * ]).then(results => console.log(results))\n     * @returns {Promise<Array<{exitCode: number, stdout: string, stderr: string}>>} Array of results",
           "description": "Run multiple tasks in parallel",
-          "params": [],
+          "params": [
+            {
+              "name": "tasks",
+              "type": "Array<{path?: string, launchPath?: string, args?: string[], options?: Object}>",
+              "rest": false,
+              "description": "- Array of task specifications: [{path, args, options}, ...]"
+            }
+          ],
           "returns": {
-            "type": "any",
-            "description": "{Promise<Array<{exitCode: number, stdout: string, stderr: string}>>} Array of results"
+            "type": "Promise<Array<{exitCode: number, stdout: string, stderr: string}>>",
+            "description": "Array of results",
+            "promiseType": "Array<{exitCode: number, stdout: string, stderr: string}>"
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
@@ -18267,18 +18376,19 @@
         },
         {
           "name": "builder",
-          "rawDocumentation": "* Create a task builder for fluent API\n     * @param {string} launchPath - Full path to the executable\n     * @example\n     *  const b = hs.task.builder().launchPath(\"/bin/echo\").arguments([\"hi\"])\n     *  b.build().start()\n     * @returns {TaskBuilder}",
+          "rawDocumentation": "* Create a task builder for fluent API\n     * @param {string} launchPath - Full path to the executable\n     * @example\n     *  const b = hs.task.builder().launchPath(\"/bin/echo\").arguments([\"hi\"])\n     *  b.build().start()\n     * @returns {TaskBuilder} A new task builder",
           "description": "Create a task builder for fluent API",
           "params": [
             {
               "name": "launchPath",
               "type": "string",
+              "rest": false,
               "description": "- Full path to the executable"
             }
           ],
           "returns": {
-            "type": "any",
-            "description": "{TaskBuilder}"
+            "type": "TaskBuilder",
+            "description": "A new task builder"
           },
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
@@ -18628,6 +18738,107 @@
               "lineNumber": 145
             }
           ]
+        },
+        {
+          "name": "TaskBuilder",
+          "type": "jsclass",
+          "description": "TaskBuilder class for fluent task construction",
+          "rawDocumentation": "TaskBuilder class for fluent task construction",
+          "properties": [],
+          "methods": [
+            {
+              "name": "withArgs",
+              "description": "Add arguments",
+              "params": [
+                {
+                  "name": "args",
+                  "type": "string[]",
+                  "rest": true,
+                  "description": "- Arguments to add"
+                }
+              ],
+              "returns": {
+                "type": "TaskBuilder",
+                "description": "This builder, for chaining"
+              },
+              "source": "javascript"
+            },
+            {
+              "name": "withEnvironment",
+              "description": "Set environment variables",
+              "params": [
+                {
+                  "name": "environment",
+                  "type": "Object",
+                  "rest": false,
+                  "description": "- Environment variables"
+                }
+              ],
+              "returns": {
+                "type": "TaskBuilder",
+                "description": "This builder, for chaining"
+              },
+              "source": "javascript"
+            },
+            {
+              "name": "inDirectory",
+              "description": "Set working directory",
+              "params": [
+                {
+                  "name": "directory",
+                  "type": "string",
+                  "rest": false,
+                  "description": "- Working directory path"
+                }
+              ],
+              "returns": {
+                "type": "TaskBuilder",
+                "description": "This builder, for chaining"
+              },
+              "source": "javascript"
+            },
+            {
+              "name": "onOutput",
+              "description": "Set output callback",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "Function",
+                  "rest": false,
+                  "description": "- Output callback (stream, data) => {}"
+                }
+              ],
+              "returns": {
+                "type": "TaskBuilder",
+                "description": "This builder, for chaining"
+              },
+              "source": "javascript"
+            },
+            {
+              "name": "run",
+              "description": "Build and run the task",
+              "params": [],
+              "returns": {
+                "type": "Promise<{exitCode: number, stdout: string, stderr: string}>",
+                "description": "The task's result",
+                "promiseType": "{exitCode: number, stdout: string, stderr: string}"
+              },
+              "source": "javascript"
+            },
+            {
+              "name": "build",
+              "description": "Build the task without running",
+              "params": [],
+              "returns": {
+                "type": "HSTask",
+                "description": "The created task, not yet started"
+              },
+              "source": "javascript"
+            }
+          ],
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.task/hs.task.js",
+          "lineNumber": 146
         }
       ],
       "description": "Module for running external processes",
@@ -23238,7 +23449,7 @@
         },
         {
           "name": "findByTitle",
-          "rawDocumentation": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched\nReturns: An array of HSWindow objects with matching titles",
+          "rawDocumentation": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched\nReturns: {HSWindow[]} An array of HSWindow objects with matching titles",
           "description": "Find windows by title\nParameter title: The window title to search for. All windows with titles that include this string, will be matched",
           "params": [
             {
@@ -23249,7 +23460,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "HSWindow[]",
             "description": "An array of HSWindow objects with matching titles"
           },
           "examples": [],
@@ -23260,11 +23471,11 @@
         },
         {
           "name": "currentWindows",
-          "rawDocumentation": "Get all windows for the current application\nReturns: An array of HSWindow objects",
+          "rawDocumentation": "Get all windows for the current application\nReturns: {HSWindow[]} An array of HSWindow objects",
           "description": "Get all windows for the current application",
           "params": [],
           "returns": {
-            "type": "any",
+            "type": "HSWindow[]",
             "description": "An array of HSWindow objects"
           },
           "examples": [],
@@ -23275,7 +23486,7 @@
         },
         {
           "name": "moveToLeftHalf",
-          "rawDocumentation": "Move a window to left half of screen\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise False",
+          "rawDocumentation": "Move a window to left half of screen\nParameter win: An HSWindow object\nReturns: {boolean} True if the operation was successful, otherwise False",
           "description": "Move a window to left half of screen\nParameter win: An HSWindow object",
           "params": [
             {
@@ -23286,7 +23497,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "boolean",
             "description": "True if the operation was successful, otherwise False"
           },
           "examples": [],
@@ -23297,7 +23508,7 @@
         },
         {
           "name": "moveToRightHalf",
-          "rawDocumentation": "Move a window to right half of screen\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise False",
+          "rawDocumentation": "Move a window to right half of screen\nParameter win: An HSWindow object\nReturns: {boolean} True if the operation was successful, otherwise False",
           "description": "Move a window to right half of screen\nParameter win: An HSWindow object",
           "params": [
             {
@@ -23308,7 +23519,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "boolean",
             "description": "True if the operation was successful, otherwise False"
           },
           "examples": [],
@@ -23319,7 +23530,7 @@
         },
         {
           "name": "maximize",
-          "rawDocumentation": "Maximize a window\nParameter win: An HSWindow object\nReturns: True if the operation was successful, otherwise false",
+          "rawDocumentation": "Maximize a window\nParameter win: An HSWindow object\nReturns: {boolean} True if the operation was successful, otherwise false",
           "description": "Maximize a window\nParameter win: An HSWindow object",
           "params": [
             {
@@ -23330,7 +23541,7 @@
             }
           ],
           "returns": {
-            "type": "any",
+            "type": "boolean",
             "description": "True if the operation was successful, otherwise false"
           },
           "examples": [],
@@ -25841,5 +26052,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-30T00:07:15.299Z"
+  "generatedAt": "2026-08-30T22:51:59.121Z"
 }
