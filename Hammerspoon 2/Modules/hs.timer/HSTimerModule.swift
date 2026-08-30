@@ -204,15 +204,13 @@ import JavaScriptCore
     @objc func doAfter(_ seconds: TimeInterval, _ callback: JSFunction) -> HSTimer {
         let timer = HSTimer(interval: seconds, repeats: false, callback: callback)
         timers.add(timer)
-        timer.start()
-        return timer
+        return timer.start()
     }
 
     @objc func doEvery(_ interval: TimeInterval, _ callback: JSFunction) -> HSTimer {
         let timer = HSTimer(interval: interval, repeats: true, callback: callback)
         timers.add(timer)
-        timer.start()
-        return timer
+        return timer.start()
     }
 
     @objc func doAt(_ time: TimeInterval, _ repeatInterval: TimeInterval = 0, _ callback: JSFunction, _ continueOnError: Bool = false) -> HSTimer {
@@ -227,8 +225,7 @@ import JavaScriptCore
 
         let timer = HSTimer(interval: secondsUntilTarget, repeats: false, callback: callback, continueOnError: continueOnError)
         timers.add(timer)
-        timer.start()
-        return timer
+        return timer.start()
     }
 
     // MARK: - Time conversion utilities

@@ -89,17 +89,18 @@
 <h2 class="section-heading">Methods</h2>
     <div class="method" id="start">
         <h3>
-<a href="#start">start() -> None</a>
+<a href="#start">start() -> HSTimer</a>
         </h3>
 
         <div class="description">Start the timer</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">start() -> None</code></pre>
+        <pre><code class="language-javascript">start() -> HSTimer</code></pre>
 
 
         <div class="card-section-label">Returns</div>
-        <div class="return-desc" style="color: var(--text-muted);">None</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">The HSTimer object, for chaining</div>
 
 
         <div class="card-section-label">Example</div>
@@ -107,22 +108,23 @@
 t.start()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L35" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:35</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L36" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:36</a>
         </div>
     </div>
     <div class="method" id="stop">
         <h3>
-<a href="#stop">stop() -> None</a>
+<a href="#stop">stop() -> HSTimer</a>
         </h3>
 
         <div class="description">Stop the timer</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">stop() -> None</code></pre>
+        <pre><code class="language-javascript">stop() -> HSTimer</code></pre>
 
 
         <div class="card-section-label">Returns</div>
-        <div class="return-desc" style="color: var(--text-muted);">None</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">The HSTimer object, for chaining</div>
 
 
         <div class="card-section-label">Example</div>
@@ -130,22 +132,23 @@ t.start()</code></pre>
 t.stop()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L43" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:43</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L45" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:45</a>
         </div>
     </div>
     <div class="method" id="fire">
         <h3>
-<a href="#fire">fire() -> None</a>
+<a href="#fire">fire() -> HSTimer</a>
         </h3>
 
         <div class="description">Immediately fire the timer&#39;s callback</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fire() -> None</code></pre>
+        <pre><code class="language-javascript">fire() -> HSTimer</code></pre>
 
 
         <div class="card-section-label">Returns</div>
-        <div class="return-desc" style="color: var(--text-muted);">None</div>
+        <div class="return-type">HSTimer</div>
+        <div class="return-desc">The HSTimer object, for chaining</div>
 
 
         <div class="card-section-label">Example</div>
@@ -153,7 +156,7 @@ t.stop()</code></pre>
 t.fire()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L51" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:51</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L54" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:54</a>
         </div>
     </div>
     <div class="method" id="running">
@@ -177,7 +180,7 @@ t.fire()</code></pre>
 console.log(t.running())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L60" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:60</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L63" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:63</a>
         </div>
     </div>
     <div class="method" id="nextTrigger">
@@ -201,7 +204,7 @@ console.log(t.running())</code></pre>
 console.log(t.nextTrigger())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L69" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:69</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L72" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:72</a>
         </div>
     </div>
     <div class="method" id="setNextTrigger">
@@ -241,7 +244,7 @@ console.log(t.nextTrigger())</code></pre>
 t.setNextTrigger(10)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L78" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:78</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.timer/HSTimer.swift#L81" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.timer/HSTimer.swift:81</a>
         </div>
     </div>
         </main>
