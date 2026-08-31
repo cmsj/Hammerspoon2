@@ -9145,11 +9145,6 @@ Parameter win: An HSWindow object
      */
     function maximize(win: any): boolean;
 
-    /**
-     * SKIP_DOCS
-     */
-    function cycleWindows(): void;
-
 }
 
 /**

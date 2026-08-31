@@ -23466,7 +23466,7 @@
           "examples": [],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.window/hs.window.js",
-          "lineNumber": 12,
+          "lineNumber": 18,
           "type": "function"
         },
         {
@@ -23481,7 +23481,7 @@
           "examples": [],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.window/hs.window.js",
-          "lineNumber": 21,
+          "lineNumber": 27,
           "type": "function"
         },
         {
@@ -23503,7 +23503,7 @@
           "examples": [],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.window/hs.window.js",
-          "lineNumber": 32,
+          "lineNumber": 44,
           "type": "function"
         },
         {
@@ -23525,7 +23525,7 @@
           "examples": [],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.window/hs.window.js",
-          "lineNumber": 53,
+          "lineNumber": 61,
           "type": "function"
         },
         {
@@ -23547,19 +23547,7 @@
           "examples": [],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.window/hs.window.js",
-          "lineNumber": 75,
-          "type": "function"
-        },
-        {
-          "name": "cycleWindows",
-          "rawDocumentation": "SKIP_DOCS",
-          "description": "SKIP_DOCS",
-          "params": [],
-          "returns": null,
-          "examples": [],
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.window/hs.window.js",
-          "lineNumber": 93,
+          "lineNumber": 79,
           "type": "function"
         }
       ],
@@ -26052,5 +26040,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-30T22:51:59.121Z"
+  "generatedAt": "2026-08-30T23:01:06.775Z"
 }
