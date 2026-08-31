@@ -120,6 +120,7 @@ final class SettingsManager {
         case relaunchOnReload
         case dockMenuBehaviour
         case hasCompletedOnboarding
+        case debugLoggingEnabled
 
         var id: String { "\(self)" }
 
@@ -134,6 +135,8 @@ final class SettingsManager {
             case .dockMenuBehaviour:
                 return DockMenubarType.both.rawValue
             case .hasCompletedOnboarding:
+                return false
+            case .debugLoggingEnabled:
                 return false
             }
         }
@@ -169,6 +172,13 @@ final class SettingsManager {
             notifyDelegates()
         }
     }
+    var debugLoggingEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(debugLoggingEnabled, forKey: Keys.debugLoggingEnabled.rawValue)
+            akSetDebugLoggingEnabled(debugLoggingEnabled)
+            notifyDelegates()
+        }
+    }
 
     @ObservationIgnored
     private var defaultsObserver: (any NSObjectProtocol)?
@@ -179,16 +189,23 @@ final class SettingsManager {
             Keys.consoleHistoryLength.rawValue: Keys.consoleHistoryLength.defaultValue,
             Keys.relaunchOnReload.rawValue: Keys.relaunchOnReload.defaultValue,
             Keys.dockMenuBehaviour.rawValue: Keys.dockMenuBehaviour.defaultValue,
-            Keys.hasCompletedOnboarding.rawValue: Keys.hasCompletedOnboarding.defaultValue
+            Keys.hasCompletedOnboarding.rawValue: Keys.hasCompletedOnboarding.defaultValue,
+            Keys.debugLoggingEnabled.rawValue: Keys.debugLoggingEnabled.defaultValue
         ])
         configLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
             ?? (Keys.configLocation.defaultValue as! URL)
         consoleHistoryLength = UserDefaults.standard.integer(forKey: Keys.consoleHistoryLength.rawValue)
         relaunchOnReload = UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
         hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding.rawValue)
+        debugLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.debugLoggingEnabled.rawValue)
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
         dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
+
+        // didSet does not fire for assignments made inside this initializer, so the
+        // AKDebug gate needs to be seeded explicitly to match the persisted value.
+        // This must come after every stored property is initialized.
+        akSetDebugLoggingEnabled(debugLoggingEnabled)
 
         defaultsObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
@@ -225,6 +242,9 @@ final class SettingsManager {
 
         let newHasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding.rawValue)
         if newHasCompletedOnboarding != hasCompletedOnboarding { hasCompletedOnboarding = newHasCompletedOnboarding }
+
+        let newDebugLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.debugLoggingEnabled.rawValue)
+        if newDebugLoggingEnabled != debugLoggingEnabled { debugLoggingEnabled = newDebugLoggingEnabled }
     }
 }
 
@@ -234,6 +254,7 @@ extension SettingsManager: SettingsManagerProtocol {
         configLocation = Keys.configLocation.defaultValue as! URL
         consoleHistoryLength = Keys.consoleHistoryLength.defaultValue as! Int
         relaunchOnReload = Keys.relaunchOnReload.defaultValue as! Bool
+        debugLoggingEnabled = Keys.debugLoggingEnabled.defaultValue as! Bool
 
         let dockMenuType = DockMenubarType(rawValue: Keys.dockMenuBehaviour.defaultValue as! String)!
         dockMenuBehaviour = dockMenuType

@@ -15,11 +15,12 @@ import CommandLineKit
 // MARK: - Log levels (must match HammerspoonLogType raw values)
 
 private enum LogLevel: Int, CaseIterable {
-    case trace = 0, info = 1, warning = 2, error = 3, console = 4
+    case debug = 0, trace = 10, info = 20, warning = 30, error = 40, console = 50
 
     nonisolated init?(string: String) {
         switch string.lowercased() {
-        case "trace", "debug":              self = .trace
+        case "debug":                       self = .debug
+        case "trace":                       self = .trace
         case "info":                        self = .info
         case "warning", "warn":             self = .warning
         case "error":                       self = .error
@@ -30,7 +31,8 @@ private enum LogLevel: Int, CaseIterable {
 
     nonisolated var textProperties: TextProperties {
         switch self {
-        case .trace:   return TextProperties(.grey, nil)
+        case .debug:   return TextProperties(.grey, nil)
+        case .trace:   return TextProperties(.grey, nil, .bold)
         case .info:    return TextProperties(.blue, nil, .bold)
         case .warning: return TextProperties(.yellow, nil, .bold)
         case .error:   return TextProperties(.red, nil, .bold)
@@ -40,6 +42,7 @@ private enum LogLevel: Int, CaseIterable {
 
     nonisolated var label: String {
         switch self {
+        case .debug:   return "GCDBG  "
         case .trace:   return "DEBUG  "
         case .info:    return "INFO   "
         case .warning: return "WARNING"
@@ -127,7 +130,7 @@ private actor HSIPCClient {
 // MARK: - Argument parsing
 
 private var flags = Flags()
-private let logLevelFlag = flags.string("l", "log-level", description: "Show log messages at or above this level.\nLevels: trace  info  warning  error  javascript\nDefault: none (no log messages shown)")
+private let logLevelFlag = flags.string("l", "log-level", description: "Show log messages at or above this level.\nLevels: debug  trace  info  warning  error  javascript\nDefault: none (no log messages shown)")
 private let noPromptFlag = flags.option(nil, "no-prompt",   description: "Suppress 'hs2> ' prompt (useful when piping input)")
 private let helpFlag     = flags.option("h", "help",        description: "Show this help")
 

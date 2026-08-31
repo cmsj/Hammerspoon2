@@ -104,10 +104,13 @@ final class HSIPCServer: NSObject {
     // MARK: - Log broadcasting
 
     private func startObservingLog() {
-        broadcastedEntryIDs = Set(HammerspoonLog.shared.entries.map { $0.id })
+        broadcastedEntryIDs = Set(HammerspoonLog.shared.entries(minimumLevel: .Debug).map { $0.id })
         observationTask = Task { [weak self] in
+            // Watch the cheap sequence counter rather than the full merged/filtered
+            // `entries(minimumLevel:)`, so this doesn't pay for a flatten+filter+sort
+            // of every per-level buffer on every single log call.
             let changes = Observations {
-                HammerspoonLog.shared.entries.count
+                HammerspoonLog.shared.latestSequence
             }
             for await _ in changes {
                 self?.broadcastNewEntries()
@@ -117,7 +120,7 @@ final class HSIPCServer: NSObject {
 
     private func broadcastNewEntries() {
         guard !connections.isEmpty else { return }
-        let entries = HammerspoonLog.shared.entries
+        let entries = HammerspoonLog.shared.entries(minimumLevel: .Debug)
         var toSend: [HammerspoonLogEntry] = []
 
         for entry in entries where !broadcastedEntryIDs.contains(entry.id) {

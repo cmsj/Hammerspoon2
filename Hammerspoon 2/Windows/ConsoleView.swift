@@ -32,11 +32,12 @@ struct ConsoleView: View {
 
     @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Trace
 
-    private var filteredEntries: [HammerspoonLogEntry] {
-        logs.entries.filter {
-            $0.logType.rawValue >= minimumLogLevel.rawValue &&
-            (searchString.isEmpty || $0.msg.localizedStandardContains(searchString))
-        }
+    /// Bounds how many entries get laid out regardless of how much history the
+    /// per-level buffers retain, so render cost doesn't grow just because retention did.
+    private let maxRenderedEntries = 500
+
+    private var displayedEntries: [HammerspoonLogEntry] {
+        Array(logs.entries(minimumLevel: minimumLogLevel, searchString: searchString).suffix(maxRenderedEntries))
     }
 
     private func formatEntry(_ entry: HammerspoonLogEntry) -> String {
@@ -169,40 +170,24 @@ struct ConsoleView: View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    let filteredEntries = logs.entries.filter {
-                        if $0.logType.rawValue < minimumLogLevel.rawValue { return false }
-                        if searchString == "" {
-                            return true
-                        } else {
-                            return $0.msg.contains(searchString)
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(displayedEntries) { entry in
+                            Text(formatEntry(entry))
+                                .multilineTextAlignment(.leading)
+                                .foregroundColor(colorForLogType(entry.logType))
+                                .id(entry.id)
                         }
                     }
-
-                    let logText: AttributedString = {
-                        var result = AttributedString()
-                        for (index, entry) in filteredEntries.enumerated() {
-                            var part = AttributedString(formatEntry(entry))
-                            part.foregroundColor = colorForLogType(entry.logType)
-                            result.append(part)
-                            if index < filteredEntries.count - 1 {
-                                result.append(AttributedString("\n"))
-                            }
-                        }
-                        return result
-                    }()
-
-                    Text(logText)
-                        .multilineTextAlignment(.leading)
-                        .fontDesign(.monospaced)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
+                    .textSelection(.enabled)
+                    .fontDesign(.monospaced)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
 
                     Color.clear
                         .frame(height: 0)
                         .id("logBottom")
                 }
-                .onChange(of: logs.entries) {
+                .onChange(of: displayedEntries) {
                     proxy.scrollTo("logBottom", anchor: .bottom)
                 }
             }
@@ -252,9 +237,8 @@ struct ConsoleView: View {
                     savePanel.nameFieldStringValue = "hammerspoon-console-\(Date().timeIntervalSince1970).txt"
                     savePanel.begin { response in
                         if response == .OK, let url = savePanel.url {
-                            let logText = logs.entries
-                                .filter { $0.logType != .Autocomplete &&
-                                          $0.logType.rawValue >= minimumLogLevel.rawValue }
+                            let logText = logs.entries(minimumLevel: minimumLogLevel)
+                                .filter { $0.logType != .Autocomplete }
                                 .map { formatEntry($0) }
                                 .joined(separator: "\n")
                             do {
@@ -266,6 +250,15 @@ struct ConsoleView: View {
                             }
                         }
                     }
+                }
+            }
+            ToolbarItem(id: "copyVisibleLogs") {
+                Button("Copy Visible Logs") {
+                    let logText = displayedEntries
+                        .map { formatEntry($0) }
+                        .joined(separator: "\n")
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(logText, forType: .string)
                 }
             }
             ToolbarItem(id: "clearLogs") {

@@ -54,6 +54,12 @@ struct SettingsAdvancedView: View {
                             .fixedSize(horizontal: true, vertical: true)
                     }
                     GridRow {
+                        Text("Enable GC/lifecycle debug logging:")
+                            .gridColumnAlignment(.trailing)
+                        Toggle("Enable GC/lifecycle debug logging", isOn: Bindable(settingsManager).debugLoggingEnabled)
+                            .labelsHidden()
+                    }
+                    GridRow {
                         Spacer()
                     }
                     GridRow {
