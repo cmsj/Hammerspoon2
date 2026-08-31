@@ -594,14 +594,17 @@ import AppKit
         }
         let flags = CGEventFlags.from(modifierNames: mods)
 
-        let source = CGEventSource(stateID: .hidSystemState)
+        // A private-state source is used (rather than .hidSystemState) so the synthesized
+        // event's flags don't pick up whatever real modifier keys happen to be physically
+        // held at post time (e.g. still-down hotkey modifiers) — flags are set explicitly below.
+        let source = CGEventSource(stateID: .privateState)
 
         if let downEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true) {
             downEvent.flags = flags
             downEvent.post(tap: .cghidEventTap)
         }
 
-        usleep(50000)
+        usleep(5000)
 
         if let upEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) {
             upEvent.flags = flags
@@ -610,28 +613,32 @@ import AppKit
     }
 
     @objc func keyStrokes(_ text: String) {
-        let source = CGEventSource(stateID: .hidSystemState)
-        var events: [CGEvent] = []
+        // A private-state source (rather than .hidSystemState) means freshly created events
+        // start with empty flags instead of inheriting whatever real modifier keys are
+        // currently held — otherwise still-down hotkey modifiers can leak into every
+        // typed character and produce garbled/modified output.
+        let source = CGEventSource(stateID: .privateState)
+        guard let keyDownEvent = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
+              let keyUpEvent = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) else {
+            AKError("hs.eventtap.keyStrokes: Unable to construct key events")
+            return
+        }
 
-        // Prepare an array of events we want to post
         for scalar in text.unicodeScalars {
             guard scalar.value <= 0xFFFF else { continue }
             var ch = UniChar(scalar.value)
 
-            // For each event we need to post both a keyDown and a keyUp version.
-            for keyPosition in [true, false] {
-                guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: keyPosition) else {
-                    AKError("Unable to construct event for \(scalar)")
-                    return
-                }
-                unsafe event.keyboardSetUnicodeString(stringLength: 1, unicodeString: &ch)
-                events.append(event)
-            }
-        }
+            keyDownEvent.flags = CGEventFlags()
+            unsafe keyDownEvent.keyboardSetUnicodeString(stringLength: 1, unicodeString: &ch)
+            keyDownEvent.post(tap: .cghidEventTap)
 
-        for event in events {
-            event.post(tap: .cghidEventTap)
-            usleep(50000)
+            usleep(5000)
+
+            keyUpEvent.flags = CGEventFlags()
+            unsafe keyUpEvent.keyboardSetUnicodeString(stringLength: 1, unicodeString: &ch)
+            keyUpEvent.post(tap: .cghidEventTap)
+
+            usleep(5000)
         }
     }
 
