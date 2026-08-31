@@ -14,40 +14,40 @@ import CommandLineKit
 
 // MARK: - Log levels (must match HammerspoonLogType raw values)
 
-private enum LogLevel: Int, CaseIterable {
-    case debug = 0, trace = 10, info = 20, warning = 30, error = 40, console = 50
-
+extension HammerspoonLogType {
     nonisolated init?(string: String) {
         switch string.lowercased() {
-        case "debug":                       self = .debug
-        case "trace":                       self = .trace
-        case "info":                        self = .info
-        case "warning", "warn":             self = .warning
-        case "error":                       self = .error
-        case "javascript", "console", "js": self = .console
+        case "debug":                       self = .Debug
+        case "trace":                       self = .Trace
+        case "info":                        self = .Info
+        case "warning", "warn":             self = .Warning
+        case "error":                       self = .Error
+        case "javascript", "console", "js": self = .Console
         default: return nil
         }
     }
 
     nonisolated var textProperties: TextProperties {
         switch self {
-        case .debug:   return TextProperties(.grey, nil)
-        case .trace:   return TextProperties(.grey, nil, .bold)
-        case .info:    return TextProperties(.blue, nil, .bold)
-        case .warning: return TextProperties(.yellow, nil, .bold)
-        case .error:   return TextProperties(.red, nil, .bold)
-        case .console: return TextProperties(.green, nil, .bold)
+        case .Debug:   return TextProperties(.grey, nil)
+        case .Trace:   return TextProperties(.grey, nil, .bold)
+        case .Info:    return TextProperties(.blue, nil, .bold)
+        case .Warning: return TextProperties(.yellow, nil, .bold)
+        case .Error:   return TextProperties(.red, nil, .bold)
+        case .Console: return TextProperties(.green, nil, .bold)
+        case .Autocomplete: return TextProperties(.green, nil, .bold)
         }
     }
 
     nonisolated var label: String {
         switch self {
-        case .debug:   return "GCDBG  "
-        case .trace:   return "DEBUG  "
-        case .info:    return "INFO   "
-        case .warning: return "WARNING"
-        case .error:   return "ERROR  "
-        case .console: return "JS     "
+        case .Debug:   return "GCDBG  "
+        case .Trace:   return "DEBUG  "
+        case .Info:    return "INFO   "
+        case .Warning: return "WARNING"
+        case .Error:   return "ERROR  "
+        case .Console: return "JS     "
+        case .Autocomplete: return "AUTOCMPL"
         }
     }
 }
@@ -65,7 +65,7 @@ private nonisolated func writeStderr(_ s: String) {
 // nonisolated so NSXPCConnection can call logEntry from its internal queue.
 private nonisolated final class HSIPCLogDelegate: NSObject, HSIPCClientProtocol {
     nonisolated func logEntry(level: String, message: String) {
-        guard let logLevel = LogLevel(string: level) else { return }
+        guard let logLevel = HammerspoonLogType(string: level) else { return }
         // '\n' before the message keeps output clean even when a readline prompt is showing.
         print("\n\(logLevel.textProperties.apply(to: "[\(logLevel.label)]")) \(message)")
     }
@@ -160,7 +160,7 @@ private let showPrompt = !noPromptFlag.wasSet
 private let minLogLevel: Int = {
     guard let str = logLevelFlag.value else { return Int.max }
     if str.lowercased() == "none" { return Int.max }
-    return LogLevel(string: str)?.rawValue ?? Int.max
+    return HammerspoonLogType(string: str)?.rawValue ?? Int.max
 }()
 
 // MARK: - Completion helpers
