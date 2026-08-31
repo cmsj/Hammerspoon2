@@ -76,6 +76,38 @@ import AXSwift
     /// const wins = hs.window.orderedWindows()
     /// ```
     @objc func orderedWindows() -> [HSWindow]
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.window.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var focused: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var findByTitle: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var currentWindows: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var moveToLeftHalf: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var moveToRightHalf: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var maximize: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var cycleWindows: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var grid: JSValue? { get set }
+
+    /// SKIP_DOCS
+    @objc var tiling: JSValue? { get set }
 }
 
 // MARK: - Implementation
@@ -94,7 +126,15 @@ import AXSwift
     }
 
     func shutdown() {
-        // No cleanup needed for this module
+        focused = nil
+        findByTitle = nil
+        currentWindows = nil
+        moveToLeftHalf = nil
+        moveToRightHalf = nil
+        maximize = nil
+        cycleWindows = nil
+        grid = nil
+        tiling = nil
     }
 
     isolated deinit {
@@ -108,6 +148,17 @@ import AXSwift
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    // MARK: - Swift-retained storage for JS-defined functions
+    @objc var focused: JSFunction? = nil
+    @objc var findByTitle: JSFunction? = nil
+    @objc var currentWindows: JSFunction? = nil
+    @objc var moveToLeftHalf: JSFunction? = nil
+    @objc var moveToRightHalf: JSFunction? = nil
+    @objc var maximize: JSFunction? = nil
+    @objc var cycleWindows: JSFunction? = nil
+    @objc var grid: JSValue? = nil
+    @objc var tiling: JSValue? = nil
 
     // MARK: - Helper Methods
     private func checkAccessibility() -> Bool {

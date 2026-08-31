@@ -1,5 +1,11 @@
 // hs.window.js
 // JavaScript enhancements for the hs.window module
+//
+// The functions/objects below are assigned onto properties that hs.window (HSWindowModule)
+// pre-declares in Swift. That's required, not stylistic: JavaScriptCore drops dynamically-added
+// properties on a JSExport-wrapped object the first time it garbage collects that object's JS
+// wrapper. Pre-declared @objc properties are real Swift-retained storage, so they survive GC.
+// See issue #185.
 
 // Convenience function to get the focused window
 // (alias for the module method)
@@ -26,6 +32,12 @@ hs.window.currentWindows = function() {
     return hs.window.windowsForApp(app.pid);
 };
 
+// Get the usable frame of the screen a window is on, falling back to the main screen.
+function screenFrameFor(win) {
+    const screen = (win && win.screen) || hs.screen.main();
+    return screen ? screen.frame : null;
+}
+
 /// Move a window to left half of screen
 /// Parameter win: An HSWindow object
 /// Returns: {boolean} True if the operation was successful, otherwise False
@@ -35,16 +47,12 @@ hs.window.moveToLeftHalf = function(win) {
         return false;
     }
 
-    const frame = win.frame;
-    if (!frame) {
+    const screenFrame = screenFrameFor(win);
+    if (!screenFrame) {
         return false;
     }
 
-    // Get screen dimensions (simplified - assumes main screen)
-    const screenWidth = 1920; // TODO: Get actual screen width
-    const screenHeight = 1080; // TODO: Get actual screen height
-
-    return win.setFrame(0, 0, Math.floor(screenWidth / 2), screenHeight);
+    return win.setFrame(screenFrame.x, screenFrame.y, Math.floor(screenFrame.w / 2), screenFrame.h);
 };
 
 /// Move a window to right half of screen
@@ -56,17 +64,13 @@ hs.window.moveToRightHalf = function(win) {
         return false;
     }
 
-    const frame = win.frame;
-    if (!frame) {
+    const screenFrame = screenFrameFor(win);
+    if (!screenFrame) {
         return false;
     }
 
-    // Get screen dimensions (simplified - assumes main screen)
-    const screenWidth = 1920; // TODO: Get actual screen width
-    const screenHeight = 1080; // TODO: Get actual screen height
-
-    const halfWidth = Math.floor(screenWidth / 2);
-    return win.setFrame(halfWidth, 0, halfWidth, screenHeight);
+    const halfWidth = Math.floor(screenFrame.w / 2);
+    return win.setFrame(screenFrame.x + halfWidth, screenFrame.y, halfWidth, screenFrame.h);
 };
 
 /// Maximize a window
@@ -78,27 +82,30 @@ hs.window.maximize = function(win) {
         return false;
     }
 
-    // Get screen dimensions (simplified - assumes main screen)
-    const screenWidth = 1920; // TODO: Get actual screen width
-    const screenHeight = 1080; // TODO: Get actual screen height
+    const screenFrame = screenFrameFor(win);
+    if (!screenFrame) {
+        return false;
+    }
 
-    return win.setFrame(0, 0, screenWidth, screenHeight);
+    return win.setFrame(screenFrame.x, screenFrame.y, screenFrame.w, screenFrame.h);
 };
 
 // Cycle through windows
-hs.window._cycleIndex = 0;
-
 // FIXME: This seems kinda lame, and can only be called by one function at a time. Decide if we want this, most likely remove it.
 /// SKIP_DOCS
-hs.window.cycleWindows = function() {
-    const windows = hs.window.orderedWindows().filter(w => w.isVisible);
-    if (windows.length === 0) {
-        return;
-    }
+hs.window.cycleWindows = (function() {
+    let cycleIndex = 0;
 
-    hs.window._cycleIndex = (hs.window._cycleIndex + 1) % windows.length;
-    windows[hs.window._cycleIndex].focus();
-};
+    return function() {
+        const windows = hs.window.orderedWindows().filter(w => w.isVisible);
+        if (windows.length === 0) {
+            return;
+        }
+
+        cycleIndex = (cycleIndex + 1) % windows.length;
+        windows[cycleIndex].focus();
+    };
+})();
 
 // FIXME: Everything below this seems dumb and out of place. Figure out what to do about submodules, since that isn't a concept we've introduced so far.
 // Window grid functionality
@@ -112,15 +119,16 @@ hs.window.grid = {
             return false;
         }
 
-        // Get screen dimensions (simplified - assumes main screen)
-        const screenWidth = 1920; // TODO: Get actual screen width
-        const screenHeight = 1080; // TODO: Get actual screen height
+        const screenFrame = screenFrameFor(win);
+        if (!screenFrame) {
+            return false;
+        }
 
-        const cellWidth = Math.floor(screenWidth / grid.cols);
-        const cellHeight = Math.floor(screenHeight / grid.rows);
+        const cellWidth = Math.floor(screenFrame.w / grid.cols);
+        const cellHeight = Math.floor(screenFrame.h / grid.rows);
 
-        const x = cell.col * cellWidth;
-        const y = cell.row * cellHeight;
+        const x = screenFrame.x + cell.col * cellWidth;
+        const y = screenFrame.y + cell.row * cellHeight;
         const w = cell.colSpan * cellWidth;
         const h = cell.rowSpan * cellHeight;
 
@@ -144,10 +152,12 @@ hs.window.tiling = {
             return false;
         }
 
-        const screenWidth = 1920;
-        const screenHeight = 1080;
+        const screenFrame = screenFrameFor(win);
+        if (!screenFrame) {
+            return false;
+        }
 
-        return win.setFrame(0, 0, screenWidth, Math.floor(screenHeight / 2));
+        return win.setFrame(screenFrame.x, screenFrame.y, screenFrame.w, Math.floor(screenFrame.h / 2));
     },
 
     bottom: function(win) {
@@ -156,11 +166,13 @@ hs.window.tiling = {
             return false;
         }
 
-        const screenWidth = 1920;
-        const screenHeight = 1080;
-        const halfHeight = Math.floor(screenHeight / 2);
+        const screenFrame = screenFrameFor(win);
+        if (!screenFrame) {
+            return false;
+        }
 
-        return win.setFrame(0, halfHeight, screenWidth, halfHeight);
+        const halfHeight = Math.floor(screenFrame.h / 2);
+        return win.setFrame(screenFrame.x, screenFrame.y + halfHeight, screenFrame.w, halfHeight);
     },
 
     topLeft: function(win) {
@@ -169,10 +181,12 @@ hs.window.tiling = {
             return false;
         }
 
-        const screenWidth = 1920;
-        const screenHeight = 1080;
+        const screenFrame = screenFrameFor(win);
+        if (!screenFrame) {
+            return false;
+        }
 
-        return win.setFrame(0, 0, Math.floor(screenWidth / 2), Math.floor(screenHeight / 2));
+        return win.setFrame(screenFrame.x, screenFrame.y, Math.floor(screenFrame.w / 2), Math.floor(screenFrame.h / 2));
     },
 
     topRight: function(win) {
@@ -181,11 +195,13 @@ hs.window.tiling = {
             return false;
         }
 
-        const screenWidth = 1920;
-        const screenHeight = 1080;
-        const halfWidth = Math.floor(screenWidth / 2);
+        const screenFrame = screenFrameFor(win);
+        if (!screenFrame) {
+            return false;
+        }
 
-        return win.setFrame(halfWidth, 0, halfWidth, Math.floor(screenHeight / 2));
+        const halfWidth = Math.floor(screenFrame.w / 2);
+        return win.setFrame(screenFrame.x + halfWidth, screenFrame.y, halfWidth, Math.floor(screenFrame.h / 2));
     },
 
     bottomLeft: function(win) {
@@ -194,11 +210,13 @@ hs.window.tiling = {
             return false;
         }
 
-        const screenWidth = 1920;
-        const screenHeight = 1080;
-        const halfHeight = Math.floor(screenHeight / 2);
+        const screenFrame = screenFrameFor(win);
+        if (!screenFrame) {
+            return false;
+        }
 
-        return win.setFrame(0, halfHeight, Math.floor(screenWidth / 2), halfHeight);
+        const halfHeight = Math.floor(screenFrame.h / 2);
+        return win.setFrame(screenFrame.x, screenFrame.y + halfHeight, Math.floor(screenFrame.w / 2), halfHeight);
     },
 
     bottomRight: function(win) {
@@ -207,11 +225,13 @@ hs.window.tiling = {
             return false;
         }
 
-        const screenWidth = 1920;
-        const screenHeight = 1080;
-        const halfWidth = Math.floor(screenWidth / 2);
-        const halfHeight = Math.floor(screenHeight / 2);
+        const screenFrame = screenFrameFor(win);
+        if (!screenFrame) {
+            return false;
+        }
 
-        return win.setFrame(halfWidth, halfHeight, halfWidth, halfHeight);
+        const halfWidth = Math.floor(screenFrame.w / 2);
+        const halfHeight = Math.floor(screenFrame.h / 2);
+        return win.setFrame(screenFrame.x + halfWidth, screenFrame.y + halfHeight, halfWidth, halfHeight);
     }
 };
