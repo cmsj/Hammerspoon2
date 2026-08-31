@@ -461,7 +461,7 @@ evt.post()</code></pre>
         <h3><a href="#keyStroke">hs.eventtap.keyStroke(mods, key) -> None</a></h3>
 
         <div class="description">Send a key down and key up event with optional modifier keys.
-A 50 ms pause is inserted between the key-down and key-up events to improve
+A 5 ms pause is inserted between the key-down and key-up events to improve
 compatibility with applications that miss very fast synthetic keystrokes.</div>
 
         <div class="card-section-label">Declaration</div>
@@ -506,7 +506,7 @@ hs.eventtap.keyStroke([&quot;cmd&quot;, &quot;shift&quot;], &quot;4&quot;)  // S
         <h3><a href="#keyStrokes">hs.eventtap.keyStrokes(text) -> None</a></h3>
 
         <div class="description">Type a string of characters as individual key events.
-A 50 ms pause is inserted between each key-down and key-up event.</div>
+A 5 ms pause is inserted between each key-down and key-up event.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">hs.eventtap.keyStrokes(text) -> None</code></pre>

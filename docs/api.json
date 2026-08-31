@@ -4901,8 +4901,8 @@
           "name": "keyStroke",
           "signature": "func keyStroke(_ mods: [String], _ key: String)",
           "isStatic": false,
-          "rawDocumentation": "Send a key down and key up event with optional modifier keys.\n\nA 50 ms pause is inserted between the key-down and key-up events to improve\ncompatibility with applications that miss very fast synthetic keystrokes.\n\n- Parameters:\n  - mods: An array of modifier names (e.g. [\"cmd\", \"shift\"])\n  - key: A key name or single character (e.g. \"a\", \"space\", \"return\")\n- Example:\n```js\nhs.eventtap.keyStroke([\"cmd\"], \"c\")      // Copy\nhs.eventtap.keyStroke([\"cmd\", \"shift\"], \"4\")  // Screenshot selection\n```",
-          "description": "Send a key down and key up event with optional modifier keys.\nA 50 ms pause is inserted between the key-down and key-up events to improve\ncompatibility with applications that miss very fast synthetic keystrokes.",
+          "rawDocumentation": "Send a key down and key up event with optional modifier keys.\n\nA 5 ms pause is inserted between the key-down and key-up events to improve\ncompatibility with applications that miss very fast synthetic keystrokes.\n\n- Parameters:\n  - mods: An array of modifier names (e.g. [\"cmd\", \"shift\"])\n  - key: A key name or single character (e.g. \"a\", \"space\", \"return\")\n- Example:\n```js\nhs.eventtap.keyStroke([\"cmd\"], \"c\")      // Copy\nhs.eventtap.keyStroke([\"cmd\", \"shift\"], \"4\")  // Screenshot selection\n```",
+          "description": "Send a key down and key up event with optional modifier keys.\nA 5 ms pause is inserted between the key-down and key-up events to improve\ncompatibility with applications that miss very fast synthetic keystrokes.",
           "params": [
             {
               "name": "mods",
@@ -4935,8 +4935,8 @@
           "name": "keyStrokes",
           "signature": "func keyStrokes(_ text: String)",
           "isStatic": false,
-          "rawDocumentation": "Type a string of characters as individual key events.\n\nA 50 ms pause is inserted between each key-down and key-up event.\n\n- Parameter text: The string to type\n- Example:\n```js\nhs.eventtap.keyStrokes(\"Hello, World!\")\n```",
-          "description": "Type a string of characters as individual key events.\nA 50 ms pause is inserted between each key-down and key-up event.",
+          "rawDocumentation": "Type a string of characters as individual key events.\n\nA 5 ms pause is inserted between each key-down and key-up event.\n\n- Parameter text: The string to type\n- Example:\n```js\nhs.eventtap.keyStrokes(\"Hello, World!\")\n```",
+          "description": "Type a string of characters as individual key events.\nA 5 ms pause is inserted between each key-down and key-up event.",
           "params": [
             {
               "name": "text",
@@ -26040,5 +26040,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-31T14:26:51.751Z"
+  "generatedAt": "2026-08-31T15:04:03.274Z"
 }

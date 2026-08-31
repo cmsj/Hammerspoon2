@@ -2,43 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>org.hammerspoon.Hammerspoon2</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>hammerspoon2</string>
-			</array>
-		</dict>
-	</array>
-	<key>NSAccessibilityUsageDescription</key>
-	<string>Hammerspoon 2 requires accessibility permissions to control your Mac</string>
-	<key>SUFeedURL</key>
-	<string>https://www.hammerspoon.org/appcast2.xml</string>
-	<key>UTExportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>net.tenshu.hammerspoon2.spoon</string>
-			<key>UTTypeDescription</key>
-			<string>Hammerspoon 2 Spoon</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>com.apple.package</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>spoon2</string>
-				</array>
-			</dict>
-		</dict>
-	</array>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -52,6 +15,75 @@
 			<array>
 				<string>net.tenshu.hammerspoon2.spoon</string>
 			</array>
+		</dict>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>app.hammerspoon2.Hammerspoon</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>hammerspoon2</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>app.hammerspoon2.http</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>http</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>app.hammerspoon2.https</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>https</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>app.hammerspoon2.mailto</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>mailto</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>Hammerspoon 2 requires accessibility permissions to control your Mac</string>
+	<key>SUFeedURL</key>
+	<string>https://www.hammerspoon.org/appcast2.xml</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.package</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Hammerspoon 2 Spoon</string>
+			<key>UTTypeIcons</key>
+			<dict/>
+			<key>UTTypeIdentifier</key>
+			<string>app.hammerspoon2.spoon</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>spoon2</string>
+				</array>
+			</dict>
 		</dict>
 	</array>
 </dict>

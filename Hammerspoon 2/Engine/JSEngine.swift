@@ -217,7 +217,7 @@ struct RequireInstaller: JSContextInstallable {
         let fileExists: @convention(block) (String) -> Bool = { path in
             let expanded = NSString(string: path).expandingTildeInPath
             var isDir: ObjCBool = false
-            let exists = FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir)
+            let exists = unsafe FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir)
             return exists && !isDir.boolValue
         }
 

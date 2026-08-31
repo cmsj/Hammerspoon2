@@ -211,7 +211,7 @@ import AppKit
 
     /// Send a key down and key up event with optional modifier keys.
     ///
-    /// A 50 ms pause is inserted between the key-down and key-up events to improve
+    /// A 5 ms pause is inserted between the key-down and key-up events to improve
     /// compatibility with applications that miss very fast synthetic keystrokes.
     ///
     /// - Parameters:
@@ -226,7 +226,7 @@ import AppKit
 
     /// Type a string of characters as individual key events.
     ///
-    /// A 50 ms pause is inserted between each key-down and key-up event.
+    /// A 5 ms pause is inserted between each key-down and key-up event.
     ///
     /// - Parameter text: The string to type
     /// - Example:

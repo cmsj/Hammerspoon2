@@ -2328,7 +2328,7 @@ Coordinates are in **Hammerspoon screen coordinates** (top-left origin, y increa
 
     /**
      * Send a key down and key up event with optional modifier keys.
-A 50 ms pause is inserted between the key-down and key-up events to improve
+A 5 ms pause is inserted between the key-down and key-up events to improve
 compatibility with applications that miss very fast synthetic keystrokes.
      * @param mods An array of modifier names (e.g. ["cmd", "shift"])
      * @param key A key name or single character (e.g. "a", "space", "return")
@@ -2337,7 +2337,7 @@ compatibility with applications that miss very fast synthetic keystrokes.
 
     /**
      * Type a string of characters as individual key events.
-A 50 ms pause is inserted between each key-down and key-up event.
+A 5 ms pause is inserted between each key-down and key-up event.
      * @param text The string to type
      */
     function keyStrokes(text: string): void;
