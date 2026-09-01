@@ -155,7 +155,7 @@ import CoreGraphics
     }
 
     isolated deinit {
-        AKDebug("deinit of HSEventTapEvent")
+        AKGarbage("deinit of HSEventTapEvent")
     }
 
     @objc var type: Int {

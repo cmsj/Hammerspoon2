@@ -231,7 +231,7 @@ nonisolated private func hsStreamDeckInputReportCallback(
     isolated deinit {
         destroy()
         unsafe reportBuffer.deallocate()
-        AKDebug("Deinit of HSStreamDeckDevice(\(identifier))")
+        AKGarbage("Deinit of HSStreamDeckDevice(\(identifier))")
     }
 
     /// Begins delivering input reports. Called once by the module right after the device

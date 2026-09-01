@@ -154,7 +154,7 @@ import CoreLocation
         locationManager = CLLocationManager()
         super.init()
         locationManager.delegate = self
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -165,7 +165,7 @@ import CoreLocation
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
         shutdown()
     }
 

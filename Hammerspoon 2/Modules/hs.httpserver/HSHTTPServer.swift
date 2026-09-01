@@ -307,7 +307,7 @@ struct ParsedHTTPRequest {
 
     isolated deinit {
         // destroy() was called by shutdown() — this is just the final ARC release
-        AKDebug("deinit of HSHTTPServer(\(identifier))")
+        AKGarbage("deinit of HSHTTPServer(\(identifier))")
     }
 
     @objc func destroy() {
@@ -428,7 +428,7 @@ struct ParsedHTTPRequest {
                     guard let self else { return }
                     switch state {
                     case .ready:
-                        AKTrace("HSHTTPServer(\(self.identifier)): Listening on port \(self.getPort())")
+                        AKDebug("HSHTTPServer(\(self.identifier)): Listening on port \(self.getPort())")
                     case .failed(let error):
                         AKError("HSHTTPServer(\(self.identifier)): Failed: \(error)")
                         self.isRunning = false
@@ -440,7 +440,7 @@ struct ParsedHTTPRequest {
 
             listener?.start(queue: .main)
             isRunning = true
-            AKTrace("HSHTTPServer(\(identifier)): Starting on port \(_port == 0 ? "auto" : "\(_port)")")
+            AKDebug("HSHTTPServer(\(identifier)): Starting on port \(_port == 0 ? "auto" : "\(_port)")")
         } catch {
             AKError("HSHTTPServer(\(identifier)): Could not create listener: \(error)")
         }
@@ -455,7 +455,7 @@ struct ParsedHTTPRequest {
         for connection in connections.values { connection.cancel() }
         connections.removeAll()
         isRunning = false
-        AKTrace("HSHTTPServer(\(identifier)): Stopped")
+        AKDebug("HSHTTPServer(\(identifier)): Stopped")
         return self
     }
 
@@ -661,7 +661,7 @@ struct ParsedHTTPRequest {
                 self._wsConnections.add(wsConn)
                 _ = callback.value?.call(withArguments: ["connected", wsConn, ""])
                 self.receiveWebSocketFrames(on: connection, wsConn: wsConn, path: path, buffer: Data())
-                AKTrace("HSHTTPServer(\(self.identifier)): WebSocket upgrade on \(path)")
+                AKDebug("HSHTTPServer(\(self.identifier)): WebSocket upgrade on \(path)")
             }
         })
     }

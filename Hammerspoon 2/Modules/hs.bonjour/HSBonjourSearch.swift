@@ -184,7 +184,7 @@ import JavaScriptCore
         servicesCallback?.detach(from: self)
         servicesCallback = JSCallback(value: callback, owner: self)
         servicesBrowser.searchForServices(ofType: type, inDomain: domain)
-        AKTrace("HSBonjourSearch(\(identifier)): Searching for \(type) in '\(domain)'")
+        AKDebug("HSBonjourSearch(\(identifier)): Searching for \(type) in '\(domain)'")
         return self
     }
 
@@ -193,7 +193,7 @@ import JavaScriptCore
         domainsCallback?.detach(from: self)
         domainsCallback = JSCallback(value: callback, owner: self)
         domainsBrowser.searchForBrowsableDomains()
-        AKTrace("HSBonjourSearch(\(identifier)): Searching for browsable domains")
+        AKDebug("HSBonjourSearch(\(identifier)): Searching for browsable domains")
         return self
     }
 
@@ -202,7 +202,7 @@ import JavaScriptCore
         registrationCallback?.detach(from: self)
         registrationCallback = JSCallback(value: callback, owner: self)
         registrationBrowser.searchForRegistrationDomains()
-        AKTrace("HSBonjourSearch(\(identifier)): Searching for registration domains")
+        AKDebug("HSBonjourSearch(\(identifier)): Searching for registration domains")
         return self
     }
 
@@ -217,7 +217,7 @@ import JavaScriptCore
         registrationCallback?.detach(from: self)
         registrationCallback = nil
         serviceTable.removeAll()
-        AKTrace("HSBonjourSearch(\(identifier)): Stopped all searches")
+        AKDebug("HSBonjourSearch(\(identifier)): Stopped all searches")
         return self
     }
 
@@ -242,25 +242,25 @@ import JavaScriptCore
             wrapper = HSBonjourService(netService: service)
             serviceTable[key] = wrapper
         }
-        AKTrace("HSBonjourSearch(\(identifier)): serviceFound '\(service.name)' (moreComing: \(moreComing))")
+        AKDebug("HSBonjourSearch(\(identifier)): serviceFound '\(service.name)' (moreComing: \(moreComing))")
         _ = servicesCallback?.value?.call(withArguments: ["serviceFound", wrapper, moreComing])
     }
 
     func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
         let key = ObjectIdentifier(service)
         let wrapper = serviceTable.removeValue(forKey: key) ?? HSBonjourService(netService: service)
-        AKTrace("HSBonjourSearch(\(identifier)): serviceRemoved '\(service.name)' (moreComing: \(moreComing))")
+        AKDebug("HSBonjourSearch(\(identifier)): serviceRemoved '\(service.name)' (moreComing: \(moreComing))")
         _ = servicesCallback?.value?.call(withArguments: ["serviceRemoved", wrapper, moreComing])
     }
 
     func netServiceBrowser(_ browser: NetServiceBrowser, didFindDomain domain: String, moreComing: Bool) {
-        AKTrace("HSBonjourSearch(\(identifier)): domainFound '\(domain)' (moreComing: \(moreComing))")
+        AKDebug("HSBonjourSearch(\(identifier)): domainFound '\(domain)' (moreComing: \(moreComing))")
         let cb = browser === domainsBrowser ? domainsCallback : registrationCallback
         _ = cb?.value?.call(withArguments: ["domainFound", domain, moreComing])
     }
 
     func netServiceBrowser(_ browser: NetServiceBrowser, didRemoveDomain domain: String, moreComing: Bool) {
-        AKTrace("HSBonjourSearch(\(identifier)): domainRemoved '\(domain)' (moreComing: \(moreComing))")
+        AKDebug("HSBonjourSearch(\(identifier)): domainRemoved '\(domain)' (moreComing: \(moreComing))")
         let cb = browser === domainsBrowser ? domainsCallback : registrationCallback
         _ = cb?.value?.call(withArguments: ["domainRemoved", domain, moreComing])
     }
@@ -280,6 +280,6 @@ import JavaScriptCore
     }
 
     func netServiceBrowserDidStopSearch(_ browser: NetServiceBrowser) {
-        AKTrace("HSBonjourSearch(\(identifier)): Search stopped")
+        AKDebug("HSBonjourSearch(\(identifier)): Search stopped")
     }
 }

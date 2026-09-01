@@ -86,10 +86,11 @@ struct ParsedWebSocketFrame {
     init(connection: NWConnection) {
         self.connection = connection
         super.init()
+        AKGarbage("init of HSWebSocketConnection (\(identifier))")
     }
 
     isolated deinit {
-        AKTrace("deinit of HSWebSocketConnection(\(identifier))")
+        AKGarbage("deinit of HSWebSocketConnection (\(identifier))")
     }
 
     @objc func send(_ message: String) {
@@ -115,7 +116,7 @@ struct ParsedWebSocketFrame {
             })
         }
         connection = nil
-        AKTrace("HSWebSocketConnection(\(identifier)): Destroyed")
+        AKDebug("HSWebSocketConnection(\(identifier)): Destroyed")
     }
 }
 

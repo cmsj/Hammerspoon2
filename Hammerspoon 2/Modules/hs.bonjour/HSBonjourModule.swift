@@ -179,7 +179,7 @@ import dnssd
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -192,7 +192,7 @@ import dnssd
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -210,14 +210,14 @@ import dnssd
     @objc func createSearch() -> HSBonjourSearch {
         let search = HSBonjourSearch()
         searches.add(search)
-        AKDebug("HSBonjourModule: Created search \(search.identifier)")
+        AKGarbage("HSBonjourModule: Created search \(search.identifier)")
         return search
     }
 
     @objc func removeSearch(_ search: HSBonjourSearch) {
         search.destroy()
         searches.remove(search)
-        AKDebug("HSBonjourModule: Removed search \(search.identifier)")
+        AKGarbage("HSBonjourModule: Removed search \(search.identifier)")
     }
 
     @objc func advertise(_ name: String, _ type: String, _ port: Int, _ domain: String, _ callback: JSFunction) {
@@ -234,7 +234,7 @@ import dnssd
         let handle = AdvertisedService(name: name, type: type, port: port, domain: effectiveDomain, callback: effectiveCallback)
         advertisedServices[key] = handle
         handle.publish()
-        AKTrace("hs.bonjour.advertise: Started advertising '\(name)' (\(type)) port \(port) in \(effectiveDomain)")
+        AKDebug("hs.bonjour.advertise: Started advertising '\(name)' (\(type)) port \(port) in \(effectiveDomain)")
     }
 
     @objc func stopAdvertising(_ name: String, _ type: String) {
@@ -244,7 +244,7 @@ import dnssd
             return
         }
         handle.stop()
-        AKTrace("hs.bonjour.stopAdvertising: Stopped advertising '\(name)' (\(type))")
+        AKDebug("hs.bonjour.stopAdvertising: Stopped advertising '\(name)' (\(type))")
     }
 
     @objc func networkServices(_ timeout: Double) -> JSPromise? {
@@ -326,7 +326,7 @@ private class AdvertisedService: NSObject, NetServiceDelegate {
 
     func netServiceDidPublish(_ sender: NetService) {
         guard let service else { return }
-        AKTrace("hs.bonjour: Published '\(service.name)'")
+        AKDebug("hs.bonjour: Published '\(service.name)'")
         _ = callback?.call(withArguments: ["published"])
     }
 
@@ -339,7 +339,7 @@ private class AdvertisedService: NSObject, NetServiceDelegate {
 
     func netServiceDidStop(_ sender: NetService) {
         guard let service else { return }
-        AKTrace("hs.bonjour: Stopped '\(service.name)'")
+        AKDebug("hs.bonjour: Stopped '\(service.name)'")
         _ = callback?.call(withArguments: ["stopped"])
         callback = nil
     }

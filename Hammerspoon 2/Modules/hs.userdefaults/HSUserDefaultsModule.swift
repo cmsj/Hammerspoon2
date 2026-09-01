@@ -137,7 +137,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
         if suite == nil {
             AKError("hs.userdefaults: Failed to create UserDefaults suite '\(hsUserDefaultsSuiteName)'. This module will not function.")
         }
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -151,7 +151,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
         shutdown()
     }
 
@@ -225,7 +225,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
         }
         watcherCallbacks[key] = callback
         unsafe suite.addObserver(self, forKeyPath: key, options: [.new], context: nil)
-        AKTrace("hs.userdefaults.addWatcher(): Started watching '\(key)'")
+        AKDebug("hs.userdefaults.addWatcher(): Started watching '\(key)'")
     }
 
     @objc func _removeWatcher(_ key: String) {
@@ -236,7 +236,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
         guard watcherCallbacks[key] != nil else { return }
         suite.removeObserver(self, forKeyPath: key)
         watcherCallbacks.removeValue(forKey: key)
-        AKTrace("hs.userdefaults.removeWatcher(): Stopped watching '\(key)'")
+        AKDebug("hs.userdefaults.removeWatcher(): Stopped watching '\(key)'")
     }
 
     nonisolated override func observeValue(

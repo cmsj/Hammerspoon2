@@ -131,7 +131,7 @@ import CoreGraphics
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSEventTap(\(identifier))")
+        AKGarbage("deinit of HSEventTap(\(identifier))")
     }
 
     func destroy() {
@@ -173,7 +173,7 @@ import CoreGraphics
         unsafe tapPort = port
         unsafe runLoopSource = source
         running = true
-        AKTrace("hs.eventtap: tap \(identifier) started")
+        AKDebug("hs.eventtap: tap \(identifier) started")
         return self
     }
 
@@ -192,7 +192,7 @@ import CoreGraphics
         unsafe runLoopSource = nil
         running = false
         unsafe selfRetain = nil
-        AKTrace("hs.eventtap: tap \(identifier) stopped")
+        AKDebug("hs.eventtap: tap \(identifier) stopped")
         return self
     }
 

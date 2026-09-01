@@ -212,7 +212,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -226,7 +226,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
 
     isolated deinit {
         shutdown()
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -356,7 +356,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
             return false
         }
 
-        AKTrace("hs.serial._addWatcher(): Started")
+        AKDebug("hs.serial._addWatcher(): Started")
         return true
     }
 
@@ -387,7 +387,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
         watcherCallback?.detach(from: self)
         watcherCallback = nil
 
-        AKTrace("hs.serial._removeWatcher(): Stopped")
+        AKDebug("hs.serial._removeWatcher(): Stopped")
     }
 
     // MARK: - Private

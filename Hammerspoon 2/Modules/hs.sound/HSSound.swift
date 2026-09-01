@@ -171,7 +171,7 @@ import AppKit
 
     isolated deinit {
         _teardown()
-        AKDebug("deinit of HSSound(\(identifier))")
+        AKGarbage("deinit of HSSound(\(identifier))")
     }
 
     private func _teardown() {

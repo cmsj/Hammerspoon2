@@ -341,7 +341,7 @@ private let ioctlIOSSIOSPEED: UInt = {
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSSerialPort(\(identifier))")
+        AKGarbage("deinit of HSSerialPort(\(identifier))")
     }
 
     // MARK: - API
@@ -364,7 +364,7 @@ private let ioctlIOSSIOSPEED: UInt = {
         applyControlLine(bit: TIOCM_RTS, enabled: _rts)
         startReading()
         selfRetain = self
-        AKTrace("HSSerialPort(\(identifier)): opened \(path)")
+        AKDebug("HSSerialPort(\(identifier)): opened \(path)")
         fireCallback(event: "opened", data: "")
         return self
     }
@@ -461,7 +461,7 @@ private let ioctlIOSSIOSPEED: UInt = {
         unsafe fd = -1
         readSource = nil
         selfRetain = nil
-        AKTrace("HSSerialPort(\(identifier)): closed")
+        AKDebug("HSSerialPort(\(identifier)): closed")
     }
 
     // MARK: - Private: termios / control lines

@@ -229,7 +229,7 @@ import JavaScriptCoreExtras
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSTask: \(launchPath)")
+        AKGarbage("deinit of HSTask: \(launchPath)")
     }
 
     func destroy() {

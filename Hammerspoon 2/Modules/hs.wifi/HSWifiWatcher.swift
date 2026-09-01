@@ -154,7 +154,7 @@ let wifiWatcherValidEvents: Set<String> = [
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSWifiWatcher(\(identifier))")
+        AKGarbage("deinit of HSWifiWatcher(\(identifier))")
     }
 
     func destroy() {
@@ -178,7 +178,7 @@ let wifiWatcherValidEvents: Set<String> = [
             AKWarning("HSWifiWatcher(\(identifier)).start(): failed to register one or more event types")
             return self
         }
-        AKTrace("HSWifiWatcher(\(identifier)).start(): Started")
+        AKDebug("HSWifiWatcher(\(identifier)).start(): Started")
         return self
     }
 
@@ -196,7 +196,7 @@ let wifiWatcherValidEvents: Set<String> = [
             AKWarning("HSWifiWatcher(\(identifier)).stop(): failed to unregister one or more event types")
             return self
         }
-        AKTrace("HSWifiWatcher(\(identifier)).stop(): Stopped")
+        AKDebug("HSWifiWatcher(\(identifier)).stop(): Stopped")
         return self
     }
 

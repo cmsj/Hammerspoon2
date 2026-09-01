@@ -340,7 +340,7 @@ import AppKit
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -349,7 +349,7 @@ import AppKit
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
         shutdown()
     }
 
@@ -498,7 +498,7 @@ import AppKit
                 }
             }
         }
-        AKTrace("hs.pasteboard._startWatcher(): Polling started at \(interval)s interval")
+        AKDebug("hs.pasteboard._startWatcher(): Polling started at \(interval)s interval")
     }
 
     @objc func _stopWatcher() {
@@ -506,6 +506,6 @@ import AppKit
         watcherTimer?.invalidate()
         watcherTimer = nil
         watcherCallback = nil
-        AKTrace("hs.pasteboard._stopWatcher(): Polling stopped")
+        AKDebug("hs.pasteboard._stopWatcher(): Polling stopped")
     }
 }

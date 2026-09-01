@@ -54,6 +54,12 @@ struct SettingsAdvancedView: View {
                             .fixedSize(horizontal: true, vertical: true)
                     }
                     GridRow {
+                        Text("Enable garbage collection logging:")
+                            .gridColumnAlignment(.trailing)
+                        Toggle("Enable garbage collection logging", isOn: Bindable(settingsManager).garbageLoggingEnabled)
+                            .labelsHidden()
+                    }
+                    GridRow {
                         Spacer()
                     }
                     GridRow {

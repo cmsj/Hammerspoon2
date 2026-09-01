@@ -496,12 +496,12 @@ final class UIWebViewToolbarEntry: Identifiable {
         super.init()
         self.navigationDecider = UIWebViewNavigationDecider(owner: self)
         self.page = WebPage(navigationDecider: self.navigationDecider)
-        AKDebug("Init of UIWebView")
+        AKGarbage("Init of UIWebView")
     }
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of UIWebView")
+        AKGarbage("deinit of UIWebView")
     }
 
     // MARK: HSUIElement

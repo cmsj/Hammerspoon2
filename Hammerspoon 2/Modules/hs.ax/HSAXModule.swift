@@ -199,7 +199,7 @@ import AXSwift
             _notificationTypes[name] = notificationType.rawValue
         }
         super.init()
-        AKDebug("Init of \(self.moduleName)")
+        AKGarbage("Init of \(self.moduleName)")
     }
 
     func shutdown() {
@@ -211,7 +211,7 @@ import AXSwift
                     if let observer = observers[pid] {
                         do {
                             try observer.removeNotification(watcherObject.notification, forElement: watcherObject.element)
-                            AKTrace("hs.ax: Removed watcher for \(watcherObject.notification.rawValue)")
+                            AKDebug("hs.ax: Removed watcher for \(watcherObject.notification.rawValue)")
                         } catch {
                             AKError("hs.ax: Error removing watcher: \(error)")
                         }
@@ -233,7 +233,7 @@ import AXSwift
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
         shutdown()
     }
 
@@ -338,7 +338,7 @@ import AXSwift
                     self.handleNotification(pid: pid, element: element, notification: notification)
                 }
                 observers[pid] = observer
-                AKTrace("hs.ax.addWatcher(): Created observer for PID \(pid)")
+                AKDebug("hs.ax.addWatcher(): Created observer for PID \(pid)")
             } catch {
                 AKError("hs.ax.addWatcher(): Failed to create observer for PID \(pid): \(error)")
                 return
@@ -357,7 +357,7 @@ import AXSwift
         // Add the notification to the observer
         do {
             try observer.addNotification(notifType, forElement: appElement.element)
-            AKTrace("hs.ax.addWatcher(): Added watcher for \(notification) on PID \(pid)")
+            AKDebug("hs.ax.addWatcher(): Added watcher for \(notification) on PID \(pid)")
         } catch {
             AKError("hs.ax.addWatcher(): Failed to add notification: \(error)")
             watchers.removeValue(forKey: key)
@@ -369,12 +369,12 @@ import AXSwift
         let key = makeWatcherKey(pid: pid, notification: notification)
 
         guard let watcherObject = watchers[key] else {
-            AKTrace("hs.ax.removeWatcher(): No watcher found for \(notification) on PID \(pid)")
+            AKDebug("hs.ax.removeWatcher(): No watcher found for \(notification) on PID \(pid)")
             return
         }
 
         guard let observer = observers[pid] else {
-            AKTrace("hs.ax.removeWatcher(): No observer found for PID \(pid)")
+            AKDebug("hs.ax.removeWatcher(): No observer found for PID \(pid)")
             watchers.removeValue(forKey: key)
             return
         }
@@ -382,7 +382,7 @@ import AXSwift
         // Remove the notification from the observer
         do {
             try observer.removeNotification(watcherObject.notification, forElement: watcherObject.element)
-            AKTrace("hs.ax.removeWatcher(): Removed watcher for \(notification) on PID \(pid)")
+            AKDebug("hs.ax.removeWatcher(): Removed watcher for \(notification) on PID \(pid)")
         } catch {
             AKError("hs.ax.removeWatcher(): Failed to remove notification: \(error)")
         }
@@ -394,7 +394,7 @@ import AXSwift
         if remainingWatchers.isEmpty {
             observer.stop()
             observers.removeValue(forKey: pid)
-            AKTrace("hs.ax.removeWatcher(): Removed observer for PID \(pid) (no more watchers)")
+            AKDebug("hs.ax.removeWatcher(): Removed observer for PID \(pid) (no more watchers)")
         }
     }
 
@@ -482,7 +482,7 @@ import AXSwift
         let indent = String(repeating: "  ", count: depth)
         let role = element.role ?? "unknown"
         let titleStr = element.title.map { " \"\($0)\"" } ?? ""
-        AKTrace("\(indent)\(role)\(titleStr)")
+        AKDebug("\(indent)\(role)\(titleStr)")
 
         guard depth < maxDepth else { return }
         for child in element.children() {

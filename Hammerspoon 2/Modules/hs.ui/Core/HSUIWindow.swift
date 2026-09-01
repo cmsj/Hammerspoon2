@@ -461,7 +461,7 @@ import SwiftUI
     }
 
     isolated deinit {
-        AKDebug("deinit of HSUIWindow(\(identifier))")
+        AKGarbage("deinit of HSUIWindow(\(identifier))")
 
         // In the normal shutdown path destroy() has already been called, so nsWindow and
         // rootElement are nil and this is a no-op. In the unexpected edge case where the

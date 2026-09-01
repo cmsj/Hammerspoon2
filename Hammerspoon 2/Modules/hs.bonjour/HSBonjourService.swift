@@ -197,27 +197,27 @@ import Darwin
         service.stop()
         resolveCallback = callback.isObject ? JSCallback(value: callback, owner: self) : nil
         service.resolve(withTimeout: timeout)
-        AKTrace("HSBonjourService(\(identifier)).resolve(): Resolving '\(name)' (timeout: \(timeout)s)")
+        AKDebug("HSBonjourService(\(identifier)).resolve(): Resolving '\(name)' (timeout: \(timeout)s)")
         return self
     }
 
     @objc @discardableResult func monitor(_ callback: JSFunction) -> HSBonjourService {
         monitorCallback = callback.isObject ? JSCallback(value: callback, owner: self) : nil
         service.startMonitoring()
-        AKTrace("HSBonjourService(\(identifier)).monitor(): Started TXT monitoring for '\(name)'")
+        AKDebug("HSBonjourService(\(identifier)).monitor(): Started TXT monitoring for '\(name)'")
         return self
     }
 
     @objc @discardableResult func stop() -> HSBonjourService {
         service.stop()
-        AKTrace("HSBonjourService(\(identifier)).stop(): Stopped '\(name)'")
+        AKDebug("HSBonjourService(\(identifier)).stop(): Stopped '\(name)'")
         return self
     }
 
     @objc @discardableResult func stopMonitoring() -> HSBonjourService {
         service.stopMonitoring()
         monitorCallback = nil
-        AKTrace("HSBonjourService(\(identifier)).stopMonitoring(): Stopped TXT monitoring for '\(name)'")
+        AKDebug("HSBonjourService(\(identifier)).stopMonitoring(): Stopped TXT monitoring for '\(name)'")
         return self
     }
 
@@ -234,7 +234,7 @@ import Darwin
     // Apple guarantees main-thread delivery, so these are inferred @MainActor.
 
     func netServiceDidResolveAddress(_ sender: NetService) {
-        AKTrace("HSBonjourService(\(identifier)): Resolved '\(name)' → \(sender.hostName ?? "?")")
+        AKDebug("HSBonjourService(\(identifier)): Resolved '\(name)' → \(sender.hostName ?? "?")")
         _ = resolveCallback?.call(withArguments: ["resolved"])
     }
 
@@ -245,14 +245,14 @@ import Darwin
     }
 
     func netServiceDidStop(_ sender: NetService) {
-        AKTrace("HSBonjourService(\(identifier)): Stopped '\(name)'")
+        AKDebug("HSBonjourService(\(identifier)): Stopped '\(name)'")
         _ = resolveCallback?.call(withArguments: ["stopped"])
         resolveCallback = nil
     }
 
     func netService(_ sender: NetService, didUpdateTXTRecord data: Data) {
         let record = Self.parseTXTRecord(data)
-        AKTrace("HSBonjourService(\(identifier)): TXT record updated for '\(name)'")
+        AKDebug("HSBonjourService(\(identifier)): TXT record updated for '\(name)'")
         _ = monitorCallback?.call(withArguments: [record])
     }
 

@@ -258,7 +258,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         }
         unsafe cmioListenerBlock = block
         unsafe CMIOObjectAddPropertyListenerBlock(cmioID, &address, .main, block)
-        AKTrace("hs.camera._addWatcher(): Started watching '\(name)'")
+        AKDebug("hs.camera._addWatcher(): Started watching '\(name)'")
     }
 
     @objc func _removeWatcher() {
@@ -277,7 +277,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         watcherCMIOID = nil
         watcherCallback = nil
         selfRetain = nil
-        AKTrace("hs.camera._removeWatcher(): Stopped watching '\(name)'")
+        AKDebug("hs.camera._removeWatcher(): Stopped watching '\(name)'")
     }
 
     // MARK: - Image Capture

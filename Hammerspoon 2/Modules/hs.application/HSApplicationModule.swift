@@ -193,7 +193,7 @@ class HSApplicationWatcherObject {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -202,7 +202,7 @@ class HSApplicationWatcherObject {
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
         shutdown()
     }
 
@@ -259,7 +259,7 @@ class HSApplicationWatcherObject {
         let selector = #selector(HSApplicationWatcherObject.handleEvent(notification:))
 
         for notificationName in HSApplicationWatcherObject.notificationToEventName.keys {
-            AKTrace("hs.application._addWatcher(): Registering for \(notificationName.rawValue)")
+            AKDebug("hs.application._addWatcher(): Registering for \(notificationName.rawValue)")
             NSWorkspace.shared.notificationCenter.addObserver(watcherObject,
                                                               selector: selector,
                                                               name: notificationName,
@@ -279,7 +279,7 @@ class HSApplicationWatcherObject {
         }
 
         watcher = nil
-        AKTrace("hs.application._removeWatcher(): Removed all application event watchers")
+        AKDebug("hs.application._removeWatcher(): Removed all application event watchers")
     }
 
     // MARK: - API for application information

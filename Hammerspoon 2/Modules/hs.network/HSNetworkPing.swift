@@ -322,7 +322,7 @@ private func readICMPReply(fd: Int32, family: Int32,
 
     isolated deinit {
         teardown(fireFinish: false)
-        AKDebug("deinit HSNetworkPing(\(_server))")
+        AKGarbage("deinit HSNetworkPing(\(_server))")
     }
 
     // MARK: - HSNetworkPingAPI

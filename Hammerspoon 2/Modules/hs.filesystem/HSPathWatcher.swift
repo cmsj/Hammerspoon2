@@ -133,7 +133,7 @@ import CoreServices
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSPathWatcher(\(identifier))")
+        AKGarbage("deinit of HSPathWatcher(\(identifier))")
     }
 
     // MARK: - API
@@ -177,7 +177,7 @@ import CoreServices
         }
         unsafe stream = newStream
         selfRetain = self
-        AKTrace("HSPathWatcher(\(identifier)): started watching \(watchedPath)")
+        AKDebug("HSPathWatcher(\(identifier)): started watching \(watchedPath)")
         return self
     }
 
@@ -193,7 +193,7 @@ import CoreServices
         unsafe FSEventStreamRelease(s)
         unsafe stream = nil
         selfRetain = nil
-        AKTrace("HSPathWatcher(\(identifier)): stopped")
+        AKDebug("HSPathWatcher(\(identifier)): stopped")
         return self
     }
 

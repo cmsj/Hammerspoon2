@@ -301,7 +301,7 @@ private enum HSWifiError: LocalizedError {
         self.engineID = engineID
         super.init()
         client.delegate = self
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -313,7 +313,7 @@ private enum HSWifiError: LocalizedError {
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
         shutdown()
     }
 
@@ -447,7 +447,7 @@ private enum HSWifiError: LocalizedError {
                 try client.startMonitoringEvent(with: type)
                 eventRefCounts[type] = 1
                 registered.insert(name)
-                AKTrace("hs.wifi: started monitoring \(name)")
+                AKDebug("hs.wifi: started monitoring \(name)")
             } catch {
                 AKError("hs.wifi: failed to start monitoring \(name): \(error.localizedDescription)")
             }
@@ -477,7 +477,7 @@ private enum HSWifiError: LocalizedError {
                 try client.stopMonitoringEvent(with: type)
                 eventRefCounts[type] = 0
                 registered.remove(name)
-                AKTrace("hs.wifi: stopped monitoring \(name)")
+                AKDebug("hs.wifi: stopped monitoring \(name)")
             } catch {
                 AKError("hs.wifi: failed to stop monitoring \(name): \(error.localizedDescription)")
             }

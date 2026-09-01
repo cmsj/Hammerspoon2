@@ -23,6 +23,11 @@ protocol SettingsManagerProtocol: AnyObject {
     /// Whether the user has completed the first-run onboarding flow
     var hasCompletedOnboarding: Bool { get set }
 
+    /// Whether `AKGarbage` (module lifecycle/GC diagnostics) actually records anything.
+    /// Off by default since it's high-volume; enabled at runtime to diagnose an issue
+    /// without requiring a custom DEBUG build.
+    var garbageLoggingEnabled: Bool { get set }
+
     /// Resets all settings to their default values
     func resetToDefaults()
 }

@@ -14,37 +14,40 @@ import CommandLineKit
 
 // MARK: - Log levels (must match HammerspoonLogType raw values)
 
-private enum LogLevel: Int, CaseIterable {
-    case trace = 0, info = 1, warning = 2, error = 3, console = 4
-
+extension HammerspoonLogType {
     nonisolated init?(string: String) {
         switch string.lowercased() {
-        case "trace", "debug":              self = .trace
-        case "info":                        self = .info
-        case "warning", "warn":             self = .warning
-        case "error":                       self = .error
-        case "javascript", "console", "js": self = .console
+        case "garbage":                     self = .Garbage
+        case "debug":                       self = .Debug
+        case "info":                        self = .Info
+        case "warning", "warn":             self = .Warning
+        case "error":                       self = .Error
+        case "javascript", "console", "js": self = .Console
         default: return nil
         }
     }
 
     nonisolated var textProperties: TextProperties {
         switch self {
-        case .trace:   return TextProperties(.grey, nil)
-        case .info:    return TextProperties(.blue, nil, .bold)
-        case .warning: return TextProperties(.yellow, nil, .bold)
-        case .error:   return TextProperties(.red, nil, .bold)
-        case .console: return TextProperties(.green, nil, .bold)
+        case .Garbage: return TextProperties(.grey, nil)
+        case .Debug:   return TextProperties(.grey, nil, .bold)
+        case .Info:    return TextProperties(.blue, nil, .bold)
+        case .Warning: return TextProperties(.yellow, nil, .bold)
+        case .Error:   return TextProperties(.red, nil, .bold)
+        case .Console: return TextProperties(.green, nil, .bold)
+        case .Autocomplete: return TextProperties(.green, nil, .bold)
         }
     }
 
     nonisolated var label: String {
         switch self {
-        case .trace:   return "DEBUG  "
-        case .info:    return "INFO   "
-        case .warning: return "WARNING"
-        case .error:   return "ERROR  "
-        case .console: return "JS     "
+        case .Garbage: return "GARBAGE"
+        case .Debug:   return "DEBUG  "
+        case .Info:    return "INFO   "
+        case .Warning: return "WARNING"
+        case .Error:   return "ERROR  "
+        case .Console: return "JS     "
+        case .Autocomplete: return "AUTOCMPL"
         }
     }
 }
@@ -62,7 +65,7 @@ private nonisolated func writeStderr(_ s: String) {
 // nonisolated so NSXPCConnection can call logEntry from its internal queue.
 private nonisolated final class HSIPCLogDelegate: NSObject, HSIPCClientProtocol {
     nonisolated func logEntry(level: String, message: String) {
-        guard let logLevel = LogLevel(string: level) else { return }
+        guard let logLevel = HammerspoonLogType(string: level) else { return }
         // '\n' before the message keeps output clean even when a readline prompt is showing.
         print("\n\(logLevel.textProperties.apply(to: "[\(logLevel.label)]")) \(message)")
     }
@@ -127,7 +130,7 @@ private actor HSIPCClient {
 // MARK: - Argument parsing
 
 private var flags = Flags()
-private let logLevelFlag = flags.string("l", "log-level", description: "Show log messages at or above this level.\nLevels: trace  info  warning  error  javascript\nDefault: none (no log messages shown)")
+private let logLevelFlag = flags.string("l", "log-level", description: "Show log messages at or above this level.\nLevels: garbage  debug  info  warning  error  javascript\nDefault: none (no log messages shown)")
 private let noPromptFlag = flags.option(nil, "no-prompt",   description: "Suppress 'hs2> ' prompt (useful when piping input)")
 private let helpFlag     = flags.option("h", "help",        description: "Show this help")
 
@@ -157,7 +160,7 @@ private let showPrompt = !noPromptFlag.wasSet
 private let minLogLevel: Int = {
     guard let str = logLevelFlag.value else { return Int.max }
     if str.lowercased() == "none" { return Int.max }
-    return LogLevel(string: str)?.rawValue ?? Int.max
+    return HammerspoonLogType(string: str)?.rawValue ?? Int.max
 }()
 
 // MARK: - Completion helpers

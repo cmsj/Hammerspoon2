@@ -114,7 +114,7 @@ import Carbon
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSHotkey: id=\(hotkeyID)")
+        AKGarbage("deinit of HSHotkey: id=\(hotkeyID)")
     }
 
     @objc func destroy() {

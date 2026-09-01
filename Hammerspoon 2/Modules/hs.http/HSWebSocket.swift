@@ -167,7 +167,7 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSWebSocket(\(identifier))")
+        AKGarbage("deinit of HSWebSocket(\(identifier))")
     }
 
     // Called by HSHTTPModule.openWebSocket() after the object is created.
@@ -179,7 +179,7 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
         task = session?.webSocketTask(with: url)
         task?.resume()
         scheduleNextReceive()
-        AKTrace("HSWebSocket(\(identifier)): Connecting to \(url)")
+        AKDebug("HSWebSocket(\(identifier)): Connecting to \(url)")
     }
 
     // MARK: - Internal event handlers (always called on main thread)
@@ -188,14 +188,14 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
         guard _readyState == 0 else { return }
         _readyState = 1
         _ = _openCallback?.value?.call(withArguments: [])
-        AKTrace("HSWebSocket(\(identifier)): Open")
+        AKDebug("HSWebSocket(\(identifier)): Open")
     }
 
     fileprivate func handleClose(code: Int, reason: String) {
         guard _readyState == 1 else { return }
         _readyState = 3
         _ = _closeCallback?.value?.call(withArguments: [code, reason])
-        AKTrace("HSWebSocket(\(identifier)): Closed by remote (code \(code))")
+        AKDebug("HSWebSocket(\(identifier)): Closed by remote (code \(code))")
     }
 
     // MARK: - Receive loop
@@ -284,7 +284,7 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
         if wasOpen {
             _ = _closeCallback?.value?.call(withArguments: [1000, "Normal closure"])
         }
-        AKTrace("HSWebSocket(\(identifier)): Closed (user initiated)")
+        AKDebug("HSWebSocket(\(identifier)): Closed (user initiated)")
     }
 
     @objc func destroy() {

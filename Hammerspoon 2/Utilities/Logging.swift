@@ -10,38 +10,17 @@ import JavaScriptCore
 import Synchronization
 import os
 
-@_documentation(visibility: private)
-enum HammerspoonLogType: Int, CaseIterable, Identifiable {
-    case Trace = 0
-    case Info
-    case Warning
-    case Error
-    case Console
-    case Autocomplete
 
-    var id: Self { self }
-    var asString: String {
-        switch (self) {
-        case .Trace:
-            return "Debug"
-        case .Info:
-            return "Info"
-        case .Warning:
-            return "Warning"
-        case .Error:
-            return "Error"
-        case .Console:
-            return "JavaScript"
-        case .Autocomplete:
-            return "Autocomplete"
-        }
-    }
-}
 
 @_documentation(visibility: private)
 struct HammerspoonLogEntry: Identifiable, Equatable, Hashable {
     let id = UUID()
     let date = Date()
+    /// Monotonically increasing, assigned by `HammerspoonLog.log(_:_:)`. Used to
+    /// merge per-level buffers back into a single chronological stream, since
+    /// `Date()` resolution can tie under bursty logging and ties would make
+    /// cross-level interleave order ambiguous.
+    let sequence: UInt64
     let logType: HammerspoonLogType
     let msg: String
 
@@ -67,18 +46,56 @@ extension Logger {
 final class HammerspoonLog: Sendable {
     static let shared = HammerspoonLog()
 
-    var entries: [HammerspoonLogEntry] = []
+    /// `.Garbage` entries (module lifecycle/GC diagnostics) are extremely high volume
+    /// compared to normal user-facing logging, so they get their own small, fixed
+    /// capacity rather than sharing `consoleHistoryLength` with everything else.
+    private static let garbageBufferCapacity = 200
+
+    /// Per-level ring buffers, so a burst of low-severity entries (e.g. Debug)
+    /// can't evict high-severity entries (e.g. Error) before a user filtering
+    /// the Console to a higher minimum level ever sees them.
+    private var buffers: [HammerspoonLogType: [HammerspoonLogEntry]] = [:]
+
+    @ObservationIgnored
+    private var sequenceCounter: UInt64 = 0
+
+    /// Cheap, `@Observable`-tracked change signal for consumers (e.g. hs.ipc's
+    /// log-forwarding) that only need to know "did anything change", so they
+    /// don't have to pay for a full merge/filter/sort of `entries(minimumLevel:)`
+    /// on every single log call.
+    private(set) var latestSequence: UInt64 = 0
+
+    private func capacity(for level: HammerspoonLogType) -> Int {
+        level == .Garbage ? Self.garbageBufferCapacity : SettingsManager.shared.consoleHistoryLength
+    }
 
     func log(_ level: HammerspoonLogType, _ msg: String) {
-        entries.append(HammerspoonLogEntry(logType: level, msg: msg))
+        sequenceCounter += 1
+        latestSequence = sequenceCounter
 
-        if entries.count > SettingsManager.shared.consoleHistoryLength {
-            entries.removeFirst()
+        var levelBuffer = buffers[level] ?? []
+        levelBuffer.append(HammerspoonLogEntry(sequence: sequenceCounter, logType: level, msg: msg))
+
+        let cap = capacity(for: level)
+        if levelBuffer.count > cap {
+            levelBuffer.removeFirst(levelBuffer.count - cap)
         }
+        buffers[level] = levelBuffer
+    }
+
+    /// The merged, chronological view across every per-level buffer at or above
+    /// `minimumLevel`, optionally filtered by `searchString`. This is the single
+    /// source of truth for anything that wants to display or forward log history.
+    func entries(minimumLevel: HammerspoonLogType, searchString: String = "") -> [HammerspoonLogEntry] {
+        HammerspoonLogType.allCases
+            .filter { $0.rawValue >= minimumLevel.rawValue }
+            .flatMap { buffers[$0] ?? [] }
+            .filter { searchString.isEmpty || $0.msg.localizedStandardContains(searchString) }
+            .sorted { $0.sequence < $1.sequence }
     }
 
     func clearLog() {
-        entries.removeAll()
+        buffers.removeAll()
     }
 }
 
@@ -108,9 +125,9 @@ func AKError(_ msg: String) {
 }
 
 @_documentation(visibility: private)
-func AKTrace(_ msg: String) {
+func AKDebug(_ msg: String) {
     Logger.Hammerspoon.debug("\(msg)")
-    AKLog(.Trace, msg)
+    AKLog(.Debug, msg)
 }
 
 @_documentation(visibility: private)
@@ -125,10 +142,22 @@ func AKAutocomplete(_ msg: String) {
     AKLog(.Autocomplete, msg)
 }
 
-#if DEBUG
-func AKDebug(_ msg: String) {
-    AKTrace("__\(msg)")
+/// Lock-free, thread-agnostic gate for `AKGarbage`. `AKGarbage` is called from
+/// arbitrary threads/actors (including deinits of non-MainActor types) on some
+/// hot paths, so checking whether garbage logging is enabled must not require
+/// hopping to `SettingsManager`'s `@MainActor` isolation or touching UserDefaults.
+private let garbageLoggingGate = Atomic<Bool>(false)
+
+/// Enables/disables `AKGarbage`'s runtime gate. Callable from any thread/actor.
+/// `SettingsManager` calls this whenever `garbageLoggingEnabled` changes.
+func akSetGarbageLoggingEnabled(_ enabled: Bool) {
+    garbageLoggingGate.store(enabled, ordering: .relaxed)
 }
-#else
-func AKDebug(_ msg: String) {}
-#endif
+
+@_documentation(visibility: private)
+func AKGarbage(_ msg: @autoclosure () -> String) {
+    guard garbageLoggingGate.load(ordering: .relaxed) else { return }
+    let message = msg()
+    Logger.Hammerspoon.debug("\(message)")
+    AKLog(.Garbage, message)
+}

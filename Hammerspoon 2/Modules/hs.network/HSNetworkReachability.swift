@@ -173,7 +173,7 @@ private func pathToString(_ path: NWPath) -> String {
 
     isolated deinit {
         destroy()
-        AKDebug("deinit HSNetworkReachability")
+        AKGarbage("deinit HSNetworkReachability")
     }
 
     // MARK: - HSNetworkReachabilityAPI
@@ -196,7 +196,7 @@ private func pathToString(_ path: NWPath) -> String {
         guard !_isWatching else { return self }
         _isWatching = true
         selfRetain = self
-        AKTrace("HSNetworkReachability.start()")
+        AKDebug("HSNetworkReachability.start()")
         return self
     }
 
@@ -226,6 +226,6 @@ private func pathToString(_ path: NWPath) -> String {
         guard _isWatching else { return }
         _isWatching = false
         selfRetain = nil
-        AKTrace("HSNetworkReachability.stop()")
+        AKDebug("HSNetworkReachability.stop()")
     }
 }

@@ -230,7 +230,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -239,7 +239,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -319,7 +319,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.localeDidChange() }
         }
-        AKTrace("hs.locale._addWatcher: started")
+        AKDebug("hs.locale._addWatcher: started")
     }
 
     @objc func _removeWatcher() {
@@ -328,7 +328,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
             localeChangeObserver = nil
         }
         watcherCallback = nil
-        AKTrace("hs.locale._removeWatcher: stopped")
+        AKDebug("hs.locale._removeWatcher: stopped")
     }
 
     private func localeDidChange() {

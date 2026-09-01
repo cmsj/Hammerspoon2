@@ -143,11 +143,11 @@ private struct RawObservation: Sendable {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -159,7 +159,7 @@ private struct RawObservation: Sendable {
     }
 
     func shutdown() {
-        AKDebug("Shutdown of \(moduleName): \(engineID)")
+        AKGarbage("Shutdown of \(moduleName): \(engineID)")
     }
 
     // MARK: - HSOCRModuleAPI

@@ -199,7 +199,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSMIDIDevice(\(identifier))")
+        AKGarbage("deinit of HSMIDIDevice(\(identifier))")
     }
 
     // MARK: - HSMIDIDeviceAPI
@@ -294,7 +294,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
             AKError("hs.midi: Failed to connect input port to '\(name)' (error \(connectStatus))")
             return
         }
-        AKTrace("hs.midi: Connected input for '\(name)'")
+        AKDebug("hs.midi: Connected input for '\(name)'")
     }
 
     private func disconnectInput() {

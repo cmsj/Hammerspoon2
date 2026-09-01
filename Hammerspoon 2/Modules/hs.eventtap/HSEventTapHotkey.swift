@@ -135,7 +135,7 @@ protocol EventTapHotkeyCoordinator: AnyObject {
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSEventTapHotkey: keyCode=\(keyCode)")
+        AKGarbage("deinit of HSEventTapHotkey: keyCode=\(keyCode)")
     }
 
     func destroy() {

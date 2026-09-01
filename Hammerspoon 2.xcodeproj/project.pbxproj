@@ -97,6 +97,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4F5D2E4930462D2D005EA5EA /* Exceptions for "Hammerspoon 2" folder in "hs2" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Utilities/LoggingLevels.swift,
+			);
+			target = 4FE4C0032F00000000000003 /* hs2 */;
+		};
 		4F917A71301CBE2500878259 /* Exceptions for "Hammerspoon 2" folder in "Hammerspoon 2" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -125,6 +132,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				4F917A71301CBE2500878259 /* Exceptions for "Hammerspoon 2" folder in "Hammerspoon 2" target */,
+				4F5D2E4930462D2D005EA5EA /* Exceptions for "Hammerspoon 2" folder in "hs2" target */,
 			);
 			path = "Hammerspoon 2";
 			sourceTree = "<group>";
