@@ -32,7 +32,7 @@ class JSEngine {
     // MARK: - JSContext Managing
     private func createContext() throws(HammerspoonError) {
         id = UUID()
-        AKDebug("Creating JavaScript context: \(id)")
+        AKDebug("Creating JSContext: \(id)")
         vm = JSVirtualMachine()
         guard vm != nil else {
             throw HammerspoonError(.vmCreation, msg: "Unknown error (vm)")
@@ -74,7 +74,7 @@ class JSEngine {
     }
 
     private func deleteContext() {
-        AKDebug("Destroying JavaScript context: \(id)")
+        AKDebug("Destroying JSContext: \(id)")
 
         SettingsManager.shared.removeAllDelegates()
 

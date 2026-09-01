@@ -253,7 +253,7 @@ struct ConsoleView: View {
                 }
             }
             ToolbarItem(id: "copyVisibleLogs") {
-                Button("Copy Visible Logs") {
+                Button("Copy Logs") {
                     let logText = displayedEntries
                         .map { formatEntry($0) }
                         .joined(separator: "\n")
