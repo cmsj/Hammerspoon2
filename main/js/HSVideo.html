@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSVideo - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSVideo</span>
+</nav>
+<div class="page-header">
+    <h1>HSVideo</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>Bridge type for working with video playback in JavaScript</p>
+<p>HSVideo wraps an <code>AVQueuePlayer</code> and can be embedded in an <code>hs.ui.window</code> via <code>.video()</code>,
+or driven entirely from JavaScript with <code>play()</code>, <code>pause()</code>, <code>seek()</code>, <code>loop()</code>, and <code>volume</code>.</p>
+<h2>Loading Video</h2>
+<p>Each entry may be a local file path (<code>~</code> is expanded) or a remote URL string. Multiple
+entries are queued and play back to back, in order.</p>
+<pre><code class="language-javascript">// A single local file
+const clip = HSVideo.fromURLs([&quot;~/Movies/clip.mp4&quot;])
+
+// A playlist mixing a local file and a remote stream
+const playlist = HSVideo.fromURLs([&quot;~/Movies/intro.mp4&quot;, &quot;https://example.com/video.mp4&quot;])
+</code></pre>
+<h2>Playback Control</h2>
+<pre><code class="language-javascript">const clip = HSVideo.fromURLs([&quot;~/Movies/clip.mp4&quot;])
+clip.volume = 0.5
+clip.loop(true)
+clip.play()
+// ... later ...
+clip.seek(30)
+clip.pause()
+</code></pre>
+<h2>Looping</h2>
+<p>Gapless looping (via <code>AVPlayerLooper</code>) is only supported when the playlist contains a
+single URL. Calling <code>loop(true)</code> on a multi-URL playlist has no effect (the playlist just
+plays through once) and logs a warning.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="volume">
+        <h3><a href="#volume">volume</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The playback volume, from 0.0 (silent) to 1.0 (full volume)</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSVideo.swift#L106" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSVideo.swift:106</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="fromURLs">
+        <h3>
+<span class="static-badge">static</span><a href="#fromURLs">HSVideo.fromURLs(urls) -> HSVideo</a>
+        </h3>
+
+        <div class="description">Load a playlist of videos to play back to back, in order</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">HSVideo.fromURLs(urls) -> HSVideo</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">urls</td>
+                    <td class="param-type">string[]</td>
+                    <td class="param-desc">Each entry is a local file path (`~` is expanded) or a remote URL string</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSVideo</div>
+        <div class="return-desc">An HSVideo object, or null if the list is empty or an entry couldn&#39;t be resolved</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const clip = HSVideo.fromURLs([&quot;~/Movies/clip.mp4&quot;])
+const playlist = HSVideo.fromURLs([&quot;~/Movies/intro.mp4&quot;, &quot;https://example.com/video.mp4&quot;])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSVideo.swift#L60" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSVideo.swift:60</a>
+        </div>
+    </div>
+    <div class="method" id="play">
+        <h3>
+<a href="#play">play() -> HSVideo</a>
+        </h3>
+
+        <div class="description">Start (or resume) playback</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">play() -> HSVideo</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSVideo</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">clip.play()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSVideo.swift#L68" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSVideo.swift:68</a>
+        </div>
+    </div>
+    <div class="method" id="pause">
+        <h3>
+<a href="#pause">pause() -> HSVideo</a>
+        </h3>
+
+        <div class="description">Pause playback</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">pause() -> HSVideo</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSVideo</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">clip.pause()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSVideo.swift#L76" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSVideo.swift:76</a>
+        </div>
+    </div>
+    <div class="method" id="seek">
+        <h3>
+<a href="#seek">seek(seconds) -> HSVideo</a>
+        </h3>
+
+        <div class="description">Seek to a specific position</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">seek(seconds) -> HSVideo</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">seconds</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The position to seek to, in seconds</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSVideo</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">clip.seek(30)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSVideo.swift#L85" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSVideo.swift:85</a>
+        </div>
+    </div>
+    <div class="method" id="loop">
+        <h3>
+<a href="#loop">loop(enabled) -> HSVideo</a>
+        </h3>
+
+        <div class="description">Enable or disable gapless looping
+Only supported when this HSVideo was created from a single-URL playlist. Enabling
+loop on a multi-URL playlist has no effect and logs a warning.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">loop(enabled) -> HSVideo</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">enabled</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` to loop playback indefinitely</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSVideo</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">HSVideo.fromURLs([&quot;~/Movies/clip.mp4&quot;]).loop(true).play()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSVideo.swift#L98" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSVideo.swift:98</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSVideo');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

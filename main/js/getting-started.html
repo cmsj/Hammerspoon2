@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="active">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Getting Started</span>
+</nav>
+<div class="page-header">
+    <h1>Getting Started</h1>
+    <span class="page-badge">Guide</span>
+</div>
+
+<div class="guide-content"><p>Hammerspoon 2 runs a JavaScript file of yours inside a real macOS app, and gives that
+JavaScript access to a large surface of system APIs — windows, hotkeys, the filesystem,
+Wi-Fi, AppleScript, notifications, and a SwiftUI-backed UI toolkit, among others. This guide
+gets you from an empty config to a handful of working automations, and flags the handful of
+conventions that aren&#39;t obvious from the API reference alone — most importantly, how object
+lifetime works, since it&#39;s the single most common source of &quot;this stopped working for no
+reason&quot; bug reports. If you&#39;re arriving from Hammerspoon 1, read the
+<a href="migration-guide.html">migration guide</a> instead — it assumes v1 knowledge; this guide
+doesn&#39;t.</p>
+<h2 id="your-config-file">Your config file</h2>
+<p>Your automations live in one JavaScript file, <code>init.js</code>, in the config directory you chose
+during onboarding (typically <code>~/.config/Hammerspoon2/</code>). You can find the exact paths at any
+time from the console:</p>
+<pre><code class="language-js">console.log(hs.appinfo.configPath)  // the init.js file itself
+console.log(hs.appinfo.configDir)   // the directory it lives in
+</code></pre>
+<p><code>init.js</code> is plain JavaScript, evaluated top to bottom, once, when Hammerspoon starts or when
+you reload. There&#39;s no special config format or entry-point function to implement — top-level
+code runs immediately, and anything you want to keep running (hotkeys, watchers, timers, UI)
+needs to be set up explicitly, as covered below.</p>
+<p><strong>Reloading:</strong> pick &quot;Reload Config&quot; from the menu bar icon, or call <code>hs.reload()</code> yourself
+from a hotkey — reloading is itself an ordinary API call, useful for building a &quot;reload
+config&quot; hotkey. By default this tears down the JavaScript runtime and re-evaluates <code>init.js</code>
+from scratch, without a full app relaunch; a &quot;Relaunch on reload&quot; setting exists if you&#39;d
+rather have a clean process each time (useful if you suspect native state, not just JS state,
+is stuck).</p>
+<p><strong>The console:</strong> <code>hs.openConsole()</code> opens the log/REPL window; <code>console.log()</code>/<code>.warn()</code>/
+<code>.error()</code>/<code>.info()</code>/<code>.debug()</code> write to it. Keep it open while you work — most mistakes show
+up there first, as a thrown JS exception with a file/line number.</p>
+<p><strong>Offline docs:</strong> <code>hs.docs.show()</code> opens the full API reference bundled into the app, in case
+you&#39;re scripting somewhere without a browser handy.</p>
+<h2 id="object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time">Object lifecycle: the one habit that saves you the most debugging time</h2>
+<p>Almost everything Hammerspoon hands back to you — a hotkey, a timer, a path watcher, a
+UI window, a reactive value — is a live JavaScript object backed by a real native resource
+underneath. As long as your JavaScript keeps a reference to it, that resource stays alive. The
+moment nothing in your JS references it any more, JavaScriptCore&#39;s garbage collector is free
+to collect it — and Hammerspoon then tears down whatever it was backing: the hotkey stops
+firing, the timer stops ticking, the window closes. This is normal JS garbage collection
+behavior, not a Hammerspoon bug, but it catches people because the failure is silent and can
+take a while to show up (GC doesn&#39;t necessarily run the instant the object becomes
+unreachable).</p>
+<p>Concretely, this is the mistake:</p>
+<pre><code class="language-js">// Nothing keeps a reference to what bind() returns. It works today, and may
+// simply stop firing after the next garbage collection.
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;h&quot;, () =&gt; {
+    console.log(&quot;hello&quot;)
+})
+</code></pre>
+<p>And this is the fix — capture the return value in a variable that lives as long as your
+config does, typically a top-level <code>const</code> in <code>init.js</code>:</p>
+<pre><code class="language-js">const helloHotkey = hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;h&quot;, () =&gt; {
+    console.log(&quot;hello&quot;)
+})
+</code></pre>
+<p><code>helloHotkey</code> never needs to be read again for this to work — its mere existence as a
+reachable variable is what keeps the hotkey alive. The same rule applies to anything returned
+from a factory-style call: <code>hs.hotkey.bind()</code>/<code>bindSpec()</code>, <code>hs.timer.create()</code>/<code>doEvery()</code>/
+<code>doAfter()</code>, <code>hs.fs.createPathWatcher()</code>, <code>hs.ui.window()</code>/<code>alert()</code>/<code>dialog()</code> while it&#39;s
+still showing, and any reactive value (<code>HSString</code>, <code>HSColor</code>, <code>HSImage</code>) you intend to update
+later. If you&#39;re building several of these, a single top-level array works well as a catch-all:</p>
+<pre><code class="language-js">const keepAlive = []
+keepAlive.push(hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;h&quot;, () =&gt; console.log(&quot;hello&quot;)))
+keepAlive.push(hs.timer.doEvery(60, () =&gt; console.log(&quot;still here&quot;)))
+</code></pre>
+<p>One family of APIs behaves differently: modules with <code>addWatcher()</code>/<code>removeWatcher()</code> (
+<code>hs.pasteboard</code>, <code>hs.screen</code>, <code>hs.wifi</code>, <code>hs.application</code>, and others) take your callback
+function directly rather than handing back a separate object — the module itself holds the
+reference, so you don&#39;t need a variable just to keep it alive. You <em>do</em> still need to keep a
+reference to the function if you ever want to call <code>removeWatcher()</code> with it later, since
+removal matches on function identity, not on when/how it was registered:</p>
+<pre><code class="language-js">const onPaste = () =&gt; console.log(&quot;clipboard changed&quot;)
+hs.pasteboard.addWatcher(onPaste)
+// ... later ...
+hs.pasteboard.removeWatcher(onPaste)  // only works because we kept `onPaste` around
+</code></pre>
+<p>If a hotkey, timer, or watcher you built mysteriously stops working after your config has been
+running a while, this is the first thing to check.</p>
+<h2 id="hotkeys">Hotkeys</h2>
+<p><code>hs.hotkey.bind(mods, key, onPress, onRelease)</code> is the workhorse. Either callback can be
+<code>null</code>:</p>
+<pre><code class="language-js">const lockScreen = hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;l&quot;, () =&gt; {
+    hs.power.lockScreen()
+}, null)
+</code></pre>
+<p>The returned object supports <code>.enable()</code>, <code>.disable()</code>, <code>.isEnabled()</code>, and <code>.destroy()</code> if
+you want to toggle or tear down a hotkey deliberately, rather than waiting on GC. There&#39;s also
+<code>hs.hotkey.bindSpec(mods, key, message, onPress, onRelease)</code>, identical except for an extra
+description string, for when you want to self-document what a hotkey is for.</p>
+<h2 id="watching-for-changes">Watching for changes</h2>
+<p>The <code>addWatcher()</code>/<code>removeWatcher()</code> pattern shown above is consistent across most modules
+that report ongoing state changes — clipboard contents, display configuration, application
+launch/quit, and more. <code>hs.screen</code>&#39;s watcher is a typical example; the callback takes no
+arguments, so query current state from inside it:</p>
+<pre><code class="language-js">hs.screen.addWatcher(() =&gt; {
+    console.log(`Screen layout changed, now ${hs.screen.all().length} screen(s)`)
+})
+</code></pre>
+<p>A few modules (<code>hs.wifi</code>, <code>hs.fs</code>&#39;s path watcher) instead return a configurable watcher
+object rather than taking your callback directly — the same lifecycle rule from above
+applies to those, since the object itself is what needs to stay referenced.</p>
+<p>For filesystem changes specifically, <code>hs.fs.createPathWatcher(path)</code> returns an object you
+configure and start (remember: keep a reference to it):</p>
+<pre><code class="language-js">const docsWatcher = hs.fs.createPathWatcher(&quot;~/Documents&quot;)
+docsWatcher.setCallback((paths, flags) =&gt; {
+    paths.forEach((p, i) =&gt; console.log(`${flags[i].join(&quot;,&quot;)}: ${p}`))
+}).start()
+</code></pre>
+<p>Events batch with roughly a second of latency — don&#39;t expect sub-second delivery.</p>
+<h2 id="talking-to-the-rest-of-macos-promises">Talking to the rest of macOS: Promises</h2>
+<p>Anything that could take a while — running AppleScript/JXA, making an HTTP request, launching
+an app — returns a Promise rather than taking a completion-callback argument:</p>
+<pre><code class="language-js">hs.osascript.applescript(`tell application &quot;Finder&quot; to name of every disk`)
+    .then((result) =&gt; {
+        if (result.success) {
+            console.log(result.result)
+        } else {
+            console.error(`osascript failed: ${result.raw}`)
+        }
+    })
+</code></pre>
+<p>Note the shape there: <code>hs.osascript</code>&#39;s Promise always <em>resolves</em>, even when the script itself
+failed — check <code>result.success</code> rather than reaching for <code>.catch()</code>. Other modules do reject
+on failure, so check the API reference for the specific module you&#39;re calling.</p>
+<p><code>hs.application.launchOrFocus(bundleID)</code> follows the same Promise pattern for the common
+&quot;open this app, or bring it to the front if it&#39;s already running&quot; case:</p>
+<pre><code class="language-js">hs.application.launchOrFocus(&quot;com.apple.Safari&quot;).then((ok) =&gt; {
+    console.log(ok ? &quot;Focused Safari&quot; : &quot;Couldn&#39;t launch/focus Safari&quot;)
+})
+</code></pre>
+<h2 id="moving-windows-around">Moving windows around</h2>
+<p><code>hs.window</code> gives you direct queries and single-window actions — there&#39;s no persistent
+filter/subscription/layout system, so this section is deliberately simple:</p>
+<pre><code class="language-js">const win = hs.window.focusedWindow()
+if (win) {
+    const screenFrame = win.screen.frame
+    win.frame = new HSRect(
+        screenFrame.x,
+        screenFrame.y,
+        screenFrame.w / 2,
+        screenFrame.h
+    )
+}
+</code></pre>
+<p><code>win.frame</code> is a settable property — assign it a new <code>HSRect</code> to move and resize a window in
+one step. <code>HSPoint</code>/<code>HSRect</code>/<code>HSSize</code> (constructed directly with <code>new HSRect(x, y, w, h)</code>, and
+so on) carry the geometry math you&#39;d want — <code>centerOnScreen()</code> on the window itself covers the
+common recentering case without any manual math at all.</p>
+<h2 id="building-ui-with-hsui">Building UI with hs.ui</h2>
+<p><code>hs.ui</code> is how you put anything on screen — alerts, dialogs, custom windows, live-updating
+overlays. It works on two ideas that are worth understanding before you write any code:</p>
+<ol>
+<li><strong>You build a declarative tree once, with a chained builder.</strong> Call <code>hs.ui.window({x, y, w, h})</code> to start, then chain layout containers (<code>.vstack()</code>, <code>.hstack()</code>, <code>.zstack()</code>),
+content (<code>.text()</code>, <code>.image()</code>, <code>.button()</code>, <code>.rectangle()</code>, <code>.circle()</code>), and styling
+(<code>.fill()</code>, <code>.frame()</code>, <code>.font()</code>, <code>.foregroundColor()</code>) or interaction (<code>.onClick()</code>,
+<code>.onHover()</code>) calls that apply to whatever element preceded them. Containers close with
+<code>.end()</code>. Finish with <code>.show()</code>. There&#39;s no &quot;append an element to an existing window&quot;
+call — to change the <em>structure</em> of what&#39;s on screen, you build a new tree and show it.</li>
+<li><strong>Anything that changes after the window is shown goes through a reactive value, not a
+setter on the window.</strong> Create one with <code>HSString</code>/<code>hs.ui.string(...)</code>, <code>HSColor.hex(...)</code>/
+<code>.rgb(...)</code>/<code>.named(...)</code>, or an <code>HSImage</code>, pass it in where you&#39;d otherwise pass a plain
+value, and later call <code>.set()</code> on <em>that value itself</em> — from a hotkey callback, a timer, a
+watcher, wherever. The on-screen element updates automatically; you never touch the window
+object again for that update.</li>
+</ol>
+<p>The simplest possible case, a self-dismissing alert:</p>
+<pre><code class="language-js">hs.ui.alert(&quot;Saved!&quot;).duration(2).show()
+</code></pre>
+<p>A small window with a couple of elements and a click handler:</p>
+<pre><code class="language-js">const win = hs.ui.window({ x: 100, y: 100, w: 240, h: 120 })
+    .windowTitle(&quot;Quick Actions&quot;)
+    .vstack()
+        .text(&quot;Pick something:&quot;)
+        .button(&quot;Lock screen&quot;).onClick(() =&gt; hs.power.lockScreen())
+        .button(&quot;Close&quot;).onClick(() =&gt; win.hide())
+    .end()
+    .show()
+</code></pre>
+<p>(Note the same lifecycle rule applies here — <code>win</code> needs to stay referenced for as long as you
+want the window to exist. <code>hs.ui</code> windows are also usually kept open indefinitely on purpose,
+unlike a hotkey you set up once and forget about, so it&#39;s common to see them assigned to a
+top-level <code>const</code> right alongside your hotkeys.)</p>
+<p>And a window whose text updates live via a reactive value, driven by a timer:</p>
+<pre><code class="language-js">const clockText = hs.ui.string(new Date().toLocaleTimeString())
+
+const clockWindow = hs.ui.window({ x: 20, y: 20, w: 160, h: 60 })
+    .vstack()
+        .text(clockText)
+    .end()
+    .show()
+
+const clockTimer = hs.timer.doEvery(1, () =&gt; {
+    clockText.set(new Date().toLocaleTimeString())
+})
+</code></pre>
+<p><code>clockText</code>, <code>clockWindow</code>, and <code>clockTimer</code> all need to stay reachable — that&#39;s three
+separate objects this example relies on staying alive, and dropping any one of them (e.g.
+building <code>clockText</code> inline inside the <code>.text()</code> call instead of assigning it first) would
+mean losing the ability to update it later, or the timer/window disappearing under GC.</p>
+<h2 id="splitting-a-growing-config-into-multiple-files">Splitting a growing config into multiple files</h2>
+<p><code>init.js</code> doesn&#39;t have to hold everything. <code>require(path)</code> loads another JS file as its own
+module — the same shape as Node&#39;s <code>require()</code>: give it something to hand back by setting
+<code>module.exports</code> (or individual properties on <code>exports</code>), and that&#39;s what the caller gets back.</p>
+<pre><code class="language-js">// window-management.js
+const LEFT_HALF = new HSRect(0, 0, 0.5, 1)  // a unit rect: left half of whichever screen it&#39;s applied to
+
+function centerFocused() {
+    const win = hs.window.focusedWindow()
+    if (win) win.centerOnScreen()
+}
+
+function snapLeft() {
+    const win = hs.window.focusedWindow()
+    if (win) win.frame = LEFT_HALF.fromUnitRect(win.screen.frame)
+}
+
+module.exports = { centerFocused, snapLeft, LEFT_HALF }
+</code></pre>
+<pre><code class="language-js">// init.js
+const { centerFocused, snapLeft } = require(&quot;./window-management.js&quot;)
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;c&quot;, centerFocused)
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;left&quot;, snapLeft)
+</code></pre>
+<p><code>module.exports</code> isn&#39;t limited to functions — it&#39;s a plain object, so export whatever a
+caller needs: functions, constants, config objects, <code>HSRect</code>/<code>HSColor</code> values, anything. The
+example above exports two functions and a reusable <code>HSRect</code> constant (<code>LEFT_HALF</code>) side by
+side, and <code>init.js</code> picks out only the pieces it wants via destructuring.</p>
+<p>A few things worth knowing about how paths resolve:</p>
+<ul>
+<li><strong>Local files need an explicit <code>./</code> or <code>../</code> prefix.</strong> <code>require(&quot;foo.js&quot;)</code> — no prefix — is
+not the same as <code>require(&quot;./foo.js&quot;)</code> and won&#39;t find a file sitting next to <code>init.js</code>.
+Absolute paths and <code>~/...</code> paths also work directly.</li>
+<li><strong>The <code>.js</code> extension is optional</strong> — <code>require(&quot;./utils&quot;)</code> and <code>require(&quot;./utils.js&quot;)</code> are
+equivalent.</li>
+<li><strong>Requiring a directory looks for <code>index.js</code></strong> inside it.</li>
+<li><strong><code>.json</code> files are parsed automatically</strong> — <code>require(&quot;./settings.json&quot;)</code> returns the parsed
+object, not a string.</li>
+<li><strong>Modules are cached by resolved path.</strong> Requiring the same file twice from anywhere in your
+config returns the identical <code>exports</code> object both times rather than re-evaluating it.</li>
+</ul>
+<p><strong>Scope:</strong> each required file&#39;s top-level code runs inside its own private function, not
+global scope — a <code>var</code>/<code>let</code>/<code>const</code>/function declared at the top of <code>window-management.js</code> is
+invisible everywhere else, including <code>init.js</code>; <code>module.exports</code> is the only way to hand
+anything back. <code>init.js</code> itself is the one exception — it runs unwrapped at true global scope,
+specifically so hotkeys/timers/watchers it creates
+<a href="#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time">stay alive</a> — so a
+required file <em>can</em> read whatever <code>init.js</code> declared at its own top level, but not the other
+way around, and two required files can&#39;t see each other&#39;s declarations either. Don&#39;t lean on
+that asymmetry deliberately; pass values between files through <code>module.exports</code> instead.</p>
+<h2 id="where-to-go-from-here">Where to go from here</h2>
+<p>The <a href="index.html">API reference</a> covers every module and type in full, with parameters and
+examples for each method — this guide only scratched the surface of what&#39;s available. Want to
+install someone else&#39;s packaged automation, or share your own? See the
+<a href="spoons-guide.html">Spoons guide</a>. Coming from Hammerspoon 1? See the
+<a href="migration-guide.html">migration guide</a> for what moved, what changed shape, and what has no v2
+equivalent yet.</p>
+</div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('getting-started');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

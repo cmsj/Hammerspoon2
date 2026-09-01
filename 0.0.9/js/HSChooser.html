@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSChooser - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSChooser</span>
+</nav>
+<div class="page-header">
+    <h1>HSChooser</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>A keyboard-driven floating chooser panel.</p>
+<p>Create via <code>hs.chooser.create()</code>. Configure choices, set callbacks, then call <code>.show()</code>.</p>
+<h2>Choice format</h2>
+<p>Each choice is a plain object with required <code>text</code> and optional <code>subText</code>, <code>image</code>, <code>valid</code>,
+and <code>contextMenu</code> fields. All other fields are passed through to the <code>onSelect</code> callback unchanged.</p>
+<p>The <code>contextMenu</code> array defines per-row right-click menu entries. Each entry is either
+<code>{ title: &quot;...&quot;, action: (item) =&gt; {} }</code> for a button or <code>{ type: &quot;divider&quot; }</code> for a separator:</p>
+<pre><code class="language-javascript">{
+  text: &quot;Open Safari&quot;, subText: &quot;com.apple.Safari&quot;,
+  image: HSImage.fromAppBundle(&quot;com.apple.Safari&quot;), valid: true, myData: 42,
+  contextMenu: [
+    { title: &quot;Open&quot;, action: () =&gt; hs.urlevent.openURL(&quot;https://apple.com&quot;) },
+    { type: &quot;divider&quot; },
+    { title: &quot;Copy bundle ID&quot;, action: () =&gt; hs.pasteboard.writeString(&quot;com.apple.Safari&quot;) }
+  ]
+}
+</code></pre>
+<h2>Keyboard shortcuts</h2>
+<ul>
+<li><strong>Return</strong> — confirm selection</li>
+<li><strong>Escape</strong> — dismiss (calls <code>onSelect</code> with <code>null</code>)</li>
+<li><strong>↑ / ↓</strong> — move through results</li>
+</ul>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="typeName">
+        <h3><a href="#typeName">typeName</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">Read-only type identifier.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L43" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:43</a>
+        </div>
+    </div>
+    <div class="property" id="identifier">
+        <h3><a href="#identifier">identifier</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">Stable UUID string for this chooser instance.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:46</a>
+        </div>
+    </div>
+    <div class="property" id="query">
+        <h3><a href="#query">query</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The current text in the search field. Setting this from JS updates the display but
+does not invoke the `onQueryChange` callback.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L56" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:56</a>
+        </div>
+    </div>
+    <div class="property" id="placeholder">
+        <h3><a href="#placeholder">placeholder</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">Placeholder text shown in the empty search field (default: `&quot;Search...&quot;`).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L63" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:63</a>
+        </div>
+    </div>
+    <div class="property" id="searchSubText">
+        <h3><a href="#searchSubText">searchSubText</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether searches match against `subText` in addition to `text` (default: `false`).
+Only applies when a static choices array is provided.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L71" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:71</a>
+        </div>
+    </div>
+    <div class="property" id="enableDefaultForQuery">
+        <h3><a href="#enableDefaultForQuery">enableDefaultForQuery</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">When `true` and the query is non-empty but there are no matching choices, `onSelect`
+is called with `{ text: &lt;query&gt; }` instead of `null` (default: `false`).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:79</a>
+        </div>
+    </div>
+    <div class="property" id="selectedRow">
+        <h3><a href="#selectedRow">selectedRow</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The zero-based index of the currently highlighted row (-1 when empty).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:117</a>
+        </div>
+    </div>
+    <div class="property" id="width">
+        <h3><a href="#width">width</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">Width of the chooser as a fraction of the screen width (default: `0.5` = 50 %).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L126" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:126</a>
+        </div>
+    </div>
+    <div class="property" id="visibleRows">
+        <h3><a href="#visibleRows">visibleRows</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">Maximum number of rows visible at once without scrolling (default: `10`).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L133" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:133</a>
+        </div>
+    </div>
+    <div class="property" id="isVisible">
+        <h3><a href="#isVisible">isVisible</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">`true` if the chooser panel is currently on screen.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L158" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:158</a>
+        </div>
+    </div>
+    <div class="property" id="onSelect">
+        <h3><a href="#onSelect">onSelect</a></h3>
+        <div class="prop-type">function | null</div>
+        <div class="description">Called when the user confirms a selection, or null to remove the handler.
+The argument is the chosen row object (the original dict you passed to `setChoices`,
+with `text`, `subText`, `image`, `valid`, and any custom fields intact).
+The argument is `null` when dismissed (Escape).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L175" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:175</a>
+        </div>
+    </div>
+    <div class="property" id="onQueryChange">
+        <h3><a href="#onQueryChange">onQueryChange</a></h3>
+        <div class="prop-type">function | null</div>
+        <div class="description">Called on every keystroke with the new query string, or null to remove the handler.
+Use this to debounce expensive searches or trigger async data fetching.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L187" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:187</a>
+        </div>
+    </div>
+    <div class="property" id="onShow">
+        <h3><a href="#onShow">onShow</a></h3>
+        <div class="prop-type">function | null</div>
+        <div class="description">Called after the panel becomes visible, or null to remove the handler.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L194" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:194</a>
+        </div>
+    </div>
+    <div class="property" id="onHide">
+        <h3><a href="#onHide">onHide</a></h3>
+        <div class="prop-type">function | null</div>
+        <div class="description">Called after the panel is hidden (for any reason: selection, Escape, or `hide()`), or null to remove the handler.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L201" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:201</a>
+        </div>
+    </div>
+    <div class="property" id="onInvalid">
+        <h3><a href="#onInvalid">onInvalid</a></h3>
+        <div class="prop-type">function | null</div>
+        <div class="description">Called when the user activates a row whose `valid` field is `false`, or null to remove the handler.
+The chooser stays open; the argument is the row dict (same shape as `onSelect`).
+If unset, activating an invalid row is silently ignored.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:210</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="setChoices">
+        <h3>
+<a href="#setChoices">setChoices(choices) -> HSChooser</a>
+        </h3>
+
+        <div class="description">on show. The function is responsible for filtering; the chooser displays all items it returns.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setChoices(choices) -> HSChooser</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">choices</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">An array of choice objects, or a function `(query) =&gt; [...]`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSChooser</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">// Static
+chooser.setChoices([{text: &quot;Foo&quot;}, {text: &quot;Bar&quot;}])
+
+// Dynamic
+chooser.setChoices(q =&gt; items.filter(i =&gt; i.text.toLowerCase().includes(q.toLowerCase())))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L99" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:99</a>
+        </div>
+    </div>
+    <div class="method" id="refreshChoices">
+        <h3>
+<a href="#refreshChoices">refreshChoices() -> HSChooser</a>
+        </h3>
+
+        <div class="description">Re-apply filtering (static choices) or re-invoke the choices function (dynamic).
+Call after updating an external data source in an async `onQueryChange` handler.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">refreshChoices() -> HSChooser</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSChooser</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">chooser.refreshChoices()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L108" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:108</a>
+        </div>
+    </div>
+    <div class="method" id="show">
+        <h3>
+<a href="#show">show() -> HSChooser</a>
+        </h3>
+
+        <div class="description">Show the chooser.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">show() -> HSChooser</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSChooser</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">chooser.show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L143" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:143</a>
+        </div>
+    </div>
+    <div class="method" id="hide">
+        <h3>
+<a href="#hide">hide() -> HSChooser</a>
+        </h3>
+
+        <div class="description">Hide the chooser without making a selection. Restores focus to the previously active window.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hide() -> HSChooser</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSChooser</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">chooser.hide()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L151" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:151</a>
+        </div>
+    </div>
+    <div class="method" id="select">
+        <h3>
+<a href="#select">select(row) -> HSChooser</a>
+        </h3>
+
+        <div class="description">Programmatically confirm a selection.
+Omit `row` to confirm the currently highlighted row. Fires `onSelect` (or `onInvalid`
+for rows with `valid: false`) and hides the chooser.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">select(row) -> HSChooser</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">row</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">Zero-based row index, or omit to use the current selection.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSChooser</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">chooser.select()     // confirm highlighted row
+chooser.select(2)    // confirm row at index 2</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L224" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:224</a>
+        </div>
+    </div>
+    <div class="method" id="selectedRowContents">
+        <h3>
+<a href="#selectedRowContents">selectedRowContents(row) -> [String: Any]</a>
+        </h3>
+
+        <div class="description">Returns the dict for the highlighted row, or for a specific row by index.
+Returns `null` if the index is out of range or no choices are set.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">selectedRowContents(row) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">row</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">Zero-based row index, or omit to query the highlighted row.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">The row dict (`{ text, subText?, image?, valid, ...extras }`) or `null`.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const item = chooser.selectedRowContents()
+const item = chooser.selectedRowContents(2)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L236" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:236</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSChooser');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
