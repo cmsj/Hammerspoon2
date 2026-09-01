@@ -142,7 +142,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
         IOHIDManagerScheduleWithRunLoop(ioHIDManager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
         IOHIDManagerOpen(ioHIDManager, IOOptionBits(kIOHIDOptionsTypeNone))
 
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -166,7 +166,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 
     isolated deinit {
         shutdown()
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -226,7 +226,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
         let deck = HSStreamDeckDevice(device: device, model: model)
         devices[entryID] = deck
         deck.startReceivingInputReports()
-        AKTrace("hs.streamdeck: connected \(model.deckType) (\(deck.serialNumber))")
+        AKDebug("hs.streamdeck: connected \(model.deckType) (\(deck.serialNumber))")
         return deck
     }
 
@@ -241,7 +241,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
             return
         }
         deck.destroy()
-        AKTrace("hs.streamdeck: disconnected \(deck.deckType)")
+        AKDebug("hs.streamdeck: disconnected \(deck.deckType)")
         fireWatcherEvent("disconnected", device: deck)
     }
 
@@ -271,13 +271,13 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
             return
         }
         moduleCallback = callback
-        AKTrace("hs.streamdeck._addWatcher(): Started")
+        AKDebug("hs.streamdeck._addWatcher(): Started")
     }
 
     @objc func _removeWatcher() {
         guard moduleCallback != nil else { return }
         moduleCallback = nil
-        AKTrace("hs.streamdeck._removeWatcher(): Stopped")
+        AKDebug("hs.streamdeck._removeWatcher(): Stopped")
     }
 
     private func fireWatcherEvent(_ eventType: String, device: HSStreamDeckDevice) {

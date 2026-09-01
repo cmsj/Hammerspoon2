@@ -120,7 +120,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -130,7 +130,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
     isolated deinit {
         shutdown()
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -229,7 +229,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
             return false
         }
 
-        AKTrace("hs.usb._addWatcher(): Started")
+        AKDebug("hs.usb._addWatcher(): Started")
         return true
     }
 
@@ -260,7 +260,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
         watcherCallback?.detach(from: self)
         watcherCallback = nil
 
-        AKTrace("hs.usb._removeWatcher(): Stopped")
+        AKDebug("hs.usb._removeWatcher(): Stopped")
     }
 
     // MARK: - Private

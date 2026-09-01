@@ -256,7 +256,7 @@ import AXSwift
     }
 
     deinit {
-//        AKDebug("deinit of \(self): \(self.runningApplication.localizedName ?? "UNKNOWN")")
+//        AKGarbage("deinit of \(self): \(self.runningApplication.localizedName ?? "UNKNOWN")")
     }
 
     @objc var pid: Int { Int(self.runningApplication.processIdentifier) }

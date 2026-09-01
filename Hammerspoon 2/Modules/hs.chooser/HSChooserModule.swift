@@ -89,11 +89,11 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -110,13 +110,13 @@ import JavaScriptCore
             chooser.destroy()
         }
         choosers.removeAllObjects()
-        AKDebug("\(moduleName) shutdown: \(engineID)")
+        AKGarbage("\(moduleName) shutdown: \(engineID)")
     }
 
     @objc func create() -> HSChooser {
         let chooser = HSChooser()
         choosers.add(chooser)
-        AKDebug("hs.chooser.create(): \(chooser.identifier)")
+        AKGarbage("hs.chooser.create(): \(chooser.identifier)")
         return chooser
     }
 }

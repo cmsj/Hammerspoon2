@@ -145,7 +145,7 @@ import JavaScriptCore
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSMenuBarItem")
+        AKGarbage("deinit of HSMenuBarItem")
     }
 
     @objc func destroy() {

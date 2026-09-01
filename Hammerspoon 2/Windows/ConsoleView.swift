@@ -30,7 +30,7 @@ struct ConsoleView: View {
 
     @Environment(\.dismissWindow) var dismissWindow
 
-    @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Trace
+    @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Debug
 
     /// Bounds how many entries get laid out regardless of how much history the
     /// per-level buffers retain, so render cost doesn't grow just because retention did.

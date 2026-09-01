@@ -46,12 +46,12 @@ extension Logger {
 final class HammerspoonLog: Sendable {
     static let shared = HammerspoonLog()
 
-    /// `.Debug` entries (module lifecycle/GC diagnostics) are extremely high volume
+    /// `.Garbage` entries (module lifecycle/GC diagnostics) are extremely high volume
     /// compared to normal user-facing logging, so they get their own small, fixed
     /// capacity rather than sharing `consoleHistoryLength` with everything else.
-    private static let debugBufferCapacity = 200
+    private static let garbageBufferCapacity = 200
 
-    /// Per-level ring buffers, so a burst of low-severity entries (e.g. Trace)
+    /// Per-level ring buffers, so a burst of low-severity entries (e.g. Debug)
     /// can't evict high-severity entries (e.g. Error) before a user filtering
     /// the Console to a higher minimum level ever sees them.
     private var buffers: [HammerspoonLogType: [HammerspoonLogEntry]] = [:]
@@ -66,7 +66,7 @@ final class HammerspoonLog: Sendable {
     private(set) var latestSequence: UInt64 = 0
 
     private func capacity(for level: HammerspoonLogType) -> Int {
-        level == .Debug ? Self.debugBufferCapacity : SettingsManager.shared.consoleHistoryLength
+        level == .Garbage ? Self.garbageBufferCapacity : SettingsManager.shared.consoleHistoryLength
     }
 
     func log(_ level: HammerspoonLogType, _ msg: String) {
@@ -125,9 +125,9 @@ func AKError(_ msg: String) {
 }
 
 @_documentation(visibility: private)
-func AKTrace(_ msg: String) {
+func AKDebug(_ msg: String) {
     Logger.Hammerspoon.debug("\(msg)")
-    AKLog(.Trace, msg)
+    AKLog(.Debug, msg)
 }
 
 @_documentation(visibility: private)
@@ -142,22 +142,22 @@ func AKAutocomplete(_ msg: String) {
     AKLog(.Autocomplete, msg)
 }
 
-/// Lock-free, thread-agnostic gate for `AKDebug`. `AKDebug` is called from
+/// Lock-free, thread-agnostic gate for `AKGarbage`. `AKGarbage` is called from
 /// arbitrary threads/actors (including deinits of non-MainActor types) on some
-/// hot paths, so checking whether debug logging is enabled must not require
+/// hot paths, so checking whether garbage logging is enabled must not require
 /// hopping to `SettingsManager`'s `@MainActor` isolation or touching UserDefaults.
-private let debugLoggingGate = Atomic<Bool>(false)
+private let garbageLoggingGate = Atomic<Bool>(false)
 
-/// Enables/disables `AKDebug`'s runtime gate. Callable from any thread/actor.
-/// `SettingsManager` calls this whenever `debugLoggingEnabled` changes.
-func akSetDebugLoggingEnabled(_ enabled: Bool) {
-    debugLoggingGate.store(enabled, ordering: .relaxed)
+/// Enables/disables `AKGarbage`'s runtime gate. Callable from any thread/actor.
+/// `SettingsManager` calls this whenever `garbageLoggingEnabled` changes.
+func akSetGarbageLoggingEnabled(_ enabled: Bool) {
+    garbageLoggingGate.store(enabled, ordering: .relaxed)
 }
 
 @_documentation(visibility: private)
-func AKDebug(_ msg: @autoclosure () -> String) {
-    guard debugLoggingGate.load(ordering: .relaxed) else { return }
+func AKGarbage(_ msg: @autoclosure () -> String) {
+    guard garbageLoggingGate.load(ordering: .relaxed) else { return }
     let message = msg()
     Logger.Hammerspoon.debug("\(message)")
-    AKLog(.Debug, message)
+    AKLog(.Garbage, message)
 }

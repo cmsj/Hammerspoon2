@@ -157,7 +157,7 @@ import JavaScriptCoreExtras
         if let result = modules[name] as? T {
             return result
         } else {
-            AKTrace("Loading module: \(name)")
+            AKDebug("Loading module: \(name)")
             let module = type.init(engineID: engineID)
             modules[name] = module
 
@@ -172,7 +172,7 @@ import JavaScriptCoreExtras
     func shutdown() {
         let names = Array(modules.keys)
         for moduleName in names {
-            AKTrace("Destroying module: \(moduleName)")
+            AKDebug("Destroying module: \(moduleName)")
             modules[moduleName]?.shutdown()
         }
         modules.removeAll()

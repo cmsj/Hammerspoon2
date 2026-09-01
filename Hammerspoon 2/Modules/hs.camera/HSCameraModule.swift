@@ -131,7 +131,7 @@ import AVFoundation
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -144,7 +144,7 @@ import AVFoundation
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -253,7 +253,7 @@ import AVFoundation
             }
         }
 
-        AKTrace("hs.camera._addWatcher(): Started")
+        AKDebug("hs.camera._addWatcher(): Started")
     }
 
     @objc func _removeWatcher() {
@@ -262,6 +262,6 @@ import AVFoundation
         if let obs = connectObserver { nc.removeObserver(obs); connectObserver = nil }
         if let obs = disconnectObserver { nc.removeObserver(obs); disconnectObserver = nil }
         moduleCallback = nil
-        AKTrace("hs.camera._removeWatcher(): Stopped")
+        AKDebug("hs.camera._removeWatcher(): Stopped")
     }
 }

@@ -88,7 +88,7 @@ Use the `/HSTests` skill when writing or reviewing tests.
 
 ### Key Conventions
 
-- **Logging:** `AKTrace(...)`, `AKError(...)`, `AKWarning(...)` — never `print` in production code (the hash module's `deinit` is the exception to clean up).
+- **Logging:** `AKDebug(...)`, `AKError(...)`, `AKWarning(...)` — never `print` in production code (the hash module's `deinit` is the exception to clean up).
 - **JS↔Swift on main thread:** JS runs on the main thread. Use `MainActor.assumeIsolated { }` when JS calls into `@MainActor`-isolated code.
 - **`JSConvertible` protocol** — used for custom bridging of Swift types to/from `JSValue`.
 - **SourceKit false positives:** SourceKit frequently reports "cannot find type" errors across files; these are not real compile errors.

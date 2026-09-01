@@ -105,7 +105,7 @@ extension SBApplication: ShortcutsBridgeApp {}
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -115,7 +115,7 @@ extension SBApplication: ShortcutsBridgeApp {}
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -154,7 +154,7 @@ extension SBApplication: ShortcutsBridgeApp {}
                 "actionCount": actionCount
             ])
         }
-        AKTrace("hs.shortcuts.list(): Returned \(result.count) shortcuts")
+        AKDebug("hs.shortcuts.list(): Returned \(result.count) shortcuts")
         return result
     }
 
@@ -175,7 +175,7 @@ extension SBApplication: ShortcutsBridgeApp {}
                         let message = output?.isEmpty == false
                             ? output!
                             : "Shortcut '\(name)' failed with exit code \(exitCode)"
-                        AKTrace("hs.shortcuts.run(): '\(name)' rejected: \(message)")
+                        AKDebug("hs.shortcuts.run(): '\(name)' rejected: \(message)")
                         holder.rejectWithMessage(message)
                     }
                 } catch {
@@ -197,7 +197,7 @@ extension SBApplication: ShortcutsBridgeApp {}
             return
         }
         NSWorkspace.shared.open(url)
-        AKTrace("hs.shortcuts.open(): Opened '\(name)'")
+        AKDebug("hs.shortcuts.open(): Opened '\(name)'")
     }
 
     // MARK: - Private Helpers

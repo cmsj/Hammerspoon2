@@ -134,7 +134,7 @@ import JavaScriptCore
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -143,7 +143,7 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -195,7 +195,7 @@ import JavaScriptCore
             MainActor.assumeIsolated { self?.fireWatcherEvent() }
         }
 
-        AKTrace("hs.screen._addWatcher: started")
+        AKDebug("hs.screen._addWatcher: started")
     }
 
     @objc func _removeWatcher() {
@@ -207,7 +207,7 @@ import JavaScriptCore
         }
         watcherCallback = nil
 
-        AKTrace("hs.screen._removeWatcher: stopped")
+        AKDebug("hs.screen._removeWatcher: stopped")
     }
 
     private func fireWatcherEvent() {

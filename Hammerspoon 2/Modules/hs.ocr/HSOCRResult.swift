@@ -88,6 +88,6 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("deinit of HSOCRResult")
+        AKGarbage("deinit of HSOCRResult")
     }
 }

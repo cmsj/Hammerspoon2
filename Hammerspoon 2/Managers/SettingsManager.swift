@@ -120,7 +120,7 @@ final class SettingsManager {
         case relaunchOnReload
         case dockMenuBehaviour
         case hasCompletedOnboarding
-        case debugLoggingEnabled
+        case garbageLoggingEnabled
 
         var id: String { "\(self)" }
 
@@ -136,7 +136,7 @@ final class SettingsManager {
                 return DockMenubarType.both.rawValue
             case .hasCompletedOnboarding:
                 return false
-            case .debugLoggingEnabled:
+            case .garbageLoggingEnabled:
                 return false
             }
         }
@@ -172,10 +172,10 @@ final class SettingsManager {
             notifyDelegates()
         }
     }
-    var debugLoggingEnabled: Bool {
+    var garbageLoggingEnabled: Bool {
         didSet {
-            UserDefaults.standard.set(debugLoggingEnabled, forKey: Keys.debugLoggingEnabled.rawValue)
-            akSetDebugLoggingEnabled(debugLoggingEnabled)
+            UserDefaults.standard.set(garbageLoggingEnabled, forKey: Keys.garbageLoggingEnabled.rawValue)
+            akSetGarbageLoggingEnabled(garbageLoggingEnabled)
             notifyDelegates()
         }
     }
@@ -190,22 +190,22 @@ final class SettingsManager {
             Keys.relaunchOnReload.rawValue: Keys.relaunchOnReload.defaultValue,
             Keys.dockMenuBehaviour.rawValue: Keys.dockMenuBehaviour.defaultValue,
             Keys.hasCompletedOnboarding.rawValue: Keys.hasCompletedOnboarding.defaultValue,
-            Keys.debugLoggingEnabled.rawValue: Keys.debugLoggingEnabled.defaultValue
+            Keys.garbageLoggingEnabled.rawValue: Keys.garbageLoggingEnabled.defaultValue
         ])
         configLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
             ?? (Keys.configLocation.defaultValue as! URL)
         consoleHistoryLength = UserDefaults.standard.integer(forKey: Keys.consoleHistoryLength.rawValue)
         relaunchOnReload = UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
         hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding.rawValue)
-        debugLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.debugLoggingEnabled.rawValue)
+        garbageLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.garbageLoggingEnabled.rawValue)
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
         dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
 
         // didSet does not fire for assignments made inside this initializer, so the
-        // AKDebug gate needs to be seeded explicitly to match the persisted value.
+        // AKGarbage gate needs to be seeded explicitly to match the persisted value.
         // This must come after every stored property is initialized.
-        akSetDebugLoggingEnabled(debugLoggingEnabled)
+        akSetGarbageLoggingEnabled(garbageLoggingEnabled)
 
         defaultsObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
@@ -243,8 +243,8 @@ final class SettingsManager {
         let newHasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding.rawValue)
         if newHasCompletedOnboarding != hasCompletedOnboarding { hasCompletedOnboarding = newHasCompletedOnboarding }
 
-        let newDebugLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.debugLoggingEnabled.rawValue)
-        if newDebugLoggingEnabled != debugLoggingEnabled { debugLoggingEnabled = newDebugLoggingEnabled }
+        let newGarbageLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.garbageLoggingEnabled.rawValue)
+        if newGarbageLoggingEnabled != garbageLoggingEnabled { garbageLoggingEnabled = newGarbageLoggingEnabled }
     }
 }
 
@@ -254,7 +254,7 @@ extension SettingsManager: SettingsManagerProtocol {
         configLocation = Keys.configLocation.defaultValue as! URL
         consoleHistoryLength = Keys.consoleHistoryLength.defaultValue as! Int
         relaunchOnReload = Keys.relaunchOnReload.defaultValue as! Bool
-        debugLoggingEnabled = Keys.debugLoggingEnabled.defaultValue as! Bool
+        garbageLoggingEnabled = Keys.garbageLoggingEnabled.defaultValue as! Bool
 
         let dockMenuType = DockMenubarType(rawValue: Keys.dockMenuBehaviour.defaultValue as! String)!
         dockMenuBehaviour = dockMenuType

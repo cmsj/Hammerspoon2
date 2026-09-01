@@ -111,6 +111,6 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("deinit of HSOCRObservation")
+        AKGarbage("deinit of HSOCRObservation")
     }
 }

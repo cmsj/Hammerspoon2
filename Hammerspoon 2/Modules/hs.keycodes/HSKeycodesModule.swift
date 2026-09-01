@@ -228,7 +228,7 @@ import AppKit
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.inputSourceDidChange() }
         }
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -241,7 +241,7 @@ import AppKit
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -392,7 +392,7 @@ import AppKit
             if tisStringProperty(of: source, key: kTISPropertyInputSourceID) == sourceID {
                 let status = TISSelectInputSource(source)
                 if status == noErr {
-                    AKTrace("hs.keycodes.setSourceID: selected \(sourceID)")
+                    AKDebug("hs.keycodes.setSourceID: selected \(sourceID)")
                     return true
                 }
                 AKError("hs.keycodes.setSourceID: TISSelectInputSource failed (\(status))")
@@ -420,12 +420,12 @@ import AppKit
             return
         }
         watcherCallback = callback
-        AKTrace("hs.keycodes._addWatcher: started")
+        AKDebug("hs.keycodes._addWatcher: started")
     }
 
     @objc func _removeWatcher() {
         watcherCallback = nil
-        AKTrace("hs.keycodes._removeWatcher: stopped")
+        AKDebug("hs.keycodes._removeWatcher: stopped")
     }
 
     // MARK: - Private helpers
@@ -461,7 +461,7 @@ import AppKit
             if tisStringProperty(of: source, key: propertyKey) == value {
                 let status = TISSelectInputSource(source)
                 if status == noErr {
-                    AKTrace("hs.keycodes: selected input source '\(value)'")
+                    AKDebug("hs.keycodes: selected input source '\(value)'")
                     return true
                 }
                 AKError("hs.keycodes: TISSelectInputSource('\(value)') failed (\(status))")

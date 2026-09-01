@@ -233,7 +233,7 @@ let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "
     }
 
     isolated deinit {
-        AKDebug("deinit of HSWindow: \(self.title ?? "unknown")")
+        AKGarbage("deinit of HSWindow: \(self.title ?? "unknown")")
     }
 
     // MARK: - Basic Properties

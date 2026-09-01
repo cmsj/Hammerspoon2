@@ -70,7 +70,7 @@ import JavaScriptCore
     }
 
     isolated deinit {
-//        AKDebug("deinit of HSSpotlightItem(\(identifier))")
+//        AKGarbage("deinit of HSSpotlightItem(\(identifier))")
     }
 
     @objc func attributes() -> [String] {

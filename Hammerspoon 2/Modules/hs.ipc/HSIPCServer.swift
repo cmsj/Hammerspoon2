@@ -81,7 +81,7 @@ final class HSIPCServer: NSObject {
         listener = nil
         isListening = false
         broadcastedEntryIDs.removeAll()
-        AKTrace("hs.ipc: Server stopped")
+        AKDebug("hs.ipc: Server stopped")
     }
 
     // MARK: - Connection management (called via Task { @MainActor } from nonisolated delegate)
@@ -89,12 +89,12 @@ final class HSIPCServer: NSObject {
     fileprivate func addConnection(_ box: XPCConnectionBox) {
         let conn = unsafe box.connection
         connections[ObjectIdentifier(conn)] = ConnectionEntry(connection: conn)
-        AKTrace("hs.ipc: Client connected. Active: \(connections.count)")
+        AKDebug("hs.ipc: Client connected. Active: \(connections.count)")
     }
 
     fileprivate func removeConnection(id: ObjectIdentifier) {
         connections.removeValue(forKey: id)
-        AKTrace("hs.ipc: Client disconnected. Active: \(connections.count)")
+        AKDebug("hs.ipc: Client disconnected. Active: \(connections.count)")
     }
 
     fileprivate func setMinLogLevel(_ level: Int, connectionID: ObjectIdentifier) {
@@ -104,7 +104,7 @@ final class HSIPCServer: NSObject {
     // MARK: - Log broadcasting
 
     private func startObservingLog() {
-        broadcastedEntryIDs = Set(HammerspoonLog.shared.entries(minimumLevel: .Debug).map { $0.id })
+        broadcastedEntryIDs = Set(HammerspoonLog.shared.entries(minimumLevel: .Garbage).map { $0.id })
         observationTask = Task { [weak self] in
             // Watch the cheap sequence counter rather than the full merged/filtered
             // `entries(minimumLevel:)`, so this doesn't pay for a flatten+filter+sort
@@ -120,7 +120,7 @@ final class HSIPCServer: NSObject {
 
     private func broadcastNewEntries() {
         guard !connections.isEmpty else { return }
-        let entries = HammerspoonLog.shared.entries(minimumLevel: .Debug)
+        let entries = HammerspoonLog.shared.entries(minimumLevel: .Garbage)
         var toSend: [HammerspoonLogEntry] = []
 
         for entry in entries where !broadcastedEntryIDs.contains(entry.id) {

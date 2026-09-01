@@ -122,7 +122,7 @@ import AXSwift
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -138,7 +138,7 @@ import AXSwift
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -178,7 +178,7 @@ import AXSwift
             let windows: [UIElement] = try axApp.windows() ?? []
             return windows
         } catch {
-            AKTrace("Failed to get windows for \(app.localizedName ?? "unknown"): \(error.localizedDescription)")
+            AKDebug("Failed to get windows for \(app.localizedName ?? "unknown"): \(error.localizedDescription)")
             return []
         }
     }
@@ -203,7 +203,7 @@ import AXSwift
 
             return HSWindow(element: focusedWindow, app: frontApp)
         } catch {
-            AKTrace("Failed to get focused window: \(error.localizedDescription)")
+            AKDebug("Failed to get focused window: \(error.localizedDescription)")
             return nil
         }
     }

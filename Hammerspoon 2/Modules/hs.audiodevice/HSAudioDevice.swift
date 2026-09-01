@@ -490,7 +490,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     }
 
     isolated deinit {
-        AKDebug("deinit of HSAudioDevice id=\(objectID)")
+        AKGarbage("deinit of HSAudioDevice id=\(objectID)")
     }
 
     // MARK: - Private helpers
@@ -739,7 +739,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
             }
         }
 
-        AKTrace(unsafe "HSAudioDevice id=\(objectID): watcher started (\(deviceRegistrations.count) listeners)")
+        AKDebug(unsafe "HSAudioDevice id=\(objectID): watcher started (\(deviceRegistrations.count) listeners)")
     }
 
     @objc(_removeWatcher) func _removeWatcher() {
@@ -755,7 +755,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
         }
         unsafe deviceRegistrations.removeAll()
         selfRetain = nil
-        AKTrace("HSAudioDevice id=\(objectID): watcher stopped")
+        AKDebug("HSAudioDevice id=\(objectID): watcher stopped")
     }
 
     /// Stop all CoreAudio listeners registered on this device. Called during module shutdown.

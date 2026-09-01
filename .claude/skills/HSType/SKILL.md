@@ -260,7 +260,7 @@ synchronously), `HSScreen`, `HSAudioDevice`.
 - `@MainActor` class → `isolated deinit` (lets deinit safely access actor state)
 - Non-`@MainActor` class → plain `deinit`
 
-Always log in deinit (`AKTrace` or `print`). Clean up OS resources (invalidate
+Always log in deinit (`AKDebug` or `print`). Clean up OS resources (invalidate
 timers, stop observers, close file handles) in deinit if the module hasn't already.
 
 ### `identifier` property

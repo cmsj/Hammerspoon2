@@ -14,7 +14,7 @@ class MockSettingsManager: SettingsManagerProtocol {
     var consoleHistoryLength: Int = 100
     var relaunchOnReload: Bool = false
     var hasCompletedOnboarding: Bool = false
-    var debugLoggingEnabled: Bool = false
+    var garbageLoggingEnabled: Bool = false
 
     var resetToDefaultsCalls: Int = 0
 
@@ -23,7 +23,7 @@ class MockSettingsManager: SettingsManagerProtocol {
         configLocation = URL(fileURLWithPath: "/mock/config/init.js")
         consoleHistoryLength = 100
         relaunchOnReload = false
-        debugLoggingEnabled = false
+        garbageLoggingEnabled = false
     }
 
     // Helper methods for testing
@@ -33,6 +33,6 @@ class MockSettingsManager: SettingsManagerProtocol {
         consoleHistoryLength = 100
         relaunchOnReload = false
         hasCompletedOnboarding = false
-        debugLoggingEnabled = false
+        garbageLoggingEnabled = false
     }
 }

@@ -312,7 +312,7 @@ import IOKit.pwr_mgt
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -326,7 +326,7 @@ import IOKit.pwr_mgt
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {
@@ -370,7 +370,7 @@ import IOKit.pwr_mgt
         }
 
         sleepAssertions[type] = assertionID
-        AKTrace("hs.power.preventSleep(\(type)): assertion \(assertionID) created")
+        AKDebug("hs.power.preventSleep(\(type)): assertion \(assertionID) created")
         return true
     }
 
@@ -385,7 +385,7 @@ import IOKit.pwr_mgt
         }
 
         sleepAssertions.removeValue(forKey: type)
-        AKTrace("hs.power.allowSleep(\(type)): assertion \(assertionID) released")
+        AKDebug("hs.power.allowSleep(\(type)): assertion \(assertionID) released")
         return true
     }
 
@@ -439,7 +439,7 @@ import IOKit.pwr_mgt
         process.arguments = ["-suspend"]
         do {
             try process.run()
-            AKTrace("hs.power.lockScreen: CGSession -suspend launched")
+            AKDebug("hs.power.lockScreen: CGSession -suspend launched")
         } catch {
             AKError("hs.power.lockScreen: failed to launch CGSession: \(error)")
         }
@@ -449,7 +449,7 @@ import IOKit.pwr_mgt
         NSWorkspace.shared.open(
             URL(fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app")
         )
-        AKTrace("hs.power.startScreensaver: ScreenSaverEngine opened")
+        AKDebug("hs.power.startScreensaver: ScreenSaverEngine opened")
     }
 
     // MARK: - Battery & Power State
@@ -592,7 +592,7 @@ import IOKit.pwr_mgt
             distributedObservers.append(obs)
         }
 
-        AKTrace("hs.power._addEventWatcher: started")
+        AKDebug("hs.power._addEventWatcher: started")
     }
 
     @objc func _removeEventWatcher() {
@@ -608,7 +608,7 @@ import IOKit.pwr_mgt
         distributedObservers.removeAll()
         eventWatcherCallback = nil
 
-        AKTrace("hs.power._removeEventWatcher: stopped")
+        AKDebug("hs.power._removeEventWatcher: stopped")
     }
 
     // MARK: - Battery Watcher (Pattern A)
@@ -653,7 +653,7 @@ import IOKit.pwr_mgt
 
         batteryRunLoopSource = source
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .defaultMode)
-        AKTrace("hs.power._addBatteryWatcher: started")
+        AKDebug("hs.power._addBatteryWatcher: started")
     }
 
     @objc func _removeBatteryWatcher() {
@@ -669,7 +669,7 @@ import IOKit.pwr_mgt
         }
         batteryWatcherCallback = nil
 
-        AKTrace("hs.power._removeBatteryWatcher: stopped")
+        AKDebug("hs.power._removeBatteryWatcher: stopped")
     }
 
     // MARK: - Private Helpers

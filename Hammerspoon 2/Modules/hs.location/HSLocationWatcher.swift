@@ -129,13 +129,13 @@ import CoreLocation
 
     @objc @discardableResult func start() -> HSLocationWatcher {
         manager.startUpdatingLocation()
-        AKTrace("HSLocationWatcher(\(identifier)).start(): Started")
+        AKDebug("HSLocationWatcher(\(identifier)).start(): Started")
         return self
     }
 
     @objc @discardableResult func stop() -> HSLocationWatcher {
         manager.stopUpdatingLocation()
-        AKTrace("HSLocationWatcher(\(identifier)).stop(): Stopped")
+        AKDebug("HSLocationWatcher(\(identifier)).stop(): Stopped")
         return self
     }
 

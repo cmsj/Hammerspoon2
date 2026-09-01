@@ -143,12 +143,12 @@ import AppKit
         self.module = module
         super.init()
         service.delegate = self
-        AKDebug("Init of HSSharingService(\(identifier)): \(service.title)")
+        AKGarbage("Init of HSSharingService(\(identifier)): \(service.title)")
     }
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSSharingService(\(identifier))")
+        AKGarbage("deinit of HSSharingService(\(identifier))")
     }
 
     func destroy() {

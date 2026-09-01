@@ -13,7 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate! = nil
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        AKDebug("applicationDidFinishLaunching: Creating/booting shared manager")
+        AKGarbage("applicationDidFinishLaunching: Creating/booting shared manager")
 
         AppDelegate.instance = self
         ConsoleCompletionEngine.shared.prewarm()
@@ -42,12 +42,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let plan = try SpoonManager.shared.planImport(from: url)
 
             if !confirmOverwriteIfNeeded(plan) {
-                AKDebug("Import of Spoon from \(url.path) cancelled by user")
+                AKInfo("Import of Spoon from \(url.path) cancelled by user")
                 return
             }
 
             try SpoonManager.shared.performImport(plan)
-            AKDebug("Imported Spoon '\(plan.name)' from \(url.path)")
+            AKInfo("Imported Spoon '\(plan.name)' from \(url.path)")
 
             let alert = NSAlert()
             alert.alertStyle = .informational

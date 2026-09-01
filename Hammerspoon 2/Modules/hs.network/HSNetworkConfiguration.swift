@@ -133,7 +133,7 @@ private nonisolated func scConfigWatcherCallback(
 
     isolated deinit {
         destroy()
-        AKDebug("deinit HSNetworkConfigurationWatcher")
+        AKGarbage("deinit HSNetworkConfigurationWatcher")
     }
 
     // MARK: - HSNetworkConfigurationWatcherAPI
@@ -159,7 +159,7 @@ private nonisolated func scConfigWatcherCallback(
         _isWatching = true
         selfRetain = self
         SCDynamicStoreSetDispatchQueue(store, .main)
-        AKTrace("HSNetworkConfigurationWatcher.start()")
+        AKDebug("HSNetworkConfigurationWatcher.start()")
         return self
     }
 
@@ -191,6 +191,6 @@ private nonisolated func scConfigWatcherCallback(
         // callback cannot fire after this point (even if selfRetain was the last ref).
         if let s = store { SCDynamicStoreSetDispatchQueue(s, nil) }
         selfRetain = nil
-        AKTrace("HSNetworkConfigurationWatcher.stop()")
+        AKDebug("HSNetworkConfigurationWatcher.stop()")
     }
 }

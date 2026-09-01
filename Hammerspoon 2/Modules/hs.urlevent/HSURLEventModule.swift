@@ -187,7 +187,7 @@ import JavaScriptCoreExtras
         URLEventDispatcher.shared.setHandler { [weak self] url in
             self?.handleURL(url)
         }
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -198,11 +198,11 @@ import JavaScriptCoreExtras
         _httpCallback = nil
         _mailtoCallback?.detach(from: self)
         _mailtoCallback = nil
-        AKDebug("Shutdown of \(moduleName): \(engineID)")
+        AKGarbage("Shutdown of \(moduleName): \(engineID)")
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
     }
 
     @objc func toString() -> String {

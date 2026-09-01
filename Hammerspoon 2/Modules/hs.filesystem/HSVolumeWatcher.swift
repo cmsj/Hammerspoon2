@@ -100,7 +100,7 @@ import AppKit
 
     isolated deinit {
         destroy()
-        AKDebug("deinit of HSVolumeWatcher(\(identifier))")
+        AKGarbage("deinit of HSVolumeWatcher(\(identifier))")
     }
 
     // MARK: - API
@@ -117,7 +117,7 @@ import AppKit
                            name: NSWorkspace.willUnmountNotification, object: nil)
         center.addObserver(self, selector: #selector(onVolumeDidRename(_:)),
                            name: NSWorkspace.didRenameVolumeNotification, object: nil)
-        AKTrace("HSVolumeWatcher(\(identifier)): started")
+        AKDebug("HSVolumeWatcher(\(identifier)): started")
         return self
     }
 
@@ -129,7 +129,7 @@ import AppKit
         center.removeObserver(self, name: NSWorkspace.didUnmountNotification, object: nil)
         center.removeObserver(self, name: NSWorkspace.willUnmountNotification, object: nil)
         center.removeObserver(self, name: NSWorkspace.didRenameVolumeNotification, object: nil)
-        AKTrace("HSVolumeWatcher(\(identifier)): stopped")
+        AKDebug("HSVolumeWatcher(\(identifier)): stopped")
         return self
     }
 

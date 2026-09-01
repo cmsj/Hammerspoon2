@@ -180,7 +180,7 @@ import JavaScriptCore
         self.engineID = engineID
         super.init()
         UNUserNotificationCenter.current().delegate = self
-        AKDebug("Init of \(moduleName): \(engineID)")
+        AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
@@ -192,7 +192,7 @@ import JavaScriptCore
     }
 
     isolated deinit {
-        AKDebug("Deinit of \(moduleName): \(engineID)")
+        AKGarbage("Deinit of \(moduleName): \(engineID)")
         shutdown()
     }
 
