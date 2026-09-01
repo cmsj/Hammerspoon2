@@ -136,8 +136,9 @@ import AppKit
             alert.informativeText = info
         }
 
-        // Add buttons in reverse order (NSAlert adds them right-to-left)
-        for button in buttons.reversed() {
+        // NSAlert assigns alertFirstButtonReturn to whichever button is added first,
+        // so add in the given order to keep buttonIndex aligned with the buttons() array.
+        for button in buttons {
             alert.addButton(withTitle: button)
         }
 
