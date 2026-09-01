@@ -107,9 +107,9 @@ import Carbon
         self.modifiers = modifiers
         self.hotkeyID = HotkeyManager.shared.nextID
         super.init()
-        // Phase 2 — JSContext.current() is valid because init is called from a JS bridge method
-        if let cb = callbackPressed { self.callbackPressed = cb }
-        if let cb = callbackReleased { self.callbackReleased = cb }
+
+        self.callbackPressed = callbackPressed
+        self.callbackReleased = callbackReleased
     }
 
     isolated deinit {
