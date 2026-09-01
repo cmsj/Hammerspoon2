@@ -176,6 +176,7 @@ import JavaScriptCoreExtras
             modules[moduleName]?.shutdown()
         }
         modules.removeAll()
+        _spoons = nil
     }
 
     // MARK: - ModuleRootAPI conformance
