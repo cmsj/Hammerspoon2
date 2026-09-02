@@ -76,6 +76,7 @@ class ManagerManager {
 
         if !configDirExists.boolValue {
             AKError("Configuration directory does not exist at: \(configDir.path)")
+            settings.hasCompletedOnboarding = false
             return
         }
 
@@ -83,6 +84,7 @@ class ManagerManager {
 
         if !fileSystem.fileExists(atPath: settings.configLocation.path) {
             AKError("No config file found at: \(settings.configLocation.path)")
+            settings.hasCompletedOnboarding = false
             return
         }
         try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)

@@ -154,6 +154,12 @@ struct Hammerspoon_2App: App {
         .onChange(of: settingsManager.dockMenuBehaviour, initial: true) {
             NSApplication.shared.setActivationPolicy(settingsManager.dockMenuBehaviour.activationPolicy)
         }
+        .onChange(of: settingsManager.hasCompletedOnboarding, initial: true) {
+            if !settingsManager.hasCompletedOnboarding {
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                openWindow(id: "onboarding")
+            }
+        }
 
         Window("Console", id: "console") {
             ConsoleView()
@@ -165,6 +171,19 @@ struct Hammerspoon_2App: App {
             CommandGroup(replacing: CommandGroupPlacement.appInfo) {
                 Button("About Hammerspoon 2") {
                     openWindow(id: "about")
+                }
+
+                CheckForUpdatesView(updater: updaterController.updater)
+            }
+
+            CommandMenu("Debug") {
+                Button("Reload Config") {
+                    try? ManagerManager.shared.reload()
+                }
+
+                Button("Open Console") {
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                    openWindow(id: "console")
                 }
             }
         }
