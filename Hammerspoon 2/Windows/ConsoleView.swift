@@ -266,6 +266,11 @@ struct ConsoleView: View {
                     HammerspoonLog.shared.clearLog()
                 }
             }
+            ToolbarItem(id: "reload") {
+                Button("Reload Config") {
+                    try? ManagerManager.shared.reload()
+                }
+            }
         }
         .alert("Save Failed", isPresented: $showSaveError) {
             Button("OK", role: .cancel) { }
