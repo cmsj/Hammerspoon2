@@ -66,6 +66,50 @@ struct ManagerManagerTests {
         #expect(mockEngine.evalFromURLCalls.count == 0, "Config file should not be evaluated when missing")
     }
 
+    @Test("Boot reopens onboarding when config directory does not exist")
+    func testBootMarksOnboardingIncompleteWithMissingConfigDirectory() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+
+        mockSettings.configLocation = URL(fileURLWithPath: "/missing/config/init.js")
+        mockSettings.hasCompletedOnboarding = true
+
+        let manager = ManagerManager(
+            engine: mockEngine,
+            settings: mockSettings,
+            fileSystem: mockFileSystem
+        )
+
+        try manager.boot()
+
+        #expect(mockSettings.hasCompletedOnboarding == false, "Missing config directory should make onboarding available again")
+        #expect(mockEngine.evalFromURLCalls.isEmpty, "Config should not be evaluated without a config directory")
+    }
+
+    @Test("Boot reopens onboarding when config file does not exist")
+    func testBootMarksOnboardingIncompleteWithMissingConfigFile() async throws {
+        let mockEngine = MockJSEngine()
+        let mockSettings = MockSettingsManager()
+        let mockFileSystem = MockFileSystem()
+
+        let configDirectory = URL(fileURLWithPath: "/existing/config")
+        mockSettings.configLocation = configDirectory.appendingPathComponent("init.js")
+        mockSettings.hasCompletedOnboarding = true
+        mockFileSystem.addDirectory(atPath: configDirectory.path)
+
+        let manager = ManagerManager(
+            engine: mockEngine,
+            settings: mockSettings,
+            fileSystem: mockFileSystem
+        )
+
+        try manager.boot()
+
+        #expect(mockSettings.hasCompletedOnboarding == false, "Missing config file should make onboarding available again")
+        #expect(mockEngine.evalFromURLCalls.isEmpty, "Config should not be evaluated without a config file")
+    }
+
     @Test("Boot resets context before loading config")
     func testBootResetsContext() async throws {
         // Arrange
@@ -291,6 +335,10 @@ struct ManagerManagerTests {
         let mockEngine = MockJSEngine()
         let mockSettings = MockSettingsManager()
         let mockFileSystem = MockFileSystem()
+
+        let templateDir = templateDirectory()
+        mockFileSystem.addDirectory(atPath: templateDir.path)
+        mockFileSystem.addFile(at: templateDir.appendingPathComponent("init.js"), contents: "// default config")
 
         let configDir = URL(fileURLWithPath: "/chosen/config/dir")
 
