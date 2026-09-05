@@ -337,6 +337,24 @@ struct HSHotkeyTests {
             #expect(!harness.hasException)
         }
 
+        @Test("a message containing quotes and script-injection-shaped content is shown safely, not executed")
+        func testMessageWithInjectionShapedContentIsNotExecuted() {
+            let harness = makeHarnessWithUI()
+            harness.eval("globalThis.pwned = false")
+            harness.eval(#"""
+                var hk = hs.hotkey.bind(['ctrl'], 'f', () => {}, () => {})
+                hk.message = "hi\"); globalThis.pwned = true; (\""
+                """#)
+            guard let hotkey = harness.evalValue("hk")?.toObjectOf(HSHotkey.self) as? HSHotkey else {
+                Issue.record("Could not extract HSHotkey")
+                return
+            }
+            hotkey.trigger(eventKind: UInt32(kEventHotKeyPressed))
+            harness.expectTrue("hs.ui.toString().includes('1 alert')")
+            harness.expectTrue("globalThis.pwned === false")
+            #expect(!harness.hasException)
+        }
+
         @Test("getHotkeys includes an enabled hotkey and excludes a disabled one")
         func testGetHotkeysReflectsEnabledState() {
             let harness = makeHarness()

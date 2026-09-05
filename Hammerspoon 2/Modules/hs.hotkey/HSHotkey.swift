@@ -253,11 +253,13 @@ import Carbon
 
     private func showMessageAlert(in context: JSContext) {
         guard let message, !message.isEmpty else { return }
-        context.evaluateScript("""
-            hs.ui.alert("\(message)")
-            .duration(hs.hotkey.alertDuration)
-            .show()
-            """)
+        // message is passed as a JSValue argument (not interpolated into evaluated source)
+        // so arbitrary message content can never be interpreted as JavaScript.
+        guard let hsUI = context.evaluateScript("hs.ui"), !hsUI.isUndefined else { return }
+        guard let alert = hsUI.invokeMethod("alert", withArguments: [message]) else { return }
+        let duration = context.evaluateScript("hs.hotkey.alertDuration")?.toDouble() ?? 1.0
+        guard let sized = alert.invokeMethod("duration", withArguments: [duration]) else { return }
+        sized.invokeMethod("show", withArguments: [])
     }
 
     // MARK: - Repeat
