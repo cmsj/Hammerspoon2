@@ -1772,18 +1772,6 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
           "lineNumber": 134
-        },
-        {
-          "name": "_makeDeviceEmitter",
-          "rawDocumentation": "SKIP_DOCS",
-          "description": "SKIP_DOCS",
-          "params": [],
-          "returns": null,
-          "examples": [],
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/hs.audiodevice.js",
-          "lineNumber": 108,
-          "type": "function"
         }
       ],
       "properties": [],
@@ -3893,18 +3881,6 @@
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
           "lineNumber": 109
-        },
-        {
-          "name": "_makeCameraEmitter",
-          "rawDocumentation": "SKIP_DOCS",
-          "description": "SKIP_DOCS",
-          "params": [],
-          "returns": null,
-          "examples": [],
-          "source": "javascript",
-          "filePath": "Hammerspoon 2/Modules/hs.camera/hs.camera.js",
-          "lineNumber": 89,
-          "type": "function"
         }
       ],
       "properties": [],
@@ -7892,7 +7868,7 @@
           "name": "bind",
           "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n  - callbackRepeat: {(() => void) | null} [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null, () => console.log(\"still held\"))\n```",
+          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n  - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null, () => console.log(\"still held\"))\n```",
           "description": "Bind a hotkey\n`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.",
           "params": [
             {
@@ -7926,8 +7902,8 @@
             {
               "name": "callbackRepeat",
               "type": "JSFunction",
-              "description": "[optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat",
-              "optional": false,
+              "description": "A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat",
+              "optional": true,
               "tsType": "(() => void) | null"
             }
           ],
@@ -7994,7 +7970,7 @@
           "name": "create",
           "signature": "func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Create a hotkey without enabling it\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n  - callbackRepeat: {(() => void) | null} [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.\n- Example:\n```js\nconst hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\nhk.enable()\n```",
+          "rawDocumentation": "Create a hotkey without enabling it\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n  - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.\n- Example:\n```js\nconst hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\nhk.enable()\n```",
           "description": "Create a hotkey without enabling it\n`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.",
           "params": [
             {
@@ -8028,8 +8004,8 @@
             {
               "name": "callbackRepeat",
               "type": "JSFunction",
-              "description": "[optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat",
-              "optional": false,
+              "description": "A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat",
+              "optional": true,
               "tsType": "(() => void) | null"
             }
           ],
@@ -8221,42 +8197,6 @@
               "name": "spec",
               "type": "any",
               "description": "An object with the following fields:",
-              "optional": false
-            },
-            {
-              "name": "mods",
-              "type": "any",
-              "description": "Modifier keys (e.g. [\"cmd\", \"shift\"])",
-              "optional": false
-            },
-            {
-              "name": "key",
-              "type": "any",
-              "description": "Key name or character (e.g. \"h\")",
-              "optional": false
-            },
-            {
-              "name": "message",
-              "type": "any",
-              "description": "[optional] A description shown as a toast when the hotkey fires",
-              "optional": false
-            },
-            {
-              "name": "pressed",
-              "type": "any",
-              "description": "[optional] Called when the hotkey is pressed",
-              "optional": false
-            },
-            {
-              "name": "released",
-              "type": "any",
-              "description": "[optional] Called when the hotkey is released",
-              "optional": false
-            },
-            {
-              "name": "repeat",
-              "type": "any",
-              "description": "[optional] Called repeatedly while the hotkey is held down",
               "optional": false
             }
           ],
@@ -26342,5 +26282,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-05T22:01:09.574Z"
+  "generatedAt": "2026-09-05T22:13:24.325Z"
 }

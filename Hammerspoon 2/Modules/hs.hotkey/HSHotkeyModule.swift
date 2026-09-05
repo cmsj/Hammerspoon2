@@ -19,7 +19,7 @@ import Carbon
     ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
     ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
     ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
-    ///   - callbackRepeat: {(() => void) | null} [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
+    ///   - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
     /// - Returns: A hotkey object, or null if binding failed
     /// - Example:
     /// ```js
@@ -52,7 +52,7 @@ import Carbon
     ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
     ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
     ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
-    ///   - callbackRepeat: {(() => void) | null} [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
+    ///   - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
     /// - Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.
     /// - Example:
     /// ```js

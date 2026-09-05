@@ -1180,11 +1180,6 @@ declare namespace hs.audiodevice {
      */
     function removeWatcher(listener: (...args: any[]) => any): void;
 
-    /**
-     * SKIP_DOCS
-     */
-    function _makeDeviceEmitter(): void;
-
 }
 
 /**
@@ -1904,11 +1899,6 @@ declare namespace hs.camera {
      * @param listener The function originally passed to ``addWatcher(_:)``
      */
     function removeWatcher(listener: (...args: any[]) => any): void;
-
-    /**
-     * SKIP_DOCS
-     */
-    function _makeCameraEmitter(): void;
 
 }
 
@@ -3221,10 +3211,10 @@ declare namespace hs.hotkey {
      * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
-     * @param callbackRepeat [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
+     * @param callbackRepeat A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
      * @returns A hotkey object, or null if binding failed
      */
-    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null, callbackRepeat: (() => void) | null): HSHotkey | null;
+    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null, callbackRepeat?: (() => void) | null): HSHotkey | null;
 
     /**
      * Get the system-wide mapping of key names to key codes
@@ -3245,10 +3235,10 @@ declare namespace hs.hotkey {
      * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
-     * @param callbackRepeat [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
+     * @param callbackRepeat A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
      * @returns A hotkey object, or null if creation failed. Call `.enable()` to activate it.
      */
-    function create(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null, callbackRepeat: (() => void) | null): HSHotkey | null;
+    function create(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null, callbackRepeat?: (() => void) | null): HSHotkey | null;
 
     /**
      * Get a list of all currently-enabled hotkeys
@@ -3292,15 +3282,9 @@ accepts a `message` and a `repeat` callback. `message` is available on any hotke
 just ones created via bindSpec()) by setting `.message` directly on the returned object;
 see hs.hotkey's message property for exactly when it is shown.
      * @param spec An object with the following fields:
-     * @param mods Modifier keys (e.g. ["cmd", "shift"])
-     * @param key Key name or character (e.g. "h")
-     * @param message [optional] A description shown as a toast when the hotkey fires
-     * @param pressed [optional] Called when the hotkey is pressed
-     * @param released [optional] Called when the hotkey is released
-     * @param repeat [optional] Called repeatedly while the hotkey is held down
      * @returns A hotkey object, or null if binding failed
      */
-    function bindSpec(spec: any, mods: any, key: any, message: any, pressed: any, released: any, repeat: any): any;
+    function bindSpec(spec: any): any;
 
     /**
      * Create a new modal hotkey group, optionally entered via a trigger key combination

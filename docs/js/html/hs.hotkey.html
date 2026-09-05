@@ -133,7 +133,7 @@
                 <tr>
                     <td class="param-name">callbackRepeat</td>
                     <td class="param-type">function</td>
-                    <td class="param-desc">[optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat</td>
+                    <td class="param-desc">A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat</td>
                 </tr>
             </tbody>
         </table>
@@ -236,7 +236,7 @@
                 <tr>
                     <td class="param-name">callbackRepeat</td>
                     <td class="param-type">function</td>
-                    <td class="param-desc">[optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat</td>
+                    <td class="param-desc">A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat</td>
                 </tr>
             </tbody>
         </table>
@@ -448,7 +448,7 @@ hk.enable()</code></pre>
         </div>
     </div>
     <div class="method" id="bindSpec">
-        <h3><a href="#bindSpec">hs.hotkey.bindSpec(spec, mods, key, message, pressed, released, repeat) -> any</a></h3>
+        <h3><a href="#bindSpec">hs.hotkey.bindSpec(spec) -> any</a></h3>
 
         <div class="description">Bind a hotkey from a single options object. Like hs.hotkey.bind()/create(), but also
 accepts a `message` and a `repeat` callback. `message` is available on any hotkey (not
@@ -456,7 +456,7 @@ just ones created via bindSpec()) by setting `.message` directly on the returned
 see hs.hotkey&#39;s message property for exactly when it is shown.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.hotkey.bindSpec(spec, mods, key, message, pressed, released, repeat) -> any</code></pre>
+        <pre><code class="language-javascript">hs.hotkey.bindSpec(spec) -> any</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -472,36 +472,6 @@ see hs.hotkey&#39;s message property for exactly when it is shown.</div>
                     <td class="param-name">spec</td>
                     <td class="param-type">any</td>
                     <td class="param-desc">An object with the following fields:</td>
-                </tr>
-                <tr>
-                    <td class="param-name">mods</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">Modifier keys (e.g. [&quot;cmd&quot;, &quot;shift&quot;])</td>
-                </tr>
-                <tr>
-                    <td class="param-name">key</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">Key name or character (e.g. &quot;h&quot;)</td>
-                </tr>
-                <tr>
-                    <td class="param-name">message</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">[optional] A description shown as a toast when the hotkey fires</td>
-                </tr>
-                <tr>
-                    <td class="param-name">pressed</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">[optional] Called when the hotkey is pressed</td>
-                </tr>
-                <tr>
-                    <td class="param-name">released</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">[optional] Called when the hotkey is released</td>
-                </tr>
-                <tr>
-                    <td class="param-name">repeat</td>
-                    <td class="param-type">any</td>
-                    <td class="param-desc">[optional] Called repeatedly while the hotkey is held down</td>
                 </tr>
             </tbody>
         </table>
