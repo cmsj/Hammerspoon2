@@ -3221,9 +3221,10 @@ declare namespace hs.hotkey {
      * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
+     * @param callbackRepeat [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
      * @returns A hotkey object, or null if binding failed
      */
-    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
+    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null, callbackRepeat: (() => void) | null): HSHotkey | null;
 
     /**
      * Get the system-wide mapping of key names to key codes
@@ -3244,9 +3245,10 @@ declare namespace hs.hotkey {
      * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
      * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
+     * @param callbackRepeat [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
      * @returns A hotkey object, or null if creation failed. Call `.enable()` to activate it.
      */
-    function create(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
+    function create(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null, callbackRepeat: (() => void) | null): HSHotkey | null;
 
     /**
      * Get a list of all currently-enabled hotkeys

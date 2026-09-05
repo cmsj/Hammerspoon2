@@ -228,6 +228,38 @@ struct HSHotkeyTests {
             #expect(!harness.hasException)
         }
 
+        @Test("bind accepts callbackRepeat as a 5th positional argument")
+        func testBindAcceptsCallbackRepeatAsFifthArgument() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'g', () => {}, () => {}, () => {})")
+            harness.expectTrue("typeof hk.callbackRepeat === 'function'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("create accepts callbackRepeat as a 5th positional argument")
+        func testCreateAcceptsCallbackRepeatAsFifthArgument() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.create(['ctrl'], 'h', () => {}, () => {}, () => {})")
+            harness.expectTrue("typeof hk.callbackRepeat === 'function'")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bind without a 5th argument leaves callbackRepeat unset")
+        func testBindWithoutFifthArgumentLeavesCallbackRepeatUnset() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'j', () => {}, () => {})")
+            harness.expectTrue("hk.callbackRepeat === null || hk.callbackRepeat === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bind treats an explicit null callbackRepeat the same as omitting it")
+        func testBindWithNullCallbackRepeat() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'k', () => {}, () => {}, null)")
+            harness.expectTrue("hk.callbackRepeat === null || hk.callbackRepeat === undefined")
+            #expect(!harness.hasException)
+        }
+
         @Test("triggering press/release with a repeat callback set does not throw")
         func testTriggerWithRepeatDoesNotThrow() {
             let harness = makeHarness()

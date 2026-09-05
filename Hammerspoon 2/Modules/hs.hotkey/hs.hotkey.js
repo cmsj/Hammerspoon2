@@ -22,10 +22,9 @@
 /// ```
 hs.hotkey.bindSpec = function(spec) {
     const { mods = [], key, message, pressed = null, released = null, repeat: repeatfn = null } = spec;
-    const hk = hs.hotkey.bind(mods, key, pressed, released);
+    const hk = hs.hotkey.bind(mods, key, pressed, released, repeatfn);
     if (!hk) return null;
     if (message) hk.message = message;
-    if (repeatfn) hk.callbackRepeat = repeatfn;
     return hk;
 };
 
@@ -55,9 +54,8 @@ class HSHotkeyModal {
      * @returns {HSHotkeyModal} This modal, for chaining
      */
     bind(mods, key, callbackPressed, callbackReleased, callbackRepeat) {
-        const hk = hs.hotkey.create(mods, key, callbackPressed, callbackReleased);
+        const hk = hs.hotkey.create(mods, key, callbackPressed, callbackReleased, callbackRepeat);
         if (!hk) return this;
-        if (callbackRepeat) hk.callbackRepeat = callbackRepeat;
         this._hotkeys.push(hk);
         if (this.isActive) hk.enable();
         return this;

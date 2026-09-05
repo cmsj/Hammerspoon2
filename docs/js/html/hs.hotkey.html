@@ -86,19 +86,19 @@
         <div class="description">Duration in seconds for the on-screen toast shown when a hotkey with a
 `message` set fires. Default is 1.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L120" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:120</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L122" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:122</a>
         </div>
     </div>
 
 <h2 class="section-heading">Methods</h2>
     <div class="method" id="bind">
-        <h3><a href="#bind">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased) -> HSHotkey</a></h3>
+        <h3><a href="#bind">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased, callbackRepeat) -> HSHotkey</a></h3>
 
         <div class="description">Bind a hotkey
 `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased) -> HSHotkey</code></pre>
+        <pre><code class="language-javascript">hs.hotkey.bind(mods, key, callbackPressed, callbackReleased, callbackRepeat) -> HSHotkey</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -130,6 +130,11 @@
                     <td class="param-type">function</td>
                     <td class="param-desc">A JavaScript function to call when the hotkey is released, or null for no callback</td>
                 </tr>
+                <tr>
+                    <td class="param-name">callbackRepeat</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">[optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat</td>
+                </tr>
             </tbody>
         </table>
 
@@ -141,10 +146,10 @@
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">hs.hotkey.bind([&quot;cmd&quot;,&quot;shift&quot;], &quot;h&quot;, () =&gt; {
     console.log(&quot;Hello!&quot;)
-}, null)</code></pre>
+}, null, () =&gt; console.log(&quot;still held&quot;))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L29" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:29</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L30" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:30</a>
         </div>
     </div>
     <div class="method" id="getKeyCodeMap">
@@ -165,7 +170,7 @@
         <pre><code class="language-js">console.log(hs.hotkey.getKeyCodeMap())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L37" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:37</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L38" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:38</a>
         </div>
     </div>
     <div class="method" id="getModifierMap">
@@ -186,17 +191,17 @@
         <pre><code class="language-js">console.log(hs.hotkey.getModifierMap())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L45" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:45</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:46</a>
         </div>
     </div>
     <div class="method" id="create">
-        <h3><a href="#create">hs.hotkey.create(mods, key, callbackPressed, callbackReleased) -> HSHotkey</a></h3>
+        <h3><a href="#create">hs.hotkey.create(mods, key, callbackPressed, callbackReleased, callbackRepeat) -> HSHotkey</a></h3>
 
         <div class="description">Create a hotkey without enabling it
 `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.hotkey.create(mods, key, callbackPressed, callbackReleased) -> HSHotkey</code></pre>
+        <pre><code class="language-javascript">hs.hotkey.create(mods, key, callbackPressed, callbackReleased, callbackRepeat) -> HSHotkey</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -228,6 +233,11 @@
                     <td class="param-type">function</td>
                     <td class="param-desc">A JavaScript function to call when the hotkey is released, or null for no callback</td>
                 </tr>
+                <tr>
+                    <td class="param-name">callbackRepeat</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">[optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat</td>
+                </tr>
             </tbody>
         </table>
 
@@ -243,7 +253,7 @@
 hk.enable()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L62" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:62</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:64</a>
         </div>
     </div>
     <div class="method" id="getHotkeys">
@@ -264,7 +274,7 @@ hk.enable()</code></pre>
         <pre><code class="language-js">console.log(hs.hotkey.getHotkeys())</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L70" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:70</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L72" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:72</a>
         </div>
     </div>
     <div class="method" id="systemAssigned">
@@ -307,7 +317,7 @@ hk.enable()</code></pre>
         <pre><code class="language-js">console.log(hs.hotkey.systemAssigned([&quot;cmd&quot;,&quot;space&quot;], &quot;space&quot;))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L81" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:81</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L83" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:83</a>
         </div>
     </div>
     <div class="method" id="assignable">
@@ -350,7 +360,7 @@ hk.enable()</code></pre>
         <pre><code class="language-js">console.log(hs.hotkey.assignable([&quot;cmd&quot;,&quot;shift&quot;], &quot;h&quot;))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L92" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:92</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L94" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:94</a>
         </div>
     </div>
     <div class="method" id="deleteAll">
@@ -392,7 +402,7 @@ hk.enable()</code></pre>
         <pre><code class="language-js">hs.hotkey.deleteAll([&quot;cmd&quot;,&quot;shift&quot;], &quot;h&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L102" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:102</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L104" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:104</a>
         </div>
     </div>
     <div class="method" id="disableAll">
@@ -434,7 +444,7 @@ hk.enable()</code></pre>
         <pre><code class="language-js">hs.hotkey.disableAll([&quot;cmd&quot;,&quot;shift&quot;], &quot;h&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:112</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/HSHotkeyModule.swift#L114" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift:114</a>
         </div>
     </div>
     <div class="method" id="bindSpec">
@@ -555,7 +565,7 @@ m.exitFn  = () =&gt; console.log(&#39;modal exited&#39;)
 m.bind([], &#39;escape&#39;, () =&gt; m.exit(), null)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/hs.hotkey.js#L125" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js:125</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/hs.hotkey.js#L123" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js:123</a>
         </div>
     </div>
     <div class="method" id="showHotkeys">
@@ -599,7 +609,7 @@ enabled hotkeys (and their messages, if any) as an on-screen toast.</div>
         <pre><code class="language-js">hs.hotkey.showHotkeys([&quot;cmd&quot;,&quot;shift&quot;], &quot;/&quot;)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/hs.hotkey.js#L146" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js:146</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.hotkey/hs.hotkey.js#L144" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js:144</a>
         </div>
     </div>
         </main>

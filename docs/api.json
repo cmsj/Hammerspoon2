@@ -7890,9 +7890,9 @@
       "methods": [
         {
           "name": "bind",
-          "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
+          "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\n```",
+          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n  - callbackRepeat: {(() => void) | null} [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null, () => console.log(\"still held\"))\n```",
           "description": "Bind a hotkey\n`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.",
           "params": [
             {
@@ -7922,6 +7922,13 @@
               "description": "A JavaScript function to call when the hotkey is released, or null for no callback",
               "optional": false,
               "tsType": "(() => void) | null"
+            },
+            {
+              "name": "callbackRepeat",
+              "type": "JSFunction",
+              "description": "[optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat",
+              "optional": false,
+              "tsType": "(() => void) | null"
             }
           ],
           "returns": {
@@ -7932,12 +7939,12 @@
           "examples": [
             {
               "lang": "js",
-              "code": "hs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)"
+              "code": "hs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null, () => console.log(\"still held\"))"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 29
+          "lineNumber": 30
         },
         {
           "name": "getKeyCodeMap",
@@ -7959,7 +7966,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 37
+          "lineNumber": 38
         },
         {
           "name": "getModifierMap",
@@ -7981,13 +7988,13 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 45
+          "lineNumber": 46
         },
         {
           "name": "create",
-          "signature": "func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
+          "signature": "func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Create a hotkey without enabling it\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.\n- Example:\n```js\nconst hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\nhk.enable()\n```",
+          "rawDocumentation": "Create a hotkey without enabling it\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n  - callbackRepeat: {(() => void) | null} [optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.\n- Example:\n```js\nconst hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\nhk.enable()\n```",
           "description": "Create a hotkey without enabling it\n`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.",
           "params": [
             {
@@ -8017,6 +8024,13 @@
               "description": "A JavaScript function to call when the hotkey is released, or null for no callback",
               "optional": false,
               "tsType": "(() => void) | null"
+            },
+            {
+              "name": "callbackRepeat",
+              "type": "JSFunction",
+              "description": "[optional] A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat",
+              "optional": false,
+              "tsType": "(() => void) | null"
             }
           ],
           "returns": {
@@ -8032,7 +8046,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 62
+          "lineNumber": 64
         },
         {
           "name": "getHotkeys",
@@ -8054,7 +8068,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 70
+          "lineNumber": 72
         },
         {
           "name": "systemAssigned",
@@ -8091,7 +8105,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 81
+          "lineNumber": 83
         },
         {
           "name": "assignable",
@@ -8128,7 +8142,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 92
+          "lineNumber": 94
         },
         {
           "name": "deleteAll",
@@ -8162,7 +8176,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 102
+          "lineNumber": 104
         },
         {
           "name": "disableAll",
@@ -8196,7 +8210,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 112
+          "lineNumber": 114
         },
         {
           "name": "bindSpec",
@@ -8291,7 +8305,7 @@
           ],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
-          "lineNumber": 125,
+          "lineNumber": 123,
           "type": "function"
         },
         {
@@ -8324,7 +8338,7 @@
           ],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
-          "lineNumber": 146,
+          "lineNumber": 144,
           "type": "function"
         }
       ],
@@ -8344,7 +8358,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 120
+          "lineNumber": 122
         }
       ],
       "types": [
@@ -8633,7 +8647,7 @@
           ],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
-          "lineNumber": 32
+          "lineNumber": 31
         }
       ],
       "description": "Module for creating and managing system-wide hotkeys",
@@ -26328,5 +26342,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-01T23:06:57.803Z"
+  "generatedAt": "2026-09-05T20:23:12.631Z"
 }
