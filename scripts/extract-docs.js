@@ -710,7 +710,8 @@ function parseJavaScriptFile(filePath, moduleName = null, repoRoot = REPO_ROOT) 
 
             if (docLines.length > 0) {
                 const docText = docLines.join('\n');
-                const parsed = parseDocCStyleComment(docText);
+                const realParamNames = params.split(',').map(p => p.trim().split('=')[0].trim()).filter(Boolean);
+                const parsed = parseDocCStyleComment(docText, realParamNames);
                 functions.push({
                     name: stripModulePrefix(functionName),
                     rawDocumentation: docText,
@@ -754,7 +755,10 @@ function parseJavaScriptFile(filePath, moduleName = null, repoRoot = REPO_ROOT) 
         }
     }
 
-    return functions;
+    // Exclude functions marked SKIP_DOCS (checked here, once, rather than in each of the
+    // three extraction passes above, so it applies uniformly regardless of which pass
+    // captured a given function).
+    return functions.filter(f => !shouldSkipDocs(f.rawDocumentation));
 }
 
 /**
@@ -887,8 +891,15 @@ function extractBracedType(text) {
 
 /**
  * Parse DocC-style comment (used in Swift and some JavaScript files)
+ * @param {string[]|null} realParamNames - The actual parameter names from the function's
+ * signature, in order. When given, only bullets matching these names become `doc.params`
+ * entries; other bullets (e.g. sub-fields of an options-object parameter, documented as
+ * nested `- foo: ...` bullets under `- spec: ...`) are treated as descriptive text only,
+ * since the doc-comment bullet list has no indentation left to distinguish nesting by the
+ * time it reaches this function (stripped by the `///` comment extraction upstream).
+ * When omitted, every parsed bullet is used, matching the old flatten-everything behavior.
  */
-function parseDocCStyleComment(docText) {
+function parseDocCStyleComment(docText, realParamNames = null) {
     const lines = docText.split('\n').map(line => line.trim());
     const descriptions = extractParamDescriptions(lines);
 
@@ -909,8 +920,13 @@ function parseDocCStyleComment(docText) {
     }
     doc.description = descLines.join(' ').trim();
 
-    // Extract parameters - they're in the descriptions map
-    for (const [paramName, paramInfo] of Object.entries(descriptions)) {
+    // Extract parameters - they're in the descriptions map. When the real parameter names
+    // are known, use exactly those (in signature order) so a documented options-object
+    // parameter (e.g. `spec`) whose fields are described as nested bullets doesn't get
+    // flattened into extra top-level parameters that don't exist in the actual signature.
+    const paramNames = realParamNames || Object.keys(descriptions);
+    for (const paramName of paramNames) {
+        const paramInfo = descriptions[paramName] || { description: '', optional: false };
         doc.params.push({
             name: paramName,
             type: 'any',
