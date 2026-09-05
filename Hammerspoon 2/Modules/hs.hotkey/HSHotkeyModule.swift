@@ -185,46 +185,15 @@ import Carbon
     // MARK: - Hotkey binding
 
     @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey? {
-        guard let modifierFlags = parseModifiers(mods) else {
-            AKError("hs.hotkey.bind: Invalid modifiers")
-            return nil
-        }
-        guard let keyCode = keyNameToKeyCode(key) else {
-            AKError("hs.hotkey.bind: Unknown key '\(key)'")
-            return nil
-        }
-        guard callbackPressed.isFunction || callbackPressed.isNull else {
-            AKError("hs.hotkey.bind: callbackPressed must be either a function or null")
-            return nil
-        }
-        guard callbackReleased.isFunction || callbackReleased.isNull else {
-            AKError("hs.hotkey.bind: callbackReleased must be either a function or null")
-            return nil
-        }
-        guard callbackRepeat.isFunction || callbackRepeat.isNull || callbackRepeat.isUndefined else {
-            AKError("hs.hotkey.bind: callbackRepeat must be either a function, null, or omitted")
-            return nil
-        }
-
-        let hotkey = HSHotkey(
-            keyCode: keyCode,
-            modifiers: modifierFlags,
-            mods: mods,
-            key: key,
-            callbackPressed: callbackPressed.isNull ? nil : callbackPressed,
-            callbackReleased: callbackReleased.isNull ? nil : callbackReleased
-        )
-        if callbackRepeat.isFunction {
-            hotkey.callbackRepeat = callbackRepeat
-        }
+        guard let hotkey = create(mods, key, callbackPressed, callbackReleased, callbackRepeat) else { return nil }
 
         guard hotkey.enable() else {
             AKError("hs.hotkey.bind(): failed to enable hotkey: " + mods.joined(separator: ",") + ", " + key)
             hotkey.destroy()
+            activeHotkeys.remove(hotkey)
             return nil
         }
 
-        activeHotkeys.add(hotkey)
         return hotkey
     }
 
