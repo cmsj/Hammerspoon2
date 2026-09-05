@@ -166,6 +166,19 @@ struct Hammerspoon_2App: App {
                 Button("About Hammerspoon 2") {
                     openWindow(id: "about")
                 }
+
+                CheckForUpdatesView(updater: updaterController.updater)
+            }
+
+            CommandMenu("Debug") {
+                Button("Reload Config") {
+                    try? ManagerManager.shared.reload()
+                }
+
+                Button("Open Console") {
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                    openWindow(id: "console")
+                }
             }
         }
 
