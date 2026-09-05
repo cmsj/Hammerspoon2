@@ -28,23 +28,6 @@ import Carbon
     /// ```
     @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?
 
-    /// Bind a hotkey with a message description
-    /// - Parameters:
-    ///   - mods: An array of modifier key strings
-    ///   - key: The key name or character
-    ///   - message: A description of what this hotkey does (currently unused, for future features)
-    ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
-    ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
-    /// - Returns: A hotkey object, or null if binding failed
-    /// - Example:
-    /// ```js
-    /// hs.hotkey.bindSpec(["cmd"], "space", "Spotlight-like", () => {
-    ///     console.log("pressed")
-    /// }, null)
-    /// ```
-    @objc(bindSpec:::::)
-    func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?
-
     /// Get the system-wide mapping of key names to key codes
     /// - Returns: A dictionary mapping key names to numeric key codes
     /// - Example:
@@ -78,8 +61,72 @@ import Carbon
     /// ```
     @objc func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?
 
+    /// Get a list of all currently-enabled hotkeys
+    /// - Returns: An array of objects, each with `mods`, `key`, `message` and `enabled` fields
+    /// - Example:
+    /// ```js
+    /// console.log(hs.hotkey.getHotkeys())
+    /// ```
+    @objc func getHotkeys() -> [[String: Any]]
+
+    /// Check whether macOS itself has already claimed a key combination (e.g. for Spotlight, screenshots, etc.)
+    /// - Parameters:
+    ///   - mods: An array of modifier key strings
+    ///   - key: The key name or character
+    /// - Returns: An object with `keyCode`, `mods` and `enabled` fields if the combination is system-assigned, otherwise null
+    /// - Example:
+    /// ```js
+    /// console.log(hs.hotkey.systemAssigned(["cmd","space"], "space"))
+    /// ```
+    @objc func systemAssigned(_ mods: [String], _ key: String) -> [String: Any]?
+
+    /// Check whether a key combination is available to be bound (i.e. not already claimed by macOS)
+    /// - Parameters:
+    ///   - mods: An array of modifier key strings
+    ///   - key: The key name or character
+    /// - Returns: True if the combination can be bound, otherwise False
+    /// - Example:
+    /// ```js
+    /// console.log(hs.hotkey.assignable(["cmd","shift"], "h"))
+    /// ```
+    @objc func assignable(_ mods: [String], _ key: String) -> Bool
+
+    /// Disable and remove every hotkey currently bound to a key combination
+    /// - Parameters:
+    ///   - mods: An array of modifier key strings
+    ///   - key: The key name or character
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.deleteAll(["cmd","shift"], "h")
+    /// ```
+    @objc func deleteAll(_ mods: [String], _ key: String)
+
+    /// Disable every hotkey currently bound to a key combination, without removing them
+    /// - Parameters:
+    ///   - mods: An array of modifier key strings
+    ///   - key: The key name or character
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.disableAll(["cmd","shift"], "h")
+    /// ```
+    @objc func disableAll(_ mods: [String], _ key: String)
+
+    /// {number} Duration in seconds for the on-screen toast shown when a hotkey with a
+    /// `message` set fires. Default is 1.
+    /// - Example:
+    /// ```js
+    /// hs.hotkey.alertDuration = 3
+    /// ```
+    @objc var alertDuration: Double { get set }
+
     /// SKIP_DOCS
     @objc var createModal: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var bindSpec: JSFunction? { get set }
+
+    /// SKIP_DOCS
+    @objc var showHotkeys: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -95,17 +142,24 @@ import Carbon
 
     // MARK: - Swift-retained storage for JS-defined functions
     @objc var createModal: JSFunction? = nil
+    @objc var bindSpec: JSFunction? = nil
+    @objc var showHotkeys: JSFunction? = nil
+
+    @objc var alertDuration: Double = 1.0
 
     // MARK: - Module lifecycle
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
+        self.alertDuration = 1.0
         AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
         createModal = nil
+        bindSpec = nil
+        showHotkeys = nil
 
         for hotkey in activeHotkeys.allObjects {
             hotkey.destroy()
@@ -129,10 +183,6 @@ import Carbon
     // MARK: - Hotkey binding
 
     @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey? {
-        return bindSpec(mods, key, nil, callbackPressed, callbackReleased)
-    }
-
-    @objc func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey? {
         guard let modifierFlags = parseModifiers(mods) else {
             AKError("hs.hotkey.bind: Invalid modifiers")
             return nil
@@ -153,12 +203,14 @@ import Carbon
         let hotkey = HSHotkey(
             keyCode: keyCode,
             modifiers: modifierFlags,
+            mods: mods,
+            key: key,
             callbackPressed: callbackPressed.isNull ? nil : callbackPressed,
             callbackReleased: callbackReleased.isNull ? nil : callbackReleased
         )
 
         guard hotkey.enable() else {
-            AKError("hs.hotkey.bindSpec(): failed to enable hotkey: " + mods.joined(separator: ",") + ", " + key)
+            AKError("hs.hotkey.bind(): failed to enable hotkey: " + mods.joined(separator: ",") + ", " + key)
             hotkey.destroy()
             return nil
         }
@@ -190,12 +242,100 @@ import Carbon
         let hotkey = HSHotkey(
             keyCode: keyCode,
             modifiers: modifierFlags,
+            mods: mods,
+            key: key,
             callbackPressed: callbackPressed.isNull ? nil : callbackPressed,
             callbackReleased: callbackReleased.isNull ? nil : callbackReleased
         )
 
         activeHotkeys.add(hotkey)
         return hotkey
+    }
+
+    // MARK: - Introspection & management
+
+    @objc func getHotkeys() -> [[String: Any]] {
+        return activeHotkeys.allObjects
+            .filter { $0.isEnabled() }
+            .map { hotkey in
+                [
+                    "mods": hotkey.mods,
+                    "key": hotkey.key,
+                    "message": hotkey.message ?? NSNull(),
+                    "enabled": hotkey.isEnabled(),
+                ]
+            }
+    }
+
+    @objc func systemAssigned(_ mods: [String], _ key: String) -> [String: Any]? {
+        guard let modifierFlags = parseModifiers(mods) else {
+            AKError("hs.hotkey.systemAssigned: Invalid modifiers")
+            return nil
+        }
+        guard let keyCode = keyNameToKeyCode(key) else {
+            AKError("hs.hotkey.systemAssigned: Unknown key '\(key)'")
+            return nil
+        }
+
+        var symbolicHotKeysRef: Unmanaged<CFArray>?
+        guard unsafe CopySymbolicHotKeys(&symbolicHotKeysRef) == noErr,
+              let symbolicHotKeys = unsafe symbolicHotKeysRef?.takeRetainedValue() as? [[String: Any]] else {
+            return nil
+        }
+
+        // macOS sets bit 1<<17 (kMenuFKeyModifier-adjacent Fn bit) on symbolic hotkey
+        // modifiers that we never set ourselves, so mask it out before comparing.
+        let fnBit: UInt32 = 1 << 17
+
+        for entry in symbolicHotKeys {
+            guard let entryEnabled = entry[kHISymbolicHotKeyEnabled as String] as? Bool, entryEnabled,
+                  let entryCode = entry[kHISymbolicHotKeyCode as String] as? UInt32,
+                  let entryMods = entry[kHISymbolicHotKeyModifiers as String] as? UInt32 else {
+                continue
+            }
+            if entryCode == keyCode && (entryMods & ~fnBit) == modifierFlags {
+                return ["keyCode": entryCode, "mods": entryMods, "enabled": entryEnabled]
+            }
+        }
+        return nil
+    }
+
+    @objc func assignable(_ mods: [String], _ key: String) -> Bool {
+        guard let modifierFlags = parseModifiers(mods) else {
+            AKError("hs.hotkey.assignable: Invalid modifiers")
+            return false
+        }
+        guard let keyCode = keyNameToKeyCode(key) else {
+            AKError("hs.hotkey.assignable: Unknown key '\(key)'")
+            return false
+        }
+
+        var probeRef: EventHotKeyRef?
+        let probeID = EventHotKeyID(signature: OSType(("HMSP" as NSString).fourCharCode), id: HotkeyManager.shared.nextID)
+        let status = unsafe RegisterEventHotKey(keyCode, modifierFlags, probeID, GetEventDispatcherTarget(), 0, &probeRef)
+        guard status == noErr else { return false }
+        if unsafe probeRef != nil {
+            unsafe UnregisterEventHotKey(probeRef)
+        }
+        return true
+    }
+
+    @objc func deleteAll(_ mods: [String], _ key: String) {
+        forEachMatchingHotkey(mods, key) { $0.destroy() }
+    }
+
+    @objc func disableAll(_ mods: [String], _ key: String) {
+        forEachMatchingHotkey(mods, key) { $0.disable() }
+    }
+
+    private func forEachMatchingHotkey(_ mods: [String], _ key: String, _ body: (HSHotkey) -> Void) {
+        guard let modifierFlags = parseModifiers(mods), let keyCode = keyNameToKeyCode(key) else {
+            AKError("hs.hotkey: Invalid mods or key")
+            return
+        }
+        for hotkey in activeHotkeys.allObjects where hotkey.matches(keyCode: keyCode, modifiers: modifierFlags) {
+            body(hotkey)
+        }
     }
 
     // MARK: - Helper methods

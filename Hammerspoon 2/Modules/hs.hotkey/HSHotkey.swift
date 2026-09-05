@@ -5,12 +5,48 @@
 
 import Foundation
 import JavaScriptCore
+import AppKit
 import Carbon
 
 // MARK: - Protocol
 
 /// Object representing a system-wide hotkey. You should not create these objects directly, but rather, use the methods in hs.hotkey to instantiate these.
 @objc protocol HSHotkeyAPI: HSTypeAPI, JSExport {
+    /// {string[]} The modifier keys this hotkey was bound with, as originally passed to bind()/create()
+    /// - Example:
+    /// ```js
+    /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
+    /// console.log(hk.mods)
+    /// ```
+    @objc var mods: [String] { get }
+
+    /// {string} The key this hotkey was bound with, as originally passed to bind()/create()
+    /// - Example:
+    /// ```js
+    /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
+    /// console.log(hk.key)
+    /// ```
+    @objc var key: String { get }
+
+    /// {string | null} An optional description of what this hotkey does, or null if none was set.
+    /// When set, it is shown as an on-screen toast via `hs.ui.alert()` (duration controlled by
+    /// `hs.hotkey.alertDuration`) just before the hotkey's callback runs: before the pressed
+    /// callback if one exists, otherwise before the released callback if one exists.
+    /// - Example:
+    /// ```js
+    /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
+    /// hk.message = "Say hello"
+    /// ```
+    @objc var message: String? { get set }
+
+    /// {(() => void) | null} The callback function to be called repeatedly while the hotkey is held down, or null to remove it. Repeats at the system keyboard-repeat delay/interval, matching how held-down keys repeat elsewhere in macOS.
+    /// - Example:
+    /// ```js
+    /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
+    /// hk.callbackRepeat = () => console.log("still held")
+    /// ```
+    @objc var callbackRepeat: JSFunction? { get set }
+
     /// Enable the hotkey
     /// - Returns: True if the hotkey was enabled, otherwise False
     /// - Example:
@@ -79,8 +115,12 @@ import Carbon
     }
     private let keyCode: UInt32
     private let modifiers: UInt32
+    @objc let mods: [String]
+    @objc let key: String
+    @objc var message: String?
     private var _callbackPressed: JSCallback?
     private var _callbackReleased: JSCallback?
+    private var _callbackRepeat: JSCallback?
 
     @objc var callbackPressed: JSFunction? {
         get { _callbackPressed?.value }
@@ -96,15 +136,26 @@ import Carbon
             _callbackReleased = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
+    @objc var callbackRepeat: JSFunction? {
+        get { _callbackRepeat?.value }
+        set {
+            _callbackRepeat?.detach(from: self)
+            _callbackRepeat = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+        }
+    }
 
     nonisolated(unsafe) private var carbonHotKeyRef: EventHotKeyRef?
     private var enabled = false
     private let hotkeyID: UInt32
+    private var repeatDelayTimer: Timer?
+    private var repeatIntervalTimer: Timer?
 
-    init(keyCode: UInt32, modifiers: UInt32,
+    init(keyCode: UInt32, modifiers: UInt32, mods: [String], key: String,
          callbackPressed: JSFunction? = nil, callbackReleased: JSFunction? = nil) {
         self.keyCode = keyCode
         self.modifiers = modifiers
+        self.mods = mods
+        self.key = key
         self.hotkeyID = HotkeyManager.shared.nextID
         super.init()
 
@@ -117,12 +168,19 @@ import Carbon
         AKGarbage("deinit of HSHotkey: id=\(hotkeyID)")
     }
 
+    /// Returns true if this hotkey was bound with the given key code and modifier flags.
+    func matches(keyCode: UInt32, modifiers: UInt32) -> Bool {
+        self.keyCode == keyCode && self.modifiers == modifiers
+    }
+
     @objc func destroy() {
         disable()
         _callbackPressed?.detach(from: self)
         _callbackPressed = nil
         _callbackReleased?.detach(from: self)
         _callbackReleased = nil
+        _callbackRepeat?.detach(from: self)
+        _callbackRepeat = nil
     }
 
     @objc func enable() -> Bool {
@@ -148,6 +206,7 @@ import Carbon
     }
 
     @objc func disable() {
+        stopRepeating()
         guard enabled, let ref = unsafe carbonHotKeyRef else { return }
         unsafe UnregisterEventHotKey(ref)
         unsafe carbonHotKeyRef = nil
@@ -158,17 +217,29 @@ import Carbon
     @objc func isEnabled() -> Bool { enabled }
 
     func trigger(eventKind: UInt32) {
-        let callback: JSFunction?
         switch eventKind {
         case UInt32(kEventHotKeyPressed):
-            callback = _callbackPressed?.value
+            // A message is shown before the pressed callback whenever one exists,
+            // whether or not a released callback also exists.
+            if let context = _callbackPressed?.value?.context {
+                showMessageAlert(in: context)
+            }
+            invoke(_callbackPressed?.value)
+            startRepeatingIfNeeded()
         case UInt32(kEventHotKeyReleased):
-            callback = _callbackReleased?.value
+            // Only shown before the released callback when there's no pressed callback
+            // to have already shown it.
+            if _callbackPressed == nil, let context = _callbackReleased?.value?.context {
+                showMessageAlert(in: context)
+            }
+            invoke(_callbackReleased?.value)
+            stopRepeating()
         default:
             AKError("hs.hotkey: Unknown event kind: \(eventKind)")
-            return
         }
+    }
 
+    private func invoke(_ callback: JSFunction?) {
         guard let callback, !callback.isNull else { return }
         callback.call(withArguments: [])
         if let context = callback.context,
@@ -176,6 +247,49 @@ import Carbon
             AKError("hs.hotkey: Error in callback: \(exc.toString() ?? "unknown")")
             context.exception = nil
         }
+    }
+
+    // MARK: - Message alert
+
+    private func showMessageAlert(in context: JSContext) {
+        guard let message, !message.isEmpty else { return }
+        context.evaluateScript("""
+            hs.ui.alert("\(message)")
+            .duration(hs.hotkey.alertDuration)
+            .show()
+            """)
+    }
+
+    // MARK: - Repeat
+
+    private func startRepeatingIfNeeded() {
+        guard _callbackRepeat != nil else { return }
+        stopRepeating()
+        repeatDelayTimer = Timer.scheduledTimer(withTimeInterval: NSEvent.keyRepeatDelay, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.beginRepeating()
+            }
+        }
+    }
+
+    private func beginRepeating() {
+        fireRepeatCallback()
+        repeatIntervalTimer = Timer.scheduledTimer(withTimeInterval: NSEvent.keyRepeatInterval, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.fireRepeatCallback()
+            }
+        }
+    }
+
+    private func fireRepeatCallback() {
+        invoke(_callbackRepeat?.value)
+    }
+
+    private func stopRepeating() {
+        repeatDelayTimer?.invalidate()
+        repeatDelayTimer = nil
+        repeatIntervalTimer?.invalidate()
+        repeatIntervalTimer = nil
     }
 }
 
@@ -265,7 +379,7 @@ class HotkeyManager {
 
 // MARK: - FourCharCode helper
 
-private extension NSString {
+extension NSString {
     var fourCharCode: FourCharCode {
         guard self.length == 4 else { return 0 }
         var result: FourCharCode = 0

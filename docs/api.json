@@ -7940,64 +7940,6 @@
           "lineNumber": 29
         },
         {
-          "name": "bindSpec",
-          "signature": "func bindSpec(_ mods: [String], _ key: String, _ message: String?, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSHotkey?",
-          "isStatic": false,
-          "rawDocumentation": "Bind a hotkey with a message description\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n  - message: A description of what this hotkey does (currently unused, for future features)\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bindSpec([\"cmd\"], \"space\", \"Spotlight-like\", () => {\n    console.log(\"pressed\")\n}, null)\n```",
-          "description": "Bind a hotkey with a message description",
-          "params": [
-            {
-              "name": "mods",
-              "type": "Array<String>",
-              "description": "An array of modifier key strings",
-              "optional": false,
-              "tsType": null
-            },
-            {
-              "name": "key",
-              "type": "string",
-              "description": "The key name or character",
-              "optional": false,
-              "tsType": null
-            },
-            {
-              "name": "message",
-              "type": "string",
-              "description": "A description of what this hotkey does (currently unused, for future features)",
-              "optional": false,
-              "tsType": null
-            },
-            {
-              "name": "callbackPressed",
-              "type": "JSFunction",
-              "description": "A JavaScript function to call when the hotkey is pressed, or null for no callback",
-              "optional": false,
-              "tsType": "(() => void) | null"
-            },
-            {
-              "name": "callbackReleased",
-              "type": "JSFunction",
-              "description": "A JavaScript function to call when the hotkey is released, or null for no callback",
-              "optional": false,
-              "tsType": "(() => void) | null"
-            }
-          ],
-          "returns": {
-            "type": "HSHotkey",
-            "description": "A hotkey object, or null if binding failed"
-          },
-          "notes": [],
-          "examples": [
-            {
-              "lang": "js",
-              "code": "hs.hotkey.bindSpec([\"cmd\"], \"space\", \"Spotlight-like\", () => {\n    console.log(\"pressed\")\n}, null)"
-            }
-          ],
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 46
-        },
-        {
           "name": "getKeyCodeMap",
           "signature": "func getKeyCodeMap() -> [String: UInt32]",
           "isStatic": false,
@@ -8017,7 +7959,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 54
+          "lineNumber": 37
         },
         {
           "name": "getModifierMap",
@@ -8039,7 +7981,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 62
+          "lineNumber": 45
         },
         {
           "name": "create",
@@ -8090,7 +8032,234 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
-          "lineNumber": 79
+          "lineNumber": 62
+        },
+        {
+          "name": "getHotkeys",
+          "signature": "func getHotkeys() -> [[String: Any]]",
+          "isStatic": false,
+          "rawDocumentation": "Get a list of all currently-enabled hotkeys\n- Returns: An array of objects, each with `mods`, `key`, `message` and `enabled` fields\n- Example:\n```js\nconsole.log(hs.hotkey.getHotkeys())\n```",
+          "description": "Get a list of all currently-enabled hotkeys",
+          "params": [],
+          "returns": {
+            "type": "[[String: Any]]",
+            "description": "An array of objects, each with `mods`, `key`, `message` and `enabled` fields"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.hotkey.getHotkeys())"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
+          "lineNumber": 70
+        },
+        {
+          "name": "systemAssigned",
+          "signature": "func systemAssigned(_ mods: [String], _ key: String) -> [String: Any]?",
+          "isStatic": false,
+          "rawDocumentation": "Check whether macOS itself has already claimed a key combination (e.g. for Spotlight, screenshots, etc.)\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n- Returns: An object with `keyCode`, `mods` and `enabled` fields if the combination is system-assigned, otherwise null\n- Example:\n```js\nconsole.log(hs.hotkey.systemAssigned([\"cmd\",\"space\"], \"space\"))\n```",
+          "description": "Check whether macOS itself has already claimed a key combination (e.g. for Spotlight, screenshots, etc.)",
+          "params": [
+            {
+              "name": "mods",
+              "type": "Array<String>",
+              "description": "An array of modifier key strings",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The key name or character",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "Object<String, Any>",
+            "description": "An object with `keyCode`, `mods` and `enabled` fields if the combination is system-assigned, otherwise null"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.hotkey.systemAssigned([\"cmd\",\"space\"], \"space\"))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
+          "lineNumber": 81
+        },
+        {
+          "name": "assignable",
+          "signature": "func assignable(_ mods: [String], _ key: String) -> Bool",
+          "isStatic": false,
+          "rawDocumentation": "Check whether a key combination is available to be bound (i.e. not already claimed by macOS)\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n- Returns: True if the combination can be bound, otherwise False\n- Example:\n```js\nconsole.log(hs.hotkey.assignable([\"cmd\",\"shift\"], \"h\"))\n```",
+          "description": "Check whether a key combination is available to be bound (i.e. not already claimed by macOS)",
+          "params": [
+            {
+              "name": "mods",
+              "type": "Array<String>",
+              "description": "An array of modifier key strings",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The key name or character",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "True if the combination can be bound, otherwise False"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(hs.hotkey.assignable([\"cmd\",\"shift\"], \"h\"))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
+          "lineNumber": 92
+        },
+        {
+          "name": "deleteAll",
+          "signature": "func deleteAll(_ mods: [String], _ key: String)",
+          "isStatic": false,
+          "rawDocumentation": "Disable and remove every hotkey currently bound to a key combination\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n- Example:\n```js\nhs.hotkey.deleteAll([\"cmd\",\"shift\"], \"h\")\n```",
+          "description": "Disable and remove every hotkey currently bound to a key combination",
+          "params": [
+            {
+              "name": "mods",
+              "type": "Array<String>",
+              "description": "An array of modifier key strings",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The key name or character",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.hotkey.deleteAll([\"cmd\",\"shift\"], \"h\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
+          "lineNumber": 102
+        },
+        {
+          "name": "disableAll",
+          "signature": "func disableAll(_ mods: [String], _ key: String)",
+          "isStatic": false,
+          "rawDocumentation": "Disable every hotkey currently bound to a key combination, without removing them\n- Parameters:\n  - mods: An array of modifier key strings\n  - key: The key name or character\n- Example:\n```js\nhs.hotkey.disableAll([\"cmd\",\"shift\"], \"h\")\n```",
+          "description": "Disable every hotkey currently bound to a key combination, without removing them",
+          "params": [
+            {
+              "name": "mods",
+              "type": "Array<String>",
+              "description": "An array of modifier key strings",
+              "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The key name or character",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.hotkey.disableAll([\"cmd\",\"shift\"], \"h\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
+          "lineNumber": 112
+        },
+        {
+          "name": "bindSpec",
+          "rawDocumentation": "Bind a hotkey from a single options object. Like hs.hotkey.bind()/create(), but also\naccepts a `message` and a `repeat` callback. `message` is available on any hotkey (not\njust ones created via bindSpec()) by setting `.message` directly on the returned object;\nsee hs.hotkey's message property for exactly when it is shown.\nParameters:\n- spec: An object with the following fields:\n- mods: {string[]} Modifier keys (e.g. [\"cmd\", \"shift\"])\n- key: {string} Key name or character (e.g. \"h\")\n- message: {string} [optional] A description shown as a toast when the hotkey fires\n- pressed: {(() => void) | null} [optional] Called when the hotkey is pressed\n- released: {(() => void) | null} [optional] Called when the hotkey is released\n- repeat: {(() => void) | null} [optional] Called repeatedly while the hotkey is held down\nReturns: A hotkey object, or null if binding failed\nExample:\n```js\nhs.hotkey.bindSpec({\nmods: [\"cmd\"], key: \"space\", message: \"Spotlight-like\",\npressed: () => console.log(\"pressed\")\n})\n```",
+          "description": "Bind a hotkey from a single options object. Like hs.hotkey.bind()/create(), but also\naccepts a `message` and a `repeat` callback. `message` is available on any hotkey (not\njust ones created via bindSpec()) by setting `.message` directly on the returned object;\nsee hs.hotkey's message property for exactly when it is shown.",
+          "params": [
+            {
+              "name": "spec",
+              "type": "any",
+              "description": "An object with the following fields:",
+              "optional": false
+            },
+            {
+              "name": "mods",
+              "type": "any",
+              "description": "Modifier keys (e.g. [\"cmd\", \"shift\"])",
+              "optional": false
+            },
+            {
+              "name": "key",
+              "type": "any",
+              "description": "Key name or character (e.g. \"h\")",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": "any",
+              "description": "[optional] A description shown as a toast when the hotkey fires",
+              "optional": false
+            },
+            {
+              "name": "pressed",
+              "type": "any",
+              "description": "[optional] Called when the hotkey is pressed",
+              "optional": false
+            },
+            {
+              "name": "released",
+              "type": "any",
+              "description": "[optional] Called when the hotkey is released",
+              "optional": false
+            },
+            {
+              "name": "repeat",
+              "type": "any",
+              "description": "[optional] Called repeatedly while the hotkey is held down",
+              "optional": false
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "A hotkey object, or null if binding failed"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.hotkey.bindSpec({\nmods: [\"cmd\"], key: \"space\", message: \"Spotlight-like\",\npressed: () => console.log(\"pressed\")\n})"
+            }
+          ],
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
+          "lineNumber": 23,
+          "type": "function"
         },
         {
           "name": "createModal",
@@ -8122,11 +8291,62 @@
           ],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
-          "lineNumber": 94,
+          "lineNumber": 125,
+          "type": "function"
+        },
+        {
+          "name": "showHotkeys",
+          "rawDocumentation": "Create and enable a hotkey that, while held down, displays a list of all currently\nenabled hotkeys (and their messages, if any) as an on-screen toast.\nParameters:\n- mods: Modifier keys for the trigger hotkey (e.g. [\"cmd\", \"shift\"])\n- key: Key name for the trigger hotkey (e.g. \"/\")\nReturns: A hotkey object\nExample:\n```js\nhs.hotkey.showHotkeys([\"cmd\",\"shift\"], \"/\")\n```",
+          "description": "Create and enable a hotkey that, while held down, displays a list of all currently\nenabled hotkeys (and their messages, if any) as an on-screen toast.",
+          "params": [
+            {
+              "name": "mods",
+              "type": "any",
+              "description": "Modifier keys for the trigger hotkey (e.g. [\"cmd\", \"shift\"])",
+              "optional": false
+            },
+            {
+              "name": "key",
+              "type": "any",
+              "description": "Key name for the trigger hotkey (e.g. \"/\")",
+              "optional": false
+            }
+          ],
+          "returns": {
+            "type": "any",
+            "description": "A hotkey object"
+          },
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.hotkey.showHotkeys([\"cmd\",\"shift\"], \"/\")"
+            }
+          ],
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
+          "lineNumber": 146,
           "type": "function"
         }
       ],
-      "properties": [],
+      "properties": [
+        {
+          "name": "alertDuration",
+          "signature": "var alertDuration: Double { get set }",
+          "rawDocumentation": "Duration in seconds for the on-screen toast shown when a hotkey with a\n`message` set fires. Default is 1.\n- Example:\n```js\nhs.hotkey.alertDuration = 3\n```",
+          "description": "Duration in seconds for the on-screen toast shown when a hotkey with a\n`message` set fires. Default is 1.",
+          "tsType": "number",
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "hs.hotkey.alertDuration = 3"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkeyModule.swift",
+          "lineNumber": 120
+        }
+      ],
       "types": [
         {
           "name": "HSHotkeyAPI",
@@ -8154,7 +8374,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 21
+              "lineNumber": 57
             },
             {
               "name": "disable",
@@ -8173,7 +8393,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 29
+              "lineNumber": 65
             },
             {
               "name": "isEnabled",
@@ -8195,7 +8415,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 38
+              "lineNumber": 74
             },
             {
               "name": "destroy",
@@ -8214,10 +8434,78 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 62
+              "lineNumber": 98
             }
           ],
           "properties": [
+            {
+              "name": "mods",
+              "signature": "var mods: [String] { get }",
+              "rawDocumentation": "The modifier keys this hotkey was bound with, as originally passed to bind()/create()\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nconsole.log(hk.mods)\n```",
+              "description": "The modifier keys this hotkey was bound with, as originally passed to bind()/create()",
+              "tsType": "string[]",
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nconsole.log(hk.mods)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
+              "lineNumber": 21
+            },
+            {
+              "name": "key",
+              "signature": "var key: String { get }",
+              "rawDocumentation": "The key this hotkey was bound with, as originally passed to bind()/create()\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nconsole.log(hk.key)\n```",
+              "description": "The key this hotkey was bound with, as originally passed to bind()/create()",
+              "tsType": "string",
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nconsole.log(hk.key)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
+              "lineNumber": 29
+            },
+            {
+              "name": "message",
+              "signature": "var message: String? { get set }",
+              "rawDocumentation": "An optional description of what this hotkey does, or null if none was set.\nWhen set, it is shown as an on-screen toast via `hs.ui.alert()` (duration controlled by\n`hs.hotkey.alertDuration`) just before the hotkey's callback runs: before the pressed\ncallback if one exists, otherwise before the released callback if one exists.\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.message = \"Say hello\"\n```",
+              "description": "An optional description of what this hotkey does, or null if none was set.\nWhen set, it is shown as an on-screen toast via `hs.ui.alert()` (duration controlled by\n`hs.hotkey.alertDuration`) just before the hotkey's callback runs: before the pressed\ncallback if one exists, otherwise before the released callback if one exists.",
+              "tsType": "string | null",
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.message = \"Say hello\""
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
+              "lineNumber": 40
+            },
+            {
+              "name": "callbackRepeat",
+              "signature": "var callbackRepeat: JSFunction? { get set }",
+              "rawDocumentation": "The callback function to be called repeatedly while the hotkey is held down, or null to remove it. Repeats at the system keyboard-repeat delay/interval, matching how held-down keys repeat elsewhere in macOS.\n- Example:\n```js\nconst hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.callbackRepeat = () => console.log(\"still held\")\n```",
+              "description": "The callback function to be called repeatedly while the hotkey is held down, or null to remove it. Repeats at the system keyboard-repeat delay/interval, matching how held-down keys repeat elsewhere in macOS.",
+              "tsType": "(() => void) | null",
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const hk = hs.hotkey.bind([\"cmd\"], \"h\", () => {})\nhk.callbackRepeat = () => console.log(\"still held\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
+              "lineNumber": 48
+            },
             {
               "name": "callbackPressed",
               "signature": "var callbackPressed: JSFunction? { get set }",
@@ -8233,7 +8521,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 46
+              "lineNumber": 82
             },
             {
               "name": "callbackReleased",
@@ -8250,7 +8538,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.hotkey/HSHotkey.swift",
-              "lineNumber": 54
+              "lineNumber": 90
             }
           ]
         },
@@ -8345,7 +8633,7 @@
           ],
           "source": "javascript",
           "filePath": "Hammerspoon 2/Modules/hs.hotkey/hs.hotkey.js",
-          "lineNumber": 3
+          "lineNumber": 32
         }
       ],
       "description": "Module for creating and managing system-wide hotkeys",
@@ -26040,5 +26328,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-08-31T22:13:50.578Z"
+  "generatedAt": "2026-09-01T23:06:57.803Z"
 }

@@ -3226,17 +3226,6 @@ declare namespace hs.hotkey {
     function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
 
     /**
-     * Bind a hotkey with a message description
-     * @param mods An array of modifier key strings
-     * @param key The key name or character
-     * @param message A description of what this hotkey does (currently unused, for future features)
-     * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
-     * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
-     * @returns A hotkey object, or null if binding failed
-     */
-    function bindSpec(mods: string[], key: string, message: string | null, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
-
-    /**
      * Get the system-wide mapping of key names to key codes
      * @returns A dictionary mapping key names to numeric key codes
      */
@@ -3260,12 +3249,79 @@ declare namespace hs.hotkey {
     function create(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null): HSHotkey | null;
 
     /**
+     * Get a list of all currently-enabled hotkeys
+     * @returns An array of objects, each with `mods`, `key`, `message` and `enabled` fields
+     */
+    function getHotkeys(): Record<string, any>[];
+
+    /**
+     * Check whether macOS itself has already claimed a key combination (e.g. for Spotlight, screenshots, etc.)
+     * @param mods An array of modifier key strings
+     * @param key The key name or character
+     * @returns An object with `keyCode`, `mods` and `enabled` fields if the combination is system-assigned, otherwise null
+     */
+    function systemAssigned(mods: string[], key: string): Record<string, any> | null;
+
+    /**
+     * Check whether a key combination is available to be bound (i.e. not already claimed by macOS)
+     * @param mods An array of modifier key strings
+     * @param key The key name or character
+     * @returns True if the combination can be bound, otherwise False
+     */
+    function assignable(mods: string[], key: string): boolean;
+
+    /**
+     * Disable and remove every hotkey currently bound to a key combination
+     * @param mods An array of modifier key strings
+     * @param key The key name or character
+     */
+    function deleteAll(mods: string[], key: string): void;
+
+    /**
+     * Disable every hotkey currently bound to a key combination, without removing them
+     * @param mods An array of modifier key strings
+     * @param key The key name or character
+     */
+    function disableAll(mods: string[], key: string): void;
+
+    /**
+     * Bind a hotkey from a single options object. Like hs.hotkey.bind()/create(), but also
+accepts a `message` and a `repeat` callback. `message` is available on any hotkey (not
+just ones created via bindSpec()) by setting `.message` directly on the returned object;
+see hs.hotkey's message property for exactly when it is shown.
+     * @param spec An object with the following fields:
+     * @param mods Modifier keys (e.g. ["cmd", "shift"])
+     * @param key Key name or character (e.g. "h")
+     * @param message [optional] A description shown as a toast when the hotkey fires
+     * @param pressed [optional] Called when the hotkey is pressed
+     * @param released [optional] Called when the hotkey is released
+     * @param repeat [optional] Called repeatedly while the hotkey is held down
+     * @returns A hotkey object, or null if binding failed
+     */
+    function bindSpec(spec: any, mods: any, key: any, message: any, pressed: any, released: any, repeat: any): any;
+
+    /**
      * Create a new modal hotkey group, optionally entered via a trigger key combination
      * @param mods Modifier keys for the trigger hotkey (e.g. ["cmd", "shift"]), or an empty array for no trigger
      * @param key Key name for the trigger hotkey (e.g. "h"), or an empty string for no trigger
      * @returns A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and enterFn/exitFn callbacks
      */
     function createModal(mods: any, key: any): HSHotkeyModal;
+
+    /**
+     * Create and enable a hotkey that, while held down, displays a list of all currently
+enabled hotkeys (and their messages, if any) as an on-screen toast.
+     * @param mods Modifier keys for the trigger hotkey (e.g. ["cmd", "shift"])
+     * @param key Key name for the trigger hotkey (e.g. "/")
+     * @returns A hotkey object
+     */
+    function showHotkeys(mods: any, key: any): any;
+
+    /**
+     * Duration in seconds for the on-screen toast shown when a hotkey with a
+`message` set fires. Default is 1.
+     */
+    let alertDuration: number;
 
 }
 
@@ -3294,6 +3350,29 @@ declare class HSHotkey {
      * Disable and permanently remove this hotkey, releasing all associated resources
      */
     destroy(): void;
+
+    /**
+     * The modifier keys this hotkey was bound with, as originally passed to bind()/create()
+     */
+    readonly mods: string[];
+
+    /**
+     * The key this hotkey was bound with, as originally passed to bind()/create()
+     */
+    readonly key: string;
+
+    /**
+     * An optional description of what this hotkey does, or null if none was set.
+When set, it is shown as an on-screen toast via `hs.ui.alert()` (duration controlled by
+`hs.hotkey.alertDuration`) just before the hotkey's callback runs: before the pressed
+callback if one exists, otherwise before the released callback if one exists.
+     */
+    message: string | null;
+
+    /**
+     * The callback function to be called repeatedly while the hotkey is held down, or null to remove it. Repeats at the system keyboard-repeat delay/interval, matching how held-down keys repeat elsewhere in macOS.
+     */
+    callbackRepeat: (() => void) | null;
 
     /**
      * The callback function to be called when the hotkey is pressed, or null to remove it
