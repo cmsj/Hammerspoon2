@@ -183,6 +183,13 @@ import AXSwift
         }
     }
 
+    /// Apps with an activation policy of `.prohibited` are background/helper
+    /// processes that don't respond to the Accessibility APIs, so querying
+    /// them stalls on a system timeout instead of returning quickly.
+    private func candidateApplications() -> [NSRunningApplication] {
+        return NSWorkspace.shared.runningApplications.filter { $0.activationPolicy != .prohibited }
+    }
+
     // MARK: - API Implementation
 
     @objc func focusedWindow() -> HSWindow? {
@@ -213,7 +220,7 @@ import AXSwift
 
         var windows: [HSWindow] = []
 
-        for app in NSWorkspace.shared.runningApplications {
+        for app in candidateApplications() {
             let windowElements = getWindowElements(for: app)
             windows.append(contentsOf: windowElements.map { HSWindow(element: $0, app: app) })
         }
@@ -298,8 +305,8 @@ import AXSwift
         }
 
         // Add other apps
-        for app in NSWorkspace.shared.runningApplications {
-            if app.activationPolicy == .regular && !orderedApps.contains(app) {
+        for app in candidateApplications() {
+            if !orderedApps.contains(app) {
                 orderedApps.append(app)
             }
         }
