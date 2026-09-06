@@ -20,7 +20,7 @@ import Carbon
     ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
     ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
     ///   - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
-    /// - Returns: A hotkey object, or null if binding failed
+    /// - Returns: A hotkey object, or null if binding failed (including when none of the callbacks is a function — at least one is required)
     /// - Example:
     /// ```js
     /// hs.hotkey.bind(["cmd","shift"], "h", () => {
@@ -185,6 +185,14 @@ import Carbon
     // MARK: - Hotkey binding
 
     @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey? {
+        // bind() enables the hotkey immediately, so a hotkey with no callbacks at all would
+        // silently claim the key combination and do nothing. Require at least one callback.
+        // (create() stays permissive so callers can build a hotkey and assign callbacks later.)
+        guard callbackPressed.isFunction || callbackReleased.isFunction || callbackRepeat.isFunction else {
+            AKError("hs.hotkey.bind: at least one of callbackPressed, callbackReleased, or callbackRepeat must be a function")
+            return nil
+        }
+
         guard let hotkey = create(mods, key, callbackPressed, callbackReleased, callbackRepeat) else { return nil }
 
         guard hotkey.enable() else {
