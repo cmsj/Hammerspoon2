@@ -75,17 +75,20 @@ struct HSCameraTests {
             #expect(harness.evalTypeOf("hs.camera.removeWatcher") == "function")
         }
 
-        @Test("hs.camera.js emitter factory is stored in a Swift-retained property")
-        func testCameraEmitterFactoryIsRetainedBySwift() {
+        @Test("hs.camera.js emitter factory survives garbage collection")
+        func testCameraEmitterFactorySurvivesGC() {
             let harness = makeHarness()
             #expect(harness.evalTypeOf("hs.camera._makeCameraEmitter") == "function")
 
             // The factory must land in the native `_makeCameraEmitter` property rather than
             // in a JS expando on the module wrapper, which JavaScriptCore may discard once
-            // the wrapper is collected — leaving per-camera addWatcher() with no factory.
-            let module = harness.evalValue("hs.camera")?.toObjectOf(HSCameraModule.self) as? HSCameraModule
-            #expect(module != nil)
-            #expect(module?._makeCameraEmitter?.isObject == true)
+            // nothing on the JS side references it — leaving per-camera addWatcher() with no
+            // factory. Force a GC pass and confirm the factory is still callable afterward.
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.camera._makeCameraEmitter") == "function")
+            harness.expectTrue("typeof hs.camera._makeCameraEmitter({}) === 'object'")
         }
 
         @Test("module-level addWatcher() / removeWatcher() cycle is safe")

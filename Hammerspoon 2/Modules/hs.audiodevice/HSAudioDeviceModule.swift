@@ -142,6 +142,11 @@ import JavaScriptCore
     /// Swift-retained storage for the JS AudioDeviceModuleWatcherEmitter instance
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    /// Swift-retained storage for the JS per-device emitter factory. Storing it here (rather
+    /// than as a bare JS expando) keeps it alive across garbage collection of the module wrapper.
+    /// SKIP_DOCS
+    @objc var _makeDeviceEmitter: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -164,6 +169,7 @@ import JavaScriptCore
         _removeWatcher()
         HSAudioDeviceManager.shared.stopAllWatchers()
         _watcherEmitter = nil
+        _makeDeviceEmitter = nil
     }
 
     isolated deinit {
@@ -212,6 +218,7 @@ import JavaScriptCore
     // MARK: - System-level watcher
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _makeDeviceEmitter: JSFunction? = nil
     private var moduleCallback: JSFunction? = nil
     private var moduleRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:]
     private var previousDeviceIDs: Set<AudioObjectID> = []

@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import AVFoundation
 
 // MARK: - JavaScript API Protocol
@@ -200,7 +201,7 @@ import AVFoundation
         // invokeMethod doesn't propagate JS exceptions to the calling context's try-catch,
         // so we validate here and throw via context.exception before delegating.
         guard let context = JSContext.current() else { return }
-        guard listener.isObject else {
+        guard listener.isFunction else {
             context.exception = JSValue(newErrorFromMessage: "hs.camera.addWatcher(): listener must be a function", in: context)
             return
         }

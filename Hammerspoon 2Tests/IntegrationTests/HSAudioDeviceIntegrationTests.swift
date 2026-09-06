@@ -510,5 +510,23 @@ struct HSAudioDeviceTests {
             })()
         """)
         }
+
+        // MARK: - Per-device emitter factory GC survival
+
+        @Test("hs.audiodevice.js per-device emitter factory survives garbage collection")
+        func testDeviceEmitterFactorySurvivesGC() {
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.audiodevice._makeDeviceEmitter") == "function")
+
+            // The factory must land in the native `_makeDeviceEmitter` property rather than
+            // in a JS expando on the module wrapper, which JavaScriptCore may discard once
+            // nothing on the JS side references it — leaving per-device addWatcher() with no
+            // factory. Force a GC pass and confirm the factory is still callable afterward.
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.audiodevice._makeDeviceEmitter") == "function")
+            harness.expectTrue("typeof hs.audiodevice._makeDeviceEmitter({}) === 'object'")
+        }
     }
 }

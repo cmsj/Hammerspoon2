@@ -234,29 +234,6 @@ import JavaScriptCoreExtras
         return spoonsObject(in: context)
     }
 
-    /// Calls `body` and reports whether it raised a JS exception, leaving `context.exception`
-    /// set to it if so. `context.exception` itself cannot be polled for this directly: once a
-    /// JSContext has a custom `exceptionHandler` installed (as every context in this app does),
-    /// JSC clears `context.exception` immediately after invoking that handler, for both
-    /// `JSValue.call(withArguments:)` and `.invokeMethod(_:withArguments:)` - confirmed
-    /// empirically, not documented behavior. Temporarily wrapping the handler to capture the
-    /// exception ourselves, then setting `context.exception` to it fresh right before
-    /// returning, propagates it to our own caller the same way `fail()` below does.
-    private func callCapturingException(in context: JSContext, _ body: () -> JSValue?) -> JSValue? {
-        let previousHandler = context.exceptionHandler
-        var caught: JSValue?
-        context.exceptionHandler = { context, exception in
-            caught = exception
-            previousHandler?(context, exception)
-        }
-        let result = body()
-        context.exceptionHandler = previousHandler
-        if let caught {
-            context.exception = caught
-        }
-        return result
-    }
-
     @objc func loadSpoon(_ name: String) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
 
@@ -284,7 +261,7 @@ import JavaScriptCoreExtras
 
         // If init.js itself throws, that's the exception we want visible to our caller -
         // context.exception is already left set to it by callCapturingException.
-        let result = callCapturingException(in: context) {
+        let result = context.callCapturingException {
             requireFn.call(withArguments: [initJSURL.path])
         }
         if context.exception != nil {
@@ -303,7 +280,7 @@ import JavaScriptCoreExtras
 
         // Matches v1: call init() automatically if the Spoon defines one.
         if let initFn = result.objectForKeyedSubscript("init"), !initFn.isUndefined {
-            _ = callCapturingException(in: context) {
+            _ = context.callCapturingException {
                 result.invokeMethod("init", withArguments: [])
             }
             if context.exception != nil {
