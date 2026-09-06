@@ -137,7 +137,16 @@ class JSTestHarness {
 
         hs.setObject(module, forKeyedSubscript: name as NSString)
 
-        // Try to load the JavaScript enhancement file if it exists
+        if let jsCode = Self.enhancementScriptSource(for: name) {
+            context.evaluateScript(jsCode)
+        }
+    }
+
+    /// Reads a module's `hs.<name>.js` enhancement file source from the app bundle, without
+    /// evaluating it. Exposed so tests can run the real production JS against a custom `hs`
+    /// object (e.g. one where a module property is a computed accessor instead of a value
+    /// stored by `loadModule`), rather than reimplementing the enhancement logic inline.
+    static func enhancementScriptSource(for name: String) -> String? {
         // Look in the Hammerspoon_2 bundle, not the test bundle
         let bundles = [
             Bundle.main,
@@ -147,14 +156,40 @@ class JSTestHarness {
         for bundle in bundles {
             if let moduleJS = bundle.url(forResource: "hs.\(name)", withExtension: "js") {
                 do {
-                    let jsCode = try String(contentsOf: moduleJS, encoding: .utf8)
-                    context.evaluateScript(jsCode)
-                    break // Successfully loaded, don't try other bundles
+                    return try String(contentsOf: moduleJS, encoding: .utf8)
                 } catch {
                     print("⚠️ Could not load JavaScript enhancement for \(name): \(error)")
                 }
             }
         }
+        return nil
+    }
+
+    /// Loads `moduleType` at `hs.<name>` as a *computed accessor* rather than a stored value —
+    /// mirroring how `ModuleRoot`'s real module properties actually work (e.g. `ModuleRoot.camera`
+    /// re-invokes its getter on every access, returning the same Swift singleton without any
+    /// particular JS wrapper for it ever being pinned).
+    ///
+    /// `loadModule` stores the wrapper directly as a property value, which keeps that specific
+    /// wrapper JS-reachable for the harness's whole lifetime and makes a forced GC of it a no-op.
+    /// Use this instead when a test needs to actually collect the module's JS wrapper and verify
+    /// that state backed by native `@objc` properties survives — the underlying Swift `module` is
+    /// still returned so the test can assert on it directly if needed.
+    static func makeUnpinned<T: HSModuleAPI>(_ moduleType: T.Type, as name: String) -> (harness: JSTestHarness, module: T) {
+        let harness = JSTestHarness()
+        let module = moduleType.init(engineID: UUID())
+        harness.loadedModuleObjects.append(module)
+
+        // The block must return an ObjC-representable type; a generic `T` isn't one, but the
+        // `@objc` protocol it conforms to is.
+        let getter: @convention(block) () -> HSModuleAPI = { module }
+        harness.context.setObject(getter, forKeyedSubscript: "__get_\(name)" as NSString)
+        harness.eval("Object.defineProperty(hs, '\(name)', { get: __get_\(name), configurable: true });")
+
+        if let jsCode = enhancementScriptSource(for: name) {
+            harness.context.evaluateScript(jsCode)
+        }
+        return (harness, module)
     }
 
     /// Wait for all tasks in this harness to complete

@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import AVFoundation
 
 // MARK: - JavaScript API Protocol
@@ -114,6 +115,8 @@ import AVFoundation
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var _makeCameraEmitter: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -141,6 +144,7 @@ import AVFoundation
         }
         cameraCache.removeAll()
         _watcherEmitter = nil
+        _makeCameraEmitter = nil
     }
 
     isolated deinit {
@@ -182,7 +186,7 @@ import AVFoundation
 
     private func camera(for device: AVCaptureDevice) -> HSCamera {
         if let cached = cameraCache[device.uniqueID] { return cached }
-        let cam = HSCamera(device: device)
+        let cam = HSCamera(device: device, cameraModule: self)
         cameraCache[device.uniqueID] = cam
         return cam
     }
@@ -190,13 +194,14 @@ import AVFoundation
     // MARK: - Module-level watcher
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _makeCameraEmitter: JSFunction? = nil
     private var moduleCallback: JSFunction? = nil
 
     @objc func addWatcher(_ listener: JSFunction) {
         // invokeMethod doesn't propagate JS exceptions to the calling context's try-catch,
         // so we validate here and throw via context.exception before delegating.
         guard let context = JSContext.current() else { return }
-        guard listener.isObject else {
+        guard listener.isFunction else {
             context.exception = JSValue(newErrorFromMessage: "hs.camera.addWatcher(): listener must be a function", in: context)
             return
         }

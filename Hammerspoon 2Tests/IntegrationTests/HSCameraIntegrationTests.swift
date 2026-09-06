@@ -75,6 +75,38 @@ struct HSCameraTests {
             #expect(harness.evalTypeOf("hs.camera.removeWatcher") == "function")
         }
 
+        @Test("hs.camera.js emitter factory survives garbage collection of the module wrapper")
+        func testCameraEmitterFactorySurvivesGC() {
+            // `makeHarness()` (via `loadModule`) stores the module wrapper permanently as a
+            // property of `hs`, which would keep that specific wrapper JS-reachable for the
+            // rest of the test and make garbage collection a no-op — defeating the point of
+            // this test. `makeUnpinned` instead mirrors what `ModuleRoot.camera` actually does
+            // in production: `hs.camera` is a *computed* accessor handing back the same Swift
+            // singleton on every access, without any particular JS wrapper for it ever being
+            // pinned — letting JavaScriptCore's wrapper cache actually collect an unreferenced
+            // wrapper, and running the real `hs.camera.js` (not a reimplementation) against it.
+            let (harness, _) = JSTestHarness.makeUnpinned(HSCameraModule.self, as: "camera")
+            #expect(harness.evalTypeOf("hs.camera._makeCameraEmitter") == "function")
+
+            // Nothing above stored the wrapper `hs.camera` resolved to while running that script,
+            // so it's now eligible for collection. If the factory were still a bare JS expando
+            // (the pre-fix bug) rather than the native `_makeCameraEmitter` property, it would
+            // live on that now-collectible wrapper and be lost; a subsequent `hs.camera` access
+            // would return a fresh wrapper without it.
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.camera._makeCameraEmitter") == "function")
+            // Confirm the survivor is a genuine, working CameraWatcherEmitter, not just any
+            // object shaped like one.
+            harness.expectTrue("""
+            (function() {
+                var e = hs.camera._makeCameraEmitter({});
+                return typeof e.on === 'function' && typeof e.removeListener === 'function';
+            })()
+        """)
+        }
+
         @Test("module-level addWatcher() / removeWatcher() cycle is safe")
         func testModuleWatcherCycle() {
             let harness = makeHarness()
@@ -356,6 +388,31 @@ struct HSCameraTests {
                 return true;
             })()
         """)
+        }
+
+        @Test("per-camera addWatcher() finds its emitter factory after the hs.camera module wrapper is collected")
+        func testAddWatcherSurvivesModuleWrapperGC() {
+            // hs.camera exposed as a computed accessor (see makeUnpinned), not a stored value,
+            // so no particular JS wrapper for the module is kept reachable.
+            let (harness, _) = JSTestHarness.makeUnpinned(HSCameraModule.self, as: "camera")
+
+            harness.eval("var __gcTestCamera = hs.camera.all()[0];")
+            #expect(!harness.hasException)
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            // The pre-fix HSCamera.addWatcher() re-fetched `hs.camera` from JS on every call and
+            // read a bare JS expando off whatever wrapper it found there — which, after a GC pass
+            // with no wrapper pinned, could be a fresh one missing the factory. The fix reads the
+            // factory through a direct Swift reference to the owning HSCameraModule instead, so a
+            // real end-to-end addWatcher()/removeWatcher() cycle must still succeed here.
+            harness.eval("""
+            var fn = function(inUse) {};
+            __gcTestCamera.addWatcher(fn);
+            __gcTestCamera.removeWatcher(fn);
+        """)
+            #expect(!harness.hasException)
         }
     }
 

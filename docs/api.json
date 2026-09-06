@@ -3766,7 +3766,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
-          "lineNumber": 68
+          "lineNumber": 69
         },
         {
           "name": "findByName",
@@ -3796,7 +3796,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
-          "lineNumber": 77
+          "lineNumber": 78
         },
         {
           "name": "findByUID",
@@ -3826,7 +3826,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
-          "lineNumber": 86
+          "lineNumber": 87
         },
         {
           "name": "addWatcher",
@@ -3853,7 +3853,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
-          "lineNumber": 101
+          "lineNumber": 102
         },
         {
           "name": "removeWatcher",
@@ -3880,7 +3880,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.camera/HSCameraModule.swift",
-          "lineNumber": 109
+          "lineNumber": 110
         }
       ],
       "properties": [],
@@ -3916,7 +3916,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
-              "lineNumber": 125
+              "lineNumber": 126
             },
             {
               "name": "removeWatcher",
@@ -3943,7 +3943,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
-              "lineNumber": 133
+              "lineNumber": 134
             },
             {
               "name": "captureImage",
@@ -3966,7 +3966,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
-              "lineNumber": 154
+              "lineNumber": 155
             }
           ],
           "properties": [
@@ -3980,7 +3980,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
-              "lineNumber": 87
+              "lineNumber": 88
             },
             {
               "name": "uid",
@@ -3997,7 +3997,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
-              "lineNumber": 94
+              "lineNumber": 95
             },
             {
               "name": "name",
@@ -4014,7 +4014,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
-              "lineNumber": 101
+              "lineNumber": 102
             },
             {
               "name": "isInUse",
@@ -4031,7 +4031,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.camera/HSCamera.swift",
-              "lineNumber": 110
+              "lineNumber": 111
             }
           ]
         }
@@ -26282,5 +26282,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-06T11:18:30.286Z"
+  "generatedAt": "2026-09-06T13:16:39.890Z"
 }
