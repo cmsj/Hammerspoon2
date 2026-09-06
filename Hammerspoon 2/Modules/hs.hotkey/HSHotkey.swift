@@ -151,7 +151,8 @@ import Carbon
     private var repeatIntervalTimer: Timer?
 
     init(keyCode: UInt32, modifiers: UInt32, mods: [String], key: String,
-         callbackPressed: JSFunction? = nil, callbackReleased: JSFunction? = nil) {
+         callbackPressed: JSFunction? = nil, callbackReleased: JSFunction? = nil,
+         callbackRepeat: JSFunction? = nil) {
         self.keyCode = keyCode
         self.modifiers = modifiers
         self.mods = mods
@@ -161,6 +162,7 @@ import Carbon
 
         self.callbackPressed = callbackPressed
         self.callbackReleased = callbackReleased
+        self.callbackRepeat = callbackRepeat
     }
 
     isolated deinit {
