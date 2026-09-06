@@ -489,7 +489,9 @@ import SwiftUI
             // UInt16) before entering MainActor.assumeIsolated so we never try to pass
             // the non-Sendable NSEvent across the isolation boundary.
             let keyCode = event.keyCode
-            let modifierFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            // Caps Lock (and function/numeric-pad flags) are irrelevant to our shortcuts and must be
+            // excluded here, otherwise the exact-match comparisons below never succeed while it's on.
+            let modifierFlags = event.modifierFlags.intersection([.command, .control, .option, .shift])
             let consumed = MainActor.assumeIsolated {
                 self?.interceptKeyCode(keyCode, modifierFlags: modifierFlags) ?? false
             }
