@@ -112,8 +112,16 @@ const lockScreen = hs.hotkey.bind(["cmd", "ctrl"], "l", () => {
 
 The returned object supports `.enable()`, `.disable()`, `.isEnabled()`, and `.destroy()` if
 you want to toggle or tear down a hotkey deliberately, rather than waiting on GC. There's also
-`hs.hotkey.bindSpec(mods, key, message, onPress, onRelease)`, identical except for an extra
-description string, for when you want to self-document what a hotkey is for.
+`hs.hotkey.bindSpec(spec)`, which takes a single options object (`mods`, `key`, `pressed`,
+`released`, `repeat`) instead of positional arguments, plus a `message` field for when you
+want to self-document what a hotkey is for:
+
+```js
+hs.hotkey.bindSpec({
+    mods: ["cmd"], key: "space", message: "Spotlight-like",
+    pressed: () => console.log("pressed")
+})
+```
 
 ## Watching for changes
 
