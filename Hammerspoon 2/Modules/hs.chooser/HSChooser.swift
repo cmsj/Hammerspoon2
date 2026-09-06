@@ -487,9 +487,9 @@ import SwiftUI
             // UInt16) before entering MainActor.assumeIsolated so we never try to pass
             // the non-Sendable NSEvent across the isolation boundary.
             let keyCode = event.keyCode
-            let isControl = event.modifierFlags.contains(.control)
+            let modifierFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             let consumed = MainActor.assumeIsolated {
-                self?.interceptKeyCode(keyCode, isControl: isControl) ?? false
+                self?.interceptKeyCode(keyCode, modifierFlags: modifierFlags) ?? false
             }
             return consumed ? nil : event
         }
@@ -519,7 +519,7 @@ import SwiftUI
         resignKeyObserver = nil
     }
 
-    private func interceptKeyCode(_ keyCode: UInt16, isControl: Bool) -> Bool {
+    private func interceptKeyCode(_ keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
         // Only intercept while our panel is the key window.
         guard let panel = window, panel.isKeyWindow else { return false }
 
@@ -534,12 +534,12 @@ import SwiftUI
                 viewModel.selectedIndex -= 1
             }
             return true
-        case 45 where isControl: // kVK_ANSI_N, Ctrl-N: next row
+        case 45 where modifierFlags == .control: // kVK_ANSI_N, Ctrl-N: next row
             if viewModel.selectedIndex < viewModel.filteredChoices.count - 1 {
                 viewModel.selectedIndex += 1
             }
             return true
-        case 35 where isControl: // kVK_ANSI_P, Ctrl-P: previous row
+        case 35 where modifierFlags == .control: // kVK_ANSI_P, Ctrl-P: previous row
             if viewModel.selectedIndex > 0 {
                 viewModel.selectedIndex -= 1
             }
