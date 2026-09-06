@@ -114,6 +114,8 @@ import AVFoundation
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var _makeCameraEmitter: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -141,6 +143,7 @@ import AVFoundation
         }
         cameraCache.removeAll()
         _watcherEmitter = nil
+        _makeCameraEmitter = nil
     }
 
     isolated deinit {
@@ -182,7 +185,7 @@ import AVFoundation
 
     private func camera(for device: AVCaptureDevice) -> HSCamera {
         if let cached = cameraCache[device.uniqueID] { return cached }
-        let cam = HSCamera(device: device)
+        let cam = HSCamera(device: device, cameraModule: self)
         cameraCache[device.uniqueID] = cam
         return cam
     }
@@ -190,6 +193,7 @@ import AVFoundation
     // MARK: - Module-level watcher
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _makeCameraEmitter: JSFunction? = nil
     private var moduleCallback: JSFunction? = nil
 
     @objc func addWatcher(_ listener: JSFunction) {

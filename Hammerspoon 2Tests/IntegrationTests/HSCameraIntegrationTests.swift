@@ -75,6 +75,19 @@ struct HSCameraTests {
             #expect(harness.evalTypeOf("hs.camera.removeWatcher") == "function")
         }
 
+        @Test("hs.camera.js emitter factory is stored in a Swift-retained property")
+        func testCameraEmitterFactoryIsRetainedBySwift() {
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.camera._makeCameraEmitter") == "function")
+
+            // The factory must land in the native `_makeCameraEmitter` property rather than
+            // in a JS expando on the module wrapper, which JavaScriptCore may discard once
+            // the wrapper is collected — leaving per-camera addWatcher() with no factory.
+            let module = harness.evalValue("hs.camera")?.toObjectOf(HSCameraModule.self) as? HSCameraModule
+            #expect(module != nil)
+            #expect(module?._makeCameraEmitter?.isObject == true)
+        }
+
         @Test("module-level addWatcher() / removeWatcher() cycle is safe")
         func testModuleWatcherCycle() {
             let harness = makeHarness()

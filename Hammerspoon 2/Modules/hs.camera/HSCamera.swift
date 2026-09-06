@@ -170,9 +170,11 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     }
 
     let device: AVCaptureDevice
+    weak var cameraModule: HSCameraModule?
 
-    init(device: AVCaptureDevice) {
+    init(device: AVCaptureDevice, cameraModule: HSCameraModule) {
         self.device = device
+        self.cameraModule = cameraModule
         super.init()
     }
 
@@ -213,17 +215,37 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
 
     @objc func addWatcher(_ listener: JSFunction) {
         // invokeMethod doesn't propagate JS exceptions to the calling context's try-catch,
-        // so we validate here and throw via context.exception before delegating.
+        // so validate the listener and emitter before delegating.
         guard let ctx = JSContext.current() else { return }
         guard listener.isObject else {
             ctx.exception = JSValue(newErrorFromMessage: "hs.camera device.addWatcher(): listener must be a function", in: ctx)
             return
         }
-        if _watcherEmitter == nil {
-            let cameraModule = ctx.objectForKeyedSubscript("hs")?.objectForKeyedSubscript("camera")
-            _watcherEmitter = cameraModule?.invokeMethod("_makeCameraEmitter", withArguments: [self])
+        // A previously stored `undefined` emitter must not block a later retry, so
+        // treat any non-object value as absent.
+        if let stored = _watcherEmitter, stored.isUndefined || stored.isNull {
+            _watcherEmitter = nil
         }
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
+        if _watcherEmitter == nil {
+            guard let emitterFactory = cameraModule?._makeCameraEmitter,
+                  emitterFactory.isObject else {
+                ctx.exception = JSValue(
+                    newErrorFromMessage: "hs.camera device.addWatcher(): camera watcher emitter factory is unavailable",
+                    in: ctx
+                )
+                return
+            }
+            let emitter = emitterFactory.call(withArguments: [self])
+            _watcherEmitter = (emitter?.isObject == true) ? emitter : nil
+        }
+        guard let emitter = _watcherEmitter else {
+            ctx.exception = JSValue(
+                newErrorFromMessage: "hs.camera device.addWatcher(): failed to create camera watcher emitter",
+                in: ctx
+            )
+            return
+        }
+        emitter.invokeMethod("on", withArguments: [listener])
     }
 
     @objc func removeWatcher(_ listener: JSFunction) {
