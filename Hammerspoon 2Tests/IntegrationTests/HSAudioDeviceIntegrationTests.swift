@@ -513,20 +513,64 @@ struct HSAudioDeviceTests {
 
         // MARK: - Per-device emitter factory GC survival
 
-        @Test("hs.audiodevice.js per-device emitter factory survives garbage collection")
+        @Test("hs.audiodevice.js per-device emitter factory survives garbage collection of the module wrapper")
         func testDeviceEmitterFactorySurvivesGC() {
-            let harness = makeHarness()
+            // `makeHarness()` (via `loadModule`) stores the module wrapper permanently as a
+            // property of `hs`, which would keep that specific wrapper JS-reachable for the
+            // rest of the test and make garbage collection a no-op — defeating the point of
+            // this test. `makeUnpinned` instead mirrors what `ModuleRoot.audiodevice` actually
+            // does in production: `hs.audiodevice` is a *computed* accessor handing back the
+            // same Swift singleton on every access, without any particular JS wrapper for it
+            // ever being pinned — letting JavaScriptCore's wrapper cache actually collect an
+            // unreferenced wrapper, and running the real `hs.audiodevice.js` (not a
+            // reimplementation) against it.
+            let (harness, _) = JSTestHarness.makeUnpinned(HSAudioDeviceModule.self, as: "audiodevice")
             #expect(harness.evalTypeOf("hs.audiodevice._makeDeviceEmitter") == "function")
 
-            // The factory must land in the native `_makeDeviceEmitter` property rather than
-            // in a JS expando on the module wrapper, which JavaScriptCore may discard once
-            // nothing on the JS side references it — leaving per-device addWatcher() with no
-            // factory. Force a GC pass and confirm the factory is still callable afterward.
+            // Nothing above stored the wrapper `hs.audiodevice` resolved to while running that
+            // script, so it's now eligible for collection. If the factory were still a bare JS
+            // expando (the pre-fix bug) rather than the native `_makeDeviceEmitter` property, it
+            // would live on that now-collectible wrapper and be lost; a subsequent
+            // `hs.audiodevice` access would return a fresh wrapper without it.
             unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
             unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
 
             #expect(harness.evalTypeOf("hs.audiodevice._makeDeviceEmitter") == "function")
-            harness.expectTrue("typeof hs.audiodevice._makeDeviceEmitter({}) === 'object'")
+            // Confirm the survivor is a genuine, working AudioDeviceWatcherEmitter, not just any
+            // object shaped like one.
+            harness.expectTrue("""
+            (function() {
+                var e = hs.audiodevice._makeDeviceEmitter({});
+                return typeof e.on === 'function' && typeof e.removeListener === 'function';
+            })()
+        """)
+        }
+
+        @Test("per-device addWatcher() finds its emitter factory after the hs.audiodevice module wrapper is collected")
+        func testDeviceAddWatcherSurvivesModuleWrapperGC() {
+            // hs.audiodevice exposed as a computed accessor (see makeUnpinned), not a stored
+            // value, so no particular JS wrapper for the module is kept reachable.
+            let (harness, _) = JSTestHarness.makeUnpinned(HSAudioDeviceModule.self, as: "audiodevice")
+
+            harness.eval("var __gcTestDevice = hs.audiodevice.all()[0];")
+            #expect(!harness.hasException)
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            // HSAudioDevice.addWatcher() re-fetches `hs.audiodevice` from JS on every call and
+            // reads `_makeDeviceEmitter` off whatever wrapper it finds there — which, after a GC
+            // pass with no wrapper pinned, could be a fresh one. That's only safe because the
+            // factory is now the native `_makeDeviceEmitter` property (Swift-object-backed, so
+            // any wrapper for the same object exposes it) rather than a JS expando (wrapper-local,
+            // and lost when that specific wrapper is collected) — so a real end-to-end
+            // addWatcher()/removeWatcher() cycle must still succeed here.
+            harness.eval("""
+            var fn = function(e) {};
+            __gcTestDevice.addWatcher(fn);
+            __gcTestDevice.removeWatcher(fn);
+        """)
+            #expect(!harness.hasException)
         }
     }
 }
