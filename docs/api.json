@@ -4070,7 +4070,7 @@
         {
           "name": "HSChooserAPI",
           "type": "typedef",
-          "rawDocumentation": "A keyboard-driven floating chooser panel.\n\nCreate via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.\n\n## Choice format\n\nEach choice is a plain object with required `text` and optional `subText`, `image`, `valid`,\nand `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.\n\nThe `contextMenu` array defines per-row right-click menu entries. Each entry is either\n`{ title: \"...\", action: (item) => {} }` for a button or `{ type: \"divider\" }` for a separator:\n\n```javascript\n{\n  text: \"Open Safari\", subText: \"com.apple.Safari\",\n  image: HSImage.fromAppBundle(\"com.apple.Safari\"), valid: true, myData: 42,\n  contextMenu: [\n    { title: \"Open\", action: () => hs.urlevent.openURL(\"https://apple.com\") },\n    { type: \"divider\" },\n    { title: \"Copy bundle ID\", action: () => hs.pasteboard.writeString(\"com.apple.Safari\") }\n  ]\n}\n```\n\n## Keyboard shortcuts\n\n- **Return** — confirm selection\n- **Escape** — dismiss (calls `onSelect` with `null`)\n- **↑ / ↓** — move through results",
+          "rawDocumentation": "A keyboard-driven floating chooser panel.\n\nCreate via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.\n\n## Choice format\n\nEach choice is a plain object with required `text` and optional `subText`, `image`, `valid`,\nand `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.\n\nThe `contextMenu` array defines per-row right-click menu entries. Each entry is either\n`{ title: \"...\", action: (item) => {} }` for a button or `{ type: \"divider\" }` for a separator:\n\n```javascript\n{\n  text: \"Open Safari\", subText: \"com.apple.Safari\",\n  image: HSImage.fromAppBundle(\"com.apple.Safari\"), valid: true, myData: 42,\n  contextMenu: [\n    { title: \"Open\", action: () => hs.urlevent.openURL(\"https://apple.com\") },\n    { type: \"divider\" },\n    { title: \"Copy bundle ID\", action: () => hs.pasteboard.writeString(\"com.apple.Safari\") }\n  ]\n}\n```\n\n## Keyboard shortcuts\n\n- **Return** — confirm selection\n- **Escape** — dismiss (calls `onSelect` with `null`)\n- **↑ / ↓** — move through results\n- **Ctrl-N / Ctrl-P** — move through results (alternative to ↑ / ↓)\n- **Cmd-1 ... Cmd-9, Cmd-0** — instantly select one of the first ten results",
           "description": "A keyboard-driven floating chooser panel.\nCreate via `hs.chooser.create()`. Configure choices, set callbacks, then call `.show()`.\n## Choice format\nEach choice is a plain object with required `text` and optional `subText`, `image`, `valid`,\nand `contextMenu` fields. All other fields are passed through to the `onSelect` callback unchanged.\nThe `contextMenu` array defines per-row right-click menu entries. Each entry is either\n```javascript\n{\n  text: \"Open Safari\", subText: \"com.apple.Safari\",\n  image: HSImage.fromAppBundle(\"com.apple.Safari\"), valid: true, myData: 42,\n  contextMenu: [\n    { title: \"Open\", action: () => hs.urlevent.openURL(\"https://apple.com\") },\n    { type: \"divider\" },\n    { title: \"Copy bundle ID\", action: () => hs.pasteboard.writeString(\"com.apple.Safari\") }\n  ]\n}\n```\n## Keyboard shortcuts",
           "methods": [
             {
@@ -4101,7 +4101,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 99
+              "lineNumber": 101
             },
             {
               "name": "refreshChoices",
@@ -4123,7 +4123,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 108
+              "lineNumber": 110
             },
             {
               "name": "show",
@@ -4145,7 +4145,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 143
+              "lineNumber": 145
             },
             {
               "name": "hide",
@@ -4167,7 +4167,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 151
+              "lineNumber": 153
             },
             {
               "name": "select",
@@ -4197,7 +4197,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 224
+              "lineNumber": 226
             },
             {
               "name": "selectedRowContents",
@@ -4227,7 +4227,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 236
+              "lineNumber": 238
             }
           ],
           "properties": [
@@ -4241,7 +4241,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 43
+              "lineNumber": 45
             },
             {
               "name": "identifier",
@@ -4253,7 +4253,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 46
+              "lineNumber": 48
             },
             {
               "name": "query",
@@ -4270,7 +4270,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 56
+              "lineNumber": 58
             },
             {
               "name": "placeholder",
@@ -4287,7 +4287,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 63
+              "lineNumber": 65
             },
             {
               "name": "searchSubText",
@@ -4304,7 +4304,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 71
+              "lineNumber": 73
             },
             {
               "name": "enableDefaultForQuery",
@@ -4321,7 +4321,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 79
+              "lineNumber": 81
             },
             {
               "name": "selectedRow",
@@ -4338,7 +4338,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 117
+              "lineNumber": 119
             },
             {
               "name": "width",
@@ -4355,7 +4355,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 126
+              "lineNumber": 128
             },
             {
               "name": "visibleRows",
@@ -4372,7 +4372,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 133
+              "lineNumber": 135
             },
             {
               "name": "isVisible",
@@ -4389,7 +4389,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 158
+              "lineNumber": 160
             },
             {
               "name": "onSelect",
@@ -4406,7 +4406,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 175
+              "lineNumber": 177
             },
             {
               "name": "onQueryChange",
@@ -4423,7 +4423,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 187
+              "lineNumber": 189
             },
             {
               "name": "onShow",
@@ -4440,7 +4440,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 194
+              "lineNumber": 196
             },
             {
               "name": "onHide",
@@ -4457,7 +4457,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 201
+              "lineNumber": 203
             },
             {
               "name": "onInvalid",
@@ -4474,7 +4474,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.chooser/HSChooser.swift",
-              "lineNumber": 210
+              "lineNumber": 212
             }
           ]
         }
@@ -26282,5 +26282,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-06T13:23:12.886Z"
+  "generatedAt": "2026-09-06T16:46:17.495Z"
 }
