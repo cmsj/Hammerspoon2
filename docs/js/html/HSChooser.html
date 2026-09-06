@@ -87,6 +87,8 @@ and <code>contextMenu</code> fields. All other fields are passed through to the 
 <li><strong>Return</strong> — confirm selection</li>
 <li><strong>Escape</strong> — dismiss (calls <code>onSelect</code> with <code>null</code>)</li>
 <li><strong>↑ / ↓</strong> — move through results</li>
+<li><strong>Ctrl-N / Ctrl-P</strong> — move through results (alternative to ↑ / ↓)</li>
+<li><strong>Cmd-1 ... Cmd-9, Cmd-0</strong> — instantly select one of the first ten results</li>
 </ul>
 </div>
 
@@ -96,7 +98,7 @@ and <code>contextMenu</code> fields. All other fields are passed through to the 
         <div class="prop-type">string</div>
         <div class="description">Read-only type identifier.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L43" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:43</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L45" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:45</a>
         </div>
     </div>
     <div class="property" id="identifier">
@@ -104,7 +106,7 @@ and <code>contextMenu</code> fields. All other fields are passed through to the 
         <div class="prop-type">string</div>
         <div class="description">Stable UUID string for this chooser instance.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:46</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L48" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:48</a>
         </div>
     </div>
     <div class="property" id="query">
@@ -113,7 +115,7 @@ and <code>contextMenu</code> fields. All other fields are passed through to the 
         <div class="description">The current text in the search field. Setting this from JS updates the display but
 does not invoke the `onQueryChange` callback.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L56" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:56</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L58" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:58</a>
         </div>
     </div>
     <div class="property" id="placeholder">
@@ -121,7 +123,7 @@ does not invoke the `onQueryChange` callback.</div>
         <div class="prop-type">string</div>
         <div class="description">Placeholder text shown in the empty search field (default: `&quot;Search...&quot;`).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L63" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:63</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L65" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:65</a>
         </div>
     </div>
     <div class="property" id="searchSubText">
@@ -130,7 +132,7 @@ does not invoke the `onQueryChange` callback.</div>
         <div class="description">Whether searches match against `subText` in addition to `text` (default: `false`).
 Only applies when a static choices array is provided.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L71" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:71</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L73" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:73</a>
         </div>
     </div>
     <div class="property" id="enableDefaultForQuery">
@@ -139,7 +141,7 @@ Only applies when a static choices array is provided.</div>
         <div class="description">When `true` and the query is non-empty but there are no matching choices, `onSelect`
 is called with `{ text: &lt;query&gt; }` instead of `null` (default: `false`).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:79</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L81" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:81</a>
         </div>
     </div>
     <div class="property" id="selectedRow">
@@ -147,7 +149,7 @@ is called with `{ text: &lt;query&gt; }` instead of `null` (default: `false`).</
         <div class="prop-type">number</div>
         <div class="description">The zero-based index of the currently highlighted row (-1 when empty).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L117" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:117</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L119" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:119</a>
         </div>
     </div>
     <div class="property" id="width">
@@ -155,7 +157,7 @@ is called with `{ text: &lt;query&gt; }` instead of `null` (default: `false`).</
         <div class="prop-type">number</div>
         <div class="description">Width of the chooser as a fraction of the screen width (default: `0.5` = 50 %).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L126" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:126</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L128" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:128</a>
         </div>
     </div>
     <div class="property" id="visibleRows">
@@ -163,7 +165,7 @@ is called with `{ text: &lt;query&gt; }` instead of `null` (default: `false`).</
         <div class="prop-type">number</div>
         <div class="description">Maximum number of rows visible at once without scrolling (default: `10`).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L133" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:133</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L135" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:135</a>
         </div>
     </div>
     <div class="property" id="isVisible">
@@ -171,7 +173,7 @@ is called with `{ text: &lt;query&gt; }` instead of `null` (default: `false`).</
         <div class="prop-type">boolean</div>
         <div class="description">`true` if the chooser panel is currently on screen.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L158" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:158</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L160" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:160</a>
         </div>
     </div>
     <div class="property" id="onSelect">
@@ -182,7 +184,7 @@ The argument is the chosen row object (the original dict you passed to `setChoic
 with `text`, `subText`, `image`, `valid`, and any custom fields intact).
 The argument is `null` when dismissed (Escape).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L175" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:175</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L177" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:177</a>
         </div>
     </div>
     <div class="property" id="onQueryChange">
@@ -191,7 +193,7 @@ The argument is `null` when dismissed (Escape).</div>
         <div class="description">Called on every keystroke with the new query string, or null to remove the handler.
 Use this to debounce expensive searches or trigger async data fetching.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L187" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:187</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L189" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:189</a>
         </div>
     </div>
     <div class="property" id="onShow">
@@ -199,7 +201,7 @@ Use this to debounce expensive searches or trigger async data fetching.</div>
         <div class="prop-type">function | null</div>
         <div class="description">Called after the panel becomes visible, or null to remove the handler.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L194" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:194</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L196" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:196</a>
         </div>
     </div>
     <div class="property" id="onHide">
@@ -207,7 +209,7 @@ Use this to debounce expensive searches or trigger async data fetching.</div>
         <div class="prop-type">function | null</div>
         <div class="description">Called after the panel is hidden (for any reason: selection, Escape, or `hide()`), or null to remove the handler.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L201" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:201</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L203" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:203</a>
         </div>
     </div>
     <div class="property" id="onInvalid">
@@ -217,7 +219,7 @@ Use this to debounce expensive searches or trigger async data fetching.</div>
 The chooser stays open; the argument is the row dict (same shape as `onSelect`).
 If unset, activating an invalid row is silently ignored.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:210</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L212" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:212</a>
         </div>
     </div>
 
@@ -263,7 +265,7 @@ chooser.setChoices([{text: &quot;Foo&quot;}, {text: &quot;Bar&quot;}])
 chooser.setChoices(q =&gt; items.filter(i =&gt; i.text.toLowerCase().includes(q.toLowerCase())))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L99" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:99</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L101" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:101</a>
         </div>
     </div>
     <div class="method" id="refreshChoices">
@@ -287,7 +289,7 @@ Call after updating an external data source in an async `onQueryChange` handler.
         <pre><code class="language-js">chooser.refreshChoices()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L108" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:108</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L110" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:110</a>
         </div>
     </div>
     <div class="method" id="show">
@@ -310,7 +312,7 @@ Call after updating an external data source in an async `onQueryChange` handler.
         <pre><code class="language-js">chooser.show()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L143" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:143</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L145" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:145</a>
         </div>
     </div>
     <div class="method" id="hide">
@@ -333,7 +335,7 @@ Call after updating an external data source in an async `onQueryChange` handler.
         <pre><code class="language-js">chooser.hide()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L151" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:151</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L153" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:153</a>
         </div>
     </div>
     <div class="method" id="select">
@@ -376,7 +378,7 @@ for rows with `valid: false`) and hides the chooser.</div>
 chooser.select(2)    // confirm row at index 2</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L224" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:224</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L226" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:226</a>
         </div>
     </div>
     <div class="method" id="selectedRowContents">
@@ -418,7 +420,7 @@ Returns `null` if the index is out of range or no choices are set.</div>
 const item = chooser.selectedRowContents(2)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L236" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:236</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.chooser/HSChooser.swift#L238" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.chooser/HSChooser.swift:238</a>
         </div>
     </div>
         </main>

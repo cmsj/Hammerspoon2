@@ -37,6 +37,8 @@ import SwiftUI
 /// - **Return** — confirm selection
 /// - **Escape** — dismiss (calls `onSelect` with `null`)
 /// - **↑ / ↓** — move through results
+/// - **Ctrl-N / Ctrl-P** — move through results (alternative to ↑ / ↓)
+/// - **Cmd-1 ... Cmd-9, Cmd-0** — instantly select one of the first ten results
 @objc protocol HSChooserAPI: HSTypeAPI, JSExport {
 
     /// Read-only type identifier.
@@ -551,9 +553,30 @@ import SwiftUI
             handleSelection(viewModel.filteredChoices.isEmpty ? nil : viewModel.selectedIndex)
             return true
         default:
+            // Cmd-1 through Cmd-9, Cmd-0: jump straight to one of the first ten rows.
+            if modifierFlags == .command,
+               let rowIndex = Self.numberKeyRowIndex[keyCode],
+               rowIndex < viewModel.filteredChoices.count {
+                handleSelection(rowIndex)
+                return true
+            }
             return false
         }
     }
+
+    /// Maps the ANSI number-row key codes to the row index they select (Cmd-1 → 0, ..., Cmd-9 → 8, Cmd-0 → 9).
+    private static let numberKeyRowIndex: [UInt16: Int] = [
+        18: 0, // kVK_ANSI_1
+        19: 1, // kVK_ANSI_2
+        20: 2, // kVK_ANSI_3
+        21: 3, // kVK_ANSI_4
+        23: 4, // kVK_ANSI_5
+        22: 5, // kVK_ANSI_6
+        26: 6, // kVK_ANSI_7
+        28: 7, // kVK_ANSI_8
+        25: 8, // kVK_ANSI_9
+        29: 9  // kVK_ANSI_0
+    ]
 
     // MARK: - Private
 

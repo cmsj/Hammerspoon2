@@ -72,18 +72,22 @@ struct ChooserView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(viewModel.filteredChoices.enumerated()), id: \.element.id) { index, item in
-                        ChooserRowView(item: item, isSelected: index == viewModel.selectedIndex)
-                            .id(item.id)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                viewModel.selectedIndex = index
-                                onSelect(index)
+                        ChooserRowView(
+                            item: item,
+                            isSelected: index == viewModel.selectedIndex,
+                            shortcutDigit: index < 10 ? (index + 1) % 10 : nil
+                        )
+                        .id(item.id)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            viewModel.selectedIndex = index
+                            onSelect(index)
+                        }
+                        .contextMenu {
+                            ForEach(Array(item.contextMenuItems.enumerated()), id: \.offset) { _, entry in
+                                contextMenuEntryView(for: entry)
                             }
-                            .contextMenu {
-                                ForEach(Array(item.contextMenuItems.enumerated()), id: \.offset) { _, entry in
-                                    contextMenuEntryView(for: entry)
-                                }
-                            }
+                        }
                     }
                 }
             }
