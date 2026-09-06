@@ -18,7 +18,7 @@ import Carbon
     ///     `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.
     ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
     ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
-    ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
+    ///   - callbackReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback
     ///   - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
     /// - Returns: A hotkey object, or null if binding failed (including when none of the callbacks is a function — at least one is required)
     /// - Example:
@@ -51,7 +51,7 @@ import Carbon
     ///     `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.
     ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
     ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
-    ///   - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback
+    ///   - callbackReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback
     ///   - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
     /// - Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.
     /// - Example:
@@ -220,8 +220,8 @@ import Carbon
             AKError("hs.hotkey.create: callbackPressed must be either a function or null")
             return nil
         }
-        guard callbackReleased.isFunction || callbackReleased.isNull else {
-            AKError("hs.hotkey.create: callbackReleased must be either a function or null")
+        guard callbackReleased.isFunction || callbackReleased.isNull || callbackReleased.isUndefined else {
+            AKError("hs.hotkey.create: callbackReleased must be either a function, null, or omitted")
             return nil
         }
         guard callbackRepeat.isFunction || callbackRepeat.isNull || callbackRepeat.isUndefined else {
@@ -234,12 +234,10 @@ import Carbon
             modifiers: modifierFlags,
             mods: mods,
             key: key,
-            callbackPressed: callbackPressed.isNull ? nil : callbackPressed,
-            callbackReleased: callbackReleased.isNull ? nil : callbackReleased
+            callbackPressed: callbackPressed.isFunction ? callbackPressed : nil,
+            callbackReleased: callbackReleased.isFunction ? callbackReleased : nil,
+            callbackRepeat: callbackRepeat.isFunction ? callbackRepeat : nil
         )
-        if callbackRepeat.isFunction {
-            hotkey.callbackRepeat = callbackRepeat
-        }
 
         activeHotkeys.add(hotkey)
         return hotkey

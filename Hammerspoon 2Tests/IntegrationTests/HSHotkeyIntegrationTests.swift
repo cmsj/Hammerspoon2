@@ -260,6 +260,41 @@ struct HSHotkeyTests {
             #expect(!harness.hasException)
         }
 
+        @Test("bind without a released argument still binds (released is optional)")
+        func testBindWithoutReleasedArgumentBinds() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'b', () => {})")
+            harness.expectTrue("typeof hk === 'object' && hk !== null")
+            harness.expectTrue("hk.isEnabled() === true")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bind treats an omitted released the same as null (no released callback)")
+        func testBindOmittedReleasedIsUnset() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'd', () => {})")
+            harness.expectTrue("hk.callbackReleased === null || hk.callbackReleased === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bind without a pressed argument returns null (pressed is required)")
+        func testBindWithoutPressedReturnsNull() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'l')")
+            harness.expectTrue("hk === null || hk === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("repeat-only hotkey (pressed and released null) sets callbackRepeat")
+        func testRepeatOnlyHotkeySetsRepeat() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'm', null, null, () => {})")
+            harness.expectTrue("typeof hk === 'object' && hk !== null")
+            #expect(harness.evalTypeOf("hk.callbackRepeat") == "function")
+            harness.expectTrue("hk.callbackPressed === null || hk.callbackPressed === undefined")
+            #expect(!harness.hasException)
+        }
+
         @Test("triggering press/release with a repeat callback set does not throw")
         func testTriggerWithRepeatDoesNotThrow() {
             let harness = makeHarness()
