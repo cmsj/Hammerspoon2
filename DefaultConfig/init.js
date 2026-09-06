@@ -17,7 +17,7 @@ hs.notify.show("Hammerspoon 2", "Config loaded successfully.")
 //
 // const helloHotkey = hs.hotkey.bind(["cmd", "alt"], "h", () => {
 //   hs.notify.show("Hammerspoon 2", "Hello from your config!")
-// })
+// }, null, null)
 //
 // Note: capture the return value in a variable that lives as long as your config
 //       does, otherwise it will simply stop firing after the next garbage collection.
