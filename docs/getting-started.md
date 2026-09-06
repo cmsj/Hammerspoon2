@@ -57,7 +57,7 @@ Concretely, this is the mistake:
 // simply stop firing after the next garbage collection.
 hs.hotkey.bind(["cmd", "alt"], "h", () => {
     console.log("hello")
-})
+}, null, null)
 ```
 
 And this is the fix — capture the return value in a variable that lives as long as your
@@ -66,7 +66,7 @@ config does, typically a top-level `const` in `init.js`:
 ```js
 const helloHotkey = hs.hotkey.bind(["cmd", "alt"], "h", () => {
     console.log("hello")
-})
+}, null, null)
 ```
 
 `helloHotkey` never needs to be read again for this to work — its mere existence as a
@@ -78,7 +78,7 @@ later. If you're building several of these, a single top-level array works well 
 
 ```js
 const keepAlive = []
-keepAlive.push(hs.hotkey.bind(["cmd", "alt"], "h", () => console.log("hello")))
+keepAlive.push(hs.hotkey.bind(["cmd", "alt"], "h", () => console.log("hello"), null, null))
 keepAlive.push(hs.timer.doEvery(60, () => console.log("still here")))
 ```
 
@@ -107,13 +107,21 @@ running a while, this is the first thing to check.
 ```js
 const lockScreen = hs.hotkey.bind(["cmd", "ctrl"], "l", () => {
     hs.power.lockScreen()
-}, null)
+}, null, null)
 ```
 
 The returned object supports `.enable()`, `.disable()`, `.isEnabled()`, and `.destroy()` if
 you want to toggle or tear down a hotkey deliberately, rather than waiting on GC. There's also
-`hs.hotkey.bindSpec(mods, key, message, onPress, onRelease)`, identical except for an extra
-description string, for when you want to self-document what a hotkey is for.
+`hs.hotkey.bindSpec(spec)`, which takes a single options object (`mods`, `key`, `pressed`,
+`released`, `repeat`) instead of positional arguments, plus a `message` field for when you
+want to self-document what a hotkey is for:
+
+```js
+hs.hotkey.bindSpec({
+    mods: ["cmd"], key: "space", message: "Spotlight-like",
+    pressed: () => console.log("pressed")
+})
+```
 
 ## Watching for changes
 
@@ -286,8 +294,8 @@ module.exports = { centerFocused, snapLeft, LEFT_HALF }
 ```js
 // init.js
 const { centerFocused, snapLeft } = require("./window-management.js")
-hs.hotkey.bind(["cmd", "alt"], "c", centerFocused)
-hs.hotkey.bind(["cmd", "alt"], "left", snapLeft)
+hs.hotkey.bind(["cmd", "alt"], "c", centerFocused, null)
+hs.hotkey.bind(["cmd", "alt"], "left", snapLeft, null)
 ```
 
 `module.exports` isn't limited to functions — it's a plain object, so export whatever a

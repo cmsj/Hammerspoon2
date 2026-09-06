@@ -111,13 +111,13 @@ unreachable).</p>
 // simply stop firing after the next garbage collection.
 hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;h&quot;, () =&gt; {
     console.log(&quot;hello&quot;)
-})
+}, null, null)
 </code></pre>
 <p>And this is the fix — capture the return value in a variable that lives as long as your
 config does, typically a top-level <code>const</code> in <code>init.js</code>:</p>
 <pre><code class="language-js">const helloHotkey = hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;h&quot;, () =&gt; {
     console.log(&quot;hello&quot;)
-})
+}, null, null)
 </code></pre>
 <p><code>helloHotkey</code> never needs to be read again for this to work — its mere existence as a
 reachable variable is what keeps the hotkey alive. The same rule applies to anything returned
@@ -126,7 +126,7 @@ from a factory-style call: <code>hs.hotkey.bind()</code>/<code>bindSpec()</code>
 still showing, and any reactive value (<code>HSString</code>, <code>HSColor</code>, <code>HSImage</code>) you intend to update
 later. If you&#39;re building several of these, a single top-level array works well as a catch-all:</p>
 <pre><code class="language-js">const keepAlive = []
-keepAlive.push(hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;h&quot;, () =&gt; console.log(&quot;hello&quot;)))
+keepAlive.push(hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;h&quot;, () =&gt; console.log(&quot;hello&quot;), null, null))
 keepAlive.push(hs.timer.doEvery(60, () =&gt; console.log(&quot;still here&quot;)))
 </code></pre>
 <p>One family of APIs behaves differently: modules with <code>addWatcher()</code>/<code>removeWatcher()</code> (
@@ -147,12 +147,18 @@ running a while, this is the first thing to check.</p>
 <code>null</code>:</p>
 <pre><code class="language-js">const lockScreen = hs.hotkey.bind([&quot;cmd&quot;, &quot;ctrl&quot;], &quot;l&quot;, () =&gt; {
     hs.power.lockScreen()
-}, null)
+}, null, null)
 </code></pre>
 <p>The returned object supports <code>.enable()</code>, <code>.disable()</code>, <code>.isEnabled()</code>, and <code>.destroy()</code> if
 you want to toggle or tear down a hotkey deliberately, rather than waiting on GC. There&#39;s also
-<code>hs.hotkey.bindSpec(mods, key, message, onPress, onRelease)</code>, identical except for an extra
-description string, for when you want to self-document what a hotkey is for.</p>
+<code>hs.hotkey.bindSpec(spec)</code>, which takes a single options object (<code>mods</code>, <code>key</code>, <code>pressed</code>,
+<code>released</code>, <code>repeat</code>) instead of positional arguments, plus a <code>message</code> field for when you
+want to self-document what a hotkey is for:</p>
+<pre><code class="language-js">hs.hotkey.bindSpec({
+    mods: [&quot;cmd&quot;], key: &quot;space&quot;, message: &quot;Spotlight-like&quot;,
+    pressed: () =&gt; console.log(&quot;pressed&quot;)
+})
+</code></pre>
 <h2 id="watching-for-changes">Watching for changes</h2>
 <p>The <code>addWatcher()</code>/<code>removeWatcher()</code> pattern shown above is consistent across most modules
 that report ongoing state changes — clipboard contents, display configuration, application
@@ -284,8 +290,8 @@ module.exports = { centerFocused, snapLeft, LEFT_HALF }
 </code></pre>
 <pre><code class="language-js">// init.js
 const { centerFocused, snapLeft } = require(&quot;./window-management.js&quot;)
-hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;c&quot;, centerFocused)
-hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;left&quot;, snapLeft)
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;c&quot;, centerFocused, null)
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;left&quot;, snapLeft, null)
 </code></pre>
 <p><code>module.exports</code> isn&#39;t limited to functions — it&#39;s a plain object, so export whatever a
 caller needs: functions, constants, config objects, <code>HSRect</code>/<code>HSColor</code> values, anything. The
