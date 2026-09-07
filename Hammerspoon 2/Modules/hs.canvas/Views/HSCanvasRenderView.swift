@@ -25,7 +25,13 @@ struct HSCanvasRenderView: View {
     /// when no individual element was hit.
     static let canvasSentinelID = "_canvas"
 
-    @State private var hoveredKey: String?
+    /// The id of whatever currently owns enter/exit tracking under the cursor: a specific
+    /// tracked element's id, `Self.canvasSentinelID` (hovering background with
+    /// `canvasTrackMouseEnterExit` enabled), or `nil` if neither applies. Stored as the
+    /// actual id value (not a stringified key) so `clearHover()` can emit a correctly
+    /// typed `mouseExit` for it without needing to re-run `trackedElements()` after the
+    /// pointer has already left the view.
+    @State private var hoveredID: Any?
     @State private var isPressed = false
 
     var body: some View {
@@ -70,18 +76,18 @@ struct HSCanvasRenderView: View {
         let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
         let enterExitHit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .enterExit)
         let moveHit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .move)
-        let newKey = (enterExitHit ?? moveHit).map { String(describing: $0.id) }
 
-        if newKey != hoveredKey {
-            if let previousKey = hoveredKey,
-               let previous = tracked.first(where: { String(describing: $0.id) == previousKey }),
-               previous.trackMouseEnterExit {
-                onMouseEvent?("mouseExit", previous.id, location.x, location.y)
-            }
-            hoveredKey = newKey
-            if let hit = enterExitHit {
-                onMouseEvent?("mouseEnter", hit.id, location.x, location.y)
-            }
+        let transition = Self.resolveEnterExitTransition(
+            currentTargetID: hoveredID,
+            enterExitHit: enterExitHit,
+            canvasTrackMouseEnterExit: store.canvasTrackMouseEnterExit
+        )
+        if let exitID = transition.exitID {
+            onMouseEvent?("mouseExit", exitID, location.x, location.y)
+        }
+        hoveredID = transition.newTargetID
+        if let enterID = transition.enterID {
+            onMouseEvent?("mouseEnter", enterID, location.x, location.y)
         }
 
         if let hit = moveHit {
@@ -91,8 +97,32 @@ struct HSCanvasRenderView: View {
         }
     }
 
+    /// Pure decision logic for enter/exit transitions: given what currently owns enter/exit
+    /// tracking and the latest hit-test result, determines the new target and which
+    /// exit/enter callbacks (if any) should fire. Extracted out of `updateHover` so this
+    /// logic -- including the `canvasTrackMouseEnterExit` whole-canvas case -- is directly
+    /// unit-testable without instantiating SwiftUI hover gestures.
+    static func resolveEnterExitTransition(
+        currentTargetID: Any?,
+        enterExitHit: CanvasElementDrawing.TrackedElement?,
+        canvasTrackMouseEnterExit: Bool
+    ) -> (newTargetID: Any?, exitID: Any?, enterID: Any?) {
+        let newTargetID: Any? = enterExitHit?.id ?? (canvasTrackMouseEnterExit ? Self.canvasSentinelID : nil)
+        guard String(describing: newTargetID) != String(describing: currentTargetID) else {
+            return (currentTargetID, nil, nil)
+        }
+        return (newTargetID, currentTargetID, newTargetID)
+    }
+
     private func clearHover() {
-        hoveredKey = nil
+        // The pointer has left the view entirely -- fire the exit callback for whatever
+        // was hovered (a tracked element or the whole-canvas sentinel), since a move
+        // straight from inside a shape to outside the canvas bounds never passes through
+        // updateHover()'s own transition check.
+        if let previousID = hoveredID {
+            onMouseEvent?("mouseExit", previousID, -1, -1)
+        }
+        hoveredID = nil
     }
 
     private func handleMouseDown(at location: CGPoint, size: CGSize) {

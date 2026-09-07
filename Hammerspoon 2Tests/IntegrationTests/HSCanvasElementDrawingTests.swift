@@ -226,3 +226,73 @@ struct HSCanvasElementDrawingTests {
         #expect(CanvasElementDrawing.topmostHit(at: CGPoint(x: 5, y: 5), in: transformed, for: .down) == nil)
     }
 }
+
+/// Tests for `HSCanvasRenderView.resolveEnterExitTransition`, the pure decision function
+/// behind `updateHover()`/`canvasMouseEvents()`'s enter/exit delivery -- extracted so this
+/// logic (including the whole-canvas `canvasTrackMouseEnterExit` case) is unit-testable
+/// without instantiating SwiftUI hover gestures.
+@Suite("hs.canvas enter/exit transition tests")
+struct HSCanvasEnterExitTransitionTests {
+
+    private func trackedElement(id: Any) -> CanvasElementDrawing.TrackedElement {
+        CanvasElementDrawing.TrackedElement(
+            id: id, path: Path(),
+            trackMouseDown: false, trackMouseUp: false,
+            trackMouseEnterExit: true, trackMouseMove: false
+        )
+    }
+
+    @Test("No hit and canvasTrackMouseEnterExit disabled: no target, nothing fires")
+    func noHitNoCanvasTracking() {
+        let result = HSCanvasRenderView.resolveEnterExitTransition(
+            currentTargetID: nil, enterExitHit: nil, canvasTrackMouseEnterExit: false
+        )
+        #expect(result.newTargetID == nil)
+        #expect(result.exitID == nil)
+        #expect(result.enterID == nil)
+    }
+
+    @Test("No element hit but canvasTrackMouseEnterExit enabled: enters the whole-canvas sentinel")
+    func backgroundHoverEntersCanvasSentinel() {
+        // This is the exact case that was previously dead code: canvasTrackMouseEnterExit
+        // was stored but never read, so canvasMouseEvents(_, _, true, _) never delivered
+        // its promised enter/exit events for background regions.
+        let result = HSCanvasRenderView.resolveEnterExitTransition(
+            currentTargetID: nil, enterExitHit: nil, canvasTrackMouseEnterExit: true
+        )
+        #expect(result.newTargetID as? String == HSCanvasRenderView.canvasSentinelID)
+        #expect(result.exitID == nil)
+        #expect(result.enterID as? String == HSCanvasRenderView.canvasSentinelID)
+    }
+
+    @Test("Already at the canvas sentinel with no hit: no repeated enter")
+    func repeatedBackgroundHoverDoesNotRefire() {
+        let result = HSCanvasRenderView.resolveEnterExitTransition(
+            currentTargetID: HSCanvasRenderView.canvasSentinelID, enterExitHit: nil, canvasTrackMouseEnterExit: true
+        )
+        #expect(result.exitID == nil)
+        #expect(result.enterID == nil)
+    }
+
+    @Test("Moving from the canvas sentinel onto a tracked element: exits canvas, enters element")
+    func movingFromBackgroundToElement() {
+        let result = HSCanvasRenderView.resolveEnterExitTransition(
+            currentTargetID: HSCanvasRenderView.canvasSentinelID,
+            enterExitHit: trackedElement(id: "dot"),
+            canvasTrackMouseEnterExit: true
+        )
+        #expect(result.exitID as? String == HSCanvasRenderView.canvasSentinelID)
+        #expect(result.enterID as? String == "dot")
+        #expect(result.newTargetID as? String == "dot")
+    }
+
+    @Test("Moving off a tracked element with no canvas tracking: exits the element, no new target")
+    func movingOffElementWithoutCanvasTracking() {
+        let result = HSCanvasRenderView.resolveEnterExitTransition(
+            currentTargetID: "dot", enterExitHit: nil, canvasTrackMouseEnterExit: false
+        )
+        #expect(result.exitID as? String == "dot")
+        #expect(result.enterID == nil)
+        #expect(result.newTargetID == nil)
+    }
+}
