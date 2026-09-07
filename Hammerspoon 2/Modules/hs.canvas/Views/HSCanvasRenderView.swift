@@ -67,7 +67,7 @@ struct HSCanvasRenderView: View {
     }
 
     private func updateHover(at location: CGPoint, size: CGSize) {
-        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size)
+        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
         let enterExitHit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .enterExit)
         let moveHit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .move)
         let newKey = (enterExitHit ?? moveHit).map { String(describing: $0.id) }
@@ -96,7 +96,7 @@ struct HSCanvasRenderView: View {
     }
 
     private func handleMouseDown(at location: CGPoint, size: CGSize) {
-        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size)
+        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
         if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .down) {
             onMouseEvent?("mouseDown", hit.id, location.x, location.y)
         } else if store.canvasTrackMouseDown {
@@ -105,7 +105,7 @@ struct HSCanvasRenderView: View {
     }
 
     private func handleMouseUp(at location: CGPoint, size: CGSize) {
-        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size)
+        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
         if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .up) {
             onMouseEvent?("mouseUp", hit.id, location.x, location.y)
         } else if store.canvasTrackMouseUp {

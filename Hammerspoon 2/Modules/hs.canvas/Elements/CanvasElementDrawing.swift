@@ -444,7 +444,12 @@ enum CanvasElementDrawing {
     /// `Path` for hit-testing. An element's `id` defaults to its index if not given,
     /// matching v1. Kept as a pure function (no SwiftUI/gesture dependency) so it's
     /// directly unit-testable.
-    static func trackedElements(elements: [[String: Any]], containerSize: CGSize) -> [TrackedElement] {
+    /// - Parameter canvasTransform: The whole-canvas transform set via `setTransformation()`,
+    ///   if any. Drawing already reflects this (via `GraphicsContext.concatenate` in
+    ///   `HSCanvasRenderView`'s `Canvas` closure) -- hit-testing has to apply the same
+    ///   transform to each tracked path, or pointer locations get compared against
+    ///   geometry that no longer matches what's on screen.
+    static func trackedElements(elements: [[String: Any]], containerSize: CGSize, canvasTransform: CGAffineTransform? = nil) -> [TrackedElement] {
         var result: [TrackedElement] = []
         for (index, element) in elements.enumerated() {
             let trackDown = (element["trackMouseDown"] as? Bool) ?? false
@@ -452,7 +457,10 @@ enum CanvasElementDrawing {
             let trackEnterExit = (element["trackMouseEnterExit"] as? Bool) ?? false
             let trackMove = (element["trackMouseMove"] as? Bool) ?? false
             guard trackDown || trackUp || trackEnterExit || trackMove else { continue }
-            guard let path = pathFor(element: element, containerSize: containerSize) else { continue }
+            guard var path = pathFor(element: element, containerSize: containerSize) else { continue }
+            if let canvasTransform {
+                path = path.applying(canvasTransform)
+            }
             let id = element["id"] ?? index
             result.append(TrackedElement(
                 id: id, path: path,

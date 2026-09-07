@@ -201,4 +201,28 @@ struct HSCanvasElementDrawingTests {
         let hit = CanvasElementDrawing.topmostHit(at: CGPoint(x: 50, y: 50), in: tracked, for: .down)
         #expect(hit == nil)
     }
+
+    @Test("trackedElements applies the canvas-wide transform to hit-test paths")
+    func trackedElementsAppliesCanvasTransform() {
+        // Drawing already reflects setTransformation() (applied in HSCanvasRenderView's
+        // Canvas closure) -- hit-testing has to apply the same transform to each tracked
+        // path, or a translated/rotated/scaled canvas fires callbacks against stale
+        // (pre-transform) locations. Regression test for that mismatch.
+        let elements: [[String: Any]] = [
+            ["type": "rectangle", "frame": ["x": 0, "y": 0, "w": 10, "h": 10], "trackMouseDown": true],
+        ]
+        let translated = CGAffineTransform(translationX: 50, y: 50)
+
+        let untransformed = CanvasElementDrawing.trackedElements(elements: elements, containerSize: CGSize(width: 100, height: 100))
+        let transformed = CanvasElementDrawing.trackedElements(elements: elements, containerSize: CGSize(width: 100, height: 100), canvasTransform: translated)
+
+        // Without a transform, (5,5) hits the rectangle and (55,55) misses it.
+        #expect(CanvasElementDrawing.topmostHit(at: CGPoint(x: 5, y: 5), in: untransformed, for: .down) != nil)
+        #expect(CanvasElementDrawing.topmostHit(at: CGPoint(x: 55, y: 55), in: untransformed, for: .down) == nil)
+
+        // With a +50/+50 canvas transform, hit-testing should follow the shape to its new
+        // on-screen location: (55,55) now hits, (5,5) no longer does.
+        #expect(CanvasElementDrawing.topmostHit(at: CGPoint(x: 55, y: 55), in: transformed, for: .down) != nil)
+        #expect(CanvasElementDrawing.topmostHit(at: CGPoint(x: 5, y: 5), in: transformed, for: .down) == nil)
+    }
 }

@@ -381,6 +381,26 @@ struct HSCanvasTests {
             #expect(harness.evalTypeOf("bounds.w") == "number")
             #expect(harness.evalTypeOf("bounds.h") == "number")
         }
+
+        @Test("elementBounds() reflects the whole-canvas transformation")
+        func elementBoundsReflectsCanvasTransform() {
+            // Drawing already applies setTransformation() at render time -- elementBounds()
+            // has to apply the same transform to what it reports, or the bounds disagree
+            // with the shape actually on screen.
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create({x: 0, y: 0, w: 100, h: 100})
+                c.appendElements([{ type: "rectangle", action: "fill", frame: {x: 0, y: 0, w: 10, h: 10} }])
+                var before = c.elementBounds(0)
+                c.setTransformation({m11: 1, m12: 0, m21: 0, m22: 1, tX: 50, tY: 50})
+                var after = c.elementBounds(0)
+                """)
+            #expect(!harness.hasException)
+            harness.expectEqual("before.x", 0)
+            harness.expectEqual("before.y", 0)
+            harness.expectEqual("after.x", 50)
+            harness.expectEqual("after.y", 50)
+        }
     }
 
     // MARK: - Mouse interaction, transforms, and full-parity extras (M4/M5)

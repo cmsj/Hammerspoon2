@@ -691,7 +691,13 @@ import SwiftUI
         guard index >= 0 && index < elementStore.elements.count else { return [:] }
         let element = elementStore.elements[index]
         let containerSize = nsWindow?.frame.size ?? canvasFrame.size
-        guard let path = CanvasElementDrawing.pathFor(element: element, containerSize: containerSize) else { return [:] }
+        guard var path = CanvasElementDrawing.pathFor(element: element, containerSize: containerSize) else { return [:] }
+        // Match what's actually drawn: the whole-canvas transform from setTransformation()
+        // is applied at render time (HSCanvasRenderView), so the reported bounds have to
+        // account for it too, or they'll disagree with the displayed shape.
+        if let canvasTransform = elementStore.canvasTransform {
+            path = path.applying(canvasTransform)
+        }
         let rect = path.boundingRect
         return ["x": rect.origin.x, "y": rect.origin.y, "w": rect.size.width, "h": rect.size.height]
     }
