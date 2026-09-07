@@ -525,7 +525,14 @@ import SwiftUI
     @objc func setSize(_ dimensions: [String: Any]) -> HSCanvas {
         let w = (dimensions["w"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.size.width)
         let h = (dimensions["h"] as? NSNumber)?.doubleValue ?? Double(canvasFrame.size.height)
-        canvasFrame = CGRect(origin: canvasFrame.origin, size: CGSize(width: w, height: h))
+        // canvasFrame.origin is the AppKit bottom-left, not the top-left this method
+        // promises to preserve -- recompute the origin from the previous top edge so a
+        // height change doesn't silently shift where the canvas visually sits.
+        let topY = canvasFrame.origin.y + canvasFrame.size.height
+        canvasFrame = CGRect(
+            origin: CGPoint(x: canvasFrame.origin.x, y: topY - h),
+            size: CGSize(width: w, height: h)
+        )
         nsWindow?.setFrame(canvasFrame, display: true)
         return self
     }

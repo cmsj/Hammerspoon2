@@ -251,21 +251,26 @@ struct HSCanvasTests {
             harness.expectEqual("s.h", 80)
         }
 
-        @Test("setSize() resizes the window without moving its origin")
+        @Test("setSize() resizes the window without moving its top-left corner")
         @MainActor
-        func setSizePreservesOrigin() {
+        func setSizePreservesTopLeft() {
             let harness = makeHarness()
             harness.eval("""
                 var c = hs.canvas.create({x: 30, y: 40, w: 100, h: 100})
                 c.show()
                 c.setSize({w: 200, h: 150})
                 var f = c.frame()
+                var tl = c.topLeft()
                 """)
             #expect(!harness.hasException)
+            // The origin (bottom-left, f.x/f.y) is expected to move -- only the top-left
+            // corner (tl) is promised to stay fixed when the height changes.
             harness.expectEqual("f.x", 30)
-            harness.expectEqual("f.y", 40)
+            harness.expectEqual("f.y", -10) // topY (40 + 100 = 140) - new height (150)
             harness.expectEqual("f.w", 200)
             harness.expectEqual("f.h", 150)
+            harness.expectEqual("tl.x", 30)
+            harness.expectEqual("tl.y", 140) // unchanged from before the resize
         }
     }
 
