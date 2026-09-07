@@ -83,4 +83,84 @@ struct HSCanvasM5VisualAcceptanceTests {
         #expect(arcInterior.g > arcInterior.r && arcInterior.g > arcInterior.b, "Arc interior should be green")
         #expect(background.r < 20 && background.g < 20 && background.b < 20, "Untouched background should remain black")
     }
+
+    /// Builds a small solid-color square `HSImage` via a throwaway canvas + `imageFromCanvas()`,
+    /// so `image`-type elements can be tested without depending on an external file.
+    @MainActor
+    private func makeSolidColorImage(color: [String: Any], size: CGFloat = 20) throws -> HSImage {
+        let module = HSCanvasModule(engineID: UUID())
+        let helper = HSCanvas(frame: CGRect(x: 0, y: 0, width: size, height: size), module: module)
+        _ = helper.appendElements([["type": "rectangle", "action": "fill", "fillColor": color]])
+        return try #require(helper.imageFromCanvas())
+    }
+
+    @Test("text/image/canvas elements honor action:skip, don't leak a previous element's blendMode, and apply rotation")
+    @MainActor
+    func specialElementsRespectActionTransformAndCompositeRule() throws {
+        let size = CGSize(width: 300, height: 200)
+        let green: [String: Any] = ["green": 1, "alpha": 1]
+        let greenImage = try makeSolidColorImage(color: green)
+
+        let elements: [[String: Any]] = [
+            // Region 1 (x:0-40, y:0-40): action:"skip" on an image element. Before the fix,
+            // text/image/canvas elements were drawn unconditionally regardless of `action` --
+            // this should draw nothing at all.
+            ["type": "image", "action": "skip", "image": greenImage, "frame": ["x": 10, "y": 10, "w": 20, "h": 20]],
+
+            // Region 2 (x:80-120, y:10-50): a blue rectangle sets compositeRule:"multiply"
+            // (multiply against the black background leaves that area black either way), then
+            // a green image with NO compositeRule draws over the same spot. Before the fix,
+            // the image inherited the leftover .multiply blendMode from the rectangle, so
+            // multiply(green, black) stayed black; after the fix, blendMode resets to .normal
+            // per element, so the image should draw as plain opaque green.
+            ["type": "rectangle", "action": "fill", "frame": ["x": 80, "y": 10, "w": 40, "h": 40], "fillColor": ["blue": 1, "alpha": 1], "compositeRule": "multiply"],
+            ["type": "image", "image": greenImage, "frame": ["x": 80, "y": 10, "w": 40, "h": 40]],
+
+            // Region 3: a green image at (220,10)-(240,30) rotated 180 degrees about a pivot
+            // far from its own center (250,100). Before the fix, `rotation` was ignored for
+            // image elements, so it would draw at its unrotated frame; after the fix, a 180
+            // degree rotation about (250,100) maps its center (~230,20) to (~270,180).
+            ["type": "image", "image": greenImage, "frame": ["x": 220, "y": 10, "w": 20, "h": 20], "rotation": 180, "rotationPoint": ["x": 250, "y": 100]],
+        ]
+
+        let store = CanvasElementStore()
+        store.elements = elements
+        let view = HSCanvasRenderView(store: store)
+            .frame(width: size.width, height: size.height)
+            .background(Color.black)
+
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2.0
+        let cgImage = try #require(renderer.cgImage)
+
+        guard let data = cgImage.dataProvider?.data else {
+            Issue.record("Could not read rendered pixel data")
+            return
+        }
+        let pixelData = data as Data
+        let bytesPerPixel = cgImage.bitsPerPixel / 8
+        let bytesPerRow = cgImage.bytesPerRow
+        let scale = Int(renderer.scale)
+
+        func pixel(atX x: Int, y: Int) -> (r: UInt8, g: UInt8, b: UInt8) {
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            return (pixelData[offset], pixelData[offset + 1], pixelData[offset + 2])
+        }
+        func isGreen(_ p: (r: UInt8, g: UInt8, b: UInt8)) -> Bool {
+            p.g > 150 && p.r < 60 && p.b < 60
+        }
+        func isBackground(_ p: (r: UInt8, g: UInt8, b: UInt8)) -> Bool {
+            p.r < 20 && p.g < 20 && p.b < 20
+        }
+
+        // Region 1: skip -- nothing should be drawn at the image's own frame.
+        #expect(isBackground(pixel(atX: 20 * scale, y: 20 * scale)), "action:\"skip\" should hide an image element, not draw it")
+
+        // Region 2: blendMode must not leak from the preceding rectangle into the image.
+        #expect(isGreen(pixel(atX: 100 * scale, y: 30 * scale)), "An image with no compositeRule should draw at normal blend, not inherit the previous element's blendMode")
+
+        // Region 3: rotation must actually move where the image is drawn.
+        #expect(isBackground(pixel(atX: 230 * scale, y: 20 * scale)), "A rotated image should no longer appear at its unrotated frame position")
+        #expect(isGreen(pixel(atX: 270 * scale, y: 180 * scale)), "A rotated image should appear at its rotated position")
+    }
 }

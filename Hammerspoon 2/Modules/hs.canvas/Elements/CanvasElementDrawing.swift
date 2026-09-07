@@ -49,14 +49,26 @@ enum CanvasElementDrawing {
                 continue
             }
 
+            // `action` and `compositeRule` apply uniformly to every element type, including
+            // text/image/canvas -- resolving both up front (rather than inside the
+            // shape-only switch below, as originally written) is what makes `action: "skip"`
+            // actually hide a text/image/canvas element, and what stops those types from
+            // silently inheriting whatever blendMode a previous shape element left behind.
+            let actionString = (element["action"] as? String) ?? "strokeAndFill"
+            if actionString == "skip" {
+                pendingPath = nil
+                continue
+            }
+            working.blendMode = blendMode(for: element["compositeRule"] as? String)
+
             if typeString == CanvasElementType.text.rawValue {
-                drawText(element, into: &working, containerSize: size)
+                drawText(element, into: working, containerSize: size)
                 pendingPath = nil
                 continue
             }
 
             if typeString == CanvasElementType.image.rawValue {
-                drawImage(element, into: &working, containerSize: size)
+                drawImage(element, into: working, containerSize: size)
                 pendingPath = nil
                 continue
             }
@@ -72,13 +84,9 @@ enum CanvasElementDrawing {
             var combinedPath = pendingPath ?? Path()
             combinedPath.addPath(shapePath)
 
-            let actionString = (element["action"] as? String) ?? "strokeAndFill"
             let eoFill = (element["windingRule"] as? String) == "evenOdd"
 
             switch actionString {
-            case "skip":
-                pendingPath = nil
-
             case "build":
                 pendingPath = combinedPath
 
@@ -87,10 +95,6 @@ enum CanvasElementDrawing {
                 pendingPath = nil
 
             default:
-                // compositeRule maps to blendMode; reset to .normal every element so a
-                // non-default mode set by a previous element never leaks into this one.
-                working.blendMode = blendMode(for: element["compositeRule"] as? String)
-
                 if actionString == "fill" || actionString == "strokeAndFill" {
                     if let shading = gradientShading(element, path: combinedPath, containerSize: size) {
                         working.fill(combinedPath, with: shading, style: FillStyle(eoFill: eoFill))
@@ -247,17 +251,23 @@ enum CanvasElementDrawing {
         return CGPoint(x: center.x + radius * cos(radians), y: center.y + radius * sin(radians))
     }
 
-    static func drawText(_ element: [String: Any], into context: inout GraphicsContext, containerSize: CGSize) {
+    static func drawText(_ element: [String: Any], into context: GraphicsContext, containerSize: CGSize) {
         guard let string = element["text"] as? String else { return }
         let rect = resolveFrame(element["frame"], containerSize: containerSize)
             ?? CGRect(origin: .zero, size: containerSize)
         let size = (element["textSize"] as? NSNumber)?.doubleValue ?? 27.0
         let color = parseColor(element["textColor"]) ?? .black
         let resolved = Text(string).font(.system(size: CGFloat(size))).foregroundColor(color)
-        context.draw(resolved, in: rect)
+
+        var textContext = context
+        let transform = elementTransform(element: element, pivotRect: rect, containerSize: containerSize)
+        if !transform.isIdentity {
+            textContext.concatenate(transform)
+        }
+        textContext.draw(resolved, in: rect)
     }
 
-    static func drawImage(_ element: [String: Any], into context: inout GraphicsContext, containerSize: CGSize) {
+    static func drawImage(_ element: [String: Any], into context: GraphicsContext, containerSize: CGSize) {
         guard let hsImage = element["image"] as? HSImage else { return }
         let rect = resolveFrame(element["frame"], containerSize: containerSize)
             ?? CGRect(origin: .zero, size: containerSize)
@@ -265,6 +275,10 @@ enum CanvasElementDrawing {
 
         var imageContext = context
         imageContext.opacity = CGFloat(alpha)
+        let transform = elementTransform(element: element, pivotRect: rect, containerSize: containerSize)
+        if !transform.isIdentity {
+            imageContext.concatenate(transform)
+        }
         imageContext.draw(Image(nsImage: hsImage.image), in: rect)
     }
 
@@ -282,6 +296,15 @@ enum CanvasElementDrawing {
         var nestedContext = context
         nestedContext.opacity = CGFloat(alpha)
         nestedContext.translateBy(x: rect.minX, y: rect.minY)
+        // Rotation/transformation pivots about the embed box's own center -- resolve the
+        // pivot rect AFTER the translateBy above, in the same local (0,0)-origin space the
+        // nested render() call below uses, so it doesn't have to be reasoned about relative
+        // to any already-applied translation.
+        let localPivotRect = CGRect(origin: .zero, size: rect.size)
+        let transform = elementTransform(element: element, pivotRect: localPivotRect, containerSize: containerSize)
+        if !transform.isIdentity {
+            nestedContext.concatenate(transform)
+        }
         render(elements: nested.elementsForNestedRendering, into: nestedContext, size: rect.size, depth: depth + 1)
     }
 
@@ -376,16 +399,40 @@ enum CanvasElementDrawing {
     // MARK: - Element-level transforms (rotateElement / per-element transformation)
 
     /// Applies either an explicit `transformation` matrix or a simple `rotation` angle
-    /// to an already-built element `Path`. `transformation` takes precedence if both are
-    /// present. Returns `path` unchanged if neither attribute is set.
+    /// to an already-built element `Path`. Returns `path` unchanged if neither attribute
+    /// is set. Thin wrapper around `elementTransform(element:pivotRect:containerSize:)` --
+    /// see that function for the shared logic used by every element type, not just
+    /// Path-based shapes.
     static func applyElementTransform(_ path: Path, element: [String: Any], containerSize: CGSize) -> Path {
+        let transform = elementTransform(element: element, pivotRect: path.boundingRect, containerSize: containerSize)
+        return transform.isIdentity ? path : path.applying(transform)
+    }
+
+    /// Computes the `CGAffineTransform` implied by an element's `transformation` matrix or
+    /// `rotation` angle (`transformation` takes precedence if both are present), using
+    /// `pivotRect`'s center as the default rotation pivot when no explicit `rotationPoint`
+    /// is given. Returns `.identity` if neither attribute is set.
+    ///
+    /// Shared by `applyElementTransform` (applied to a `Path`, for shape elements) and
+    /// `drawText`/`drawImage`/`drawNestedCanvas` (applied directly to a `GraphicsContext`
+    /// via `concatenate`, since text/image/nested-canvas content isn't drawn via a `Path`
+    /// and so has nothing for `applyElementTransform` to apply a transform to).
+    static func elementTransform(element: [String: Any], pivotRect: CGRect, containerSize: CGSize) -> CGAffineTransform {
         if let matrixDict = element["transformation"] as? [String: Any] {
-            return path.applying(transformMatrix(matrixDict))
+            return transformMatrix(matrixDict)
         }
-        if let angle = (element["rotation"] as? NSNumber)?.doubleValue {
-            return rotatedPath(path, degrees: angle, element: element, containerSize: containerSize)
+        guard let angle = (element["rotation"] as? NSNumber)?.doubleValue else { return .identity }
+
+        let pivot: CGPoint
+        if let pointDict = element["rotationPoint"] as? [String: Any] {
+            pivot = resolvePoint(pointDict, keyX: "x", keyY: "y", containerSize: containerSize)
+        } else {
+            pivot = CGPoint(x: pivotRect.midX, y: pivotRect.midY)
         }
-        return path
+        let radians = angle * .pi / 180
+        return CGAffineTransform(translationX: pivot.x, y: pivot.y)
+            .rotated(by: radians)
+            .translatedBy(x: -pivot.x, y: -pivot.y)
     }
 
     /// Parses a v1-style 2D affine matrix (`{m11, m12, m21, m22, tX, tY}`).
@@ -397,21 +444,6 @@ enum CanvasElementDrawing {
         let tx = (dict["tX"] as? NSNumber)?.doubleValue ?? 0
         let ty = (dict["tY"] as? NSNumber)?.doubleValue ?? 0
         return CGAffineTransform(a: CGFloat(a), b: CGFloat(b), c: CGFloat(c), d: CGFloat(d), tx: CGFloat(tx), ty: CGFloat(ty))
-    }
-
-    static func rotatedPath(_ path: Path, degrees: Double, element: [String: Any], containerSize: CGSize) -> Path {
-        let pivot: CGPoint
-        if let pointDict = element["rotationPoint"] as? [String: Any] {
-            pivot = resolvePoint(pointDict, keyX: "x", keyY: "y", containerSize: containerSize)
-        } else {
-            let bounds = path.boundingRect
-            pivot = CGPoint(x: bounds.midX, y: bounds.midY)
-        }
-        let radians = degrees * .pi / 180
-        let transform = CGAffineTransform(translationX: pivot.x, y: pivot.y)
-            .rotated(by: radians)
-            .translatedBy(x: -pivot.x, y: -pivot.y)
-        return path.applying(transform)
     }
 
     // MARK: - Mouse-tracking hit-testing
