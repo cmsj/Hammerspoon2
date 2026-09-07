@@ -146,7 +146,11 @@ import AppKit
     }
 
     func shutdown() {
-        for canvas in activeCanvases.values {
+        // Snapshot into an Array first -- canvas.destroy() synchronously calls back into
+        // unregister(canvas:), which mutates activeCanvases. Iterating the dictionary's
+        // .values directly while that happens traps ("Dictionary was mutated while being
+        // enumerated").
+        for canvas in Array(activeCanvases.values) {
             canvas.destroy()
         }
         activeCanvases.removeAll()

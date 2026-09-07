@@ -556,4 +556,37 @@ struct HSCanvasTests {
         }
         tracker.assertNoLeaks(timeout: 1.0)
     }
+
+    @Test("shutdown() with multiple shown canvases destroys all of them without trapping")
+    @MainActor
+    func testShutdownWithMultipleCanvases() {
+        // Regression test: HSCanvasModule.shutdown() used to iterate activeCanvases.values
+        // directly while each canvas.destroy() call synchronously mutated that same
+        // dictionary via unregister(canvas:) -- mutating a Dictionary while enumerating it
+        // traps at runtime. A single canvas doesn't reliably exercise this; several do.
+        let trackers = (0..<5).map { _ in WeakLeakTracker() }
+        autoreleasepool {
+            let harness = JSTestHarness()
+            harness.loadModule(HSCanvasModule.self, as: "canvas")
+            harness.eval("""
+                var canvases = []
+                for (var i = 0; i < 5; i++) {
+                    var c = hs.canvas.create({x: i * 10, y: 0, w: 50, h: 50})
+                    c.appendElements([{ type: "rectangle", action: "fill", fillColor: { alpha: 1 } }])
+                    c.show()
+                    canvases.push(c)
+                }
+            """)
+            for (index, tracker) in trackers.enumerated() {
+                if let obj = harness.evalValue("canvases[\(index)]")?.toObjectOf(HSCanvas.self) as? HSCanvas {
+                    tracker.track(obj)
+                }
+            }
+            harness.eval("canvases = null")
+            harness.shutdownForLeakTest()
+        }
+        for tracker in trackers {
+            tracker.assertNoLeaks(timeout: 1.0)
+        }
+    }
 }
