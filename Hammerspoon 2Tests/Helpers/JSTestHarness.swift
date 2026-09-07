@@ -512,6 +512,8 @@ extension JSTestHarness {
                 loadModule(HSBonjourModule.self, as: name)
             case "camera":
                 loadModule(HSCameraModule.self, as: name)
+            case "canvas":
+                loadModule(HSCanvasModule.self, as: name)
             case "power":
                 loadModule(HSPowerModule.self, as: name)
             case "location":

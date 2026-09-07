@@ -100,6 +100,7 @@ import JavaScriptCoreExtras
     @objc var ax: HSAXModule { get }
     @objc var bonjour: HSBonjourModule { get }
     @objc var camera: HSCameraModule { get }
+    @objc var canvas: HSCanvasModule { get }
     @objc var fs: HSFSModule { get }
     @objc var hashing: HSHashModule { get }
     @objc var hotkey: HSHotkeyModule { get }
@@ -302,6 +303,7 @@ import JavaScriptCoreExtras
     @objc var ax: HSAXModule { get { getOrCreate(name: "ax", type: HSAXModule.self)}}
     @objc var bonjour: HSBonjourModule { get { getOrCreate(name: "bonjour", type: HSBonjourModule.self)}}
     @objc var camera: HSCameraModule { get { getOrCreate(name: "camera", type: HSCameraModule.self)}}
+    @objc var canvas: HSCanvasModule { get { getOrCreate(name: "canvas", type: HSCanvasModule.self)}}
     @objc var fs: HSFSModule { get { getOrCreate(name: "fs", type: HSFSModule.self)}}
     @objc var hashing: HSHashModule { get { getOrCreate(name: "hashing", type: HSHashModule.self)}}
     @objc var hotkey: HSHotkeyModule { get { getOrCreate(name: "hotkey", type: HSHotkeyModule.self)}}

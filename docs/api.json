@@ -4040,6 +4040,1200 @@
       "rawDocumentation": "Module for discovering and interacting with camera devices.\n\nThis module lets you enumerate cameras, capture still images, and react to\ndevice connect/disconnect events in real time.\n\nCamera access requires user permission. Call `hs.permissions.requestCamera()`\nbefore using ``captureImage()`` or reading ``isInUse``.\n\n## Enumerating cameras\n\n```javascript\nconst cameras = hs.camera.all()\ncameras.forEach(cam => {\n    console.log(cam.name + \" — \" + (cam.isInUse ? \"in use\" : \"idle\"))\n})\n```\n\n## Finding a specific camera\n\n```javascript\nconst cam = hs.camera.findByName(\"FaceTime HD Camera\")\nif (cam) {\n    cam.captureImage()\n        .then(img => img.saveToFile(\"/tmp/snapshot.png\"))\n        .catch(err => console.error(\"Capture error: \" + err))\n}\n```\n\n## Watching for connect / disconnect events\n\n```javascript\nconst handler = (event, camera) => {\n    if (event === \"connected\")    console.log(\"Camera connected: \" + camera.name)\n    if (event === \"disconnected\") console.log(\"Camera disconnected: \" + camera.name)\n}\nhs.camera.addWatcher(handler)\n// Later…\nhs.camera.removeWatcher(handler)\n```\n\n## Watching a camera's in-use state\n\n```javascript\nconst cam = hs.camera.all()[0]\ncam.addWatcher((isInUse) => {\n    console.log(cam.name + \" is now \" + (isInUse ? \"in use\" : \"idle\"))\n})\n```"
     },
     {
+      "name": "hs.canvas",
+      "methods": [
+        {
+          "name": "create",
+          "signature": "func create(_ rect: [String: Any]) -> HSCanvas",
+          "isStatic": false,
+          "rawDocumentation": "Create a new canvas\n\nNamed `create()` rather than v1's `new()` -- `new` cannot be used as a\nJavaScriptCore-exported method name (it collides with the JS `new` operator\nkeyword at the bridging layer), and this codebase's conventions additionally\nforbid method names starting with `new`/`alloc`/`copy` (an ARC/ObjC hazard).\n- Parameter rect: {object} A `{x, y, w, h}` dictionary describing the canvas window's frame\n- Returns: A new HSCanvas, not yet shown\n- Example:\n```js\nconst c = hs.canvas.create({x: 100, y: 100, w: 200, h: 200})\n```",
+          "description": "Create a new canvas\nNamed `create()` rather than v1's `new()` -- `new` cannot be used as a\nJavaScriptCore-exported method name (it collides with the JS `new` operator\nkeyword at the bridging layer), and this codebase's conventions additionally\nforbid method names starting with `new`/`alloc`/`copy` (an ARC/ObjC hazard).",
+          "params": [
+            {
+              "name": "rect",
+              "type": "Object<String, Any>",
+              "description": "A `{x, y, w, h}` dictionary describing the canvas window's frame",
+              "optional": false,
+              "tsType": "object"
+            }
+          ],
+          "returns": {
+            "type": "HSCanvas",
+            "description": "A new HSCanvas, not yet shown"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "const c = hs.canvas.create({x: 100, y: 100, w: 200, h: 200})"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.canvas/HSCanvasModule.swift",
+          "lineNumber": 85
+        }
+      ],
+      "properties": [
+        {
+          "name": "windowLevels",
+          "signature": "var windowLevels: [String: Int] { get }",
+          "rawDocumentation": "Named window levels, exposed as raw numeric values (not opaque strings) so\nscripts can do arithmetic on them, matching v1 behavior.\n- Example:\n```js\ncanvas.levelValue(hs.canvas.windowLevels.screenSaver + 1)\n```",
+          "description": "Named window levels, exposed as raw numeric values (not opaque strings) so\nscripts can do arithmetic on them, matching v1 behavior.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "canvas.levelValue(hs.canvas.windowLevels.screenSaver + 1)"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.canvas/HSCanvasModule.swift",
+          "lineNumber": 57
+        },
+        {
+          "name": "windowBehaviors",
+          "signature": "var windowBehaviors: [String: Int] { get }",
+          "rawDocumentation": "Named window Spaces/Exposé collection behaviors, exposed as raw numeric bit values.\n- Example:\n```js\ncanvas.behavior(\"canJoinAllSpaces\")\n```",
+          "description": "Named window Spaces/Exposé collection behaviors, exposed as raw numeric bit values.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "canvas.behavior(\"canJoinAllSpaces\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.canvas/HSCanvasModule.swift",
+          "lineNumber": 64
+        },
+        {
+          "name": "compositeTypes",
+          "signature": "var compositeTypes: [String: String] { get }",
+          "rawDocumentation": "Named compositing/blend rules usable as an element's `compositeRule` attribute.\n- Example:\n```js\nc.appendElements([{ type: \"circle\", action: \"fill\", compositeRule: hs.canvas.compositeTypes.multiply }])\n```",
+          "description": "Named compositing/blend rules usable as an element's `compositeRule` attribute.",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "c.appendElements([{ type: \"circle\", action: \"fill\", compositeRule: hs.canvas.compositeTypes.multiply }])"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.canvas/HSCanvasModule.swift",
+          "lineNumber": 71
+        }
+      ],
+      "types": [
+        {
+          "name": "HSCanvasAPI",
+          "type": "typedef",
+          "rawDocumentation": "# HSCanvas\n\nA single canvas window: an absolutely-positioned, low-level drawing surface\nmirroring v1 Hammerspoon's `hs.canvas`. Elements are plain JS objects (matching\nv1's Lua tables) added with `appendElements()` and mutated in place with\n`setElementAttribute()`/`elementAttribute()`. Supports the same `fill`/`stroke`/\n`strokeAndFill`/`clip`/`build`/`skip` action pipeline as v1, including the\n`build`+`clip`+`reversePath` technique used to punch holes in shapes (see\n`hs.canvas.windowLevels`/`hs.canvas.windowBehaviors` for the window-level/Spaces\ncontrols needed alongside this for overlay-style canvases).\n\n## Example\n```javascript\nconst c = hs.canvas.create({x: 100, y: 100, w: 200, h: 200})\nc.appendElements([\n    { type: \"rectangle\", action: \"fill\", fillColor: { red: 0.2, green: 0.5, blue: 0.9, alpha: 1 } }\n])\nc.show()\n```",
+          "description": "# HSCanvas\nA single canvas window: an absolutely-positioned, low-level drawing surface\nmirroring v1 Hammerspoon's `hs.canvas`. Elements are plain JS objects (matching\nv1's Lua tables) added with `appendElements()` and mutated in place with\n`setElementAttribute()`/`elementAttribute()`. Supports the same `fill`/`stroke`/\n`strokeAndFill`/`clip`/`build`/`skip` action pipeline as v1, including the\n`build`+`clip`+`reversePath` technique used to punch holes in shapes (see\n`hs.canvas.windowLevels`/`hs.canvas.windowBehaviors` for the window-level/Spaces\ncontrols needed alongside this for overlay-style canvases).\n## Example\n```javascript\nconst c = hs.canvas.create({x: 100, y: 100, w: 200, h: 200})\nc.appendElements([\n    { type: \"rectangle\", action: \"fill\", fillColor: { red: 0.2, green: 0.5, blue: 0.9, alpha: 1 } }\n])\nc.show()\n```",
+          "methods": [
+            {
+              "name": "show",
+              "signature": "func show() -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Show the canvas window\n- Returns: Self for chaining",
+              "description": "Show the canvas window",
+              "params": [],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 35
+            },
+            {
+              "name": "hide",
+              "signature": "func hide() -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Hide the canvas window (keeps it in memory; elements and window config are preserved)\n- Returns: Self for chaining",
+              "description": "Hide the canvas window (keeps it in memory; elements and window config are preserved)",
+              "params": [],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 39
+            },
+            {
+              "name": "destroy",
+              "signature": "func destroy()",
+              "isStatic": false,
+              "rawDocumentation": "Destroy the canvas window and release its resources\n\nNamed `destroy()` rather than v1's `delete()` -- `delete` cannot be used as a\nJavaScriptCore-exported method name in this codebase's bridging layer.\n- Example:\n```js\nc.destroy()\n```",
+              "description": "Destroy the canvas window and release its resources\nNamed `destroy()` rather than v1's `delete()` -- `delete` cannot be used as a\nJavaScriptCore-exported method name in this codebase's bridging layer.",
+              "params": [],
+              "returns": null,
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.destroy()"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 49
+            },
+            {
+              "name": "isShowing",
+              "signature": "func isShowing() -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Whether the canvas window is currently ordered onto the screen\n- Returns: `true` if the canvas has been shown and not hidden or destroyed",
+              "description": "Whether the canvas window is currently ordered onto the screen",
+              "params": [],
+              "returns": {
+                "type": "boolean",
+                "description": "`true` if the canvas has been shown and not hidden or destroyed"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 53
+            },
+            {
+              "name": "isVisible",
+              "signature": "func isVisible() -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Whether the canvas is showing AND at least partially visible (not fully occluded or off-screen)\n- Returns: `true` if the canvas is showing and at least partially on-screen",
+              "description": "Whether the canvas is showing AND at least partially visible (not fully occluded or off-screen)",
+              "params": [],
+              "returns": {
+                "type": "boolean",
+                "description": "`true` if the canvas is showing and at least partially on-screen"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 57
+            },
+            {
+              "name": "isOccluded",
+              "signature": "func isOccluded() -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Whether the canvas is hidden behind other windows, or off-screen entirely\n- Returns: `true` if the canvas is showing but fully occluded or off-screen",
+              "description": "Whether the canvas is hidden behind other windows, or off-screen entirely",
+              "params": [],
+              "returns": {
+                "type": "boolean",
+                "description": "`true` if the canvas is showing but fully occluded or off-screen"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 61
+            },
+            {
+              "name": "frame",
+              "signature": "func frame() -> [String: Any]",
+              "isStatic": false,
+              "rawDocumentation": "The canvas window's current position and size\n- Returns: {object} A `{x, y, w, h}` dictionary, in the same unflipped AppKit screen coordinates as `create()`",
+              "description": "The canvas window's current position and size",
+              "params": [],
+              "returns": {
+                "type": "object",
+                "description": "A `{x, y, w, h}` dictionary, in the same unflipped AppKit screen coordinates as `create()`"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 67
+            },
+            {
+              "name": "setFrame",
+              "signature": "func setFrame(_ rect: [String: Any]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Move and/or resize the canvas window\n- Parameter rect: {object} A `{x, y, w, h}` dictionary. Any keys left out keep their current value\n- Returns: Self for chaining\n- Example:\n```js\nc.setFrame({x: 200, y: 200, w: 300, h: 300})\n```",
+              "description": "Move and/or resize the canvas window",
+              "params": [
+                {
+                  "name": "rect",
+                  "type": "Object<String, Any>",
+                  "description": "A `{x, y, w, h}` dictionary. Any keys left out keep their current value",
+                  "optional": false,
+                  "tsType": "object"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.setFrame({x: 200, y: 200, w: 300, h: 300})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 76
+            },
+            {
+              "name": "topLeft",
+              "signature": "func topLeft() -> [String: Any]",
+              "isStatic": false,
+              "rawDocumentation": "The canvas window's current top-left corner\n\n\"Top-left\" here means the same unflipped AppKit sense `create()`/`frame()` use:\nthe point at the window's highest `y` (its screen-visual top), not `y = 0`.\n- Returns: {object} An `{x, y}` dictionary",
+              "description": "The canvas window's current top-left corner\nthe point at the window's highest `y` (its screen-visual top), not `y = 0`.",
+              "params": [],
+              "returns": {
+                "type": "object",
+                "description": "An `{x, y}` dictionary"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 83
+            },
+            {
+              "name": "setTopLeft",
+              "signature": "func setTopLeft(_ point: [String: Any]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Move the canvas window without changing its size\n- Parameter point: {object} An `{x, y}` dictionary giving the new top-left corner. Any keys left out keep their current value\n- Returns: Self for chaining\n- Example:\n```js\nc.setTopLeft({x: 200, y: 800})\n```",
+              "description": "Move the canvas window without changing its size",
+              "params": [
+                {
+                  "name": "point",
+                  "type": "Object<String, Any>",
+                  "description": "An `{x, y}` dictionary giving the new top-left corner. Any keys left out keep their current value",
+                  "optional": false,
+                  "tsType": "object"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.setTopLeft({x: 200, y: 800})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 92
+            },
+            {
+              "name": "size",
+              "signature": "func size() -> [String: Any]",
+              "isStatic": false,
+              "rawDocumentation": "The canvas window's current size\n- Returns: {object} A `{w, h}` dictionary",
+              "description": "The canvas window's current size",
+              "params": [],
+              "returns": {
+                "type": "object",
+                "description": "A `{w, h}` dictionary"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 96
+            },
+            {
+              "name": "setSize",
+              "signature": "func setSize(_ dimensions: [String: Any]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Resize the canvas window without moving its top-left corner\n- Parameter dimensions: {object} A `{w, h}` dictionary. Any keys left out keep their current value\n- Returns: Self for chaining\n- Example:\n```js\nc.setSize({w: 400, h: 300})\n```",
+              "description": "Resize the canvas window without moving its top-left corner",
+              "params": [
+                {
+                  "name": "dimensions",
+                  "type": "Object<String, Any>",
+                  "description": "A `{w, h}` dictionary. Any keys left out keep their current value",
+                  "optional": false,
+                  "tsType": "object"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.setSize({w: 400, h: 300})"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 105
+            },
+            {
+              "name": "level",
+              "signature": "func level(_ name: String) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set the window level by name\n- Parameter name: A level name from `hs.canvas.windowLevels` (e.g. `\"floating\"`, `\"screenSaver\"`)\n- Returns: Self for chaining\n- Example:\n```js\nc.level(\"floating\")\n```",
+              "description": "Set the window level by name",
+              "params": [
+                {
+                  "name": "name",
+                  "type": "string",
+                  "description": "A level name from `hs.canvas.windowLevels` (e.g. `\"floating\"`, `\"screenSaver\"`)",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.level(\"floating\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 116
+            },
+            {
+              "name": "levelValue",
+              "signature": "func levelValue(_ value: Int) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set the window level to a raw numeric value\n\nSplit out from `level(_:)` (rather than accepting a string-or-number union)\nbecause JSExport parameters must have a single concrete type -- see\n`hs.canvas.windowLevels`, which exposes raw numeric values (not opaque name\nstrings) so scripts can do arithmetic on them, matching v1 behavior.\n- Parameter value: A raw numeric window level\n- Returns: Self for chaining\n- Example:\n```js\nc.levelValue(hs.canvas.windowLevels.screenSaver + 1)\n```",
+              "description": "Set the window level to a raw numeric value\nSplit out from `level(_:)` (rather than accepting a string-or-number union)\nbecause JSExport parameters must have a single concrete type -- see\n`hs.canvas.windowLevels`, which exposes raw numeric values (not opaque name\nstrings) so scripts can do arithmetic on them, matching v1 behavior.",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "number",
+                  "description": "A raw numeric window level",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.levelValue(hs.canvas.windowLevels.screenSaver + 1)"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 130
+            },
+            {
+              "name": "behavior",
+              "signature": "func behavior(_ name: String) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set the window's Spaces/Exposé collection behavior to a single named behavior\n- Parameter name: A behavior name from `hs.canvas.windowBehaviors` (e.g. `\"canJoinAllSpaces\"`)\n- Returns: Self for chaining\n- Example:\n```js\nc.behavior(\"canJoinAllSpaces\")\n```",
+              "description": "Set the window's Spaces/Exposé collection behavior to a single named behavior",
+              "params": [
+                {
+                  "name": "name",
+                  "type": "string",
+                  "description": "A behavior name from `hs.canvas.windowBehaviors` (e.g. `\"canJoinAllSpaces\"`)",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.behavior(\"canJoinAllSpaces\")"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 139
+            },
+            {
+              "name": "behaviorList",
+              "signature": "func behaviorList(_ names: [String]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set the window's Spaces/Exposé collection behavior to a combination of named behaviors\n- Parameter names: {string[]} Behavior names from `hs.canvas.windowBehaviors`, combined together\n- Returns: Self for chaining\n- Example:\n```js\nc.behaviorList([\"canJoinAllSpaces\", \"stationary\"])\n```",
+              "description": "Set the window's Spaces/Exposé collection behavior to a combination of named behaviors",
+              "params": [
+                {
+                  "name": "names",
+                  "type": "Array<String>",
+                  "description": "Behavior names from `hs.canvas.windowBehaviors`, combined together",
+                  "optional": false,
+                  "tsType": "string[]"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.behaviorList([\"canJoinAllSpaces\", \"stationary\"])"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 148
+            },
+            {
+              "name": "behaviorValue",
+              "signature": "func behaviorValue(_ value: Int) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set the window's Spaces/Exposé collection behavior to a raw bitmask\n- Parameter value: A raw `NSWindow.CollectionBehavior` bitmask\n- Returns: Self for chaining",
+              "description": "Set the window's Spaces/Exposé collection behavior to a raw bitmask",
+              "params": [
+                {
+                  "name": "value",
+                  "type": "number",
+                  "description": "A raw `NSWindow.CollectionBehavior` bitmask",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 153
+            },
+            {
+              "name": "clickActivating",
+              "signature": "func clickActivating(_ flag: Bool) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set whether clicking the canvas activates the Hammerspoon app\n- Parameter flag: Pass `false` to prevent clicks on the canvas from bringing the app forward\n- Returns: Self for chaining",
+              "description": "Set whether clicking the canvas activates the Hammerspoon app",
+              "params": [
+                {
+                  "name": "flag",
+                  "type": "boolean",
+                  "description": "Pass `false` to prevent clicks on the canvas from bringing the app forward",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 158
+            },
+            {
+              "name": "ignoreMouseEvents",
+              "signature": "func ignoreMouseEvents(_ flag: Bool) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set whether the canvas window ignores all mouse events, passing clicks through to whatever is behind it\n\nThis is a capability beyond v1's `hs.canvas` API surface (not a literal v1 method\nname) -- v1 has no direct equivalent for full click pass-through.\n- Parameter flag: Pass `true` to make the canvas fully click-through\n- Returns: Self for chaining",
+              "description": "Set whether the canvas window ignores all mouse events, passing clicks through to whatever is behind it\nThis is a capability beyond v1's `hs.canvas` API surface (not a literal v1 method\nname) -- v1 has no direct equivalent for full click pass-through.",
+              "params": [
+                {
+                  "name": "flag",
+                  "type": "boolean",
+                  "description": "Pass `true` to make the canvas fully click-through",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 166
+            },
+            {
+              "name": "appendElements",
+              "signature": "func appendElements(_ elements: [[String: Any]]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Append one or more elements to the end of the canvas\n\nElement `frame`/`center`/`coordinates` values are y-down (`y = 0` at the top of\nthe canvas) -- a different sense from the canvas *window's* own `x`/`y` position,\nwhich is unflipped AppKit screen coordinates. See `hs.canvas`'s module-level docs\nfor the full explanation.\n- Parameter elements: {object[]} Array of element dictionaries (each needs at least a `type`)\n- Returns: Self for chaining\n- Example:\n```js\nc.appendElements([{ type: \"circle\", action: \"fill\", fillColor: { alpha: 1 } }])\n```",
+              "description": "Append one or more elements to the end of the canvas\nElement `frame`/`center`/`coordinates` values are y-down (`y = 0` at the top of\nthe canvas) -- a different sense from the canvas *window's* own `x`/`y` position,\nwhich is unflipped AppKit screen coordinates. See `hs.canvas`'s module-level docs\nfor the full explanation.",
+              "params": [
+                {
+                  "name": "elements",
+                  "type": "[[String: Any]]",
+                  "description": "Array of element dictionaries (each needs at least a `type`)",
+                  "optional": false,
+                  "tsType": "object[]"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.appendElements([{ type: \"circle\", action: \"fill\", fillColor: { alpha: 1 } }])"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 182
+            },
+            {
+              "name": "insertElement",
+              "signature": "func insertElement(_ element: [String: Any], _ index: Int) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Insert an element at a specific index\n- Parameters:\n  - element: The element dictionary to insert\n  - index: The index to insert at (clamped to the valid range)\n- Returns: Self for chaining",
+              "description": "Insert an element at a specific index",
+              "params": [
+                {
+                  "name": "element",
+                  "type": "Object<String, Any>",
+                  "description": "The element dictionary to insert",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The index to insert at (clamped to the valid range)",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 189
+            },
+            {
+              "name": "assignElement",
+              "signature": "func assignElement(_ element: [String: Any], _ index: Int) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Replace the element at an index, or append if the index equals the current element count\n- Parameters:\n  - element: The replacement element dictionary\n  - index: The index to replace\n- Returns: Self for chaining",
+              "description": "Replace the element at an index, or append if the index equals the current element count",
+              "params": [
+                {
+                  "name": "element",
+                  "type": "Object<String, Any>",
+                  "description": "The replacement element dictionary",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The index to replace",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 196
+            },
+            {
+              "name": "removeElement",
+              "signature": "func removeElement(_ index: Int) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Remove the element at a specific index\n- Parameter index: The index to remove\n- Returns: Self for chaining",
+              "description": "Remove the element at a specific index",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The index to remove",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 201
+            },
+            {
+              "name": "removeLastElement",
+              "signature": "func removeLastElement() -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Remove the last element\n- Returns: Self for chaining",
+              "description": "Remove the last element",
+              "params": [],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 205
+            },
+            {
+              "name": "replaceElements",
+              "signature": "func replaceElements(_ elements: [[String: Any]]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Replace all elements on the canvas\n- Parameter elements: {object[]} The new full element list\n- Returns: Self for chaining",
+              "description": "Replace all elements on the canvas",
+              "params": [
+                {
+                  "name": "elements",
+                  "type": "[[String: Any]]",
+                  "description": "The new full element list",
+                  "optional": false,
+                  "tsType": "object[]"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 210
+            },
+            {
+              "name": "elementCount",
+              "signature": "func elementCount() -> Int",
+              "isStatic": false,
+              "rawDocumentation": "The number of elements on the canvas\n- Returns: The current element count",
+              "description": "The number of elements on the canvas",
+              "params": [],
+              "returns": {
+                "type": "number",
+                "description": "The current element count"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 214
+            },
+            {
+              "name": "canvasElements",
+              "signature": "func canvasElements() -> [[String: Any]]",
+              "isStatic": false,
+              "rawDocumentation": "All elements currently on the canvas\n- Returns: {object[]} Array of element dictionaries",
+              "description": "All elements currently on the canvas",
+              "params": [],
+              "returns": {
+                "type": "object[]",
+                "description": "Array of element dictionaries"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 218
+            },
+            {
+              "name": "elementKeys",
+              "signature": "func elementKeys(_ index: Int) -> [String]",
+              "isStatic": false,
+              "rawDocumentation": "The attribute keys present on an element\n- Parameter index: The element index\n- Returns: {string[]} Array of attribute key names",
+              "description": "The attribute keys present on an element",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The element index",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "string[]",
+                "description": "Array of attribute key names"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 223
+            },
+            {
+              "name": "elementAttribute",
+              "signature": "func elementAttribute(_ index: Int, _ key: String) -> Any?",
+              "isStatic": false,
+              "rawDocumentation": "Get a single attribute value from an element\n\nReturns `Any?` (mirroring `hs.userdefaults.get()`) rather than a concrete Swift\ntype because an element attribute's value is genuinely heterogeneous -- a\nstring, number, boolean, nested object, or array, matching v1's dynamically-typed\nLua table values.\n- Parameters:\n  - index: The element index\n  - key: The attribute key\n- Returns: The attribute's current value, or `null` if not set",
+              "description": "Get a single attribute value from an element\nReturns `Any?` (mirroring `hs.userdefaults.get()`) rather than a concrete Swift\ntype because an element attribute's value is genuinely heterogeneous -- a\nstring, number, boolean, nested object, or array, matching v1's dynamically-typed\nLua table values.",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The element index",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "key",
+                  "type": "string",
+                  "description": "The attribute key",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "*",
+                "description": "The attribute's current value, or `null` if not set"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 235
+            },
+            {
+              "name": "setElementAttribute",
+              "signature": "func setElementAttribute(_ index: Int, _ key: String, _ value: Any) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set a single attribute value on an element\n- Parameters:\n  - index: The element index\n  - key: The attribute key\n  - value: The value to assign\n- Returns: Self for chaining",
+              "description": "Set a single attribute value on an element",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The element index",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "key",
+                  "type": "string",
+                  "description": "The attribute key",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "value",
+                  "type": "*",
+                  "description": "The value to assign",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 243
+            },
+            {
+              "name": "removeElementAttribute",
+              "signature": "func removeElementAttribute(_ index: Int, _ key: String) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Remove a single attribute from an element\n- Parameters:\n  - index: The element index\n  - key: The attribute key to remove\n- Returns: Self for chaining",
+              "description": "Remove a single attribute from an element",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The element index",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "key",
+                  "type": "string",
+                  "description": "The attribute key to remove",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 250
+            },
+            {
+              "name": "elementBounds",
+              "signature": "func elementBounds(_ index: Int) -> [String: Any]",
+              "isStatic": false,
+              "rawDocumentation": "The smallest rectangle enclosing an element's rendered shape\n- Parameter index: The element index\n- Returns: {object} A `{x, y, w, h}` dictionary",
+              "description": "The smallest rectangle enclosing an element's rendered shape",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The element index",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "object",
+                "description": "A `{x, y, w, h}` dictionary"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 255
+            },
+            {
+              "name": "mouseCallback",
+              "signature": "func mouseCallback(_ callback: JSFunction) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set the callback fired for tracked mouse events\n\nFires for elements with `trackMouseDown`/`trackMouseUp`/`trackMouseEnterExit`/\n`trackMouseMove` set to `true` in their element dictionary, and for whole-canvas\nregions enabled via `canvasMouseEvents()` (delivered with id `\"_canvas\"`).\n- Parameter callback: {(canvas: HSCanvas, message: string, id: any, x: number, y: number) => void} A JavaScript function called with the canvas, the event name (`\"mouseDown\"`/`\"mouseUp\"`/`\"mouseEnter\"`/`\"mouseExit\"`/`\"mouseMove\"`), the tracked element's id, and the event's x/y coordinates\n- Returns: Self for chaining\n- Example:\n```js\nc.appendElements([{ type: \"circle\", action: \"fill\", trackMouseDown: true, id: \"dot\" }])\nc.mouseCallback((canvas, message, id, x, y) => console.log(message, id, x, y))\n```",
+              "description": "Set the callback fired for tracked mouse events\nFires for elements with `trackMouseDown`/`trackMouseUp`/`trackMouseEnterExit`/\n`trackMouseMove` set to `true` in their element dictionary, and for whole-canvas\nregions enabled via `canvasMouseEvents()` (delivered with id `\"_canvas\"`).",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "A JavaScript function called with the canvas, the event name (`\"mouseDown\"`/`\"mouseUp\"`/`\"mouseEnter\"`/`\"mouseExit\"`/`\"mouseMove\"`), the tracked element's id, and the event's x/y coordinates",
+                  "optional": false,
+                  "tsType": "(canvas: HSCanvas, message: string, id: any, x: number, y: number) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.appendElements([{ type: \"circle\", action: \"fill\", trackMouseDown: true, id: \"dot\" }])\nc.mouseCallback((canvas, message, id, x, y) => console.log(message, id, x, y))"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 271
+            },
+            {
+              "name": "canvasMouseEvents",
+              "signature": "func canvasMouseEvents(_ down: Bool, _ up: Bool, _ enterExit: Bool, _ move: Bool) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Enable whole-canvas mouse tracking for regions not covered by any individually\ntracked element. Delivered through `mouseCallback()` with id `\"_canvas\"`.\n- Parameters:\n  - down: Track mouse-down events\n  - up: Track mouse-up events\n  - enterExit: Track mouse enter/exit events\n  - move: Track mouse-move events\n- Returns: Self for chaining",
+              "description": "Enable whole-canvas mouse tracking for regions not covered by any individually\ntracked element. Delivered through `mouseCallback()` with id `\"_canvas\"`.",
+              "params": [
+                {
+                  "name": "down",
+                  "type": "boolean",
+                  "description": "Track mouse-down events",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "up",
+                  "type": "boolean",
+                  "description": "Track mouse-up events",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "enterExit",
+                  "type": "boolean",
+                  "description": "Track mouse enter/exit events",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "move",
+                  "type": "boolean",
+                  "description": "Track mouse-move events",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 281
+            },
+            {
+              "name": "rotateElement",
+              "signature": "func rotateElement(_ index: Int, _ angle: Double) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Rotate an element about its own bounding-box center\n- Parameters:\n  - index: The element index\n  - angle: The rotation angle, in degrees\n- Returns: Self for chaining",
+              "description": "Rotate an element about its own bounding-box center",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The element index",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "angle",
+                  "type": "number",
+                  "description": "The rotation angle, in degrees",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 290
+            },
+            {
+              "name": "rotateElementAroundPoint",
+              "signature": "func rotateElementAroundPoint(_ index: Int, _ angle: Double, _ point: [String: Any]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Rotate an element about a specific point\n- Parameters:\n  - index: The element index\n  - angle: The rotation angle, in degrees\n  - point: {object} A `{x, y}` dictionary giving the pivot point\n- Returns: Self for chaining",
+              "description": "Rotate an element about a specific point",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The element index",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "angle",
+                  "type": "number",
+                  "description": "The rotation angle, in degrees",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "point",
+                  "type": "Object<String, Any>",
+                  "description": "A `{x, y}` dictionary giving the pivot point",
+                  "optional": false,
+                  "tsType": "object"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 298
+            },
+            {
+              "name": "setElementTransformation",
+              "signature": "func setElementTransformation(_ index: Int, _ matrix: [String: Any]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Apply a raw 2D affine transformation matrix to a single element\n- Parameters:\n  - index: The element index\n  - matrix: {object} A `{m11, m12, m21, m22, tX, tY}` matrix dictionary\n- Returns: Self for chaining",
+              "description": "Apply a raw 2D affine transformation matrix to a single element",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The element index",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "matrix",
+                  "type": "Object<String, Any>",
+                  "description": "A `{m11, m12, m21, m22, tX, tY}` matrix dictionary",
+                  "optional": false,
+                  "tsType": "object"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 305
+            },
+            {
+              "name": "setTransformation",
+              "signature": "func setTransformation(_ matrix: [String: Any]) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Apply a raw 2D affine transformation matrix to the whole canvas\n- Parameter matrix: {object} A `{m11, m12, m21, m22, tX, tY}` matrix dictionary\n- Returns: Self for chaining",
+              "description": "Apply a raw 2D affine transformation matrix to the whole canvas",
+              "params": [
+                {
+                  "name": "matrix",
+                  "type": "Object<String, Any>",
+                  "description": "A `{m11, m12, m21, m22, tX, tY}` matrix dictionary",
+                  "optional": false,
+                  "tsType": "object"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 310
+            },
+            {
+              "name": "clearTransformation",
+              "signature": "func clearTransformation() -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Remove the whole-canvas transformation set by `setTransformation()`\n- Returns: Self for chaining",
+              "description": "Remove the whole-canvas transformation set by `setTransformation()`",
+              "params": [],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 314
+            },
+            {
+              "name": "imageFromCanvas",
+              "signature": "func imageFromCanvas() -> HSImage?",
+              "isStatic": false,
+              "rawDocumentation": "Render the canvas's current contents to an image\n- Returns: An HSImage snapshot of the canvas, or `null` if it could not be rendered",
+              "description": "Render the canvas's current contents to an image",
+              "params": [],
+              "returns": {
+                "type": "HSImage",
+                "description": "An HSImage snapshot of the canvas, or `null` if it could not be rendered"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 320
+            },
+            {
+              "name": "duplicate",
+              "signature": "func duplicate() -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Create an independent copy of this canvas, with the same frame, elements, and\nwindow configuration\n\nNamed `duplicate()` rather than v1's `copy()` -- this codebase's conventions\nforbid method names starting with `copy` (an ARC/ObjC hazard), the same rule\nthat renamed `new()` to `create()`.\n- Returns: A new HSCanvas",
+              "description": "Create an independent copy of this canvas, with the same frame, elements, and\nwindow configuration\nNamed `duplicate()` rather than v1's `copy()` -- this codebase's conventions\nforbid method names starting with `copy` (an ARC/ObjC hazard), the same rule\nthat renamed `new()` to `create()`.",
+              "params": [],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "A new HSCanvas"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 329
+            },
+            {
+              "name": "setAccessibilitySubrole",
+              "signature": "func setAccessibilitySubrole(_ subrole: String) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set the accessibility subrole reported for this canvas's window\n- Parameter subrole: The accessibility subrole string\n- Returns: Self for chaining",
+              "description": "Set the accessibility subrole reported for this canvas's window",
+              "params": [
+                {
+                  "name": "subrole",
+                  "type": "string",
+                  "description": "The accessibility subrole string",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 336
+            },
+            {
+              "name": "draggingCallback",
+              "signature": "func draggingCallback(_ callback: JSFunction) -> HSCanvas",
+              "isStatic": false,
+              "rawDocumentation": "Set a callback fired when files or text are dropped onto the canvas\n- Parameter callback: {(paths: string[]) => void} Called with the dropped file paths, or a single-element array containing dropped text\n- Returns: Self for chaining",
+              "description": "Set a callback fired when files or text are dropped onto the canvas",
+              "params": [
+                {
+                  "name": "callback",
+                  "type": "JSFunction",
+                  "description": "Called with the dropped file paths, or a single-element array containing dropped text",
+                  "optional": false,
+                  "tsType": "(paths: string[]) => void"
+                }
+              ],
+              "returns": {
+                "type": "HSCanvas",
+                "description": "Self for chaining"
+              },
+              "notes": [],
+              "examples": [],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 343
+            }
+          ],
+          "properties": []
+        }
+      ],
+      "description": "# hs.canvas\n**A low-level, absolutely-positioned drawing surface**\n`hs.canvas` mirrors v1 Hammerspoon's `hs.canvas` module: elements are plain JS\nobjects (mirroring v1's Lua tables) describing shapes (`rectangle`, `circle`,\n`oval`, `text`) with a `fill`/`stroke`/`strokeAndFill`/`clip`/`build`/`skip` action\npipeline. This is a different tool from `hs.ui`, which is a SwiftUI stack/layout\nbuilder for app-like interfaces -- reach for `hs.canvas` when you need absolute\npositioning, clipped/composited shapes, or direct window-level/Spaces control.\n## Coordinate systems -- read this before positioning elements\nA canvas's **window position** (`create({x, y, w, h})`, and any later `x`/`y` you\n`y = 0` is the *bottom* of the screen, and `y` increases upward. This matches\n`hs.ui.window`.\nBut **element content** positioned *inside* a canvas -- every `frame`, `center`, and\n`y = 0` is the *top* of the canvas, and `y` increases downward. These two coordinate\nsenses are independent of each other and easy to conflate, especially when a script\ncomputes an element's position from the same screen geometry it used for the\nwindow's own placement. If a shape appears vertically mirrored from where you\nexpect, this mismatch is the first thing to check.\n## Example: a rounded screen corner overlay\n```javascript\nconst radius = 12\nconst corner = hs.canvas.create({x: 0, y: 0, w: radius, h: radius})\ncorner.appendElements([\n    { action: \"build\", type: \"rectangle\" },\n    { action: \"clip\", type: \"circle\", center: {x: radius, y: radius}, radius: radius, reversePath: true },\n    { action: \"fill\", type: \"rectangle\", fillColor: { alpha: 1 } },\n    { type: \"resetClip\" }\n])\ncorner.levelValue(hs.canvas.windowLevels.screenSaver + 1)\ncorner.behavior(\"canJoinAllSpaces\")\ncorner.show()\n```",
+      "rawDocumentation": "# hs.canvas\n\n**A low-level, absolutely-positioned drawing surface**\n\n`hs.canvas` mirrors v1 Hammerspoon's `hs.canvas` module: elements are plain JS\nobjects (mirroring v1's Lua tables) describing shapes (`rectangle`, `circle`,\n`oval`, `text`) with a `fill`/`stroke`/`strokeAndFill`/`clip`/`build`/`skip` action\npipeline. This is a different tool from `hs.ui`, which is a SwiftUI stack/layout\nbuilder for app-like interfaces -- reach for `hs.canvas` when you need absolute\npositioning, clipped/composited shapes, or direct window-level/Spaces control.\n\n## Coordinate systems -- read this before positioning elements\n\nA canvas's **window position** (`create({x, y, w, h})`, and any later `x`/`y` you\ncompare it against, e.g. from `hs.screen`) uses unflipped AppKit screen coordinates:\n`y = 0` is the *bottom* of the screen, and `y` increases upward. This matches\n`hs.ui.window`.\n\nBut **element content** positioned *inside* a canvas -- every `frame`, `center`, and\n`coordinates` value you pass to `appendElements()` and friends -- is drawn top-down:\n`y = 0` is the *top* of the canvas, and `y` increases downward. These two coordinate\nsenses are independent of each other and easy to conflate, especially when a script\ncomputes an element's position from the same screen geometry it used for the\nwindow's own placement. If a shape appears vertically mirrored from where you\nexpect, this mismatch is the first thing to check.\n\n## Example: a rounded screen corner overlay\n```javascript\nconst radius = 12\nconst corner = hs.canvas.create({x: 0, y: 0, w: radius, h: radius})\ncorner.appendElements([\n    { action: \"build\", type: \"rectangle\" },\n    { action: \"clip\", type: \"circle\", center: {x: radius, y: radius}, radius: radius, reversePath: true },\n    { action: \"fill\", type: \"rectangle\", fillColor: { alpha: 1 } },\n    { type: \"resetClip\" }\n])\ncorner.levelValue(hs.canvas.windowLevels.screenSaver + 1)\ncorner.behavior(\"canJoinAllSpaces\")\ncorner.show()\n```"
+    },
+    {
       "name": "hs.chooser",
       "methods": [
         {
@@ -26282,5 +27476,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-06T16:46:17.495Z"
+  "generatedAt": "2026-09-07T20:24:59.080Z"
 }
