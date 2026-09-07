@@ -14,6 +14,16 @@ const path = require('path');
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_FILE = path.join(__dirname, '..', 'docs', 'hammerspoon.d.ts');
 
+// Words TypeScript reserves even as `declare namespace { function <name>() }` identifiers
+// (unlike plain JS, where e.g. `new`/`delete` are valid property names called as
+// `obj.new()`). Mirrors extract-docs.js's escapeFunctionName -- same convention (`_` prefix),
+// applied here too since this generator emits `function name(...)` declarations directly.
+const TS_RESERVED_FUNCTION_NAMES = ['new', 'delete', 'default', 'function', 'class', 'var', 'let', 'const'];
+
+function escapeTSFunctionName(name) {
+    return TS_RESERVED_FUNCTION_NAMES.includes(name) ? `_${name}` : name;
+}
+
 /**
  * Find the index of the first colon at bracket-depth 0 within a string.
  * Returns -1 if no such colon exists (i.e. the string is an array type, not a dictionary).
@@ -54,7 +64,12 @@ function swiftTypeToTS(swiftType, promiseType = null) {
         'NSNumber': 'number',
         'NSDate': 'Date',
         'Any': 'any',
-        'Void': 'void'
+        'Void': 'void',
+        // A JSValue param/return that isn't a JSFunction/JSPromise is a deliberately
+        // dynamic value (e.g. a canvas element attribute, which can be a string, number,
+        // boolean, nested object, or array) -- there is no single concrete Swift type to
+        // map it to, so it surfaces as `any` in TypeScript too.
+        'JSValue': 'any'
     };
 
     // Handle JSFunction - convert to a callable type.
@@ -144,9 +159,14 @@ function generateModuleDefinitions(moduleData) {
 
     // Module methods
     for (const method of moduleData.methods || []) {
+        const tsName = escapeTSFunctionName(method.name);
+
         output += `    /**\n`;
         if (method.description) {
             output += `     * ${escapeDocComment(method.description)}\n`;
+        }
+        if (tsName !== method.name) {
+            output += `     * @remarks TypeScript-only name -- \`${method.name}\` is a reserved word in TypeScript declarations, but the actual JavaScript call is \`${moduleData.name}.${method.name}(...)\`, not \`${moduleData.name}.${tsName}(...)\`.\n`;
         }
         if (method.notes && method.notes.length > 0) {
             output += `     * @remarks ${method.notes.map(escapeDocComment).join(' ')}\n`;
@@ -173,7 +193,7 @@ function generateModuleDefinitions(moduleData) {
             ? (method.source === 'swift' ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : method.returns.type)
             : 'void';
 
-        output += `    function ${method.name}(${params}): ${returnType};\n\n`;
+        output += `    function ${tsName}(${params}): ${returnType};\n\n`;
     }
 
     // Module properties

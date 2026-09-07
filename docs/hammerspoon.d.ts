@@ -1976,6 +1976,415 @@ Queries the underlying CoreMediaIO device state each time it is read.
 }
 
 /**
+ * # hs.canvas
+**A low-level, absolutely-positioned drawing surface**
+`hs.canvas` mirrors v1 Hammerspoon's `hs.canvas` module: elements are plain JS
+objects (mirroring v1's Lua tables) describing shapes (`rectangle`, `circle`,
+`oval`, `text`) with a `fill`/`stroke`/`strokeAndFill`/`clip`/`build`/`skip` action
+pipeline. This is a different tool from `hs.ui`, which is a SwiftUI stack/layout
+builder for app-like interfaces -- reach for `hs.canvas` when you need absolute
+positioning, clipped/composited shapes, or direct window-level/Spaces control.
+## Coordinate systems -- read this before positioning elements
+A canvas's **window position** (`create({x, y, w, h})`, and any later `x`/`y` you
+`y = 0` is the *bottom* of the screen, and `y` increases upward. This matches
+`hs.ui.window`.
+But **element content** positioned *inside* a canvas -- every `frame`, `center`, and
+`y = 0` is the *top* of the canvas, and `y` increases downward. These two coordinate
+senses are independent of each other and easy to conflate, especially when a script
+computes an element's position from the same screen geometry it used for the
+window's own placement. If a shape appears vertically mirrored from where you
+expect, this mismatch is the first thing to check.
+## Example: a rounded screen corner overlay
+```javascript
+const radius = 12
+const corner = hs.canvas.create({x: 0, y: 0, w: radius, h: radius})
+corner.appendElements([
+    { action: "build", type: "rectangle" },
+    { action: "clip", type: "circle", center: {x: radius, y: radius}, radius: radius, reversePath: true },
+    { action: "fill", type: "rectangle", fillColor: { alpha: 1 } },
+    { type: "resetClip" }
+])
+corner.levelValue(hs.canvas.windowLevels.screenSaver + 1)
+corner.behavior("canJoinAllSpaces")
+corner.show()
+```
+ */
+declare namespace hs.canvas {
+    /**
+     * Create a new canvas
+Named `create()` rather than v1's `new()` -- `new` cannot be used as a
+JavaScriptCore-exported method name (it collides with the JS `new` operator
+keyword at the bridging layer), and this codebase's conventions additionally
+forbid method names starting with `new`/`alloc`/`copy` (an ARC/ObjC hazard).
+     * @param rect A `{x, y, w, h}` dictionary describing the canvas window's frame
+     * @returns A new HSCanvas, not yet shown
+     */
+    function create(rect: object): HSCanvas;
+
+    /**
+     * Named window levels, exposed as raw numeric values (not opaque strings) so
+scripts can do arithmetic on them, matching v1 behavior.
+     */
+    const windowLevels: Record<string, number>;
+
+    /**
+     * Named window Spaces/Exposé collection behaviors, exposed as raw numeric bit values.
+     */
+    const windowBehaviors: Record<string, number>;
+
+    /**
+     * Named compositing/blend rules usable as an element's `compositeRule` attribute.
+     */
+    const compositeTypes: Record<string, string>;
+
+}
+
+/**
+ * # HSCanvas
+A single canvas window: an absolutely-positioned, low-level drawing surface
+mirroring v1 Hammerspoon's `hs.canvas`. Elements are plain JS objects (matching
+v1's Lua tables) added with `appendElements()` and mutated in place with
+`setElementAttribute()`/`elementAttribute()`. Supports the same `fill`/`stroke`/
+`strokeAndFill`/`clip`/`build`/`skip` action pipeline as v1, including the
+`build`+`clip`+`reversePath` technique used to punch holes in shapes (see
+`hs.canvas.windowLevels`/`hs.canvas.windowBehaviors` for the window-level/Spaces
+controls needed alongside this for overlay-style canvases).
+## Example
+```javascript
+const c = hs.canvas.create({x: 100, y: 100, w: 200, h: 200})
+c.appendElements([
+    { type: "rectangle", action: "fill", fillColor: { red: 0.2, green: 0.5, blue: 0.9, alpha: 1 } }
+])
+c.show()
+```
+ */
+declare class HSCanvas {
+    /**
+     * Show the canvas window
+     * @returns Self for chaining
+     */
+    show(): HSCanvas;
+
+    /**
+     * Hide the canvas window (keeps it in memory; elements and window config are preserved)
+     * @returns Self for chaining
+     */
+    hide(): HSCanvas;
+
+    /**
+     * Destroy the canvas window and release its resources
+Named `destroy()` rather than v1's `delete()` -- `delete` cannot be used as a
+JavaScriptCore-exported method name in this codebase's bridging layer.
+     */
+    destroy(): void;
+
+    /**
+     * Whether the canvas window is currently ordered onto the screen
+     * @returns `true` if the canvas has been shown and not hidden or destroyed
+     */
+    isShowing(): boolean;
+
+    /**
+     * Whether the canvas is showing AND at least partially visible (not fully occluded or off-screen)
+     * @returns `true` if the canvas is showing and at least partially on-screen
+     */
+    isVisible(): boolean;
+
+    /**
+     * Whether the canvas is hidden behind other windows, or off-screen entirely
+     * @returns `true` if the canvas is showing but fully occluded or off-screen
+     */
+    isOccluded(): boolean;
+
+    /**
+     * The canvas window's current position and size
+     * @returns A `{x, y, w, h}` dictionary, in the same unflipped AppKit screen coordinates as `create()`
+     */
+    frame(): object;
+
+    /**
+     * Move and/or resize the canvas window
+     * @param rect A `{x, y, w, h}` dictionary. Any keys left out keep their current value
+     * @returns Self for chaining
+     */
+    setFrame(rect: object): HSCanvas;
+
+    /**
+     * The canvas window's current top-left corner
+the point at the window's highest `y` (its screen-visual top), not `y = 0`.
+     * @returns An `{x, y}` dictionary
+     */
+    topLeft(): object;
+
+    /**
+     * Move the canvas window without changing its size
+     * @param point An `{x, y}` dictionary giving the new top-left corner. Any keys left out keep their current value
+     * @returns Self for chaining
+     */
+    setTopLeft(point: object): HSCanvas;
+
+    /**
+     * The canvas window's current size
+     * @returns A `{w, h}` dictionary
+     */
+    size(): object;
+
+    /**
+     * Resize the canvas window without moving its top-left corner
+     * @param dimensions A `{w, h}` dictionary. Any keys left out keep their current value
+     * @returns Self for chaining
+     */
+    setSize(dimensions: object): HSCanvas;
+
+    /**
+     * Set the window level by name
+     * @param name A level name from `hs.canvas.windowLevels` (e.g. `"floating"`, `"screenSaver"`)
+     * @returns Self for chaining
+     */
+    level(name: string): HSCanvas;
+
+    /**
+     * Set the window level to a raw numeric value
+Split out from `level(_:)` (rather than accepting a string-or-number union)
+because JSExport parameters must have a single concrete type -- see
+`hs.canvas.windowLevels`, which exposes raw numeric values (not opaque name
+strings) so scripts can do arithmetic on them, matching v1 behavior.
+     * @param value A raw numeric window level
+     * @returns Self for chaining
+     */
+    levelValue(value: number): HSCanvas;
+
+    /**
+     * Set the window's Spaces/Exposé collection behavior to a single named behavior
+     * @param name A behavior name from `hs.canvas.windowBehaviors` (e.g. `"canJoinAllSpaces"`)
+     * @returns Self for chaining
+     */
+    behavior(name: string): HSCanvas;
+
+    /**
+     * Set the window's Spaces/Exposé collection behavior to a combination of named behaviors
+     * @param names Behavior names from `hs.canvas.windowBehaviors`, combined together
+     * @returns Self for chaining
+     */
+    behaviorList(names: string[]): HSCanvas;
+
+    /**
+     * Set the window's Spaces/Exposé collection behavior to a raw bitmask
+     * @param value A raw `NSWindow.CollectionBehavior` bitmask
+     * @returns Self for chaining
+     */
+    behaviorValue(value: number): HSCanvas;
+
+    /**
+     * Set whether clicking the canvas activates the Hammerspoon app
+     * @param flag Pass `false` to prevent clicks on the canvas from bringing the app forward
+     * @returns Self for chaining
+     */
+    clickActivating(flag: boolean): HSCanvas;
+
+    /**
+     * Set whether the canvas window ignores all mouse events, passing clicks through to whatever is behind it
+This is a capability beyond v1's `hs.canvas` API surface (not a literal v1 method
+name) -- v1 has no direct equivalent for full click pass-through.
+     * @param flag Pass `true` to make the canvas fully click-through
+     * @returns Self for chaining
+     */
+    ignoreMouseEvents(flag: boolean): HSCanvas;
+
+    /**
+     * Append one or more elements to the end of the canvas
+Element `frame`/`center`/`coordinates` values are y-down (`y = 0` at the top of
+the canvas) -- a different sense from the canvas *window's* own `x`/`y` position,
+which is unflipped AppKit screen coordinates. See `hs.canvas`'s module-level docs
+for the full explanation.
+     * @param elements Array of element dictionaries (each needs at least a `type`)
+     * @returns Self for chaining
+     */
+    appendElements(elements: object[]): HSCanvas;
+
+    /**
+     * Insert an element at a specific index
+     * @param element The element dictionary to insert
+     * @param index The index to insert at (clamped to the valid range)
+     * @returns Self for chaining
+     */
+    insertElement(element: Record<string, any>, index: number): HSCanvas;
+
+    /**
+     * Replace the element at an index, or append if the index equals the current element count
+     * @param element The replacement element dictionary
+     * @param index The index to replace
+     * @returns Self for chaining
+     */
+    assignElement(element: Record<string, any>, index: number): HSCanvas;
+
+    /**
+     * Remove the element at a specific index
+     * @param index The index to remove
+     * @returns Self for chaining
+     */
+    removeElement(index: number): HSCanvas;
+
+    /**
+     * Remove the last element
+     * @returns Self for chaining
+     */
+    removeLastElement(): HSCanvas;
+
+    /**
+     * Replace all elements on the canvas
+     * @param elements The new full element list
+     * @returns Self for chaining
+     */
+    replaceElements(elements: object[]): HSCanvas;
+
+    /**
+     * The number of elements on the canvas
+     * @returns The current element count
+     */
+    elementCount(): number;
+
+    /**
+     * All elements currently on the canvas
+     * @returns Array of element dictionaries
+     */
+    canvasElements(): object[];
+
+    /**
+     * The attribute keys present on an element
+     * @param index The element index
+     * @returns Array of attribute key names
+     */
+    elementKeys(index: number): string[];
+
+    /**
+     * Get a single attribute value from an element
+Returns `Any?` (mirroring `hs.userdefaults.get()`) rather than a concrete Swift
+type because an element attribute's value is genuinely heterogeneous -- a
+string, number, boolean, nested object, or array, matching v1's dynamically-typed
+Lua table values.
+     * @param index The element index
+     * @param key The attribute key
+     * @returns The attribute's current value, or `null` if not set
+     */
+    elementAttribute(index: number, key: string): any | null;
+
+    /**
+     * Set a single attribute value on an element
+     * @param index The element index
+     * @param key The attribute key
+     * @param value The value to assign
+     * @returns Self for chaining
+     */
+    setElementAttribute(index: number, key: string, value: any): HSCanvas;
+
+    /**
+     * Remove a single attribute from an element
+     * @param index The element index
+     * @param key The attribute key to remove
+     * @returns Self for chaining
+     */
+    removeElementAttribute(index: number, key: string): HSCanvas;
+
+    /**
+     * The smallest rectangle enclosing an element's rendered shape
+     * @param index The element index
+     * @returns A `{x, y, w, h}` dictionary
+     */
+    elementBounds(index: number): object;
+
+    /**
+     * Set the callback fired for tracked mouse events
+Fires for elements with `trackMouseDown`/`trackMouseUp`/`trackMouseEnterExit`/
+`trackMouseMove` set to `true` in their element dictionary, and for whole-canvas
+regions enabled via `canvasMouseEvents()` (delivered with id `"_canvas"`).
+     * @param callback A JavaScript function called with the canvas, the event name (`"mouseDown"`/`"mouseUp"`/`"mouseEnter"`/`"mouseExit"`/`"mouseMove"`), the tracked element's id, and the event's x/y coordinates
+     * @returns Self for chaining
+     */
+    mouseCallback(callback: (canvas: HSCanvas, message: string, id: any, x: number, y: number) => void): HSCanvas;
+
+    /**
+     * Enable whole-canvas mouse tracking for regions not covered by any individually
+tracked element. Delivered through `mouseCallback()` with id `"_canvas"`.
+     * @param down Track mouse-down events
+     * @param up Track mouse-up events
+     * @param enterExit Track mouse enter/exit events
+     * @param move Track mouse-move events
+     * @returns Self for chaining
+     */
+    canvasMouseEvents(down: boolean, up: boolean, enterExit: boolean, move: boolean): HSCanvas;
+
+    /**
+     * Rotate an element about its own bounding-box center
+     * @param index The element index
+     * @param angle The rotation angle, in degrees
+     * @returns Self for chaining
+     */
+    rotateElement(index: number, angle: number): HSCanvas;
+
+    /**
+     * Rotate an element about a specific point
+     * @param index The element index
+     * @param angle The rotation angle, in degrees
+     * @param point A `{x, y}` dictionary giving the pivot point
+     * @returns Self for chaining
+     */
+    rotateElementAroundPoint(index: number, angle: number, point: object): HSCanvas;
+
+    /**
+     * Apply a raw 2D affine transformation matrix to a single element
+     * @param index The element index
+     * @param matrix A `{m11, m12, m21, m22, tX, tY}` matrix dictionary
+     * @returns Self for chaining
+     */
+    setElementTransformation(index: number, matrix: object): HSCanvas;
+
+    /**
+     * Apply a raw 2D affine transformation matrix to the whole canvas
+     * @param matrix A `{m11, m12, m21, m22, tX, tY}` matrix dictionary
+     * @returns Self for chaining
+     */
+    setTransformation(matrix: object): HSCanvas;
+
+    /**
+     * Remove the whole-canvas transformation set by `setTransformation()`
+     * @returns Self for chaining
+     */
+    clearTransformation(): HSCanvas;
+
+    /**
+     * Render the canvas's current contents to an image
+     * @returns An HSImage snapshot of the canvas, or `null` if it could not be rendered
+     */
+    imageFromCanvas(): HSImage | null;
+
+    /**
+     * Create an independent copy of this canvas, with the same frame, elements, and
+window configuration
+Named `duplicate()` rather than v1's `copy()` -- this codebase's conventions
+forbid method names starting with `copy` (an ARC/ObjC hazard), the same rule
+that renamed `new()` to `create()`.
+     * @returns A new HSCanvas
+     */
+    duplicate(): HSCanvas;
+
+    /**
+     * Set the accessibility subrole reported for this canvas's window
+     * @param subrole The accessibility subrole string
+     * @returns Self for chaining
+     */
+    setAccessibilitySubrole(subrole: string): HSCanvas;
+
+    /**
+     * Set a callback fired when files or text are dropped onto the canvas
+     * @param callback Called with the dropped file paths, or a single-element array containing dropped text
+     * @returns Self for chaining
+     */
+    draggingCallback(callback: (paths: string[]) => void): HSCanvas;
+
+}
+
+/**
  * # hs.chooser
 **A Spotlight-style chooser for presenting options to the user**
 `hs.chooser` lets you show a floating search panel that users can type into to filter and
