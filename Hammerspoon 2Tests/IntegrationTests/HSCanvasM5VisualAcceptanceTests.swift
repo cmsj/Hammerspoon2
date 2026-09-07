@@ -50,8 +50,11 @@ struct HSCanvasM5VisualAcceptanceTests {
 
         let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
         let pngData = try #require(bitmapRep.representation(using: .png, properties: [:]))
-        let outPath = "/private/tmp/claude-501/-Users-cmsj-hacking-Hammerspoon2/b081d57c-9cb0-41ee-892b-f2fdd824b997/scratchpad/m5_visual_acceptance.png"
-        try pngData.write(to: URL(fileURLWithPath: outPath))
+        // Diagnostic-only -- the assertions below read pixels straight from `cgImage`, not
+        // from this file. Written to the system temp directory (not a hardcoded developer
+        // path) purely so it can be opened for a visual sanity check while debugging.
+        let outPath = FileManager.default.temporaryDirectory.appendingPathComponent("m5_visual_acceptance.png")
+        try pngData.write(to: outPath)
 
         guard let data = cgImage.dataProvider?.data else {
             Issue.record("Could not read rendered pixel data")
