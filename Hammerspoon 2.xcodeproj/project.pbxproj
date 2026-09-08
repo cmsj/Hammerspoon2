@@ -121,7 +121,7 @@
 		4F947DAD2F5703D300DD814E /* Exceptions for "HammerspoonOSAScriptHelper" folder in "Hammerspoon 2" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				HSOSAScriptTypes.swift,
+				HSOSAScriptShared.swift,
 			);
 			target = 4F5641822E8333830099EB4C /* Hammerspoon 2 */;
 		};

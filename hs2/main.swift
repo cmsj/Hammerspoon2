@@ -81,6 +81,7 @@ private actor HSIPCClient {
     private let connection: NSXPCConnection
 
     init() {
+        // FIXME: Add peer validation (same-team signature check)
         let c = NSXPCConnection(machServiceName: "net.tenshu.Hammerspoon-2.ipc")
         c.remoteObjectInterface = NSXPCInterface(with: HSIPCServerProtocol.self)
         c.exportedInterface = NSXPCInterface(with: HSIPCClientProtocol.self)

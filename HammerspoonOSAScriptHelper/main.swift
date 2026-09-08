@@ -17,11 +17,12 @@ nonisolated func errorMessage(from dict: NSDictionary?, fallback: String) -> Str
     ?? (dict.description)
 }
 
-let serviceName = "net.tenshu.Hammerspoon-2.HammerspoonOSAScriptHelper"
 let xpcListener: XPCListener
 
 let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest) -> XPCListener.IncomingSessionRequest.Decision in
     request.accept { message in
+        print("New request accepted...")
+
         // First, check that we can decode the incoming message to the expected HSOSARequest type
         guard let request = try? message.decode(as: HSOSARequest.self) else {
             print("Unable to decode request")
@@ -38,6 +39,8 @@ let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest
                                  jsonMessage: nil)
         }
 
+        print("Detected language: \(osaLanguage.name ?? "UNKNOWN")")
+
         // Third, compile the supplied script
         let script = OSAScript(source: request.source, language: osaLanguage)
         var compileError: NSDictionary? = nil
@@ -48,15 +51,18 @@ let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest
                                  jsonMessage: nil)
         }
 
+        print("Compiled...")
+
         // Fourth, execute the supplied script
         var execError: NSDictionary? = nil
         guard let result = script.executeAndReturnError(&execError) else {
-            print("Execution failed")
+            print("Execution failed: \(execError?.description ?? "<no error>")")
             return HSOSAResponse(success: false,
                                  rawMessage: errorMessage(from: execError, fallback: "Execution failed"),
                                  jsonMessage: nil)
         }
 
+        print("Executed...")
         // Finally, attempt to convert the response into a dictionary of foundation objects
         // and encode that to JSON
         let rawString  = result.stringValue ?? ""
@@ -66,6 +72,7 @@ let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest
             let jsonData   = try JSONSerialization.data(
                 withJSONObject: jsonObject, options: [.fragmentsAllowed])
             let jsonString = String(data: jsonData, encoding: .utf8)
+            print("Returning result")
             return HSOSAResponse(success: true, rawMessage: rawString, jsonMessage: jsonString)
         } catch {
             // Serialisation failed (unexpected); fall back to JSON-encoded raw string.
@@ -83,15 +90,10 @@ let xpcSessionHandler = { @Sendable (request: XPCListener.IncomingSessionRequest
 
 #if DEBUG
     print("WARNING: Running without XPC peer checking. This is unsafe and should only be done in development.")
-    xpcListener = try XPCListener(service: serviceName, incomingSessionHandler: xpcSessionHandler)
+    xpcListener = try XPCListener(service: HSOSAScriptServiceName, incomingSessionHandler: xpcSessionHandler)
 #else
     print("Enforcing XPC peer requirements.")
-if #available(macOS 26.0, *) {
-    xpcListener = try XPCListener(service: serviceName, requirement: .isFromSameTeam(), incomingSessionHandler: xpcSessionHandler)
-} else {
-    // Fallback on earlier versions
-    xpcListener = try XPCListener(service: serviceName, incomingSessionHandler: xpcSessionHandler)
-}
+    xpcListener = try XPCListener(service: HSOSAScriptServiceName, requirement: .isFromSameTeam(), incomingSessionHandler: xpcSessionHandler)
 #endif
 
 dispatchMain()
