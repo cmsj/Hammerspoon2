@@ -226,7 +226,9 @@ import AppKit
 
     /// Type a string of characters as individual key events.
     ///
-    /// A 5 ms pause is inserted between each key-down and key-up event.
+    /// A 5 ms pause is inserted between each key-down and key-up event. This blocks the
+    /// calling thread (the main thread) for the duration of typing — for long strings,
+    /// prefer `keyStrokesAsync()` to avoid stalling the rest of Hammerspoon while typing.
     ///
     /// - Parameter text: The string to type
     /// - Example:
@@ -234,6 +236,20 @@ import AppKit
     /// hs.eventtap.keyStrokes("Hello, World!")
     /// ```
     @objc func keyStrokes(_ text: String)
+
+    /// Type a string of characters as individual key events, without blocking the main thread.
+    ///
+    /// Behaves like `keyStrokes()`, but the key events are posted from a background task, so
+    /// JavaScript execution and the rest of Hammerspoon continue running while typing proceeds.
+    ///
+    /// - Parameter text: The string to type
+    /// - Returns: {Promise<void>} A Promise that resolves once every character has been posted.
+    /// - Example:
+    /// ```js
+    /// await hs.eventtap.keyStrokesAsync("Hello, World!")
+    /// console.log("Finished typing")
+    /// ```
+    @objc func keyStrokesAsync(_ text: String) -> JSPromise?
 
     /// Post a left mouse button click at the given position.
     ///
@@ -640,6 +656,49 @@ import AppKit
 
             usleep(5000)
         }
+    }
+
+    @objc func keyStrokesAsync(_ text: String) -> JSPromise? {
+        guard let context = JSContext.current() else { return nil }
+        return wrapAsyncInJSPromise(in: context) { holder in
+            Task {
+                let ok = await HSEventTapModule.postKeyStrokesOffMainThread(text)
+                if ok {
+                    holder.resolveWith(nil)
+                } else {
+                    holder.rejectWithMessage("hs.eventtap.keyStrokesAsync: Unable to construct key events")
+                }
+            }
+        }
+    }
+
+    // `@concurrent nonisolated` so the per-character posting loop (and its 5 ms pauses
+    // between events) runs on a background thread instead of the main actor.
+    @concurrent
+    nonisolated private static func postKeyStrokesOffMainThread(_ text: String) async -> Bool {
+        let source = CGEventSource(stateID: .privateState)
+        guard let keyDownEvent = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
+              let keyUpEvent = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) else {
+            return false
+        }
+
+        for scalar in text.unicodeScalars {
+            guard scalar.value <= 0xFFFF else { continue }
+            var ch = UniChar(scalar.value)
+
+            keyDownEvent.flags = CGEventFlags()
+            unsafe keyDownEvent.keyboardSetUnicodeString(stringLength: 1, unicodeString: &ch)
+            keyDownEvent.post(tap: .cghidEventTap)
+
+//            usleep(5000)
+
+            keyUpEvent.flags = CGEventFlags()
+            unsafe keyUpEvent.keyboardSetUnicodeString(stringLength: 1, unicodeString: &ch)
+            keyUpEvent.post(tap: .cghidEventTap)
+
+//            usleep(5000)
+        }
+        return true
     }
 
     @objc func leftClick(_ x: Double, _ y: Double) {

@@ -150,6 +150,11 @@ struct HSEventTapTests {
             #expect(makeHarness().evalTypeOf("hs.eventtap.keyStrokes") == "function")
         }
 
+        @Test("keyStrokesAsync is a function")
+        func testKeyStrokesAsyncIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.eventtap.keyStrokesAsync") == "function")
+        }
+
         @Test("leftClick is a function")
         func testLeftClickIsFunction() {
             #expect(makeHarness().evalTypeOf("hs.eventtap.leftClick") == "function")
@@ -594,6 +599,36 @@ struct HSEventTapTests {
             let harness = makeHarness()
             harness.eval("var tap = hs.eventtap.addWatcher([], function() {})")
             harness.expectTrue("tap === null || tap === undefined")
+            #expect(!harness.hasException)
+        }
+
+        // MARK: keyStrokesAsync
+
+        @Test("keyStrokesAsync returns a Promise")
+        func testKeyStrokesAsyncReturnsPromise() {
+            let harness = makeHarness()
+            harness.eval("var p = hs.eventtap.keyStrokesAsync('a')")
+            harness.expectTrue("p !== null && p !== undefined && typeof p.then === 'function'")
+            #expect(!harness.hasException)
+        }
+
+        // keyStrokesAsync() posts events from a @concurrent background task, then hops back
+        // to the main actor to resolve the Promise. waitForAsync() cooperatively yields the
+        // main actor so that continuation can run and the .then handler fires.
+        @Test("keyStrokesAsync resolves after posting all characters")
+        @MainActor
+        func testKeyStrokesAsyncResolves() async {
+            let harness = makeHarness()
+            harness.eval("""
+                var __keyStrokesAsyncDone = false;
+                hs.eventtap.keyStrokesAsync('ab').then(function() {
+                    __keyStrokesAsyncDone = true;
+                });
+            """)
+            let ok = await harness.waitForAsync(timeout: 5.0) {
+                harness.evalValue("__keyStrokesAsyncDone")?.toBool() == true
+            }
+            #expect(ok, "keyStrokesAsync() did not resolve within timeout")
             #expect(!harness.hasException)
         }
 

@@ -2736,10 +2736,21 @@ compatibility with applications that miss very fast synthetic keystrokes.
 
     /**
      * Type a string of characters as individual key events.
-A 5 ms pause is inserted between each key-down and key-up event.
+A 5 ms pause is inserted between each key-down and key-up event. This blocks the
+calling thread (the main thread) for the duration of typing — for long strings,
+prefer `keyStrokesAsync()` to avoid stalling the rest of Hammerspoon while typing.
      * @param text The string to type
      */
     function keyStrokes(text: string): void;
+
+    /**
+     * Type a string of characters as individual key events, without blocking the main thread.
+Behaves like `keyStrokes()`, but the key events are posted from a background task, so
+JavaScript execution and the rest of Hammerspoon continue running while typing proceeds.
+     * @param text The string to type
+     * @returns A Promise that resolves once every character has been posted.
+     */
+    function keyStrokesAsync(text: string): Promise<void>;
 
     /**
      * Post a left mouse button click at the given position.

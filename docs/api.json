@@ -6105,8 +6105,8 @@
           "name": "keyStrokes",
           "signature": "func keyStrokes(_ text: String)",
           "isStatic": false,
-          "rawDocumentation": "Type a string of characters as individual key events.\n\nA 5 ms pause is inserted between each key-down and key-up event.\n\n- Parameter text: The string to type\n- Example:\n```js\nhs.eventtap.keyStrokes(\"Hello, World!\")\n```",
-          "description": "Type a string of characters as individual key events.\nA 5 ms pause is inserted between each key-down and key-up event.",
+          "rawDocumentation": "Type a string of characters as individual key events.\n\nA 5 ms pause is inserted between each key-down and key-up event. This blocks the\ncalling thread (the main thread) for the duration of typing — for long strings,\nprefer `keyStrokesAsync()` to avoid stalling the rest of Hammerspoon while typing.\n\n- Parameter text: The string to type\n- Example:\n```js\nhs.eventtap.keyStrokes(\"Hello, World!\")\n```",
+          "description": "Type a string of characters as individual key events.\nA 5 ms pause is inserted between each key-down and key-up event. This blocks the\ncalling thread (the main thread) for the duration of typing — for long strings,\nprefer `keyStrokesAsync()` to avoid stalling the rest of Hammerspoon while typing.",
           "params": [
             {
               "name": "text",
@@ -6126,7 +6126,38 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 236
+          "lineNumber": 238
+        },
+        {
+          "name": "keyStrokesAsync",
+          "signature": "func keyStrokesAsync(_ text: String) -> JSPromise?",
+          "isStatic": false,
+          "rawDocumentation": "Type a string of characters as individual key events, without blocking the main thread.\n\nBehaves like `keyStrokes()`, but the key events are posted from a background task, so\nJavaScript execution and the rest of Hammerspoon continue running while typing proceeds.\n\n- Parameter text: The string to type\n- Returns: {Promise<void>} A Promise that resolves once every character has been posted.\n- Example:\n```js\nawait hs.eventtap.keyStrokesAsync(\"Hello, World!\")\nconsole.log(\"Finished typing\")\n```",
+          "description": "Type a string of characters as individual key events, without blocking the main thread.\nBehaves like `keyStrokes()`, but the key events are posted from a background task, so\nJavaScript execution and the rest of Hammerspoon continue running while typing proceeds.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string",
+              "description": "The string to type",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "JSPromise",
+            "description": "A Promise that resolves once every character has been posted.",
+            "promiseType": "void"
+          },
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "await hs.eventtap.keyStrokesAsync(\"Hello, World!\")\nconsole.log(\"Finished typing\")"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
+          "lineNumber": 252
         },
         {
           "name": "leftClick",
@@ -6160,7 +6191,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 249
+          "lineNumber": 265
         },
         {
           "name": "rightClick",
@@ -6194,7 +6225,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 262
+          "lineNumber": 278
         },
         {
           "name": "doubleLeftClick",
@@ -6228,7 +6259,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 275
+          "lineNumber": 291
         },
         {
           "name": "middleClick",
@@ -6262,7 +6293,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 288
+          "lineNumber": 304
         },
         {
           "name": "scrollWheel",
@@ -6310,7 +6341,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 303
+          "lineNumber": 319
         },
         {
           "name": "currentModifiers",
@@ -6332,7 +6363,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 314
+          "lineNumber": 330
         },
         {
           "name": "checkMouseButtons",
@@ -6354,7 +6385,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 323
+          "lineNumber": 339
         },
         {
           "name": "mouseLocation",
@@ -6376,7 +6407,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 333
+          "lineNumber": 349
         },
         {
           "name": "doubleClickInterval",
@@ -6398,7 +6429,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 341
+          "lineNumber": 357
         },
         {
           "name": "keyRepeatDelay",
@@ -6420,7 +6451,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 349
+          "lineNumber": 365
         },
         {
           "name": "keyRepeatInterval",
@@ -6442,7 +6473,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 357
+          "lineNumber": 373
         },
         {
           "name": "bindHotkey",
@@ -6493,7 +6524,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 392
+          "lineNumber": 408
         },
         {
           "name": "removeHotkey",
@@ -6520,7 +6551,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.eventtap/HSEventTapModule.swift",
-          "lineNumber": 401
+          "lineNumber": 417
         }
       ],
       "properties": [
@@ -27476,5 +27507,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-07T20:24:59.080Z"
+  "generatedAt": "2026-09-08T12:43:26.370Z"
 }
