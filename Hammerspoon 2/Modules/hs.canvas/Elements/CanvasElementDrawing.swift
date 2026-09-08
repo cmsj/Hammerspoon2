@@ -252,36 +252,49 @@ enum CanvasElementDrawing {
         return CGPoint(x: center.x + radius * cos(radians), y: center.y + radius * sin(radians))
     }
 
+    /// Renders text by rasterizing it with AppKit (`NSAttributedString.draw(in:withAttributes:)`)
+    /// into an offscreen image, then drawing that image into the `GraphicsContext` -- rather
+    /// than resolving a SwiftUI `Text` and drawing it directly.
+    ///
+    /// This exists because `textAlignment`/`textLineBreak` need `NSParagraphStyle`, and
+    /// SwiftUI has no path to that: `Text.multilineTextAlignment`/`.truncationMode` are
+    /// declared only as `View` extensions (they work by setting an environment value), and
+    /// `GraphicsContext.draw` only accepts a concrete `Text`, not `some View` -- there's no
+    /// way to get an environment value onto a bare `Text` before resolving it. Rasterizing
+    /// through AppKit sidesteps that entirely and gets full v1 parity (including `justified`
+    /// alignment and `clip`/`charWrap` line-break modes, which have no SwiftUI equivalent at
+    /// all) for less code than approximating it.
     static func drawText(_ element: [String: Any], into context: GraphicsContext, containerSize: CGSize) {
         guard let string = element["text"] as? String else { return }
         let rect = resolveFrame(element["frame"], containerSize: containerSize)
             ?? CGRect(origin: .zero, size: containerSize)
-        let size = (element["textSize"] as? NSNumber)?.doubleValue ?? 27.0
-        let color = parseColor(element["textColor"]) ?? .black
+        guard rect.width > 0, rect.height > 0 else { return }
 
-        var font: Font
-        if let fontName = element["textFont"] as? String {
-            if NSFont(name: fontName, size: size) == nil {
-                AKWarning("hs.canvas: textFont \"\(fontName)\" is not an installed font name, falling back to the system font")
-            }
-            font = Font.custom(fontName, fixedSize: CGFloat(size))
-        } else {
-            let weight = parseTextWeight(element["textWeight"]) ?? .regular
-            let design = parseTextDesign(element["textDesign"]) ?? .default
-            font = Font.system(size: CGFloat(size), weight: weight, design: design)
-        }
-        if (element["textItalic"] as? NSNumber)?.boolValue ?? false {
-            font = font.italic()
-        }
+        let font = resolvedNSFont(for: element)
+        let color = NSColor(parseColor(element["textColor"]) ?? .black)
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = nsTextAlignment(element["textAlignment"]) ?? .natural
+        paragraphStyle.lineBreakMode = nsLineBreakMode(element["textLineBreak"]) ?? .byWordWrapping
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paragraphStyle,
+        ]
 
-        let resolved = Text(string).font(font).foregroundColor(color)
+        // `flipped: true` matches every other element's y-down frame convention (see the
+        // module-level coordinate systems doc) -- text draws top-down starting at the rect's
+        // visual top, not AppKit's unflipped bottom-left origin.
+        let image = NSImage(size: rect.size, flipped: true) { imageRect in
+            (string as NSString).draw(in: imageRect, withAttributes: attributes)
+            return true
+        }
 
         var textContext = context
         let transform = elementTransform(element: element, pivotRect: rect, containerSize: containerSize)
         if !transform.isIdentity {
             textContext.concatenate(transform)
         }
-        textContext.draw(resolved, in: rect)
+        textContext.draw(Image(nsImage: image), in: rect)
     }
 
     static func drawImage(_ element: [String: Any], into context: GraphicsContext, containerSize: CGSize) {
@@ -362,32 +375,6 @@ enum CanvasElementDrawing {
         return Color(.sRGB, red: r, green: g, blue: b, opacity: a)
     }
 
-    static func parseTextWeight(_ raw: Any?) -> Font.Weight? {
-        guard let weight = raw as? String else { return nil }
-        switch weight {
-        case "black": return .black
-        case "bold": return .bold
-        case "heavy": return .heavy
-        case "light": return .light
-        case "medium": return .medium
-        case "regular": return .regular
-        case "semibold": return .semibold
-        case "thin": return .thin
-        case "ultraLight": return .ultraLight
-        default: return nil
-        }
-    }
-
-    static func parseTextDesign(_ raw: Any?) -> Font.Design? {
-        guard let design = raw as? String else { return nil }
-        switch design {
-        case "monospaced": return .monospaced
-        case "rounded": return .rounded
-        case "serif": return .serif
-        default: return nil
-        }
-    }
-
     // MARK: - Text measurement
 
     static func nsFontWeight(_ raw: Any?) -> NSFont.Weight? {
@@ -416,15 +403,45 @@ enum CanvasElementDrawing {
         }
     }
 
+    static func nsTextAlignment(_ raw: Any?) -> NSTextAlignment? {
+        guard let alignment = raw as? String else { return nil }
+        switch alignment {
+        case "left": return .left
+        case "right": return .right
+        case "center": return .center
+        case "justified": return .justified
+        case "natural": return .natural
+        default: return nil
+        }
+    }
+
+    static func nsLineBreakMode(_ raw: Any?) -> NSLineBreakMode? {
+        guard let wrap = raw as? String else { return nil }
+        switch wrap {
+        case "wordWrap": return .byWordWrapping
+        case "charWrap": return .byCharWrapping
+        case "clip": return .byClipping
+        case "truncateHead": return .byTruncatingHead
+        case "truncateMiddle": return .byTruncatingMiddle
+        case "truncateTail": return .byTruncatingTail
+        default: return nil
+        }
+    }
+
     /// Builds the `NSFont` a text element's `textFont`/`textSize`/`textWeight`/`textDesign`/
-    /// `textItalic` keys would resolve to -- the `NSFont` counterpart to `drawText`'s `Font`
-    /// resolution, needed because `NSString.size(withAttributes:)` (unlike SwiftUI) has no
-    /// text-measurement API that takes a `Font` directly.
+    /// `textItalic` keys resolve to. Used both to actually render the text (`drawText`) and
+    /// to measure it (`minimumTextSize`), so an unresolvable `textFont` name only needs to be
+    /// warned about in one place.
     static func resolvedNSFont(for element: [String: Any]) -> NSFont {
         let size = (element["textSize"] as? NSNumber)?.doubleValue ?? 27.0
         var font: NSFont
         if let fontName = element["textFont"] as? String {
-            font = NSFont(name: fontName, size: size) ?? .systemFont(ofSize: size)
+            if let named = NSFont(name: fontName, size: size) {
+                font = named
+            } else {
+                AKWarning("hs.canvas: textFont \"\(fontName)\" is not an installed font name, falling back to the system font")
+                font = .systemFont(ofSize: size)
+            }
         } else {
             let weight = nsFontWeight(element["textWeight"]) ?? .regular
             font = .systemFont(ofSize: size, weight: weight)

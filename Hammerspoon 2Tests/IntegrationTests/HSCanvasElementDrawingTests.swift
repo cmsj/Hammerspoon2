@@ -140,28 +140,51 @@ struct HSCanvasElementDrawingTests {
 
     // MARK: - Text font/weight/design
 
-    @Test("parseTextWeight maps every named weight and falls back to nil for unknown/nil")
-    func parseTextWeightMapping() {
-        #expect(CanvasElementDrawing.parseTextWeight("black") == .black)
-        #expect(CanvasElementDrawing.parseTextWeight("bold") == .bold)
-        #expect(CanvasElementDrawing.parseTextWeight("heavy") == .heavy)
-        #expect(CanvasElementDrawing.parseTextWeight("light") == .light)
-        #expect(CanvasElementDrawing.parseTextWeight("medium") == .medium)
-        #expect(CanvasElementDrawing.parseTextWeight("regular") == .regular)
-        #expect(CanvasElementDrawing.parseTextWeight("semibold") == .semibold)
-        #expect(CanvasElementDrawing.parseTextWeight("thin") == .thin)
-        #expect(CanvasElementDrawing.parseTextWeight("ultraLight") == .ultraLight)
-        #expect(CanvasElementDrawing.parseTextWeight("nonsense") == nil)
-        #expect(CanvasElementDrawing.parseTextWeight(nil) == nil)
+    @Test("nsFontWeight maps every named weight and falls back to nil for unknown/nil")
+    func nsFontWeightMapping() {
+        #expect(CanvasElementDrawing.nsFontWeight("black") == .black)
+        #expect(CanvasElementDrawing.nsFontWeight("bold") == .bold)
+        #expect(CanvasElementDrawing.nsFontWeight("heavy") == .heavy)
+        #expect(CanvasElementDrawing.nsFontWeight("light") == .light)
+        #expect(CanvasElementDrawing.nsFontWeight("medium") == .medium)
+        #expect(CanvasElementDrawing.nsFontWeight("regular") == .regular)
+        #expect(CanvasElementDrawing.nsFontWeight("semibold") == .semibold)
+        #expect(CanvasElementDrawing.nsFontWeight("thin") == .thin)
+        #expect(CanvasElementDrawing.nsFontWeight("ultraLight") == .ultraLight)
+        #expect(CanvasElementDrawing.nsFontWeight("nonsense") == nil)
+        #expect(CanvasElementDrawing.nsFontWeight(nil) == nil)
     }
 
-    @Test("parseTextDesign maps every named design and falls back to nil for unknown/nil")
-    func parseTextDesignMapping() {
-        #expect(CanvasElementDrawing.parseTextDesign("monospaced") == .monospaced)
-        #expect(CanvasElementDrawing.parseTextDesign("rounded") == .rounded)
-        #expect(CanvasElementDrawing.parseTextDesign("serif") == .serif)
-        #expect(CanvasElementDrawing.parseTextDesign("nonsense") == nil)
-        #expect(CanvasElementDrawing.parseTextDesign(nil) == nil)
+    @Test("nsFontDesign maps every named design and falls back to nil for unknown/nil")
+    func nsFontDesignMapping() {
+        #expect(CanvasElementDrawing.nsFontDesign("monospaced") == .monospaced)
+        #expect(CanvasElementDrawing.nsFontDesign("rounded") == .rounded)
+        #expect(CanvasElementDrawing.nsFontDesign("serif") == .serif)
+        #expect(CanvasElementDrawing.nsFontDesign("nonsense") == nil)
+        #expect(CanvasElementDrawing.nsFontDesign(nil) == nil)
+    }
+
+    @Test("nsTextAlignment maps every named alignment and falls back to nil for unknown/nil")
+    func nsTextAlignmentMapping() {
+        #expect(CanvasElementDrawing.nsTextAlignment("left") == .left)
+        #expect(CanvasElementDrawing.nsTextAlignment("right") == .right)
+        #expect(CanvasElementDrawing.nsTextAlignment("center") == .center)
+        #expect(CanvasElementDrawing.nsTextAlignment("justified") == .justified)
+        #expect(CanvasElementDrawing.nsTextAlignment("natural") == .natural)
+        #expect(CanvasElementDrawing.nsTextAlignment("nonsense") == nil)
+        #expect(CanvasElementDrawing.nsTextAlignment(nil) == nil)
+    }
+
+    @Test("nsLineBreakMode maps every named mode and falls back to nil for unknown/nil")
+    func nsLineBreakModeMapping() {
+        #expect(CanvasElementDrawing.nsLineBreakMode("wordWrap") == .byWordWrapping)
+        #expect(CanvasElementDrawing.nsLineBreakMode("charWrap") == .byCharWrapping)
+        #expect(CanvasElementDrawing.nsLineBreakMode("clip") == .byClipping)
+        #expect(CanvasElementDrawing.nsLineBreakMode("truncateHead") == .byTruncatingHead)
+        #expect(CanvasElementDrawing.nsLineBreakMode("truncateMiddle") == .byTruncatingMiddle)
+        #expect(CanvasElementDrawing.nsLineBreakMode("truncateTail") == .byTruncatingTail)
+        #expect(CanvasElementDrawing.nsLineBreakMode("nonsense") == nil)
+        #expect(CanvasElementDrawing.nsLineBreakMode(nil) == nil)
     }
 
     @Test("minimumTextSize measures a multi-line string taller than the same text on one line")
