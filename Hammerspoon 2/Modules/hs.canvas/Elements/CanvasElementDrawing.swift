@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import AppKit
 import SwiftUI
 
 /// Translates v1-style canvas element dictionaries into SwiftUI `GraphicsContext` drawing
@@ -258,13 +259,19 @@ enum CanvasElementDrawing {
         let size = (element["textSize"] as? NSNumber)?.doubleValue ?? 27.0
         let color = parseColor(element["textColor"]) ?? .black
 
-        let font: Font
-        if let fontName = element["font"] as? String {
+        var font: Font
+        if let fontName = element["textFont"] as? String {
+            if NSFont(name: fontName, size: size) == nil {
+                AKWarning("hs.canvas: textFont \"\(fontName)\" is not an installed font name, falling back to the system font")
+            }
             font = Font.custom(fontName, fixedSize: CGFloat(size))
         } else {
             let weight = parseTextWeight(element["textWeight"]) ?? .regular
             let design = parseTextDesign(element["textDesign"]) ?? .default
             font = Font.system(size: CGFloat(size), weight: weight, design: design)
+        }
+        if (element["textItalic"] as? NSNumber)?.boolValue ?? false {
+            font = font.italic()
         }
 
         let resolved = Text(string).font(font).foregroundColor(color)

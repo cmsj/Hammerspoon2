@@ -138,6 +138,32 @@ struct HSCanvasElementDrawingTests {
         #expect(CanvasElementDrawing.blendMode(for: nil) == .normal)
     }
 
+    // MARK: - Text font/weight/design
+
+    @Test("parseTextWeight maps every named weight and falls back to nil for unknown/nil")
+    func parseTextWeightMapping() {
+        #expect(CanvasElementDrawing.parseTextWeight("black") == .black)
+        #expect(CanvasElementDrawing.parseTextWeight("bold") == .bold)
+        #expect(CanvasElementDrawing.parseTextWeight("heavy") == .heavy)
+        #expect(CanvasElementDrawing.parseTextWeight("light") == .light)
+        #expect(CanvasElementDrawing.parseTextWeight("medium") == .medium)
+        #expect(CanvasElementDrawing.parseTextWeight("regular") == .regular)
+        #expect(CanvasElementDrawing.parseTextWeight("semibold") == .semibold)
+        #expect(CanvasElementDrawing.parseTextWeight("thin") == .thin)
+        #expect(CanvasElementDrawing.parseTextWeight("ultraLight") == .ultraLight)
+        #expect(CanvasElementDrawing.parseTextWeight("nonsense") == nil)
+        #expect(CanvasElementDrawing.parseTextWeight(nil) == nil)
+    }
+
+    @Test("parseTextDesign maps every named design and falls back to nil for unknown/nil")
+    func parseTextDesignMapping() {
+        #expect(CanvasElementDrawing.parseTextDesign("monospaced") == .monospaced)
+        #expect(CanvasElementDrawing.parseTextDesign("rounded") == .rounded)
+        #expect(CanvasElementDrawing.parseTextDesign("serif") == .serif)
+        #expect(CanvasElementDrawing.parseTextDesign("nonsense") == nil)
+        #expect(CanvasElementDrawing.parseTextDesign(nil) == nil)
+    }
+
     // MARK: - Mouse-tracking hit-testing
 
     @Test("trackedElements only includes elements with a trackMouse* flag set")
