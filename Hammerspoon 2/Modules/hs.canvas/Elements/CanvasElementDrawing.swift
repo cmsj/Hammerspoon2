@@ -257,7 +257,17 @@ enum CanvasElementDrawing {
             ?? CGRect(origin: .zero, size: containerSize)
         let size = (element["textSize"] as? NSNumber)?.doubleValue ?? 27.0
         let color = parseColor(element["textColor"]) ?? .black
-        let resolved = Text(string).font(.system(size: CGFloat(size))).foregroundColor(color)
+
+        let font: Font
+        if let fontName = element["font"] as? String {
+            font = Font.custom(fontName, fixedSize: CGFloat(size))
+        } else {
+            let weight = parseTextWeight(element["textWeight"]) ?? .regular
+            let design = parseTextDesign(element["textDesign"]) ?? .default
+            font = Font.system(size: CGFloat(size), weight: weight, design: design)
+        }
+
+        let resolved = Text(string).font(font).foregroundColor(color)
 
         var textContext = context
         let transform = elementTransform(element: element, pivotRect: rect, containerSize: containerSize)
@@ -343,6 +353,32 @@ enum CanvasElementDrawing {
         let b = (dict["blue"] as? NSNumber)?.doubleValue ?? 0
         let a = (dict["alpha"] as? NSNumber)?.doubleValue ?? 1
         return Color(.sRGB, red: r, green: g, blue: b, opacity: a)
+    }
+
+    static func parseTextWeight(_ raw: Any?) -> Font.Weight? {
+        guard let weight = raw as? String else { return nil }
+        switch weight {
+        case "black": return .black
+        case "bold": return .bold
+        case "heavy": return .heavy
+        case "light": return .light
+        case "medium": return .medium
+        case "regular": return .regular
+        case "semibold": return .semibold
+        case "thin": return .thin
+        case "ultraLight": return .ultraLight
+        default: return nil
+        }
+    }
+
+    static func parseTextDesign(_ raw: Any?) -> Font.Design? {
+        guard let design = raw as? String else { return nil }
+        switch design {
+        case "monospaced": return .monospaced
+        case "rounded": return .rounded
+        case "serif": return .serif
+        default: return nil
+        }
     }
 
     // MARK: - Gradients
