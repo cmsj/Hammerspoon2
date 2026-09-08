@@ -66,6 +66,9 @@
             ReferencedContainer = "container:Hammerspoon 2.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <MetalAPIValidationSettings
+         isEnabled = "No">
+      </MetalAPIValidationSettings>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
