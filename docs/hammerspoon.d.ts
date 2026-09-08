@@ -2294,6 +2294,18 @@ Lua table values.
     elementBounds(index: number): object;
 
     /**
+     * The smallest size that can fully render a string of text, using a text element's
+font attributes (`textFont`/`textSize`/`textWeight`/`textDesign`/`textItalic`)
+Mirrors v1's `hs.canvas:minimumTextSize()`. Multi-line strings (separated by `\n`)
+are measured correctly -- the height covers every line and the width is the longest
+line's width, not a fixed single-line size.
+     * @param index The index of a text element in the canvas whose font attributes to measure with
+     * @param text The string to measure -- it doesn't need to match the element's own `text`
+     * @returns A `{w, h}` dictionary, or `{}` if `index` is out of bounds
+     */
+    minimumTextSize(index: number, text: string): object;
+
+    /**
      * Set the callback fired for tracked mouse events
 Fires for elements with `trackMouseDown`/`trackMouseUp`/`trackMouseEnterExit`/
 `trackMouseMove` set to `true` in their element dictionary, and for whole-canvas

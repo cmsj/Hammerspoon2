@@ -254,6 +254,24 @@ import SwiftUI
     /// - Returns: {object} A `{x, y, w, h}` dictionary
     @objc func elementBounds(_ index: Int) -> [String: Any]
 
+    /// The smallest size that can fully render a string of text, using a text element's
+    /// font attributes (`textFont`/`textSize`/`textWeight`/`textDesign`/`textItalic`)
+    ///
+    /// Mirrors v1's `hs.canvas:minimumTextSize()`. Multi-line strings (separated by `\n`)
+    /// are measured correctly -- the height covers every line and the width is the longest
+    /// line's width, not a fixed single-line size.
+    /// - Parameters:
+    ///   - index: The index of a text element in the canvas whose font attributes to measure with
+    ///   - text: The string to measure -- it doesn't need to match the element's own `text`
+    /// - Returns: {object} A `{w, h}` dictionary, or `{}` if `index` is out of bounds
+    /// - Example:
+    /// ```js
+    /// c.appendElements([{ type: "text", text: "placeholder", textFont: "Menlo-Bold", textSize: 24 }])
+    /// const size = c.minimumTextSize(0, "Hello\nWorld")
+    /// c.setElementAttribute(0, "frame", { x: 10, y: 10, w: size.w, h: size.h })
+    /// ```
+    @objc func minimumTextSize(_ index: Int, _ text: String) -> [String: Any]
+
     // MARK: Mouse interaction
 
     /// Set the callback fired for tracked mouse events
@@ -700,6 +718,12 @@ import SwiftUI
         }
         let rect = path.boundingRect
         return ["x": rect.origin.x, "y": rect.origin.y, "w": rect.size.width, "h": rect.size.height]
+    }
+
+    @objc func minimumTextSize(_ index: Int, _ text: String) -> [String: Any] {
+        guard index >= 0 && index < elementStore.elements.count else { return [:] }
+        let size = CanvasElementDrawing.minimumTextSize(text: text, element: elementStore.elements[index])
+        return ["w": size.width, "h": size.height]
     }
 
     // MARK: - Mouse interaction

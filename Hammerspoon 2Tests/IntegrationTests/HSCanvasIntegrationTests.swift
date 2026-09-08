@@ -401,6 +401,45 @@ struct HSCanvasTests {
             harness.expectEqual("after.x", 50)
             harness.expectEqual("after.y", 50)
         }
+
+        @Test("minimumTextSize() returns a numeric size for a text element's font attributes")
+        func minimumTextSize() {
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create({x: 0, y: 0, w: 200, h: 200})
+                c.appendElements([{ type: "text", text: "placeholder", textSize: 24 }])
+                var size = c.minimumTextSize(0, "Hammerspoon")
+                """)
+            #expect(!harness.hasException)
+            #expect(harness.evalTypeOf("size.w") == "number")
+            #expect(harness.evalTypeOf("size.h") == "number")
+        }
+
+        @Test("minimumTextSize() measures multi-line text taller than the same text on one line")
+        func minimumTextSizeMultiLine() {
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create({x: 0, y: 0, w: 200, h: 200})
+                c.appendElements([{ type: "text", text: "placeholder", textSize: 24 }])
+                var oneLine = c.minimumTextSize(0, "Hammerspoon")
+                var twoLines = c.minimumTextSize(0, "Hammer\\nspoon")
+                var tallerWhenWrapped = twoLines.h > oneLine.h
+                """)
+            #expect(!harness.hasException)
+            harness.expectEqual("tallerWhenWrapped", true)
+        }
+
+        @Test("minimumTextSize() returns an empty object for an out-of-bounds index")
+        func minimumTextSizeOutOfBounds() {
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create({x: 0, y: 0, w: 200, h: 200})
+                var size = c.minimumTextSize(0, "Hammerspoon")
+                var keyCount = Object.keys(size).length
+                """)
+            #expect(!harness.hasException)
+            harness.expectEqual("keyCount", 0)
+        }
     }
 
     // MARK: - Mouse interaction, transforms, and full-parity extras (M4/M5)

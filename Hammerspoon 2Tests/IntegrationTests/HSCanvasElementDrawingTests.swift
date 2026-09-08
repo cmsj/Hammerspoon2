@@ -164,6 +164,36 @@ struct HSCanvasElementDrawingTests {
         #expect(CanvasElementDrawing.parseTextDesign(nil) == nil)
     }
 
+    @Test("minimumTextSize measures a multi-line string taller than the same text on one line")
+    func minimumTextSizeMultiLineIsTaller() {
+        let element: [String: Any] = ["textSize": 24]
+        let oneLine = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: element)
+        let twoLines = CanvasElementDrawing.minimumTextSize(text: "Hammer\nspoon", element: element)
+        #expect(twoLines.height > oneLine.height)
+    }
+
+    @Test("minimumTextSize scales with textSize")
+    func minimumTextSizeScalesWithTextSize() {
+        let small = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 12])
+        let large = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 48])
+        #expect(large.width > small.width)
+        #expect(large.height > small.height)
+    }
+
+    @Test("minimumTextSize measures a bold weight wider than regular for the same string")
+    func minimumTextSizeWeightAffectsWidth() {
+        let regular = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 24, "textWeight": "regular"])
+        let bold = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 24, "textWeight": "black"])
+        #expect(bold.width > regular.width)
+    }
+
+    @Test("minimumTextSize falls back to the system font size for an unresolvable textFont")
+    func minimumTextSizeFallsBackForUnresolvableFont() {
+        let size = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 24, "textFont": "Definitely Not An Installed Font Name"])
+        #expect(size.width > 0)
+        #expect(size.height > 0)
+    }
+
     // MARK: - Mouse-tracking hit-testing
 
     @Test("trackedElements only includes elements with a trackMouse* flag set")

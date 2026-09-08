@@ -388,6 +388,67 @@ enum CanvasElementDrawing {
         }
     }
 
+    // MARK: - Text measurement
+
+    static func nsFontWeight(_ raw: Any?) -> NSFont.Weight? {
+        guard let weight = raw as? String else { return nil }
+        switch weight {
+        case "black": return .black
+        case "bold": return .bold
+        case "heavy": return .heavy
+        case "light": return .light
+        case "medium": return .medium
+        case "regular": return .regular
+        case "semibold": return .semibold
+        case "thin": return .thin
+        case "ultraLight": return .ultraLight
+        default: return nil
+        }
+    }
+
+    static func nsFontDesign(_ raw: Any?) -> NSFontDescriptor.SystemDesign? {
+        guard let design = raw as? String else { return nil }
+        switch design {
+        case "monospaced": return .monospaced
+        case "rounded": return .rounded
+        case "serif": return .serif
+        default: return nil
+        }
+    }
+
+    /// Builds the `NSFont` a text element's `textFont`/`textSize`/`textWeight`/`textDesign`/
+    /// `textItalic` keys would resolve to -- the `NSFont` counterpart to `drawText`'s `Font`
+    /// resolution, needed because `NSString.size(withAttributes:)` (unlike SwiftUI) has no
+    /// text-measurement API that takes a `Font` directly.
+    static func resolvedNSFont(for element: [String: Any]) -> NSFont {
+        let size = (element["textSize"] as? NSNumber)?.doubleValue ?? 27.0
+        var font: NSFont
+        if let fontName = element["textFont"] as? String {
+            font = NSFont(name: fontName, size: size) ?? .systemFont(ofSize: size)
+        } else {
+            let weight = nsFontWeight(element["textWeight"]) ?? .regular
+            font = .systemFont(ofSize: size, weight: weight)
+            if let design = nsFontDesign(element["textDesign"]), let descriptor = font.fontDescriptor.withDesign(design) {
+                font = NSFont(descriptor: descriptor, size: size) ?? font
+            }
+        }
+        if (element["textItalic"] as? NSNumber)?.boolValue ?? false {
+            let italicDescriptor = font.fontDescriptor.withSymbolicTraits(.italic)
+            font = NSFont(descriptor: italicDescriptor, size: size) ?? font
+        }
+        return font
+    }
+
+    /// Measures the minimum size needed to fully render `text` using an element's font
+    /// attributes, mirroring v1's `hs.canvas:minimumTextSize()` (which used
+    /// `NSString.sizeWithAttributes()` under the hood). Multi-line strings (separated by
+    /// `\n`) are measured correctly for free -- `size(withAttributes:)` sizes each explicit
+    /// line and returns the tallest/widest combination, it isn't a fixed single-line size.
+    static func minimumTextSize(text: String, element: [String: Any]) -> CGSize {
+        let font = resolvedNSFont(for: element)
+        return (text as NSString).size(withAttributes: [.font: font])
+    }
+
     // MARK: - Gradients
 
     /// Builds a `GraphicsContext.Shading` from `fillGradient`/`fillGradientColors`/
