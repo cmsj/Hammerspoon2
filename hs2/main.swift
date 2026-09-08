@@ -71,6 +71,24 @@ private nonisolated final class HSIPCLogDelegate: NSObject, HSIPCClientProtocol 
     }
 }
 
+// Returns a code-signing requirement string that matches any binary signed with
+// the same Team ID as this process. Used with setConnectionCodeSigningRequirement.
+private nonisolated func peerSigningRequirement() -> String? {
+    var selfCode: SecCode?
+    guard unsafe SecCodeCopySelf([], &selfCode) == errSecSuccess, let selfCode else { return nil }
+
+    var selfStatic: SecStaticCode?
+    guard unsafe SecCodeCopyStaticCode(selfCode, [], &selfStatic) == errSecSuccess,
+          let selfStatic else { return nil }
+
+    var info: CFDictionary?
+    guard unsafe SecCodeCopySigningInformation(selfStatic, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+          let teamID = (info as? [String: Any])?[kSecCodeInfoTeamIdentifier as String] as? String,
+          !teamID.isEmpty else { return nil }
+
+    return "anchor apple generic and certificate leaf[subject.OU] = \"\(teamID)\""
+}
+
 // MARK: - IPC client actor
 //
 // Wraps NSXPCConnection in an actor so the connection is always accessed from the
@@ -81,11 +99,17 @@ private actor HSIPCClient {
     private let connection: NSXPCConnection
 
     init() {
-        // FIXME: Add peer validation (same-team signature check)
         let c = NSXPCConnection(machServiceName: "net.tenshu.Hammerspoon-2.ipc")
         c.remoteObjectInterface = NSXPCInterface(with: HSIPCServerProtocol.self)
         c.exportedInterface = NSXPCInterface(with: HSIPCClientProtocol.self)
         c.exportedObject = HSIPCLogDelegate()
+#if !DEBUG
+        guard let requirement = peerSigningRequirement() else {
+            writeStderr("Error: Unable to establish peer requirement\n")
+            exit(1)
+        }
+        c.setCodeSigningRequirement(requirement)
+#endif
         c.invalidationHandler = {
             writeStderr("Error: Connection to Hammerspoon 2 was lost.\n")
             exit(1)
