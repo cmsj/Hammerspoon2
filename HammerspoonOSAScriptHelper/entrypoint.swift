@@ -12,11 +12,13 @@ import OSLog
 @main
 extension HSOSAScriptXPCHelper {
     static func main() throws {
-        guard let _ = HSOSAScriptXPCHelper() else {
+        guard let helper = HSOSAScriptXPCHelper() else {
             print("FATAL: Unable to start XPCListener")
             exit(EXIT_FAILURE)
         }
-        dispatchMain()
+        withExtendedLifetime(helper) {
+            dispatchMain()
+        }
     }
 }
 
