@@ -9605,6 +9605,15 @@ declare namespace hs.window {
     function orderedWindows(): HSWindow[];
 
     /**
+     * Capture the current on-screen contents of the window with the given ID.
+Requires **Screen Recording** permission.
+     * @param id The window's underlying ID (see the `id` property on `hs.window` objects).
+     * @param keepTransparency Whether to preserve the window's alpha channel. If `false` (the default), transparent regions are filled with an opaque black background.
+     * @returns Resolves with the captured image, or rejects if no window with that ID can be found, or the capture fails.
+     */
+    function snapshotForID(id: number, keepTransparency?: boolean): Promise<HSImage>;
+
+    /**
      * Find windows by title
 Parameter title: The window title to search for. All windows with titles that include this string, will be matched
      * @param title The window title to search for. All windows with titles that include this string, will be matched
@@ -9689,6 +9698,14 @@ declare class HSWindow {
      * Center the window on the screen
      */
     centerOnScreen(): void;
+
+    /**
+     * Capture the current on-screen contents of this window as an image.
+Requires **Screen Recording** permission.
+     * @param keepTransparency Whether to preserve the window's alpha channel. If `false` (the default), transparent regions are filled with an opaque black background.
+     * @returns Resolves with the captured image, or rejects if the capture fails (e.g. permission denied, or the window could no longer be located).
+     */
+    snapshot(keepTransparency?: boolean): Promise<HSImage>;
 
     /**
      * Get the underlying AXElement
