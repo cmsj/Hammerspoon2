@@ -281,10 +281,23 @@ enum CanvasElementDrawing {
             .paragraphStyle: paragraphStyle,
         ]
 
+        // Rasterizing at the full frame size is wasteful when the text doesn't need it -- a
+        // text element with no `frame` of its own defaults to the entire canvas, so a single
+        // short status line would otherwise repaint a giant, mostly-empty offscreen bitmap on
+        // every redraw. If the text already fits on one line (or one physical line per
+        // explicit `\n`) within the frame's width, none of NSAttributedString's
+        // wrapping/truncation layout actually gets exercised, so it's safe to rasterize just
+        // the text's own natural size and position that within the frame ourselves instead --
+        // see `textImageSize`/`textImageOrigin`. Text that needs to wrap still uses the full
+        // frame, unchanged: shrinking that case safely needs real line-layout measurement,
+        // not just this fits-on-one-line check.
+        let naturalSize = (string as NSString).size(withAttributes: [.font: font])
+        let imageSize = textImageSize(naturalSize: naturalSize, frame: rect)
+
         // `flipped: true` matches every other element's y-down frame convention (see the
         // module-level coordinate systems doc) -- text draws top-down starting at the rect's
         // visual top, not AppKit's unflipped bottom-left origin.
-        let image = NSImage(size: rect.size, flipped: true) { imageRect in
+        let image = NSImage(size: imageSize, flipped: true) { imageRect in
             (string as NSString).draw(in: imageRect, withAttributes: attributes)
             return true
         }
@@ -294,7 +307,39 @@ enum CanvasElementDrawing {
         if !transform.isIdentity {
             textContext.concatenate(transform)
         }
-        textContext.draw(Image(nsImage: image), in: rect)
+        let origin = textImageOrigin(imageSize: imageSize, frame: rect, alignment: paragraphStyle.alignment)
+        textContext.draw(Image(nsImage: image), in: CGRect(origin: origin, size: imageSize))
+    }
+
+    /// The size to rasterize a text element's offscreen image at: the text's own natural size
+    /// (rounded up, height capped at the frame's height) if it fits within the frame's width
+    /// without needing to wrap, or the full frame size otherwise -- the safe fallback, since
+    /// correctly shrinking a WRAPPED render needs real line-layout measurement, not just this
+    /// fits-on-one-line check.
+    static func textImageSize(naturalSize: CGSize, frame: CGRect) -> CGSize {
+        guard naturalSize.width > 0, naturalSize.height > 0, naturalSize.width <= frame.width else {
+            return frame.size
+        }
+        return CGSize(width: ceil(naturalSize.width), height: min(ceil(naturalSize.height), frame.height))
+    }
+
+    /// Where to place a (possibly shrunk) text image within its frame, so the result is
+    /// pixel-identical to having drawn the full-size text directly into `frame`: always
+    /// top-anchored vertically (`NSAttributedString` always lays lines out top-down,
+    /// regardless of alignment or spare height), horizontally positioned per `alignment`.
+    /// Nesting a narrower alignment inside a wider one produces the same absolute position
+    /// as aligning directly against the full width, for all three cases (`center`: (frame.midX
+    /// - imageSize.width/2) equals centering the image itself, which already centers its own
+    /// content; `right`/`left`: edges stay flush either way) -- so this is exact, not an
+    /// approximation, whenever `imageSize.width` is smaller than `frame.width`.
+    static func textImageOrigin(imageSize: CGSize, frame: CGRect, alignment: NSTextAlignment) -> CGPoint {
+        let x: CGFloat
+        switch alignment {
+        case .right: x = frame.maxX - imageSize.width
+        case .center: x = frame.midX - imageSize.width / 2
+        default: x = frame.minX // .left, .natural, .justified
+        }
+        return CGPoint(x: x, y: frame.minY)
     }
 
     static func drawImage(_ element: [String: Any], into context: GraphicsContext, containerSize: CGSize) {

@@ -217,6 +217,38 @@ struct HSCanvasElementDrawingTests {
         #expect(size.height > 0)
     }
 
+    // MARK: - Text rasterization sizing (avoiding full-frame rasterization for short text)
+
+    @Test("textImageSize shrinks to the text's natural size when it fits the frame's width")
+    func textImageSizeShrinksWhenTextFits() {
+        // A huge frame (as a frame-less text element would default to on a large canvas)
+        // with a small natural size -- should rasterize at the natural size, not the frame.
+        let size = CanvasElementDrawing.textImageSize(naturalSize: CGSize(width: 80, height: 20), frame: CGRect(x: 0, y: 0, width: 1920, height: 1080))
+        #expect(size == CGSize(width: 80, height: 20))
+    }
+
+    @Test("textImageSize caps the shrunk height at the frame's own height")
+    func textImageSizeCapsHeightAtFrame() {
+        let size = CanvasElementDrawing.textImageSize(naturalSize: CGSize(width: 80, height: 500), frame: CGRect(x: 0, y: 0, width: 1920, height: 100))
+        #expect(size == CGSize(width: 80, height: 100))
+    }
+
+    @Test("textImageSize falls back to the full frame when the text needs to wrap")
+    func textImageSizeFallsBackWhenWiderThanFrame() {
+        let size = CanvasElementDrawing.textImageSize(naturalSize: CGSize(width: 500, height: 20), frame: CGRect(x: 0, y: 0, width: 200, height: 80))
+        #expect(size == CGSize(width: 200, height: 80))
+    }
+
+    @Test("textImageOrigin is always top-anchored, and positions per alignment")
+    func textImageOriginPositioning() {
+        let frame = CGRect(x: 10, y: 20, width: 200, height: 100)
+        let imageSize = CGSize(width: 50, height: 20)
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .left) == CGPoint(x: 10, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .center) == CGPoint(x: 85, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .right) == CGPoint(x: 160, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .natural) == CGPoint(x: 10, y: 20))
+    }
+
     // MARK: - Image scaling/alignment
 
     @Test("proportionalImageSize with scaleUp:true scales a small image up to fit")

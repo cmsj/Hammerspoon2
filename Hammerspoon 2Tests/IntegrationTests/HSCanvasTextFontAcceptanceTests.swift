@@ -193,4 +193,30 @@ struct HSCanvasTextFontAcceptanceTests {
 
         #expect(wrappedExtent > truncatedExtent, "wordWrap should spread overflowing text across multiple lines (more vertical extent) while truncateTail keeps it to one line")
     }
+
+    @Test("a frame-less text element (defaulting to the whole canvas) still aligns correctly, using the shrunk-rasterization fast path")
+    @MainActor
+    func frameLessTextStillAligns() throws {
+        // No "frame" key -- resolveFrame() falls back to the full container size, which is
+        // exactly the "text element without its own frame uses the entire canvas" case that
+        // motivated shrinking the rasterized image to the text's natural size rather than
+        // always rasterizing at the full (here, deliberately huge) frame.
+        func leftmostInkColumn(alignment: String) throws -> Int {
+            let element: [String: Any] = ["type": "text", "text": "Hi", "textSize": 32, "textColor": ["red": 1, "green": 1, "blue": 1, "alpha": 1], "textAlignment": alignment]
+            let bitmap = NSBitmapImageRep(cgImage: try render(element, size: CGSize(width: 900, height: 80)))
+            for x in 0..<bitmap.pixelsWide {
+                for y in 0..<bitmap.pixelsHigh where redChannel(bitmap, x: x, y: y) > 0.15 {
+                    return x
+                }
+            }
+            return -1
+        }
+
+        let leftX = try leftmostInkColumn(alignment: "left")
+        let rightX = try leftmostInkColumn(alignment: "right")
+        let centerX = try leftmostInkColumn(alignment: "center")
+
+        #expect(leftX >= 0 && rightX >= 0 && centerX >= 0, "should find ink for all three alignments")
+        #expect(rightX > centerX && centerX > leftX, "alignment should still be positioned relative to the whole (frame-less) canvas width, not just the shrunk text's own natural width")
+    }
 }
