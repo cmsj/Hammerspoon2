@@ -4922,6 +4922,43 @@
               "lineNumber": 255
             },
             {
+              "name": "minimumTextSize",
+              "signature": "func minimumTextSize(_ index: Int, _ text: String) -> [String: Any]",
+              "isStatic": false,
+              "rawDocumentation": "The smallest size that can fully render a string of text, using a text element's\nfont attributes (`textFont`/`textSize`/`textWeight`/`textDesign`/`textItalic`)\n\nMirrors v1's `hs.canvas:minimumTextSize()`. Multi-line strings (separated by `\\n`)\nare measured correctly -- the height covers every line and the width is the longest\nline's width, not a fixed single-line size.\n- Parameters:\n  - index: The index of a text element in the canvas whose font attributes to measure with\n  - text: The string to measure -- it doesn't need to match the element's own `text`\n- Returns: {object} A `{w, h}` dictionary, or `{}` if `index` is out of bounds\n- Example:\n```js\nc.appendElements([{ type: \"text\", text: \"placeholder\", textFont: \"Menlo-Bold\", textSize: 24 }])\nconst size = c.minimumTextSize(0, \"Hello\\nWorld\")\nc.setElementAttribute(0, \"frame\", { x: 10, y: 10, w: size.w, h: size.h })\n```",
+              "description": "The smallest size that can fully render a string of text, using a text element's\nfont attributes (`textFont`/`textSize`/`textWeight`/`textDesign`/`textItalic`)\nMirrors v1's `hs.canvas:minimumTextSize()`. Multi-line strings (separated by `\\n`)\nare measured correctly -- the height covers every line and the width is the longest\nline's width, not a fixed single-line size.",
+              "params": [
+                {
+                  "name": "index",
+                  "type": "number",
+                  "description": "The index of a text element in the canvas whose font attributes to measure with",
+                  "optional": false,
+                  "tsType": null
+                },
+                {
+                  "name": "text",
+                  "type": "string",
+                  "description": "The string to measure -- it doesn't need to match the element's own `text`",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "object",
+                "description": "A `{w, h}` dictionary, or `{}` if `index` is out of bounds"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "c.appendElements([{ type: \"text\", text: \"placeholder\", textFont: \"Menlo-Bold\", textSize: 24 }])\nconst size = c.minimumTextSize(0, \"Hello\\nWorld\")\nc.setElementAttribute(0, \"frame\", { x: 10, y: 10, w: size.w, h: size.h })"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
+              "lineNumber": 273
+            },
+            {
               "name": "mouseCallback",
               "signature": "func mouseCallback(_ callback: JSFunction) -> HSCanvas",
               "isStatic": false,
@@ -4949,7 +4986,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 271
+              "lineNumber": 289
             },
             {
               "name": "canvasMouseEvents",
@@ -4995,7 +5032,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 281
+              "lineNumber": 299
             },
             {
               "name": "rotateElement",
@@ -5027,7 +5064,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 290
+              "lineNumber": 308
             },
             {
               "name": "rotateElementAroundPoint",
@@ -5066,7 +5103,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 298
+              "lineNumber": 316
             },
             {
               "name": "setElementTransformation",
@@ -5098,7 +5135,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 305
+              "lineNumber": 323
             },
             {
               "name": "setTransformation",
@@ -5123,7 +5160,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 310
+              "lineNumber": 328
             },
             {
               "name": "clearTransformation",
@@ -5140,7 +5177,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 314
+              "lineNumber": 332
             },
             {
               "name": "imageFromCanvas",
@@ -5157,7 +5194,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 320
+              "lineNumber": 338
             },
             {
               "name": "duplicate",
@@ -5174,7 +5211,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 329
+              "lineNumber": 347
             },
             {
               "name": "setAccessibilitySubrole",
@@ -5199,7 +5236,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 336
+              "lineNumber": 354
             },
             {
               "name": "draggingCallback",
@@ -5224,7 +5261,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift",
-              "lineNumber": 343
+              "lineNumber": 361
             }
           ],
           "properties": []
@@ -27507,5 +27544,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-08T12:43:26.370Z"
+  "generatedAt": "2026-09-09T12:37:16.330Z"
 }

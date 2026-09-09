@@ -138,6 +138,196 @@ struct HSCanvasElementDrawingTests {
         #expect(CanvasElementDrawing.blendMode(for: nil) == .normal)
     }
 
+    // MARK: - Text font/weight/design
+
+    @Test("nsFontWeight maps every named weight and falls back to nil for unknown/nil")
+    func nsFontWeightMapping() {
+        #expect(CanvasElementDrawing.nsFontWeight("black") == .black)
+        #expect(CanvasElementDrawing.nsFontWeight("bold") == .bold)
+        #expect(CanvasElementDrawing.nsFontWeight("heavy") == .heavy)
+        #expect(CanvasElementDrawing.nsFontWeight("light") == .light)
+        #expect(CanvasElementDrawing.nsFontWeight("medium") == .medium)
+        #expect(CanvasElementDrawing.nsFontWeight("regular") == .regular)
+        #expect(CanvasElementDrawing.nsFontWeight("semibold") == .semibold)
+        #expect(CanvasElementDrawing.nsFontWeight("thin") == .thin)
+        #expect(CanvasElementDrawing.nsFontWeight("ultraLight") == .ultraLight)
+        #expect(CanvasElementDrawing.nsFontWeight("nonsense") == nil)
+        #expect(CanvasElementDrawing.nsFontWeight(nil) == nil)
+    }
+
+    @Test("nsFontDesign maps every named design and falls back to nil for unknown/nil")
+    func nsFontDesignMapping() {
+        #expect(CanvasElementDrawing.nsFontDesign("monospaced") == .monospaced)
+        #expect(CanvasElementDrawing.nsFontDesign("rounded") == .rounded)
+        #expect(CanvasElementDrawing.nsFontDesign("serif") == .serif)
+        #expect(CanvasElementDrawing.nsFontDesign("nonsense") == nil)
+        #expect(CanvasElementDrawing.nsFontDesign(nil) == nil)
+    }
+
+    @Test("nsTextAlignment maps every named alignment and falls back to nil for unknown/nil")
+    func nsTextAlignmentMapping() {
+        #expect(CanvasElementDrawing.nsTextAlignment("left") == .left)
+        #expect(CanvasElementDrawing.nsTextAlignment("right") == .right)
+        #expect(CanvasElementDrawing.nsTextAlignment("center") == .center)
+        #expect(CanvasElementDrawing.nsTextAlignment("justified") == .justified)
+        #expect(CanvasElementDrawing.nsTextAlignment("natural") == .natural)
+        #expect(CanvasElementDrawing.nsTextAlignment("nonsense") == nil)
+        #expect(CanvasElementDrawing.nsTextAlignment(nil) == nil)
+    }
+
+    @Test("nsLineBreakMode maps every named mode and falls back to nil for unknown/nil")
+    func nsLineBreakModeMapping() {
+        #expect(CanvasElementDrawing.nsLineBreakMode("wordWrap") == .byWordWrapping)
+        #expect(CanvasElementDrawing.nsLineBreakMode("charWrap") == .byCharWrapping)
+        #expect(CanvasElementDrawing.nsLineBreakMode("clip") == .byClipping)
+        #expect(CanvasElementDrawing.nsLineBreakMode("truncateHead") == .byTruncatingHead)
+        #expect(CanvasElementDrawing.nsLineBreakMode("truncateMiddle") == .byTruncatingMiddle)
+        #expect(CanvasElementDrawing.nsLineBreakMode("truncateTail") == .byTruncatingTail)
+        #expect(CanvasElementDrawing.nsLineBreakMode("nonsense") == nil)
+        #expect(CanvasElementDrawing.nsLineBreakMode(nil) == nil)
+    }
+
+    @Test("minimumTextSize measures a multi-line string taller than the same text on one line")
+    func minimumTextSizeMultiLineIsTaller() {
+        let element: [String: Any] = ["textSize": 24]
+        let oneLine = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: element)
+        let twoLines = CanvasElementDrawing.minimumTextSize(text: "Hammer\nspoon", element: element)
+        #expect(twoLines.height > oneLine.height)
+    }
+
+    @Test("minimumTextSize scales with textSize")
+    func minimumTextSizeScalesWithTextSize() {
+        let small = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 12])
+        let large = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 48])
+        #expect(large.width > small.width)
+        #expect(large.height > small.height)
+    }
+
+    @Test("minimumTextSize measures a bold weight wider than regular for the same string")
+    func minimumTextSizeWeightAffectsWidth() {
+        let regular = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 24, "textWeight": "regular"])
+        let bold = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 24, "textWeight": "black"])
+        #expect(bold.width > regular.width)
+    }
+
+    @Test("minimumTextSize falls back to the system font size for an unresolvable textFont")
+    func minimumTextSizeFallsBackForUnresolvableFont() {
+        let size = CanvasElementDrawing.minimumTextSize(text: "Hammerspoon", element: ["textSize": 24, "textFont": "Definitely Not An Installed Font Name"])
+        #expect(size.width > 0)
+        #expect(size.height > 0)
+    }
+
+    // MARK: - Text rasterization sizing (avoiding full-frame rasterization for short text)
+
+    @Test("textImageSize shrinks to the text's natural size when it fits the frame's width")
+    func textImageSizeShrinksWhenTextFits() {
+        // A huge frame (as a frame-less text element would default to on a large canvas)
+        // with a small natural size -- should rasterize at the natural size, not the frame.
+        let size = CanvasElementDrawing.textImageSize(naturalSize: CGSize(width: 80, height: 20), frame: CGRect(x: 0, y: 0, width: 1920, height: 1080))
+        #expect(size == CGSize(width: 80, height: 20))
+    }
+
+    @Test("textImageSize caps the shrunk height at the frame's own height")
+    func textImageSizeCapsHeightAtFrame() {
+        let size = CanvasElementDrawing.textImageSize(naturalSize: CGSize(width: 80, height: 500), frame: CGRect(x: 0, y: 0, width: 1920, height: 100))
+        #expect(size == CGSize(width: 80, height: 100))
+    }
+
+    @Test("textImageSize falls back to the full frame when the text needs to wrap")
+    func textImageSizeFallsBackWhenWiderThanFrame() {
+        let size = CanvasElementDrawing.textImageSize(naturalSize: CGSize(width: 500, height: 20), frame: CGRect(x: 0, y: 0, width: 200, height: 80))
+        #expect(size == CGSize(width: 200, height: 80))
+    }
+
+    @Test("textImageOrigin is always top-anchored, and positions per alignment")
+    func textImageOriginPositioning() {
+        let frame = CGRect(x: 10, y: 20, width: 200, height: 100)
+        let imageSize = CGSize(width: 50, height: 20)
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .left, isRightToLeft: false) == CGPoint(x: 10, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .center, isRightToLeft: false) == CGPoint(x: 85, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .right, isRightToLeft: false) == CGPoint(x: 160, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .natural, isRightToLeft: false) == CGPoint(x: 10, y: 20))
+    }
+
+    @Test("textImageOrigin resolves natural/justified alignment against the frame's right edge for right-to-left text")
+    func textImageOriginNaturalRTL() {
+        let frame = CGRect(x: 10, y: 20, width: 200, height: 100)
+        let imageSize = CGSize(width: 50, height: 20)
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .natural, isRightToLeft: true) == CGPoint(x: 160, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .justified, isRightToLeft: true) == CGPoint(x: 160, y: 20))
+        // .left/.right/.center are direction-independent -- isRightToLeft must not override them.
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .left, isRightToLeft: true) == CGPoint(x: 10, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .right, isRightToLeft: true) == CGPoint(x: 160, y: 20))
+    }
+
+    @Test("isRightToLeftText detects RTL scripts and treats LTR/empty strings as false")
+    func isRightToLeftTextDetection() {
+        #expect(CanvasElementDrawing.isRightToLeftText("שלום") == true)
+        #expect(CanvasElementDrawing.isRightToLeftText("مرحبا") == true)
+        #expect(CanvasElementDrawing.isRightToLeftText("Hello") == false)
+        #expect(CanvasElementDrawing.isRightToLeftText("") == false)
+    }
+
+    // MARK: - Image scaling/alignment
+
+    @Test("proportionalImageSize with scaleUp:true scales a small image up to fit")
+    func proportionalImageSizeScalesUp() {
+        let size = CanvasElementDrawing.proportionalImageSize(CGSize(width: 10, height: 10), fitting: CGSize(width: 100, height: 50), scaleUp: true)
+        #expect(size == CGSize(width: 50, height: 50))
+    }
+
+    @Test("proportionalImageSize with scaleUp:false leaves a small image at native size")
+    func proportionalImageSizeShrinkOnlyLeavesSmallImageAlone() {
+        let size = CanvasElementDrawing.proportionalImageSize(CGSize(width: 10, height: 10), fitting: CGSize(width: 100, height: 50), scaleUp: false)
+        #expect(size == CGSize(width: 10, height: 10))
+    }
+
+    @Test("proportionalImageSize shrinks a large image regardless of scaleUp")
+    func proportionalImageSizeShrinksLargeImage() {
+        let fitting = CGSize(width: 100, height: 50)
+        let scaleUpTrue = CanvasElementDrawing.proportionalImageSize(CGSize(width: 200, height: 200), fitting: fitting, scaleUp: true)
+        let scaleUpFalse = CanvasElementDrawing.proportionalImageSize(CGSize(width: 200, height: 200), fitting: fitting, scaleUp: false)
+        #expect(scaleUpTrue == CGSize(width: 50, height: 50))
+        #expect(scaleUpFalse == CGSize(width: 50, height: 50))
+    }
+
+    @Test("imageDrawRect: none scaling keeps native size and defaults to centering")
+    func imageDrawRectNoneScalingCentersNativeSize() {
+        let rect = CanvasElementDrawing.imageDrawRect(for: ["imageScaling": "none"], imageSize: CGSize(width: 20, height: 10), frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        #expect(rect == CGRect(x: 40, y: 45, width: 20, height: 10))
+    }
+
+    @Test("imageDrawRect: scaleToFit stretches to the full frame regardless of aspect ratio")
+    func imageDrawRectScaleToFitFillsFrame() {
+        let rect = CanvasElementDrawing.imageDrawRect(for: ["imageScaling": "scaleToFit"], imageSize: CGSize(width: 20, height: 10), frame: CGRect(x: 0, y: 0, width: 100, height: 50))
+        #expect(rect == CGRect(x: 0, y: 0, width: 100, height: 50))
+    }
+
+    @Test("imageDrawRect: default scaling/alignment matches v1's scaleProportionally/center")
+    func imageDrawRectDefaultsMatchV1() {
+        let rect = CanvasElementDrawing.imageDrawRect(for: [:], imageSize: CGSize(width: 10, height: 10), frame: CGRect(x: 0, y: 0, width: 100, height: 50))
+        // Proportionally scaled up to fit the smaller axis (height: 50), then centered.
+        #expect(rect == CGRect(x: 25, y: 0, width: 50, height: 50))
+    }
+
+    @Test("imageDrawRect honors each of the 9 named alignments")
+    func imageDrawRectAlignments() {
+        let frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let size = CGSize(width: 20, height: 20)
+        func origin(_ alignment: String) -> CGPoint {
+            CanvasElementDrawing.imageDrawRect(for: ["imageScaling": "none", "imageAlignment": alignment], imageSize: size, frame: frame).origin
+        }
+        #expect(origin("topLeft") == CGPoint(x: 0, y: 0))
+        #expect(origin("topRight") == CGPoint(x: 80, y: 0))
+        #expect(origin("bottomLeft") == CGPoint(x: 0, y: 80))
+        #expect(origin("bottomRight") == CGPoint(x: 80, y: 80))
+        #expect(origin("top") == CGPoint(x: 40, y: 0))
+        #expect(origin("bottom") == CGPoint(x: 40, y: 80))
+        #expect(origin("left") == CGPoint(x: 0, y: 40))
+        #expect(origin("right") == CGPoint(x: 80, y: 40))
+        #expect(origin("center") == CGPoint(x: 40, y: 40))
+    }
+
     // MARK: - Mouse-tracking hit-testing
 
     @Test("trackedElements only includes elements with a trackMouse* flag set")

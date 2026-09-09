@@ -1163,6 +1163,57 @@ Lua table values.</div>
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L255" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:255</a>
         </div>
     </div>
+    <div class="method" id="minimumTextSize">
+        <h3>
+<a href="#minimumTextSize">minimumTextSize(index, text) -> object</a>
+        </h3>
+
+        <div class="description">The smallest size that can fully render a string of text, using a text element&#39;s
+font attributes (`textFont`/`textSize`/`textWeight`/`textDesign`/`textItalic`)
+Mirrors v1&#39;s `hs.canvas:minimumTextSize()`. Multi-line strings (separated by `&#92;n`)
+are measured correctly -- the height covers every line and the width is the longest
+line&#39;s width, not a fixed single-line size.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">minimumTextSize(index, text) -> object</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">index</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The index of a text element in the canvas whose font attributes to measure with</td>
+                </tr>
+                <tr>
+                    <td class="param-name">text</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The string to measure -- it doesn&#39;t need to match the element&#39;s own `text`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">object</div>
+        <div class="return-desc">A `{w, h}` dictionary, or `{}` if `index` is out of bounds</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">c.appendElements([{ type: &quot;text&quot;, text: &quot;placeholder&quot;, textFont: &quot;Menlo-Bold&quot;, textSize: 24 }])
+const size = c.minimumTextSize(0, &quot;Hello&#92;nWorld&quot;)
+c.setElementAttribute(0, &quot;frame&quot;, { x: 10, y: 10, w: size.w, h: size.h })</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L273" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:273</a>
+        </div>
+    </div>
     <div class="method" id="mouseCallback">
         <h3>
 <a href="#mouseCallback">mouseCallback(callback) -> HSCanvas</a>
@@ -1204,7 +1255,7 @@ regions enabled via `canvasMouseEvents()` (delivered with id `&quot;_canvas&quot
 c.mouseCallback((canvas, message, id, x, y) =&gt; console.log(message, id, x, y))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L271" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:271</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L289" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:289</a>
         </div>
     </div>
     <div class="method" id="canvasMouseEvents">
@@ -1258,7 +1309,7 @@ tracked element. Delivered through `mouseCallback()` with id `&quot;_canvas&quot
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L281" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:281</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L299" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:299</a>
         </div>
     </div>
     <div class="method" id="rotateElement">
@@ -1301,7 +1352,7 @@ tracked element. Delivered through `mouseCallback()` with id `&quot;_canvas&quot
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L290" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:290</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L308" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:308</a>
         </div>
     </div>
     <div class="method" id="rotateElementAroundPoint">
@@ -1349,7 +1400,7 @@ tracked element. Delivered through `mouseCallback()` with id `&quot;_canvas&quot
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L298" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:298</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L316" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:316</a>
         </div>
     </div>
     <div class="method" id="setElementTransformation">
@@ -1392,7 +1443,7 @@ tracked element. Delivered through `mouseCallback()` with id `&quot;_canvas&quot
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L305" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:305</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L323" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:323</a>
         </div>
     </div>
     <div class="method" id="setTransformation">
@@ -1430,7 +1481,7 @@ tracked element. Delivered through `mouseCallback()` with id `&quot;_canvas&quot
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L310" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:310</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L328" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:328</a>
         </div>
     </div>
     <div class="method" id="clearTransformation">
@@ -1451,7 +1502,7 @@ tracked element. Delivered through `mouseCallback()` with id `&quot;_canvas&quot
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L314" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:314</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L332" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:332</a>
         </div>
     </div>
     <div class="method" id="imageFromCanvas">
@@ -1472,7 +1523,7 @@ tracked element. Delivered through `mouseCallback()` with id `&quot;_canvas&quot
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L320" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:320</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L338" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:338</a>
         </div>
     </div>
     <div class="method" id="duplicate">
@@ -1497,7 +1548,7 @@ that renamed `new()` to `create()`.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L329" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:329</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L347" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:347</a>
         </div>
     </div>
     <div class="method" id="setAccessibilitySubrole">
@@ -1535,7 +1586,7 @@ that renamed `new()` to `create()`.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L336" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:336</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L354" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:354</a>
         </div>
     </div>
     <div class="method" id="draggingCallback">
@@ -1573,7 +1624,7 @@ that renamed `new()` to `create()`.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L343" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:343</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/Core/HSCanvas.swift#L361" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/Core/HSCanvas.swift:361</a>
         </div>
     </div>
         </main>

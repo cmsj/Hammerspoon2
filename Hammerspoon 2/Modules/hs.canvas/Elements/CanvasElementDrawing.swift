@@ -4,6 +4,8 @@
 //
 
 import Foundation
+import AppKit
+import CoreText
 import SwiftUI
 
 /// Translates v1-style canvas element dictionaries into SwiftUI `GraphicsContext` drawing
@@ -251,20 +253,117 @@ enum CanvasElementDrawing {
         return CGPoint(x: center.x + radius * cos(radians), y: center.y + radius * sin(radians))
     }
 
+    /// Renders text by rasterizing it with AppKit (`NSAttributedString.draw(in:withAttributes:)`)
+    /// into an offscreen image, then drawing that image into the `GraphicsContext` -- rather
+    /// than resolving a SwiftUI `Text` and drawing it directly.
+    ///
+    /// This exists because `textAlignment`/`textLineBreak` need `NSParagraphStyle`, and
+    /// SwiftUI has no path to that: `Text.multilineTextAlignment`/`.truncationMode` are
+    /// declared only as `View` extensions (they work by setting an environment value), and
+    /// `GraphicsContext.draw` only accepts a concrete `Text`, not `some View` -- there's no
+    /// way to get an environment value onto a bare `Text` before resolving it. Rasterizing
+    /// through AppKit sidesteps that entirely and gets full v1 parity (including `justified`
+    /// alignment and `clip`/`charWrap` line-break modes, which have no SwiftUI equivalent at
+    /// all) for less code than approximating it.
     static func drawText(_ element: [String: Any], into context: GraphicsContext, containerSize: CGSize) {
         guard let string = element["text"] as? String else { return }
         let rect = resolveFrame(element["frame"], containerSize: containerSize)
             ?? CGRect(origin: .zero, size: containerSize)
-        let size = (element["textSize"] as? NSNumber)?.doubleValue ?? 27.0
-        let color = parseColor(element["textColor"]) ?? .black
-        let resolved = Text(string).font(.system(size: CGFloat(size))).foregroundColor(color)
+        guard rect.width > 0, rect.height > 0 else { return }
+
+        let font = resolvedNSFont(for: element)
+        let color = NSColor(parseColor(element["textColor"]) ?? .black)
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = nsTextAlignment(element["textAlignment"]) ?? .natural
+        paragraphStyle.lineBreakMode = nsLineBreakMode(element["textLineBreak"]) ?? .byWordWrapping
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paragraphStyle,
+        ]
+
+        // Rasterizing at the full frame size is wasteful when the text doesn't need it -- a
+        // text element with no `frame` of its own defaults to the entire canvas, so a single
+        // short status line would otherwise repaint a giant, mostly-empty offscreen bitmap on
+        // every redraw. If the text already fits on one line (or one physical line per
+        // explicit `\n`) within the frame's width, none of NSAttributedString's
+        // wrapping/truncation layout actually gets exercised, so it's safe to rasterize just
+        // the text's own natural size and position that within the frame ourselves instead --
+        // see `textImageSize`/`textImageOrigin`. Text that needs to wrap still uses the full
+        // frame, unchanged: shrinking that case safely needs real line-layout measurement,
+        // not just this fits-on-one-line check.
+        let naturalSize = (string as NSString).size(withAttributes: [.font: font])
+        let imageSize = textImageSize(naturalSize: naturalSize, frame: rect)
+
+        // `flipped: true` matches every other element's y-down frame convention (see the
+        // module-level coordinate systems doc) -- text draws top-down starting at the rect's
+        // visual top, not AppKit's unflipped bottom-left origin.
+        let image = NSImage(size: imageSize, flipped: true) { imageRect in
+            (string as NSString).draw(in: imageRect, withAttributes: attributes)
+            return true
+        }
 
         var textContext = context
         let transform = elementTransform(element: element, pivotRect: rect, containerSize: containerSize)
         if !transform.isIdentity {
             textContext.concatenate(transform)
         }
-        textContext.draw(resolved, in: rect)
+        let origin = textImageOrigin(imageSize: imageSize, frame: rect, alignment: paragraphStyle.alignment, isRightToLeft: isRightToLeftText(string))
+        textContext.draw(Image(nsImage: image), in: CGRect(origin: origin, size: imageSize))
+    }
+
+    /// Whether `string` lays out right-to-left, per CoreText's own bidi/shaping resolution --
+    /// the same engine `NSAttributedString`'s drawing uses on macOS, so this stays consistent
+    /// with how `.natural`/`.justified` alignment actually resolves when text lays out for
+    /// real, rather than reimplementing the Unicode bidi algorithm ourselves.
+    static func isRightToLeftText(_ string: String) -> Bool {
+        guard !string.isEmpty else { return false }
+        let line = CTLineCreateWithAttributedString(NSAttributedString(string: string))
+        guard let runs = CTLineGetGlyphRuns(line) as? [CTRun], let firstRun = runs.first else { return false }
+        return CTRunGetStatus(firstRun).contains(.rightToLeft)
+    }
+
+    /// The size to rasterize a text element's offscreen image at: the text's own natural size
+    /// (rounded up, height capped at the frame's height) if it fits within the frame's width
+    /// without needing to wrap, or the full frame size otherwise -- the safe fallback, since
+    /// correctly shrinking a WRAPPED render needs real line-layout measurement, not just this
+    /// fits-on-one-line check.
+    static func textImageSize(naturalSize: CGSize, frame: CGRect) -> CGSize {
+        guard naturalSize.width > 0, naturalSize.height > 0, naturalSize.width <= frame.width else {
+            return frame.size
+        }
+        return CGSize(width: ceil(naturalSize.width), height: min(ceil(naturalSize.height), frame.height))
+    }
+
+    /// Where to place a (possibly shrunk) text image within its frame, so the result is
+    /// pixel-identical to having drawn the full-size text directly into `frame`: always
+    /// top-anchored vertically (`NSAttributedString` always lays lines out top-down,
+    /// regardless of alignment or spare height), horizontally positioned per `alignment`.
+    /// Nesting a narrower alignment inside a wider one produces the same absolute position
+    /// as aligning directly against the full width, for `center`/`right`/`left` (`center`:
+    /// (frame.midX - imageSize.width/2) equals centering the image itself, which already
+    /// centers its own content; `right`/`left`: edges stay flush either way).
+    ///
+    /// `natural`/`justified` need `isRightToLeft` to resolve correctly: "natural" means
+    /// flush with the text's own *leading* edge, which is the frame's right edge for RTL
+    /// content, not always the left -- and for a single physical line (the only case this
+    /// function is used for), `justified` behaves the same as the paragraph's leading edge,
+    /// since justification only stretches non-final lines. `isRightToLeft` is `@autoclosure`
+    /// so callers don't pay for computing it (a real text-shaping pass, not free) except in
+    /// that branch.
+    static func textImageOrigin(imageSize: CGSize, frame: CGRect, alignment: NSTextAlignment, isRightToLeft: @autoclosure () -> Bool) -> CGPoint {
+        let x: CGFloat
+        switch alignment {
+        case .right:
+            x = frame.maxX - imageSize.width
+        case .center:
+            x = frame.midX - imageSize.width / 2
+        case .left:
+            x = frame.minX
+        default: // .natural, .justified
+            x = isRightToLeft() ? frame.maxX - imageSize.width : frame.minX
+        }
+        return CGPoint(x: x, y: frame.minY)
     }
 
     static func drawImage(_ element: [String: Any], into context: GraphicsContext, containerSize: CGSize) {
@@ -279,7 +378,55 @@ enum CanvasElementDrawing {
         if !transform.isIdentity {
             imageContext.concatenate(transform)
         }
-        imageContext.draw(Image(nsImage: hsImage.image), in: rect)
+        // Matches v1's explicit `[NSBezierPath clipRect:cellFrame]` -- without it, "none"
+        // scaling of an image larger than the frame would overflow it instead of being cropped.
+        imageContext.clip(to: Path(rect))
+        let drawRect = imageDrawRect(for: element, imageSize: hsImage.image.size, frame: rect)
+        imageContext.draw(Image(nsImage: hsImage.image), in: drawRect)
+    }
+
+    /// Computes the sub-rect an image should actually be drawn into within its element
+    /// `frame`, honoring v1's `imageScaling` (default `"scaleProportionally"`) and
+    /// `imageAlignment` (default `"center"`) keys -- mirrors v1's
+    /// `realRectFor:inFrame:withScaling:withAlignment:`. v1 branched on view-flippedness for
+    /// vertical alignment; that's not needed here since this module's element frames are
+    /// already uniformly y-down, so "top" always means the smaller `y`.
+    static func imageDrawRect(for element: [String: Any], imageSize: CGSize, frame: CGRect) -> CGRect {
+        let scaling = (element["imageScaling"] as? String) ?? "scaleProportionally"
+        let targetSize: CGSize
+        switch scaling {
+        case "none": targetSize = imageSize
+        case "scaleToFit": targetSize = frame.size
+        case "shrinkToFit": targetSize = proportionalImageSize(imageSize, fitting: frame.size, scaleUp: false)
+        default: targetSize = proportionalImageSize(imageSize, fitting: frame.size, scaleUp: true) // "scaleProportionally"
+        }
+
+        let alignment = (element["imageAlignment"] as? String) ?? "center"
+        let x: CGFloat
+        switch alignment {
+        case "left", "topLeft", "bottomLeft": x = frame.minX
+        case "right", "topRight", "bottomRight": x = frame.maxX - targetSize.width
+        default: x = frame.midX - targetSize.width / 2 // "center", "top", "bottom"
+        }
+        let y: CGFloat
+        switch alignment {
+        case "top", "topLeft", "topRight": y = frame.minY
+        case "bottom", "bottomLeft", "bottomRight": y = frame.maxY - targetSize.height
+        default: y = frame.midY - targetSize.height / 2 // "center", "left", "right"
+        }
+
+        return CGRect(origin: CGPoint(x: x, y: y), size: targetSize)
+    }
+
+    /// Scales `imageSize` to fit inside `frameSize` preserving aspect ratio, matching v1's
+    /// `scaleProportionally()` C function. `scaleUp: false` only ever shrinks (v1's
+    /// `shrinkToFit`); `scaleUp: true` scales in either direction to exactly fit one axis
+    /// (v1's `scaleProportionally`, the default scaling mode).
+    static func proportionalImageSize(_ imageSize: CGSize, fitting frameSize: CGSize, scaleUp: Bool) -> CGSize {
+        guard imageSize.width > 0, imageSize.height > 0 else { return .zero }
+        let ratio = min(frameSize.width / imageSize.width, frameSize.height / imageSize.height)
+        guard ratio < 1.0 || scaleUp else { return imageSize }
+        return CGSize(width: imageSize.width * ratio, height: imageSize.height * ratio)
     }
 
     /// Recursively renders another `HSCanvas`'s elements as a nested element. Takes a
@@ -343,6 +490,97 @@ enum CanvasElementDrawing {
         let b = (dict["blue"] as? NSNumber)?.doubleValue ?? 0
         let a = (dict["alpha"] as? NSNumber)?.doubleValue ?? 1
         return Color(.sRGB, red: r, green: g, blue: b, opacity: a)
+    }
+
+    // MARK: - Text measurement
+
+    static func nsFontWeight(_ raw: Any?) -> NSFont.Weight? {
+        guard let weight = raw as? String else { return nil }
+        switch weight {
+        case "black": return .black
+        case "bold": return .bold
+        case "heavy": return .heavy
+        case "light": return .light
+        case "medium": return .medium
+        case "regular": return .regular
+        case "semibold": return .semibold
+        case "thin": return .thin
+        case "ultraLight": return .ultraLight
+        default: return nil
+        }
+    }
+
+    static func nsFontDesign(_ raw: Any?) -> NSFontDescriptor.SystemDesign? {
+        guard let design = raw as? String else { return nil }
+        switch design {
+        case "monospaced": return .monospaced
+        case "rounded": return .rounded
+        case "serif": return .serif
+        default: return nil
+        }
+    }
+
+    static func nsTextAlignment(_ raw: Any?) -> NSTextAlignment? {
+        guard let alignment = raw as? String else { return nil }
+        switch alignment {
+        case "left": return .left
+        case "right": return .right
+        case "center": return .center
+        case "justified": return .justified
+        case "natural": return .natural
+        default: return nil
+        }
+    }
+
+    static func nsLineBreakMode(_ raw: Any?) -> NSLineBreakMode? {
+        guard let wrap = raw as? String else { return nil }
+        switch wrap {
+        case "wordWrap": return .byWordWrapping
+        case "charWrap": return .byCharWrapping
+        case "clip": return .byClipping
+        case "truncateHead": return .byTruncatingHead
+        case "truncateMiddle": return .byTruncatingMiddle
+        case "truncateTail": return .byTruncatingTail
+        default: return nil
+        }
+    }
+
+    /// Builds the `NSFont` a text element's `textFont`/`textSize`/`textWeight`/`textDesign`/
+    /// `textItalic` keys resolve to. Used both to actually render the text (`drawText`) and
+    /// to measure it (`minimumTextSize`), so an unresolvable `textFont` name only needs to be
+    /// warned about in one place.
+    static func resolvedNSFont(for element: [String: Any]) -> NSFont {
+        let size = (element["textSize"] as? NSNumber)?.doubleValue ?? 27.0
+        var font: NSFont
+        if let fontName = element["textFont"] as? String {
+            if let named = NSFont(name: fontName, size: size) {
+                font = named
+            } else {
+                AKWarning("hs.canvas: textFont \"\(fontName)\" is not an installed font name, falling back to the system font")
+                font = .systemFont(ofSize: size)
+            }
+        } else {
+            let weight = nsFontWeight(element["textWeight"]) ?? .regular
+            font = .systemFont(ofSize: size, weight: weight)
+            if let design = nsFontDesign(element["textDesign"]), let descriptor = font.fontDescriptor.withDesign(design) {
+                font = NSFont(descriptor: descriptor, size: size) ?? font
+            }
+        }
+        if (element["textItalic"] as? NSNumber)?.boolValue ?? false {
+            let italicDescriptor = font.fontDescriptor.withSymbolicTraits(.italic)
+            font = NSFont(descriptor: italicDescriptor, size: size) ?? font
+        }
+        return font
+    }
+
+    /// Measures the minimum size needed to fully render `text` using an element's font
+    /// attributes, mirroring v1's `hs.canvas:minimumTextSize()` (which used
+    /// `NSString.sizeWithAttributes()` under the hood). Multi-line strings (separated by
+    /// `\n`) are measured correctly for free -- `size(withAttributes:)` sizes each explicit
+    /// line and returns the tallest/widest combination, it isn't a fixed single-line size.
+    static func minimumTextSize(text: String, element: [String: Any]) -> CGSize {
+        let font = resolvedNSFont(for: element)
+        return (text as NSString).size(withAttributes: [.font: font])
     }
 
     // MARK: - Gradients

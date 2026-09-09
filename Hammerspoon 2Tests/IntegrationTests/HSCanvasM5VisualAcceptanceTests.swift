@@ -166,4 +166,57 @@ struct HSCanvasM5VisualAcceptanceTests {
         #expect(isBackground(pixel(atX: 230 * scale, y: 20 * scale)), "A rotated image should no longer appear at its unrotated frame position")
         #expect(isGreen(pixel(atX: 270 * scale, y: 180 * scale)), "A rotated image should appear at its rotated position")
     }
+
+    @Test("image elements honor imageScaling/imageAlignment, matching v1 defaults instead of always stretching to fill the frame")
+    @MainActor
+    func imageScalingAndAlignmentRespected() throws {
+        let size = CGSize(width: 200, height: 200)
+        let red: [String: Any] = ["red": 1, "alpha": 1]
+
+        // A wide (40x10) solid-color image -- non-square, so stretch-to-fill vs proportional
+        // scaling produce visibly different results.
+        let module = HSCanvasModule(engineID: UUID())
+        let helper = HSCanvas(frame: CGRect(x: 0, y: 0, width: 40, height: 10), module: module)
+        _ = helper.appendElements([["type": "rectangle", "action": "fill", "fillColor": red]])
+        let wideRedImage = try #require(helper.imageFromCanvas())
+
+        let elements: [[String: Any]] = [
+            // Region 1 (0,0)-(100,100): default scaling/alignment (v1's "scaleProportionally"/
+            // "center") -- the 40x10 image should scale up to 100x25 (limited by width) and
+            // center vertically, not stretch to fill the whole 100x100 square.
+            ["type": "image", "image": wideRedImage, "frame": ["x": 0, "y": 0, "w": 100, "h": 100]],
+
+            // Region 2 (100,0)-(200,100): imageScaling:"none" + imageAlignment:"topLeft" --
+            // should draw at native 40x10 size, pinned to the frame's top-left corner.
+            ["type": "image", "image": wideRedImage, "frame": ["x": 100, "y": 0, "w": 100, "h": 100], "imageScaling": "none", "imageAlignment": "topLeft"],
+        ]
+
+        let store = CanvasElementStore()
+        store.elements = elements
+        let view = HSCanvasRenderView(store: store)
+            .frame(width: size.width, height: size.height)
+            .background(Color.black)
+
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2.0
+        let cgImage = try #require(renderer.cgImage)
+        let pixelData = try #require(cgImage.dataProvider?.data) as Data
+        let bytesPerPixel = cgImage.bitsPerPixel / 8
+        let bytesPerRow = cgImage.bytesPerRow
+        let scale = Int(renderer.scale)
+
+        func isRed(atX x: Int, y: Int) -> Bool {
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            return pixelData[offset] > 150 && pixelData[offset + 1] < 60 && pixelData[offset + 2] < 60
+        }
+
+        // Region 1: proportionally scaled to 100x25, centered vertically (band y:37.5-62.5) --
+        // the frame's own top-left corner is well outside that band and must stay black.
+        #expect(!isRed(atX: 5 * scale, y: 5 * scale), "proportional scaling should NOT stretch the image to fill the whole frame")
+        #expect(isRed(atX: 50 * scale, y: 50 * scale), "proportional scaling should place the scaled image across its centered band")
+
+        // Region 2: native 40x10 size pinned to the frame's top-left corner.
+        #expect(isRed(atX: 105 * scale, y: 5 * scale), "imageAlignment:topLeft + imageScaling:none should pin the image to the frame's top-left corner")
+        #expect(!isRed(atX: 105 * scale, y: 95 * scale), "imageScaling:none should not stretch the image down to the bottom of the frame")
+    }
 }
