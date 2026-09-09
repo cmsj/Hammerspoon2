@@ -243,10 +243,29 @@ struct HSCanvasElementDrawingTests {
     func textImageOriginPositioning() {
         let frame = CGRect(x: 10, y: 20, width: 200, height: 100)
         let imageSize = CGSize(width: 50, height: 20)
-        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .left) == CGPoint(x: 10, y: 20))
-        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .center) == CGPoint(x: 85, y: 20))
-        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .right) == CGPoint(x: 160, y: 20))
-        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .natural) == CGPoint(x: 10, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .left, isRightToLeft: false) == CGPoint(x: 10, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .center, isRightToLeft: false) == CGPoint(x: 85, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .right, isRightToLeft: false) == CGPoint(x: 160, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .natural, isRightToLeft: false) == CGPoint(x: 10, y: 20))
+    }
+
+    @Test("textImageOrigin resolves natural/justified alignment against the frame's right edge for right-to-left text")
+    func textImageOriginNaturalRTL() {
+        let frame = CGRect(x: 10, y: 20, width: 200, height: 100)
+        let imageSize = CGSize(width: 50, height: 20)
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .natural, isRightToLeft: true) == CGPoint(x: 160, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .justified, isRightToLeft: true) == CGPoint(x: 160, y: 20))
+        // .left/.right/.center are direction-independent -- isRightToLeft must not override them.
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .left, isRightToLeft: true) == CGPoint(x: 10, y: 20))
+        #expect(CanvasElementDrawing.textImageOrigin(imageSize: imageSize, frame: frame, alignment: .right, isRightToLeft: true) == CGPoint(x: 160, y: 20))
+    }
+
+    @Test("isRightToLeftText detects RTL scripts and treats LTR/empty strings as false")
+    func isRightToLeftTextDetection() {
+        #expect(CanvasElementDrawing.isRightToLeftText("שלום") == true)
+        #expect(CanvasElementDrawing.isRightToLeftText("مرحبا") == true)
+        #expect(CanvasElementDrawing.isRightToLeftText("Hello") == false)
+        #expect(CanvasElementDrawing.isRightToLeftText("") == false)
     }
 
     // MARK: - Image scaling/alignment

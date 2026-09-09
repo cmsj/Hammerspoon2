@@ -5,6 +5,7 @@
 
 import Foundation
 import AppKit
+import CoreText
 import SwiftUI
 
 /// Translates v1-style canvas element dictionaries into SwiftUI `GraphicsContext` drawing
@@ -307,8 +308,19 @@ enum CanvasElementDrawing {
         if !transform.isIdentity {
             textContext.concatenate(transform)
         }
-        let origin = textImageOrigin(imageSize: imageSize, frame: rect, alignment: paragraphStyle.alignment)
+        let origin = textImageOrigin(imageSize: imageSize, frame: rect, alignment: paragraphStyle.alignment, isRightToLeft: isRightToLeftText(string))
         textContext.draw(Image(nsImage: image), in: CGRect(origin: origin, size: imageSize))
+    }
+
+    /// Whether `string` lays out right-to-left, per CoreText's own bidi/shaping resolution --
+    /// the same engine `NSAttributedString`'s drawing uses on macOS, so this stays consistent
+    /// with how `.natural`/`.justified` alignment actually resolves when text lays out for
+    /// real, rather than reimplementing the Unicode bidi algorithm ourselves.
+    static func isRightToLeftText(_ string: String) -> Bool {
+        guard !string.isEmpty else { return false }
+        let line = CTLineCreateWithAttributedString(NSAttributedString(string: string))
+        guard let runs = CTLineGetGlyphRuns(line) as? [CTRun], let firstRun = runs.first else { return false }
+        return CTRunGetStatus(firstRun).contains(.rightToLeft)
     }
 
     /// The size to rasterize a text element's offscreen image at: the text's own natural size
@@ -328,16 +340,28 @@ enum CanvasElementDrawing {
     /// top-anchored vertically (`NSAttributedString` always lays lines out top-down,
     /// regardless of alignment or spare height), horizontally positioned per `alignment`.
     /// Nesting a narrower alignment inside a wider one produces the same absolute position
-    /// as aligning directly against the full width, for all three cases (`center`: (frame.midX
-    /// - imageSize.width/2) equals centering the image itself, which already centers its own
-    /// content; `right`/`left`: edges stay flush either way) -- so this is exact, not an
-    /// approximation, whenever `imageSize.width` is smaller than `frame.width`.
-    static func textImageOrigin(imageSize: CGSize, frame: CGRect, alignment: NSTextAlignment) -> CGPoint {
+    /// as aligning directly against the full width, for `center`/`right`/`left` (`center`:
+    /// (frame.midX - imageSize.width/2) equals centering the image itself, which already
+    /// centers its own content; `right`/`left`: edges stay flush either way).
+    ///
+    /// `natural`/`justified` need `isRightToLeft` to resolve correctly: "natural" means
+    /// flush with the text's own *leading* edge, which is the frame's right edge for RTL
+    /// content, not always the left -- and for a single physical line (the only case this
+    /// function is used for), `justified` behaves the same as the paragraph's leading edge,
+    /// since justification only stretches non-final lines. `isRightToLeft` is `@autoclosure`
+    /// so callers don't pay for computing it (a real text-shaping pass, not free) except in
+    /// that branch.
+    static func textImageOrigin(imageSize: CGSize, frame: CGRect, alignment: NSTextAlignment, isRightToLeft: @autoclosure () -> Bool) -> CGPoint {
         let x: CGFloat
         switch alignment {
-        case .right: x = frame.maxX - imageSize.width
-        case .center: x = frame.midX - imageSize.width / 2
-        default: x = frame.minX // .left, .natural, .justified
+        case .right:
+            x = frame.maxX - imageSize.width
+        case .center:
+            x = frame.midX - imageSize.width / 2
+        case .left:
+            x = frame.minX
+        default: // .natural, .justified
+            x = isRightToLeft() ? frame.maxX - imageSize.width : frame.minX
         }
         return CGPoint(x: x, y: frame.minY)
     }

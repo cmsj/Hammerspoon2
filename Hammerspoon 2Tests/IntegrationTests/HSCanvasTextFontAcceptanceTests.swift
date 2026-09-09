@@ -219,4 +219,25 @@ struct HSCanvasTextFontAcceptanceTests {
         #expect(leftX >= 0 && rightX >= 0 && centerX >= 0, "should find ink for all three alignments")
         #expect(rightX > centerX && centerX > leftX, "alignment should still be positioned relative to the whole (frame-less) canvas width, not just the shrunk text's own natural width")
     }
+
+    @Test("default (natural) alignment sits right-of-center for right-to-left text in a wide frame")
+    @MainActor
+    func naturalAlignmentRespectsRightToLeftText() throws {
+        // Hebrew text, no textAlignment given (defaults to "natural"). Natural alignment
+        // means flush with the text's own leading edge -- the frame's RIGHT edge for RTL
+        // content -- so this must land in the right half of a frame much wider than the text,
+        // not flush left the way Latin-script "natural" text would.
+        let element: [String: Any] = ["type": "text", "text": "שלום", "frame": ["x": 0, "y": 0, "w": 400, "h": 80], "textSize": 32, "textColor": ["red": 1, "green": 1, "blue": 1, "alpha": 1]]
+        let bitmap = NSBitmapImageRep(cgImage: try render(element, size: CGSize(width: 400, height: 80)))
+        var leftmostInk = -1
+        for x in 0..<bitmap.pixelsWide {
+            for y in 0..<bitmap.pixelsHigh where redChannel(bitmap, x: x, y: y) > 0.15 {
+                leftmostInk = x
+                break
+            }
+            if leftmostInk >= 0 { break }
+        }
+        #expect(leftmostInk >= 0, "should find rendered ink for the Hebrew string")
+        #expect(leftmostInk > bitmap.pixelsWide / 2, "natural alignment for RTL text should sit in the right half of the frame, not flush left")
+    }
 }
