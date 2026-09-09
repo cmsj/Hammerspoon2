@@ -217,6 +217,66 @@ struct HSCanvasElementDrawingTests {
         #expect(size.height > 0)
     }
 
+    // MARK: - Image scaling/alignment
+
+    @Test("proportionalImageSize with scaleUp:true scales a small image up to fit")
+    func proportionalImageSizeScalesUp() {
+        let size = CanvasElementDrawing.proportionalImageSize(CGSize(width: 10, height: 10), fitting: CGSize(width: 100, height: 50), scaleUp: true)
+        #expect(size == CGSize(width: 50, height: 50))
+    }
+
+    @Test("proportionalImageSize with scaleUp:false leaves a small image at native size")
+    func proportionalImageSizeShrinkOnlyLeavesSmallImageAlone() {
+        let size = CanvasElementDrawing.proportionalImageSize(CGSize(width: 10, height: 10), fitting: CGSize(width: 100, height: 50), scaleUp: false)
+        #expect(size == CGSize(width: 10, height: 10))
+    }
+
+    @Test("proportionalImageSize shrinks a large image regardless of scaleUp")
+    func proportionalImageSizeShrinksLargeImage() {
+        let fitting = CGSize(width: 100, height: 50)
+        let scaleUpTrue = CanvasElementDrawing.proportionalImageSize(CGSize(width: 200, height: 200), fitting: fitting, scaleUp: true)
+        let scaleUpFalse = CanvasElementDrawing.proportionalImageSize(CGSize(width: 200, height: 200), fitting: fitting, scaleUp: false)
+        #expect(scaleUpTrue == CGSize(width: 50, height: 50))
+        #expect(scaleUpFalse == CGSize(width: 50, height: 50))
+    }
+
+    @Test("imageDrawRect: none scaling keeps native size and defaults to centering")
+    func imageDrawRectNoneScalingCentersNativeSize() {
+        let rect = CanvasElementDrawing.imageDrawRect(for: ["imageScaling": "none"], imageSize: CGSize(width: 20, height: 10), frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        #expect(rect == CGRect(x: 40, y: 45, width: 20, height: 10))
+    }
+
+    @Test("imageDrawRect: scaleToFit stretches to the full frame regardless of aspect ratio")
+    func imageDrawRectScaleToFitFillsFrame() {
+        let rect = CanvasElementDrawing.imageDrawRect(for: ["imageScaling": "scaleToFit"], imageSize: CGSize(width: 20, height: 10), frame: CGRect(x: 0, y: 0, width: 100, height: 50))
+        #expect(rect == CGRect(x: 0, y: 0, width: 100, height: 50))
+    }
+
+    @Test("imageDrawRect: default scaling/alignment matches v1's scaleProportionally/center")
+    func imageDrawRectDefaultsMatchV1() {
+        let rect = CanvasElementDrawing.imageDrawRect(for: [:], imageSize: CGSize(width: 10, height: 10), frame: CGRect(x: 0, y: 0, width: 100, height: 50))
+        // Proportionally scaled up to fit the smaller axis (height: 50), then centered.
+        #expect(rect == CGRect(x: 25, y: 0, width: 50, height: 50))
+    }
+
+    @Test("imageDrawRect honors each of the 9 named alignments")
+    func imageDrawRectAlignments() {
+        let frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let size = CGSize(width: 20, height: 20)
+        func origin(_ alignment: String) -> CGPoint {
+            CanvasElementDrawing.imageDrawRect(for: ["imageScaling": "none", "imageAlignment": alignment], imageSize: size, frame: frame).origin
+        }
+        #expect(origin("topLeft") == CGPoint(x: 0, y: 0))
+        #expect(origin("topRight") == CGPoint(x: 80, y: 0))
+        #expect(origin("bottomLeft") == CGPoint(x: 0, y: 80))
+        #expect(origin("bottomRight") == CGPoint(x: 80, y: 80))
+        #expect(origin("top") == CGPoint(x: 40, y: 0))
+        #expect(origin("bottom") == CGPoint(x: 40, y: 80))
+        #expect(origin("left") == CGPoint(x: 0, y: 40))
+        #expect(origin("right") == CGPoint(x: 80, y: 40))
+        #expect(origin("center") == CGPoint(x: 40, y: 40))
+    }
+
     // MARK: - Mouse-tracking hit-testing
 
     @Test("trackedElements only includes elements with a trackMouse* flag set")

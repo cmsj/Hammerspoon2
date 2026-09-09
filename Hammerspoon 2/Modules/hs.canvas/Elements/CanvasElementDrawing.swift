@@ -309,7 +309,55 @@ enum CanvasElementDrawing {
         if !transform.isIdentity {
             imageContext.concatenate(transform)
         }
-        imageContext.draw(Image(nsImage: hsImage.image), in: rect)
+        // Matches v1's explicit `[NSBezierPath clipRect:cellFrame]` -- without it, "none"
+        // scaling of an image larger than the frame would overflow it instead of being cropped.
+        imageContext.clip(to: Path(rect))
+        let drawRect = imageDrawRect(for: element, imageSize: hsImage.image.size, frame: rect)
+        imageContext.draw(Image(nsImage: hsImage.image), in: drawRect)
+    }
+
+    /// Computes the sub-rect an image should actually be drawn into within its element
+    /// `frame`, honoring v1's `imageScaling` (default `"scaleProportionally"`) and
+    /// `imageAlignment` (default `"center"`) keys -- mirrors v1's
+    /// `realRectFor:inFrame:withScaling:withAlignment:`. v1 branched on view-flippedness for
+    /// vertical alignment; that's not needed here since this module's element frames are
+    /// already uniformly y-down, so "top" always means the smaller `y`.
+    static func imageDrawRect(for element: [String: Any], imageSize: CGSize, frame: CGRect) -> CGRect {
+        let scaling = (element["imageScaling"] as? String) ?? "scaleProportionally"
+        let targetSize: CGSize
+        switch scaling {
+        case "none": targetSize = imageSize
+        case "scaleToFit": targetSize = frame.size
+        case "shrinkToFit": targetSize = proportionalImageSize(imageSize, fitting: frame.size, scaleUp: false)
+        default: targetSize = proportionalImageSize(imageSize, fitting: frame.size, scaleUp: true) // "scaleProportionally"
+        }
+
+        let alignment = (element["imageAlignment"] as? String) ?? "center"
+        let x: CGFloat
+        switch alignment {
+        case "left", "topLeft", "bottomLeft": x = frame.minX
+        case "right", "topRight", "bottomRight": x = frame.maxX - targetSize.width
+        default: x = frame.midX - targetSize.width / 2 // "center", "top", "bottom"
+        }
+        let y: CGFloat
+        switch alignment {
+        case "top", "topLeft", "topRight": y = frame.minY
+        case "bottom", "bottomLeft", "bottomRight": y = frame.maxY - targetSize.height
+        default: y = frame.midY - targetSize.height / 2 // "center", "left", "right"
+        }
+
+        return CGRect(origin: CGPoint(x: x, y: y), size: targetSize)
+    }
+
+    /// Scales `imageSize` to fit inside `frameSize` preserving aspect ratio, matching v1's
+    /// `scaleProportionally()` C function. `scaleUp: false` only ever shrinks (v1's
+    /// `shrinkToFit`); `scaleUp: true` scales in either direction to exactly fit one axis
+    /// (v1's `scaleProportionally`, the default scaling mode).
+    static func proportionalImageSize(_ imageSize: CGSize, fitting frameSize: CGSize, scaleUp: Bool) -> CGSize {
+        guard imageSize.width > 0, imageSize.height > 0 else { return .zero }
+        let ratio = min(frameSize.width / imageSize.width, frameSize.height / imageSize.height)
+        guard ratio < 1.0 || scaleUp else { return imageSize }
+        return CGSize(width: imageSize.width * ratio, height: imageSize.height * ratio)
     }
 
     /// Recursively renders another `HSCanvas`'s elements as a nested element. Takes a
