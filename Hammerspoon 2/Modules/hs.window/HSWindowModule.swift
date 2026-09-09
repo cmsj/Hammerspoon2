@@ -77,6 +77,20 @@ import AXSwift
     /// ```
     @objc func orderedWindows() -> [HSWindow]
 
+    /// Capture the current on-screen contents of the window with the given ID.
+    ///
+    /// Requires **Screen Recording** permission.
+    ///
+    /// - Parameters:
+    ///   - id: The window's underlying ID (see the `id` property on `hs.window` objects).
+    ///   - keepTransparency?: Whether to preserve the window's alpha channel. If `false` (the default), transparent regions are filled with an opaque black background.
+    /// - Returns: {Promise<HSImage>} Resolves with the captured image, or rejects if no window with that ID can be found, or the capture fails.
+    /// - Example:
+    /// ```js
+    /// hs.window.snapshotForID(12345).then(img => img.saveToFile("/tmp/window.png"))
+    /// ```
+    @objc func snapshotForID(_ id: Int, _ keepTransparency: Bool) -> JSPromise?
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.window.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -318,5 +332,16 @@ import AXSwift
         }
 
         return windows
+    }
+
+    @objc func snapshotForID(_ id: Int, _ keepTransparency: Bool = false) -> JSPromise? {
+        guard id > 0, let windowID = CGWindowID(exactly: id) else {
+            return JSEngine.shared.createPromise { holder in
+                Task.detached {
+                    await holder.rejectWithMessage("hs.window.snapshotForID: invalid window ID \(id)")
+                }
+            }
+        }
+        return captureWindowSnapshot(windowID: windowID, keepTransparency: keepTransparency)
     }
 }

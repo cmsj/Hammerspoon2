@@ -9,9 +9,44 @@ import Foundation
 import JavaScriptCore
 import AppKit
 import AXSwift
+import ScreenCaptureKit
 
 // Expose some private API, per https://github.com/saagarjha/Ensemble/blob/27f3fd77c261660c1f469a246858d23d06aa8c1f/macOS/SPI.swift#L21
 let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "_AXUIElementGetWindow"), to: (@convention(c) (AXUIElement, UnsafeMutablePointer<CGWindowID>) -> AXError)?.self)
+
+/// Captures the current on-screen contents of the window with the given ID.
+///
+/// Shared by `HSWindow.snapshot()` and `HSWindowModule.snapshotForID()`.
+func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPromise? {
+    return JSEngine.shared.createPromise { holder in
+        Task.detached {
+            do {
+                let content = try await SCShareableContent.current
+                guard let scWindow = content.windows.first(where: { $0.windowID == windowID }) else {
+                    await holder.rejectWithMessage("hs.window.snapshot: could not locate window \(windowID)")
+                    return
+                }
+
+                let filter = SCContentFilter(desktopIndependentWindow: scWindow)
+                let config = SCStreamConfiguration()
+                config.width = Int(filter.contentRect.width * Double(filter.pointPixelScale))
+                config.height = Int(filter.contentRect.height * Double(filter.pointPixelScale))
+                config.showsCursor = false
+                if !keepTransparency {
+                    config.backgroundColor = CGColor.black
+                }
+
+                let cgImage = try await SCScreenshotManager.captureImage(
+                    contentFilter: filter,
+                    configuration: config
+                )
+                await holder.resolveWith(HSImage(image: NSImage(cgImage: cgImage, size: filter.contentRect.size)))
+            } catch {
+                await holder.rejectWithMessage("hs.window.snapshot: \(error.localizedDescription)")
+            }
+        }
+    }
+}
 
 /// Object representing a window. You should not instantiate these directly, but rather, use the methods in hs.window to create them for you.
 /// Note that this type uses private macOS APIs
@@ -191,6 +226,21 @@ let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "
     /// win.centerOnScreen()
     /// ```
     @objc func centerOnScreen()
+
+    // MARK: - Screenshot
+
+    /// Capture the current on-screen contents of this window as an image.
+    ///
+    /// Requires **Screen Recording** permission.
+    ///
+    /// - Parameter keepTransparency?: Whether to preserve the window's alpha channel. If `false` (the default), transparent regions are filled with an opaque black background.
+    /// - Returns: {Promise<HSImage>} Resolves with the captured image, or rejects if the capture fails (e.g. permission denied, or the window could no longer be located).
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.focusedWindow()
+    /// win.snapshot().then(img => img.saveToFile("/tmp/window.png"))
+    /// ```
+    @objc func snapshot(_ keepTransparency: Bool) -> JSPromise?
 
     // MARK: - Advanced
 
@@ -466,6 +516,19 @@ let _AXUIElementGetWindow = unsafe unsafeBitCast(dlsym(dlopen(nil, RTLD_LAZY), "
         let centerY = Int(screenFrame.midY) - Int(sz.h) / 2
 
         position = HSPoint(x: Double(centerX), y: Double(centerY))
+    }
+
+    // MARK: - Screenshot
+
+    @objc func snapshot(_ keepTransparency: Bool = false) -> JSPromise? {
+        guard id > 0, let windowID = CGWindowID(exactly: id) else {
+            return JSEngine.shared.createPromise { holder in
+                Task.detached {
+                    await holder.rejectWithMessage("hs.window.snapshot: window has no valid ID")
+                }
+            }
+        }
+        return captureWindowSnapshot(windowID: windowID, keepTransparency: keepTransparency)
     }
 
     // MARK: - Advanced
