@@ -39,6 +39,13 @@ const GUIDES = [
         slug: 'spoons-guide',
         pageTitle: 'Spoons',
         searchDescription: 'How to install, use, and write Spoons - packaged, reusable pieces of Hammerspoon 2 configuration.'
+    },
+    {
+        sourcePath: path.join(__dirname, '..', 'docs', 'canvas-guide.md'),
+        outputName: 'canvas-guide.html',
+        slug: 'canvas-guide',
+        pageTitle: 'hs.canvas',
+        searchDescription: 'A complete guide to hs.canvas: the element/property reference, the action pipeline, and worked examples combining shapes, text, images, gradients, and mouse interaction.'
     }
 ];
 
