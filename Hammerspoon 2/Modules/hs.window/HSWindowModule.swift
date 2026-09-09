@@ -335,13 +335,13 @@ import AXSwift
     }
 
     @objc func snapshotForID(_ id: Int, _ keepTransparency: Bool = false) -> JSPromise? {
-        guard id > 0 else {
+        guard id > 0, let windowID = CGWindowID(exactly: id) else {
             return JSEngine.shared.createPromise { holder in
                 Task.detached {
                     await holder.rejectWithMessage("hs.window.snapshotForID: invalid window ID \(id)")
                 }
             }
         }
-        return captureWindowSnapshot(windowID: CGWindowID(id), keepTransparency: keepTransparency)
+        return captureWindowSnapshot(windowID: windowID, keepTransparency: keepTransparency)
     }
 }
