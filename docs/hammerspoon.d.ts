@@ -1366,13 +1366,13 @@ console.log(element.role, element.title);
 
 // Watch for window creation events on an application
 const app = hs.application.frontmost();
-hs.ax.addWatcher(hs.ax.applicationElement(app), "AXWindowCreated", (notification, element) => {
+hs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
     console.log("New window:", element.title);
 });
 
 // Watch a specific element (e.g. a text field found via findByRole) for value changes
-const field = hs.ax.findByRole("AXTextField", hs.ax.applicationElement(app))[0];
-hs.ax.addWatcher(field, "AXValueChanged", (notification, element) => {
+const field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];
+hs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {
     console.log("Field changed:", element.value);
 });
 ```
@@ -1430,7 +1430,7 @@ declare namespace hs.ax {
 
     /**
      * Find AX elements matching a given role
-     * @param role The role name to search for (e.g. "AXButton")
+     * @param role The role name to search for (e.g. "AXButton", or hs.ax.roles.button)
      * @param parent An HSAXElement to search within
      * @returns An array of matching HSAXElement objects
      */
@@ -1455,6 +1455,11 @@ declare namespace hs.ax {
      * A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()
      */
     const notificationTypes: Record<string, string>;
+
+    /**
+     * A dictionary containing all of the known accessibility roles that elements can have, for use with hs.ax.findByRole() and similar
+     */
+    const roles: Record<string, string>;
 
 }
 

@@ -100,6 +100,71 @@ struct HSAXTests {
         """)
         }
 
+        // MARK: - roles dictionary
+
+        @Test("roles is a non-null object")
+        func testRolesIsObject() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.ax.roles === 'object' && hs.ax.roles !== null")
+        }
+
+        @Test("roles is non-empty")
+        func testRolesNonEmpty() {
+            let harness = makeHarness()
+            harness.expectTrue("Object.keys(hs.ax.roles).length > 0")
+        }
+
+        @Test("roles values all start with AX")
+        func testRolesValuesHaveAXPrefix() {
+            let harness = makeHarness()
+            harness.expectTrue("Object.values(hs.ax.roles).every(function(v) { return v.startsWith('AX'); })")
+        }
+
+        @Test("roles keys are camelCase (start with a lowercase letter)")
+        func testRolesKeysAreCamelCase() {
+            let harness = makeHarness()
+            harness.expectTrue("""
+            Object.keys(hs.ax.roles).every(function(k) {
+                return k.length > 0 && k[0] === k[0].toLowerCase() && /[a-z]/.test(k[0]);
+            })
+        """)
+        }
+
+        @Test("roles['button'] equals 'AXButton'")
+        func testRolesButton() {
+            let harness = makeHarness()
+            harness.expectEqual("hs.ax.roles['button']", "AXButton")
+        }
+
+        @Test("roles contains textField")
+        func testRolesContainsTextField() {
+            let harness = makeHarness()
+            harness.expectTrue("'textField' in hs.ax.roles")
+        }
+
+        @Test("roles contains window")
+        func testRolesContainsWindow() {
+            let harness = makeHarness()
+            harness.expectTrue("'window' in hs.ax.roles")
+        }
+
+        @Test("roles contains application")
+        func testRolesContainsApplication() {
+            let harness = makeHarness()
+            harness.expectTrue("'application' in hs.ax.roles")
+        }
+
+        @Test("roles keys and values form a one-to-one mapping")
+        func testRolesNoDuplicateValues() {
+            let harness = makeHarness()
+            harness.expectTrue("""
+            (function() {
+                var vals = Object.values(hs.ax.roles);
+                return vals.length === new Set(vals).size;
+            })()
+        """)
+        }
+
         // MARK: - Core Swift API presence
 
         @Test("systemWideElement is a function")

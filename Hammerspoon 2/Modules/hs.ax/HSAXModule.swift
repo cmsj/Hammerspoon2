@@ -34,7 +34,7 @@ import AXSwift
 /// });
 ///
 /// // Watch a specific element (e.g. a text field found via findByRole) for value changes
-/// const field = hs.ax.findByRole("AXTextField", app.axElement())[0];
+/// const field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];
 /// hs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {
 ///     console.log("Field changed:", element.value);
 /// });
@@ -88,6 +88,13 @@ import AXSwift
     /// ```
     @objc var notificationTypes: [String: String] { get }
 
+    /// A dictionary containing all of the known accessibility roles that elements can have, for use with hs.ax.findByRole() and similar
+    /// - Example:
+    /// ```js
+    /// console.log(Object.keys(hs.ax.roles))
+    /// ```
+    @objc var roles: [String: String] { get }
+
     /// Add a watcher for AX events on a specific element
     /// - Parameters:
     ///   - element: An HSAXElement to watch. This can be an application element (to receive notifications for the whole app's hierarchy) or any specific descendant element (e.g. a single text field)
@@ -125,13 +132,13 @@ import AXSwift
 
     /// Find AX elements matching a given role
     /// - Parameters:
-    ///   - role: The role name to search for (e.g. "AXButton")
+    ///   - role: The role name to search for (e.g. "AXButton", or hs.ax.roles.button)
     ///   - parent: An HSAXElement to search within
     /// - Returns: An array of matching HSAXElement objects
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// const buttons = hs.ax.findByRole("AXButton", app.axElement())
+    /// const buttons = hs.ax.findByRole(hs.ax.roles.button, app.axElement())
     /// ```
     @objc func findByRole(_ role: String, _ parent: HSAXElement) -> [HSAXElement]
 
@@ -193,6 +200,9 @@ import AXSwift
     // Notification types exposed to JavaScript
     @objc var _notificationTypes: [String: String] = [:]
 
+    // Element roles exposed to JavaScript
+    @objc var _roles: [String: String] = [:]
+
     // Swift-retained storage for the JS watcher emitter
     @objc var _watcherEmitter: JSFunction? = nil
 
@@ -252,18 +262,43 @@ import AXSwift
             kAXAnnouncementRequestedNotification as String,
         ]
         for rawName in notifications {
-            var name = rawName
-            if name.hasPrefix("AX") {
-                name = String(name.dropFirst(2)) // Remove "AX" prefix
-            }
-            // Convert to camelCase starting with lowercase
-            if let first = name.first {
-                name = first.lowercased() + name.dropFirst()
-            }
-            _notificationTypes[name] = rawName
+            _notificationTypes[Self.camelCaseKey(fromRawAXName: rawName)] = rawName
         }
+
+        // Build the roles dictionary. Copied from AXSwift's UIElement.Role, rather than
+        // depending on that library's static properties directly, since new roles are
+        // unlikely to require an AXSwift update to become usable here.
+        let roleNames: [String] = [
+            "AXUnknown", "AXButton", "AXRadioButton", "AXCheckBox", "AXSlider", "AXTabGroup",
+            "AXTextField", "AXStaticText", "AXTextArea", "AXScrollArea", "AXPopUpButton",
+            "AXMenuButton", "AXTable", "AXApplication", "AXGroup", "AXRadioGroup", "AXList",
+            "AXScrollBar", "AXValueIndicator", "AXImage", "AXMenuBar", "AXMenu", "AXMenuItem",
+            "AXMenuBarItem", "AXColumn", "AXRow", "AXToolbar", "AXBusyIndicator",
+            "AXProgressIndicator", "AXWindow", "AXDrawer", "AXSystemWide", "AXOutline",
+            "AXIncrementor", "AXBrowser", "AXComboBox", "AXSplitGroup", "AXSplitter",
+            "AXColorWell", "AXGrowArea", "AXSheet", "AXHelpTag", "AXMatte", "AXRuler",
+            "AXRulerMarker", "AXLink", "AXDisclosureTriangle", "AXGrid", "AXRelevanceIndicator",
+            "AXLevelIndicator", "AXCell", "AXPopover", "AXLayoutArea", "AXLayoutItem", "AXHandle",
+        ]
+        for rawName in roleNames {
+            _roles[Self.camelCaseKey(fromRawAXName: rawName)] = rawName
+        }
+
         super.init()
         AKGarbage("Init of \(self.moduleName)")
+    }
+
+    /// Convert a raw "AXFoo" constant name into the camelCase key used to expose it to JavaScript
+    private static func camelCaseKey(fromRawAXName rawName: String) -> String {
+        var name = rawName
+        if name.hasPrefix("AX") {
+            name = String(name.dropFirst(2)) // Remove "AX" prefix
+        }
+        // Convert to camelCase starting with lowercase
+        if let first = name.first {
+            name = first.lowercased() + name.dropFirst()
+        }
+        return name
     }
 
     func shutdown() {
@@ -353,6 +388,10 @@ import AXSwift
 
     @objc var notificationTypes: [String: String] {
         return _notificationTypes
+    }
+
+    @objc var roles: [String: String] {
+        return _roles
     }
 
     // MARK: - Watcher Management
