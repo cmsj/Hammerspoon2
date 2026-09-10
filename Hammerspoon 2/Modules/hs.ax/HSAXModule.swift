@@ -33,7 +33,10 @@ import AXSwift
 ///     console.log("New window:", element.title);
 /// });
 ///
-/// // Watch a specific element (e.g. a text field found via findByRole) for value changes
+/// // Watch a specific element (e.g. a text field found via findByRole) for value changes.
+/// // Element-specific notifications like AXValueChanged are only delivered to a watcher
+/// // registered on the exact element that posts them - registering on the application
+/// // element only works for application-level notifications like AXWindowCreated above.
 /// const field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];
 /// hs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {
 ///     console.log("Field changed:", element.value);
@@ -97,7 +100,7 @@ import AXSwift
 
     /// Add a watcher for AX events on a specific element
     /// - Parameters:
-    ///   - element: An HSAXElement to watch. This can be an application element (to receive notifications for the whole app's hierarchy) or any specific descendant element (e.g. a single text field)
+    ///   - element: An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them
     ///   - notification: An event name
     ///   - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to
     /// - Example:

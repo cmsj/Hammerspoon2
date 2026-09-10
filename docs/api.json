@@ -2336,7 +2336,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 51
+          "lineNumber": 54
         },
         {
           "name": "applicationElement",
@@ -2366,7 +2366,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 62
+          "lineNumber": 65
         },
         {
           "name": "windowElement",
@@ -2396,7 +2396,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 73
+          "lineNumber": 76
         },
         {
           "name": "elementAtPoint",
@@ -2426,19 +2426,19 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 82
+          "lineNumber": 85
         },
         {
           "name": "addWatcher",
           "signature": "func addWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Add a watcher for AX events on a specific element\n- Parameters:\n  - element: An HSAXElement to watch. This can be an application element (to receive notifications for the whole app's hierarchy) or any specific descendant element (e.g. a single text field)\n  - notification: An event name\n  - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n```",
+          "rawDocumentation": "Add a watcher for AX events on a specific element\n- Parameters:\n  - element: An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them\n  - notification: An event name\n  - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n```",
           "description": "Add a watcher for AX events on a specific element",
           "params": [
             {
               "name": "element",
               "type": "HSAXElement",
-              "description": "An HSAXElement to watch. This can be an application element (to receive notifications for the whole app's hierarchy) or any specific descendant element (e.g. a single text field)",
+              "description": "An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them",
               "optional": false,
               "tsType": null
             },
@@ -2467,7 +2467,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 110
+          "lineNumber": 113
         },
         {
           "name": "removeWatcher",
@@ -2508,7 +2508,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 122
+          "lineNumber": 125
         },
         {
           "name": "focusedElement",
@@ -2530,7 +2530,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 131
+          "lineNumber": 134
         },
         {
           "name": "findByRole",
@@ -2567,7 +2567,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 143
+          "lineNumber": 146
         },
         {
           "name": "findByTitle",
@@ -2604,7 +2604,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 155
+          "lineNumber": 158
         },
         {
           "name": "printHierarchy",
@@ -2638,7 +2638,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 166
+          "lineNumber": 169
         }
       ],
       "properties": [
@@ -2657,7 +2657,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 89
+          "lineNumber": 92
         },
         {
           "name": "roles",
@@ -2674,7 +2674,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 96
+          "lineNumber": 99
         }
       ],
       "types": [
@@ -3146,8 +3146,8 @@
           ]
         }
       ],
-      "description": "# Accessibility API Module\n## Basic Usage\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events on an application\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n\n// Watch a specific element (e.g. a text field found via findByRole) for value changes\nconst field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];\nhs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {\n    console.log(\"Field changed:\", element.value);\n});\n```\n**Note:** Requires accessibility permissions in System Preferences.",
-      "rawDocumentation": "# Accessibility API Module\n\nThis module provides access to macOS's powerful **Accessibility API**, allowing you to:\n- Inspect UI elements in any application\n- Monitor window and element changes\n- Programmatically interact with UI elements\n\n## Basic Usage\n\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events on an application\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n\n// Watch a specific element (e.g. a text field found via findByRole) for value changes\nconst field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];\nhs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {\n    console.log(\"Field changed:\", element.value);\n});\n```\n\n**Note:** Requires accessibility permissions in System Preferences."
+      "description": "# Accessibility API Module\n## Basic Usage\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events on an application\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n\n// Watch a specific element (e.g. a text field found via findByRole) for value changes.\n// Element-specific notifications like AXValueChanged are only delivered to a watcher\n// registered on the exact element that posts them - registering on the application\n// element only works for application-level notifications like AXWindowCreated above.\nconst field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];\nhs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {\n    console.log(\"Field changed:\", element.value);\n});\n```\n**Note:** Requires accessibility permissions in System Preferences.",
+      "rawDocumentation": "# Accessibility API Module\n\nThis module provides access to macOS's powerful **Accessibility API**, allowing you to:\n- Inspect UI elements in any application\n- Monitor window and element changes\n- Programmatically interact with UI elements\n\n## Basic Usage\n\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events on an application\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n\n// Watch a specific element (e.g. a text field found via findByRole) for value changes.\n// Element-specific notifications like AXValueChanged are only delivered to a watcher\n// registered on the exact element that posts them - registering on the application\n// element only works for application-level notifications like AXWindowCreated above.\nconst field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];\nhs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {\n    console.log(\"Field changed:\", element.value);\n});\n```\n\n**Note:** Requires accessibility permissions in System Preferences."
     },
     {
       "name": "hs.bonjour",
@@ -27660,5 +27660,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-10T19:36:48.883Z"
+  "generatedAt": "2026-09-10T20:05:12.709Z"
 }
