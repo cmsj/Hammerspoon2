@@ -197,7 +197,7 @@ struct HSHotkeyTests {
         @Test("bindSpec sets the message property on the returned hotkey")
         func testBindSpecSetsMessage() {
             let harness = makeHarness()
-            harness.eval("var hk = hs.hotkey.bindSpec({mods: ['ctrl'], key: '9', message: 'test message'})")
+            harness.eval("var hk = hs.hotkey.bindSpec({mods: ['ctrl'], key: '9', message: 'test message', pressed: () => {}})")
             harness.expectTrue("hk.message === 'test message'")
             #expect(!harness.hasException)
         }
@@ -205,7 +205,7 @@ struct HSHotkeyTests {
         @Test("bindSpec without a message leaves message unset")
         func testBindSpecWithoutMessage() {
             let harness = makeHarness()
-            harness.eval("var hk = hs.hotkey.bindSpec({mods: ['ctrl'], key: '0'})")
+            harness.eval("var hk = hs.hotkey.bindSpec({mods: ['ctrl'], key: '0', pressed: () => {}})")
             harness.expectTrue("hk.message === null || hk.message === undefined")
             #expect(!harness.hasException)
         }
@@ -417,6 +417,22 @@ struct HSHotkeyTests {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'a', () => {}, null)")
             harness.expectTrue("hs.hotkey.systemAssigned(['ctrl'], 'a') === null || hs.hotkey.systemAssigned(['ctrl'], 'a') === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bind with no function callbacks returns null (at least one is required)")
+        func testBindRequiresAtLeastOneFunction() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'n', null, null)")
+            harness.expectTrue("hk === null || hk === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("create with no callbacks still succeeds (deferred assignment)")
+        func testCreateWithoutCallbacksSucceeds() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.create(['ctrl'], 'n', null, null)")
+            harness.expectTrue("typeof hk === 'object' && hk !== null")
             #expect(!harness.hasException)
         }
     }
