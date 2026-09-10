@@ -78,10 +78,16 @@
 const element = hs.ax.focusedElement();
 console.log(element.role, element.title);
 
-// Watch for window creation events
+// Watch for window creation events on an application
 const app = hs.application.frontmost();
-hs.ax.addWatcher(app, &quot;AXWindowCreated&quot;, (notification, element) =&gt; {
+hs.ax.addWatcher(hs.ax.applicationElement(app), &quot;AXWindowCreated&quot;, (notification, element) =&gt; {
     console.log(&quot;New window:&quot;, element.title);
+});
+
+// Watch a specific element (e.g. a text field found via findByRole) for value changes
+const field = hs.ax.findByRole(&quot;AXTextField&quot;, hs.ax.applicationElement(app))[0];
+hs.ax.addWatcher(field, &quot;AXValueChanged&quot;, (notification, element) =&gt; {
+    console.log(&quot;Field changed:&quot;, element.value);
 });
 </code></pre>
 <p><strong>Note:</strong> Requires accessibility permissions in System Preferences.</p>
@@ -101,7 +107,7 @@ hs.ax.addWatcher(app, &quot;AXWindowCreated&quot;, (notification, element) =&gt;
         <div class="prop-type">{[key: string]: string}</div>
         <div class="description">A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L83" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:83</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L89" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:89</a>
         </div>
     </div>
 
@@ -124,7 +130,7 @@ hs.ax.addWatcher(app, &quot;AXWindowCreated&quot;, (notification, element) =&gt;
         <pre><code class="language-js">const sys = hs.ax.systemWideElement()</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L45" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:45</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L51" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:51</a>
         </div>
     </div>
     <div class="method" id="applicationElement">
@@ -163,7 +169,7 @@ hs.ax.addWatcher(app, &quot;AXWindowCreated&quot;, (notification, element) =&gt;
 const ax = hs.ax.applicationElement(app)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L56" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:56</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L62" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:62</a>
         </div>
     </div>
     <div class="method" id="windowElement">
@@ -202,7 +208,7 @@ const ax = hs.ax.applicationElement(app)</code></pre>
 const ax = hs.ax.windowElement(win)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L67" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:67</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L73" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:73</a>
         </div>
     </div>
     <div class="method" id="elementAtPoint">
@@ -240,16 +246,16 @@ const ax = hs.ax.windowElement(win)</code></pre>
         <pre><code class="language-js">const el = hs.ax.elementAtPoint({x: 100, y: 200})</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L76" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:76</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L82" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:82</a>
         </div>
     </div>
     <div class="method" id="addWatcher">
-        <h3><a href="#addWatcher">hs.ax.addWatcher(application, notification, listener) -> None</a></h3>
+        <h3><a href="#addWatcher">hs.ax.addWatcher(element, notification, listener) -> None</a></h3>
 
-        <div class="description">Add a watcher for application AX events</div>
+        <div class="description">Add a watcher for AX events on a specific element</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.ax.addWatcher(application, notification, listener) -> None</code></pre>
+        <pre><code class="language-javascript">hs.ax.addWatcher(element, notification, listener) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -262,9 +268,9 @@ const ax = hs.ax.windowElement(win)</code></pre>
             </thead>
             <tbody>
                 <tr>
-                    <td class="param-name">application</td>
-                    <td class="param-type">HSApplication</td>
-                    <td class="param-desc">An HSApplication object</td>
+                    <td class="param-name">element</td>
+                    <td class="param-type">HSAXElement</td>
+                    <td class="param-desc">An HSAXElement to watch. This can be an application element (to receive notifications for the whole app&#39;s hierarchy) or any specific descendant element (e.g. a single text field)</td>
                 </tr>
                 <tr>
                     <td class="param-name">notification</td>
@@ -285,21 +291,21 @@ const ax = hs.ax.windowElement(win)</code></pre>
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const app = hs.application.frontmost()
-hs.ax.addWatcher(app, &quot;AXWindowCreated&quot;, (notification, element) =&gt; {
+hs.ax.addWatcher(hs.ax.applicationElement(app), &quot;AXWindowCreated&quot;, (notification, element) =&gt; {
     console.log(&quot;New window:&quot;, element.title)
 })</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L97" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:97</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L103" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:103</a>
         </div>
     </div>
     <div class="method" id="removeWatcher">
-        <h3><a href="#removeWatcher">hs.ax.removeWatcher(application, notification, listener) -> None</a></h3>
+        <h3><a href="#removeWatcher">hs.ax.removeWatcher(element, notification, listener) -> None</a></h3>
 
-        <div class="description">Remove a watcher for application AX events</div>
+        <div class="description">Remove a watcher for AX events on a specific element</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">hs.ax.removeWatcher(application, notification, listener) -> None</code></pre>
+        <pre><code class="language-javascript">hs.ax.removeWatcher(element, notification, listener) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -312,9 +318,9 @@ hs.ax.addWatcher(app, &quot;AXWindowCreated&quot;, (notification, element) =&gt;
             </thead>
             <tbody>
                 <tr>
-                    <td class="param-name">application</td>
-                    <td class="param-type">HSApplication</td>
-                    <td class="param-desc">An HSApplication object</td>
+                    <td class="param-name">element</td>
+                    <td class="param-type">HSAXElement</td>
+                    <td class="param-desc">The HSAXElement that was passed to addWatcher()</td>
                 </tr>
                 <tr>
                     <td class="param-name">notification</td>
@@ -335,10 +341,10 @@ hs.ax.addWatcher(app, &quot;AXWindowCreated&quot;, (notification, element) =&gt;
 
         <div class="card-section-label">Example</div>
         <pre><code class="language-js">const app = hs.application.frontmost()
-hs.ax.removeWatcher(app, &quot;AXWindowCreated&quot;, myHandler)</code></pre>
+hs.ax.removeWatcher(hs.ax.applicationElement(app), &quot;AXWindowCreated&quot;, myHandler)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L109" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:109</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L115" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:115</a>
         </div>
     </div>
     <div class="method" id="focusedElement">
@@ -360,7 +366,7 @@ hs.ax.removeWatcher(app, &quot;AXWindowCreated&quot;, myHandler)</code></pre>
 console.log(el.role + &quot; &quot; + el.title)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L118" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:118</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L124" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:124</a>
         </div>
     </div>
     <div class="method" id="findByRole">
@@ -404,7 +410,7 @@ console.log(el.role + &quot; &quot; + el.title)</code></pre>
 const buttons = hs.ax.findByRole(&quot;AXButton&quot;, hs.ax.applicationElement(app))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L130" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:130</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L136" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:136</a>
         </div>
     </div>
     <div class="method" id="findByTitle">
@@ -448,7 +454,7 @@ const buttons = hs.ax.findByRole(&quot;AXButton&quot;, hs.ax.applicationElement(
 const matches = hs.ax.findByTitle(&quot;OK&quot;, hs.ax.applicationElement(app))</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L142" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:142</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L148" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:148</a>
         </div>
     </div>
     <div class="method" id="printHierarchy">
@@ -491,7 +497,7 @@ const matches = hs.ax.findByTitle(&quot;OK&quot;, hs.ax.applicationElement(app))
 hs.ax.printHierarchy(hs.ax.applicationElement(app), 3)</code></pre>
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L153" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:153</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXModule.swift#L159" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXModule.swift:159</a>
         </div>
     </div>
         </main>

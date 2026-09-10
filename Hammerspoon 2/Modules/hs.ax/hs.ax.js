@@ -4,7 +4,7 @@
 "use strict";
 
 // One-to-many event emitter for hs.ax events.
-// Allows multiple JavaScript listeners for the same app+notification pair
+// Allows multiple JavaScript listeners for the same element+notification pair
 // while Swift manages only a single callback per combination.
 class AXModuleWatcherEmitter {
     #events = {}
@@ -20,16 +20,16 @@ class AXModuleWatcherEmitter {
         }
     }
 
-    on(application, notification, listener) {
+    on(element, notification, listener) {
         if (typeof listener !== 'function') {
             throw new Error("hs.ax.addWatcher(): The provided handler must be a function");
         }
 
-        const key = `${application.pid}:${notification}`;
+        const key = `${element._identityKey}:${notification}`;
 
         if (!Array.isArray(this.#events[key])) {
             this.#events[key] = [];
-            hs.ax._addWatcher(application, notification, (notif, elem) => {
+            hs.ax._addWatcher(element, notification, (notif, elem) => {
                 this.#handleEvent(key, notif, elem);
             });
         }
@@ -42,8 +42,8 @@ class AXModuleWatcherEmitter {
         this.#events[key].push(listener);
     }
 
-    removeListener(application, notification, listener) {
-        const key = `${application.pid}:${notification}`;
+    removeListener(element, notification, listener) {
+        const key = `${element._identityKey}:${notification}`;
 
         if (Array.isArray(this.#events[key])) {
             const idx = this.#events[key].indexOf(listener);
@@ -53,7 +53,7 @@ class AXModuleWatcherEmitter {
             }
 
             if (this.#events[key].length === 0) {
-                hs.ax._removeWatcher(application, notification);
+                hs.ax._removeWatcher(element, notification);
                 delete this.#events[key];
             }
         }

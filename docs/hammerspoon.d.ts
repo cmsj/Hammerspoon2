@@ -1364,10 +1364,16 @@ For devices that support a range, both the minimum and maximum are included.
 const element = hs.ax.focusedElement();
 console.log(element.role, element.title);
 
-// Watch for window creation events
+// Watch for window creation events on an application
 const app = hs.application.frontmost();
-hs.ax.addWatcher(app, "AXWindowCreated", (notification, element) => {
+hs.ax.addWatcher(hs.ax.applicationElement(app), "AXWindowCreated", (notification, element) => {
     console.log("New window:", element.title);
+});
+
+// Watch a specific element (e.g. a text field found via findByRole) for value changes
+const field = hs.ax.findByRole("AXTextField", hs.ax.applicationElement(app))[0];
+hs.ax.addWatcher(field, "AXValueChanged", (notification, element) => {
+    console.log("Field changed:", element.value);
 });
 ```
 **Note:** Requires accessibility permissions in System Preferences.
@@ -1401,20 +1407,20 @@ declare namespace hs.ax {
     function elementAtPoint(point: HSPoint): HSAXElement | null;
 
     /**
-     * Add a watcher for application AX events
-     * @param application An HSApplication object
+     * Add a watcher for AX events on a specific element
+     * @param element An HSAXElement to watch. This can be an application element (to receive notifications for the whole app's hierarchy) or any specific descendant element (e.g. a single text field)
      * @param notification An event name
      * @param listener A function called with the notification name and the accessibility element it applies to
      */
-    function addWatcher(application: HSApplication, notification: string, listener: (notification: string, element: HSAXElement) => void): void;
+    function addWatcher(element: HSAXElement, notification: string, listener: (notification: string, element: HSAXElement) => void): void;
 
     /**
-     * Remove a watcher for application AX events
-     * @param application An HSApplication object
+     * Remove a watcher for AX events on a specific element
+     * @param element The HSAXElement that was passed to addWatcher()
      * @param notification The event name to stop watching
      * @param listener The function/lambda provided when adding the watcher
      */
-    function removeWatcher(application: HSApplication, notification: string, listener: (...args: any[]) => any): void;
+    function removeWatcher(element: HSAXElement, notification: string, listener: (...args: any[]) => any): void;
 
     /**
      * Fetch the focused UI element
@@ -1509,6 +1515,13 @@ declare class HSAXElement {
      * @returns True if the action succeeded, otherwise False
      */
     performAction(action: string): boolean;
+
+    /**
+     * Test whether this element and another refer to the same underlying accessibility object
+     * @param other Another HSAXElement to compare against
+     * @returns True if both objects represent the same underlying accessibility element
+     */
+    isEqualToElement(other: HSAXElement): boolean;
 
     /**
      * The element's role (e.g., "AXWindow", "AXButton")

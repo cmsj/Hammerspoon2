@@ -27,10 +27,16 @@ import AXSwift
 /// const element = hs.ax.focusedElement();
 /// console.log(element.role, element.title);
 ///
-/// // Watch for window creation events
+/// // Watch for window creation events on an application
 /// const app = hs.application.frontmost();
-/// hs.ax.addWatcher(app, "AXWindowCreated", (notification, element) => {
+/// hs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
 ///     console.log("New window:", element.title);
+/// });
+///
+/// // Watch a specific element (e.g. a text field found via findByRole) for value changes
+/// const field = hs.ax.findByRole("AXTextField", app.axElement())[0];
+/// hs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {
+///     console.log("Field changed:", element.value);
 /// });
 /// ```
 ///
@@ -82,31 +88,31 @@ import AXSwift
     /// ```
     @objc var notificationTypes: [String: String] { get }
 
-    /// Add a watcher for application AX events
+    /// Add a watcher for AX events on a specific element
     /// - Parameters:
-    ///   - application: An HSApplication object
+    ///   - element: An HSAXElement to watch. This can be an application element (to receive notifications for the whole app's hierarchy) or any specific descendant element (e.g. a single text field)
     ///   - notification: An event name
     ///   - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// hs.ax.addWatcher(app, "AXWindowCreated", (notification, element) => {
+    /// hs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
     ///     console.log("New window:", element.title)
     /// })
     /// ```
-    @objc func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction)
+    @objc func addWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction)
 
-    /// Remove a watcher for application AX events
+    /// Remove a watcher for AX events on a specific element
     /// - Parameters:
-    ///   - application: An HSApplication object
+    ///   - element: The HSAXElement that was passed to addWatcher()
     ///   - notification: The event name to stop watching
     ///   - listener: The function/lambda provided when adding the watcher
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// hs.ax.removeWatcher(app, "AXWindowCreated", myHandler)
+    /// hs.ax.removeWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, myHandler)
     /// ```
-    @objc func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction)
+    @objc func removeWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction)
 
     /// Fetch the focused UI element
     /// - Returns: An HSAXElement representing the focused UI element, or nil if none was found
@@ -125,7 +131,7 @@ import AXSwift
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// const buttons = hs.ax.findByRole("AXButton", hs.ax.applicationElement(app))
+    /// const buttons = hs.ax.findByRole("AXButton", app.axElement())
     /// ```
     @objc func findByRole(_ role: String, _ parent: HSAXElement) -> [HSAXElement]
 
@@ -137,7 +143,7 @@ import AXSwift
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// const matches = hs.ax.findByTitle("OK", hs.ax.applicationElement(app))
+    /// const matches = hs.ax.findByTitle("OK", app.axElement())
     /// ```
     @objc func findByTitle(_ title: String, _ parent: HSAXElement) -> [HSAXElement]
 
@@ -148,15 +154,15 @@ import AXSwift
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// hs.ax.printHierarchy(hs.ax.applicationElement(app), 3)
+    /// hs.ax.printHierarchy(app.axElement(), 3)
     /// ```
     @objc func printHierarchy(_ element: HSAXElement?, _ maxDepth: Int)
 
     // NOTE: These are private API for the companion JS file only
     /// SKIP_DOCS
-    @objc(_addWatcher:::) func _addWatcher(_ application: HSApplication, notification: String, callback: JSFunction)
+    @objc(_addWatcher:::) func _addWatcher(_ element: HSAXElement, notification: String, callback: JSFunction)
     /// SKIP_DOCS
-    @objc(_removeWatcher::) func _removeWatcher(_ application: HSApplication, notification: String)
+    @objc(_removeWatcher::) func _removeWatcher(_ element: HSAXElement, notification: String)
 
     /// Swift-retained storage for the JS AXModuleWatcherEmitter instance
     /// SKIP_DOCS
@@ -174,8 +180,15 @@ import AXSwift
     // Store observers by PID
     private var observers: [pid_t: Observer] = [:]
 
-    // Store watchers by a key composed of "pid:notification"
-    private var watchers: [String: HSAXWatcherObject] = [:]
+    // Identifies a single watcher: a specific element and notification pair
+    private struct WatcherKey: Hashable {
+        let element: UIElement
+        let notification: String
+    }
+
+    // Store watchers by element+notification, so multiple elements (e.g. two different
+    // text fields) can each have their own watcher for the same notification type
+    private var watchers: [WatcherKey: HSAXWatcherObject] = [:]
 
     // Notification types exposed to JavaScript
     @objc var _notificationTypes: [String: String] = [:]
@@ -344,36 +357,31 @@ import AXSwift
 
     // MARK: - Watcher Management
 
-    private func makeWatcherKey(pid: pid_t, notification: String) -> String {
-        return "\(pid):\(notification)"
+    @objc func addWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction) {
+        _watcherEmitter?.invokeMethod("on", withArguments: [element, notification, listener])
     }
 
-    @objc func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [application, notification, listener])
+    @objc func removeWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction) {
+        _watcherEmitter?.invokeMethod("removeListener", withArguments: [element, notification, listener])
     }
 
-    @objc func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [application, notification, listener])
-    }
-
-    @objc(_addWatcher:::) func _addWatcher(_ application: HSApplication, notification: String, callback: JSFunction) {
+    @objc(_addWatcher:::) func _addWatcher(_ element: HSAXElement, notification: String, callback: JSFunction) {
         guard isAccessibilityEnabled() else {
             AKError("hs.ax.addWatcher(): Accessibility permissions not granted")
             return
         }
 
-        let pid = application.runningApplication.processIdentifier
-        let key = makeWatcherKey(pid: pid, notification: notification)
-
-        // Check if we already have a watcher for this combination
-        if watchers.keys.contains(key) {
-            AKWarning("hs.ax.addWatcher(): There is already a watcher for \(notification) on PID \(pid). Refusing to create a second.")
+        let pid = pid_t(element.pid)
+        guard pid > 0 else {
+            AKError("hs.ax.addWatcher(): Could not get PID for element")
             return
         }
 
-        // Get the application element
-        guard let appElement = application.axElement() else {
-            AKError("hs.ax.addWatcher(): Could not get AX element for application")
+        let key = WatcherKey(element: element.element, notification: notification)
+
+        // Check if we already have a watcher for this combination
+        if watchers.keys.contains(key) {
+            AKWarning("hs.ax.addWatcher(): There is already a watcher for \(notification) on this element. Refusing to create a second.")
             return
         }
 
@@ -386,7 +394,7 @@ import AXSwift
                 let observer = try Observer(processID: pid) { [weak self] (observer: Observer, element: UIElement, notification: UIElement.AXNotification, info: [String: AnyObject]?) in
                     // This closure is called when any notification on this PID fires
                     guard let self = self else { return }
-                    self.handleNotification(pid: pid, element: element, notification: notification)
+                    self.handleNotification(element: element, notification: notification)
                 }
                 observers[pid] = observer
                 AKDebug("hs.ax.addWatcher(): Created observer for PID \(pid)")
@@ -402,12 +410,12 @@ import AXSwift
         }
 
         // Create the watcher object
-        let watcherObject = HSAXWatcherObject(element: appElement.element, notification: notifType, callback: callback)
+        let watcherObject = HSAXWatcherObject(element: element.element, notification: notifType, callback: callback)
         watchers[key] = watcherObject
 
         // Add the notification to the observer
         do {
-            try observer.addNotification(notifType, forElement: appElement.element)
+            try observer.addNotification(notifType, forElement: element.element)
             AKDebug("hs.ax.addWatcher(): Added watcher for \(notification) on PID \(pid)")
         } catch {
             AKError("hs.ax.addWatcher(): Failed to add notification: \(error)")
@@ -415,12 +423,12 @@ import AXSwift
         }
     }
 
-    @objc(_removeWatcher::) func _removeWatcher(_ application: HSApplication, notification: String) {
-        let pid = application.runningApplication.processIdentifier
-        let key = makeWatcherKey(pid: pid, notification: notification)
+    @objc(_removeWatcher::) func _removeWatcher(_ element: HSAXElement, notification: String) {
+        let pid = pid_t(element.pid)
+        let key = WatcherKey(element: element.element, notification: notification)
 
         guard let watcherObject = watchers[key] else {
-            AKDebug("hs.ax.removeWatcher(): No watcher found for \(notification) on PID \(pid)")
+            AKDebug("hs.ax.removeWatcher(): No watcher found for \(notification) on this element")
             return
         }
 
@@ -441,7 +449,7 @@ import AXSwift
         watchers.removeValue(forKey: key)
 
         // If there are no more watchers for this PID, clean up the observer
-        let remainingWatchers = watchers.keys.filter { $0.hasPrefix("\(pid):") }
+        let remainingWatchers = watchers.keys.filter { (try? $0.element.pid()) == pid }
         if remainingWatchers.isEmpty {
             observer.stop()
             observers.removeValue(forKey: pid)
@@ -450,8 +458,8 @@ import AXSwift
     }
 
     /// Handle a notification from the observer
-    private func handleNotification(pid: pid_t, element: UIElement, notification: UIElement.AXNotification) {
-        let key = makeWatcherKey(pid: pid, notification: notification.rawValue)
+    private func handleNotification(element: UIElement, notification: UIElement.AXNotification) {
+        let key = WatcherKey(element: element, notification: notification.rawValue)
 
         guard let watcherObject = watchers[key] else {
             // This can happen if we're watching multiple notifications on an element
