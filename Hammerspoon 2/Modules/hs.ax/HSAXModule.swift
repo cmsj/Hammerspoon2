@@ -101,7 +101,7 @@ import AXSwift
     /// Add a watcher for AX events on a specific element
     /// - Parameters:
     ///   - element: An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them
-    ///   - notification: An event name
+    ///   - notification: {string | string[]} An event name, or an array of event names, to watch for with the same listener
     ///   - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to
     /// - Example:
     /// ```js
@@ -109,20 +109,25 @@ import AXSwift
     /// hs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
     ///     console.log("New window:", element.title)
     /// })
+    ///
+    /// // Watch for several notifications with the same handler
+    /// hs.ax.addWatcher(app.axElement(), [hs.ax.notificationTypes.windowCreated, hs.ax.notificationTypes.windowMoved], (notification, element) => {
+    ///     console.log(notification, element.title)
+    /// })
     /// ```
-    @objc func addWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction)
+    @objc func addWatcher(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction)
 
     /// Remove a watcher for AX events on a specific element
     /// - Parameters:
     ///   - element: The HSAXElement that was passed to addWatcher()
-    ///   - notification: The event name to stop watching
+    ///   - notification: {string | string[]} The event name, or array of event names, to stop watching
     ///   - listener: The function/lambda provided when adding the watcher
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
     /// hs.ax.removeWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, myHandler)
     /// ```
-    @objc func removeWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction)
+    @objc func removeWatcher(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction)
 
     /// Fetch the focused UI element
     /// - Returns: An HSAXElement representing the focused UI element, or nil if none was found
@@ -399,12 +404,35 @@ import AXSwift
 
     // MARK: - Watcher Management
 
-    @objc func addWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [element, notification, listener])
+    @objc func addWatcher(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction) {
+        guard let notifications = Self.notificationStrings(from: notification) else {
+            AKError("hs.ax.addWatcher(): notification must be a string or an array of strings")
+            return
+        }
+        for notif in notifications {
+            _watcherEmitter?.invokeMethod("on", withArguments: [element, notif, listener])
+        }
     }
 
-    @objc func removeWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [element, notification, listener])
+    @objc func removeWatcher(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction) {
+        guard let notifications = Self.notificationStrings(from: notification) else {
+            AKError("hs.ax.removeWatcher(): notification must be a string or an array of strings")
+            return
+        }
+        for notif in notifications {
+            _watcherEmitter?.invokeMethod("removeListener", withArguments: [element, notif, listener])
+        }
+    }
+
+    /// Accepts either a single notification name string, or an array of them
+    private static func notificationStrings(from value: JSValue) -> [String]? {
+        if value.isString, let str = value.toString() {
+            return [str]
+        }
+        if value.isArray, let strings = value.toArray() as? [String] {
+            return strings
+        }
+        return nil
     }
 
     @objc(_addWatcher:::) func _addWatcher(_ element: HSAXElement, notification: String, callback: JSFunction) {

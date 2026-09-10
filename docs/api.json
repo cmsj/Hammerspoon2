@@ -2430,9 +2430,9 @@
         },
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction)",
+          "signature": "func addWatcher(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Add a watcher for AX events on a specific element\n- Parameters:\n  - element: An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them\n  - notification: An event name\n  - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n```",
+          "rawDocumentation": "Add a watcher for AX events on a specific element\n- Parameters:\n  - element: An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them\n  - notification: {string | string[]} An event name, or an array of event names, to watch for with the same listener\n  - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n\n// Watch for several notifications with the same handler\nhs.ax.addWatcher(app.axElement(), [hs.ax.notificationTypes.windowCreated, hs.ax.notificationTypes.windowMoved], (notification, element) => {\n    console.log(notification, element.title)\n})\n```",
           "description": "Add a watcher for AX events on a specific element",
           "params": [
             {
@@ -2444,10 +2444,10 @@
             },
             {
               "name": "notification",
-              "type": "string",
-              "description": "An event name",
+              "type": "JSValue",
+              "description": "An event name, or an array of event names, to watch for with the same listener",
               "optional": false,
-              "tsType": null
+              "tsType": "string | string[]"
             },
             {
               "name": "listener",
@@ -2462,18 +2462,18 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title)\n})"
+              "code": "const app = hs.application.frontmost()\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n\n// Watch for several notifications with the same handler\nhs.ax.addWatcher(app.axElement(), [hs.ax.notificationTypes.windowCreated, hs.ax.notificationTypes.windowMoved], (notification, element) => {\n    console.log(notification, element.title)\n})"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 113
+          "lineNumber": 118
         },
         {
           "name": "removeWatcher",
-          "signature": "func removeWatcher(_ element: HSAXElement, _ notification: String, _ listener: JSFunction)",
+          "signature": "func removeWatcher(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Remove a watcher for AX events on a specific element\n- Parameters:\n  - element: The HSAXElement that was passed to addWatcher()\n  - notification: The event name to stop watching\n  - listener: The function/lambda provided when adding the watcher\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.removeWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, myHandler)\n```",
+          "rawDocumentation": "Remove a watcher for AX events on a specific element\n- Parameters:\n  - element: The HSAXElement that was passed to addWatcher()\n  - notification: {string | string[]} The event name, or array of event names, to stop watching\n  - listener: The function/lambda provided when adding the watcher\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.removeWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, myHandler)\n```",
           "description": "Remove a watcher for AX events on a specific element",
           "params": [
             {
@@ -2485,10 +2485,10 @@
             },
             {
               "name": "notification",
-              "type": "string",
-              "description": "The event name to stop watching",
+              "type": "JSValue",
+              "description": "The event name, or array of event names, to stop watching",
               "optional": false,
-              "tsType": null
+              "tsType": "string | string[]"
             },
             {
               "name": "listener",
@@ -2508,7 +2508,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 125
+          "lineNumber": 130
         },
         {
           "name": "focusedElement",
@@ -2530,7 +2530,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 134
+          "lineNumber": 139
         },
         {
           "name": "findByRole",
@@ -2567,7 +2567,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 146
+          "lineNumber": 151
         },
         {
           "name": "findByTitle",
@@ -2604,7 +2604,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 158
+          "lineNumber": 163
         },
         {
           "name": "printHierarchy",
@@ -2638,7 +2638,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 169
+          "lineNumber": 174
         }
       ],
       "properties": [
@@ -27660,5 +27660,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-10T20:05:12.709Z"
+  "generatedAt": "2026-09-10T20:11:33.771Z"
 }

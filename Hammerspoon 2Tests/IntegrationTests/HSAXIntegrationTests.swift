@@ -1035,6 +1035,46 @@ struct HSAXTests {
             #expect(!harness.hasException)
         }
 
+        @Test("addWatcher accepts an array of notification names for a single listener")
+        func testAddWatcherAcceptsArrayOfNotifications() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc10Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc10Elem = hs.ax.applicationElement(_lc10Finder);
+            var _lc10Fn = function(n, e) {};
+            hs.ax.addWatcher(_lc10Elem, ['AXWindowCreated', 'AXWindowMiniaturized', 'AXWindowMoved'], _lc10Fn);
+            hs.ax.removeWatcher(_lc10Elem, ['AXWindowCreated', 'AXWindowMiniaturized', 'AXWindowMoved'], _lc10Fn);
+        """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("addWatcher with an array registers the listener for each notification independently")
+        func testAddWatcherArrayRegistersEachNotificationIndependently() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc11Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc11Elem = hs.ax.applicationElement(_lc11Finder);
+            var _lc11Fn = function(n, e) {};
+            hs.ax.addWatcher(_lc11Elem, ['AXWindowCreated', 'AXWindowMiniaturized'], _lc11Fn);
+            // Removing just one of the two notifications should leave the other registered
+            hs.ax.removeWatcher(_lc11Elem, 'AXWindowCreated', _lc11Fn);
+            hs.ax.removeWatcher(_lc11Elem, 'AXWindowMiniaturized', _lc11Fn);
+        """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("addWatcher with an invalid notification type does not throw and does not register")
+        func testAddWatcherInvalidNotificationTypeIsSafe() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc12Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc12Elem = hs.ax.applicationElement(_lc12Finder);
+            hs.ax.addWatcher(_lc12Elem, 42, function() {});
+            hs.ax.addWatcher(_lc12Elem, { not: 'valid' }, function() {});
+        """)
+            #expect(!harness.hasException)
+        }
+
         @Test("addWatcher throws when listener is a string, not a function")
         func testAddWatcherThrowsForStringListener() {
             let harness = makeHarness()
@@ -1289,6 +1329,31 @@ struct HSAXTests {
 
             if received {
                 harness.expectTrue("typeof _ed5Role === 'string' && _ed5Role.length > 0")
+            }
+        }
+
+        @Test("watcher registered with an array of notifications receives events for them")
+        func testWatcherWithArrayOfNotificationsReceivesEvents() async {
+            let harness = makeHarness()
+
+            harness.eval("""
+            var _ed6Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _ed6Elem = hs.ax.applicationElement(_ed6Finder);
+            var _ed6Events = [];
+            var _ed6Fn = function(notification, elem) { _ed6Events.push(notification); };
+            hs.ax.addWatcher(_ed6Elem, ['AXWindowCreated', 'AXWindowMoved'], _ed6Fn);
+        """)
+            defer { harness.eval("hs.ax.removeWatcher(_ed6Elem, ['AXWindowCreated', 'AXWindowMoved'], _ed6Fn);") }
+
+            guard openFinderWindow() else { return }
+            defer { closeFinderWindow() }
+
+            let received = await harness.waitForAsync(timeout: 2.0) {
+                harness.eval("_ed6Events.length > 0") as? Bool == true
+            }
+
+            if received {
+                harness.expectTrue("_ed6Events.indexOf('windowCreated') !== -1")
             }
         }
     }

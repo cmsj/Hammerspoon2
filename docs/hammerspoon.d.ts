@@ -1412,18 +1412,18 @@ declare namespace hs.ax {
     /**
      * Add a watcher for AX events on a specific element
      * @param element An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them
-     * @param notification An event name
+     * @param notification An event name, or an array of event names, to watch for with the same listener
      * @param listener A function called with the notification name and the accessibility element it applies to
      */
-    function addWatcher(element: HSAXElement, notification: string, listener: (notification: string, element: HSAXElement) => void): void;
+    function addWatcher(element: HSAXElement, notification: string | string[], listener: (notification: string, element: HSAXElement) => void): void;
 
     /**
      * Remove a watcher for AX events on a specific element
      * @param element The HSAXElement that was passed to addWatcher()
-     * @param notification The event name to stop watching
+     * @param notification The event name, or array of event names, to stop watching
      * @param listener The function/lambda provided when adding the watcher
      */
-    function removeWatcher(element: HSAXElement, notification: string, listener: (...args: any[]) => any): void;
+    function removeWatcher(element: HSAXElement, notification: string | string[], listener: (...args: any[]) => any): void;
 
     /**
      * Fetch the focused UI element
