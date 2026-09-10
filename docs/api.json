@@ -2336,7 +2336,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 44
+          "lineNumber": 45
         },
         {
           "name": "applicationElement",
@@ -2366,7 +2366,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 55
+          "lineNumber": 56
         },
         {
           "name": "windowElement",
@@ -2396,7 +2396,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 66
+          "lineNumber": 67
         },
         {
           "name": "elementAtPoint",
@@ -2426,7 +2426,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 75
+          "lineNumber": 76
         },
         {
           "name": "addWatcher",
@@ -2467,7 +2467,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 96
+          "lineNumber": 97
         },
         {
           "name": "removeWatcher",
@@ -2508,7 +2508,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 108
+          "lineNumber": 109
         },
         {
           "name": "focusedElement",
@@ -2530,7 +2530,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 117
+          "lineNumber": 118
         },
         {
           "name": "findByRole",
@@ -2567,7 +2567,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 129
+          "lineNumber": 130
         },
         {
           "name": "findByTitle",
@@ -2604,7 +2604,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 141
+          "lineNumber": 142
         },
         {
           "name": "printHierarchy",
@@ -2638,7 +2638,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 152
+          "lineNumber": 153
         }
       ],
       "properties": [
@@ -2657,7 +2657,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 82
+          "lineNumber": 83
         }
       ],
       "types": [
@@ -27613,5 +27613,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-09T15:56:16.638Z"
+  "generatedAt": "2026-09-10T15:37:29.052Z"
 }

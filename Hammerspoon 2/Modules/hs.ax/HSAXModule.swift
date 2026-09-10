@@ -8,6 +8,7 @@
 import Foundation
 import JavaScriptCore
 import AppKit
+import ApplicationServices
 import AXSwift
 
 // MARK: - Declare our JavaScript API
@@ -186,9 +187,59 @@ import AXSwift
 
     required init(engineID: UUID) {
         self.engineID = engineID
-        // Build the notification types dictionary
-        for notificationType in UIElement.AXNotification.allCases {
-            var name = notificationType.rawValue
+        // Build the notification types dictionary directly from the system's AX notification
+        // constants, rather than a third-party library's potentially stale mirror of them.
+        let notifications: [String] = [
+            // Focus
+            kAXMainWindowChangedNotification as String,
+            kAXFocusedWindowChangedNotification as String,
+            kAXFocusedUIElementChangedNotification as String,
+            // Application
+            kAXApplicationActivatedNotification as String,
+            kAXApplicationDeactivatedNotification as String,
+            kAXApplicationHiddenNotification as String,
+            kAXApplicationShownNotification as String,
+            // Window
+            kAXWindowCreatedNotification as String,
+            kAXWindowMovedNotification as String,
+            kAXWindowResizedNotification as String,
+            kAXWindowMiniaturizedNotification as String,
+            kAXWindowDeminiaturizedNotification as String,
+            // Drawer, sheet, help
+            kAXDrawerCreatedNotification as String,
+            kAXSheetCreatedNotification as String,
+            kAXHelpTagCreatedNotification as String,
+            // Element
+            kAXValueChangedNotification as String,
+            kAXUIElementDestroyedNotification as String,
+            kAXElementBusyChangedNotification as String,
+            // Menu
+            kAXMenuOpenedNotification as String,
+            kAXMenuClosedNotification as String,
+            kAXMenuItemSelectedNotification as String,
+            // Table/outline
+            kAXRowCountChangedNotification as String,
+            kAXRowExpandedNotification as String,
+            kAXRowCollapsedNotification as String,
+            // Cell-based table
+            kAXSelectedCellsChangedNotification as String,
+            // Layout area
+            kAXUnitsChangedNotification as String,
+            kAXSelectedChildrenMovedNotification as String,
+            // Other
+            kAXSelectedChildrenChangedNotification as String,
+            kAXResizedNotification as String,
+            kAXMovedNotification as String,
+            kAXCreatedNotification as String,
+            kAXSelectedRowsChangedNotification as String,
+            kAXSelectedColumnsChangedNotification as String,
+            kAXSelectedTextChangedNotification as String,
+            kAXTitleChangedNotification as String,
+            kAXLayoutChangedNotification as String,
+            kAXAnnouncementRequestedNotification as String,
+        ]
+        for rawName in notifications {
+            var name = rawName
             if name.hasPrefix("AX") {
                 name = String(name.dropFirst(2)) // Remove "AX" prefix
             }
@@ -196,7 +247,7 @@ import AXSwift
             if let first = name.first {
                 name = first.lowercased() + name.dropFirst()
             }
-            _notificationTypes[name] = notificationType.rawValue
+            _notificationTypes[name] = rawName
         }
         super.init()
         AKGarbage("Init of \(self.moduleName)")
