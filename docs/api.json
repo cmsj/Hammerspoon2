@@ -5,17 +5,17 @@
       "methods": [
         {
           "name": "log",
-          "signature": "func log(_ message: String)",
+          "signature": "func log(_ value: JSValue)",
           "isStatic": false,
-          "rawDocumentation": "Log a message to the Hammerspoon Log Window\n- Parameter message: A message to log",
-          "description": "Log a message to the Hammerspoon Log Window",
+          "rawDocumentation": "Log a value to the Hammerspoon Log Window\n\nAccepts any number of values, which are space-separated in the log output. Non-string\nvalues (objects, arrays, errors, etc.) are formatted the way Node's `util.inspect` would\nrender them.\n- Parameter value: A value to log\n- Example: `console.log(\"window count:\", hs.window.allWindows().length)`",
+          "description": "Log a value to the Hammerspoon Log Window\nAccepts any number of values, which are space-separated in the log output. Non-string\nvalues (objects, arrays, errors, etc.) are formatted the way Node's `util.inspect` would\nrender them.",
           "params": [
             {
-              "name": "message",
-              "type": "string",
-              "description": "A message to log",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -23,21 +23,21 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 16
+          "lineNumber": 22
         },
         {
           "name": "error",
-          "signature": "func error(_ message: String)",
+          "signature": "func error(_ value: JSValue)",
           "isStatic": false,
-          "rawDocumentation": "Log an error to the Hammerspoon Log Window\n- Parameter message: An error message",
-          "description": "Log an error to the Hammerspoon Log Window",
+          "rawDocumentation": "Log an error to the Hammerspoon Log Window\n\nAccepts any number of values; see ``log(_:)`` for formatting details.\n- Parameter value: A value to log\n- Example: `console.error(\"failed to load config:\", err)`",
+          "description": "Log an error to the Hammerspoon Log Window\nAccepts any number of values; see ``log(_:)`` for formatting details.",
           "params": [
             {
-              "name": "message",
-              "type": "string",
-              "description": "An error message",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -45,21 +45,21 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 20
+          "lineNumber": 30
         },
         {
           "name": "warn",
-          "signature": "func warn(_ message: String)",
+          "signature": "func warn(_ value: JSValue)",
           "isStatic": false,
-          "rawDocumentation": "Log a warning to the Hammerspoon Log WIndow\n- Parameter message: A warning message",
-          "description": "Log a warning to the Hammerspoon Log WIndow",
+          "rawDocumentation": "Log a warning to the Hammerspoon Log WIndow\n\nAccepts any number of values; see ``log(_:)`` for formatting details.\n- Parameter value: A value to log\n- Example: `console.warn(\"deprecated call to\", \"hs.oldThing()\")`",
+          "description": "Log a warning to the Hammerspoon Log WIndow\nAccepts any number of values; see ``log(_:)`` for formatting details.",
           "params": [
             {
-              "name": "message",
-              "type": "string",
-              "description": "A warning message",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -67,21 +67,21 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 24
+          "lineNumber": 38
         },
         {
           "name": "info",
-          "signature": "func info(_ message: String)",
+          "signature": "func info(_ value: JSValue)",
           "isStatic": false,
-          "rawDocumentation": "Log an informational message to the Hammerspoon Log Window\n- Parameter message: An informational message",
-          "description": "Log an informational message to the Hammerspoon Log Window",
+          "rawDocumentation": "Log an informational message to the Hammerspoon Log Window\n\nAccepts any number of values; see ``log(_:)`` for formatting details.\n- Parameter value: A value to log\n- Example: `console.info(\"config reloaded\")`",
+          "description": "Log an informational message to the Hammerspoon Log Window\nAccepts any number of values; see ``log(_:)`` for formatting details.",
           "params": [
             {
-              "name": "message",
-              "type": "string",
-              "description": "An informational message",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -89,21 +89,21 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 28
+          "lineNumber": 46
         },
         {
           "name": "debug",
-          "signature": "func debug(_ message: String)",
+          "signature": "func debug(_ value: JSValue)",
           "isStatic": false,
-          "rawDocumentation": "Log a debug message to the Hammerspoon Log Window\n- Parameter message: A debug message",
-          "description": "Log a debug message to the Hammerspoon Log Window",
+          "rawDocumentation": "Log a debug message to the Hammerspoon Log Window\n\nAccepts any number of values; see ``log(_:)`` for formatting details.\n- Parameter value: A value to log\n- Example: `console.debug(\"state:\", { x: 1, y: 2 })`",
+          "description": "Log a debug message to the Hammerspoon Log Window\nAccepts any number of values; see ``log(_:)`` for formatting details.",
           "params": [
             {
-              "name": "message",
-              "type": "string",
-              "description": "A debug message",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -111,7 +111,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 32
+          "lineNumber": 54
         }
       ],
       "properties": [],
@@ -25580,6 +25580,40 @@
       ],
       "description": "Module for interacting with windows",
       "rawDocumentation": "Module for interacting with windows"
+    },
+    {
+      "name": "util",
+      "methods": [
+        {
+          "name": "inspect",
+          "signature": "func inspect(_ value: JSValue) -> String",
+          "isStatic": false,
+          "rawDocumentation": "Returns a string representation of a value, intended for debugging.\n\nObjects, arrays, `Map`/`Set`, functions, dates, and errors are formatted the way\nNode/browser consoles render them; a top-level string is returned as-is.\n- Parameter value: The value to format.\n- Returns: A formatted string.\n- Example: `util.inspect({ a: 1, b: [1, 2, 3] }) // \"{ a: 1, b: [ 1, 2, 3 ] }\"`",
+          "description": "Returns a string representation of a value, intended for debugging.\nObjects, arrays, `Map`/`Set`, functions, dates, and errors are formatted the way\nNode/browser consoles render them; a top-level string is returned as-is.",
+          "params": [
+            {
+              "name": "value",
+              "type": "JSValue",
+              "description": "The value to format.",
+              "optional": false,
+              "tsType": null
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "A formatted string."
+          },
+          "notes": [],
+          "examples": [],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/node/NodeModuleUtil.swift",
+          "lineNumber": 190
+        }
+      ],
+      "properties": [],
+      "types": [],
+      "description": "The JS-facing surface of Node's `util` module, reachable as `require('util')`.",
+      "rawDocumentation": "The JS-facing surface of Node's `util` module, reachable as `require('util')`."
     }
   ],
   "types": [
@@ -27660,5 +27694,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-11T10:43:25.318Z"
+  "generatedAt": "2026-09-11T19:51:23.742Z"
 }

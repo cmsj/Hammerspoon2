@@ -63,6 +63,7 @@ class JSEngine {
             try context.install([
                 .fetch,
                 ConsoleModuleInstaller(),      // console namespace
+                NodeBuiltinModulesInstaller(), // native backing for require('util') etc.
                 RequireInstaller(),            // require() function
                 TypeBridgesInstaller(),        // HSPoint, HSSize, HSRect, HSFont, HSAlert
                 .bundled(path: "engine.js", in: .main),  // EventEmitter class

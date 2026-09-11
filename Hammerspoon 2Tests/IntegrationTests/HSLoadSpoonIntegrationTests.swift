@@ -29,6 +29,7 @@ private final class LoadSpoonContext {
         try FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
 
         ctx.exceptionHandler = { [weak self] _, exc in self?.lastException = exc }
+        try NodeBuiltinModulesInstaller().install(in: ctx)
         try RequireInstaller().install(in: ctx)
 
         let settings = MockSettingsManager()

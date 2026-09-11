@@ -36,6 +36,14 @@ const MODULE_NAME_OVERRIDES = {
     'hs.midi_': 'hs.midi',
 };
 
+// Protocol name -> public JS namespace, for JSExport protocols whose methods should be
+// documented under a different name than their directory's default module name. This exists
+// because Modules/node/ groups multiple Node built-ins (util, and more over time) together on
+// disk, but each is reachable from JS under its own require('...') name, not "node".
+const PROTOCOL_NAMESPACE_OVERRIDES = {
+    NodeUtilModuleAPI: 'util',
+};
+
 /**
  * Check if documentation contains SKIP_DOCS marker
  */
@@ -44,6 +52,26 @@ function shouldSkipDocs(docLines) {
         return docLines.some(line => line.trim() === 'SKIP_DOCS');
     }
     return typeof docLines === 'string' && docLines.includes('SKIP_DOCS');
+}
+
+/**
+ * Check documentation for a VARIADIC(name: type) marker and extract its declaration.
+ *
+ * JSExport can only ever declare one Swift parameter, so a method that's actually variadic
+ * (eg. console.log, which reads JSContext.currentArguments() internally rather than using its
+ * declared parameter) has no way to express that in its Swift signature. This marker lets the
+ * doc comment say so explicitly; when present, it replaces the Swift-derived params with a
+ * single rest parameter in the generated docs and TypeScript. Returns null if absent.
+ */
+function extractVariadicMarker(docLines) {
+    const lines = Array.isArray(docLines) ? docLines : String(docLines).split('\n');
+    for (const line of lines) {
+        const match = line.trim().match(/^VARIADIC\(([A-Za-z_$][\w$]*)\s*:\s*([^)]+)\)$/);
+        if (match) {
+            return { name: match[1], type: match[2].trim() };
+        }
+    }
+    return null;
 }
 
 /**
@@ -265,7 +293,24 @@ function parseSwiftFile(filePath, repoRoot) {
                         }
                     }
                     
-                    const rawDoc = currentDoc.join('\n');
+                    // A VARIADIC(...) marker documents a method that's really variadic in JS
+                    // even though its Swift/JSExport signature can only declare one parameter
+                    // (see console.log & co, which read JSContext.currentArguments() instead of
+                    // using their declared parameter). Strip the marker line itself out of the
+                    // rendered doc text, and use it in place of the Swift-derived params below.
+                    const variadic = extractVariadicMarker(currentDoc);
+                    const docLinesForOutput = currentDoc.filter(line => !/^\s*VARIADIC\(/.test(line));
+                    const rawDoc = docLinesForOutput.join('\n');
+                    const swiftParams = extractParams(fullSignature, currentDoc);
+                    const params = variadic
+                        ? [{
+                            name: variadic.name,
+                            type: variadic.type,
+                            tsType: variadic.type,
+                            rest: true,
+                            description: swiftParams[0]?.description || 'Any number of values.'
+                        }]
+                        : swiftParams;
 
                     // Skip this method if it has SKIP_DOCS marker
                     if (!shouldSkipDocs(currentDoc)) {
@@ -275,7 +320,7 @@ function parseSwiftFile(filePath, repoRoot) {
                             isStatic: /(?:^|\s)static\s+func\b/.test(fullSignature),
                             rawDocumentation: rawDoc,
                             description: formatDocCToJSDoc(rawDoc),
-                            params: extractParams(fullSignature, currentDoc),
+                            params,
                             returns: extractReturns(fullSignature, currentDoc),
                             notes: extractNotes(currentDoc),
                             examples: extractExamples(currentDoc),
@@ -1086,12 +1131,18 @@ function escapeFunctionName(name) {
 function processModule(moduleName, modulePath) {
     console.log(`Processing module: ${moduleName}`);
 
-    const moduleData = {
-        name: moduleName,
-        methods: [],     // All module-level methods (Swift + JS)
-        properties: [],  // All module-level properties (Swift)
-        types: []        // Type definitions (protocols with type: 'typedef')
-    };
+    // A directory usually documents under a single JS namespace (its own moduleName), but
+    // PROTOCOL_NAMESPACE_OVERRIDES can split individual protocols off into their own
+    // namespace - see Modules/node/, which groups several separately-required Node
+    // built-ins together on disk.
+    const namespaces = new Map();
+    function dataForNamespace(name) {
+        if (!namespaces.has(name)) {
+            namespaces.set(name, { name, methods: [], properties: [], types: [] });
+        }
+        return namespaces.get(name);
+    }
+    const moduleData = dataForNamespace(moduleName);
 
     // Helper to recursively find all Swift and JS files
     function findFilesRecursive(dir) {
@@ -1136,12 +1187,18 @@ function processModule(moduleName, modulePath) {
                     // Type definitions go into types array
                     moduleData.types.push(protocol);
                 } else {
-                    // Regular protocols - extract their methods and properties
+                    // Regular protocols - extract their methods and properties, into their
+                    // own namespace if PROTOCOL_NAMESPACE_OVERRIDES calls for one.
+                    const target = dataForNamespace(PROTOCOL_NAMESPACE_OVERRIDES[protocol.name] ?? moduleName);
+                    if (target !== moduleData && !target.description && protocol.description) {
+                        target.description = protocol.description;
+                        target.rawDocumentation = protocol.rawDocumentation;
+                    }
                     if (protocol.methods) {
-                        moduleData.methods.push(...protocol.methods);
+                        target.methods.push(...protocol.methods);
                     }
                     if (protocol.properties) {
-                        moduleData.properties.push(...protocol.properties);
+                        target.properties.push(...protocol.properties);
                     }
                 }
             }
@@ -1161,7 +1218,7 @@ function processModule(moduleName, modulePath) {
         moduleData.rawDocumentation = collectedModuleDoc.rawDocumentation;
     }
 
-    return moduleData;
+    return Array.from(namespaces.values());
 }
 
 /**
@@ -1330,7 +1387,9 @@ function generateCombinedJSDoc(moduleData) {
         }
         if (method.params && method.params.length > 0) {
             for (const param of method.params) {
-                const paramType = method.source === 'swift' ? swiftTypeToJSDoc(param.type) : param.type;
+                const rawType = method.source === 'swift' ? swiftTypeToJSDoc(param.type) : param.type;
+                // JSDoc's own rest-parameter syntax is {...elementType}, not {elementType[]}.
+                const paramType = param.rest ? `...${rawType.replace(/\[\]$/, '')}` : rawType;
                 const desc = param.description ? ' ' + param.description : '';
                 output += ` * @param {${paramType}} ${param.name}${desc}\n`;
             }
@@ -1349,7 +1408,7 @@ function generateCombinedJSDoc(moduleData) {
 
         // For methods from this module, use module.name prefix
         const functionName = method.name.includes('.') ? method.name : `${moduleData.name}.${escapedName}`;
-        output += `${functionName} = function(${(method.params || []).map(p => p.name).join(', ')}) {};\n\n`;
+        output += `${functionName} = function(${(method.params || []).map(p => `${p.rest ? '...' : ''}${p.name}`).join(', ')}) {};\n\n`;
     }
 
     // Add module properties
@@ -1518,20 +1577,33 @@ function main() {
         const modulePath = path.join(MODULES_DIR, dirName);
         // Apply any directory-name → public-module-name override.
         const moduleName = MODULE_NAME_OVERRIDES[dirName] ?? dirName;
-        const moduleData = processModule(moduleName, modulePath);
+        // Usually one namespace per directory, but PROTOCOL_NAMESPACE_OVERRIDES can split a
+        // directory's protocols across several (see Modules/node/).
+        const moduleDataList = processModule(moduleName, modulePath);
 
-        allModules.push(moduleData);
+        for (const moduleData of moduleDataList) {
+            // Namespaces with no JSExport API (eg. internal Swift-only helpers) have nothing
+            // to document, so skip generating a stub page for them.
+            const hasDocumentableContent =
+                moduleData.methods.length > 0 || moduleData.properties.length > 0 || moduleData.types.length > 0;
+            if (!hasDocumentableContent) {
+                console.log(`  ⊘ Skipping ${moduleData.name} (no JSExport API found)`);
+                continue;
+            }
 
-        // Save individual module JSON (named after the public module name).
-        const jsonPath = path.join(OUTPUT_JSON_DIR, `${moduleName}.json`);
-        fs.writeFileSync(jsonPath, JSON.stringify(moduleData, null, 2));
-        console.log(`  ✓ Saved JSON: ${jsonPath}`);
+            allModules.push(moduleData);
 
-        // Save combined JSDoc file.
-        const combinedJSDoc = generateCombinedJSDoc(moduleData);
-        const combinedPath = path.join(OUTPUT_COMBINED_DIR, `${moduleName}.js`);
-        fs.writeFileSync(combinedPath, combinedJSDoc);
-        console.log(`  ✓ Saved combined: ${combinedPath}`);
+            // Save individual module JSON (named after the public module name).
+            const jsonPath = path.join(OUTPUT_JSON_DIR, `${moduleData.name}.json`);
+            fs.writeFileSync(jsonPath, JSON.stringify(moduleData, null, 2));
+            console.log(`  ✓ Saved JSON: ${jsonPath}`);
+
+            // Save combined JSDoc file.
+            const combinedJSDoc = generateCombinedJSDoc(moduleData);
+            const combinedPath = path.join(OUTPUT_COMBINED_DIR, `${moduleData.name}.js`);
+            fs.writeFileSync(combinedPath, combinedJSDoc);
+            console.log(`  ✓ Saved combined: ${combinedPath}`);
+        }
     }
 
     // Insert hs after console so it appears second in the sidebar

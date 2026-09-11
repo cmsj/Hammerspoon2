@@ -52,12 +52,12 @@
 {% if methods.length > 0 %}
     {% for method in methods %}
     <div class="method" id="{{ method.name }}">
-        <h3><a href="#{{ method.name }}">{{ module.name }}.{{ method.name }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</a></h3>
+        <h3><a href="#{{ method.name }}">{{ module.name }}.{{ method.name }}({% for param in method.params %}{% if param.rest %}...{% endif %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</a></h3>
 
         <div class="description">{{ method.description }}</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">{{ module.name }}.{{ method.name }}({% for param in method.params %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</code></pre>
+        <pre><code class="language-javascript">{{ module.name }}.{{ method.name }}({% for param in method.params %}{% if param.rest %}...{% endif %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {% if method.returns %}{{ method.returns | formatReturnType | safe }}{% else %}None{% endif %}</code></pre>
 
         {% if method.params.length > 0 %}
         <div class="card-section-label">Parameters</div>
@@ -72,7 +72,7 @@
             <tbody>
                 {% for param in method.params %}
                 <tr>
-                    <td class="param-name">{{ param.name }}</td>
+                    <td class="param-name">{% if param.rest %}...{% endif %}{{ param.name }}</td>
                     <td class="param-type">{{ param | resolveParamType }}</td>
                     <td class="param-desc">{{ param.description }}</td>
                 </tr>

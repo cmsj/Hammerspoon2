@@ -655,34 +655,41 @@ loop on a multi-URL playlist has no effect and logs a warning.
  */
 declare namespace console {
     /**
-     * Log a message to the Hammerspoon Log Window
-     * @param message A message to log
+     * Log a value to the Hammerspoon Log Window
+Accepts any number of values, which are space-separated in the log output. Non-string
+values (objects, arrays, errors, etc.) are formatted the way Node's `util.inspect` would
+render them.
+     * @param values A value to log
      */
-    function log(message: string): void;
+    function log(...values: any[]): void;
 
     /**
      * Log an error to the Hammerspoon Log Window
-     * @param message An error message
+Accepts any number of values; see ``log(_:)`` for formatting details.
+     * @param values A value to log
      */
-    function error(message: string): void;
+    function error(...values: any[]): void;
 
     /**
      * Log a warning to the Hammerspoon Log WIndow
-     * @param message A warning message
+Accepts any number of values; see ``log(_:)`` for formatting details.
+     * @param values A value to log
      */
-    function warn(message: string): void;
+    function warn(...values: any[]): void;
 
     /**
      * Log an informational message to the Hammerspoon Log Window
-     * @param message An informational message
+Accepts any number of values; see ``log(_:)`` for formatting details.
+     * @param values A value to log
      */
-    function info(message: string): void;
+    function info(...values: any[]): void;
 
     /**
      * Log a debug message to the Hammerspoon Log Window
-     * @param message A debug message
+Accepts any number of values; see ``log(_:)`` for formatting details.
+     * @param values A value to log
      */
-    function debug(message: string): void;
+    function debug(...values: any[]): void;
 
 }
 
@@ -9799,6 +9806,21 @@ A value of 0 or -1 likely means no window ID could be determined.
      * The screen that contains the largest portion of this window.
      */
     readonly screen: HSScreen | null;
+
+}
+
+/**
+ * The JS-facing surface of Node's `util` module, reachable as `require('util')`.
+ */
+declare namespace util {
+    /**
+     * Returns a string representation of a value, intended for debugging.
+Objects, arrays, `Map`/`Set`, functions, dates, and errors are formatted the way
+Node/browser consoles render them; a top-level string is returned as-is.
+     * @param value The value to format.
+     * @returns A formatted string.
+     */
+    function inspect(value: any): string;
 
 }
 

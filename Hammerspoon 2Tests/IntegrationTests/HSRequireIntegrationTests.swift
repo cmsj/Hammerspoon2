@@ -28,6 +28,7 @@ private final class RequireContext {
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
 
         ctx.exceptionHandler = { [weak self] _, exc in self?.lastException = exc }
+        try NodeBuiltinModulesInstaller().install(in: ctx)
         try RequireInstaller().install(in: ctx)
     }
 
