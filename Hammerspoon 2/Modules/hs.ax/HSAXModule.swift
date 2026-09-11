@@ -175,7 +175,7 @@ import AXSwift
 
     // NOTE: These are private API for the companion JS file only
     /// SKIP_DOCS
-    @objc(_addWatcher:::) func _addWatcher(_ element: HSAXElement, notification: String, callback: JSFunction)
+    @objc(_addWatcher:::) func _addWatcher(_ element: HSAXElement, notification: String, callback: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc(_removeWatcher::) func _removeWatcher(_ element: HSAXElement, notification: String)
 
@@ -435,16 +435,17 @@ import AXSwift
         return nil
     }
 
-    @objc(_addWatcher:::) func _addWatcher(_ element: HSAXElement, notification: String, callback: JSFunction) {
+    /// - Returns: True if the watcher was successfully registered (or already was), false if registration failed. The JS companion file uses this to decide whether to retain its listener bucket.
+    @objc(_addWatcher:::) func _addWatcher(_ element: HSAXElement, notification: String, callback: JSFunction) -> Bool {
         guard isAccessibilityEnabled() else {
             AKError("hs.ax.addWatcher(): Accessibility permissions not granted")
-            return
+            return false
         }
 
         let pid = pid_t(element.pid)
         guard pid > 0 else {
             AKError("hs.ax.addWatcher(): Could not get PID for element")
-            return
+            return false
         }
 
         let key = WatcherKey(element: element.element, notification: notification)
@@ -452,7 +453,7 @@ import AXSwift
         // Check if we already have a watcher for this combination
         if watchers.keys.contains(key) {
             AKWarning("hs.ax.addWatcher(): There is already a watcher for \(notification) on this element. Refusing to create a second.")
-            return
+            return true
         }
 
         // Parse the notification type
@@ -470,13 +471,13 @@ import AXSwift
                 AKDebug("hs.ax.addWatcher(): Created observer for PID \(pid)")
             } catch {
                 AKError("hs.ax.addWatcher(): Failed to create observer for PID \(pid): \(error)")
-                return
+                return false
             }
         }
 
         guard let observer = observers[pid] else {
             AKError("hs.ax.addWatcher(): Observer not found for PID \(pid)")
-            return
+            return false
         }
 
         // Create the watcher object
@@ -487,9 +488,11 @@ import AXSwift
         do {
             try observer.addNotification(notifType, forElement: element.element)
             AKDebug("hs.ax.addWatcher(): Added watcher for \(notification) on PID \(pid)")
+            return true
         } catch {
             AKError("hs.ax.addWatcher(): Failed to add notification: \(error)")
             watchers.removeValue(forKey: key)
+            return false
         }
     }
 

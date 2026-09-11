@@ -1075,6 +1075,41 @@ struct HSAXTests {
             #expect(!harness.hasException)
         }
 
+        @Test("_addWatcher returns false when native registration fails")
+        func testUnderscoreAddWatcherReturnsFalseOnFailure() {
+            let harness = makeHarness()
+            // The system-wide element has no owning process (pid is -1), so native
+            // registration against it always fails.
+            #expect(harness.evalBool("hs.ax._addWatcher(hs.ax.systemWideElement(), 'AXValueChanged', function() {})") == false)
+        }
+
+        @Test("a failed addWatcher does not permanently block later retries for the same element+notification")
+        func testAddWatcherRetriesAfterFailure() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc13Sys = hs.ax.systemWideElement();
+            var _lc13CallCount = 0;
+            var _lc13Original = hs.ax._addWatcher;
+            Object.defineProperty(hs.ax, '_addWatcher', {
+                value: function(element, notification, callback) {
+                    _lc13CallCount++;
+                    return _lc13Original.call(hs.ax, element, notification, callback);
+                },
+                writable: true, configurable: true
+            });
+            var _lc13Fn1 = function() {};
+            var _lc13Fn2 = function() {};
+            // Both calls target the same element+notification key. If a failed
+            // registration were incorrectly retained, the second call would skip
+            // _addWatcher entirely and _lc13CallCount would stay at 1.
+            hs.ax.addWatcher(_lc13Sys, 'AXValueChanged', _lc13Fn1);
+            hs.ax.addWatcher(_lc13Sys, 'AXValueChanged', _lc13Fn2);
+            Object.defineProperty(hs.ax, '_addWatcher', { value: _lc13Original, writable: true, configurable: true });
+        """)
+            #expect(!harness.hasException)
+            #expect(harness.evalInt("_lc13CallCount") == 2)
+        }
+
         @Test("addWatcher throws when listener is a string, not a function")
         func testAddWatcherThrowsForStringListener() {
             let harness = makeHarness()

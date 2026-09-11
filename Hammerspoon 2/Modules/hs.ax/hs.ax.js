@@ -28,10 +28,20 @@ class AXModuleWatcherEmitter {
         const key = `${element._identityKey}:${notification}`;
 
         if (!Array.isArray(this.#events[key])) {
-            this.#events[key] = [];
-            hs.ax._addWatcher(element, notification, (notif, elem) => {
+            const registered = hs.ax._addWatcher(element, notification, (notif, elem) => {
                 this.#handleEvent(key, notif, elem);
             });
+
+            if (!registered) {
+                // Native registration failed (e.g. permissions, invalid PID, unsupported
+                // notification). Don't retain a bucket for a watcher that doesn't actually
+                // exist - otherwise a later addWatcher() call would see the bucket, skip
+                // _addWatcher entirely, and the listener would silently never fire.
+                console.error("hs.ax.addWatcher(): Failed to register watcher for '" + notification + "'.");
+                return;
+            }
+
+            this.#events[key] = [];
         }
 
         if (this.#events[key].includes(listener)) {
