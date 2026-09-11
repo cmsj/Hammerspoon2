@@ -1364,10 +1364,19 @@ For devices that support a range, both the minimum and maximum are included.
 const element = hs.ax.focusedElement();
 console.log(element.role, element.title);
 
-// Watch for window creation events
+// Watch for window creation events on an application
 const app = hs.application.frontmost();
-hs.ax.addWatcher(app, "AXWindowCreated", (notification, element) => {
+hs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
     console.log("New window:", element.title);
+});
+
+// Watch a specific element (e.g. a text field found via findByRole) for value changes.
+// Element-specific notifications like AXValueChanged are only delivered to a watcher
+// registered on the exact element that posts them - registering on the application
+// element only works for application-level notifications like AXWindowCreated above.
+const field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];
+hs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {
+    console.log("Field changed:", element.value);
 });
 ```
 **Note:** Requires accessibility permissions in System Preferences.
@@ -1401,20 +1410,20 @@ declare namespace hs.ax {
     function elementAtPoint(point: HSPoint): HSAXElement | null;
 
     /**
-     * Add a watcher for application AX events
-     * @param application An HSApplication object
-     * @param notification An event name
+     * Add a watcher for AX events on a specific element
+     * @param element An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them
+     * @param notification An event name, or an array of event names, to watch for with the same listener
      * @param listener A function called with the notification name and the accessibility element it applies to
      */
-    function addWatcher(application: HSApplication, notification: string, listener: (notification: string, element: HSAXElement) => void): void;
+    function addWatcher(element: HSAXElement, notification: string | string[], listener: (notification: string, element: HSAXElement) => void): void;
 
     /**
-     * Remove a watcher for application AX events
-     * @param application An HSApplication object
-     * @param notification The event name to stop watching
+     * Remove a watcher for AX events on a specific element
+     * @param element The HSAXElement that was passed to addWatcher()
+     * @param notification The event name, or array of event names, to stop watching
      * @param listener The function/lambda provided when adding the watcher
      */
-    function removeWatcher(application: HSApplication, notification: string, listener: (...args: any[]) => any): void;
+    function removeWatcher(element: HSAXElement, notification: string | string[], listener: (...args: any[]) => any): void;
 
     /**
      * Fetch the focused UI element
@@ -1424,7 +1433,7 @@ declare namespace hs.ax {
 
     /**
      * Find AX elements matching a given role
-     * @param role The role name to search for (e.g. "AXButton")
+     * @param role The role name to search for (e.g. "AXButton", or hs.ax.roles.button)
      * @param parent An HSAXElement to search within
      * @returns An array of matching HSAXElement objects
      */
@@ -1449,6 +1458,11 @@ declare namespace hs.ax {
      * A dictionary containing all of the notification types that can be used with hs.ax.addWatcher()
      */
     const notificationTypes: Record<string, string>;
+
+    /**
+     * A dictionary containing all of the known accessibility roles that elements can have, for use with hs.ax.findByRole() and similar
+     */
+    const roles: Record<string, string>;
 
 }
 
@@ -1509,6 +1523,13 @@ declare class HSAXElement {
      * @returns True if the action succeeded, otherwise False
      */
     performAction(action: string): boolean;
+
+    /**
+     * Test whether this element and another refer to the same underlying accessibility object
+     * @param other Another HSAXElement to compare against
+     * @returns True if both objects represent the same underlying accessibility element
+     */
+    isEqualToElement(other: HSAXElement): boolean;
 
     /**
      * The element's role (e.g., "AXWindow", "AXButton")

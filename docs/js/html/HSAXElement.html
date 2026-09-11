@@ -450,6 +450,48 @@ el.performAction(&quot;AXPress&quot;)</code></pre>
             <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXElement.swift#L189" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXElement.swift:189</a>
         </div>
     </div>
+    <div class="method" id="isEqualToElement">
+        <h3>
+<a href="#isEqualToElement">isEqualToElement(other) -> boolean</a>
+        </h3>
+
+        <div class="description">Test whether this element and another refer to the same underlying accessibility object</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">isEqualToElement(other) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">other</td>
+                    <td class="param-type">HSAXElement</td>
+                    <td class="param-desc">Another HSAXElement to compare against</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">True if both objects represent the same underlying accessibility element</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const el1 = hs.ax.focusedElement()
+const el2 = hs.ax.focusedElement()
+console.log(el1.isEqualToElement(el2)) // true, assuming focus hasn&#39;t changed</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ax/HSAXElement.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ax/HSAXElement.swift:210</a>
+        </div>
+    </div>
         </main>
 
         <!-- Right TOC sidebar -->

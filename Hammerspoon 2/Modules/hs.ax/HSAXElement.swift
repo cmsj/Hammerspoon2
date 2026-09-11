@@ -197,6 +197,17 @@ import AXSwift
     /// console.log(el.pid)
     /// ```
     @objc var pid: Int { get }
+
+    /// Test whether this element and another refer to the same underlying accessibility object
+    /// - Parameter other: Another HSAXElement to compare against
+    /// - Returns: True if both objects represent the same underlying accessibility element
+    /// - Example:
+    /// ```js
+    /// const el1 = hs.ax.focusedElement()
+    /// const el2 = hs.ax.focusedElement()
+    /// console.log(el1.isEqualToElement(el2)) // true, assuming focus hasn't changed
+    /// ```
+    @objc func isEqualToElement(_ other: HSAXElement) -> Bool
 }
 
 @_documentation(visibility: private)
@@ -420,6 +431,10 @@ import AXSwift
     @objc var pid: Int {
         let pid = try? Int(element.pid())
         return pid ?? -1
+    }
+
+    @objc func isEqualToElement(_ other: HSAXElement) -> Bool {
+        return element == other.element
     }
 
     private func bridgeValue(_ value: Any) -> Any {

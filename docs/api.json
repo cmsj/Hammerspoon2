@@ -2336,7 +2336,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 44
+          "lineNumber": 54
         },
         {
           "name": "applicationElement",
@@ -2366,7 +2366,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 55
+          "lineNumber": 65
         },
         {
           "name": "windowElement",
@@ -2396,7 +2396,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 66
+          "lineNumber": 76
         },
         {
           "name": "elementAtPoint",
@@ -2426,28 +2426,28 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 75
+          "lineNumber": 85
         },
         {
           "name": "addWatcher",
-          "signature": "func addWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction)",
+          "signature": "func addWatcher(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Add a watcher for application AX events\n- Parameters:\n  - application: An HSApplication object\n  - notification: An event name\n  - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n```",
-          "description": "Add a watcher for application AX events",
+          "rawDocumentation": "Add a watcher for AX events on a specific element\n- Parameters:\n  - element: An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them\n  - notification: {string | string[]} An event name, or an array of event names, to watch for with the same listener\n  - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n\n// Watch for several notifications with the same handler\nhs.ax.addWatcher(app.axElement(), [hs.ax.notificationTypes.windowCreated, hs.ax.notificationTypes.windowMoved], (notification, element) => {\n    console.log(notification, element.title)\n})\n```",
+          "description": "Add a watcher for AX events on a specific element",
           "params": [
             {
-              "name": "application",
-              "type": "HSApplication",
-              "description": "An HSApplication object",
+              "name": "element",
+              "type": "HSAXElement",
+              "description": "An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them",
               "optional": false,
               "tsType": null
             },
             {
               "name": "notification",
-              "type": "string",
-              "description": "An event name",
+              "type": "JSValue",
+              "description": "An event name, or an array of event names, to watch for with the same listener",
               "optional": false,
-              "tsType": null
+              "tsType": "string | string[]"
             },
             {
               "name": "listener",
@@ -2462,33 +2462,33 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title)\n})"
+              "code": "const app = hs.application.frontmost()\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title)\n})\n\n// Watch for several notifications with the same handler\nhs.ax.addWatcher(app.axElement(), [hs.ax.notificationTypes.windowCreated, hs.ax.notificationTypes.windowMoved], (notification, element) => {\n    console.log(notification, element.title)\n})"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 96
+          "lineNumber": 118
         },
         {
           "name": "removeWatcher",
-          "signature": "func removeWatcher(_ application: HSApplication, _ notification: String, _ listener: JSFunction)",
+          "signature": "func removeWatcher(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction)",
           "isStatic": false,
-          "rawDocumentation": "Remove a watcher for application AX events\n- Parameters:\n  - application: An HSApplication object\n  - notification: The event name to stop watching\n  - listener: The function/lambda provided when adding the watcher\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.removeWatcher(app, \"AXWindowCreated\", myHandler)\n```",
-          "description": "Remove a watcher for application AX events",
+          "rawDocumentation": "Remove a watcher for AX events on a specific element\n- Parameters:\n  - element: The HSAXElement that was passed to addWatcher()\n  - notification: {string | string[]} The event name, or array of event names, to stop watching\n  - listener: The function/lambda provided when adding the watcher\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.removeWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, myHandler)\n```",
+          "description": "Remove a watcher for AX events on a specific element",
           "params": [
             {
-              "name": "application",
-              "type": "HSApplication",
-              "description": "An HSApplication object",
+              "name": "element",
+              "type": "HSAXElement",
+              "description": "The HSAXElement that was passed to addWatcher()",
               "optional": false,
               "tsType": null
             },
             {
               "name": "notification",
-              "type": "string",
-              "description": "The event name to stop watching",
+              "type": "JSValue",
+              "description": "The event name, or array of event names, to stop watching",
               "optional": false,
-              "tsType": null
+              "tsType": "string | string[]"
             },
             {
               "name": "listener",
@@ -2503,12 +2503,12 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nhs.ax.removeWatcher(app, \"AXWindowCreated\", myHandler)"
+              "code": "const app = hs.application.frontmost()\nhs.ax.removeWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, myHandler)"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 108
+          "lineNumber": 130
         },
         {
           "name": "focusedElement",
@@ -2530,19 +2530,19 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 117
+          "lineNumber": 139
         },
         {
           "name": "findByRole",
           "signature": "func findByRole(_ role: String, _ parent: HSAXElement) -> [HSAXElement]",
           "isStatic": false,
-          "rawDocumentation": "Find AX elements matching a given role\n- Parameters:\n  - role: The role name to search for (e.g. \"AXButton\")\n  - parent: An HSAXElement to search within\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(\"AXButton\", hs.ax.applicationElement(app))\n```",
+          "rawDocumentation": "Find AX elements matching a given role\n- Parameters:\n  - role: The role name to search for (e.g. \"AXButton\", or hs.ax.roles.button)\n  - parent: An HSAXElement to search within\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(hs.ax.roles.button, app.axElement())\n```",
           "description": "Find AX elements matching a given role",
           "params": [
             {
               "name": "role",
               "type": "string",
-              "description": "The role name to search for (e.g. \"AXButton\")",
+              "description": "The role name to search for (e.g. \"AXButton\", or hs.ax.roles.button)",
               "optional": false,
               "tsType": null
             },
@@ -2562,18 +2562,18 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(\"AXButton\", hs.ax.applicationElement(app))"
+              "code": "const app = hs.application.frontmost()\nconst buttons = hs.ax.findByRole(hs.ax.roles.button, app.axElement())"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 129
+          "lineNumber": 151
         },
         {
           "name": "findByTitle",
           "signature": "func findByTitle(_ title: String, _ parent: HSAXElement) -> [HSAXElement]",
           "isStatic": false,
-          "rawDocumentation": "Find AX elements whose title contains a given string\n- Parameters:\n  - title: The string to search for within element titles\n  - parent: An HSAXElement to search within\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(\"OK\", hs.ax.applicationElement(app))\n```",
+          "rawDocumentation": "Find AX elements whose title contains a given string\n- Parameters:\n  - title: The string to search for within element titles\n  - parent: An HSAXElement to search within\n- Returns: An array of matching HSAXElement objects\n- Example:\n```js\nconst app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(\"OK\", app.axElement())\n```",
           "description": "Find AX elements whose title contains a given string",
           "params": [
             {
@@ -2599,18 +2599,18 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(\"OK\", hs.ax.applicationElement(app))"
+              "code": "const app = hs.application.frontmost()\nconst matches = hs.ax.findByTitle(\"OK\", app.axElement())"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 141
+          "lineNumber": 163
         },
         {
           "name": "printHierarchy",
           "signature": "func printHierarchy(_ element: HSAXElement?, _ maxDepth: Int)",
           "isStatic": false,
-          "rawDocumentation": "Print the accessibility hierarchy of an element to the Console\n- Parameters:\n  - element?: An HSAXElement to print. If omitted, the system-wide element is used\n  - maxDepth?: Maximum number of levels to traverse. Defaults to 5\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.printHierarchy(hs.ax.applicationElement(app), 3)\n```",
+          "rawDocumentation": "Print the accessibility hierarchy of an element to the Console\n- Parameters:\n  - element?: An HSAXElement to print. If omitted, the system-wide element is used\n  - maxDepth?: Maximum number of levels to traverse. Defaults to 5\n- Example:\n```js\nconst app = hs.application.frontmost()\nhs.ax.printHierarchy(app.axElement(), 3)\n```",
           "description": "Print the accessibility hierarchy of an element to the Console",
           "params": [
             {
@@ -2633,12 +2633,12 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const app = hs.application.frontmost()\nhs.ax.printHierarchy(hs.ax.applicationElement(app), 3)"
+              "code": "const app = hs.application.frontmost()\nhs.ax.printHierarchy(app.axElement(), 3)"
             }
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 152
+          "lineNumber": 174
         }
       ],
       "properties": [
@@ -2657,7 +2657,24 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
-          "lineNumber": 82
+          "lineNumber": 92
+        },
+        {
+          "name": "roles",
+          "signature": "var roles: [String: String] { get }",
+          "rawDocumentation": "A dictionary containing all of the known accessibility roles that elements can have, for use with hs.ax.findByRole() and similar\n- Example:\n```js\nconsole.log(Object.keys(hs.ax.roles))\n```",
+          "description": "A dictionary containing all of the known accessibility roles that elements can have, for use with hs.ax.findByRole() and similar",
+          "tsType": null,
+          "notes": [],
+          "examples": [
+            {
+              "lang": "js",
+              "code": "console.log(Object.keys(hs.ax.roles))"
+            }
+          ],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXModule.swift",
+          "lineNumber": 99
         }
       ],
       "types": [
@@ -2889,6 +2906,36 @@
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
               "lineNumber": 189
+            },
+            {
+              "name": "isEqualToElement",
+              "signature": "func isEqualToElement(_ other: HSAXElement) -> Bool",
+              "isStatic": false,
+              "rawDocumentation": "Test whether this element and another refer to the same underlying accessibility object\n- Parameter other: Another HSAXElement to compare against\n- Returns: True if both objects represent the same underlying accessibility element\n- Example:\n```js\nconst el1 = hs.ax.focusedElement()\nconst el2 = hs.ax.focusedElement()\nconsole.log(el1.isEqualToElement(el2)) // true, assuming focus hasn't changed\n```",
+              "description": "Test whether this element and another refer to the same underlying accessibility object",
+              "params": [
+                {
+                  "name": "other",
+                  "type": "HSAXElement",
+                  "description": "Another HSAXElement to compare against",
+                  "optional": false,
+                  "tsType": null
+                }
+              ],
+              "returns": {
+                "type": "boolean",
+                "description": "True if both objects represent the same underlying accessibility element"
+              },
+              "notes": [],
+              "examples": [
+                {
+                  "lang": "js",
+                  "code": "const el1 = hs.ax.focusedElement()\nconst el2 = hs.ax.focusedElement()\nconsole.log(el1.isEqualToElement(el2)) // true, assuming focus hasn't changed"
+                }
+              ],
+              "source": "swift",
+              "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
+              "lineNumber": 210
             }
           ],
           "properties": [
@@ -3099,8 +3146,8 @@
           ]
         }
       ],
-      "description": "# Accessibility API Module\n## Basic Usage\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n```\n**Note:** Requires accessibility permissions in System Preferences.",
-      "rawDocumentation": "# Accessibility API Module\n\nThis module provides access to macOS's powerful **Accessibility API**, allowing you to:\n- Inspect UI elements in any application\n- Monitor window and element changes\n- Programmatically interact with UI elements\n\n## Basic Usage\n\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app, \"AXWindowCreated\", (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n```\n\n**Note:** Requires accessibility permissions in System Preferences."
+      "description": "# Accessibility API Module\n## Basic Usage\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events on an application\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n\n// Watch a specific element (e.g. a text field found via findByRole) for value changes.\n// Element-specific notifications like AXValueChanged are only delivered to a watcher\n// registered on the exact element that posts them - registering on the application\n// element only works for application-level notifications like AXWindowCreated above.\nconst field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];\nhs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {\n    console.log(\"Field changed:\", element.value);\n});\n```\n**Note:** Requires accessibility permissions in System Preferences.",
+      "rawDocumentation": "# Accessibility API Module\n\nThis module provides access to macOS's powerful **Accessibility API**, allowing you to:\n- Inspect UI elements in any application\n- Monitor window and element changes\n- Programmatically interact with UI elements\n\n## Basic Usage\n\n```js\n// Get the focused UI element\nconst element = hs.ax.focusedElement();\nconsole.log(element.role, element.title);\n\n// Watch for window creation events on an application\nconst app = hs.application.frontmost();\nhs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {\n    console.log(\"New window:\", element.title);\n});\n\n// Watch a specific element (e.g. a text field found via findByRole) for value changes.\n// Element-specific notifications like AXValueChanged are only delivered to a watcher\n// registered on the exact element that posts them - registering on the application\n// element only works for application-level notifications like AXWindowCreated above.\nconst field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];\nhs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {\n    console.log(\"Field changed:\", element.value);\n});\n```\n\n**Note:** Requires accessibility permissions in System Preferences."
     },
     {
       "name": "hs.bonjour",
@@ -27613,5 +27660,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-09T15:56:16.638Z"
+  "generatedAt": "2026-09-11T08:50:05.127Z"
 }

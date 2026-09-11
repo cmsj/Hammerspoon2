@@ -100,6 +100,71 @@ struct HSAXTests {
         """)
         }
 
+        // MARK: - roles dictionary
+
+        @Test("roles is a non-null object")
+        func testRolesIsObject() {
+            let harness = makeHarness()
+            harness.expectTrue("typeof hs.ax.roles === 'object' && hs.ax.roles !== null")
+        }
+
+        @Test("roles is non-empty")
+        func testRolesNonEmpty() {
+            let harness = makeHarness()
+            harness.expectTrue("Object.keys(hs.ax.roles).length > 0")
+        }
+
+        @Test("roles values all start with AX")
+        func testRolesValuesHaveAXPrefix() {
+            let harness = makeHarness()
+            harness.expectTrue("Object.values(hs.ax.roles).every(function(v) { return v.startsWith('AX'); })")
+        }
+
+        @Test("roles keys are camelCase (start with a lowercase letter)")
+        func testRolesKeysAreCamelCase() {
+            let harness = makeHarness()
+            harness.expectTrue("""
+            Object.keys(hs.ax.roles).every(function(k) {
+                return k.length > 0 && k[0] === k[0].toLowerCase() && /[a-z]/.test(k[0]);
+            })
+        """)
+        }
+
+        @Test("roles['button'] equals 'AXButton'")
+        func testRolesButton() {
+            let harness = makeHarness()
+            harness.expectEqual("hs.ax.roles['button']", "AXButton")
+        }
+
+        @Test("roles contains textField")
+        func testRolesContainsTextField() {
+            let harness = makeHarness()
+            harness.expectTrue("'textField' in hs.ax.roles")
+        }
+
+        @Test("roles contains window")
+        func testRolesContainsWindow() {
+            let harness = makeHarness()
+            harness.expectTrue("'window' in hs.ax.roles")
+        }
+
+        @Test("roles contains application")
+        func testRolesContainsApplication() {
+            let harness = makeHarness()
+            harness.expectTrue("'application' in hs.ax.roles")
+        }
+
+        @Test("roles keys and values form a one-to-one mapping")
+        func testRolesNoDuplicateValues() {
+            let harness = makeHarness()
+            harness.expectTrue("""
+            (function() {
+                var vals = Object.values(hs.ax.roles);
+                return vals.length === new Set(vals).size;
+            })()
+        """)
+        }
+
         // MARK: - Core Swift API presence
 
         @Test("systemWideElement is a function")
@@ -283,6 +348,34 @@ struct HSAXTests {
                 var finder = hs.application.matchingBundleID('com.apple.finder');
                 var elem = hs.ax.applicationElement(finder);
                 return elem && typeof elem.pid === 'number' && elem.pid > 0;
+            })()
+        """)
+        }
+
+        // MARK: - Element identity
+
+        @Test("isEqualToElement is true for two lookups of the same element")
+        func testIsEqualToElementSameElement() {
+            let harness = makeHarness()
+            harness.expectTrue("""
+            (function() {
+                var finder = hs.application.matchingBundleID('com.apple.finder');
+                var a = hs.ax.applicationElement(finder);
+                var b = hs.ax.applicationElement(finder);
+                return a.isEqualToElement(b);
+            })()
+        """)
+        }
+
+        @Test("isEqualToElement is false for two different elements")
+        func testIsEqualToElementDifferentElements() {
+            let harness = makeHarness()
+            harness.expectFalse("""
+            (function() {
+                var finder = hs.application.matchingBundleID('com.apple.finder');
+                var appElem = hs.ax.applicationElement(finder);
+                var sysElem = hs.ax.systemWideElement();
+                return appElem.isEqualToElement(sysElem);
             })()
         """)
         }
@@ -874,9 +967,10 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc1Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc1Elem = hs.ax.applicationElement(_lc1Finder);
             var _lc1Fn = function(notification, elem) {};
-            hs.ax.addWatcher(_lc1Finder, 'AXWindowCreated', _lc1Fn);
-            hs.ax.removeWatcher(_lc1Finder, 'AXWindowCreated', _lc1Fn);
+            hs.ax.addWatcher(_lc1Elem, 'AXWindowCreated', _lc1Fn);
+            hs.ax.removeWatcher(_lc1Elem, 'AXWindowCreated', _lc1Fn);
         """)
             #expect(!harness.hasException)
         }
@@ -886,7 +980,8 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc2Finder = hs.application.matchingBundleID('com.apple.finder');
-            hs.ax.removeWatcher(_lc2Finder, 'AXWindowCreated', function() {});
+            var _lc2Elem = hs.ax.applicationElement(_lc2Finder);
+            hs.ax.removeWatcher(_lc2Elem, 'AXWindowCreated', function() {});
         """)
             #expect(!harness.hasException)
         }
@@ -896,10 +991,11 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc3Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc3Elem = hs.ax.applicationElement(_lc3Finder);
             var _lc3Fn = function(notification, elem) {};
-            hs.ax.addWatcher(_lc3Finder, 'AXWindowCreated', _lc3Fn);
-            hs.ax.addWatcher(_lc3Finder, 'AXWindowCreated', _lc3Fn);
-            hs.ax.removeWatcher(_lc3Finder, 'AXWindowCreated', _lc3Fn);
+            hs.ax.addWatcher(_lc3Elem, 'AXWindowCreated', _lc3Fn);
+            hs.ax.addWatcher(_lc3Elem, 'AXWindowCreated', _lc3Fn);
+            hs.ax.removeWatcher(_lc3Elem, 'AXWindowCreated', _lc3Fn);
         """)
             #expect(!harness.hasException)
         }
@@ -909,15 +1005,16 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc4Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc4Elem = hs.ax.applicationElement(_lc4Finder);
             var _lc4Fn1 = function(n, e) {};
             var _lc4Fn2 = function(n, e) {};
             var _lc4Fn3 = function(n, e) {};
-            hs.ax.addWatcher(_lc4Finder, 'AXWindowCreated', _lc4Fn1);
-            hs.ax.addWatcher(_lc4Finder, 'AXWindowCreated', _lc4Fn2);
-            hs.ax.addWatcher(_lc4Finder, 'AXWindowCreated', _lc4Fn3);
-            hs.ax.removeWatcher(_lc4Finder, 'AXWindowCreated', _lc4Fn1);
-            hs.ax.removeWatcher(_lc4Finder, 'AXWindowCreated', _lc4Fn2);
-            hs.ax.removeWatcher(_lc4Finder, 'AXWindowCreated', _lc4Fn3);
+            hs.ax.addWatcher(_lc4Elem, 'AXWindowCreated', _lc4Fn1);
+            hs.ax.addWatcher(_lc4Elem, 'AXWindowCreated', _lc4Fn2);
+            hs.ax.addWatcher(_lc4Elem, 'AXWindowCreated', _lc4Fn3);
+            hs.ax.removeWatcher(_lc4Elem, 'AXWindowCreated', _lc4Fn1);
+            hs.ax.removeWatcher(_lc4Elem, 'AXWindowCreated', _lc4Fn2);
+            hs.ax.removeWatcher(_lc4Elem, 'AXWindowCreated', _lc4Fn3);
         """)
             #expect(!harness.hasException)
         }
@@ -927,14 +1024,90 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc5Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc5Elem = hs.ax.applicationElement(_lc5Finder);
             var _lc5Fn1 = function(n, e) {};
             var _lc5Fn2 = function(n, e) {};
-            hs.ax.addWatcher(_lc5Finder, 'AXWindowCreated', _lc5Fn1);
-            hs.ax.addWatcher(_lc5Finder, 'AXWindowMiniaturized', _lc5Fn2);
-            hs.ax.removeWatcher(_lc5Finder, 'AXWindowCreated', _lc5Fn1);
-            hs.ax.removeWatcher(_lc5Finder, 'AXWindowMiniaturized', _lc5Fn2);
+            hs.ax.addWatcher(_lc5Elem, 'AXWindowCreated', _lc5Fn1);
+            hs.ax.addWatcher(_lc5Elem, 'AXWindowMiniaturized', _lc5Fn2);
+            hs.ax.removeWatcher(_lc5Elem, 'AXWindowCreated', _lc5Fn1);
+            hs.ax.removeWatcher(_lc5Elem, 'AXWindowMiniaturized', _lc5Fn2);
         """)
             #expect(!harness.hasException)
+        }
+
+        @Test("addWatcher accepts an array of notification names for a single listener")
+        func testAddWatcherAcceptsArrayOfNotifications() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc10Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc10Elem = hs.ax.applicationElement(_lc10Finder);
+            var _lc10Fn = function(n, e) {};
+            hs.ax.addWatcher(_lc10Elem, ['AXWindowCreated', 'AXWindowMiniaturized', 'AXWindowMoved'], _lc10Fn);
+            hs.ax.removeWatcher(_lc10Elem, ['AXWindowCreated', 'AXWindowMiniaturized', 'AXWindowMoved'], _lc10Fn);
+        """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("addWatcher with an array registers the listener for each notification independently")
+        func testAddWatcherArrayRegistersEachNotificationIndependently() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc11Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc11Elem = hs.ax.applicationElement(_lc11Finder);
+            var _lc11Fn = function(n, e) {};
+            hs.ax.addWatcher(_lc11Elem, ['AXWindowCreated', 'AXWindowMiniaturized'], _lc11Fn);
+            // Removing just one of the two notifications should leave the other registered
+            hs.ax.removeWatcher(_lc11Elem, 'AXWindowCreated', _lc11Fn);
+            hs.ax.removeWatcher(_lc11Elem, 'AXWindowMiniaturized', _lc11Fn);
+        """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("addWatcher with an invalid notification type does not throw and does not register")
+        func testAddWatcherInvalidNotificationTypeIsSafe() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc12Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc12Elem = hs.ax.applicationElement(_lc12Finder);
+            hs.ax.addWatcher(_lc12Elem, 42, function() {});
+            hs.ax.addWatcher(_lc12Elem, { not: 'valid' }, function() {});
+        """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("_addWatcher returns false when native registration fails")
+        func testUnderscoreAddWatcherReturnsFalseOnFailure() {
+            let harness = makeHarness()
+            // The system-wide element has no owning process (pid is -1), so native
+            // registration against it always fails.
+            #expect(harness.evalBool("hs.ax._addWatcher(hs.ax.systemWideElement(), 'AXValueChanged', function() {})") == false)
+        }
+
+        @Test("a failed addWatcher does not permanently block later retries for the same element+notification")
+        func testAddWatcherRetriesAfterFailure() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc13Sys = hs.ax.systemWideElement();
+            var _lc13CallCount = 0;
+            var _lc13Original = hs.ax._addWatcher;
+            Object.defineProperty(hs.ax, '_addWatcher', {
+                value: function(element, notification, callback) {
+                    _lc13CallCount++;
+                    return _lc13Original.call(hs.ax, element, notification, callback);
+                },
+                writable: true, configurable: true
+            });
+            var _lc13Fn1 = function() {};
+            var _lc13Fn2 = function() {};
+            // Both calls target the same element+notification key. If a failed
+            // registration were incorrectly retained, the second call would skip
+            // _addWatcher entirely and _lc13CallCount would stay at 1.
+            hs.ax.addWatcher(_lc13Sys, 'AXValueChanged', _lc13Fn1);
+            hs.ax.addWatcher(_lc13Sys, 'AXValueChanged', _lc13Fn2);
+            Object.defineProperty(hs.ax, '_addWatcher', { value: _lc13Original, writable: true, configurable: true });
+        """)
+            #expect(!harness.hasException)
+            #expect(harness.evalInt("_lc13CallCount") == 2)
         }
 
         @Test("addWatcher throws when listener is a string, not a function")
@@ -942,7 +1115,8 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc6Finder = hs.application.matchingBundleID('com.apple.finder');
-            hs.ax.addWatcher(_lc6Finder, 'AXWindowCreated', 'not a function');
+            var _lc6Elem = hs.ax.applicationElement(_lc6Finder);
+            hs.ax.addWatcher(_lc6Elem, 'AXWindowCreated', 'not a function');
         """)
             #expect(harness.hasException)
         }
@@ -952,7 +1126,8 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc7Finder = hs.application.matchingBundleID('com.apple.finder');
-            hs.ax.addWatcher(_lc7Finder, 'AXWindowCreated', 42);
+            var _lc7Elem = hs.ax.applicationElement(_lc7Finder);
+            hs.ax.addWatcher(_lc7Elem, 'AXWindowCreated', 42);
         """)
             #expect(harness.hasException)
         }
@@ -962,7 +1137,8 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc8Finder = hs.application.matchingBundleID('com.apple.finder');
-            hs.ax.addWatcher(_lc8Finder, 'AXWindowCreated', null);
+            var _lc8Elem = hs.ax.applicationElement(_lc8Finder);
+            hs.ax.addWatcher(_lc8Elem, 'AXWindowCreated', null);
         """)
             #expect(harness.hasException)
         }
@@ -972,12 +1148,46 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("""
             var _lc9Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc9Elem = hs.ax.applicationElement(_lc9Finder);
             var _lc9Fn1 = function(n, e) {};
             var _lc9Fn2 = function(n, e) {};
-            hs.ax.addWatcher(_lc9Finder, 'AXWindowCreated', _lc9Fn1);
-            hs.ax.addWatcher(_lc9Finder, 'AXWindowCreated', _lc9Fn2);
-            hs.ax.removeWatcher(_lc9Finder, 'AXWindowCreated', _lc9Fn2);
-            hs.ax.removeWatcher(_lc9Finder, 'AXWindowCreated', _lc9Fn1);
+            hs.ax.addWatcher(_lc9Elem, 'AXWindowCreated', _lc9Fn1);
+            hs.ax.addWatcher(_lc9Elem, 'AXWindowCreated', _lc9Fn2);
+            hs.ax.removeWatcher(_lc9Elem, 'AXWindowCreated', _lc9Fn2);
+            hs.ax.removeWatcher(_lc9Elem, 'AXWindowCreated', _lc9Fn1);
+        """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("a watcher can be added to a specific descendant element, not just the application element")
+        func testWatcherOnDescendantElement() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc10Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc10AppElem = hs.ax.applicationElement(_lc10Finder);
+            var _lc10MenuBar = _lc10AppElem.attributeValue('AXMenuBar');
+            var _lc10Fn = function(notification, elem) {};
+            hs.ax.addWatcher(_lc10MenuBar, 'AXValueChanged', _lc10Fn);
+            hs.ax.removeWatcher(_lc10MenuBar, 'AXValueChanged', _lc10Fn);
+        """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("watchers on two different elements for the same notification coexist independently")
+        func testWatchersOnDifferentElementsCoexist() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _lc11Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _lc11AppElem = hs.ax.applicationElement(_lc11Finder);
+            var _lc11MenuBar = _lc11AppElem.attributeValue('AXMenuBar');
+            var _lc11Fn1 = function(n, e) {};
+            var _lc11Fn2 = function(n, e) {};
+            // Same notification type, two distinct elements — this would previously
+            // collide because watchers were keyed only by (pid, notification).
+            hs.ax.addWatcher(_lc11AppElem, 'AXValueChanged', _lc11Fn1);
+            hs.ax.addWatcher(_lc11MenuBar, 'AXValueChanged', _lc11Fn2);
+            hs.ax.removeWatcher(_lc11AppElem, 'AXValueChanged', _lc11Fn1);
+            hs.ax.removeWatcher(_lc11MenuBar, 'AXValueChanged', _lc11Fn2);
         """)
             #expect(!harness.hasException)
         }
@@ -1019,11 +1229,12 @@ struct HSAXTests {
 
             harness.eval("""
             var _ed1Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _ed1Elem = hs.ax.applicationElement(_ed1Finder);
             var _ed1Events = [];
             var _ed1Fn = function(notification, elem) { _ed1Events.push(notification); };
-            hs.ax.addWatcher(_ed1Finder, 'AXWindowCreated', _ed1Fn);
+            hs.ax.addWatcher(_ed1Elem, 'AXWindowCreated', _ed1Fn);
         """)
-            defer { harness.eval("hs.ax.removeWatcher(_ed1Finder, 'AXWindowCreated', _ed1Fn);") }
+            defer { harness.eval("hs.ax.removeWatcher(_ed1Elem, 'AXWindowCreated', _ed1Fn);") }
 
             guard openFinderWindow() else { return }
             defer { closeFinderWindow() }
@@ -1043,16 +1254,17 @@ struct HSAXTests {
 
             harness.eval("""
             var _ed2Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _ed2Elem = hs.ax.applicationElement(_ed2Finder);
             var _ed2Count1 = 0, _ed2Count2 = 0;
             var _ed2Fn1 = function(n, e) { if (n === 'windowCreated') _ed2Count1++; };
             var _ed2Fn2 = function(n, e) { if (n === 'windowCreated') _ed2Count2++; };
-            hs.ax.addWatcher(_ed2Finder, 'AXWindowCreated', _ed2Fn1);
-            hs.ax.addWatcher(_ed2Finder, 'AXWindowCreated', _ed2Fn2);
+            hs.ax.addWatcher(_ed2Elem, 'AXWindowCreated', _ed2Fn1);
+            hs.ax.addWatcher(_ed2Elem, 'AXWindowCreated', _ed2Fn2);
         """)
             defer {
                 harness.eval("""
-                hs.ax.removeWatcher(_ed2Finder, 'AXWindowCreated', _ed2Fn1);
-                hs.ax.removeWatcher(_ed2Finder, 'AXWindowCreated', _ed2Fn2);
+                hs.ax.removeWatcher(_ed2Elem, 'AXWindowCreated', _ed2Fn1);
+                hs.ax.removeWatcher(_ed2Elem, 'AXWindowCreated', _ed2Fn2);
             """)
             }
 
@@ -1075,14 +1287,15 @@ struct HSAXTests {
 
             harness.eval("""
             var _ed3Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _ed3Elem = hs.ax.applicationElement(_ed3Finder);
             var _ed3RemovedCount = 0, _ed3KeptCount = 0;
             var _ed3RemovedFn = function(n, e) { _ed3RemovedCount++; };
             var _ed3KeptFn = function(n, e) { if (n === 'windowCreated') _ed3KeptCount++; };
-            hs.ax.addWatcher(_ed3Finder, 'AXWindowCreated', _ed3RemovedFn);
-            hs.ax.addWatcher(_ed3Finder, 'AXWindowCreated', _ed3KeptFn);
-            hs.ax.removeWatcher(_ed3Finder, 'AXWindowCreated', _ed3RemovedFn);
+            hs.ax.addWatcher(_ed3Elem, 'AXWindowCreated', _ed3RemovedFn);
+            hs.ax.addWatcher(_ed3Elem, 'AXWindowCreated', _ed3KeptFn);
+            hs.ax.removeWatcher(_ed3Elem, 'AXWindowCreated', _ed3RemovedFn);
         """)
-            defer { harness.eval("hs.ax.removeWatcher(_ed3Finder, 'AXWindowCreated', _ed3KeptFn);") }
+            defer { harness.eval("hs.ax.removeWatcher(_ed3Elem, 'AXWindowCreated', _ed3KeptFn);") }
 
             guard openFinderWindow() else { return }
             defer { closeFinderWindow() }
@@ -1103,14 +1316,15 @@ struct HSAXTests {
 
             harness.eval("""
             var _ed4Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _ed4TargetElem = hs.ax.applicationElement(_ed4Finder);
             var _ed4Notif = null, _ed4Elem = null;
             var _ed4Fn = function(notification, element) {
                 _ed4Notif = notification;
                 _ed4Elem = element;
             };
-            hs.ax.addWatcher(_ed4Finder, 'AXWindowCreated', _ed4Fn);
+            hs.ax.addWatcher(_ed4TargetElem, 'AXWindowCreated', _ed4Fn);
         """)
-            defer { harness.eval("hs.ax.removeWatcher(_ed4Finder, 'AXWindowCreated', _ed4Fn);") }
+            defer { harness.eval("hs.ax.removeWatcher(_ed4TargetElem, 'AXWindowCreated', _ed4Fn);") }
 
             guard openFinderWindow() else { return }
             defer { closeFinderWindow() }
@@ -1132,13 +1346,14 @@ struct HSAXTests {
 
             harness.eval("""
             var _ed5Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _ed5Elem = hs.ax.applicationElement(_ed5Finder);
             var _ed5Role = null;
             var _ed5Fn = function(notification, element) {
                 if (element) { _ed5Role = element.role; }
             };
-            hs.ax.addWatcher(_ed5Finder, 'AXWindowCreated', _ed5Fn);
+            hs.ax.addWatcher(_ed5Elem, 'AXWindowCreated', _ed5Fn);
         """)
-            defer { harness.eval("hs.ax.removeWatcher(_ed5Finder, 'AXWindowCreated', _ed5Fn);") }
+            defer { harness.eval("hs.ax.removeWatcher(_ed5Elem, 'AXWindowCreated', _ed5Fn);") }
 
             guard openFinderWindow() else { return }
             defer { closeFinderWindow() }
@@ -1149,6 +1364,31 @@ struct HSAXTests {
 
             if received {
                 harness.expectTrue("typeof _ed5Role === 'string' && _ed5Role.length > 0")
+            }
+        }
+
+        @Test("watcher registered with an array of notifications receives events for them")
+        func testWatcherWithArrayOfNotificationsReceivesEvents() async {
+            let harness = makeHarness()
+
+            harness.eval("""
+            var _ed6Finder = hs.application.matchingBundleID('com.apple.finder');
+            var _ed6Elem = hs.ax.applicationElement(_ed6Finder);
+            var _ed6Events = [];
+            var _ed6Fn = function(notification, elem) { _ed6Events.push(notification); };
+            hs.ax.addWatcher(_ed6Elem, ['AXWindowCreated', 'AXWindowMoved'], _ed6Fn);
+        """)
+            defer { harness.eval("hs.ax.removeWatcher(_ed6Elem, ['AXWindowCreated', 'AXWindowMoved'], _ed6Fn);") }
+
+            guard openFinderWindow() else { return }
+            defer { closeFinderWindow() }
+
+            let received = await harness.waitForAsync(timeout: 2.0) {
+                harness.eval("_ed6Events.length > 0") as? Bool == true
+            }
+
+            if received {
+                harness.expectTrue("_ed6Events.indexOf('windowCreated') !== -1")
             }
         }
     }
