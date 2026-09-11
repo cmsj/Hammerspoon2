@@ -82,8 +82,9 @@ enum NodeUtil {
         guard depth >= 0 else { return "[Array]" }
         let length = Int(value.objectForKeyedSubscript("length")?.toInt32() ?? 0)
         guard length > 0 else { return "[]" }
+        let objectConstructor = value.context.objectForKeyedSubscript("Object")
         let items = (0..<length).map {
-            format(value.objectAtIndexedSubscript($0), depth: depth - 1)
+            formatProperty(value, key: String($0), depth: depth - 1, objectConstructor: objectConstructor)
         }
         return "[ \(items.joined(separator: ", ")) ]"
     }
@@ -120,14 +121,32 @@ enum NodeUtil {
     private static func formatObject(_ value: JSValue, depth: Int) -> String {
         guard depth >= 0 else { return "[Object]" }
         let prefix = constructorPrefix(value)
-        let keysValue = value.context.objectForKeyedSubscript("Object")?
-            .invokeMethod("keys", withArguments: [value])
+        let objectConstructor = value.context.objectForKeyedSubscript("Object")
+        let keysValue = objectConstructor?.invokeMethod("keys", withArguments: [value])
         let keys = (keysValue?.toArray() as? [String]) ?? []
         guard !keys.isEmpty else { return "\(prefix){}" }
         let entries = keys.map { key -> String in
-            "\(formatKey(key)): \(format(value.objectForKeyedSubscript(key), depth: depth - 1))"
+            "\(formatKey(key)): \(formatProperty(value, key: key, depth: depth - 1, objectConstructor: objectConstructor))"
         }
         return "\(prefix){ \(entries.joined(separator: ", ")) }"
+    }
+
+    /// Formats a single property without invoking user-defined getters: Node's `util.inspect`
+    /// doesn't execute getters by default, since merely logging an object shouldn't be able to
+    /// run arbitrary code, mutate state, or throw. A getter (or getter/setter pair) is shown as
+    /// a placeholder instead of being read.
+    private static func formatProperty(
+        _ value: JSValue,
+        key: String,
+        depth: Int,
+        objectConstructor: JSValue?
+    ) -> String {
+        let descriptor = objectConstructor?.invokeMethod("getOwnPropertyDescriptor", withArguments: [value, key])
+        if let getter = descriptor?.objectForKeyedSubscript("get"), getter.isFunction {
+            let hasSetter = descriptor?.objectForKeyedSubscript("set")?.isFunction ?? false
+            return hasSetter ? "[Getter/Setter]" : "[Getter]"
+        }
+        return format(value.objectForKeyedSubscript(key), depth: depth)
     }
 
     private static func constructorPrefix(_ value: JSValue) -> String {
