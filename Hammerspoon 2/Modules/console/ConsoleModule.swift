@@ -16,6 +16,7 @@ import JavaScriptCoreExtras
     /// Accepts any number of values, which are space-separated in the log output. Non-string
     /// values (objects, arrays, errors, etc.) are formatted the way Node's `util.inspect` would
     /// render them.
+    /// VARIADIC(values: any[])
     /// - Parameter value: A value to log
     /// - Example: `console.log("window count:", hs.window.allWindows().length)`
     @objc func log(_ value: JSValue)
@@ -23,6 +24,7 @@ import JavaScriptCoreExtras
     /// Log an error to the Hammerspoon Log Window
     ///
     /// Accepts any number of values; see ``log(_:)`` for formatting details.
+    /// VARIADIC(values: any[])
     /// - Parameter value: A value to log
     /// - Example: `console.error("failed to load config:", err)`
     @objc func error(_ value: JSValue)
@@ -30,6 +32,7 @@ import JavaScriptCoreExtras
     /// Log a warning to the Hammerspoon Log WIndow
     ///
     /// Accepts any number of values; see ``log(_:)`` for formatting details.
+    /// VARIADIC(values: any[])
     /// - Parameter value: A value to log
     /// - Example: `console.warn("deprecated call to", "hs.oldThing()")`
     @objc func warn(_ value: JSValue)
@@ -37,6 +40,7 @@ import JavaScriptCoreExtras
     /// Log an informational message to the Hammerspoon Log Window
     ///
     /// Accepts any number of values; see ``log(_:)`` for formatting details.
+    /// VARIADIC(values: any[])
     /// - Parameter value: A value to log
     /// - Example: `console.info("config reloaded")`
     @objc func info(_ value: JSValue)
@@ -44,6 +48,7 @@ import JavaScriptCoreExtras
     /// Log a debug message to the Hammerspoon Log Window
     ///
     /// Accepts any number of values; see ``log(_:)`` for formatting details.
+    /// VARIADIC(values: any[])
     /// - Parameter value: A value to log
     /// - Example: `console.debug("state:", { x: 1, y: 2 })`
     @objc func debug(_ value: JSValue)

@@ -11,11 +11,11 @@
           "description": "Log a value to the Hammerspoon Log Window\nAccepts any number of values, which are space-separated in the log output. Non-string\nvalues (objects, arrays, errors, etc.) are formatted the way Node's `util.inspect` would\nrender them.",
           "params": [
             {
-              "name": "value",
-              "type": "JSValue",
-              "description": "A value to log",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -23,7 +23,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 21
+          "lineNumber": 22
         },
         {
           "name": "error",
@@ -33,11 +33,11 @@
           "description": "Log an error to the Hammerspoon Log Window\nAccepts any number of values; see ``log(_:)`` for formatting details.",
           "params": [
             {
-              "name": "value",
-              "type": "JSValue",
-              "description": "A value to log",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -45,7 +45,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 28
+          "lineNumber": 30
         },
         {
           "name": "warn",
@@ -55,11 +55,11 @@
           "description": "Log a warning to the Hammerspoon Log WIndow\nAccepts any number of values; see ``log(_:)`` for formatting details.",
           "params": [
             {
-              "name": "value",
-              "type": "JSValue",
-              "description": "A value to log",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -67,7 +67,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 35
+          "lineNumber": 38
         },
         {
           "name": "info",
@@ -77,11 +77,11 @@
           "description": "Log an informational message to the Hammerspoon Log Window\nAccepts any number of values; see ``log(_:)`` for formatting details.",
           "params": [
             {
-              "name": "value",
-              "type": "JSValue",
-              "description": "A value to log",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -89,7 +89,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 42
+          "lineNumber": 46
         },
         {
           "name": "debug",
@@ -99,11 +99,11 @@
           "description": "Log a debug message to the Hammerspoon Log Window\nAccepts any number of values; see ``log(_:)`` for formatting details.",
           "params": [
             {
-              "name": "value",
-              "type": "JSValue",
-              "description": "A value to log",
-              "optional": false,
-              "tsType": null
+              "name": "values",
+              "type": "any[]",
+              "tsType": "any[]",
+              "rest": true,
+              "description": "A value to log"
             }
           ],
           "returns": null,
@@ -111,7 +111,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/console/ConsoleModule.swift",
-          "lineNumber": 49
+          "lineNumber": 54
         }
       ],
       "properties": [],
@@ -27694,5 +27694,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-11T16:04:38.227Z"
+  "generatedAt": "2026-09-11T16:17:14.712Z"
 }

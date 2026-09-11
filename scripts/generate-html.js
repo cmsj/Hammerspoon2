@@ -375,7 +375,7 @@ function buildSearchIndex(allModuleData, allTypeEntries) {
         }
 
         for (const method of moduleData.methods || []) {
-            const params = (method.params || []).map(p => p.name).join(', ');
+            const params = (method.params || []).map(p => `${p.rest ? '...' : ''}${p.name}`).join(', ');
             entries.push({
                 fullName: `${parentName}.${method.name}(${params})`,
                 description: firstParagraph(method.description),
@@ -404,7 +404,7 @@ function buildSearchIndex(allModuleData, allTypeEntries) {
 
         for (const method of protocol.methods || []) {
             if (method.name === 'init') continue;
-            const params = (method.params || []).map(p => p.name).join(', ');
+            const params = (method.params || []).map(p => `${p.rest ? '...' : ''}${p.name}`).join(', ');
             entries.push({
                 fullName: `${typeName}.${method.name}(${params})`,
                 description: firstParagraph(method.description),

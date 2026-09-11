@@ -659,37 +659,37 @@ declare namespace console {
 Accepts any number of values, which are space-separated in the log output. Non-string
 values (objects, arrays, errors, etc.) are formatted the way Node's `util.inspect` would
 render them.
-     * @param value A value to log
+     * @param values A value to log
      */
-    function log(value: any): void;
+    function log(...values: any[]): void;
 
     /**
      * Log an error to the Hammerspoon Log Window
 Accepts any number of values; see ``log(_:)`` for formatting details.
-     * @param value A value to log
+     * @param values A value to log
      */
-    function error(value: any): void;
+    function error(...values: any[]): void;
 
     /**
      * Log a warning to the Hammerspoon Log WIndow
 Accepts any number of values; see ``log(_:)`` for formatting details.
-     * @param value A value to log
+     * @param values A value to log
      */
-    function warn(value: any): void;
+    function warn(...values: any[]): void;
 
     /**
      * Log an informational message to the Hammerspoon Log Window
 Accepts any number of values; see ``log(_:)`` for formatting details.
-     * @param value A value to log
+     * @param values A value to log
      */
-    function info(value: any): void;
+    function info(...values: any[]): void;
 
     /**
      * Log a debug message to the Hammerspoon Log Window
 Accepts any number of values; see ``log(_:)`` for formatting details.
-     * @param value A value to log
+     * @param values A value to log
      */
-    function debug(value: any): void;
+    function debug(...values: any[]): void;
 
 }
 

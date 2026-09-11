@@ -75,7 +75,7 @@
 
 <h2 class="section-heading">Methods</h2>
     <div class="method" id="log">
-        <h3><a href="#log">console.log(value) -> None</a></h3>
+        <h3><a href="#log">console.log(...values) -> None</a></h3>
 
         <div class="description">Log a value to the Hammerspoon Log Window
 Accepts any number of values, which are space-separated in the log output. Non-string
@@ -83,7 +83,7 @@ values (objects, arrays, errors, etc.) are formatted the way Node&#39;s `util.in
 render them.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">console.log(value) -> None</code></pre>
+        <pre><code class="language-javascript">console.log(...values) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -96,8 +96,8 @@ render them.</div>
             </thead>
             <tbody>
                 <tr>
-                    <td class="param-name">value</td>
-                    <td class="param-type">JSValue</td>
+                    <td class="param-name">...values</td>
+                    <td class="param-type">any[]</td>
                     <td class="param-desc">A value to log</td>
                 </tr>
             </tbody>
@@ -109,17 +109,17 @@ render them.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L21" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:21</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L22" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:22</a>
         </div>
     </div>
     <div class="method" id="error">
-        <h3><a href="#error">console.error(value) -> None</a></h3>
+        <h3><a href="#error">console.error(...values) -> None</a></h3>
 
         <div class="description">Log an error to the Hammerspoon Log Window
 Accepts any number of values; see ``log(_:)`` for formatting details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">console.error(value) -> None</code></pre>
+        <pre><code class="language-javascript">console.error(...values) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -132,8 +132,8 @@ Accepts any number of values; see ``log(_:)`` for formatting details.</div>
             </thead>
             <tbody>
                 <tr>
-                    <td class="param-name">value</td>
-                    <td class="param-type">JSValue</td>
+                    <td class="param-name">...values</td>
+                    <td class="param-type">any[]</td>
                     <td class="param-desc">A value to log</td>
                 </tr>
             </tbody>
@@ -145,17 +145,17 @@ Accepts any number of values; see ``log(_:)`` for formatting details.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L28" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:28</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L30" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:30</a>
         </div>
     </div>
     <div class="method" id="warn">
-        <h3><a href="#warn">console.warn(value) -> None</a></h3>
+        <h3><a href="#warn">console.warn(...values) -> None</a></h3>
 
         <div class="description">Log a warning to the Hammerspoon Log WIndow
 Accepts any number of values; see ``log(_:)`` for formatting details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">console.warn(value) -> None</code></pre>
+        <pre><code class="language-javascript">console.warn(...values) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -168,8 +168,8 @@ Accepts any number of values; see ``log(_:)`` for formatting details.</div>
             </thead>
             <tbody>
                 <tr>
-                    <td class="param-name">value</td>
-                    <td class="param-type">JSValue</td>
+                    <td class="param-name">...values</td>
+                    <td class="param-type">any[]</td>
                     <td class="param-desc">A value to log</td>
                 </tr>
             </tbody>
@@ -181,17 +181,17 @@ Accepts any number of values; see ``log(_:)`` for formatting details.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L35" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:35</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L38" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:38</a>
         </div>
     </div>
     <div class="method" id="info">
-        <h3><a href="#info">console.info(value) -> None</a></h3>
+        <h3><a href="#info">console.info(...values) -> None</a></h3>
 
         <div class="description">Log an informational message to the Hammerspoon Log Window
 Accepts any number of values; see ``log(_:)`` for formatting details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">console.info(value) -> None</code></pre>
+        <pre><code class="language-javascript">console.info(...values) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -204,8 +204,8 @@ Accepts any number of values; see ``log(_:)`` for formatting details.</div>
             </thead>
             <tbody>
                 <tr>
-                    <td class="param-name">value</td>
-                    <td class="param-type">JSValue</td>
+                    <td class="param-name">...values</td>
+                    <td class="param-type">any[]</td>
                     <td class="param-desc">A value to log</td>
                 </tr>
             </tbody>
@@ -217,17 +217,17 @@ Accepts any number of values; see ``log(_:)`` for formatting details.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L42" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:42</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L46" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:46</a>
         </div>
     </div>
     <div class="method" id="debug">
-        <h3><a href="#debug">console.debug(value) -> None</a></h3>
+        <h3><a href="#debug">console.debug(...values) -> None</a></h3>
 
         <div class="description">Log a debug message to the Hammerspoon Log Window
 Accepts any number of values; see ``log(_:)`` for formatting details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">console.debug(value) -> None</code></pre>
+        <pre><code class="language-javascript">console.debug(...values) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -240,8 +240,8 @@ Accepts any number of values; see ``log(_:)`` for formatting details.</div>
             </thead>
             <tbody>
                 <tr>
-                    <td class="param-name">value</td>
-                    <td class="param-type">JSValue</td>
+                    <td class="param-name">...values</td>
+                    <td class="param-type">any[]</td>
                     <td class="param-desc">A value to log</td>
                 </tr>
             </tbody>
@@ -253,7 +253,7 @@ Accepts any number of values; see ``log(_:)`` for formatting details.</div>
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L49" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:49</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/console/ConsoleModule.swift#L54" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/console/ConsoleModule.swift:54</a>
         </div>
     </div>
         </main>

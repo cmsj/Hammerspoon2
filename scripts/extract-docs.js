@@ -55,6 +55,26 @@ function shouldSkipDocs(docLines) {
 }
 
 /**
+ * Check documentation for a VARIADIC(name: type) marker and extract its declaration.
+ *
+ * JSExport can only ever declare one Swift parameter, so a method that's actually variadic
+ * (eg. console.log, which reads JSContext.currentArguments() internally rather than using its
+ * declared parameter) has no way to express that in its Swift signature. This marker lets the
+ * doc comment say so explicitly; when present, it replaces the Swift-derived params with a
+ * single rest parameter in the generated docs and TypeScript. Returns null if absent.
+ */
+function extractVariadicMarker(docLines) {
+    const lines = Array.isArray(docLines) ? docLines : String(docLines).split('\n');
+    for (const line of lines) {
+        const match = line.trim().match(/^VARIADIC\(([A-Za-z_$][\w$]*)\s*:\s*([^)]+)\)$/);
+        if (match) {
+            return { name: match[1], type: match[2].trim() };
+        }
+    }
+    return null;
+}
+
+/**
  * Parse Swift file to extract JSExport protocol information
  */
 function parseSwiftFile(filePath, repoRoot) {
@@ -273,7 +293,24 @@ function parseSwiftFile(filePath, repoRoot) {
                         }
                     }
                     
-                    const rawDoc = currentDoc.join('\n');
+                    // A VARIADIC(...) marker documents a method that's really variadic in JS
+                    // even though its Swift/JSExport signature can only declare one parameter
+                    // (see console.log & co, which read JSContext.currentArguments() instead of
+                    // using their declared parameter). Strip the marker line itself out of the
+                    // rendered doc text, and use it in place of the Swift-derived params below.
+                    const variadic = extractVariadicMarker(currentDoc);
+                    const docLinesForOutput = currentDoc.filter(line => !/^\s*VARIADIC\(/.test(line));
+                    const rawDoc = docLinesForOutput.join('\n');
+                    const swiftParams = extractParams(fullSignature, currentDoc);
+                    const params = variadic
+                        ? [{
+                            name: variadic.name,
+                            type: variadic.type,
+                            tsType: variadic.type,
+                            rest: true,
+                            description: swiftParams[0]?.description || 'Any number of values.'
+                        }]
+                        : swiftParams;
 
                     // Skip this method if it has SKIP_DOCS marker
                     if (!shouldSkipDocs(currentDoc)) {
@@ -283,7 +320,7 @@ function parseSwiftFile(filePath, repoRoot) {
                             isStatic: /(?:^|\s)static\s+func\b/.test(fullSignature),
                             rawDocumentation: rawDoc,
                             description: formatDocCToJSDoc(rawDoc),
-                            params: extractParams(fullSignature, currentDoc),
+                            params,
                             returns: extractReturns(fullSignature, currentDoc),
                             notes: extractNotes(currentDoc),
                             examples: extractExamples(currentDoc),
@@ -1350,7 +1387,9 @@ function generateCombinedJSDoc(moduleData) {
         }
         if (method.params && method.params.length > 0) {
             for (const param of method.params) {
-                const paramType = method.source === 'swift' ? swiftTypeToJSDoc(param.type) : param.type;
+                const rawType = method.source === 'swift' ? swiftTypeToJSDoc(param.type) : param.type;
+                // JSDoc's own rest-parameter syntax is {...elementType}, not {elementType[]}.
+                const paramType = param.rest ? `...${rawType.replace(/\[\]$/, '')}` : rawType;
                 const desc = param.description ? ' ' + param.description : '';
                 output += ` * @param {${paramType}} ${param.name}${desc}\n`;
             }
@@ -1369,7 +1408,7 @@ function generateCombinedJSDoc(moduleData) {
 
         // For methods from this module, use module.name prefix
         const functionName = method.name.includes('.') ? method.name : `${moduleData.name}.${escapedName}`;
-        output += `${functionName} = function(${(method.params || []).map(p => p.name).join(', ')}) {};\n\n`;
+        output += `${functionName} = function(${(method.params || []).map(p => `${p.rest ? '...' : ''}${p.name}`).join(', ')}) {};\n\n`;
     }
 
     // Add module properties
