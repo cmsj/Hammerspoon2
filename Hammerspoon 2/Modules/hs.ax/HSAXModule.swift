@@ -532,7 +532,9 @@ import AXSwift
     }
 
     /// Handle a notification from the observer
-    private func handleNotification(element: UIElement, notification: UIElement.AXNotification) {
+    /// Internal rather than private so tests can simulate AX notification delivery directly,
+    /// since this sandbox cannot receive real AXObserver callbacks (see HSAXWatcherRoutingTests).
+    func handleNotification(element: UIElement, notification: UIElement.AXNotification) {
         let notificationValue = notification.rawValue
         let elementPid = try? element.pid()
 

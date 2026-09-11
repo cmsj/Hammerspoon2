@@ -6,6 +6,7 @@
 import Testing
 import JavaScriptCore
 import AppKit
+import AXSwift
 @testable import Hammerspoon_2
 
 private nonisolated func isAccessibilityEnabled() -> Bool {
@@ -1190,6 +1191,149 @@ struct HSAXTests {
             hs.ax.removeWatcher(_lc11MenuBar, 'AXValueChanged', _lc11Fn2);
         """)
             #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Suite 4.5: Watcher routing (requires accessibility permissions)
+
+    /// Tests for HSAXModule.handleNotification()'s routing logic: which registered watchers
+    /// a given (element, notification) pair should be delivered to. These call
+    /// handleNotification() directly with a real element but a synthesized notification,
+    /// rather than relying on a real AXObserver callback - this sandbox cannot receive real
+    /// AX notification callbacks (confirmed separately: even a bare, known-working single
+    /// registration never fires here), so a test that waited for one would be vacuous. Calling
+    /// the routing function directly exercises the exact logic that used to silently drop
+    /// application-scoped notifications, without depending on OS notification delivery.
+    @Suite("hs.ax watcher routing tests", .serialized, .disabled(if: !isAccessibilityEnabled(), "Accessibility permissions not available"))
+    struct HSAXWatcherRoutingTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSAXModule.self, as: "ax")
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            return harness
+        }
+
+        /// Fetches the two menu bar items of frontmost-matched Finder, along with the app
+        /// element itself and the live HSAXModule instance, for use in routing tests.
+        @MainActor
+        private func makeFixture(_ harness: JSTestHarness) -> (module: HSAXModule, appElement: UIElement, itemA: UIElement, itemB: UIElement)? {
+            harness.eval("""
+            var _rtFinder = hs.application.matchingBundleID('com.apple.finder');
+            var _rtAppElem = hs.ax.applicationElement(_rtFinder);
+            var _rtMenuBar = _rtAppElem.attributeValue('AXMenuBar');
+            var _rtMenuItems = _rtMenuBar.children();
+            globalThis._rtAppElem = _rtAppElem;
+            // The menu bar items themselves (AXMenuBarItem) reject AXObserverAddNotification
+            // for AXValueChanged - their AXMenu dropdown children accept it, so those are used
+            // as the two distinct, independently-watchable descendant elements here.
+            globalThis._rtItemA = _rtMenuItems[0].children()[0];
+            globalThis._rtItemB = _rtMenuItems[1].children()[0];
+        """)
+            guard !harness.hasException,
+                  let module = harness.evalValue("hs.ax")?.toObjectOf(HSAXModule.self) as? HSAXModule,
+                  let appElement = harness.evalValue("_rtAppElem")?.toObjectOf(HSAXElement.self) as? HSAXElement,
+                  let itemA = harness.evalValue("_rtItemA")?.toObjectOf(HSAXElement.self) as? HSAXElement,
+                  let itemB = harness.evalValue("_rtItemB")?.toObjectOf(HSAXElement.self) as? HSAXElement
+            else {
+                return nil
+            }
+            return (module, appElement.element, itemA.element, itemB.element)
+        }
+
+        @Test("a notification delivered for a descendant element is routed to an application-level watcher")
+        @MainActor
+        func testDescendantNotificationRoutesToApplicationWatcher() {
+            let harness = makeHarness()
+            guard let fixture = makeFixture(harness) else {
+                Issue.record("Could not set up Finder AX fixture")
+                return
+            }
+
+            harness.eval("""
+            globalThis._rtAppEvents = [];
+            var _rtAppFn = function(n, e) { _rtAppEvents.push(n); };
+            globalThis._rtAppFn = _rtAppFn;
+            hs.ax.addWatcher(_rtAppElem, 'AXValueChanged', _rtAppFn);
+        """)
+            defer { harness.eval("hs.ax.removeWatcher(_rtAppElem, 'AXValueChanged', _rtAppFn);") }
+            #expect(!harness.hasException)
+
+            // Simulate AX delivering the notification for a specific descendant (itemA), the
+            // way it actually does for application-scoped notifications like AXWindowCreated -
+            // never with the application element itself as the delivered element.
+            fixture.module.handleNotification(element: fixture.itemA, notification: UIElement.AXNotification(rawValue: "AXValueChanged"))
+
+            #expect(harness.eval("_rtAppEvents.length") as? Int == 1)
+        }
+
+        @Test("a descendant-scoped watcher only fires for its own exact element, not a sibling")
+        @MainActor
+        func testDescendantWatcherStaysScopedToItsOwnElement() {
+            let harness = makeHarness()
+            guard let fixture = makeFixture(harness) else {
+                Issue.record("Could not set up Finder AX fixture")
+                return
+            }
+
+            harness.eval("""
+            globalThis._rtItemAEvents = [];
+            var _rtItemAFn = function(n, e) { _rtItemAEvents.push(n); };
+            globalThis._rtItemAFn = _rtItemAFn;
+            hs.ax.addWatcher(_rtItemA, 'AXValueChanged', _rtItemAFn);
+        """)
+            defer { harness.eval("hs.ax.removeWatcher(_rtItemA, 'AXValueChanged', _rtItemAFn);") }
+            #expect(!harness.hasException)
+
+            // A notification for the SIBLING element (itemB) must not reach itemA's watcher.
+            fixture.module.handleNotification(element: fixture.itemB, notification: UIElement.AXNotification(rawValue: "AXValueChanged"))
+            #expect(harness.eval("_rtItemAEvents.length") as? Int == 0)
+
+            // The exact same notification for itemA itself must reach it.
+            fixture.module.handleNotification(element: fixture.itemA, notification: UIElement.AXNotification(rawValue: "AXValueChanged"))
+            #expect(harness.eval("_rtItemAEvents.length") as? Int == 1)
+        }
+
+        @Test("application-level and descendant-level watchers for the same notification both fire, independently")
+        @MainActor
+        func testApplicationAndDescendantWatchersCoexistAndBothFire() {
+            let harness = makeHarness()
+            guard let fixture = makeFixture(harness) else {
+                Issue.record("Could not set up Finder AX fixture")
+                return
+            }
+
+            harness.eval("""
+            globalThis._rtAppEvents2 = [];
+            globalThis._rtItemAEvents2 = [];
+            var _rtAppFn2 = function(n, e) { _rtAppEvents2.push(n); };
+            var _rtItemAFn2 = function(n, e) { _rtItemAEvents2.push(n); };
+            globalThis._rtAppFn2 = _rtAppFn2;
+            globalThis._rtItemAFn2 = _rtItemAFn2;
+            hs.ax.addWatcher(_rtAppElem, 'AXValueChanged', _rtAppFn2);
+            hs.ax.addWatcher(_rtItemA, 'AXValueChanged', _rtItemAFn2);
+        """)
+            defer {
+                harness.eval("""
+                hs.ax.removeWatcher(_rtAppElem, 'AXValueChanged', _rtAppFn2);
+                hs.ax.removeWatcher(_rtItemA, 'AXValueChanged', _rtItemAFn2);
+            """)
+            }
+            #expect(!harness.hasException)
+
+            // A notification for itemA should reach BOTH watchers: the one scoped exactly to
+            // itemA, and the application-level one (matched by PID).
+            fixture.module.handleNotification(element: fixture.itemA, notification: UIElement.AXNotification(rawValue: "AXValueChanged"))
+
+            #expect(harness.eval("_rtAppEvents2.length") as? Int == 1)
+            #expect(harness.eval("_rtItemAEvents2.length") as? Int == 1)
+
+            // A notification for itemB (not individually watched) should reach only the
+            // application-level watcher, not itemA's.
+            fixture.module.handleNotification(element: fixture.itemB, notification: UIElement.AXNotification(rawValue: "AXValueChanged"))
+
+            #expect(harness.eval("_rtAppEvents2.length") as? Int == 2)
+            #expect(harness.eval("_rtItemAEvents2.length") as? Int == 1)
         }
     }
 
