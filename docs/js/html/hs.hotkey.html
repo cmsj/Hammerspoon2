@@ -129,7 +129,7 @@
                 <tr>
                     <td class="param-name">callbackReleased</td>
                     <td class="param-type">function</td>
-                    <td class="param-desc">A JavaScript function to call when the hotkey is released, or null for no callback</td>
+                    <td class="param-desc">A JavaScript function to call when the hotkey is released, or null/omitted for no callback</td>
                 </tr>
                 <tr>
                     <td class="param-name">callbackRepeat</td>
@@ -141,7 +141,7 @@
 
         <div class="card-section-label">Returns</div>
         <div class="return-type">HSHotkey</div>
-        <div class="return-desc">A hotkey object, or null if binding failed</div>
+        <div class="return-desc">A hotkey object, or null if binding failed (including when none of the callbacks is a function — at least one is required)</div>
 
 
         <div class="card-section-label">Example</div>
@@ -232,7 +232,7 @@
                 <tr>
                     <td class="param-name">callbackReleased</td>
                     <td class="param-type">function</td>
-                    <td class="param-desc">A JavaScript function to call when the hotkey is released, or null for no callback</td>
+                    <td class="param-desc">A JavaScript function to call when the hotkey is released, or null/omitted for no callback</td>
                 </tr>
                 <tr>
                     <td class="param-name">callbackRepeat</td>

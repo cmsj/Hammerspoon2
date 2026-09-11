@@ -9177,7 +9177,7 @@
           "name": "bind",
           "signature": "func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n  - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if binding failed\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null, () => console.log(\"still held\"))\n```",
+          "rawDocumentation": "Bind a hotkey\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback\n  - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if binding failed (including when none of the callbacks is a function — at least one is required)\n- Example:\n```js\nhs.hotkey.bind([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null, () => console.log(\"still held\"))\n```",
           "description": "Bind a hotkey\n`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.",
           "params": [
             {
@@ -9204,8 +9204,8 @@
             {
               "name": "callbackReleased",
               "type": "JSFunction",
-              "description": "A JavaScript function to call when the hotkey is released, or null for no callback",
-              "optional": false,
+              "description": "A JavaScript function to call when the hotkey is released, or null/omitted for no callback",
+              "optional": true,
               "tsType": "(() => void) | null"
             },
             {
@@ -9218,7 +9218,7 @@
           ],
           "returns": {
             "type": "HSHotkey",
-            "description": "A hotkey object, or null if binding failed"
+            "description": "A hotkey object, or null if binding failed (including when none of the callbacks is a function — at least one is required)"
           },
           "notes": [],
           "examples": [
@@ -9279,7 +9279,7 @@
           "name": "create",
           "signature": "func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Create a hotkey without enabling it\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null for no callback\n  - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.\n- Example:\n```js\nconst hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\nhk.enable()\n```",
+          "rawDocumentation": "Create a hotkey without enabling it\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback\n  - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.\n- Example:\n```js\nconst hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\nhk.enable()\n```",
           "description": "Create a hotkey without enabling it\n`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.",
           "params": [
             {
@@ -9306,8 +9306,8 @@
             {
               "name": "callbackReleased",
               "type": "JSFunction",
-              "description": "A JavaScript function to call when the hotkey is released, or null for no callback",
-              "optional": false,
+              "description": "A JavaScript function to call when the hotkey is released, or null/omitted for no callback",
+              "optional": true,
               "tsType": "(() => void) | null"
             },
             {
@@ -27660,5 +27660,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-11T08:50:05.127Z"
+  "generatedAt": "2026-09-11T10:43:25.318Z"
 }

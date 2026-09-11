@@ -3663,11 +3663,11 @@ declare namespace hs.hotkey {
      * @param mods An array of modifier key strings (e.g., `["cmd", "shift"]`). Supported names:
      * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
-     * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
+     * @param callbackReleased A JavaScript function to call when the hotkey is released, or null/omitted for no callback
      * @param callbackRepeat A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
-     * @returns A hotkey object, or null if binding failed
+     * @returns A hotkey object, or null if binding failed (including when none of the callbacks is a function — at least one is required)
      */
-    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null, callbackRepeat?: (() => void) | null): HSHotkey | null;
+    function bind(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased?: (() => void) | null, callbackRepeat?: (() => void) | null): HSHotkey | null;
 
     /**
      * Get the system-wide mapping of key names to key codes
@@ -3687,11 +3687,11 @@ declare namespace hs.hotkey {
      * @param mods An array of modifier key strings (e.g., `["cmd", "shift"]`). Supported names:
      * @param key The key name or character (e.g., "a", "space", "return", "f1")
      * @param callbackPressed A JavaScript function to call when the hotkey is pressed, or null for no callback
-     * @param callbackReleased A JavaScript function to call when the hotkey is released, or null for no callback
+     * @param callbackReleased A JavaScript function to call when the hotkey is released, or null/omitted for no callback
      * @param callbackRepeat A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
      * @returns A hotkey object, or null if creation failed. Call `.enable()` to activate it.
      */
-    function create(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased: (() => void) | null, callbackRepeat?: (() => void) | null): HSHotkey | null;
+    function create(mods: string[], key: string, callbackPressed: (() => void) | null, callbackReleased?: (() => void) | null, callbackRepeat?: (() => void) | null): HSHotkey | null;
 
     /**
      * Get a list of all currently-enabled hotkeys
