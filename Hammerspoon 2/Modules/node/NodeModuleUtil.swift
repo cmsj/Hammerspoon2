@@ -56,7 +56,11 @@ enum NodeUtil {
     }
 
     private static func formatDate(_ value: JSValue) -> String {
-        value.invokeMethod("toISOString", withArguments: [])?.toString() ?? "Invalid Date"
+        // `toISOString()` throws a RangeError for an invalid date instead of returning
+        // anything, so check validity with `getTime()` (which just returns NaN) first.
+        let time = value.invokeMethod("getTime", withArguments: [])?.toDouble() ?? .nan
+        guard time.isFinite else { return "Invalid Date" }
+        return value.invokeMethod("toISOString", withArguments: [])?.toString() ?? "Invalid Date"
     }
 
     private static func formatError(_ value: JSValue) -> String {
