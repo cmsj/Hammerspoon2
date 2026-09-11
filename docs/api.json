@@ -25607,7 +25607,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleUtil.swift",
-          "lineNumber": 186
+          "lineNumber": 190
         }
       ],
       "properties": [],
@@ -27694,5 +27694,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-11T16:17:14.712Z"
+  "generatedAt": "2026-09-11T19:51:23.742Z"
 }
