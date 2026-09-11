@@ -6,17 +6,26 @@
 // One-to-many event emitter for hs.ax events.
 // Allows multiple JavaScript listeners for the same element+notification pair
 // while Swift manages only a single callback per combination.
+//
+// Buckets are resolved with isEqualToElement() rather than a hash-derived key:
+// Hashable never guarantees uniqueness (only Equatable does), so keying buckets
+// off a hash value risks silently merging two distinct elements' listeners if
+// their hashes ever collided.
 class AXModuleWatcherEmitter {
-    #events = {}
+    #buckets = []
 
-    #handleEvent(key, notification, element) {
-        if (Array.isArray(this.#events[key])) {
-            var listeners = this.#events[key].slice();
-            const length = listeners.length;
+    #findBucket(element, notification) {
+        return this.#buckets.find((bucket) => {
+            return bucket.notification === notification && bucket.element.isEqualToElement(element);
+        });
+    }
 
-            for (var i = 0; i < length; i++) {
-                listeners[i].apply(null, [notification, element]);
-            }
+    #handleEvent(bucket, notification, element) {
+        var listeners = bucket.listeners.slice();
+        const length = listeners.length;
+
+        for (var i = 0; i < length; i++) {
+            listeners[i].apply(null, [notification, element]);
         }
     }
 
@@ -25,11 +34,13 @@ class AXModuleWatcherEmitter {
             throw new Error("hs.ax.addWatcher(): The provided handler must be a function");
         }
 
-        const key = `${element._identityKey}:${notification}`;
+        var bucket = this.#findBucket(element, notification);
 
-        if (!Array.isArray(this.#events[key])) {
+        if (!bucket) {
+            bucket = { element: element, notification: notification, listeners: [] };
+
             const registered = hs.ax._addWatcher(element, notification, (notif, elem) => {
-                this.#handleEvent(key, notif, elem);
+                this.#handleEvent(bucket, notif, elem);
             });
 
             if (!registered) {
@@ -41,30 +52,33 @@ class AXModuleWatcherEmitter {
                 return;
             }
 
-            this.#events[key] = [];
+            this.#buckets.push(bucket);
         }
 
-        if (this.#events[key].includes(listener)) {
+        if (bucket.listeners.includes(listener)) {
             console.error("hs.ax.addWatcher(): The provided handler for '" + notification + "' is already registered.");
             return;
         }
 
-        this.#events[key].push(listener);
+        bucket.listeners.push(listener);
     }
 
     removeListener(element, notification, listener) {
-        const key = `${element._identityKey}:${notification}`;
+        const bucket = this.#findBucket(element, notification);
+        if (!bucket) {
+            return;
+        }
 
-        if (Array.isArray(this.#events[key])) {
-            const idx = this.#events[key].indexOf(listener);
+        const idx = bucket.listeners.indexOf(listener);
+        if (idx > -1) {
+            bucket.listeners.splice(idx, 1);
+        }
 
-            if (idx > -1) {
-                this.#events[key].splice(idx, 1);
-            }
-
-            if (this.#events[key].length === 0) {
-                hs.ax._removeWatcher(element, notification);
-                delete this.#events[key];
+        if (bucket.listeners.length === 0) {
+            hs.ax._removeWatcher(element, notification);
+            const bucketIdx = this.#buckets.indexOf(bucket);
+            if (bucketIdx > -1) {
+                this.#buckets.splice(bucketIdx, 1);
             }
         }
     }

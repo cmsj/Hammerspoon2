@@ -208,10 +208,6 @@ import AXSwift
     /// console.log(el1.isEqualToElement(el2)) // true, assuming focus hasn't changed
     /// ```
     @objc func isEqualToElement(_ other: HSAXElement) -> Bool
-
-    /// A string that uniquely identifies the underlying accessibility object
-    /// SKIP_DOCS
-    @objc var _identityKey: String { get }
 }
 
 @_documentation(visibility: private)
@@ -439,10 +435,6 @@ import AXSwift
 
     @objc func isEqualToElement(_ other: HSAXElement) -> Bool {
         return element == other.element
-    }
-
-    @objc var _identityKey: String {
-        return "\(pid):\(element.hashValue)"
     }
 
     private func bridgeValue(_ value: Any) -> Any {
