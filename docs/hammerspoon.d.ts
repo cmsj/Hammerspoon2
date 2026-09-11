@@ -1371,16 +1371,17 @@ For devices that support a range, both the minimum and maximum are included.
 const element = hs.ax.focusedElement();
 console.log(element.role, element.title);
 
-// Watch for window creation events on an application
+// Watch an application's element for window creation events. Notifications bubble up
+// from anywhere in the application's hierarchy, so this fires for every new window,
+// not just one specific window.
 const app = hs.application.frontmost();
 hs.ax.addWatcher(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
     console.log("New window:", element.title);
 });
 
 // Watch a specific element (e.g. a text field found via findByRole) for value changes.
-// Element-specific notifications like AXValueChanged are only delivered to a watcher
-// registered on the exact element that posts them - registering on the application
-// element only works for application-level notifications like AXWindowCreated above.
+// Watching a specific element scopes the notification to just that element, rather
+// than the whole application's hierarchy.
 const field = hs.ax.findByRole(hs.ax.roles.textField, app.axElement())[0];
 hs.ax.addWatcher(field, hs.ax.notificationTypes.valueChanged, (notification, element) => {
     console.log("Field changed:", element.value);
@@ -1418,7 +1419,7 @@ declare namespace hs.ax {
 
     /**
      * Add a watcher for AX events on a specific element
-     * @param element An HSAXElement to watch. Some notifications (e.g. AXWindowCreated, AXApplicationActivated) are posted at the application level and can be watched by passing an application's element; most element-specific notifications (e.g. AXValueChanged, AXTitleChanged) are only delivered when you watch the specific element that posts them
+     * @param element An HSAXElement to watch. Passing an application's element causes matching notifications to bubble up from anywhere in that application's hierarchy (e.g. AXWindowCreated for any window in the app, not just one); passing a specific descendant element scopes the notification to just that element
      * @param notification An event name, or an array of event names, to watch for with the same listener
      * @param listener A function called with the notification name and the accessibility element it applies to
      */
