@@ -2,7 +2,7 @@
 
 // Hammerspoon 2 — CommonJS module system
 //
-// Five primitives are installed by Swift before this file is evaluated.
+// Six primitives are installed by Swift before this file is evaluated.
 // They are captured in the IIFE closure and then deleted from global scope
 // so user code cannot reach or replace them.
 //
@@ -11,6 +11,10 @@
 // directory and then hands its init.js to this same require() by absolute path; the module
 // wrapper below (see makeRequire) gives that file its own require() bound to its own
 // directory automatically, the same way it does for any other file.
+//
+// Bare specifiers (eg. require('util')) never touch the filesystem - there is no
+// npm/node_modules-style package lookup. They resolve directly against _builtinModules, a
+// hard-coded registry of Node built-ins Hammerspoon 2 currently implements.
 
 (function () {
     const _readFile   = globalThis._hs_readFile;
@@ -18,12 +22,14 @@
     const _expandPath = globalThis._hs_expandPath;
     const _evalScript = globalThis._hs_eval;
     const _configDir  = globalThis._hs_configDir;
+    const _builtinModules = globalThis._hs_node_builtins;
 
     delete globalThis._hs_readFile;
     delete globalThis._hs_fileExists;
     delete globalThis._hs_expandPath;
     delete globalThis._hs_eval;
     delete globalThis._hs_configDir;
+    delete globalThis._hs_node_builtins;
 
     // Resolved absolute path → { exports, loaded, filename, id }
     const _cache = Object.create(null);
@@ -70,7 +76,12 @@
 
     function makeRequire(currentFile) {
         function require(id) {
-            const resolved = resolvePath(String(id), currentFile);
+            const name = String(id);
+            if (Object.prototype.hasOwnProperty.call(_builtinModules, name)) {
+                return _builtinModules[name];
+            }
+
+            const resolved = resolvePath(name, currentFile);
             if (!resolved) {
                 throw new Error("Cannot find module '" + id + "' (from: " + currentFile + ")");
             }
