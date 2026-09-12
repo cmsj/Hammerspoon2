@@ -7,6 +7,7 @@
 
 import Foundation
 import JavaScriptCore
+import ApplicationServices
 import AXSwift
 
 /// Object representing an Accessibility element. You should not instantiate this directly, but rather, use the hs.ax methods to create these as required.
@@ -443,6 +444,16 @@ import AXSwift
         }
         if let elements = value as? [UIElement] {
             return elements.map { HSAXElement(element: $0) }
+        }
+        // AXSwift's getMultipleAttributes() only unwraps a raw AXUIElement into its
+        // UIElement wrapper for scalar attributes (e.g. AXParent). For array-valued
+        // attributes (e.g. AXChildren, AXWindows) the elements are left as raw,
+        // untyped AXUIElement CFTypeRefs, which don't match `UIElement` above. Detect
+        // that case directly so both scalar and array element-valued attributes bridge
+        // correctly; the [Any] branch below then recurses into arrays and hits this.
+        let cfValue = value as CFTypeRef
+        if CFGetTypeID(cfValue) == AXUIElementGetTypeID() {
+            return HSAXElement(element: UIElement(cfValue as! AXUIElement))
         }
         if let point = value as? CGPoint {
             return point.toBridge()

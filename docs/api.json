@@ -2704,7 +2704,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 115
+              "lineNumber": 116
             },
             {
               "name": "childAtIndex",
@@ -2734,7 +2734,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 125
+              "lineNumber": 126
             },
             {
               "name": "attributeNames",
@@ -2756,7 +2756,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 136
+              "lineNumber": 137
             },
             {
               "name": "attributeValue",
@@ -2786,7 +2786,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 146
+              "lineNumber": 147
             },
             {
               "name": "setAttributeValue",
@@ -2823,7 +2823,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 158
+              "lineNumber": 159
             },
             {
               "name": "isAttributeSettable",
@@ -2853,7 +2853,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 168
+              "lineNumber": 169
             },
             {
               "name": "actionNames",
@@ -2875,7 +2875,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 179
+              "lineNumber": 180
             },
             {
               "name": "performAction",
@@ -2905,7 +2905,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 189
+              "lineNumber": 190
             },
             {
               "name": "isEqualToElement",
@@ -2935,7 +2935,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 210
+              "lineNumber": 211
             }
           ],
           "properties": [
@@ -2954,7 +2954,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 22
+              "lineNumber": 23
             },
             {
               "name": "subrole",
@@ -2971,7 +2971,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 30
+              "lineNumber": 31
             },
             {
               "name": "title",
@@ -2988,7 +2988,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 38
+              "lineNumber": 39
             },
             {
               "name": "value",
@@ -3005,7 +3005,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 46
+              "lineNumber": 47
             },
             {
               "name": "elementDescription",
@@ -3022,7 +3022,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 54
+              "lineNumber": 55
             },
             {
               "name": "isEnabled",
@@ -3039,7 +3039,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 62
+              "lineNumber": 63
             },
             {
               "name": "isFocused",
@@ -3056,7 +3056,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 70
+              "lineNumber": 71
             },
             {
               "name": "position",
@@ -3073,7 +3073,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 80
+              "lineNumber": 81
             },
             {
               "name": "size",
@@ -3090,7 +3090,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 88
+              "lineNumber": 89
             },
             {
               "name": "frame",
@@ -3107,7 +3107,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 96
+              "lineNumber": 97
             },
             {
               "name": "parent",
@@ -3124,7 +3124,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 106
+              "lineNumber": 107
             },
             {
               "name": "pid",
@@ -3141,7 +3141,7 @@
               ],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.ax/HSAXElement.swift",
-              "lineNumber": 199
+              "lineNumber": 200
             }
           ]
         }
@@ -27694,5 +27694,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-11T20:44:40.511Z"
+  "generatedAt": "2026-09-12T20:26:40.403Z"
 }
