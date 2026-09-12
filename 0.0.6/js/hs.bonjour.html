@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.bonjour - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.bonjour</span>
+</nav>
+<div class="page-header">
+    <h1>hs.bonjour</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>Discover and publish Bonjour (mDNS / Zeroconf) network services.</p>
+<p>Use <code>createSearch()</code> to search the network for services advertised by other
+devices, and <code>advertise()</code> to advertise your own. The <code>networkServices()</code>
+convenience function returns a snapshot of all service types currently
+active on the local network.</p>
+<h2>Common service type strings</h2>
+<p>The <code>hs.bonjour.serviceTypes</code> object maps short names to their mDNS strings,
+e.g. <code>hs.bonjour.serviceTypes.ssh</code> → <code>&quot;_ssh._tcp.&quot;</code>.</p>
+<h2>Searching for a service</h2>
+<pre><code class="language-js">// Find all SSH services on the local network and resolve each one
+const search = hs.bonjour.createSearch()
+search.findServices(&#39;_ssh._tcp.&#39;, &#39;local.&#39;, (event, svc, moreComing) =&gt; {
+    if (event === &#39;serviceFound&#39;) {
+        svc.resolve(5, ev =&gt; {
+            if (ev === &#39;resolved&#39;) console.log(svc.hostname + &#39;:&#39; + svc.port)
+        })
+    }
+})
+</code></pre>
+<h2>Advertising a service</h2>
+<pre><code class="language-js">hs.bonjour.advertise(&#39;My Web Server&#39;, &#39;_http._tcp.&#39;, 8080, ev =&gt; {
+    if (ev === &#39;published&#39;) console.log(&#39;Now advertising!&#39;)
+    else if (ev === &#39;error&#39;) console.error(&#39;Advertising failed&#39;)
+})
+// Later, to stop:
+hs.bonjour.stopAdvertising(&#39;My Web Server&#39;, &#39;_http._tcp.&#39;)
+</code></pre>
+<h2>Listing all active service types</h2>
+<pre><code class="language-js">hs.bonjour.networkServices(5).then(types =&gt; {
+    console.log(&#39;Active service types: &#39; + types.join(&#39;, &#39;))
+})
+</code></pre>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSBonjourSearch.html">HSBonjourSearch</a>
+    </li>
+    <li>
+        <a href="HSBonjourService.html">HSBonjourService</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="serviceTypes">
+        <h3><a href="#serviceTypes">hs.bonjour.serviceTypes</a></h3>
+        <div class="prop-type">{[key: string]: string}</div>
+        <div class="description">A frozen object mapping short service-type names to their mDNS strings.
+Populated by the JavaScript enhancement layer.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bonjour/HSBonjourModule.swift#L65" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift:65</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="createSearch">
+        <h3><a href="#createSearch">hs.bonjour.createSearch() -> HSBonjourSearch</a></h3>
+
+        <div class="description">Creates a new Bonjour search for discovering services or domains.
+Call one of the `find…` methods on the returned search to start
+discovering. Remove it with `removeSearch()` when finished.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bonjour.createSearch() -> HSBonjourSearch</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSBonjourSearch</div>
+        <div class="return-desc">a new `HSBonjourSearch`</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const search = hs.bonjour.createSearch()
+search.findServices(&#39;_http._tcp.&#39;, &#39;local.&#39;, (ev, svc, more) =&gt; {
+    if (ev === &#39;serviceFound&#39;) console.log(&#39;Found:&#39;, svc.name)
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bonjour/HSBonjourModule.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift:79</a>
+        </div>
+    </div>
+    <div class="method" id="removeSearch">
+        <h3><a href="#removeSearch">hs.bonjour.removeSearch(search) -> None</a></h3>
+
+        <div class="description">Stops and removes a previously created search.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bonjour.removeSearch(search) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">search</td>
+                    <td class="param-type">HSBonjourSearch</td>
+                    <td class="param-desc">the search returned by `createSearch()`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const s = hs.bonjour.createSearch()
+// ... use search ...
+hs.bonjour.removeSearch(s)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bonjour/HSBonjourModule.swift#L89" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift:89</a>
+        </div>
+    </div>
+    <div class="method" id="advertise">
+        <h3><a href="#advertise">hs.bonjour.advertise(name, type, port, domain, callback) -> None</a></h3>
+
+        <div class="description">Starts advertising a local service on the network.
+If `domain` is omitted or not a string, it defaults to `&quot;local.&quot;`.
+If the 4th argument is a function, it is used as the callback and domain
+defaults to `&quot;local.&quot;`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bonjour.advertise(name, type, port, domain, callback) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">human-readable name shown to browsers (e.g. `&quot;My Web Server&quot;`)</td>
+                </tr>
+                <tr>
+                    <td class="param-name">type</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">service type in `&quot;_proto._tcp.&quot;` or `&quot;_proto._udp.&quot;` form</td>
+                </tr>
+                <tr>
+                    <td class="param-name">port</td>
+                    <td class="param-type">Int32</td>
+                    <td class="param-desc">port number the service listens on</td>
+                </tr>
+                <tr>
+                    <td class="param-name">domain</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">mDNS domain; defaults to `&quot;local.&quot;` if omitted</td>
+                </tr>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">optional `function(event, data?)` called on status changes</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.bonjour.advertise(&#39;My Server&#39;, &#39;_http._tcp.&#39;, 8080, ev =&gt; {
+    if (ev === &#39;published&#39;) console.log(&#39;Now advertising!&#39;)
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bonjour/HSBonjourModule.swift#L112" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift:112</a>
+        </div>
+    </div>
+    <div class="method" id="stopAdvertising">
+        <h3><a href="#stopAdvertising">hs.bonjour.stopAdvertising(name, type) -> None</a></h3>
+
+        <div class="description">Stops advertising a service previously started with `advertise()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bonjour.stopAdvertising(name, type) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the name passed to `advertise()`</td>
+                </tr>
+                <tr>
+                    <td class="param-name">type</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">the type passed to `advertise()`</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.bonjour.stopAdvertising(&#39;My Server&#39;, &#39;_http._tcp.&#39;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bonjour/HSBonjourModule.swift#L121" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift:121</a>
+        </div>
+    </div>
+    <div class="method" id="networkServices">
+        <h3><a href="#networkServices">hs.bonjour.networkServices(timeout) -> Promise&lt;string[]&gt;</a></h3>
+
+        <div class="description">Returns a Promise that resolves to an array of service-type strings
+currently advertised on the local network.
+Internally searches for `_services._dns-sd._udp.` services, collects
+results for up to `timeout` seconds (or until the browser signals no more
+results), then resolves.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.bonjour.networkServices(timeout) -> Promise&lt;string[]&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">timeout</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">maximum seconds to wait (pass `0` to use the default 5 s)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;string[]&gt;</div>
+        <div class="return-desc">a Promise resolving to an array of service-type strings such as `&quot;_http._tcp.&quot;`</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.bonjour.networkServices(5).then(types =&gt; {
+    console.log(&#39;Active service types: &#39; + types.join(&#39;, &#39;))
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.bonjour/HSBonjourModule.swift#L137" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.bonjour/HSBonjourModule.swift:137</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.bonjour');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

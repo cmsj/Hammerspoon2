@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIWebView - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">UIWebView</span>
+</nav>
+<div class="page-header">
+    <h1>UIWebView</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><h1>hs.ui.webview</h1>
+<p><strong>A web browser element for embedding in <code>hs.ui.window</code> layouts</strong></p>
+<p>Available on macOS 26.0 or later, <code>hs.ui.webview()</code> creates a web browser element backed
+by a SwiftUI <code>WebView</code> and <code>WebPage</code>. Embed it in any <code>hs.ui.window</code> using
+<code>.webview(element)</code> — it fills the available space and can sit alongside other elements in
+stacks.</p>
+<p>Create the element first, configure it, then embed it into a window:</p>
+<pre><code class="language-javascript">const wv = hs.ui.webview()
+    .toolbar([&quot;back&quot;, &quot;forward&quot;, &quot;reload&quot;, &quot;url&quot;])
+    .loadURL(&quot;https://apple.com&quot;)
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .titled(true)
+    .closable(true)
+    .allowResize(true)
+    .level(&quot;normal&quot;)
+    .webview(wv)
+    .show()
+</code></pre>
+<p>Because <code>wv</code> is a regular JavaScript object you can keep a reference and call navigation
+methods on it at any time after the window is shown:</p>
+<pre><code class="language-javascript">wv.loadURL(&quot;https://google.com&quot;)
+wv.goBack()
+</code></pre>
+<h2>Custom Toolbar Example</h2>
+<pre><code class="language-javascript">const wv = hs.ui.webview()
+    .toolbar([
+        &quot;back&quot;, &quot;forward&quot;, &quot;reload&quot;, &quot;url&quot;,
+        {title: &quot;Home&quot;, systemImage: &quot;house&quot;, callback: () =&gt; wv.loadURL(&quot;https://apple.com&quot;)},
+        {title: &quot;Reload HS&quot;, callback: () =&gt; hs.reload()}
+    ])
+    .loadURL(&quot;https://apple.com&quot;)
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .webview(wv)
+    .show()
+</code></pre>
+<h2>Full Example with Callbacks</h2>
+<pre><code class="language-javascript">const wv = hs.ui.webview()
+    .toolbar([&quot;back&quot;, &quot;forward&quot;, &quot;reload&quot;, &quot;url&quot;])
+    .inspectable(true)
+    .onNavigate((url) =&gt; console.log(&quot;Navigated to: &quot; + url))
+    .onTitleChange((title) =&gt; console.log(&quot;Title: &quot; + title))
+    .onLoadChange((loading, url, title, progress) =&gt; {
+        if (!loading) console.log(&quot;Page ready: &quot; + url)
+    })
+    .loadURL(&quot;https://apple.com&quot;)
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .webview(wv)
+    .show()
+</code></pre>
+<h2>Navigation Policy Example</h2>
+<pre><code class="language-javascript">const wv = hs.ui.webview()
+    .toolbar([&quot;back&quot;, &quot;forward&quot;, &quot;reload&quot;, &quot;url&quot;])
+    .onNavigationDecision((url) =&gt; {
+        return !url.includes(&quot;evil.com&quot;)
+    })
+    .loadURL(&quot;https://apple.com&quot;)
+
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
+    .webview(wv)
+    .show()
+</code></pre>
+<h2>JavaScript Evaluation Example</h2>
+<pre><code class="language-javascript">const wv = hs.ui.webview().loadURL(&quot;https://apple.com&quot;)
+hs.ui.window({x: 100, y: 100, w: 1024, h: 768}).webview(wv).show()
+
+// Fire and forget
+wv.execJS(&quot;document.body.style.backgroundColor = &#39;lightyellow&#39;&quot;)
+
+// With result (note the JS method name is evalJSResult)
+wv.evalJSResult(&quot;document.title&quot;, (result, error) =&gt; {
+    if (error) { console.log(&quot;Error: &quot; + error) }
+    else { console.log(&quot;Title: &quot; + result) }
+})
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="url">
+        <h3><a href="#url">url</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The URL of the current page, or `null` if no page is loaded</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L333" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:333</a>
+        </div>
+    </div>
+    <div class="property" id="title">
+        <h3><a href="#title">title</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The title of the current page</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L340" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:340</a>
+        </div>
+    </div>
+    <div class="property" id="isLoading">
+        <h3><a href="#isLoading">isLoading</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the web view is currently loading a page</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L347" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:347</a>
+        </div>
+    </div>
+    <div class="property" id="estimatedProgress">
+        <h3><a href="#estimatedProgress">estimatedProgress</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The estimated loading progress from 0.0 to 1.0</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L354" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:354</a>
+        </div>
+    </div>
+    <div class="property" id="canGoBack">
+        <h3><a href="#canGoBack">canGoBack</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the web view can navigate back in history</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L361" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:361</a>
+        </div>
+    </div>
+    <div class="property" id="canGoForward">
+        <h3><a href="#canGoForward">canGoForward</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the web view can navigate forward in history</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L368" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:368</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="loadURL">
+        <h3>
+<a href="#loadURL">loadURL(urlString) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Load a URL in the web view</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">loadURL(urlString) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">urlString</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The URL to load (e.g. &quot;https://apple.com&quot;)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.webview().loadURL(&quot;https://apple.com&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L188" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:188</a>
+        </div>
+    </div>
+    <div class="method" id="loadHTML">
+        <h3>
+<a href="#loadHTML">loadHTML(html) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Load an HTML string directly into the web view</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">loadHTML(html) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">html</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The HTML content to display</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.webview().loadHTML(&quot;&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello from Hammerspoon!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L197" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:197</a>
+        </div>
+    </div>
+    <div class="method" id="goBack">
+        <h3>
+<a href="#goBack">goBack() -> UIWebView</a>
+        </h3>
+
+        <div class="description">Navigate back in the browser history</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">goBack() -> UIWebView</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">if (wv.canGoBack) wv.goBack()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L205" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:205</a>
+        </div>
+    </div>
+    <div class="method" id="goForward">
+        <h3>
+<a href="#goForward">goForward() -> UIWebView</a>
+        </h3>
+
+        <div class="description">Navigate forward in the browser history</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">goForward() -> UIWebView</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">if (wv.canGoForward) wv.goForward()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L213" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:213</a>
+        </div>
+    </div>
+    <div class="method" id="reload">
+        <h3>
+<a href="#reload">reload() -> UIWebView</a>
+        </h3>
+
+        <div class="description">Reload the current page</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">reload() -> UIWebView</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.reload()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L221" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:221</a>
+        </div>
+    </div>
+    <div class="method" id="stopLoading">
+        <h3>
+<a href="#stopLoading">stopLoading() -> UIWebView</a>
+        </h3>
+
+        <div class="description">Stop loading the current page</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">stopLoading() -> UIWebView</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.stopLoading()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L229" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:229</a>
+        </div>
+    </div>
+    <div class="method" id="userAgent">
+        <h3>
+<a href="#userAgent">userAgent(ua) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Set a custom User-Agent string for HTTP requests</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">userAgent(ua) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">ua</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The User-Agent string</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.webview().userAgent(&quot;MyApp/1.0 AppleWebKit&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L240" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:240</a>
+        </div>
+    </div>
+    <div class="method" id="inspectable">
+        <h3>
+<a href="#inspectable">inspectable(value) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Enable or disable the Safari Web Inspector for this web view
+When enabled, the web view appears in Safari → Develop menu.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">inspectable(value) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` to enable the Web Inspector</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.webview().inspectable(true)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L252" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:252</a>
+        </div>
+    </div>
+    <div class="method" id="toolbar">
+        <h3>
+<a href="#toolbar">toolbar(items) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Configure the toolbar with a list of standard and custom items
+The toolbar renders above the web view. Each element of the array is either a string
+naming a standard control or a dictionary describing a custom button.
+An empty array (or omitting this call) hides the toolbar.
+Standard string items: `&quot;back&quot;`, `&quot;forward&quot;`, `&quot;reload&quot;`, `&quot;url&quot;`, `&quot;spacer&quot;`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toolbar(items) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">items</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">Toolbar items in display order</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">The toolbar will not be shown if the web view is in a borderless window</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.webview()
+    .toolbar([&quot;back&quot;, &quot;forward&quot;, &quot;reload&quot;, &quot;url&quot;,
+              {title: &quot;Home&quot;, systemImage: &quot;house&quot;, callback: () =&gt; wv.loadURL(&quot;https://apple.com&quot;)}])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L276" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:276</a>
+        </div>
+    </div>
+    <div class="method" id="backForwardGestures">
+        <h3>
+<a href="#backForwardGestures">backForwardGestures(enabled) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Enable or disable the macOS back/forward trackpad swipe gestures
+Gestures are enabled by default. Pass `false` to disable them.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">backForwardGestures(enabled) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">enabled</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to disable back/forward swipe gestures</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.backForwardGestures(false)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L288" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:288</a>
+        </div>
+    </div>
+    <div class="method" id="magnificationGestures">
+        <h3>
+<a href="#magnificationGestures">magnificationGestures(enabled) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Enable or disable the trackpad pinch-to-zoom magnification gesture
+The gesture is enabled by default. Pass `false` to disable it.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">magnificationGestures(enabled) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">enabled</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to disable pinch-to-zoom</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.magnificationGestures(false)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L300" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:300</a>
+        </div>
+    </div>
+    <div class="method" id="linkPreviews">
+        <h3>
+<a href="#linkPreviews">linkPreviews(enabled) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Enable or disable link preview popovers shown on force-click
+Link previews are enabled by default. Pass `false` to disable them.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">linkPreviews(enabled) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">enabled</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to disable link previews</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.linkPreviews(false)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L312" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:312</a>
+        </div>
+    </div>
+    <div class="method" id="contentBackground">
+        <h3>
+<a href="#contentBackground">contentBackground(visible) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Control whether the web page background is visible
+Pass `false` to make the web view background transparent. Enabled (visible) by default.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">contentBackground(visible) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">visible</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `false` to hide the web content background</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.contentBackground(false)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L324" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:324</a>
+        </div>
+    </div>
+    <div class="method" id="onLoadChange">
+        <h3>
+<a href="#onLoadChange">onLoadChange(callback) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Register a callback that fires when loading state or progress changes
+Called whenever `isLoading`, `url`, `title`, or `estimatedProgress` changes.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">onLoadChange(callback) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called with current loading state</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.onLoadChange((loading, url, title, progress) =&gt; {
+    if (!loading) console.log(&quot;Finished loading: &quot; + url)
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L384" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:384</a>
+        </div>
+    </div>
+    <div class="method" id="onNavigate">
+        <h3>
+<a href="#onNavigate">onNavigate(callback) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Register a callback that fires when navigation to a new page completes</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">onNavigate(callback) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called with the final URL</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.onNavigate((url) =&gt; console.log(&quot;Navigated to: &quot; + url))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L394" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:394</a>
+        </div>
+    </div>
+    <div class="method" id="onTitleChange">
+        <h3>
+<a href="#onTitleChange">onTitleChange(callback) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Register a callback that fires when the page title changes</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">onTitleChange(callback) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called with the new title</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.onTitleChange((title) =&gt; console.log(&quot;New title: &quot; + title))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L404" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:404</a>
+        </div>
+    </div>
+    <div class="method" id="onNavigationDecision">
+        <h3>
+<a href="#onNavigationDecision">onNavigationDecision(callback) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Register a callback that controls whether navigation is allowed
+Called before each navigation. Return `true` to allow or `false` to block.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">onNavigationDecision(callback) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Return `true` to allow, `false` to block</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.onNavigationDecision((url) =&gt; {
+    return !url.startsWith(&quot;file://&quot;)
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L418" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:418</a>
+        </div>
+    </div>
+    <div class="method" id="execJS">
+        <h3>
+<a href="#execJS">execJS(script) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Execute JavaScript in the web page without capturing the result</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">execJS(script) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">script</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The JavaScript code to execute</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.execJS(&quot;document.body.style.backgroundColor = &#39;lightyellow&#39;&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L429" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:429</a>
+        </div>
+    </div>
+    <div class="method" id="evalJSResult">
+        <h3>
+<a href="#evalJSResult">evalJSResult(script, callback) -> UIWebView</a>
+        </h3>
+
+        <div class="description">Execute JavaScript in the web page and deliver the result to a callback
+The JavaScript method name is `evalJSResult` — it derives from the internal
+Objective-C selector `evalJS:result:`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">evalJSResult(script, callback) -> UIWebView</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">script</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The JavaScript expression to evaluate</td>
+                </tr>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called with the result or an error message</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">UIWebView</div>
+        <div class="return-desc">Self for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">wv.evalJSResult(&quot;document.title&quot;, (result, error) =&gt; {
+    if (error) { console.log(&quot;Error: &quot; + error) }
+    else { console.log(&quot;Title: &quot; + result) }
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/Elements/Content/UIWebView.swift#L447" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/Elements/Content/UIWebView.swift:447</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('UIWebView');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

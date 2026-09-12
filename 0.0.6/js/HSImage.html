@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSImage - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSImage</span>
+</nav>
+<div class="page-header">
+    <h1>HSImage</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>Bridge type for working with images in JavaScript</p>
+<p>HSImage provides a comprehensive API for loading, manipulating, and saving images.
+It supports various image sources including files, system icons, app bundles, and URLs.</p>
+<h2>Loading Images</h2>
+<pre><code class="language-javascript">// Load from file
+const img = HSImage.fromPath(&quot;/path/to/image.png&quot;)
+
+// Load system image
+const icon = HSImage.fromName(&quot;NSComputer&quot;)
+
+// Load app icon
+const appIcon = HSImage.fromAppBundle(&quot;com.apple.Safari&quot;)
+
+// Load from URL (asynchronous with Promise)
+HSImage.fromURL(&quot;https://example.com/image.png&quot;)
+    .then(image =&gt; console.log(&quot;Image loaded:&quot;, image.size()))
+    .catch(err =&gt; console.error(&quot;Failed to load image:&quot;, err))
+
+// Or with async/await
+const image = await HSImage.fromURL(&quot;https://example.com/image.png&quot;)
+</code></pre>
+<h2>Image Manipulation</h2>
+<pre><code class="language-javascript">const img = HSImage.fromPath(&quot;/path/to/image.png&quot;)
+
+// Get size
+const size = img.size()  // Returns HSSize
+
+// Resize image
+const resized = img.setSize({w: 100, h: 100}, false)  // Proportional
+
+// Crop image
+const cropped = img.croppedCopy({x: 10, y: 10, w: 50, h: 50})
+
+// Save to file
+img.saveToFile(&quot;/path/to/output.png&quot;)
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This type has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="fromPath">
+        <h3>
+<span class="static-badge">static</span><a href="#fromPath">HSImage.fromPath(path) -> HSImage</a>
+        </h3>
+
+        <div class="description">Load an image from a file path</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">HSImage.fromPath(path) -> HSImage</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the image file</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">An HSImage object, or null if the file couldn&#39;t be loaded</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L65" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:65</a>
+        </div>
+    </div>
+    <div class="method" id="fromName">
+        <h3>
+<span class="static-badge">static</span><a href="#fromName">HSImage.fromName(name) -> HSImage</a>
+        </h3>
+
+        <div class="description">Load a system image by name</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">HSImage.fromName(name) -> HSImage</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Name of the system image (e.g., &quot;NSComputer&quot;, &quot;NSFolder&quot;)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">An HSImage object, or null if the image couldn&#39;t be found</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L70" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:70</a>
+        </div>
+    </div>
+    <div class="method" id="fromSymbol">
+        <h3>
+<span class="static-badge">static</span><a href="#fromSymbol">HSImage.fromSymbol(name) -> HSImage</a>
+        </h3>
+
+        <div class="description">Load a system symbol by name</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">HSImage.fromSymbol(name) -> HSImage</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Name of the symbol (e.g., &quot;hammer&quot;, &quot;questionmark.circle&quot;)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">An HSImage object, or null if the symbol couldn&#39;t be found</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L75" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:75</a>
+        </div>
+    </div>
+    <div class="method" id="fromAppBundle">
+        <h3>
+<span class="static-badge">static</span><a href="#fromAppBundle">HSImage.fromAppBundle(bundleID, withFallbackSymbol) -> HSImage</a>
+        </h3>
+
+        <div class="description">Load an app&#39;s icon by bundle identifier</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">HSImage.fromAppBundle(bundleID, withFallbackSymbol) -> HSImage</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">bundleID</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Bundle identifier of the application</td>
+                </tr>
+                <tr>
+                    <td class="param-name">withFallbackSymbol</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The name of an SF Symbol to use if no bundle image could be loaded. Defaults to questionmark.circle</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">An HSImage object, or null if the app couldn&#39;t be found</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L82" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:82</a>
+        </div>
+    </div>
+    <div class="method" id="iconForFile">
+        <h3>
+<span class="static-badge">static</span><a href="#iconForFile">HSImage.iconForFile(path) -> HSImage</a>
+        </h3>
+
+        <div class="description">Get the icon for a file</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">HSImage.iconForFile(path) -> HSImage</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">An HSImage object representing the file&#39;s icon</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L87" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:87</a>
+        </div>
+    </div>
+    <div class="method" id="iconForFileType">
+        <h3>
+<span class="static-badge">static</span><a href="#iconForFileType">HSImage.iconForFileType(fileType) -> HSImage</a>
+        </h3>
+
+        <div class="description">Get the icon for a file type</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">HSImage.iconForFileType(fileType) -> HSImage</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">fileType</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">File extension or UTI (e.g., &quot;png&quot;, &quot;public.png&quot;)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">An HSImage object representing the file type&#39;s icon</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L92" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:92</a>
+        </div>
+    </div>
+    <div class="method" id="fromURL">
+        <h3>
+<span class="static-badge">static</span><a href="#fromURL">HSImage.fromURL(url) -> Promise&lt;HSImage&gt;</a>
+        </h3>
+
+        <div class="description">Load an image from a URL (asynchronous)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">HSImage.fromURL(url) -> Promise&lt;HSImage&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">url</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">URL string of the image</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSImage&gt;</div>
+        <div class="return-desc">A Promise that resolves to the loaded image, or rejects on error</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L97" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:97</a>
+        </div>
+    </div>
+    <div class="method" id="size">
+        <h3>
+<a href="#size">size(size) -> JSValue</a>
+        </h3>
+
+        <div class="description">Get or set the image size</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">size(size) -> JSValue</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">size</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">Optional HSSize to set (if provided, returns a resized copy)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">JSValue</div>
+        <div class="return-desc">The current size as HSSize, or a resized copy if size was provided</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L102" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:102</a>
+        </div>
+    </div>
+    <div class="method" id="name">
+        <h3>
+<a href="#name">name(name) -> string</a>
+        </h3>
+
+        <div class="description">Get or set the image name</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">name(name) -> string</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">Optional name to set</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string</div>
+        <div class="return-desc">The current or new name</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L107" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:107</a>
+        </div>
+    </div>
+    <div class="method" id="setSize">
+        <h3>
+<a href="#setSize">setSize(size, absolute) -> HSImage</a>
+        </h3>
+
+        <div class="description">Create a resized copy of the image</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setSize(size, absolute) -> HSImage</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">size</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">Target size as HSSize</td>
+                </tr>
+                <tr>
+                    <td class="param-name">absolute</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">If true, resize exactly to specified dimensions. If false, maintain aspect ratio</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">A new resized HSImage</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L114" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:114</a>
+        </div>
+    </div>
+    <div class="method" id="copyImage">
+        <h3>
+<a href="#copyImage">copyImage() -> HSImage</a>
+        </h3>
+
+        <div class="description">Create a copy of the image</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">copyImage() -> HSImage</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">A new HSImage copy</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L118" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:118</a>
+        </div>
+    </div>
+    <div class="method" id="croppedCopy">
+        <h3>
+<a href="#croppedCopy">croppedCopy(rect) -> HSImage</a>
+        </h3>
+
+        <div class="description">Create a cropped copy of the image</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">croppedCopy(rect) -> HSImage</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rect</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">HSRect defining the crop area</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSImage</div>
+        <div class="return-desc">A new cropped HSImage, or null if cropping failed</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L123" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:123</a>
+        </div>
+    </div>
+    <div class="method" id="saveToFile">
+        <h3>
+<a href="#saveToFile">saveToFile(path) -> boolean</a>
+        </h3>
+
+        <div class="description">Save the image to a file</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">saveToFile(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Destination file path (extension determines format: png, jpg, tiff, bmp, gif)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if saved successfully, false otherwise</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L128" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:128</a>
+        </div>
+    </div>
+    <div class="method" id="template">
+        <h3>
+<a href="#template">template(state) -> boolean</a>
+        </h3>
+
+        <div class="description">Get or set the template image flag</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">template(state) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">state</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">Optional boolean to set template state</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">Current template state</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L133" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:133</a>
+        </div>
+    </div>
+    <div class="method" id="set">
+        <h3>
+<a href="#set">set(value) -> None</a>
+        </h3>
+
+        <div class="description">Replace the image with a new one, triggering a re-render if bound to a UI element</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">set(value) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">value</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">New image as an HSImage object or a file path string</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Engine/Types/HSImage.swift#L137" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Engine/Types/HSImage.swift:137</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSImage');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

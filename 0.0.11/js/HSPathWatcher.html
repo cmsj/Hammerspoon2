@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSPathWatcher - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSPathWatcher</span>
+</nav>
+<div class="page-header">
+    <h1>HSPathWatcher</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>Watches a filesystem path for changes and invokes a callback when they occur.</p>
+<p>Created via <code>hs.fs.createPathWatcher(path)</code>. Set a callback with <code>setCallback()</code>,
+then call <code>start()</code> to begin receiving events.</p>
+<p>The callback receives <code>(paths, flags)</code>:</p>
+<ul>
+<li><code>paths</code>: array of changed file/directory paths</li>
+<li><code>flags</code>: parallel array of string arrays, one per path, describing what changed</li>
+</ul>
+<p>Possible flag values in each per-path array:</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&quot;itemCreated&quot;</code></td>
+<td>Item was created</td>
+</tr>
+<tr>
+<td><code>&quot;itemRemoved&quot;</code></td>
+<td>Item was removed</td>
+</tr>
+<tr>
+<td><code>&quot;itemRenamed&quot;</code></td>
+<td>Item was renamed or moved</td>
+</tr>
+<tr>
+<td><code>&quot;itemModified&quot;</code></td>
+<td>File data was modified</td>
+</tr>
+<tr>
+<td><code>&quot;itemInodeMetaMod&quot;</code></td>
+<td>Inode metadata changed (permissions, timestamps, etc.)</td>
+</tr>
+<tr>
+<td><code>&quot;itemFinderInfoMod&quot;</code></td>
+<td>Finder info changed</td>
+</tr>
+<tr>
+<td><code>&quot;itemChangeOwner&quot;</code></td>
+<td>Ownership or group changed</td>
+</tr>
+<tr>
+<td><code>&quot;itemXattrMod&quot;</code></td>
+<td>Extended attributes changed</td>
+</tr>
+<tr>
+<td><code>&quot;itemIsFile&quot;</code></td>
+<td>The item is a file</td>
+</tr>
+<tr>
+<td><code>&quot;itemIsDir&quot;</code></td>
+<td>The item is a directory</td>
+</tr>
+<tr>
+<td><code>&quot;itemIsSymlink&quot;</code></td>
+<td>The item is a symbolic link</td>
+</tr>
+<tr>
+<td><code>&quot;itemIsHardlink&quot;</code></td>
+<td>The item is a hard link</td>
+</tr>
+<tr>
+<td><code>&quot;itemIsLastHardlink&quot;</code></td>
+<td>This is the last hard link to the inode</td>
+</tr>
+<tr>
+<td><code>&quot;itemCloned&quot;</code></td>
+<td>Item was cloned</td>
+</tr>
+<tr>
+<td><code>&quot;ownEvent&quot;</code></td>
+<td>Event was generated by this process</td>
+</tr>
+<tr>
+<td><code>&quot;mustScanSubDirs&quot;</code></td>
+<td>Subtree must be rescanned (events may have been dropped)</td>
+</tr>
+<tr>
+<td><code>&quot;userDropped&quot;</code></td>
+<td>Events were dropped at the user-space level</td>
+</tr>
+<tr>
+<td><code>&quot;kernelDropped&quot;</code></td>
+<td>Events were dropped at the kernel level</td>
+</tr>
+<tr>
+<td><code>&quot;rootChanged&quot;</code></td>
+<td>The watched root path itself changed</td>
+</tr>
+<tr>
+<td><code>&quot;mount&quot;</code></td>
+<td>A volume was mounted under the watched path</td>
+</tr>
+<tr>
+<td><code>&quot;unmount&quot;</code></td>
+<td>A volume was unmounted from under the watched path</td>
+</tr>
+</tbody></table>
+<p>Example:</p>
+<pre><code class="language-js">const w = hs.fs.createPathWatcher(&quot;/Users/me/Documents&quot;)
+w.setCallback((paths, flags) =&gt; {
+    paths.forEach((p, i) =&gt; console.log(flags[i].join(&quot;,&quot;) + &quot;: &quot; + p))
+}).start()
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="identifier">
+        <h3><a href="#identifier">identifier</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The unique identifier assigned to this watcher.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSPathWatcher.swift#L62" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSPathWatcher.swift:62</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="start">
+        <h3>
+<a href="#start">start() -> HSPathWatcher</a>
+        </h3>
+
+        <div class="description">Starts monitoring the watched path for filesystem changes.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">start() -> HSPathWatcher</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSPathWatcher</div>
+        <div class="return-desc">self, for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const w = hs.fs.createPathWatcher(&quot;/tmp&quot;)
+w.setCallback((paths, flags) =&gt; console.log(paths.join(&quot;, &quot;))).start()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSPathWatcher.swift#L71" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSPathWatcher.swift:71</a>
+        </div>
+    </div>
+    <div class="method" id="stop">
+        <h3>
+<a href="#stop">stop() -> HSPathWatcher</a>
+        </h3>
+
+        <div class="description">Stops monitoring the watched path.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">stop() -> HSPathWatcher</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSPathWatcher</div>
+        <div class="return-desc">self, for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">w.stop()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSPathWatcher.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSPathWatcher.swift:79</a>
+        </div>
+    </div>
+    <div class="method" id="setCallback">
+        <h3>
+<a href="#setCallback">setCallback(fn) -> HSPathWatcher</a>
+        </h3>
+
+        <div class="description">Sets the callback invoked when filesystem changes are detected.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCallback(fn) -> HSPathWatcher</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">fn</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called with an array of changed paths and a parallel array of per-path flag string arrays.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSPathWatcher</div>
+        <div class="return-desc">self, for chaining</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">w.setCallback((paths, flags) =&gt; {
+    paths.forEach((p, i) =&gt; console.log(p + &quot;: &quot; + flags[i].join(&quot;, &quot;)))
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSPathWatcher.swift#L90" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSPathWatcher.swift:90</a>
+        </div>
+    </div>
+    <div class="method" id="destroy">
+        <h3>
+<a href="#destroy">destroy() -> None</a>
+        </h3>
+
+        <div class="description">Stops the watcher and releases all resources. Called automatically during shutdown.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">destroy() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">w.destroy()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSPathWatcher.swift#L97" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSPathWatcher.swift:97</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSPathWatcher');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

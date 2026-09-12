@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSScreen - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSScreen</span>
+</nav>
+<div class="page-header">
+    <h1>HSScreen</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>An object representing a single display attached to the system.</p>
+<h2>Coordinate system</h2>
+<p>All geometry is returned in <strong>Hammerspoon screen coordinates</strong>: the origin <code>(0, 0)</code>
+is at the top-left of the primary display, and <code>y</code> increases downward.
+This matches Hammerspoon v1 and is the inverse of the raw macOS/CoreGraphics convention.</p>
+<h2>Examples</h2>
+<pre><code class="language-javascript">const s = hs.screen.main();
+console.log(s.name);               // e.g. &quot;Built-in Retina Display&quot;
+console.log(s.frame.w);            // usable width in points
+
+console.log(s.mode.width, s.mode.scale); // e.g. 1440, 2
+
+s.desktopImage = &quot;/Users/me/wallpaper.jpg&quot;;
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="id">
+        <h3><a href="#id">id</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">Unique display identifier (matches `CGDirectDisplayID`).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L44" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:44</a>
+        </div>
+    </div>
+    <div class="property" id="name">
+        <h3><a href="#name">name</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The manufacturer-assigned localized display name.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L52" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:52</a>
+        </div>
+    </div>
+    <div class="property" id="uuid">
+        <h3><a href="#uuid">uuid</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The display&#39;s UUID string.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L60" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:60</a>
+        </div>
+    </div>
+    <div class="property" id="frame">
+        <h3><a href="#frame">frame</a></h3>
+        <div class="prop-type">HSRect</div>
+        <div class="description">The usable screen area in Hammerspoon coordinates, excluding the menu bar and Dock.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L70" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:70</a>
+        </div>
+    </div>
+    <div class="property" id="fullFrame">
+        <h3><a href="#fullFrame">fullFrame</a></h3>
+        <div class="prop-type">HSRect</div>
+        <div class="description">The full screen area in Hammerspoon coordinates, including menu bar and Dock regions.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L78" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:78</a>
+        </div>
+    </div>
+    <div class="property" id="position">
+        <h3><a href="#position">position</a></h3>
+        <div class="prop-type">HSPoint</div>
+        <div class="description">The screen&#39;s top-left corner in global Hammerspoon coordinates.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L86" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:86</a>
+        </div>
+    </div>
+    <div class="property" id="mode">
+        <h3><a href="#mode">mode</a></h3>
+        <div class="prop-type">{[key: string]: any}</div>
+        <div class="description">The currently active display mode.
+An object with keys: `width`, `height`, `scale`, `frequency`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L98" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:98</a>
+        </div>
+    </div>
+    <div class="property" id="availableModes">
+        <h3><a href="#availableModes">availableModes</a></h3>
+        <div class="prop-type">[[String: Any]]</div>
+        <div class="description">All display modes supported by this screen.
+Each element has keys: `width`, `height`, `scale`, `frequency`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L108" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:108</a>
+        </div>
+    </div>
+    <div class="property" id="rotation">
+        <h3><a href="#rotation">rotation</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The current screen rotation in degrees (0, 90, 180, or 270).
+Assign one of `0`, `90`, `180`, or `270` to rotate the display.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L137" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:137</a>
+        </div>
+    </div>
+    <div class="property" id="desktopImage">
+        <h3><a href="#desktopImage">desktopImage</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The URL string of the current desktop background image for this screen, or `null`.
+Assign a new absolute file path or `file://` URL string to change the wallpaper.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L283" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:283</a>
+        </div>
+    </div>
+    <div class="property" id="ambientLight">
+        <h3><a href="#ambientLight">ambientLight</a></h3>
+        <div class="prop-type">NSNumber</div>
+        <div class="description">The ambient light level measured by this display&#39;s built-in sensor, in lux.
+Returns `null` if the display does not have an ambient light sensor or if the
+reading is currently unavailable.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L297" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:297</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="setMode">
+        <h3>
+<a href="#setMode">setMode(width, height, scale, frequency) -> boolean</a>
+        </h3>
+
+        <div class="description">Switch to the given display mode.
+Pass `0` for `scale` or `frequency` to match any value.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setMode(width, height, scale, frequency) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">width</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Horizontal resolution in pixels.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">height</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Vertical resolution in pixels.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">scale</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Backing scale factor (e.g. `2` for HiDPI, `1` for non-HiDPI). Pass `0` to ignore.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">frequency</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Refresh rate in Hz. Pass `0` to ignore.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const s = hs.screen.primary()
+s.setMode(1920, 1080, 1, 60)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L125" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:125</a>
+        </div>
+    </div>
+    <div class="method" id="snapshot">
+        <h3>
+<a href="#snapshot">snapshot() -> Promise&lt;HSImage&gt;</a>
+        </h3>
+
+        <div class="description">Capture the current contents of this screen as an image.
+Requires **Screen Recording** permission.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">snapshot() -> Promise&lt;HSImage&gt;</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;HSImage&gt;</div>
+        <div class="return-desc">Resolves with the captured image, or rejects if the capture fails (e.g. permission denied).</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.screen.main().snapshot().then(img =&gt; img.saveToFile(&quot;/tmp/screen.png&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L150" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:150</a>
+        </div>
+    </div>
+    <div class="method" id="next">
+        <h3>
+<a href="#next">next() -> HSScreen</a>
+        </h3>
+
+        <div class="description">The next screen in `hs.screen.all()` order, wrapping around.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">next() -> HSScreen</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSScreen</div>
+        <div class="return-desc">An HSScreen object</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const next = hs.screen.main().next()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L160" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:160</a>
+        </div>
+    </div>
+    <div class="method" id="previous">
+        <h3>
+<a href="#previous">previous() -> HSScreen</a>
+        </h3>
+
+        <div class="description">The previous screen in `hs.screen.all()` order, wrapping around.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">previous() -> HSScreen</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSScreen</div>
+        <div class="return-desc">An HSScreen object</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const prev = hs.screen.main().previous()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L168" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:168</a>
+        </div>
+    </div>
+    <div class="method" id="toEast">
+        <h3>
+<a href="#toEast">toEast() -> HSScreen</a>
+        </h3>
+
+        <div class="description">The nearest screen whose left edge is at or beyond this screen&#39;s right edge, or `null`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toEast() -> HSScreen</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSScreen</div>
+        <div class="return-desc">An HSScreen object</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const right = hs.screen.main().toEast()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:176</a>
+        </div>
+    </div>
+    <div class="method" id="toWest">
+        <h3>
+<a href="#toWest">toWest() -> HSScreen</a>
+        </h3>
+
+        <div class="description">The nearest screen whose right edge is at or before this screen&#39;s left edge, or `null`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toWest() -> HSScreen</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSScreen</div>
+        <div class="return-desc">An HSScreen object</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const left = hs.screen.main().toWest()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L184" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:184</a>
+        </div>
+    </div>
+    <div class="method" id="toNorth">
+        <h3>
+<a href="#toNorth">toNorth() -> HSScreen</a>
+        </h3>
+
+        <div class="description">The nearest screen that is physically above this screen, or `null`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toNorth() -> HSScreen</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSScreen</div>
+        <div class="return-desc">An HSScreen object</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const above = hs.screen.main().toNorth()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L192" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:192</a>
+        </div>
+    </div>
+    <div class="method" id="toSouth">
+        <h3>
+<a href="#toSouth">toSouth() -> HSScreen</a>
+        </h3>
+
+        <div class="description">The nearest screen that is physically below this screen, or `null`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">toSouth() -> HSScreen</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSScreen</div>
+        <div class="return-desc">An HSScreen object</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const below = hs.screen.main().toSouth()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L200" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:200</a>
+        </div>
+    </div>
+    <div class="method" id="setOrigin">
+        <h3>
+<a href="#setOrigin">setOrigin(x, y) -> boolean</a>
+        </h3>
+
+        <div class="description">Move this screen so its top-left corner is at the given position in global Hammerspoon coordinates.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setOrigin(x, y) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">x</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The X coordinate to move to</td>
+                </tr>
+                <tr>
+                    <td class="param-name">y</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The Y coordinate to move to</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const s = hs.screen.primary()
+s.setOrigin(0, 0)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L215" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:215</a>
+        </div>
+    </div>
+    <div class="method" id="setPrimary">
+        <h3>
+<a href="#setPrimary">setPrimary() -> boolean</a>
+        </h3>
+
+        <div class="description">Designate this screen as the primary display (moves the menu bar here).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setPrimary() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.screen.all()[1].setPrimary()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L224" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:224</a>
+        </div>
+    </div>
+    <div class="method" id="mirrorOf">
+        <h3>
+<a href="#mirrorOf">mirrorOf(screen) -> boolean</a>
+        </h3>
+
+        <div class="description">Configure this screen to mirror another screen.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">mirrorOf(screen) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">screen</td>
+                    <td class="param-type">HSScreen</td>
+                    <td class="param-desc">The screen to mirror.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const all = hs.screen.all()
+all[1].mirrorOf(all[0])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L235" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:235</a>
+        </div>
+    </div>
+    <div class="method" id="mirrorStop">
+        <h3>
+<a href="#mirrorStop">mirrorStop() -> boolean</a>
+        </h3>
+
+        <div class="description">Stop mirroring, restoring this screen to an independent display.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">mirrorStop() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.screen.all()[1].mirrorStop()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L244" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:244</a>
+        </div>
+    </div>
+    <div class="method" id="absoluteToLocal">
+        <h3>
+<a href="#absoluteToLocal">absoluteToLocal(rect) -> HSRect</a>
+        </h3>
+
+        <div class="description">Convert a rect in global Hammerspoon coordinates to coordinates local to this screen.
+The result origin is relative to this screen&#39;s top-left corner.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">absoluteToLocal(rect) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rect</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An `HSRect` in global Hammerspoon coordinates.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">The rect offset to be relative to this screen&#39;s top-left, or `null` if the input is invalid.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const s = hs.screen.main()
+const local = s.absoluteToLocal({x: 1000, y: 500, w: 200, h: 100})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L259" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:259</a>
+        </div>
+    </div>
+    <div class="method" id="localToAbsolute">
+        <h3>
+<a href="#localToAbsolute">localToAbsolute(rect) -> HSRect</a>
+        </h3>
+
+        <div class="description">Convert a rect in local screen coordinates to global Hammerspoon coordinates.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">localToAbsolute(rect) -> HSRect</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rect</td>
+                    <td class="param-type">HSRect</td>
+                    <td class="param-desc">An `HSRect` relative to this screen&#39;s top-left corner.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSRect</div>
+        <div class="return-desc">The rect in global Hammerspoon coordinates, or `null` if the input is invalid.</div>
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">This uses private macOS APIs to set rotation.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const s = hs.screen.main()
+const abs = s.localToAbsolute({x: 10, y: 10, w: 100, h: 100})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.screen/HSScreen.swift#L271" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.screen/HSScreen.swift:271</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSScreen');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
