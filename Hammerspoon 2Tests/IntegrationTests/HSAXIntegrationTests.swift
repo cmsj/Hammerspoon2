@@ -719,6 +719,29 @@ struct HSAXTests {
         """)
         }
 
+        @Test("attributeValue('AXChildren') returns usable element objects, not plain objects")
+        func testAttributeValueAXChildrenReturnsElements() {
+            // Regression test for #221: AXSwift's getMultipleAttributes() only
+            // unwraps a raw AXUIElement into its UIElement wrapper for scalar
+            // attributes; for array-valued attributes like AXChildren, the
+            // array's elements were left as raw AXUIElement values that
+            // bridgeValue() didn't recognize, so JavaScriptCore exposed them as
+            // empty, unusable plain objects.
+            let harness = makeHarness()
+            harness.expectTrue("""
+            (function() {
+                var finder = hs.application.matchingBundleID('com.apple.finder');
+                var appElem = hs.ax.applicationElement(finder);
+                if (!appElem) return false;
+                var kids = appElem.attributeValue('AXChildren');
+                if (!Array.isArray(kids) || kids.length === 0) return false;
+                return kids.every(function(k) {
+                    return k.typeName === 'HSAXElement' && typeof k.role === 'string';
+                });
+            })()
+        """)
+        }
+
         @Test("attributeValue for a non-existent attribute returns null or undefined")
         func testAttributeValueNonExistentReturnsNull() {
             let harness = makeHarness()
