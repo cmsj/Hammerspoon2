@@ -234,6 +234,10 @@ import AXSwift
 
         var windows: [HSWindow] = []
 
+        // Reduce the Accessibility API timeout to avoid weird/dead apps from making this take ages to respond
+        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25)
+        defer { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0) }
+
         for app in candidateApplications() {
             let windowElements = getWindowElements(for: app)
             windows.append(contentsOf: windowElements.map { HSWindow(element: $0, app: app) })
