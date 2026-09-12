@@ -29,6 +29,9 @@ struct ConsoleView: View {
     @State var showSaveError: Bool = false
 
     @Environment(\.dismissWindow) var dismissWindow
+    @Environment(\.locale) var locale
+    @Environment(\.timeZone) var timeZone
+    @Environment(\.calendar) var calendar
 
     @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Debug
 
@@ -40,11 +43,35 @@ struct ConsoleView: View {
         Array(logs.entries(minimumLevel: minimumLogLevel, searchString: searchString).suffix(maxRenderedEntries))
     }
 
+    /// Renders all displayed entries as a single AttributedString (rather than one `Text` per
+    /// entry) so SwiftUI's `.textSelection(.enabled)` treats the whole log as one text container —
+    /// a `LazyVStack` of separate `Text` views can't support selection spanning multiple rows.
+    ///
+    /// Cached in state and rebuilt only when `displayedEntries`, `locale`, `timeZone`, or
+    /// `calendar` changes (see `.onChange` below), rather than computed inline in `body` —
+    /// `body` re-runs on every keystroke in the eval field, and rebuilding up to
+    /// `maxRenderedEntries` lines of AttributedString each time would be wasteful.
+    @State var displayedLogText = AttributedString()
+
+    private func rebuildDisplayedLogText() {
+        var result = AttributedString()
+        let entries = displayedEntries
+        for (index, entry) in entries.enumerated() {
+            var line = AttributedString(formatEntry(entry))
+            line.foregroundColor = colorForLogType(entry.logType)
+            result += line
+            if index < entries.count - 1 {
+                result += AttributedString("\n")
+            }
+        }
+        displayedLogText = result
+    }
+
     private func formatEntry(_ entry: HammerspoonLogEntry) -> String {
         let date = entry.date.formatted(
             .verbatim(
                 "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
-                locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
+                locale: locale, timeZone: timeZone, calendar: calendar
             )
         )
         return "\(date) - \(entry.logType.asString): \(entry.msg)"
@@ -170,25 +197,29 @@ struct ConsoleView: View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(displayedEntries) { entry in
-                            Text(formatEntry(entry))
-                                .multilineTextAlignment(.leading)
-                                .foregroundColor(colorForLogType(entry.logType))
-                                .id(entry.id)
-                        }
-                    }
-                    .textSelection(.enabled)
-                    .fontDesign(.monospaced)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+                    Text(displayedLogText)
+                        .multilineTextAlignment(.leading)
+                        .textSelection(.enabled)
+                        .fontDesign(.monospaced)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
 
                     Color.clear
                         .frame(height: 0)
                         .id("logBottom")
                 }
                 .onChange(of: displayedEntries) {
+                    rebuildDisplayedLogText()
                     proxy.scrollTo("logBottom", anchor: .bottom)
+                }
+                // Timestamps are formatted with these, so a change while the console is open
+                // (e.g. the user changes time zone) must invalidate the cached text too —
+                // it won't happen to get rebuilt otherwise, since displayedEntries doesn't change.
+                .onChange(of: locale) { rebuildDisplayedLogText() }
+                .onChange(of: timeZone) { rebuildDisplayedLogText() }
+                .onChange(of: calendar) { rebuildDisplayedLogText() }
+                .task {
+                    rebuildDisplayedLogText()
                 }
             }
 
