@@ -512,22 +512,35 @@ import AXSwift
             return
         }
 
+        // Below this point, anything we do needs to remove this watcher and
+        // stop any remaining observer if it's now unused
+        defer {
+            // Remove this watcher
+            watchers.removeValue(forKey: key)
+
+            // If there are no more watchers for this PID, clean up the observer
+            let remainingWatchers = watchers.keys.filter { (try? $0.element.pid()) == pid }
+            if remainingWatchers.isEmpty {
+                observer.stop()
+                observers.removeValue(forKey: pid)
+                AKDebug("hs.ax.removeWatcher(): Removed observer for PID \(pid) (no more watchers)")
+            }
+        }
+
+        // Check the AXUIElement is still valid
+        var pid_unused: pid_t = 0
+        guard unsafe AXUIElementGetPid(watcherObject.element.element, &pid_unused) != AXError.success else {
+            // The AXUIElement is no longer valid, which likely means the UI changed or the app quit, so we'll
+            // silently give up
+            return
+        }
+
         // Remove the notification from the observer
         do {
             try observer.removeNotification(watcherObject.notification, forElement: watcherObject.element)
             AKDebug("hs.ax.removeWatcher(): Removed watcher for \(notification) on PID \(pid)")
         } catch {
             AKError("hs.ax.removeWatcher(): Failed to remove notification: \(error)")
-        }
-
-        watchers.removeValue(forKey: key)
-
-        // If there are no more watchers for this PID, clean up the observer
-        let remainingWatchers = watchers.keys.filter { (try? $0.element.pid()) == pid }
-        if remainingWatchers.isEmpty {
-            observer.stop()
-            observers.removeValue(forKey: pid)
-            AKDebug("hs.ax.removeWatcher(): Removed observer for PID \(pid) (no more watchers)")
         }
     }
 
