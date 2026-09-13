@@ -9811,6 +9811,508 @@ A value of 0 or -1 likely means no window ID could be determined.
 }
 
 /**
+ * The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.
+Covers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus
+`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always
+UTF-8 text - passing any `encoding` other than `"utf8"` throws.
+Every `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string
+Node would use (`"ENOENT"`, `"EEXIST"`, `"ENOTEMPTY"`, etc.), plus `.errno`, `.syscall`, and
+`.path`.
+ */
+declare namespace fs {
+    /**
+     * Synchronously check whether a path exists. Unlike every other function in this module,
+this never throws - any error checking the path is treated as "does not exist".
+     * @param path Path to check. `~` is expanded.
+     * @returns `true` if anything exists at the path.
+     */
+    function existsSync(path: string): boolean;
+
+    /**
+     * Synchronously read a file as a UTF-8 string.
+     * @param path Path to the file. `~` is expanded.
+     * @param encoding Must be `"utf8"` (or omitted); any other value throws, since this engine has no `Buffer` type.
+     * @returns The file's contents.
+     */
+    function readFileSync(path: string, encoding?: string | null): string | null;
+
+    /**
+     * Synchronously write a UTF-8 string to a file, creating or truncating it.
+     * @param path Path to the file. `~` is expanded.
+     * @param data String to write.
+     * @param flag One of `"w"` (default: create/truncate), `"wx"` (like `"w"` but fails if the file already exists), `"a"` (append), or `"ax"` (like `"a"` but fails if the file already exists).
+     */
+    function writeFileSync(path: string, data: string, flag?: string | null): void;
+
+    /**
+     * Synchronously append a UTF-8 string to a file, creating it if needed.
+     * @param path Path to the file. `~` is expanded.
+     * @param data String to append.
+     */
+    function appendFileSync(path: string, data: string): void;
+
+    /**
+     * Synchronously create a directory.
+     * @param path Path of the directory to create. `~` is expanded.
+     * @param recursive When `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.
+     */
+    function mkdirSync(path: string, recursive?: boolean): void;
+
+    /**
+     * Synchronously remove an empty directory.
+     * @param path Path of the directory to remove. `~` is expanded.
+     * @param recursive When `true`, removes the directory and its entire contents. Defaults to `false`.
+     */
+    function rmdirSync(path: string, recursive?: boolean): void;
+
+    /**
+     * Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.
+     * @param path Path to remove. `~` is expanded.
+     * @param recursive When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.
+     * @param force When `true`, a missing path is not treated as an error. Defaults to `false`.
+     */
+    function rmSync(path: string, recursive?: boolean, force?: boolean): void;
+
+    /**
+     * Synchronously delete a single file.
+     * @param path Path to the file. `~` is expanded.
+     */
+    function unlinkSync(path: string): void;
+
+    /**
+     * Synchronously list the contents of a directory.
+     * @param path Path to the directory. `~` is expanded.
+     * @param withFileTypes When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.
+     * @returns An array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.
+     */
+    function readdirSync(path: string, withFileTypes?: boolean): any[] | null;
+
+    /**
+     * Synchronously get file metadata, following symbolic links.
+     * @param path Path to inspect. `~` is expanded.
+     * @param throwIfNoEntry Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
+     * @returns A `Stats` object.
+     */
+    function statSync(path: string, throwIfNoEntry?: boolean): NodeFSStats | null;
+
+    /**
+     * Synchronously get file metadata, without following symbolic links.
+     * @param path Path to inspect. `~` is expanded.
+     * @param throwIfNoEntry Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
+     * @returns A `Stats` object.
+     */
+    function lstatSync(path: string, throwIfNoEntry?: boolean): NodeFSStats | null;
+
+    /**
+     * Synchronously rename (move) a file or directory.
+     * @param oldPath Existing path. `~` is expanded.
+     * @param newPath New path. `~` is expanded.
+     */
+    function renameSync(oldPath: string, newPath: string): void;
+
+    /**
+     * Synchronously copy a file.
+     * @param src Path to the existing file. `~` is expanded.
+     * @param dest Destination path. `~` is expanded. Overwritten if it already exists, unless `mode` includes `fs.constants.COPYFILE_EXCL`.
+     * @param mode Bitwise-OR of `fs.constants.COPYFILE_*` flags. Only `COPYFILE_EXCL` has any effect. Defaults to `0`.
+     */
+    function copyFileSync(src: string, dest: string, mode?: number): void;
+
+    /**
+     * Synchronously create a symbolic link.
+     * @param target The path the symlink will point to. Not expanded or validated - it need not exist.
+     * @param path The path where the symlink will be created. `~` is expanded.
+     */
+    function symlinkSync(target: string, path: string): void;
+
+    /**
+     * Synchronously read the target of a symbolic link.
+     * @param path Path to the symbolic link. `~` is expanded.
+     * @returns The raw target path.
+     */
+    function readlinkSync(path: string): string | null;
+
+    /**
+     * Synchronously resolve a path to its absolute, canonical form, following all symlinks.
+     * @param path Path to resolve. `~` is expanded.
+     * @returns The resolved absolute path.
+     */
+    function realpathSync(path: string): string | null;
+
+    /**
+     * Synchronously create a hard link.
+     * @param existingPath Path of the existing file. `~` is expanded.
+     * @param newPath Path for the new hard link. `~` is expanded.
+     */
+    function linkSync(existingPath: string, newPath: string): void;
+
+    /**
+     * Synchronously test a path's accessibility.
+     * @param path Path to check. `~` is expanded.
+     * @param mode A `fs.constants` value (`F_OK`, `R_OK`, `W_OK`, `X_OK`), or a bitwise-OR of them. Defaults to `F_OK` (existence only).
+     */
+    function accessSync(path: string, mode?: number): void;
+
+    /**
+     * Synchronously truncate (or extend, zero-filled) a file to the given length.
+     * @param path Path to the file. `~` is expanded.
+     * @param len Desired length in bytes. Defaults to `0`.
+     */
+    function truncateSync(path: string, len?: number): void;
+
+    /**
+     * Filesystem constants used by `accessSync`/`fs.promises.access` (`F_OK`, `R_OK`, `W_OK`,
+`X_OK`) and `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_EXCL`).
+     */
+    const constants: Record<string, number>;
+
+}
+
+/**
+ * The JS-facing surface of a Node-style `fs.Stats` object, as returned by `statSync`/`lstatSync`
+(and their `fs.promises` equivalents). Users should never construct these directly.
+ */
+declare class NodeFSStats {
+    /**
+     * Check whether this describes a regular file.
+     * @returns `true` if this describes a regular file.
+     */
+    isFile(): boolean;
+
+    /**
+     * Check whether this describes a directory.
+     * @returns `true` if this describes a directory.
+     */
+    isDirectory(): boolean;
+
+    /**
+     * Check whether this describes a symbolic link.
+     * @returns `true` if this describes a symbolic link. Only ever `true` when the `Stats`
+     */
+    isSymbolicLink(): boolean;
+
+    /**
+     * Check whether this describes a block device.
+     * @returns `true` if this describes a block device.
+     */
+    isBlockDevice(): boolean;
+
+    /**
+     * Check whether this describes a character device.
+     * @returns `true` if this describes a character device.
+     */
+    isCharacterDevice(): boolean;
+
+    /**
+     * Check whether this describes a FIFO/named pipe.
+     * @returns `true` if this describes a FIFO/named pipe.
+     */
+    isFIFO(): boolean;
+
+    /**
+     * Check whether this describes a Unix domain socket.
+     * @returns `true` if this describes a Unix domain socket.
+     */
+    isSocket(): boolean;
+
+    /**
+     * ID of the device containing the file.
+     */
+    readonly dev: number;
+
+    /**
+     * Inode number.
+     */
+    readonly ino: number;
+
+    /**
+     * File mode: type and permission bits, eg. `33188` (`0o100644`).
+     */
+    readonly mode: number;
+
+    /**
+     * Number of hard links.
+     */
+    readonly nlink: number;
+
+    /**
+     * User ID of the owner.
+     */
+    readonly uid: number;
+
+    /**
+     * Group ID of the owner.
+     */
+    readonly gid: number;
+
+    /**
+     * Device ID, if this is a device file.
+     */
+    readonly rdev: number;
+
+    /**
+     * Size in bytes.
+     */
+    readonly size: number;
+
+    /**
+     * Preferred block size for I/O.
+     */
+    readonly blksize: number;
+
+    /**
+     * Number of 512-byte blocks allocated.
+     */
+    readonly blocks: number;
+
+    /**
+     * Last access time, in milliseconds since the Unix epoch.
+     */
+    readonly atimeMs: number;
+
+    /**
+     * Last modification time, in milliseconds since the Unix epoch.
+     */
+    readonly mtimeMs: number;
+
+    /**
+     * Last inode change time, in milliseconds since the Unix epoch.
+     */
+    readonly ctimeMs: number;
+
+    /**
+     * Creation time, in milliseconds since the Unix epoch.
+     */
+    readonly birthtimeMs: number;
+
+    /**
+     * Last access time.
+     */
+    readonly atime: Date;
+
+    /**
+     * Last modification time.
+     */
+    readonly mtime: Date;
+
+    /**
+     * Last inode change time.
+     */
+    readonly ctime: Date;
+
+    /**
+     * Creation time.
+     */
+    readonly birthtime: Date;
+
+}
+
+/**
+ * The JS-facing surface of a Node-style `fs.Dirent` object, as returned by
+`readdirSync(path, { withFileTypes: true })`. Users should never construct these directly.
+ */
+declare class NodeFSDirent {
+    /**
+     * Check whether this entry is a regular file.
+     * @returns `true` if this entry is a regular file.
+     */
+    isFile(): boolean;
+
+    /**
+     * Check whether this entry is a directory.
+     * @returns `true` if this entry is a directory.
+     */
+    isDirectory(): boolean;
+
+    /**
+     * Check whether this entry is a symbolic link.
+     * @returns `true` if this entry is a symbolic link.
+     */
+    isSymbolicLink(): boolean;
+
+    /**
+     * Check whether this entry is a block device.
+     * @returns `true` if this entry is a block device.
+     */
+    isBlockDevice(): boolean;
+
+    /**
+     * Check whether this entry is a character device.
+     * @returns `true` if this entry is a character device.
+     */
+    isCharacterDevice(): boolean;
+
+    /**
+     * Check whether this entry is a FIFO/named pipe.
+     * @returns `true` if this entry is a FIFO/named pipe.
+     */
+    isFIFO(): boolean;
+
+    /**
+     * Check whether this entry is a Unix domain socket.
+     * @returns `true` if this entry is a Unix domain socket.
+     */
+    isSocket(): boolean;
+
+    /**
+     * The bare filename (not a full path).
+     */
+    readonly name: string;
+
+}
+
+/**
+ * The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`.
+Every function here runs its work synchronously (there is no background I/O thread pool in
+this engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still
+work exactly as in Node, just without any real concurrency.
+ */
+declare namespace fs.promises {
+    /**
+     * Read a file as a UTF-8 string. See `fs.readFileSync` for details.
+     * @param path Path to the file. `~` is expanded.
+     * @param encoding Must be `"utf8"` (or omitted); any other value rejects, since this engine has no `Buffer` type.
+     * @returns A `Promise` resolving to the file's contents.
+     */
+    function readFile(path: string, encoding?: string | null): Promise<any>;
+
+    /**
+     * Write a UTF-8 string to a file, creating or truncating it. See `fs.writeFileSync` for details.
+     * @param path Path to the file. `~` is expanded.
+     * @param data String to write.
+     * @param flag One of `"w"` (default), `"wx"`, `"a"`, or `"ax"`.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function writeFile(path: string, data: string, flag?: string | null): Promise<any>;
+
+    /**
+     * Append a UTF-8 string to a file, creating it if needed. See `fs.appendFileSync` for details.
+     * @param path Path to the file. `~` is expanded.
+     * @param data String to append.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function appendFile(path: string, data: string): Promise<any>;
+
+    /**
+     * Create a directory. See `fs.mkdirSync` for details.
+     * @param path Path of the directory to create. `~` is expanded.
+     * @param recursive When `true`, creates all missing intermediate directories. Defaults to `false`.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function mkdir(path: string, recursive?: boolean): Promise<any>;
+
+    /**
+     * Remove an empty directory. See `fs.rmdirSync` for details.
+     * @param path Path of the directory to remove. `~` is expanded.
+     * @param recursive When `true`, removes the directory and its entire contents. Defaults to `false`.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function rmdir(path: string, recursive?: boolean): Promise<any>;
+
+    /**
+     * Remove a file or directory. See `fs.rmSync` for details.
+     * @param path Path to remove. `~` is expanded.
+     * @param recursive When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.
+     * @param force When `true`, a missing path is not treated as an error. Defaults to `false`.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function rm(path: string, recursive?: boolean, force?: boolean): Promise<any>;
+
+    /**
+     * Delete a single file. See `fs.unlinkSync` for details.
+     * @param path Path to the file. `~` is expanded.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function unlink(path: string): Promise<any>;
+
+    /**
+     * List the contents of a directory. See `fs.readdirSync` for details.
+     * @param path Path to the directory. `~` is expanded.
+     * @param withFileTypes When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.
+     * @returns A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.
+     */
+    function readdir(path: string, withFileTypes?: boolean): Promise<any>;
+
+    /**
+     * Get file metadata, following symbolic links. See `fs.statSync` for details.
+     * @param path Path to inspect. `~` is expanded.
+     * @returns A `Promise` resolving to a `Stats` object.
+     */
+    function stat(path: string): Promise<any>;
+
+    /**
+     * Get file metadata, without following symbolic links. See `fs.lstatSync` for details.
+     * @param path Path to inspect. `~` is expanded.
+     * @returns A `Promise` resolving to a `Stats` object.
+     */
+    function lstat(path: string): Promise<any>;
+
+    /**
+     * Rename (move) a file or directory. See `fs.renameSync` for details.
+     * @param oldPath Existing path. `~` is expanded.
+     * @param newPath New path. `~` is expanded.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function rename(oldPath: string, newPath: string): Promise<any>;
+
+    /**
+     * Copy a file. See `fs.copyFileSync` for details.
+     * @param src Path to the existing file. `~` is expanded.
+     * @param dest Destination path. `~` is expanded. Overwritten if it already exists, unless `mode` includes `fs.constants.COPYFILE_EXCL`.
+     * @param mode Bitwise-OR of `fs.constants.COPYFILE_*` flags. Only `COPYFILE_EXCL` has any effect. Defaults to `0`.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function copyFile(src: string, dest: string, mode?: number): Promise<any>;
+
+    /**
+     * Create a symbolic link. See `fs.symlinkSync` for details.
+     * @param target The path the symlink will point to. Not expanded or validated - it need not exist.
+     * @param path The path where the symlink will be created. `~` is expanded.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function symlink(target: string, path: string): Promise<any>;
+
+    /**
+     * Read the target of a symbolic link. See `fs.readlinkSync` for details.
+     * @param path Path to the symbolic link. `~` is expanded.
+     * @returns A `Promise` resolving to the raw target path.
+     */
+    function readlink(path: string): Promise<any>;
+
+    /**
+     * Resolve a path to its absolute, canonical form, following all symlinks. See `fs.realpathSync` for details.
+     * @param path Path to resolve. `~` is expanded.
+     * @returns A `Promise` resolving to the resolved absolute path.
+     */
+    function realpath(path: string): Promise<any>;
+
+    /**
+     * Create a hard link. See `fs.linkSync` for details.
+     * @param existingPath Path of the existing file. `~` is expanded.
+     * @param newPath Path for the new hard link. `~` is expanded.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function link(existingPath: string, newPath: string): Promise<any>;
+
+    /**
+     * Test a path's accessibility. See `fs.accessSync` for details.
+     * @param path Path to check. `~` is expanded.
+     * @param mode A `fs.constants` value (`F_OK`, `R_OK`, `W_OK`, `X_OK`), or a bitwise-OR of them. Defaults to `F_OK` (existence only).
+     * @returns A `Promise` resolving to `undefined` if accessible, or rejecting otherwise.
+     */
+    function access(path: string, mode?: number): Promise<any>;
+
+    /**
+     * Truncate (or extend, zero-filled) a file to the given length. See `fs.truncateSync` for details.
+     * @param path Path to the file. `~` is expanded.
+     * @param len Desired length in bytes. Defaults to `0`.
+     * @returns A `Promise` resolving to `undefined`.
+     */
+    function truncate(path: string, len?: number): Promise<any>;
+
+}
+
+/**
  * The JS-facing surface of Node's `util` module, reachable as `require('util')`.
  */
 declare namespace util {

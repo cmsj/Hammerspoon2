@@ -42,6 +42,10 @@ const MODULE_NAME_OVERRIDES = {
 // disk, but each is reachable from JS under its own require('...') name, not "node".
 const PROTOCOL_NAMESPACE_OVERRIDES = {
     NodeUtilModuleAPI: 'util',
+    NodeFSModuleAPI: 'fs',
+    NodeFSStatsAPI: 'fs',
+    NodeFSDirentAPI: 'fs',
+    NodeFSPromisesModuleAPI: 'fs.promises',
 };
 
 /**
@@ -1184,8 +1188,11 @@ function processModule(moduleName, modulePath) {
             // Process each protocol
             for (const protocol of protocols) {
                 if (protocol.type === 'typedef') {
-                    // Type definitions go into types array
-                    moduleData.types.push(protocol);
+                    // Type definitions go into their namespace's types array - routed through
+                    // PROTOCOL_NAMESPACE_OVERRIDES too, so a type like NodeFSStatsAPI (returned
+                    // by the 'fs' builtin) documents under 'fs' rather than the directory's
+                    // default namespace ("node").
+                    dataForNamespace(PROTOCOL_NAMESPACE_OVERRIDES[protocol.name] ?? moduleName).types.push(protocol);
                 } else {
                     // Regular protocols - extract their methods and properties, into their
                     // own namespace if PROTOCOL_NAMESPACE_OVERRIDES calls for one.

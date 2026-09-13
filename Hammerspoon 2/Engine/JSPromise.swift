@@ -50,6 +50,12 @@ final class JSPromiseHolder {
     func rejectWithMessage(_ message: String) {
         reject.call(withArguments: [message])
     }
+
+    /// Reject the promise with an already-built JS value (eg. a full `Error` object carrying
+    /// extra properties like `.code`), instead of converting it to a message string first.
+    func rejectWithValue(_ value: JSValue) {
+        reject.call(withArguments: [value])
+    }
 }
 
 /// Wraps a Swift operation as a JavaScript Promise

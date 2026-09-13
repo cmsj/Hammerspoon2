@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fs.promises - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">fs.promises</span>
+</nav>
+<div class="page-header">
+    <h1>fs.promises</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><p>The promise-based equivalents of <code>fs</code>&#39;s <code>*Sync</code> functions, reachable as <code>require(&#39;fs&#39;).promises</code>.</p>
+<p>Every function here runs its work synchronously (there is no background I/O thread pool in
+this engine) and wraps the result in an already-settled <code>Promise</code>, so <code>await</code>/<code>.then()</code> still
+work exactly as in Node, just without any real concurrency.</p>
+<ul>
+<li>Example:</li>
+</ul>
+<pre><code class="language-js">const fs = require(&#39;fs&#39;)
+
+async function main() {
+    await fs.promises.writeFile(&quot;/tmp/hello.txt&quot;, &quot;Hello, world!\n&quot;)
+    console.log(await fs.promises.readFile(&quot;/tmp/hello.txt&quot;))
+}
+main()
+</code></pre>
+</div>
+
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="readFile">
+        <h3><a href="#readFile">fs.promises.readFile(path, encoding) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Read a file as a UTF-8 string. See `fs.readFileSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.readFile(path, encoding) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">encoding</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Must be `&quot;utf8&quot;` (or omitted); any other value rejects, since this engine has no `Buffer` type.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to the file&#39;s contents.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L935" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:935</a>
+        </div>
+    </div>
+    <div class="method" id="writeFile">
+        <h3><a href="#writeFile">fs.promises.writeFile(path, data, flag) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Write a UTF-8 string to a file, creating or truncating it. See `fs.writeFileSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.writeFile(path, data, flag) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">data</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">String to write.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">flag</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">One of `&quot;w&quot;` (default), `&quot;wx&quot;`, `&quot;a&quot;`, or `&quot;ax&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L944" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:944</a>
+        </div>
+    </div>
+    <div class="method" id="appendFile">
+        <h3><a href="#appendFile">fs.promises.appendFile(path, data) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Append a UTF-8 string to a file, creating it if needed. See `fs.appendFileSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.appendFile(path, data) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">data</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">String to append.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L952" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:952</a>
+        </div>
+    </div>
+    <div class="method" id="mkdir">
+        <h3><a href="#mkdir">fs.promises.mkdir(path, recursive) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Create a directory. See `fs.mkdirSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.mkdir(path, recursive) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path of the directory to create. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">recursive</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true`, creates all missing intermediate directories. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L960" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:960</a>
+        </div>
+    </div>
+    <div class="method" id="rmdir">
+        <h3><a href="#rmdir">fs.promises.rmdir(path, recursive) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Remove an empty directory. See `fs.rmdirSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.rmdir(path, recursive) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path of the directory to remove. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">recursive</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true`, removes the directory and its entire contents. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L968" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:968</a>
+        </div>
+    </div>
+    <div class="method" id="rm">
+        <h3><a href="#rm">fs.promises.rm(path, recursive, force) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Remove a file or directory. See `fs.rmSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.rm(path, recursive, force) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to remove. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">recursive</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">force</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true`, a missing path is not treated as an error. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L977" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:977</a>
+        </div>
+    </div>
+    <div class="method" id="unlink">
+        <h3><a href="#unlink">fs.promises.unlink(path) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Delete a single file. See `fs.unlinkSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.unlink(path) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L983" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:983</a>
+        </div>
+    </div>
+    <div class="method" id="readdir">
+        <h3><a href="#readdir">fs.promises.readdir(path, withFileTypes) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">List the contents of a directory. See `fs.readdirSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.readdir(path, withFileTypes) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the directory. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">withFileTypes</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L991" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:991</a>
+        </div>
+    </div>
+    <div class="method" id="stat">
+        <h3><a href="#stat">fs.promises.stat(path) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Get file metadata, following symbolic links. See `fs.statSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.stat(path) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to inspect. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to a `Stats` object.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L997" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:997</a>
+        </div>
+    </div>
+    <div class="method" id="lstat">
+        <h3><a href="#lstat">fs.promises.lstat(path) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Get file metadata, without following symbolic links. See `fs.lstatSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.lstat(path) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to inspect. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to a `Stats` object.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1003" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1003</a>
+        </div>
+    </div>
+    <div class="method" id="rename">
+        <h3><a href="#rename">fs.promises.rename(oldPath, newPath) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Rename (move) a file or directory. See `fs.renameSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.rename(oldPath, newPath) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">oldPath</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Existing path. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">newPath</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">New path. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1011" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1011</a>
+        </div>
+    </div>
+    <div class="method" id="copyFile">
+        <h3><a href="#copyFile">fs.promises.copyFile(src, dest, mode) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Copy a file. See `fs.copyFileSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.copyFile(src, dest, mode) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">src</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the existing file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">dest</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Destination path. `~` is expanded. Overwritten if it already exists, unless `mode` includes `fs.constants.COPYFILE_EXCL`.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">mode</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Bitwise-OR of `fs.constants.COPYFILE_*` flags. Only `COPYFILE_EXCL` has any effect. Defaults to `0`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1020" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1020</a>
+        </div>
+    </div>
+    <div class="method" id="symlink">
+        <h3><a href="#symlink">fs.promises.symlink(target, path) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Create a symbolic link. See `fs.symlinkSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.symlink(target, path) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">target</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path the symlink will point to. Not expanded or validated - it need not exist.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path where the symlink will be created. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1028" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1028</a>
+        </div>
+    </div>
+    <div class="method" id="readlink">
+        <h3><a href="#readlink">fs.promises.readlink(path) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Read the target of a symbolic link. See `fs.readlinkSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.readlink(path) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the symbolic link. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to the raw target path.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1034" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1034</a>
+        </div>
+    </div>
+    <div class="method" id="realpath">
+        <h3><a href="#realpath">fs.promises.realpath(path) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Resolve a path to its absolute, canonical form, following all symlinks. See `fs.realpathSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.realpath(path) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to resolve. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to the resolved absolute path.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1040" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1040</a>
+        </div>
+    </div>
+    <div class="method" id="link">
+        <h3><a href="#link">fs.promises.link(existingPath, newPath) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Create a hard link. See `fs.linkSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.link(existingPath, newPath) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">existingPath</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path of the existing file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">newPath</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path for the new hard link. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1048" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1048</a>
+        </div>
+    </div>
+    <div class="method" id="access">
+        <h3><a href="#access">fs.promises.access(path, mode) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Test a path&#39;s accessibility. See `fs.accessSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.access(path, mode) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to check. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">mode</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">A `fs.constants` value (`F_OK`, `R_OK`, `W_OK`, `X_OK`), or a bitwise-OR of them. Defaults to `F_OK` (existence only).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined` if accessible, or rejecting otherwise.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1056" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1056</a>
+        </div>
+    </div>
+    <div class="method" id="truncate">
+        <h3><a href="#truncate">fs.promises.truncate(path, len) -> Promise&lt;any&gt;</a></h3>
+
+        <div class="description">Truncate (or extend, zero-filled) a file to the given length. See `fs.truncateSync` for details.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">fs.promises.truncate(path, len) -> Promise&lt;any&gt;</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">Path to the file. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">len</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Desired length in bytes. Defaults to `0`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Promise&lt;any&gt;</div>
+        <div class="return-desc">A `Promise` resolving to `undefined`.</div>
+
+
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1064" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1064</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('fs.promises');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
