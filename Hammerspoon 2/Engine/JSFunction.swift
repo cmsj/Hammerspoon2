@@ -10,6 +10,17 @@ import JavaScriptCore
 /// to callers and documentation tooling that a callable JS value is expected.
 typealias JSFunction = JSValue
 
+/// A type alias for JSValue representing a parameter that should hold a JS string.
+///
+/// Declaring a JSExport parameter as `String` lets JavaScriptCore silently coerce whatever
+/// was actually passed (a number, an array, `null`, ...) into some Swift string before the
+/// method body ever runs, which throws away the information needed to reject the call the way
+/// Node does (`TypeError [ERR_INVALID_ARG_TYPE]`). Using `JSString` instead signals to callers
+/// and documentation tooling that a string is expected here (it still maps to `string` in
+/// generated docs/TypeScript, same as `String` would), while letting the method body check
+/// `.isString` itself before coercing.
+typealias JSString = JSValue
+
 extension JSContext {
     /// Calls `body` and reports whether it raised a JS exception, leaving `self.exception`
     /// set to it if so. `context.exception` itself cannot be polled for this directly: once a

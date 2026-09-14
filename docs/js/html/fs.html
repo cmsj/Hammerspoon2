@@ -72,7 +72,8 @@
 UTF-8 text - passing any <code>encoding</code> other than <code>&quot;utf8&quot;</code> throws.</p>
 <p>Every <code>*Sync</code> function throws a JS <code>Error</code> on failure, with <code>.code</code> set to the same string
 Node would use (<code>&quot;ENOENT&quot;</code>, <code>&quot;EEXIST&quot;</code>, <code>&quot;ENOTEMPTY&quot;</code>, etc.), plus <code>.errno</code>, <code>.syscall</code>, and
-<code>.path</code>.</p>
+<code>.path</code>. Passing a non-string where a string is expected throws a <code>TypeError</code> with
+<code>.code === &quot;ERR_INVALID_ARG_TYPE&quot;</code>, matching Node.</p>
 <ul>
 <li>Example:</li>
 </ul>
@@ -103,11 +104,12 @@ try {
 <h2 class="section-heading">Properties</h2>
     <div class="property" id="constants">
         <h3><a href="#constants">fs.constants</a></h3>
-        <div class="prop-type">{[key: string]: number}</div>
+        <div class="prop-type">NSDictionary</div>
         <div class="description">Filesystem constants used by `accessSync`/`fs.promises.access` (`F_OK`, `R_OK`, `W_OK`,
-`X_OK`) and `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_EXCL`).</div>
+`X_OK`), `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_*`), file mode bits (`S_I*`,
+checked against `Stats.mode`), and `open()` flags (`O_*`).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L640" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:640</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L812" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:812</a>
         </div>
     </div>
 
@@ -116,7 +118,8 @@ try {
         <h3><a href="#existsSync">fs.existsSync(path) -> boolean</a></h3>
 
         <div class="description">Synchronously check whether a path exists. Unlike every other function in this module,
-this never throws - any error checking the path is treated as &quot;does not exist&quot;.</div>
+this never throws (matching Node) - a non-string argument is simply treated as
+&quot;does not exist&quot;, the same as any other error checking the path.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">fs.existsSync(path) -> boolean</code></pre>
@@ -133,7 +136,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to check. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -146,7 +149,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L653" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:653</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L826" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:826</a>
         </div>
     </div>
     <div class="method" id="readFileSync">
@@ -169,12 +172,12 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">encoding</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Must be `&quot;utf8&quot;` (or omitted); any other value throws, since this engine has no `Buffer` type.</td>
                 </tr>
             </tbody>
@@ -187,7 +190,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L661" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:661</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L834" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:834</a>
         </div>
     </div>
     <div class="method" id="writeFileSync">
@@ -210,17 +213,17 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">data</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">String to write.</td>
                 </tr>
                 <tr>
                     <td class="param-name">flag</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">One of `&quot;w&quot;` (default: create/truncate), `&quot;wx&quot;` (like `&quot;w&quot;` but fails if the file already exists), `&quot;a&quot;` (append), or `&quot;ax&quot;` (like `&quot;a&quot;` but fails if the file already exists).</td>
                 </tr>
             </tbody>
@@ -232,7 +235,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L669" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:669</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L842" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:842</a>
         </div>
     </div>
     <div class="method" id="appendFileSync">
@@ -255,12 +258,12 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">data</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">String to append.</td>
                 </tr>
             </tbody>
@@ -272,7 +275,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L676" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:676</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L849" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:849</a>
         </div>
     </div>
     <div class="method" id="mkdirSync">
@@ -295,7 +298,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path of the directory to create. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -312,7 +315,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L684" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:684</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L857" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:857</a>
         </div>
     </div>
     <div class="method" id="rmdirSync">
@@ -335,7 +338,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path of the directory to remove. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -352,7 +355,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L691" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:691</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L864" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:864</a>
         </div>
     </div>
     <div class="method" id="rmSync">
@@ -375,7 +378,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to remove. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -397,7 +400,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L699" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:699</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L872" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:872</a>
         </div>
     </div>
     <div class="method" id="unlinkSync">
@@ -420,7 +423,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -432,16 +435,16 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L704" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:704</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L877" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:877</a>
         </div>
     </div>
     <div class="method" id="readdirSync">
-        <h3><a href="#readdirSync">fs.readdirSync(path, withFileTypes) -> [Any]</a></h3>
+        <h3><a href="#readdirSync">fs.readdirSync(path, withFileTypes, recursive) -> [Any]</a></h3>
 
         <div class="description">Synchronously list the contents of a directory.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.readdirSync(path, withFileTypes) -> [Any]</code></pre>
+        <pre><code class="language-javascript">fs.readdirSync(path, withFileTypes, recursive) -> [Any]</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -455,13 +458,18 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the directory. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">withFileTypes</td>
                     <td class="param-type">boolean</td>
                     <td class="param-desc">When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">recursive</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true`, walks subdirectories too. Filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn&#39;t implement `Dirent.parentPath`). Defaults to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -473,7 +481,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L713" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:713</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L888" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:888</a>
         </div>
     </div>
     <div class="method" id="statSync">
@@ -496,7 +504,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to inspect. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -514,7 +522,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L721" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:721</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L896" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:896</a>
         </div>
     </div>
     <div class="method" id="lstatSync">
@@ -537,7 +545,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to inspect. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -555,7 +563,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L729" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:729</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L904" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:904</a>
         </div>
     </div>
     <div class="method" id="renameSync">
@@ -578,12 +586,12 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">oldPath</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Existing path. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">newPath</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">New path. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -595,7 +603,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L736" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:736</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L911" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:911</a>
         </div>
     </div>
     <div class="method" id="copyFileSync">
@@ -618,12 +626,12 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">src</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the existing file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">dest</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Destination path. `~` is expanded. Overwritten if it already exists, unless `mode` includes `fs.constants.COPYFILE_EXCL`.</td>
                 </tr>
                 <tr>
@@ -640,7 +648,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L744" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:744</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L919" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:919</a>
         </div>
     </div>
     <div class="method" id="symlinkSync">
@@ -663,12 +671,12 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">target</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">The path the symlink will point to. Not expanded or validated - it need not exist.</td>
                 </tr>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">The path where the symlink will be created. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -680,7 +688,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L751" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:751</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L926" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:926</a>
         </div>
     </div>
     <div class="method" id="readlinkSync">
@@ -703,7 +711,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the symbolic link. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -716,7 +724,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L757" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:757</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L932" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:932</a>
         </div>
     </div>
     <div class="method" id="realpathSync">
@@ -739,7 +747,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to resolve. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -752,7 +760,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L763" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:763</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L938" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:938</a>
         </div>
     </div>
     <div class="method" id="linkSync">
@@ -775,12 +783,12 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">existingPath</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path of the existing file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">newPath</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path for the new hard link. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -792,7 +800,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L770" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:770</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L945" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:945</a>
         </div>
     </div>
     <div class="method" id="accessSync">
@@ -815,7 +823,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to check. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -832,7 +840,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L777" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:777</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L952" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:952</a>
         </div>
     </div>
     <div class="method" id="truncateSync">
@@ -855,7 +863,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -872,7 +880,7 @@ this never throws - any error checking the path is treated as &quot;does not exi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L784" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:784</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L959" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:959</a>
         </div>
     </div>
         </main>

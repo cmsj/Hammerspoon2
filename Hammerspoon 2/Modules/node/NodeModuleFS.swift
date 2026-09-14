@@ -5,18 +5,25 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import Darwin
 
 // MARK: - Errors
 
 /// The outcome of a failed `NodeFS` operation, carrying enough detail to build a
 /// Node-style `Error` (with `.code`, `.errno`, `.syscall`, `.path`) on the JS side.
-private enum NodeFSFailure: Error {
+/// `@unchecked Sendable` because `.invalidArgType` carries a `JSValue`: safe here since every
+/// `NodeFSFailure` is created and consumed synchronously within a single JS-calling-thread
+/// call stack (thrown, then immediately caught and turned into a JS exception/rejection in the
+/// same function), never persisted or handed across threads.
+private enum NodeFSFailure: Error, @unchecked Sendable {
     /// A failure that came from a specific POSIX syscall; `errnoValue` is the raw `errno`
     /// captured immediately after the call failed.
     case posix(errnoValue: Int32, syscall: String, path: String, path2: String?)
     /// A failure with no corresponding POSIX errno (eg. an unsupported encoding).
     case generic(code: String, message: String)
+    /// A JS-facing argument that wasn't a string, matching Node's `ERR_INVALID_ARG_TYPE`.
+    case invalidArgType(argName: String, actual: JSValue)
 
     /// Builds the JS `Error` object this failure should surface as, matching the shape of
     /// Node's own filesystem errors closely enough for `error.code` checks to work the same way.
@@ -38,6 +45,11 @@ private enum NodeFSFailure: Error {
             let error = JSValue(newErrorFromMessage: message, in: context) ?? JSValue(undefinedIn: context)
             error?.setObject(code, forKeyedSubscript: "code" as NSString)
             return error ?? JSValue(undefinedIn: context)
+        case .invalidArgType(let argName, let actual):
+            let message = "The \"\(argName)\" argument must be of type string. Received \(NodeFS.describeType(actual))"
+            let error = JSValue(newErrorFromMessage: message, in: context) ?? JSValue(undefinedIn: context)
+            error?.setObject("ERR_INVALID_ARG_TYPE", forKeyedSubscript: "code" as NSString)
+            return error ?? JSValue(undefinedIn: context)
         }
     }
 }
@@ -58,15 +70,62 @@ enum NodeFS {
         (path as NSString).expandingTildeInPath
     }
 
-    /// Normalizes an optional trailing `String` argument that JS may have omitted.
+    /// Validates that a JS value is a string, throwing Node's `ERR_INVALID_ARG_TYPE` otherwise.
     ///
-    /// JSExport does not bridge a missing trailing argument to Swift `nil` for `String?`
-    /// parameters the way it does `0`/`false` for numeric/boolean ones - JavaScriptCore passes
-    /// through the JS `undefined` value's `.toString()`, so the Swift parameter arrives holding
-    /// the literal string `"undefined"` instead. Every optional `String` parameter in this module
-    /// must be passed through this before use.
-    private static func normalizeOptionalArg(_ value: String?) -> String? {
-        (value == nil || value == "undefined") ? nil : value
+    /// Every JS-facing string parameter in this module is declared `JSString` (see
+    /// `Engine/JSFunction.swift`) rather than `String` specifically so this can run before
+    /// JSExport's automatic coercion would otherwise silently turn a number/array/object into
+    /// some string and hide the caller's mistake.
+    fileprivate static func requireString(_ value: JSString, _ argName: String) throws -> String {
+        guard value.isString else {
+            throw NodeFSFailure.invalidArgType(argName: argName, actual: value)
+        }
+        return value.toString() ?? ""
+    }
+
+    /// Same as `requireString`, but a missing/`undefined`/`null` value is treated as "not
+    /// provided" (returns `nil`) rather than an error. This is also where JSExport's
+    /// undefined-argument quirk is handled now - at the `JSValue` level, before it can be
+    /// stringified to the literal text `"undefined"`.
+    fileprivate static func requireOptionalString(_ value: JSString?, _ argName: String) throws -> String? {
+        guard let value, !value.isUndefined, !value.isNull else { return nil }
+        guard value.isString else {
+            throw NodeFSFailure.invalidArgType(argName: argName, actual: value)
+        }
+        return value.toString() ?? ""
+    }
+
+    /// Mirrors Node's internal `determineSpecificType()`, used to build the "Received ..."
+    /// suffix of `ERR_INVALID_ARG_TYPE` messages.
+    fileprivate nonisolated static func describeType(_ value: JSValue) -> String {
+        if value.isNull { return "null" }
+        if value.isUndefined { return "undefined" }
+        if value.isBoolean { return value.toBool() ? "type boolean (true)" : "type boolean (false)" }
+        if value.isNumber {
+            let d = value.toDouble()
+            if d == 0 { return d.sign == .minus ? "type number (-0)" : "type number (0)" }
+            if d.isNaN { return "type number (NaN)" }
+            if d == .infinity { return "type number (Infinity)" }
+            if d == -.infinity { return "type number (-Infinity)" }
+            return "type number (\(value.toString() ?? "\(d)"))"
+        }
+        if value.isString {
+            var s = value.toString() ?? ""
+            if s.count > 28 { s = String(s.prefix(25)) + "..." }
+            return s.contains("'") ? "type string (\"\(s)\")" : "type string ('\(s)')"
+        }
+        if value.isFunction {
+            let name = value.objectForKeyedSubscript("name")?.toString() ?? ""
+            return "function \(name)"
+        }
+        if value.isObject {
+            if let ctorName = value.objectForKeyedSubscript("constructor")?.objectForKeyedSubscript("name")?.toString(),
+               !ctorName.isEmpty {
+                return "an instance of \(ctorName)"
+            }
+            return "an object"
+        }
+        return "type \(value.toString() ?? "unknown")"
     }
 
     /// Maps a raw `errno` to the string Node's `error.code` would report for it. Covers the
@@ -95,6 +154,73 @@ enum NodeFS {
         }
     }
 
+    /// Builds a fresh copy of the dictionary backing `fs.constants`/`fs.promises.constants`
+    /// (see the doc comment on `NodeFSModuleAPI.constants` for the grouping). Only constants
+    /// that are meaningful on macOS are included; the Windows/libuv-internal-only ones Node
+    /// also exposes (`UV_FS_SYMLINK_*`, `UV_FS_O_*`, `UV_DIRENT_*`) are omitted.
+    ///
+    /// Typed `NSDictionary` (a real reference type) rather than `[String: Int]`: JSExport
+    /// re-bridges a Swift `Dictionary`-typed property fresh on every read, so two accessors
+    /// vending the "same" Swift dictionary value do not produce `===`-equal JS objects - a
+    /// stored `NSDictionary` reference bridges once and keeps its JS wrapper identity across
+    /// reads instead, which `fs.promises.constants === fs.constants` (matching Node) needs.
+    ///
+    /// This is a *function*, not a shared `static let`: each `NodeFSModule` (one per `JSContext`,
+    /// via `NodeBuiltinModulesInstaller`) must call this once and share the single result with
+    /// its own `NodeFSPromisesModule` - never store the result somewhere wider than one JS
+    /// context. A single process-wide `static let` instance bridged into a *different*
+    /// `JSVirtualMachine` per `require('fs')` call is unambiguously wrong regardless of the
+    /// point below. Separately, and even with per-context instances: JavaScriptCore's bridged-
+    /// object identity is empirically unreliable specifically when a test process creates and
+    /// tears down many short-lived `JSVirtualMachine`s in a row (confirmed: the two `NSDictionary`
+    /// instances have identical content but `===` intermittently still reports `false`) - this
+    /// doesn't affect the real app, which only ever has one `JSContext` alive at a time, so
+    /// tests assert structural equality instead of `===` for this specific property.
+    static func makeConstants() -> NSDictionary { [
+        "F_OK": Int(F_OK),
+        "R_OK": Int(R_OK),
+        "W_OK": Int(W_OK),
+        "X_OK": Int(X_OK),
+        "COPYFILE_EXCL": 1,
+        "COPYFILE_FICLONE": 2,
+        "COPYFILE_FICLONE_FORCE": 4,
+        "S_IFMT": Int(S_IFMT),
+        "S_IFREG": Int(S_IFREG),
+        "S_IFDIR": Int(S_IFDIR),
+        "S_IFCHR": Int(S_IFCHR),
+        "S_IFBLK": Int(S_IFBLK),
+        "S_IFIFO": Int(S_IFIFO),
+        "S_IFLNK": Int(S_IFLNK),
+        "S_IFSOCK": Int(S_IFSOCK),
+        "S_IRWXU": Int(S_IRWXU),
+        "S_IRUSR": Int(S_IRUSR),
+        "S_IWUSR": Int(S_IWUSR),
+        "S_IXUSR": Int(S_IXUSR),
+        "S_IRWXG": Int(S_IRWXG),
+        "S_IRGRP": Int(S_IRGRP),
+        "S_IWGRP": Int(S_IWGRP),
+        "S_IXGRP": Int(S_IXGRP),
+        "S_IRWXO": Int(S_IRWXO),
+        "S_IROTH": Int(S_IROTH),
+        "S_IWOTH": Int(S_IWOTH),
+        "S_IXOTH": Int(S_IXOTH),
+        "O_RDONLY": Int(O_RDONLY),
+        "O_WRONLY": Int(O_WRONLY),
+        "O_RDWR": Int(O_RDWR),
+        "O_CREAT": Int(O_CREAT),
+        "O_EXCL": Int(O_EXCL),
+        "O_NOCTTY": Int(O_NOCTTY),
+        "O_TRUNC": Int(O_TRUNC),
+        "O_APPEND": Int(O_APPEND),
+        "O_DIRECTORY": Int(O_DIRECTORY),
+        "O_NOFOLLOW": Int(O_NOFOLLOW),
+        "O_SYNC": Int(O_SYNC),
+        "O_DSYNC": Int(O_DSYNC),
+        "O_SYMLINK": Int(O_SYMLINK),
+        "O_NONBLOCK": Int(O_NONBLOCK),
+    ]
+    }
+
     /// Translates an `NSError` thrown by `FileManager` into a ``NodeFSFailure``, unwrapping the
     /// underlying POSIX error when `FileManager` provides one so `.code` stays accurate.
     private static func wrap(_ error: Error, syscall: String, path: String) -> NodeFSFailure {
@@ -115,7 +241,7 @@ enum NodeFS {
     }
 
     static func readFile(_ path: String, encoding: String?) throws -> String {
-        if let encoding = normalizeOptionalArg(encoding), !["utf8", "utf-8"].contains(encoding.lowercased()) {
+        if let encoding, !["utf8", "utf-8"].contains(encoding.lowercased()) {
             throw NodeFSFailure.generic(
                 code: "ERR_INVALID_ARG_VALUE",
                 message: "The \"encoding\" argument must be 'utf8'; Buffer output is not supported. Received '\(encoding)'"
@@ -151,7 +277,7 @@ enum NodeFS {
     /// Maps a Node write `flag` string to the `open()` flags it corresponds to. Only the four
     /// flags most JS code actually uses are supported: `"w"` (default), `"wx"`, `"a"`, `"ax"`.
     private static func openFlags(forWriteFlag flag: String?) -> Int32 {
-        switch normalizeOptionalArg(flag) {
+        switch flag {
         case "a":  return O_WRONLY | O_CREAT | O_APPEND
         case "ax": return O_WRONLY | O_CREAT | O_APPEND | O_EXCL
         case "wx": return O_WRONLY | O_CREAT | O_TRUNC | O_EXCL
@@ -248,25 +374,69 @@ enum NodeFS {
         }
     }
 
-    static func readdir(_ path: String, withFileTypes: Bool) throws -> [Any] {
+    static func readdir(_ path: String, withFileTypes: Bool, recursive: Bool) throws -> [Any] {
         let full = expand(path)
-        guard let dir = unsafe opendir(full) else {
-            throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "scandir", path: path, path2: nil)
+        return try readdir(atFullPath: full, relativeTo: full, withFileTypes: withFileTypes, recursive: recursive, originalPath: path)
+    }
+
+    /// - Parameters:
+    ///   - fullPath: Absolute path of the directory to list right now.
+    ///   - root: Absolute path of the top-level directory the caller asked for, used to compute
+    ///     relative paths when `recursive` is `true`.
+    ///   - originalPath: The path exactly as the caller passed it (unexpanded), for error messages.
+    private static func readdir(
+        atFullPath fullPath: String,
+        relativeTo root: String,
+        withFileTypes: Bool,
+        recursive: Bool,
+        originalPath: String
+    ) throws -> [Any] {
+        guard let dir = unsafe opendir(fullPath) else {
+            throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "scandir", path: originalPath, path2: nil)
         }
         defer { unsafe closedir(dir) }
 
         var results: [Any] = []
+        var subdirectories: [String] = []
         while let entry = unsafe Darwin.readdir(dir) {
             let name = unsafe withUnsafePointer(to: entry.pointee.d_name) { namePtr in
                 unsafe namePtr.withMemoryRebound(to: CChar.self, capacity: 1024) { unsafe String(cString: $0) }
             }
             if name == "." || name == ".." { continue }
 
+            let entryFullPath = "\(fullPath)/\(name)"
+            let dType = unsafe entry.pointee.d_type
+            let type = direntType(dType: dType, fullPath: entryFullPath)
+
             if withFileTypes {
-                let dType = unsafe entry.pointee.d_type
-                results.append(NodeFSDirent(name: name, type: direntType(dType: dType, fullPath: "\(full)/\(name)")))
+                // Matches Node: `Dirent.name` is always the bare filename, even when `recursive`
+                // is set. Node also exposes `.parentPath` in that case, which this engine does
+                // not implement yet.
+                results.append(NodeFSDirent(name: name, type: type))
+            } else if recursive {
+                let relativePath = entryFullPath.hasPrefix(root + "/")
+                    ? String(entryFullPath.dropFirst(root.count + 1))
+                    : name
+                results.append(relativePath)
             } else {
                 results.append(name)
+            }
+
+            if recursive, type == "directory" {
+                subdirectories.append(entryFullPath)
+            }
+        }
+
+        if recursive {
+            for subdirectory in subdirectories.sorted() {
+                let nested = try readdir(
+                    atFullPath: subdirectory,
+                    relativeTo: root,
+                    withFileTypes: withFileTypes,
+                    recursive: recursive,
+                    originalPath: originalPath
+                )
+                results.append(contentsOf: nested)
             }
         }
         return results
@@ -619,7 +789,8 @@ enum NodeFS {
 ///
 /// Every `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string
 /// Node would use (`"ENOENT"`, `"EEXIST"`, `"ENOTEMPTY"`, etc.), plus `.errno`, `.syscall`, and
-/// `.path`.
+/// `.path`. Passing a non-string where a string is expected throws a `TypeError` with
+/// `.code === "ERR_INVALID_ARG_TYPE"`, matching Node.
 ///
 /// - Example:
 /// ```js
@@ -636,8 +807,9 @@ enum NodeFS {
 /// ```
 @objc protocol NodeFSModuleAPI: JSExport {
     /// Filesystem constants used by `accessSync`/`fs.promises.access` (`F_OK`, `R_OK`, `W_OK`,
-    /// `X_OK`) and `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_EXCL`).
-    @objc var constants: [String: Int] { get }
+    /// `X_OK`), `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_*`), file mode bits (`S_I*`,
+    /// checked against `Stats.mode`), and `open()` flags (`O_*`).
+    @objc var constants: NSDictionary { get }
 
     /// SKIP_DOCS
     /// Fully documented as its own `fs.promises` namespace instead (see
@@ -646,11 +818,12 @@ enum NodeFS {
     @objc var promises: NodeFSPromisesModule { get }
 
     /// Synchronously check whether a path exists. Unlike every other function in this module,
-    /// this never throws - any error checking the path is treated as "does not exist".
+    /// this never throws (matching Node) - a non-string argument is simply treated as
+    /// "does not exist", the same as any other error checking the path.
     /// - Parameter path: Path to check. `~` is expanded.
     /// - Returns: `true` if anything exists at the path.
     /// - Example: `if (fs.existsSync("/tmp/file.txt")) console.log("exists")`
-    @objc func existsSync(_ path: String) -> Bool
+    @objc func existsSync(_ path: JSString) -> Bool
 
     /// Synchronously read a file as a UTF-8 string.
     /// - Parameters:
@@ -658,7 +831,7 @@ enum NodeFS {
     ///   - encoding?: Must be `"utf8"` (or omitted); any other value throws, since this engine has no `Buffer` type.
     /// - Returns: The file's contents.
     /// - Example: `const text = fs.readFileSync("/etc/hosts", "utf8")`
-    @objc func readFileSync(_ path: String, _ encoding: String?) -> String?
+    @objc func readFileSync(_ path: JSString, _ encoding: JSString?) -> String?
 
     /// Synchronously write a UTF-8 string to a file, creating or truncating it.
     /// - Parameters:
@@ -666,14 +839,14 @@ enum NodeFS {
     ///   - data: String to write.
     ///   - flag?: One of `"w"` (default: create/truncate), `"wx"` (like `"w"` but fails if the file already exists), `"a"` (append), or `"ax"` (like `"a"` but fails if the file already exists).
     /// - Example: `fs.writeFileSync("/tmp/hello.txt", "Hello, world!\n")`
-    @objc func writeFileSync(_ path: String, _ data: String, _ flag: String?)
+    @objc func writeFileSync(_ path: JSString, _ data: JSString, _ flag: JSString?)
 
     /// Synchronously append a UTF-8 string to a file, creating it if needed.
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - data: String to append.
     /// - Example: `fs.appendFileSync("/tmp/log.txt", "another line\n")`
-    @objc func appendFileSync(_ path: String, _ data: String)
+    @objc func appendFileSync(_ path: JSString, _ data: JSString)
 
     /// Synchronously create a directory.
     /// - Parameters:
@@ -681,14 +854,14 @@ enum NodeFS {
     ///   - recursive?: When `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.
     /// - Example: `fs.mkdirSync("~/Projects/new-thing", { recursive: true })`
     /// - Example: `fs.mkdirSync("~/Projects/new-thing", true)`
-    @objc func mkdirSync(_ path: String, _ recursive: Bool)
+    @objc func mkdirSync(_ path: JSString, _ recursive: Bool)
 
     /// Synchronously remove an empty directory.
     /// - Parameters:
     ///   - path: Path of the directory to remove. `~` is expanded.
     ///   - recursive?: When `true`, removes the directory and its entire contents. Defaults to `false`.
     /// - Example: `fs.rmdirSync("/tmp/empty-dir")`
-    @objc func rmdirSync(_ path: String, _ recursive: Bool)
+    @objc func rmdirSync(_ path: JSString, _ recursive: Bool)
 
     /// Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.
     /// - Parameters:
@@ -696,21 +869,23 @@ enum NodeFS {
     ///   - recursive?: When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.
     ///   - force?: When `true`, a missing path is not treated as an error. Defaults to `false`.
     /// - Example: `fs.rmSync("/tmp/old-dir", { recursive: true, force: true })`
-    @objc func rmSync(_ path: String, _ recursive: Bool, _ force: Bool)
+    @objc func rmSync(_ path: JSString, _ recursive: Bool, _ force: Bool)
 
     /// Synchronously delete a single file.
     /// - Parameter path: Path to the file. `~` is expanded.
     /// - Example: `fs.unlinkSync("/tmp/old.txt")`
-    @objc func unlinkSync(_ path: String)
+    @objc func unlinkSync(_ path: JSString)
 
     /// Synchronously list the contents of a directory.
     /// - Parameters:
     ///   - path: Path to the directory. `~` is expanded.
     ///   - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.
+    ///   - recursive?: When `true`, walks subdirectories too. Filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`). Defaults to `false`.
     /// - Returns: An array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.
     /// - Example: `const files = fs.readdirSync("~/Documents")`
     /// - Example: `fs.readdirSync("~/Documents", { withFileTypes: true }).forEach(d => console.log(d.name, d.isDirectory()))`
-    @objc func readdirSync(_ path: String, _ withFileTypes: Bool) -> [Any]?
+    /// - Example: `const allFiles = fs.readdirSync("~/Documents", { recursive: true })`
+    @objc func readdirSync(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> [Any]?
 
     /// Synchronously get file metadata, following symbolic links.
     /// - Parameters:
@@ -718,7 +893,7 @@ enum NodeFS {
     ///   - throwIfNoEntry?: Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
     /// - Returns: A `Stats` object.
     /// - Example: `console.log(fs.statSync("/etc/hosts").size)`
-    @objc func statSync(_ path: String, _ throwIfNoEntry: Bool) -> NodeFSStats?
+    @objc func statSync(_ path: JSString, _ throwIfNoEntry: Bool) -> NodeFSStats?
 
     /// Synchronously get file metadata, without following symbolic links.
     /// - Parameters:
@@ -726,14 +901,14 @@ enum NodeFS {
     ///   - throwIfNoEntry?: Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
     /// - Returns: A `Stats` object.
     /// - Example: `console.log(fs.lstatSync("/var").isSymbolicLink())`
-    @objc func lstatSync(_ path: String, _ throwIfNoEntry: Bool) -> NodeFSStats?
+    @objc func lstatSync(_ path: JSString, _ throwIfNoEntry: Bool) -> NodeFSStats?
 
     /// Synchronously rename (move) a file or directory.
     /// - Parameters:
     ///   - oldPath: Existing path. `~` is expanded.
     ///   - newPath: New path. `~` is expanded.
     /// - Example: `fs.renameSync("/tmp/old.txt", "/tmp/new.txt")`
-    @objc func renameSync(_ oldPath: String, _ newPath: String)
+    @objc func renameSync(_ oldPath: JSString, _ newPath: JSString)
 
     /// Synchronously copy a file.
     /// - Parameters:
@@ -741,60 +916,62 @@ enum NodeFS {
     ///   - dest: Destination path. `~` is expanded. Overwritten if it already exists, unless `mode` includes `fs.constants.COPYFILE_EXCL`.
     ///   - mode?: Bitwise-OR of `fs.constants.COPYFILE_*` flags. Only `COPYFILE_EXCL` has any effect. Defaults to `0`.
     /// - Example: `fs.copyFileSync("/tmp/a.txt", "/tmp/b.txt")`
-    @objc func copyFileSync(_ src: String, _ dest: String, _ mode: Int)
+    @objc func copyFileSync(_ src: JSString, _ dest: JSString, _ mode: Int)
 
     /// Synchronously create a symbolic link.
     /// - Parameters:
     ///   - target: The path the symlink will point to. Not expanded or validated - it need not exist.
     ///   - path: The path where the symlink will be created. `~` is expanded.
     /// - Example: `fs.symlinkSync("/usr/local/bin", "/tmp/bin-link")`
-    @objc func symlinkSync(_ target: String, _ path: String)
+    @objc func symlinkSync(_ target: JSString, _ path: JSString)
 
     /// Synchronously read the target of a symbolic link.
     /// - Parameter path: Path to the symbolic link. `~` is expanded.
     /// - Returns: The raw target path.
     /// - Example: `console.log(fs.readlinkSync("/var"))`
-    @objc func readlinkSync(_ path: String) -> String?
+    @objc func readlinkSync(_ path: JSString) -> String?
 
     /// Synchronously resolve a path to its absolute, canonical form, following all symlinks.
     /// - Parameter path: Path to resolve. `~` is expanded.
     /// - Returns: The resolved absolute path.
     /// - Example: `console.log(fs.realpathSync("~/Library"))`
-    @objc func realpathSync(_ path: String) -> String?
+    @objc func realpathSync(_ path: JSString) -> String?
 
     /// Synchronously create a hard link.
     /// - Parameters:
     ///   - existingPath: Path of the existing file. `~` is expanded.
     ///   - newPath: Path for the new hard link. `~` is expanded.
     /// - Example: `fs.linkSync("/tmp/a.txt", "/tmp/b.txt")`
-    @objc func linkSync(_ existingPath: String, _ newPath: String)
+    @objc func linkSync(_ existingPath: JSString, _ newPath: JSString)
 
     /// Synchronously test a path's accessibility.
     /// - Parameters:
     ///   - path: Path to check. `~` is expanded.
     ///   - mode?: A `fs.constants` value (`F_OK`, `R_OK`, `W_OK`, `X_OK`), or a bitwise-OR of them. Defaults to `F_OK` (existence only).
     /// - Example: `fs.accessSync("/tmp", fs.constants.W_OK)`
-    @objc func accessSync(_ path: String, _ mode: Int)
+    @objc func accessSync(_ path: JSString, _ mode: Int)
 
     /// Synchronously truncate (or extend, zero-filled) a file to the given length.
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - len?: Desired length in bytes. Defaults to `0`.
     /// - Example: `fs.truncateSync("/tmp/big.log", 0)`
-    @objc func truncateSync(_ path: String, _ len: Int)
+    @objc func truncateSync(_ path: JSString, _ len: Int)
 }
 
 @_documentation(visibility: private)
 @objc class NodeFSModule: NSObject, NodeFSModuleAPI {
     let promises = NodeFSPromisesModule()
+    let constants: NSDictionary
 
-    let constants: [String: Int] = [
-        "F_OK": Int(F_OK),
-        "R_OK": Int(R_OK),
-        "W_OK": Int(W_OK),
-        "X_OK": Int(X_OK),
-        "COPYFILE_EXCL": 1,
-    ]
+    override init() {
+        // Built once per NodeFSModule (one per JSContext) and shared by reference with
+        // `promises`, so `fs.promises.constants === fs.constants` holds - see the doc comment
+        // on `NodeFS.makeConstants()` for why this must not be a shared process-wide instance.
+        constants = NodeFS.makeConstants()
+        super.init()
+        promises.constants = constants
+    }
 
     /// Runs a throwing `NodeFS` operation, translating any failure into a JS exception on the
     /// current context and returning `nil`/`false`/etc. as JSExport requires.
@@ -811,46 +988,76 @@ enum NodeFS {
         }
     }
 
-    @objc func existsSync(_ path: String) -> Bool {
-        NodeFS.existsSync(path)
+    @objc func existsSync(_ path: JSString) -> Bool {
+        guard path.isString, let p = path.toString() else { return false }
+        return NodeFS.existsSync(p)
     }
 
-    @objc func readFileSync(_ path: String, _ encoding: String?) -> String? {
-        sync { try NodeFS.readFile(path, encoding: encoding) }
+    @objc func readFileSync(_ path: JSString, _ encoding: JSString?) -> String? {
+        sync {
+            let p = try NodeFS.requireString(path, "path")
+            let enc = try NodeFS.requireOptionalString(encoding, "encoding")
+            return try NodeFS.readFile(p, encoding: enc)
+        }
     }
 
-    @objc func writeFileSync(_ path: String, _ data: String, _ flag: String?) {
-        _ = sync { try NodeFS.writeFile(path, data, flag: flag) }
+    @objc func writeFileSync(_ path: JSString, _ data: JSString, _ flag: JSString?) {
+        _ = sync {
+            let p = try NodeFS.requireString(path, "path")
+            let d = try NodeFS.requireString(data, "data")
+            let f = try NodeFS.requireOptionalString(flag, "flag")
+            try NodeFS.writeFile(p, d, flag: f)
+        }
     }
 
-    @objc func appendFileSync(_ path: String, _ data: String) {
-        _ = sync { try NodeFS.appendFile(path, data) }
+    @objc func appendFileSync(_ path: JSString, _ data: JSString) {
+        _ = sync {
+            let p = try NodeFS.requireString(path, "path")
+            let d = try NodeFS.requireString(data, "data")
+            try NodeFS.appendFile(p, d)
+        }
     }
 
-    @objc func mkdirSync(_ path: String, _ recursive: Bool) {
-        _ = sync { try NodeFS.mkdir(path, recursive: recursive) }
+    @objc func mkdirSync(_ path: JSString, _ recursive: Bool) {
+        _ = sync {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.mkdir(p, recursive: recursive)
+        }
     }
 
-    @objc func rmdirSync(_ path: String, _ recursive: Bool) {
-        _ = sync { try NodeFS.rmdir(path, recursive: recursive) }
+    @objc func rmdirSync(_ path: JSString, _ recursive: Bool) {
+        _ = sync {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.rmdir(p, recursive: recursive)
+        }
     }
 
-    @objc func rmSync(_ path: String, _ recursive: Bool, _ force: Bool) {
-        _ = sync { try NodeFS.rm(path, recursive: recursive, force: force) }
+    @objc func rmSync(_ path: JSString, _ recursive: Bool, _ force: Bool) {
+        _ = sync {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.rm(p, recursive: recursive, force: force)
+        }
     }
 
-    @objc func unlinkSync(_ path: String) {
-        _ = sync { try NodeFS.unlink(path) }
+    @objc func unlinkSync(_ path: JSString) {
+        _ = sync {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.unlink(p)
+        }
     }
 
-    @objc func readdirSync(_ path: String, _ withFileTypes: Bool) -> [Any]? {
-        sync { try NodeFS.readdir(path, withFileTypes: withFileTypes) }
+    @objc func readdirSync(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> [Any]? {
+        sync {
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.readdir(p, withFileTypes: withFileTypes, recursive: recursive)
+        }
     }
 
-    @objc func statSync(_ path: String, _ throwIfNoEntry: Bool = true) -> NodeFSStats? {
+    @objc func statSync(_ path: JSString, _ throwIfNoEntry: Bool = true) -> NodeFSStats? {
         guard let context = JSContext.current() else { return nil }
         do {
-            return try NodeFS.stat(path)
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.stat(p)
         } catch let failure as NodeFSFailure {
             if case .posix(let errnoValue, _, _, _) = failure, errnoValue == ENOENT, !throwIfNoEntry { return nil }
             context.exception = failure.jsValue(in: context)
@@ -861,10 +1068,11 @@ enum NodeFS {
         }
     }
 
-    @objc func lstatSync(_ path: String, _ throwIfNoEntry: Bool = true) -> NodeFSStats? {
+    @objc func lstatSync(_ path: JSString, _ throwIfNoEntry: Bool = true) -> NodeFSStats? {
         guard let context = JSContext.current() else { return nil }
         do {
-            return try NodeFS.lstat(path)
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.lstat(p)
         } catch let failure as NodeFSFailure {
             if case .posix(let errnoValue, _, _, _) = failure, errnoValue == ENOENT, !throwIfNoEntry { return nil }
             context.exception = failure.jsValue(in: context)
@@ -875,42 +1083,71 @@ enum NodeFS {
         }
     }
 
-    @objc func renameSync(_ oldPath: String, _ newPath: String) {
-        _ = sync { try NodeFS.rename(oldPath, newPath) }
+    @objc func renameSync(_ oldPath: JSString, _ newPath: JSString) {
+        _ = sync {
+            let o = try NodeFS.requireString(oldPath, "oldPath")
+            let n = try NodeFS.requireString(newPath, "newPath")
+            try NodeFS.rename(o, n)
+        }
     }
 
-    @objc func copyFileSync(_ src: String, _ dest: String, _ mode: Int) {
-        _ = sync { try NodeFS.copyFile(src, dest, mode: mode) }
+    @objc func copyFileSync(_ src: JSString, _ dest: JSString, _ mode: Int) {
+        _ = sync {
+            let s = try NodeFS.requireString(src, "src")
+            let d = try NodeFS.requireString(dest, "dest")
+            try NodeFS.copyFile(s, d, mode: mode)
+        }
     }
 
-    @objc func symlinkSync(_ target: String, _ path: String) {
-        _ = sync { try NodeFS.symlink(target, path) }
+    @objc func symlinkSync(_ target: JSString, _ path: JSString) {
+        _ = sync {
+            let t = try NodeFS.requireString(target, "target")
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.symlink(t, p)
+        }
     }
 
-    @objc func readlinkSync(_ path: String) -> String? {
-        sync { try NodeFS.readlink(path) }
+    @objc func readlinkSync(_ path: JSString) -> String? {
+        sync {
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.readlink(p)
+        }
     }
 
-    @objc func realpathSync(_ path: String) -> String? {
-        sync { try NodeFS.realpath(path) }
+    @objc func realpathSync(_ path: JSString) -> String? {
+        sync {
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.realpath(p)
+        }
     }
 
-    @objc func linkSync(_ existingPath: String, _ newPath: String) {
-        _ = sync { try NodeFS.link(existingPath, newPath) }
+    @objc func linkSync(_ existingPath: JSString, _ newPath: JSString) {
+        _ = sync {
+            let e = try NodeFS.requireString(existingPath, "existingPath")
+            let n = try NodeFS.requireString(newPath, "newPath")
+            try NodeFS.link(e, n)
+        }
     }
 
-    @objc func accessSync(_ path: String, _ mode: Int) {
-        _ = sync { try NodeFS.access(path, mode: mode) }
+    @objc func accessSync(_ path: JSString, _ mode: Int) {
+        _ = sync {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.access(p, mode: mode)
+        }
     }
 
-    @objc func truncateSync(_ path: String, _ len: Int) {
-        _ = sync { try NodeFS.truncate(path, len: len) }
+    @objc func truncateSync(_ path: JSString, _ len: Int) {
+        _ = sync {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.truncate(p, len: len)
+        }
     }
 }
 
 // MARK: - fs.promises
 
-/// The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`.
+/// The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`
+/// and `require('fs/promises')`.
 ///
 /// Every function here runs its work synchronously (there is no background I/O thread pool in
 /// this engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still
@@ -926,13 +1163,16 @@ enum NodeFS {
 /// main()
 /// ```
 @objc protocol NodeFSPromisesModuleAPI: JSExport {
+    /// The same object as `fs.constants`, matching Node.
+    @objc var constants: NSDictionary { get }
+
     /// Read a file as a UTF-8 string. See `fs.readFileSync` for details.
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - encoding?: Must be `"utf8"` (or omitted); any other value rejects, since this engine has no `Buffer` type.
     /// - Returns: A `Promise` resolving to the file's contents.
     /// - Example: `const text = await fs.promises.readFile("/etc/hosts")`
-    @objc func readFile(_ path: String, _ encoding: String?) -> JSPromise?
+    @objc func readFile(_ path: JSString, _ encoding: JSString?) -> JSPromise?
 
     /// Write a UTF-8 string to a file, creating or truncating it. See `fs.writeFileSync` for details.
     /// - Parameters:
@@ -941,7 +1181,7 @@ enum NodeFS {
     ///   - flag?: One of `"w"` (default), `"wx"`, `"a"`, or `"ax"`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.writeFile("/tmp/hello.txt", "Hello, world!\n")`
-    @objc func writeFile(_ path: String, _ data: String, _ flag: String?) -> JSPromise?
+    @objc func writeFile(_ path: JSString, _ data: JSString, _ flag: JSString?) -> JSPromise?
 
     /// Append a UTF-8 string to a file, creating it if needed. See `fs.appendFileSync` for details.
     /// - Parameters:
@@ -949,7 +1189,7 @@ enum NodeFS {
     ///   - data: String to append.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.appendFile("/tmp/log.txt", "another line\n")`
-    @objc func appendFile(_ path: String, _ data: String) -> JSPromise?
+    @objc func appendFile(_ path: JSString, _ data: JSString) -> JSPromise?
 
     /// Create a directory. See `fs.mkdirSync` for details.
     /// - Parameters:
@@ -957,7 +1197,7 @@ enum NodeFS {
     ///   - recursive?: When `true`, creates all missing intermediate directories. Defaults to `false`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.mkdir("~/Projects/new-thing", { recursive: true })`
-    @objc func mkdir(_ path: String, _ recursive: Bool) -> JSPromise?
+    @objc func mkdir(_ path: JSString, _ recursive: Bool) -> JSPromise?
 
     /// Remove an empty directory. See `fs.rmdirSync` for details.
     /// - Parameters:
@@ -965,7 +1205,7 @@ enum NodeFS {
     ///   - recursive?: When `true`, removes the directory and its entire contents. Defaults to `false`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.rmdir("/tmp/empty-dir")`
-    @objc func rmdir(_ path: String, _ recursive: Bool) -> JSPromise?
+    @objc func rmdir(_ path: JSString, _ recursive: Bool) -> JSPromise?
 
     /// Remove a file or directory. See `fs.rmSync` for details.
     /// - Parameters:
@@ -974,33 +1214,34 @@ enum NodeFS {
     ///   - force?: When `true`, a missing path is not treated as an error. Defaults to `false`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.rm("/tmp/old-dir", { recursive: true, force: true })`
-    @objc func rm(_ path: String, _ recursive: Bool, _ force: Bool) -> JSPromise?
+    @objc func rm(_ path: JSString, _ recursive: Bool, _ force: Bool) -> JSPromise?
 
     /// Delete a single file. See `fs.unlinkSync` for details.
     /// - Parameter path: Path to the file. `~` is expanded.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.unlink("/tmp/old.txt")`
-    @objc func unlink(_ path: String) -> JSPromise?
+    @objc func unlink(_ path: JSString) -> JSPromise?
 
     /// List the contents of a directory. See `fs.readdirSync` for details.
     /// - Parameters:
     ///   - path: Path to the directory. `~` is expanded.
     ///   - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.
+    ///   - recursive?: When `true`, walks subdirectories too. Defaults to `false`.
     /// - Returns: A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.
     /// - Example: `const files = await fs.promises.readdir("~/Documents")`
-    @objc func readdir(_ path: String, _ withFileTypes: Bool) -> JSPromise?
+    @objc func readdir(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> JSPromise?
 
     /// Get file metadata, following symbolic links. See `fs.statSync` for details.
     /// - Parameter path: Path to inspect. `~` is expanded.
     /// - Returns: A `Promise` resolving to a `Stats` object.
     /// - Example: `console.log((await fs.promises.stat("/etc/hosts")).size)`
-    @objc func stat(_ path: String) -> JSPromise?
+    @objc func stat(_ path: JSString) -> JSPromise?
 
     /// Get file metadata, without following symbolic links. See `fs.lstatSync` for details.
     /// - Parameter path: Path to inspect. `~` is expanded.
     /// - Returns: A `Promise` resolving to a `Stats` object.
     /// - Example: `console.log((await fs.promises.lstat("/var")).isSymbolicLink())`
-    @objc func lstat(_ path: String) -> JSPromise?
+    @objc func lstat(_ path: JSString) -> JSPromise?
 
     /// Rename (move) a file or directory. See `fs.renameSync` for details.
     /// - Parameters:
@@ -1008,7 +1249,7 @@ enum NodeFS {
     ///   - newPath: New path. `~` is expanded.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.rename("/tmp/old.txt", "/tmp/new.txt")`
-    @objc func rename(_ oldPath: String, _ newPath: String) -> JSPromise?
+    @objc func rename(_ oldPath: JSString, _ newPath: JSString) -> JSPromise?
 
     /// Copy a file. See `fs.copyFileSync` for details.
     /// - Parameters:
@@ -1017,7 +1258,7 @@ enum NodeFS {
     ///   - mode?: Bitwise-OR of `fs.constants.COPYFILE_*` flags. Only `COPYFILE_EXCL` has any effect. Defaults to `0`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.copyFile("/tmp/a.txt", "/tmp/b.txt")`
-    @objc func copyFile(_ src: String, _ dest: String, _ mode: Int) -> JSPromise?
+    @objc func copyFile(_ src: JSString, _ dest: JSString, _ mode: Int) -> JSPromise?
 
     /// Create a symbolic link. See `fs.symlinkSync` for details.
     /// - Parameters:
@@ -1025,19 +1266,19 @@ enum NodeFS {
     ///   - path: The path where the symlink will be created. `~` is expanded.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.symlink("/usr/local/bin", "/tmp/bin-link")`
-    @objc func symlink(_ target: String, _ path: String) -> JSPromise?
+    @objc func symlink(_ target: JSString, _ path: JSString) -> JSPromise?
 
     /// Read the target of a symbolic link. See `fs.readlinkSync` for details.
     /// - Parameter path: Path to the symbolic link. `~` is expanded.
     /// - Returns: A `Promise` resolving to the raw target path.
     /// - Example: `console.log(await fs.promises.readlink("/var"))`
-    @objc func readlink(_ path: String) -> JSPromise?
+    @objc func readlink(_ path: JSString) -> JSPromise?
 
     /// Resolve a path to its absolute, canonical form, following all symlinks. See `fs.realpathSync` for details.
     /// - Parameter path: Path to resolve. `~` is expanded.
     /// - Returns: A `Promise` resolving to the resolved absolute path.
     /// - Example: `console.log(await fs.promises.realpath("~/Library"))`
-    @objc func realpath(_ path: String) -> JSPromise?
+    @objc func realpath(_ path: JSString) -> JSPromise?
 
     /// Create a hard link. See `fs.linkSync` for details.
     /// - Parameters:
@@ -1045,7 +1286,7 @@ enum NodeFS {
     ///   - newPath: Path for the new hard link. `~` is expanded.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.link("/tmp/a.txt", "/tmp/b.txt")`
-    @objc func link(_ existingPath: String, _ newPath: String) -> JSPromise?
+    @objc func link(_ existingPath: JSString, _ newPath: JSString) -> JSPromise?
 
     /// Test a path's accessibility. See `fs.accessSync` for details.
     /// - Parameters:
@@ -1053,7 +1294,7 @@ enum NodeFS {
     ///   - mode?: A `fs.constants` value (`F_OK`, `R_OK`, `W_OK`, `X_OK`), or a bitwise-OR of them. Defaults to `F_OK` (existence only).
     /// - Returns: A `Promise` resolving to `undefined` if accessible, or rejecting otherwise.
     /// - Example: `await fs.promises.access("/tmp", fs.constants.W_OK)`
-    @objc func access(_ path: String, _ mode: Int) -> JSPromise?
+    @objc func access(_ path: JSString, _ mode: Int) -> JSPromise?
 
     /// Truncate (or extend, zero-filled) a file to the given length. See `fs.truncateSync` for details.
     /// - Parameters:
@@ -1061,11 +1302,15 @@ enum NodeFS {
     ///   - len?: Desired length in bytes. Defaults to `0`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.truncate("/tmp/big.log", 0)`
-    @objc func truncate(_ path: String, _ len: Int) -> JSPromise?
+    @objc func truncate(_ path: JSString, _ len: Int) -> JSPromise?
 }
 
 @_documentation(visibility: private)
 @objc class NodeFSPromisesModule: NSObject, NodeFSPromisesModuleAPI {
+    /// Overwritten by the owning `NodeFSModule`'s `init()` right after construction, so this
+    /// default only matters if a `NodeFSPromisesModule` is ever used unpaired.
+    var constants: NSDictionary = NodeFS.makeConstants()
+
     /// Runs a throwing `NodeFS` operation that produces no value and wraps its outcome in a
     /// settled `Promise`, resolving with `undefined`.
     private func wrap(_ body: @escaping () throws -> Void) -> JSPromise? {
@@ -1099,75 +1344,137 @@ enum NodeFS {
         }
     }
 
-    @objc func readFile(_ path: String, _ encoding: String?) -> JSPromise? {
-        wrap { try NodeFS.readFile(path, encoding: encoding) }
+    @objc func readFile(_ path: JSString, _ encoding: JSString?) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            let enc = try NodeFS.requireOptionalString(encoding, "encoding")
+            return try NodeFS.readFile(p, encoding: enc)
+        }
     }
 
-    @objc func writeFile(_ path: String, _ data: String, _ flag: String?) -> JSPromise? {
-        wrap { try NodeFS.writeFile(path, data, flag: flag) }
+    @objc func writeFile(_ path: JSString, _ data: JSString, _ flag: JSString?) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            let d = try NodeFS.requireString(data, "data")
+            let f = try NodeFS.requireOptionalString(flag, "flag")
+            try NodeFS.writeFile(p, d, flag: f)
+        }
     }
 
-    @objc func appendFile(_ path: String, _ data: String) -> JSPromise? {
-        wrap { try NodeFS.appendFile(path, data) }
+    @objc func appendFile(_ path: JSString, _ data: JSString) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            let d = try NodeFS.requireString(data, "data")
+            try NodeFS.appendFile(p, d)
+        }
     }
 
-    @objc func mkdir(_ path: String, _ recursive: Bool) -> JSPromise? {
-        wrap { try NodeFS.mkdir(path, recursive: recursive) }
+    @objc func mkdir(_ path: JSString, _ recursive: Bool) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.mkdir(p, recursive: recursive)
+        }
     }
 
-    @objc func rmdir(_ path: String, _ recursive: Bool) -> JSPromise? {
-        wrap { try NodeFS.rmdir(path, recursive: recursive) }
+    @objc func rmdir(_ path: JSString, _ recursive: Bool) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.rmdir(p, recursive: recursive)
+        }
     }
 
-    @objc func rm(_ path: String, _ recursive: Bool, _ force: Bool) -> JSPromise? {
-        wrap { try NodeFS.rm(path, recursive: recursive, force: force) }
+    @objc func rm(_ path: JSString, _ recursive: Bool, _ force: Bool) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.rm(p, recursive: recursive, force: force)
+        }
     }
 
-    @objc func unlink(_ path: String) -> JSPromise? {
-        wrap { try NodeFS.unlink(path) }
+    @objc func unlink(_ path: JSString) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.unlink(p)
+        }
     }
 
-    @objc func readdir(_ path: String, _ withFileTypes: Bool) -> JSPromise? {
-        wrap { try NodeFS.readdir(path, withFileTypes: withFileTypes) }
+    @objc func readdir(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.readdir(p, withFileTypes: withFileTypes, recursive: recursive)
+        }
     }
 
-    @objc func stat(_ path: String) -> JSPromise? {
-        wrap { try NodeFS.stat(path) }
+    @objc func stat(_ path: JSString) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.stat(p)
+        }
     }
 
-    @objc func lstat(_ path: String) -> JSPromise? {
-        wrap { try NodeFS.lstat(path) }
+    @objc func lstat(_ path: JSString) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.lstat(p)
+        }
     }
 
-    @objc func rename(_ oldPath: String, _ newPath: String) -> JSPromise? {
-        wrap { try NodeFS.rename(oldPath, newPath) }
+    @objc func rename(_ oldPath: JSString, _ newPath: JSString) -> JSPromise? {
+        wrap {
+            let o = try NodeFS.requireString(oldPath, "oldPath")
+            let n = try NodeFS.requireString(newPath, "newPath")
+            try NodeFS.rename(o, n)
+        }
     }
 
-    @objc func copyFile(_ src: String, _ dest: String, _ mode: Int) -> JSPromise? {
-        wrap { try NodeFS.copyFile(src, dest, mode: mode) }
+    @objc func copyFile(_ src: JSString, _ dest: JSString, _ mode: Int) -> JSPromise? {
+        wrap {
+            let s = try NodeFS.requireString(src, "src")
+            let d = try NodeFS.requireString(dest, "dest")
+            try NodeFS.copyFile(s, d, mode: mode)
+        }
     }
 
-    @objc func symlink(_ target: String, _ path: String) -> JSPromise? {
-        wrap { try NodeFS.symlink(target, path) }
+    @objc func symlink(_ target: JSString, _ path: JSString) -> JSPromise? {
+        wrap {
+            let t = try NodeFS.requireString(target, "target")
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.symlink(t, p)
+        }
     }
 
-    @objc func readlink(_ path: String) -> JSPromise? {
-        wrap { try NodeFS.readlink(path) }
+    @objc func readlink(_ path: JSString) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.readlink(p)
+        }
     }
 
-    @objc func realpath(_ path: String) -> JSPromise? {
-        wrap { try NodeFS.realpath(path) }
+    @objc func realpath(_ path: JSString) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            return try NodeFS.realpath(p)
+        }
     }
 
-    @objc func link(_ existingPath: String, _ newPath: String) -> JSPromise? {
-        wrap { try NodeFS.link(existingPath, newPath) }
+    @objc func link(_ existingPath: JSString, _ newPath: JSString) -> JSPromise? {
+        wrap {
+            let e = try NodeFS.requireString(existingPath, "existingPath")
+            let n = try NodeFS.requireString(newPath, "newPath")
+            try NodeFS.link(e, n)
+        }
     }
 
-    @objc func access(_ path: String, _ mode: Int) -> JSPromise? {
-        wrap { try NodeFS.access(path, mode: mode) }
+    @objc func access(_ path: JSString, _ mode: Int) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.access(p, mode: mode)
+        }
     }
 
-    @objc func truncate(_ path: String, _ len: Int) -> JSPromise? {
-        wrap { try NodeFS.truncate(path, len: len) }
+    @objc func truncate(_ path: JSString, _ len: Int) -> JSPromise? {
+        wrap {
+            let p = try NodeFS.requireString(path, "path")
+            try NodeFS.truncate(p, len: len)
+        }
     }
 }

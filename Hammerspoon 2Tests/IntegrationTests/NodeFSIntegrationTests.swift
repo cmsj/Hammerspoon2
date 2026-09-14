@@ -117,6 +117,39 @@ struct NodeFSTests {
             #expect(ctx.evalInt("fs.constants.W_OK") == 2)
             #expect(ctx.evalInt("fs.constants.X_OK") == 1)
             #expect(ctx.evalInt("fs.constants.COPYFILE_EXCL") == 1)
+            #expect(ctx.evalInt("fs.constants.COPYFILE_FICLONE") == 2)
+            #expect(ctx.evalInt("fs.constants.COPYFILE_FICLONE_FORCE") == 4)
+            // Mode-bit and open-flag constants also exposed, checked against the real
+            // Darwin values rather than hardcoded numbers.
+            #expect(ctx.evalInt("fs.constants.S_IFDIR") == Int(S_IFDIR))
+            #expect(ctx.evalInt("fs.constants.S_IFREG") == Int(S_IFREG))
+            #expect(ctx.evalInt("fs.constants.S_IRUSR") == Int(S_IRUSR))
+            #expect(ctx.evalInt("fs.constants.O_CREAT") == Int(O_CREAT))
+            #expect(ctx.evalInt("fs.constants.O_APPEND") == Int(O_APPEND))
+        }
+
+        @Test("require('fs/promises') is the same object as require('fs').promises")
+        func testRequireFsPromises() throws {
+            let ctx = try NodeFSTestContext()
+            ctx.eval("var fsp = require('fs/promises')")
+            #expect(!ctx.hadException)
+            #expect(ctx.evalBool("fsp === fs.promises") == true)
+            // Node guarantees `fsp.constants === fs.constants` too, and our NodeFSModule/
+            // NodeFSPromisesModule do share one NSDictionary instance per JSContext to match -
+            // but asserting that with `===` here is unreliable: JavaScriptCore's bridged-object
+            // identity cache is flaky across the many short-lived JSVirtualMachines this test
+            // suite creates in one process (confirmed: content is always identical, only `===`
+            // intermittently reports false). Assert structural equality instead, which still
+            // catches a real regression (eg. forgetting to link the two instances) without the
+            // false negatives. See memory: jsc-multi-vm-object-identity-flakiness.
+            #expect(ctx.evalBool("""
+                (function() {
+                    var a = fsp.constants, b = fs.constants;
+                    var keysA = Object.keys(a).sort(), keysB = Object.keys(b).sort();
+                    if (JSON.stringify(keysA) !== JSON.stringify(keysB)) return false;
+                    return keysA.every(function(k) { return a[k] === b[k]; });
+                })()
+            """) == true)
         }
     }
 
@@ -252,6 +285,28 @@ struct NodeFSTests {
             let ctx = try NodeFSTestContext()
             ctx.eval("fs.rmSync('\(ctx.path("missing"))', false, true)")
             #expect(!ctx.hadException)
+        }
+
+        @Test("readdirSync with recursive walks subdirectories")
+        func testReaddirRecursive() throws {
+            let ctx = try NodeFSTestContext()
+            let dir = ctx.path("tree")
+            ctx.eval("fs.mkdirSync('\(dir)/sub', true)")
+            ctx.eval("fs.writeFileSync('\(dir)/top.txt', '1')")
+            ctx.eval("fs.writeFileSync('\(dir)/sub/nested.txt', '2')")
+
+            let flat = (ctx.evalValue("fs.readdirSync('\(dir)', false, true).sort()")?.toArray() ?? [])
+                .compactMap { $0 as? String }
+            #expect(flat == ["sub", "sub/nested.txt", "top.txt"])
+
+            // withFileTypes + recursive: Dirent.name stays the bare filename (no .parentPath).
+            ctx.eval("""
+                var entries = fs.readdirSync('\(dir)', true, true);
+                var nested = entries.find(function(e) { return e.name === 'nested.txt'; });
+                var __nestedIsFile = nested ? nested.isFile() : false;
+            """)
+            #expect(!ctx.hadException)
+            #expect(ctx.evalBool("__nestedIsFile") == true)
         }
     }
 
@@ -434,6 +489,20 @@ struct NodeFSTests {
             #expect(code == "EEXIST")
         }
 
+        @Test("rmdirSync on a file (not a directory) throws ENOTDIR")
+        func testRmdirOnFile() throws {
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("not-a-dir.txt")
+            ctx.eval("fs.writeFileSync('\(p)', 'x')")
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.rmdirSync('\(p)'); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "ENOTDIR")
+        }
+
         @Test("thrown errors carry syscall, path and errno properties")
         func testErrorShape() throws {
             let ctx = try NodeFSTestContext()
@@ -446,6 +515,97 @@ struct NodeFSTests {
             #expect(ctx.evalString("__syscall") == "open")
             #expect(ctx.evalString("__path") == p)
             #expect(ctx.evalInt("__errno") == -2)
+        }
+    }
+
+    // MARK: Argument type validation
+
+    @Suite("fs argument type validation")
+    struct NodeFSTypeValidationTests {
+        @Test("existsSync never throws, even for a non-string argument")
+        func testExistsSyncNeverThrows() throws {
+            let ctx = try NodeFSTestContext()
+            #expect(ctx.evalBool("fs.existsSync(123)") == false)
+            #expect(ctx.evalBool("fs.existsSync(null)") == false)
+            #expect(ctx.evalBool("fs.existsSync({})") == false)
+            #expect(ctx.evalBool("fs.existsSync(undefined)") == false)
+            #expect(!ctx.hadException)
+        }
+
+        @Test("renameSync throws ERR_INVALID_ARG_TYPE for a non-string oldPath/newPath")
+        func testRenameSyncInvalidType() throws {
+            let ctx = try NodeFSTestContext()
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.renameSync(123, 'x'); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "ERR_INVALID_ARG_TYPE")
+            let message = ctx.evalString("""
+                (function() {
+                    try { fs.renameSync(123, 'x'); return null; }
+                    catch (e) { return e.message; }
+                })()
+            """)
+            #expect(message == "The \"oldPath\" argument must be of type string. Received type number (123)")
+        }
+
+        @Test("writeFileSync throws ERR_INVALID_ARG_TYPE for non-string data")
+        func testWriteFileSyncInvalidDataType() throws {
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("bad-data.txt")
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.writeFileSync('\(p)', { not: 'a string' }); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "ERR_INVALID_ARG_TYPE")
+        }
+
+        @Test("readFileSync throws ERR_INVALID_ARG_TYPE for a non-string encoding")
+        func testReadFileSyncInvalidEncodingType() throws {
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("enc-type.txt")
+            ctx.eval("fs.writeFileSync('\(p)', 'x')")
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.readFileSync('\(p)', 123); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "ERR_INVALID_ARG_TYPE")
+        }
+
+        @Test("unlinkSync, rmdirSync, and readlinkSync all throw ERR_INVALID_ARG_TYPE for a non-string path")
+        func testMiscSyncInvalidType() throws {
+            let ctx = try NodeFSTestContext()
+            let calls = ["fs.unlinkSync(42)", "fs.rmdirSync(true)", "fs.readlinkSync([])"]
+            for call in calls {
+                let code = ctx.evalString("""
+                    (function() {
+                        try { \(call); return null; }
+                        catch (e) { return e.code; }
+                    })()
+                """)
+                #expect(code == "ERR_INVALID_ARG_TYPE", "\(call)")
+            }
+        }
+
+        @Test("promises.rename rejects with ERR_INVALID_ARG_TYPE for a non-string path")
+        func testPromisesRenameInvalidType() async throws {
+            let ctx = try NodeFSTestContext()
+            ctx.eval("""
+                var __done = false, __code = null;
+                fs.promises.rename([], 'x').catch(function(e) {
+                    __code = e.code;
+                    __done = true;
+                });
+            """)
+            let ok = await ctx.waitForAsync { ctx.evalBool("__done") == true }
+            #expect(ok)
+            #expect(ctx.evalString("__code") == "ERR_INVALID_ARG_TYPE")
         }
     }
 

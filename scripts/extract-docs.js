@@ -1104,6 +1104,7 @@ function swiftTypeToJSDoc(swiftType) {
     // Map common Swift types to JS types
     const typeMap = {
         'String': 'string',
+        'JSString': 'string',
         'Int': 'number',
         'Double': 'number',
         'Float': 'number',
@@ -1112,9 +1113,12 @@ function swiftTypeToJSDoc(swiftType) {
         'UInt32': 'number',
         'NSNumber': 'number',
         'NSDate': 'Date',
+        // Only used by fs.constants/fs.promises.constants today, which is why this is
+        // hardcoded to a number-valued map rather than derived per-usage.
+        'NSDictionary': 'Object<string, number>',
         'Any': '*'
     };
-    
+
     return typeMap[type] || type;
 }
 

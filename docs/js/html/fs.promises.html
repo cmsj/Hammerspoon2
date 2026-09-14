@@ -66,7 +66,8 @@
     <span class="page-badge">Module</span>
 </div>
 
-<div class="module-description"><p>The promise-based equivalents of <code>fs</code>&#39;s <code>*Sync</code> functions, reachable as <code>require(&#39;fs&#39;).promises</code>.</p>
+<div class="module-description"><p>The promise-based equivalents of <code>fs</code>&#39;s <code>*Sync</code> functions, reachable as <code>require(&#39;fs&#39;).promises</code>
+and <code>require(&#39;fs/promises&#39;)</code>.</p>
 <p>Every function here runs its work synchronously (there is no background I/O thread pool in
 this engine) and wraps the result in an already-settled <code>Promise</code>, so <code>await</code>/<code>.then()</code> still
 work exactly as in Node, just without any real concurrency.</p>
@@ -85,7 +86,14 @@ main()
 
 
 <h2 class="section-heading">Properties</h2>
-<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+    <div class="property" id="constants">
+        <h3><a href="#constants">fs.promises.constants</a></h3>
+        <div class="prop-type">NSDictionary</div>
+        <div class="description">The same object as `fs.constants`, matching Node.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1167" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1167</a>
+        </div>
+    </div>
 
 <h2 class="section-heading">Methods</h2>
     <div class="method" id="readFile">
@@ -108,12 +116,12 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">encoding</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Must be `&quot;utf8&quot;` (or omitted); any other value rejects, since this engine has no `Buffer` type.</td>
                 </tr>
             </tbody>
@@ -126,7 +134,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L935" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:935</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1175" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1175</a>
         </div>
     </div>
     <div class="method" id="writeFile">
@@ -149,17 +157,17 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">data</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">String to write.</td>
                 </tr>
                 <tr>
                     <td class="param-name">flag</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">One of `&quot;w&quot;` (default), `&quot;wx&quot;`, `&quot;a&quot;`, or `&quot;ax&quot;`.</td>
                 </tr>
             </tbody>
@@ -172,7 +180,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L944" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:944</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1184" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1184</a>
         </div>
     </div>
     <div class="method" id="appendFile">
@@ -195,12 +203,12 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">data</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">String to append.</td>
                 </tr>
             </tbody>
@@ -213,7 +221,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L952" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:952</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1192" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1192</a>
         </div>
     </div>
     <div class="method" id="mkdir">
@@ -236,7 +244,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path of the directory to create. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -254,7 +262,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L960" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:960</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1200" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1200</a>
         </div>
     </div>
     <div class="method" id="rmdir">
@@ -277,7 +285,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path of the directory to remove. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -295,7 +303,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L968" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:968</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1208" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1208</a>
         </div>
     </div>
     <div class="method" id="rm">
@@ -318,7 +326,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to remove. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -341,7 +349,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L977" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:977</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1217" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1217</a>
         </div>
     </div>
     <div class="method" id="unlink">
@@ -364,7 +372,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -377,16 +385,16 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L983" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:983</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1223" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1223</a>
         </div>
     </div>
     <div class="method" id="readdir">
-        <h3><a href="#readdir">fs.promises.readdir(path, withFileTypes) -> Promise&lt;any&gt;</a></h3>
+        <h3><a href="#readdir">fs.promises.readdir(path, withFileTypes, recursive) -> Promise&lt;any&gt;</a></h3>
 
         <div class="description">List the contents of a directory. See `fs.readdirSync` for details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.promises.readdir(path, withFileTypes) -> Promise&lt;any&gt;</code></pre>
+        <pre><code class="language-javascript">fs.promises.readdir(path, withFileTypes, recursive) -> Promise&lt;any&gt;</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -400,13 +408,18 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the directory. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">withFileTypes</td>
                     <td class="param-type">boolean</td>
                     <td class="param-desc">When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">recursive</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">When `true`, walks subdirectories too. Defaults to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -418,7 +431,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L991" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:991</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1232" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1232</a>
         </div>
     </div>
     <div class="method" id="stat">
@@ -441,7 +454,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to inspect. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -454,7 +467,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L997" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:997</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1238" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1238</a>
         </div>
     </div>
     <div class="method" id="lstat">
@@ -477,7 +490,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to inspect. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -490,7 +503,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1003" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1003</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1244" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1244</a>
         </div>
     </div>
     <div class="method" id="rename">
@@ -513,12 +526,12 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">oldPath</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Existing path. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">newPath</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">New path. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -531,7 +544,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1011" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1011</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1252" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1252</a>
         </div>
     </div>
     <div class="method" id="copyFile">
@@ -554,12 +567,12 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">src</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the existing file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">dest</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Destination path. `~` is expanded. Overwritten if it already exists, unless `mode` includes `fs.constants.COPYFILE_EXCL`.</td>
                 </tr>
                 <tr>
@@ -577,7 +590,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1020" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1020</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1261" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1261</a>
         </div>
     </div>
     <div class="method" id="symlink">
@@ -600,12 +613,12 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">target</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">The path the symlink will point to. Not expanded or validated - it need not exist.</td>
                 </tr>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">The path where the symlink will be created. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -618,7 +631,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1028" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1028</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1269" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1269</a>
         </div>
     </div>
     <div class="method" id="readlink">
@@ -641,7 +654,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the symbolic link. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -654,7 +667,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1034" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1034</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1275" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1275</a>
         </div>
     </div>
     <div class="method" id="realpath">
@@ -677,7 +690,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to resolve. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -690,7 +703,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1040" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1040</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1281" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1281</a>
         </div>
     </div>
     <div class="method" id="link">
@@ -713,12 +726,12 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">existingPath</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path of the existing file. `~` is expanded.</td>
                 </tr>
                 <tr>
                     <td class="param-name">newPath</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path for the new hard link. `~` is expanded.</td>
                 </tr>
             </tbody>
@@ -731,7 +744,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1048" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1048</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1289" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1289</a>
         </div>
     </div>
     <div class="method" id="access">
@@ -754,7 +767,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to check. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -772,7 +785,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1056" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1056</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1297" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1297</a>
         </div>
     </div>
     <div class="method" id="truncate">
@@ -795,7 +808,7 @@ main()
             <tbody>
                 <tr>
                     <td class="param-name">path</td>
-                    <td class="param-type">string</td>
+                    <td class="param-type">JSString</td>
                     <td class="param-desc">Path to the file. `~` is expanded.</td>
                 </tr>
                 <tr>
@@ -813,7 +826,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1064" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1064</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1305" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1305</a>
         </div>
     </div>
         </main>

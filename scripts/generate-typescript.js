@@ -51,6 +51,7 @@ function swiftTypeToTS(swiftType, promiseType = null) {
 
     const typeMap = {
         'String': 'string',
+        'JSString': 'string',
         'Int': 'number',
         'Double': 'number',
         'Float': 'number',
@@ -63,6 +64,9 @@ function swiftTypeToTS(swiftType, promiseType = null) {
         'UInt64': 'number',
         'NSNumber': 'number',
         'NSDate': 'Date',
+        // Only used by fs.constants/fs.promises.constants today, which is why this is
+        // hardcoded to a number-valued record rather than derived per-usage.
+        'NSDictionary': 'Record<string, number>',
         'Any': 'any',
         'Void': 'void',
         // A JSValue param/return that isn't a JSFunction/JSPromise is a deliberately

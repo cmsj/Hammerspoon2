@@ -25586,10 +25586,10 @@
       "methods": [
         {
           "name": "existsSync",
-          "signature": "func existsSync(_ path: String) -> Bool",
+          "signature": "func existsSync(_ path: JSString) -> Bool",
           "isStatic": false,
-          "rawDocumentation": "Synchronously check whether a path exists. Unlike every other function in this module,\nthis never throws - any error checking the path is treated as \"does not exist\".\n- Parameter path: Path to check. `~` is expanded.\n- Returns: `true` if anything exists at the path.\n- Example: `if (fs.existsSync(\"/tmp/file.txt\")) console.log(\"exists\")`",
-          "description": "Synchronously check whether a path exists. Unlike every other function in this module,\nthis never throws - any error checking the path is treated as \"does not exist\".",
+          "rawDocumentation": "Synchronously check whether a path exists. Unlike every other function in this module,\nthis never throws (matching Node) - a non-string argument is simply treated as\n\"does not exist\", the same as any other error checking the path.\n- Parameter path: Path to check. `~` is expanded.\n- Returns: `true` if anything exists at the path.\n- Example: `if (fs.existsSync(\"/tmp/file.txt\")) console.log(\"exists\")`",
+          "description": "Synchronously check whether a path exists. Unlike every other function in this module,\nthis never throws (matching Node) - a non-string argument is simply treated as\n\"does not exist\", the same as any other error checking the path.",
           "params": [
             {
               "name": "path",
@@ -25607,11 +25607,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 653
+          "lineNumber": 826
         },
         {
           "name": "readFileSync",
-          "signature": "func readFileSync(_ path: String, _ encoding: String?) -> String?",
+          "signature": "func readFileSync(_ path: JSString, _ encoding: JSString?) -> String?",
           "isStatic": false,
           "rawDocumentation": "Synchronously read a file as a UTF-8 string.\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - encoding?: Must be `\"utf8\"` (or omitted); any other value throws, since this engine has no `Buffer` type.\n- Returns: The file's contents.\n- Example: `const text = fs.readFileSync(\"/etc/hosts\", \"utf8\")`",
           "description": "Synchronously read a file as a UTF-8 string.",
@@ -25639,11 +25639,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 661
+          "lineNumber": 834
         },
         {
           "name": "writeFileSync",
-          "signature": "func writeFileSync(_ path: String, _ data: String, _ flag: String?)",
+          "signature": "func writeFileSync(_ path: JSString, _ data: JSString, _ flag: JSString?)",
           "isStatic": false,
           "rawDocumentation": "Synchronously write a UTF-8 string to a file, creating or truncating it.\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - data: String to write.\n  - flag?: One of `\"w\"` (default: create/truncate), `\"wx\"` (like `\"w\"` but fails if the file already exists), `\"a\"` (append), or `\"ax\"` (like `\"a\"` but fails if the file already exists).\n- Example: `fs.writeFileSync(\"/tmp/hello.txt\", \"Hello, world!\\n\")`",
           "description": "Synchronously write a UTF-8 string to a file, creating or truncating it.",
@@ -25675,11 +25675,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 669
+          "lineNumber": 842
         },
         {
           "name": "appendFileSync",
-          "signature": "func appendFileSync(_ path: String, _ data: String)",
+          "signature": "func appendFileSync(_ path: JSString, _ data: JSString)",
           "isStatic": false,
           "rawDocumentation": "Synchronously append a UTF-8 string to a file, creating it if needed.\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - data: String to append.\n- Example: `fs.appendFileSync(\"/tmp/log.txt\", \"another line\\n\")`",
           "description": "Synchronously append a UTF-8 string to a file, creating it if needed.",
@@ -25704,11 +25704,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 676
+          "lineNumber": 849
         },
         {
           "name": "mkdirSync",
-          "signature": "func mkdirSync(_ path: String, _ recursive: Bool)",
+          "signature": "func mkdirSync(_ path: JSString, _ recursive: Bool)",
           "isStatic": false,
           "rawDocumentation": "Synchronously create a directory.\n- Parameters:\n  - path: Path of the directory to create. `~` is expanded.\n  - recursive?: When `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.\n- Example: `fs.mkdirSync(\"~/Projects/new-thing\", { recursive: true })`\n- Example: `fs.mkdirSync(\"~/Projects/new-thing\", true)`",
           "description": "Synchronously create a directory.",
@@ -25733,11 +25733,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 684
+          "lineNumber": 857
         },
         {
           "name": "rmdirSync",
-          "signature": "func rmdirSync(_ path: String, _ recursive: Bool)",
+          "signature": "func rmdirSync(_ path: JSString, _ recursive: Bool)",
           "isStatic": false,
           "rawDocumentation": "Synchronously remove an empty directory.\n- Parameters:\n  - path: Path of the directory to remove. `~` is expanded.\n  - recursive?: When `true`, removes the directory and its entire contents. Defaults to `false`.\n- Example: `fs.rmdirSync(\"/tmp/empty-dir\")`",
           "description": "Synchronously remove an empty directory.",
@@ -25762,11 +25762,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 691
+          "lineNumber": 864
         },
         {
           "name": "rmSync",
-          "signature": "func rmSync(_ path: String, _ recursive: Bool, _ force: Bool)",
+          "signature": "func rmSync(_ path: JSString, _ recursive: Bool, _ force: Bool)",
           "isStatic": false,
           "rawDocumentation": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.\n- Parameters:\n  - path: Path to remove. `~` is expanded.\n  - recursive?: When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.\n  - force?: When `true`, a missing path is not treated as an error. Defaults to `false`.\n- Example: `fs.rmSync(\"/tmp/old-dir\", { recursive: true, force: true })`",
           "description": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.",
@@ -25798,11 +25798,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 699
+          "lineNumber": 872
         },
         {
           "name": "unlinkSync",
-          "signature": "func unlinkSync(_ path: String)",
+          "signature": "func unlinkSync(_ path: JSString)",
           "isStatic": false,
           "rawDocumentation": "Synchronously delete a single file.\n- Parameter path: Path to the file. `~` is expanded.\n- Example: `fs.unlinkSync(\"/tmp/old.txt\")`",
           "description": "Synchronously delete a single file.",
@@ -25820,13 +25820,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 704
+          "lineNumber": 877
         },
         {
           "name": "readdirSync",
-          "signature": "func readdirSync(_ path: String, _ withFileTypes: Bool) -> [Any]?",
+          "signature": "func readdirSync(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> [Any]?",
           "isStatic": false,
-          "rawDocumentation": "Synchronously list the contents of a directory.\n- Parameters:\n  - path: Path to the directory. `~` is expanded.\n  - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.\n- Returns: An array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.\n- Example: `const files = fs.readdirSync(\"~/Documents\")`\n- Example: `fs.readdirSync(\"~/Documents\", { withFileTypes: true }).forEach(d => console.log(d.name, d.isDirectory()))`",
+          "rawDocumentation": "Synchronously list the contents of a directory.\n- Parameters:\n  - path: Path to the directory. `~` is expanded.\n  - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.\n  - recursive?: When `true`, walks subdirectories too. Filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`). Defaults to `false`.\n- Returns: An array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.\n- Example: `const files = fs.readdirSync(\"~/Documents\")`\n- Example: `fs.readdirSync(\"~/Documents\", { withFileTypes: true }).forEach(d => console.log(d.name, d.isDirectory()))`\n- Example: `const allFiles = fs.readdirSync(\"~/Documents\", { recursive: true })`",
           "description": "Synchronously list the contents of a directory.",
           "params": [
             {
@@ -25842,6 +25842,13 @@
               "description": "When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.",
               "optional": true,
               "tsType": null
+            },
+            {
+              "name": "recursive",
+              "type": "boolean",
+              "description": "When `true`, walks subdirectories too. Filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`). Defaults to `false`.",
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
@@ -25852,11 +25859,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 713
+          "lineNumber": 888
         },
         {
           "name": "statSync",
-          "signature": "func statSync(_ path: String, _ throwIfNoEntry: Bool) -> NodeFSStats?",
+          "signature": "func statSync(_ path: JSString, _ throwIfNoEntry: Bool) -> NodeFSStats?",
           "isStatic": false,
           "rawDocumentation": "Synchronously get file metadata, following symbolic links.\n- Parameters:\n  - path: Path to inspect. `~` is expanded.\n  - throwIfNoEntry?: Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.\n- Returns: A `Stats` object.\n- Example: `console.log(fs.statSync(\"/etc/hosts\").size)`",
           "description": "Synchronously get file metadata, following symbolic links.",
@@ -25884,11 +25891,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 721
+          "lineNumber": 896
         },
         {
           "name": "lstatSync",
-          "signature": "func lstatSync(_ path: String, _ throwIfNoEntry: Bool) -> NodeFSStats?",
+          "signature": "func lstatSync(_ path: JSString, _ throwIfNoEntry: Bool) -> NodeFSStats?",
           "isStatic": false,
           "rawDocumentation": "Synchronously get file metadata, without following symbolic links.\n- Parameters:\n  - path: Path to inspect. `~` is expanded.\n  - throwIfNoEntry?: Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.\n- Returns: A `Stats` object.\n- Example: `console.log(fs.lstatSync(\"/var\").isSymbolicLink())`",
           "description": "Synchronously get file metadata, without following symbolic links.",
@@ -25916,11 +25923,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 729
+          "lineNumber": 904
         },
         {
           "name": "renameSync",
-          "signature": "func renameSync(_ oldPath: String, _ newPath: String)",
+          "signature": "func renameSync(_ oldPath: JSString, _ newPath: JSString)",
           "isStatic": false,
           "rawDocumentation": "Synchronously rename (move) a file or directory.\n- Parameters:\n  - oldPath: Existing path. `~` is expanded.\n  - newPath: New path. `~` is expanded.\n- Example: `fs.renameSync(\"/tmp/old.txt\", \"/tmp/new.txt\")`",
           "description": "Synchronously rename (move) a file or directory.",
@@ -25945,11 +25952,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 736
+          "lineNumber": 911
         },
         {
           "name": "copyFileSync",
-          "signature": "func copyFileSync(_ src: String, _ dest: String, _ mode: Int)",
+          "signature": "func copyFileSync(_ src: JSString, _ dest: JSString, _ mode: Int)",
           "isStatic": false,
           "rawDocumentation": "Synchronously copy a file.\n- Parameters:\n  - src: Path to the existing file. `~` is expanded.\n  - dest: Destination path. `~` is expanded. Overwritten if it already exists, unless `mode` includes `fs.constants.COPYFILE_EXCL`.\n  - mode?: Bitwise-OR of `fs.constants.COPYFILE_*` flags. Only `COPYFILE_EXCL` has any effect. Defaults to `0`.\n- Example: `fs.copyFileSync(\"/tmp/a.txt\", \"/tmp/b.txt\")`",
           "description": "Synchronously copy a file.",
@@ -25981,11 +25988,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 744
+          "lineNumber": 919
         },
         {
           "name": "symlinkSync",
-          "signature": "func symlinkSync(_ target: String, _ path: String)",
+          "signature": "func symlinkSync(_ target: JSString, _ path: JSString)",
           "isStatic": false,
           "rawDocumentation": "Synchronously create a symbolic link.\n- Parameters:\n  - target: The path the symlink will point to. Not expanded or validated - it need not exist.\n  - path: The path where the symlink will be created. `~` is expanded.\n- Example: `fs.symlinkSync(\"/usr/local/bin\", \"/tmp/bin-link\")`",
           "description": "Synchronously create a symbolic link.",
@@ -26010,11 +26017,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 751
+          "lineNumber": 926
         },
         {
           "name": "readlinkSync",
-          "signature": "func readlinkSync(_ path: String) -> String?",
+          "signature": "func readlinkSync(_ path: JSString) -> String?",
           "isStatic": false,
           "rawDocumentation": "Synchronously read the target of a symbolic link.\n- Parameter path: Path to the symbolic link. `~` is expanded.\n- Returns: The raw target path.\n- Example: `console.log(fs.readlinkSync(\"/var\"))`",
           "description": "Synchronously read the target of a symbolic link.",
@@ -26035,11 +26042,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 757
+          "lineNumber": 932
         },
         {
           "name": "realpathSync",
-          "signature": "func realpathSync(_ path: String) -> String?",
+          "signature": "func realpathSync(_ path: JSString) -> String?",
           "isStatic": false,
           "rawDocumentation": "Synchronously resolve a path to its absolute, canonical form, following all symlinks.\n- Parameter path: Path to resolve. `~` is expanded.\n- Returns: The resolved absolute path.\n- Example: `console.log(fs.realpathSync(\"~/Library\"))`",
           "description": "Synchronously resolve a path to its absolute, canonical form, following all symlinks.",
@@ -26060,11 +26067,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 763
+          "lineNumber": 938
         },
         {
           "name": "linkSync",
-          "signature": "func linkSync(_ existingPath: String, _ newPath: String)",
+          "signature": "func linkSync(_ existingPath: JSString, _ newPath: JSString)",
           "isStatic": false,
           "rawDocumentation": "Synchronously create a hard link.\n- Parameters:\n  - existingPath: Path of the existing file. `~` is expanded.\n  - newPath: Path for the new hard link. `~` is expanded.\n- Example: `fs.linkSync(\"/tmp/a.txt\", \"/tmp/b.txt\")`",
           "description": "Synchronously create a hard link.",
@@ -26089,11 +26096,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 770
+          "lineNumber": 945
         },
         {
           "name": "accessSync",
-          "signature": "func accessSync(_ path: String, _ mode: Int)",
+          "signature": "func accessSync(_ path: JSString, _ mode: Int)",
           "isStatic": false,
           "rawDocumentation": "Synchronously test a path's accessibility.\n- Parameters:\n  - path: Path to check. `~` is expanded.\n  - mode?: A `fs.constants` value (`F_OK`, `R_OK`, `W_OK`, `X_OK`), or a bitwise-OR of them. Defaults to `F_OK` (existence only).\n- Example: `fs.accessSync(\"/tmp\", fs.constants.W_OK)`",
           "description": "Synchronously test a path's accessibility.",
@@ -26118,11 +26125,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 777
+          "lineNumber": 952
         },
         {
           "name": "truncateSync",
-          "signature": "func truncateSync(_ path: String, _ len: Int)",
+          "signature": "func truncateSync(_ path: JSString, _ len: Int)",
           "isStatic": false,
           "rawDocumentation": "Synchronously truncate (or extend, zero-filled) a file to the given length.\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - len?: Desired length in bytes. Defaults to `0`.\n- Example: `fs.truncateSync(\"/tmp/big.log\", 0)`",
           "description": "Synchronously truncate (or extend, zero-filled) a file to the given length.",
@@ -26147,21 +26154,21 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 784
+          "lineNumber": 959
         }
       ],
       "properties": [
         {
           "name": "constants",
-          "signature": "var constants: [String: Int] { get }",
-          "rawDocumentation": "Filesystem constants used by `accessSync`/`fs.promises.access` (`F_OK`, `R_OK`, `W_OK`,\n`X_OK`) and `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_EXCL`).",
-          "description": "Filesystem constants used by `accessSync`/`fs.promises.access` (`F_OK`, `R_OK`, `W_OK`,\n`X_OK`) and `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_EXCL`).",
+          "signature": "var constants: NSDictionary { get }",
+          "rawDocumentation": "Filesystem constants used by `accessSync`/`fs.promises.access` (`F_OK`, `R_OK`, `W_OK`,\n`X_OK`), `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_*`), file mode bits (`S_I*`,\nchecked against `Stats.mode`), and `open()` flags (`O_*`).",
+          "description": "Filesystem constants used by `accessSync`/`fs.promises.access` (`F_OK`, `R_OK`, `W_OK`,\n`X_OK`), `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_*`), file mode bits (`S_I*`,\nchecked against `Stats.mode`), and `open()` flags (`O_*`).",
           "tsType": null,
           "notes": [],
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 640
+          "lineNumber": 812
         }
       ],
       "types": [
@@ -26186,7 +26193,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 473
+              "lineNumber": 643
             },
             {
               "name": "isDirectory",
@@ -26203,7 +26210,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 477
+              "lineNumber": 647
             },
             {
               "name": "isSymbolicLink",
@@ -26220,7 +26227,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 481
+              "lineNumber": 651
             },
             {
               "name": "isBlockDevice",
@@ -26237,7 +26244,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 484
+              "lineNumber": 654
             },
             {
               "name": "isCharacterDevice",
@@ -26254,7 +26261,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 487
+              "lineNumber": 657
             },
             {
               "name": "isFIFO",
@@ -26271,7 +26278,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 490
+              "lineNumber": 660
             },
             {
               "name": "isSocket",
@@ -26288,7 +26295,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 493
+              "lineNumber": 663
             }
           ],
           "properties": [
@@ -26302,7 +26309,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 434
+              "lineNumber": 604
             },
             {
               "name": "ino",
@@ -26314,7 +26321,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 436
+              "lineNumber": 606
             },
             {
               "name": "mode",
@@ -26326,7 +26333,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 438
+              "lineNumber": 608
             },
             {
               "name": "nlink",
@@ -26338,7 +26345,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 440
+              "lineNumber": 610
             },
             {
               "name": "uid",
@@ -26350,7 +26357,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 442
+              "lineNumber": 612
             },
             {
               "name": "gid",
@@ -26362,7 +26369,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 444
+              "lineNumber": 614
             },
             {
               "name": "rdev",
@@ -26374,7 +26381,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 446
+              "lineNumber": 616
             },
             {
               "name": "size",
@@ -26386,7 +26393,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 448
+              "lineNumber": 618
             },
             {
               "name": "blksize",
@@ -26398,7 +26405,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 450
+              "lineNumber": 620
             },
             {
               "name": "blocks",
@@ -26410,7 +26417,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 452
+              "lineNumber": 622
             },
             {
               "name": "atimeMs",
@@ -26422,7 +26429,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 454
+              "lineNumber": 624
             },
             {
               "name": "mtimeMs",
@@ -26434,7 +26441,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 456
+              "lineNumber": 626
             },
             {
               "name": "ctimeMs",
@@ -26446,7 +26453,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 458
+              "lineNumber": 628
             },
             {
               "name": "birthtimeMs",
@@ -26458,7 +26465,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 460
+              "lineNumber": 630
             },
             {
               "name": "atime",
@@ -26470,7 +26477,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 462
+              "lineNumber": 632
             },
             {
               "name": "mtime",
@@ -26482,7 +26489,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 464
+              "lineNumber": 634
             },
             {
               "name": "ctime",
@@ -26494,7 +26501,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 466
+              "lineNumber": 636
             },
             {
               "name": "birthtime",
@@ -26506,7 +26513,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 468
+              "lineNumber": 638
             }
           ]
         },
@@ -26531,7 +26538,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 565
+              "lineNumber": 735
             },
             {
               "name": "isDirectory",
@@ -26548,7 +26555,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 568
+              "lineNumber": 738
             },
             {
               "name": "isSymbolicLink",
@@ -26565,7 +26572,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 571
+              "lineNumber": 741
             },
             {
               "name": "isBlockDevice",
@@ -26582,7 +26589,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 574
+              "lineNumber": 744
             },
             {
               "name": "isCharacterDevice",
@@ -26599,7 +26606,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 577
+              "lineNumber": 747
             },
             {
               "name": "isFIFO",
@@ -26616,7 +26623,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 580
+              "lineNumber": 750
             },
             {
               "name": "isSocket",
@@ -26633,7 +26640,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 583
+              "lineNumber": 753
             }
           ],
           "properties": [
@@ -26647,20 +26654,20 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 561
+              "lineNumber": 731
             }
           ]
         }
       ],
-      "description": "The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.\nCovers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus\n`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always\nUTF-8 text - passing any `encoding` other than `\"utf8\"` throws.\nEvery `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string\nNode would use (`\"ENOENT\"`, `\"EEXIST\"`, `\"ENOTEMPTY\"`, etc.), plus `.errno`, `.syscall`, and\n`.path`.",
-      "rawDocumentation": "The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.\n\nCovers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus\n`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always\nUTF-8 text - passing any `encoding` other than `\"utf8\"` throws.\n\nEvery `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string\nNode would use (`\"ENOENT\"`, `\"EEXIST\"`, `\"ENOTEMPTY\"`, etc.), plus `.errno`, `.syscall`, and\n`.path`.\n\n- Example:\n```js\nconst fs = require('fs')\n\nfs.writeFileSync(\"/tmp/hello.txt\", \"Hello, world!\\n\")\nconsole.log(fs.readFileSync(\"/tmp/hello.txt\"))\n\ntry {\n    fs.readFileSync(\"/does/not/exist\")\n} catch (e) {\n    console.log(e.code) // \"ENOENT\"\n}\n```"
+      "description": "The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.\nCovers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus\n`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always\nUTF-8 text - passing any `encoding` other than `\"utf8\"` throws.\nEvery `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string\nNode would use (`\"ENOENT\"`, `\"EEXIST\"`, `\"ENOTEMPTY\"`, etc.), plus `.errno`, `.syscall`, and\n`.path`. Passing a non-string where a string is expected throws a `TypeError` with\n`.code === \"ERR_INVALID_ARG_TYPE\"`, matching Node.",
+      "rawDocumentation": "The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.\n\nCovers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus\n`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always\nUTF-8 text - passing any `encoding` other than `\"utf8\"` throws.\n\nEvery `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string\nNode would use (`\"ENOENT\"`, `\"EEXIST\"`, `\"ENOTEMPTY\"`, etc.), plus `.errno`, `.syscall`, and\n`.path`. Passing a non-string where a string is expected throws a `TypeError` with\n`.code === \"ERR_INVALID_ARG_TYPE\"`, matching Node.\n\n- Example:\n```js\nconst fs = require('fs')\n\nfs.writeFileSync(\"/tmp/hello.txt\", \"Hello, world!\\n\")\nconsole.log(fs.readFileSync(\"/tmp/hello.txt\"))\n\ntry {\n    fs.readFileSync(\"/does/not/exist\")\n} catch (e) {\n    console.log(e.code) // \"ENOENT\"\n}\n```"
     },
     {
       "name": "fs.promises",
       "methods": [
         {
           "name": "readFile",
-          "signature": "func readFile(_ path: String, _ encoding: String?) -> JSPromise?",
+          "signature": "func readFile(_ path: JSString, _ encoding: JSString?) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Read a file as a UTF-8 string. See `fs.readFileSync` for details.\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - encoding?: Must be `\"utf8\"` (or omitted); any other value rejects, since this engine has no `Buffer` type.\n- Returns: A `Promise` resolving to the file's contents.\n- Example: `const text = await fs.promises.readFile(\"/etc/hosts\")`",
           "description": "Read a file as a UTF-8 string. See `fs.readFileSync` for details.",
@@ -26688,11 +26695,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 935
+          "lineNumber": 1175
         },
         {
           "name": "writeFile",
-          "signature": "func writeFile(_ path: String, _ data: String, _ flag: String?) -> JSPromise?",
+          "signature": "func writeFile(_ path: JSString, _ data: JSString, _ flag: JSString?) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Write a UTF-8 string to a file, creating or truncating it. See `fs.writeFileSync` for details.\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - data: String to write.\n  - flag?: One of `\"w\"` (default), `\"wx\"`, `\"a\"`, or `\"ax\"`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.writeFile(\"/tmp/hello.txt\", \"Hello, world!\\n\")`",
           "description": "Write a UTF-8 string to a file, creating or truncating it. See `fs.writeFileSync` for details.",
@@ -26727,11 +26734,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 944
+          "lineNumber": 1184
         },
         {
           "name": "appendFile",
-          "signature": "func appendFile(_ path: String, _ data: String) -> JSPromise?",
+          "signature": "func appendFile(_ path: JSString, _ data: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Append a UTF-8 string to a file, creating it if needed. See `fs.appendFileSync` for details.\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - data: String to append.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.appendFile(\"/tmp/log.txt\", \"another line\\n\")`",
           "description": "Append a UTF-8 string to a file, creating it if needed. See `fs.appendFileSync` for details.",
@@ -26759,11 +26766,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 952
+          "lineNumber": 1192
         },
         {
           "name": "mkdir",
-          "signature": "func mkdir(_ path: String, _ recursive: Bool) -> JSPromise?",
+          "signature": "func mkdir(_ path: JSString, _ recursive: Bool) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Create a directory. See `fs.mkdirSync` for details.\n- Parameters:\n  - path: Path of the directory to create. `~` is expanded.\n  - recursive?: When `true`, creates all missing intermediate directories. Defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.mkdir(\"~/Projects/new-thing\", { recursive: true })`",
           "description": "Create a directory. See `fs.mkdirSync` for details.",
@@ -26791,11 +26798,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 960
+          "lineNumber": 1200
         },
         {
           "name": "rmdir",
-          "signature": "func rmdir(_ path: String, _ recursive: Bool) -> JSPromise?",
+          "signature": "func rmdir(_ path: JSString, _ recursive: Bool) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Remove an empty directory. See `fs.rmdirSync` for details.\n- Parameters:\n  - path: Path of the directory to remove. `~` is expanded.\n  - recursive?: When `true`, removes the directory and its entire contents. Defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.rmdir(\"/tmp/empty-dir\")`",
           "description": "Remove an empty directory. See `fs.rmdirSync` for details.",
@@ -26823,11 +26830,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 968
+          "lineNumber": 1208
         },
         {
           "name": "rm",
-          "signature": "func rm(_ path: String, _ recursive: Bool, _ force: Bool) -> JSPromise?",
+          "signature": "func rm(_ path: JSString, _ recursive: Bool, _ force: Bool) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Remove a file or directory. See `fs.rmSync` for details.\n- Parameters:\n  - path: Path to remove. `~` is expanded.\n  - recursive?: When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.\n  - force?: When `true`, a missing path is not treated as an error. Defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.rm(\"/tmp/old-dir\", { recursive: true, force: true })`",
           "description": "Remove a file or directory. See `fs.rmSync` for details.",
@@ -26862,11 +26869,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 977
+          "lineNumber": 1217
         },
         {
           "name": "unlink",
-          "signature": "func unlink(_ path: String) -> JSPromise?",
+          "signature": "func unlink(_ path: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Delete a single file. See `fs.unlinkSync` for details.\n- Parameter path: Path to the file. `~` is expanded.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.unlink(\"/tmp/old.txt\")`",
           "description": "Delete a single file. See `fs.unlinkSync` for details.",
@@ -26887,13 +26894,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 983
+          "lineNumber": 1223
         },
         {
           "name": "readdir",
-          "signature": "func readdir(_ path: String, _ withFileTypes: Bool) -> JSPromise?",
+          "signature": "func readdir(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> JSPromise?",
           "isStatic": false,
-          "rawDocumentation": "List the contents of a directory. See `fs.readdirSync` for details.\n- Parameters:\n  - path: Path to the directory. `~` is expanded.\n  - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.\n- Returns: A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.\n- Example: `const files = await fs.promises.readdir(\"~/Documents\")`",
+          "rawDocumentation": "List the contents of a directory. See `fs.readdirSync` for details.\n- Parameters:\n  - path: Path to the directory. `~` is expanded.\n  - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.\n  - recursive?: When `true`, walks subdirectories too. Defaults to `false`.\n- Returns: A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.\n- Example: `const files = await fs.promises.readdir(\"~/Documents\")`",
           "description": "List the contents of a directory. See `fs.readdirSync` for details.",
           "params": [
             {
@@ -26909,6 +26916,13 @@
               "description": "When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.",
               "optional": true,
               "tsType": null
+            },
+            {
+              "name": "recursive",
+              "type": "boolean",
+              "description": "When `true`, walks subdirectories too. Defaults to `false`.",
+              "optional": true,
+              "tsType": null
             }
           ],
           "returns": {
@@ -26919,11 +26933,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 991
+          "lineNumber": 1232
         },
         {
           "name": "stat",
-          "signature": "func stat(_ path: String) -> JSPromise?",
+          "signature": "func stat(_ path: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Get file metadata, following symbolic links. See `fs.statSync` for details.\n- Parameter path: Path to inspect. `~` is expanded.\n- Returns: A `Promise` resolving to a `Stats` object.\n- Example: `console.log((await fs.promises.stat(\"/etc/hosts\")).size)`",
           "description": "Get file metadata, following symbolic links. See `fs.statSync` for details.",
@@ -26944,11 +26958,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 997
+          "lineNumber": 1238
         },
         {
           "name": "lstat",
-          "signature": "func lstat(_ path: String) -> JSPromise?",
+          "signature": "func lstat(_ path: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Get file metadata, without following symbolic links. See `fs.lstatSync` for details.\n- Parameter path: Path to inspect. `~` is expanded.\n- Returns: A `Promise` resolving to a `Stats` object.\n- Example: `console.log((await fs.promises.lstat(\"/var\")).isSymbolicLink())`",
           "description": "Get file metadata, without following symbolic links. See `fs.lstatSync` for details.",
@@ -26969,11 +26983,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1003
+          "lineNumber": 1244
         },
         {
           "name": "rename",
-          "signature": "func rename(_ oldPath: String, _ newPath: String) -> JSPromise?",
+          "signature": "func rename(_ oldPath: JSString, _ newPath: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Rename (move) a file or directory. See `fs.renameSync` for details.\n- Parameters:\n  - oldPath: Existing path. `~` is expanded.\n  - newPath: New path. `~` is expanded.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.rename(\"/tmp/old.txt\", \"/tmp/new.txt\")`",
           "description": "Rename (move) a file or directory. See `fs.renameSync` for details.",
@@ -27001,11 +27015,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1011
+          "lineNumber": 1252
         },
         {
           "name": "copyFile",
-          "signature": "func copyFile(_ src: String, _ dest: String, _ mode: Int) -> JSPromise?",
+          "signature": "func copyFile(_ src: JSString, _ dest: JSString, _ mode: Int) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Copy a file. See `fs.copyFileSync` for details.\n- Parameters:\n  - src: Path to the existing file. `~` is expanded.\n  - dest: Destination path. `~` is expanded. Overwritten if it already exists, unless `mode` includes `fs.constants.COPYFILE_EXCL`.\n  - mode?: Bitwise-OR of `fs.constants.COPYFILE_*` flags. Only `COPYFILE_EXCL` has any effect. Defaults to `0`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.copyFile(\"/tmp/a.txt\", \"/tmp/b.txt\")`",
           "description": "Copy a file. See `fs.copyFileSync` for details.",
@@ -27040,11 +27054,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1020
+          "lineNumber": 1261
         },
         {
           "name": "symlink",
-          "signature": "func symlink(_ target: String, _ path: String) -> JSPromise?",
+          "signature": "func symlink(_ target: JSString, _ path: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Create a symbolic link. See `fs.symlinkSync` for details.\n- Parameters:\n  - target: The path the symlink will point to. Not expanded or validated - it need not exist.\n  - path: The path where the symlink will be created. `~` is expanded.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.symlink(\"/usr/local/bin\", \"/tmp/bin-link\")`",
           "description": "Create a symbolic link. See `fs.symlinkSync` for details.",
@@ -27072,11 +27086,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1028
+          "lineNumber": 1269
         },
         {
           "name": "readlink",
-          "signature": "func readlink(_ path: String) -> JSPromise?",
+          "signature": "func readlink(_ path: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Read the target of a symbolic link. See `fs.readlinkSync` for details.\n- Parameter path: Path to the symbolic link. `~` is expanded.\n- Returns: A `Promise` resolving to the raw target path.\n- Example: `console.log(await fs.promises.readlink(\"/var\"))`",
           "description": "Read the target of a symbolic link. See `fs.readlinkSync` for details.",
@@ -27097,11 +27111,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1034
+          "lineNumber": 1275
         },
         {
           "name": "realpath",
-          "signature": "func realpath(_ path: String) -> JSPromise?",
+          "signature": "func realpath(_ path: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Resolve a path to its absolute, canonical form, following all symlinks. See `fs.realpathSync` for details.\n- Parameter path: Path to resolve. `~` is expanded.\n- Returns: A `Promise` resolving to the resolved absolute path.\n- Example: `console.log(await fs.promises.realpath(\"~/Library\"))`",
           "description": "Resolve a path to its absolute, canonical form, following all symlinks. See `fs.realpathSync` for details.",
@@ -27122,11 +27136,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1040
+          "lineNumber": 1281
         },
         {
           "name": "link",
-          "signature": "func link(_ existingPath: String, _ newPath: String) -> JSPromise?",
+          "signature": "func link(_ existingPath: JSString, _ newPath: JSString) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Create a hard link. See `fs.linkSync` for details.\n- Parameters:\n  - existingPath: Path of the existing file. `~` is expanded.\n  - newPath: Path for the new hard link. `~` is expanded.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.link(\"/tmp/a.txt\", \"/tmp/b.txt\")`",
           "description": "Create a hard link. See `fs.linkSync` for details.",
@@ -27154,11 +27168,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1048
+          "lineNumber": 1289
         },
         {
           "name": "access",
-          "signature": "func access(_ path: String, _ mode: Int) -> JSPromise?",
+          "signature": "func access(_ path: JSString, _ mode: Int) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Test a path's accessibility. See `fs.accessSync` for details.\n- Parameters:\n  - path: Path to check. `~` is expanded.\n  - mode?: A `fs.constants` value (`F_OK`, `R_OK`, `W_OK`, `X_OK`), or a bitwise-OR of them. Defaults to `F_OK` (existence only).\n- Returns: A `Promise` resolving to `undefined` if accessible, or rejecting otherwise.\n- Example: `await fs.promises.access(\"/tmp\", fs.constants.W_OK)`",
           "description": "Test a path's accessibility. See `fs.accessSync` for details.",
@@ -27186,11 +27200,11 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1056
+          "lineNumber": 1297
         },
         {
           "name": "truncate",
-          "signature": "func truncate(_ path: String, _ len: Int) -> JSPromise?",
+          "signature": "func truncate(_ path: JSString, _ len: Int) -> JSPromise?",
           "isStatic": false,
           "rawDocumentation": "Truncate (or extend, zero-filled) a file to the given length. See `fs.truncateSync` for details.\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - len?: Desired length in bytes. Defaults to `0`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.truncate(\"/tmp/big.log\", 0)`",
           "description": "Truncate (or extend, zero-filled) a file to the given length. See `fs.truncateSync` for details.",
@@ -27218,22 +27232,35 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1064
+          "lineNumber": 1305
         }
       ],
-      "properties": [],
+      "properties": [
+        {
+          "name": "constants",
+          "signature": "var constants: NSDictionary { get }",
+          "rawDocumentation": "The same object as `fs.constants`, matching Node.",
+          "description": "The same object as `fs.constants`, matching Node.",
+          "tsType": null,
+          "notes": [],
+          "examples": [],
+          "source": "swift",
+          "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
+          "lineNumber": 1167
+        }
+      ],
       "types": [],
-      "description": "The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`.\nEvery function here runs its work synchronously (there is no background I/O thread pool in\nthis engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still\nwork exactly as in Node, just without any real concurrency.",
-      "rawDocumentation": "The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`.\n\nEvery function here runs its work synchronously (there is no background I/O thread pool in\nthis engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still\nwork exactly as in Node, just without any real concurrency.\n- Example:\n```js\nconst fs = require('fs')\n\nasync function main() {\n    await fs.promises.writeFile(\"/tmp/hello.txt\", \"Hello, world!\\n\")\n    console.log(await fs.promises.readFile(\"/tmp/hello.txt\"))\n}\nmain()\n```"
+      "description": "The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`\nand `require('fs/promises')`.\nEvery function here runs its work synchronously (there is no background I/O thread pool in\nthis engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still\nwork exactly as in Node, just without any real concurrency.",
+      "rawDocumentation": "The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`\nand `require('fs/promises')`.\n\nEvery function here runs its work synchronously (there is no background I/O thread pool in\nthis engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still\nwork exactly as in Node, just without any real concurrency.\n- Example:\n```js\nconst fs = require('fs')\n\nasync function main() {\n    await fs.promises.writeFile(\"/tmp/hello.txt\", \"Hello, world!\\n\")\n    console.log(await fs.promises.readFile(\"/tmp/hello.txt\"))\n}\nmain()\n```"
     },
     {
       "name": "util",
       "methods": [
         {
           "name": "inspect",
-          "signature": "func inspect(_ value: JSValue) -> String",
+          "signature": "func inspect(_ value: JSValue, _ options: JSValue?) -> String",
           "isStatic": false,
-          "rawDocumentation": "Returns a string representation of a value, intended for debugging.\n\nObjects, arrays, `Map`/`Set`, functions, dates, and errors are formatted the way\nNode/browser consoles render them; a top-level string is returned as-is.\n- Parameter value: The value to format.\n- Returns: A formatted string.\n- Example: `util.inspect({ a: 1, b: [1, 2, 3] }) // \"{ a: 1, b: [ 1, 2, 3 ] }\"`",
+          "rawDocumentation": "Returns a string representation of a value, intended for debugging.\n\nObjects, arrays, `Map`/`Set`, functions, dates, and errors are formatted the way\nNode/browser consoles render them; a top-level string is returned as-is.\n- Parameters:\n  - value: The value to format.\n  - options?: Formatting options. Supports `depth` (levels of nested objects/arrays to expand before collapsing to a placeholder; `null` for unlimited; defaults to `2`) and `getters` (when `true`, invokes own enumerable getter properties and shows their result instead of a `[Getter]` placeholder; defaults to `false`). Node's much larger options surface (`showHidden`, `colors`, `compact`, etc.) is not implemented - in particular, `getters` alone does not reach getters defined in a `class` body, since those are non-enumerable and live on the prototype.\n- Returns: A formatted string.\n- Example: `util.inspect({ a: 1, b: [1, 2, 3] }) // \"{ a: 1, b: [ 1, 2, 3 ] }\"`\n- Example: `util.inspect({ get x() { return 42 } }, { getters: true }) // \"{ x: [Getter: 42] }\"`",
           "description": "Returns a string representation of a value, intended for debugging.\nObjects, arrays, `Map`/`Set`, functions, dates, and errors are formatted the way\nNode/browser consoles render them; a top-level string is returned as-is.",
           "params": [
             {
@@ -27241,6 +27268,13 @@
               "type": "JSValue",
               "description": "The value to format.",
               "optional": false,
+              "tsType": null
+            },
+            {
+              "name": "options",
+              "type": "JSValue",
+              "description": "Formatting options. Supports `depth` (levels of nested objects/arrays to expand before collapsing to a placeholder; `null` for unlimited; defaults to `2`) and `getters` (when `true`, invokes own enumerable getter properties and shows their result instead of a `[Getter]` placeholder; defaults to `false`). Node's much larger options surface (`showHidden`, `colors`, `compact`, etc.) is not implemented - in particular, `getters` alone does not reach getters defined in a `class` body, since those are non-enumerable and live on the prototype.",
+              "optional": true,
               "tsType": null
             }
           ],
@@ -27252,7 +27286,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleUtil.swift",
-          "lineNumber": 190
+          "lineNumber": 245
         }
       ],
       "properties": [],
@@ -29339,5 +29373,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-13T13:38:25.787Z"
+  "generatedAt": "2026-09-14T09:52:12.739Z"
 }

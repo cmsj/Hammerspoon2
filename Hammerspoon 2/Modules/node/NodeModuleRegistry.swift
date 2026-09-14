@@ -16,7 +16,11 @@ struct NodeBuiltinModulesInstaller: JSContextInstallable {
     func install(in context: JSContext) throws {
         let builtins = JSValue(newObjectIn: context)!
         builtins.setObject(NodeUtilModule(), forKeyedSubscript: "util" as NSString)
-        builtins.setObject(NodeFSModule(), forKeyedSubscript: "fs" as NSString)
+        let fsModule = NodeFSModule()
+        builtins.setObject(fsModule, forKeyedSubscript: "fs" as NSString)
+        // require('fs/promises') must be `===` require('fs').promises, matching Node -
+        // register the same NodeFSPromisesModule instance under both names.
+        builtins.setObject(fsModule.promises, forKeyedSubscript: "fs/promises" as NSString)
         context.setObject(builtins, forKeyedSubscript: "_hs_node_builtins" as NSString)
     }
 }
