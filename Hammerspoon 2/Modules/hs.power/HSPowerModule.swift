@@ -109,6 +109,7 @@ import IOKit.pwr_mgt
 
     /// Locks the screen immediately.
     ///
+    /// - Note: This function uses private API to lock the screen, it may break in a future macOS update
     /// - Example:
     ///   ```js
     ///   hs.power.lockScreen()
@@ -433,15 +434,13 @@ import IOKit.pwr_mgt
     }
 
     func lockScreen() {
-        let cgSession = "/System/Library/CoreServices/Menu Extras/User.menu/Contents/Resources/CGSession"
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: cgSession)
-        process.arguments = ["-suspend"]
-        do {
-            try process.run()
-            AKDebug("hs.power.lockScreen: CGSession -suspend launched")
-        } catch {
-            AKError("hs.power.lockScreen: failed to launch CGSession: \(error)")
+        // Use private API via dlopen. This method was copied from https://github.com/AerialScreensaver/Aerial
+        if let libHandle = unsafe dlopen("/System/Library/PrivateFrameworks/login.framework/Versions/Current/login", RTLD_LAZY) {
+            let sym = unsafe dlsym(libHandle, "SACScreenSaverStartNow")
+            typealias SACFunction = @convention(c) () -> Void
+            let SACLockScreenImmediate = unsafe unsafeBitCast(sym, to: SACFunction.self)
+            SACLockScreenImmediate()
+            unsafe dlclose(libHandle)
         }
     }
 
