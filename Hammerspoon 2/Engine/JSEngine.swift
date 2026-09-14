@@ -50,6 +50,7 @@ class JSEngine {
 
         // Set up exception handler to catch JavaScript errors
         context.exceptionHandler = { context, exception in
+            context?.exception = exception
             if let exception = exception {
                 AKError("JavaScript Exception: \(exception.toString() ?? "unknown")")
                 if let stack = exception.objectForKeyedSubscript("stack") {
@@ -157,7 +158,15 @@ extension JSEngine: JSEngineProtocol {
             // confusing than every line number being off by one.
             script = "(function(){" + script + "\n})();"
         }
-        return context?.evaluateScript(script, withSourceURL: url)
+        context?.exception = nil
+        let result = context?.evaluateScript(script, withSourceURL: url)
+        if let exception = context?.exception {
+            let message = exception.toString() ?? "JavaScript error"
+            let stack = exception.objectForKeyedSubscript("stack")?.toString() ?? ""
+            throw NSError(domain: "Hammerspoon.Configuration", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "\(url.path): \(message)\n\(stack)"])
+        }
+        return result
     }
 
     func resetContext() throws {
