@@ -143,7 +143,7 @@ final class HSOSAScriptRunner: Sendable {
         // that arrives after this particular session has already been
         // replaced in the cache doesn't clear out its (unrelated) successor.
         session.setCancellationHandler { [weak self, weak session] error in
-            AKDebug("hs.osascript XPC session was cancelled (\(error)); a new session will be created on next use")
+            print("hs.osascript XPC session was cancelled (\(error)); a new session will be created on next use")
             guard let self, let session else { return }
             self.cachedSession.withLock { cached in
                 if cached === session {

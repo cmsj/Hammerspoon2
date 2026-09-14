@@ -33,7 +33,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
                 config.height = Int(filter.contentRect.height * Double(filter.pointPixelScale))
                 config.showsCursor = false
                 if !keepTransparency {
-                    config.backgroundColor = CGColor.black
+                    unsafe config.backgroundColor = CGColor.black
                 }
 
                 let cgImage = try await SCScreenshotManager.captureImage(
