@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.canvas - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.canvas</span>
+</nav>
+<div class="page-header">
+    <h1>hs.canvas</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><h1>hs.canvas</h1>
+<p><strong>A low-level, absolutely-positioned drawing surface</strong></p>
+<p><code>hs.canvas</code> mirrors v1 Hammerspoon&#39;s <code>hs.canvas</code> module: elements are plain JS
+objects (mirroring v1&#39;s Lua tables) describing shapes (<code>rectangle</code>, <code>circle</code>,
+<code>oval</code>, <code>text</code>) with a <code>fill</code>/<code>stroke</code>/<code>strokeAndFill</code>/<code>clip</code>/<code>build</code>/<code>skip</code> action
+pipeline. This is a different tool from <code>hs.ui</code>, which is a SwiftUI stack/layout
+builder for app-like interfaces -- reach for <code>hs.canvas</code> when you need absolute
+positioning, clipped/composited shapes, or direct window-level/Spaces control.</p>
+<h2>Coordinate systems -- read this before positioning elements</h2>
+<p>A canvas&#39;s <strong>window position</strong> (<code>create({x, y, w, h})</code>, and any later <code>x</code>/<code>y</code> you
+compare it against, e.g. from <code>hs.screen</code>) uses unflipped AppKit screen coordinates:
+<code>y = 0</code> is the <em>bottom</em> of the screen, and <code>y</code> increases upward. This matches
+<code>hs.ui.window</code>.</p>
+<p>But <strong>element content</strong> positioned <em>inside</em> a canvas -- every <code>frame</code>, <code>center</code>, and
+<code>coordinates</code> value you pass to <code>appendElements()</code> and friends -- is drawn top-down:
+<code>y = 0</code> is the <em>top</em> of the canvas, and <code>y</code> increases downward. These two coordinate
+senses are independent of each other and easy to conflate, especially when a script
+computes an element&#39;s position from the same screen geometry it used for the
+window&#39;s own placement. If a shape appears vertically mirrored from where you
+expect, this mismatch is the first thing to check.</p>
+<h2>Example: a rounded screen corner overlay</h2>
+<pre><code class="language-javascript">const radius = 12
+const corner = hs.canvas.create({x: 0, y: 0, w: radius, h: radius})
+corner.appendElements([
+    { action: &quot;build&quot;, type: &quot;rectangle&quot; },
+    { action: &quot;clip&quot;, type: &quot;circle&quot;, center: {x: radius, y: radius}, radius: radius, reversePath: true },
+    { action: &quot;fill&quot;, type: &quot;rectangle&quot;, fillColor: { alpha: 1 } },
+    { type: &quot;resetClip&quot; }
+])
+corner.levelValue(hs.canvas.windowLevels.screenSaver + 1)
+corner.behavior(&quot;canJoinAllSpaces&quot;)
+corner.show()
+</code></pre>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSCanvas.html">HSCanvas</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="windowLevels">
+        <h3><a href="#windowLevels">hs.canvas.windowLevels</a></h3>
+        <div class="prop-type">{[key: string]: number}</div>
+        <div class="description">Named window levels, exposed as raw numeric values (not opaque strings) so
+scripts can do arithmetic on them, matching v1 behavior.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/HSCanvasModule.swift#L57" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/HSCanvasModule.swift:57</a>
+        </div>
+    </div>
+    <div class="property" id="windowBehaviors">
+        <h3><a href="#windowBehaviors">hs.canvas.windowBehaviors</a></h3>
+        <div class="prop-type">{[key: string]: number}</div>
+        <div class="description">Named window Spaces/Exposé collection behaviors, exposed as raw numeric bit values.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/HSCanvasModule.swift#L64" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/HSCanvasModule.swift:64</a>
+        </div>
+    </div>
+    <div class="property" id="compositeTypes">
+        <h3><a href="#compositeTypes">hs.canvas.compositeTypes</a></h3>
+        <div class="prop-type">{[key: string]: string}</div>
+        <div class="description">Named compositing/blend rules usable as an element&#39;s `compositeRule` attribute.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/HSCanvasModule.swift#L71" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/HSCanvasModule.swift:71</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="create">
+        <h3><a href="#create">hs.canvas.create(rect) -> HSCanvas</a></h3>
+
+        <div class="description">Create a new canvas
+Named `create()` rather than v1&#39;s `new()` -- `new` cannot be used as a
+JavaScriptCore-exported method name (it collides with the JS `new` operator
+keyword at the bridging layer), and this codebase&#39;s conventions additionally
+forbid method names starting with `new`/`alloc`/`copy` (an ARC/ObjC hazard).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.canvas.create(rect) -> HSCanvas</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">rect</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">A `{x, y, w, h}` dictionary describing the canvas window&#39;s frame</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSCanvas</div>
+        <div class="return-desc">A new HSCanvas, not yet shown</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const c = hs.canvas.create({x: 100, y: 100, w: 200, h: 200})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.canvas/HSCanvasModule.swift#L85" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.canvas/HSCanvasModule.swift:85</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.canvas');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

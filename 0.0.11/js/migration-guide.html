@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migrating from Hammerspoon 1 - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="migration-guide.html" class="active">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Migrating from Hammerspoon 1</span>
+</nav>
+<div class="page-header">
+    <h1>Migrating from Hammerspoon 1</h1>
+    <span class="page-badge">Guide</span>
+</div>
+
+<div class="guide-content"><p>Hammerspoon 2 is a from-scratch rewrite: a Swift app running a JavaScriptCore engine, in
+place of the original Objective-C/Lua app. There is no automatic config converter — Lua
+<code>init.lua</code> files cannot be loaded, and no v1 module ships unmodified. This guide is a map,
+not an exhaustive method-by-method diff: it tells you where things went, what to expect
+conceptually, and where you&#39;ll need to build something yourself. Once you know where to
+look, the API reference has the exact method signatures for each module.</p>
+<h2 id="the-big-picture">The big picture</h2>
+<p>A handful of changes touch almost every module, so it&#39;s worth internalizing these before
+diving into specifics:</p>
+<ul>
+<li><strong>JavaScript, not Lua.</strong> Configs are <code>.js</code> files evaluated by JavaScriptCore, not <code>.lua</code>
+files evaluated by a bundled Lua runtime. Several v1 modules existed purely to compensate
+for gaps in Lua&#39;s standard library and simply aren&#39;t needed any more: <code>JSON.parse</code>/
+<code>JSON.stringify</code> replace <code>hs.json</code>, <code>Math</code> replaces <code>hs.math</code>, native Unicode-aware strings
+replace <code>hs.utf8</code>, <code>console.log</code>/<code>JSON.stringify(x, null, 2)</code> replace <code>hs.inspect</code>, and
+array methods (<code>.map</code>/<code>.filter</code>/<code>.reduce</code>/...) replace <code>hs.fnutils</code>.</li>
+<li><strong><code>hs.ui</code> replaces the entire drawing/canvas/webview/dialog family.</strong> <code>hs.drawing</code>,
+<code>hs.canvas</code>, <code>hs.webview</code>, <code>hs.dialog</code>, <code>hs.alert</code>, and <code>hs.styledtext</code> are all gone,
+replaced by one SwiftUI-backed declarative UI module. This is the single biggest
+programming-model change in the whole migration — see <a href="#rebuilding-ui-with-hsui">Rebuilding UI with hs.ui</a>
+below.</li>
+<li><strong>Spoons exist in v2, but reshaped.</strong> <code>hs.loadSpoon()</code> is back, <code>init()</code> is still called
+automatically, and Spoons install as <code>.spoon2</code> bundles (not <code>.spoon</code>) — but <code>start()</code>/<code>stop()</code>/
+<code>bindHotkeys()</code> are conventions now rather than a built-in lifecycle, and there&#39;s no
+spoons.hammerspoon.org-equivalent repository yet. See the <a href="spoons-guide.html">Spoons guide</a>
+for the full picture, or <a href="#hsspoons-and-spoons">hs.spoons and Spoons</a> below for what
+specifically changed from v1.</li>
+<li><strong>Watchers are usually <code>addWatcher()</code>/<code>removeWatcher()</code> on the main module now,</strong> not a
+separate <code>.watcher</code> submodule you construct and <code>:start()</code>. This pattern is consistent
+across <code>hs.audiodevice</code>, <code>hs.camera</code>, <code>hs.eventtap</code>, <code>hs.keycodes</code>, <code>hs.mouse</code>, <code>hs.screen</code>,
+<code>hs.serial</code>, <code>hs.streamdeck</code>, <code>hs.usb</code>, <code>hs.wifi</code>, <code>hs.pasteboard</code>, <code>hs.power</code>, <code>hs.fs</code>, and
+more. If a v1 module you&#39;re porting had a <code>.watcher</code> submodule and you don&#39;t see it
+mentioned below, check for <code>addWatcher()</code> on the parent module first.</li>
+<li><strong>Async is Promise-based, not callback-based.</strong> <code>hs.http</code>, <code>hs.osascript</code>, <code>hs.network</code>,
+<code>hs.shortcuts</code>, <code>hs.application.launchOrFocus()</code>, and others now return Promises you
+<code>.then()</code> rather than taking a completion-callback argument. A few (<code>hs.osascript</code>) always
+<em>resolve</em>, even on failure — check a <code>success</code>/<code>status</code> field in the result rather than
+relying on <code>.catch()</code>.</li>
+<li><strong>New macOS permission gates exist that v1 never had to deal with.</strong> <code>hs.wifi</code> and
+<code>hs.location</code> require <code>hs.permissions.requestLocation()</code> before identity-revealing fields
+populate; <code>hs.notify</code> requires <code>hs.permissions.requestNotifications()</code> before notifications
+can appear. Without authorization, fields silently come back <code>null</code>/omitted rather than
+erroring — a config that assumed a field was always present can fail quietly.</li>
+<li><strong>The URL scheme changed.</strong> <code>hammerspoon://</code> is now <code>hammerspoon2://</code> — update any external
+scripts, launchers, or Shortcuts that invoke your config via <code>hs.urlevent</code>.</li>
+</ul>
+<h2 id="splitting-configs-across-multiple-files">Splitting configs across multiple files</h2>
+<p>v1&#39;s <code>require()</code> is Lua&#39;s built-in module system: it searches <code>package.path</code> and returns
+whatever the file <code>return</code>s, typically a table of functions. v2&#39;s <code>require()</code> serves the same
+purpose but follows JavaScript&#39;s CommonJS conventions instead, which look different in two
+ways: export something by setting <code>module.exports</code> (or individual properties on <code>exports</code>)
+rather than ending the file with a <code>return</code>, and paths must be explicit —
+<code>require(&quot;./utils.js&quot;)</code>, <code>require(&quot;./utils&quot;)</code>, <code>../</code>, or <code>~/...</code> — a bare <code>require(&quot;utils&quot;)</code>
+the way Lua&#39;s <code>package.path</code> search allowed won&#39;t find a sibling file in your config directory.</p>
+<pre><code class="language-js">// utils.js
+module.exports = {
+    centerFocused: function () {
+        const win = hs.window.focusedWindow()
+        if (win) win.centerOnScreen()
+    }
+}
+</code></pre>
+<pre><code class="language-js">// init.js
+const { centerFocused } = require(&quot;./utils.js&quot;)
+</code></pre>
+<p>Requiring the same file twice returns the identical cached <code>exports</code> object both times, same
+as v1 — it isn&#39;t re-evaluated on every call. <code>.json</code> files are also <code>require()</code>-able directly,
+returning the parsed object rather than a string.</p>
+<p>One more thing worth flagging if a v1 config leaned on implicit globals: Lua chunks loaded via
+<code>require()</code> already gave <code>local</code> declarations their own scope, but a top-level Lua function or
+variable declared <em>without</em> <code>local</code> became a genuine Lua global, visible from every other
+file — an easy trap to fall into, and some v1 configs used it deliberately to share helpers
+across files. v2 has no equivalent escape hatch: every required file&#39;s top-level code runs
+inside its own function regardless of <code>var</code>/<code>let</code>/<code>const</code>, so nothing it declares is visible
+elsewhere. The one exception is <code>init.js</code> itself, which runs at true global scope (so the
+hotkeys/timers/watchers it creates stay alive) — required files can read what <code>init.js</code>
+declared at its own top level, but never the reverse, and never between two required files. If
+a v1 config shared state across files through un-<code>local</code>&#39;d globals, route it through
+<code>module.exports</code> in v2 instead.</p>
+<h2 id="quick-reference">Quick reference</h2>
+<p>Every v1 module, alphabetically. <strong>Gone</strong> means there is no v2 equivalent at all. <strong>→ hs.x</strong>
+means the functionality now lives under that v2 module (in full or in part — see the linked
+section for what, if anything, didn&#39;t make the trip). <strong>Present</strong> means a same-named v2
+module exists; see <a href="#present-but-check-before-you-port">Present, but check before you port</a>
+for what changed within it.</p>
+<table>
+<thead>
+<tr>
+<th>v1 module</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>hs</code></td>
+<td>→ <code>hs</code>, <code>hs.appinfo</code>, <code>hs.ipc</code></td>
+<td><a href="#hs-and-hsappinfo">details</a></td>
+</tr>
+<tr>
+<td><code>hs.alert</code></td>
+<td>→ <code>hs.ui</code></td>
+<td><a href="#rebuilding-ui-with-hsui">details</a></td>
+</tr>
+<tr>
+<td><code>hs.appfinder</code></td>
+<td>Gone</td>
+<td>superseded in v1 itself; use <code>hs.application.matchingName()</code> etc.</td>
+</tr>
+<tr>
+<td><code>hs.applescript</code></td>
+<td>→ <code>hs.osascript</code></td>
+<td><a href="#hsosascript">details</a></td>
+</tr>
+<tr>
+<td><code>hs.application</code></td>
+<td>Present</td>
+<td>watcher folded in, see below</td>
+</tr>
+<tr>
+<td><code>hs.application.watcher</code></td>
+<td>→ <code>hs.application</code></td>
+<td><code>addWatcher()</code>, different callback shape</td>
+</tr>
+<tr>
+<td><code>hs.audiodevice</code></td>
+<td>Present</td>
+<td>watcher folded in; no <code>.datasource</code> equivalent</td>
+</tr>
+<tr>
+<td><code>hs.audiodevice.datasource</code></td>
+<td>Gone</td>
+<td>no separate data-source API found</td>
+</tr>
+<tr>
+<td><code>hs.audiodevice.watcher</code></td>
+<td>→ <code>hs.audiodevice</code></td>
+<td><code>addWatcher()</code></td>
+</tr>
+<tr>
+<td><code>hs.axuielement</code> (+<code>.axtextmarker</code>, <code>.observer</code>)</td>
+<td>→ <code>hs.ax</code></td>
+<td><a href="#hsax-accessibility">details</a></td>
+</tr>
+<tr>
+<td><code>hs.base64</code></td>
+<td>→ <code>hs.hash</code></td>
+<td><code>base64Encode</code>/<code>base64Decode</code></td>
+</tr>
+<tr>
+<td><code>hs.battery</code> (+<code>.watcher</code>)</td>
+<td>→ <code>hs.power</code></td>
+<td><a href="#hspower">details</a></td>
+</tr>
+<tr>
+<td><code>hs.bonjour</code> (+<code>.service</code>)</td>
+<td>Present</td>
+<td><code>.service</code> objects returned inline, not a submodule</td>
+</tr>
+<tr>
+<td><code>hs.brightness</code></td>
+<td>→ <code>hs.screen</code></td>
+<td><code>getBrightness()</code>/<code>setBrightness()</code>, see <a href="#hsscreen">details</a></td>
+</tr>
+<tr>
+<td><code>hs.caffeinate</code> (+<code>.watcher</code>)</td>
+<td>→ <code>hs.power</code></td>
+<td><a href="#hspower">details</a></td>
+</tr>
+<tr>
+<td><code>hs.camera</code></td>
+<td>Present</td>
+<td>watcher folded in</td>
+</tr>
+<tr>
+<td><code>hs.canvas</code> (+<code>.matrix</code>)</td>
+<td>→ <code>hs.ui</code></td>
+<td><a href="#rebuilding-ui-with-hsui">details</a>; matrix/transform math gone</td>
+</tr>
+<tr>
+<td><code>hs.chooser</code></td>
+<td>Present</td>
+<td>construction/callback wiring changed</td>
+</tr>
+<tr>
+<td><code>hs.console</code></td>
+<td>→ <code>console</code>, <code>hs</code></td>
+<td><a href="#hsconsole">details</a></td>
+</tr>
+<tr>
+<td><code>hs.crash</code></td>
+<td>Gone</td>
+<td>dev-only hooks, not expected to return</td>
+</tr>
+<tr>
+<td><code>hs.deezer</code></td>
+<td>Gone</td>
+<td>drive via <code>hs.osascript</code> instead</td>
+</tr>
+<tr>
+<td><code>hs.dialog</code> (+<code>.color</code>)</td>
+<td>→ <code>hs.ui</code></td>
+<td><a href="#rebuilding-ui-with-hsui">details</a>; no system color-picker panel</td>
+</tr>
+<tr>
+<td><code>hs.distributednotifications</code></td>
+<td>Gone</td>
+<td>no general-purpose NSDistributedNotificationCenter wrapper</td>
+</tr>
+<tr>
+<td><code>hs.doc</code> (+<code>.builder</code>,<code>.hsdocs</code>,<code>.markdown</code>)</td>
+<td>Gone</td>
+<td><code>hs.docs</code> is unrelated (read-only bundled-doc viewer)</td>
+</tr>
+<tr>
+<td><code>hs.dockicon</code></td>
+<td>Gone</td>
+<td>no Dock icon control</td>
+</tr>
+<tr>
+<td><code>hs.drawing</code> (+<code>.color</code>)</td>
+<td>→ <code>hs.ui</code></td>
+<td><a href="#rebuilding-ui-with-hsui">details</a></td>
+</tr>
+<tr>
+<td><code>hs.eventtap</code> (+<code>.event</code>)</td>
+<td>Present</td>
+<td><code>.event</code> folded in; &quot;consume&quot; is now a property</td>
+</tr>
+<tr>
+<td><code>hs.expose</code></td>
+<td>Gone</td>
+<td>no window-overlay/hint-code equivalent</td>
+</tr>
+<tr>
+<td><code>hs.fnutils</code></td>
+<td>Gone</td>
+<td>native JS array methods</td>
+</tr>
+<tr>
+<td><code>hs.fs</code> (+<code>.volume</code>,<code>.xattr</code>)</td>
+<td>Present</td>
+<td>comprehensive; see below</td>
+</tr>
+<tr>
+<td><code>hs.geometry</code></td>
+<td>→ <code>HSPoint</code>/<code>HSRect</code>/<code>HSSize</code></td>
+<td>value types with math methods built in — see <a href="#hsgeometry">details</a></td>
+</tr>
+<tr>
+<td><code>hs.grid</code></td>
+<td>Gone</td>
+<td>see <a href="#window-management">Window management</a></td>
+</tr>
+<tr>
+<td><code>hs.hash</code></td>
+<td>Present</td>
+<td>absorbed base64, gained HMAC variants</td>
+</tr>
+<tr>
+<td><code>hs.hid</code> (+<code>.led</code>)</td>
+<td>→ <code>hs.keyboard</code></td>
+<td><a href="#hshid--hskeyboard">details</a></td>
+</tr>
+<tr>
+<td><code>hs.hints</code></td>
+<td>Gone</td>
+<td>no on-screen hint overlay</td>
+</tr>
+<tr>
+<td><code>hs.host</code> (+<code>.locale</code>)</td>
+<td>→ several modules</td>
+<td><a href="#hshost">details</a></td>
+</tr>
+<tr>
+<td><code>hs.hotkey</code> (+<code>.modal</code>)</td>
+<td>Present</td>
+<td>modal support present via JS, see below</td>
+</tr>
+<tr>
+<td><code>hs.http</code></td>
+<td>Present</td>
+<td>Promise-based, gained WebSocket client</td>
+</tr>
+<tr>
+<td><code>hs.httpserver</code></td>
+<td>Present</td>
+<td>bare server; see <code>hsminweb</code> note below</td>
+</tr>
+<tr>
+<td><code>hs.httpserver.hsminweb</code> (+<code>.cgilua*</code>)</td>
+<td>Gone</td>
+<td>no CGI/templating framework</td>
+</tr>
+<tr>
+<td><code>hs.image</code></td>
+<td>→ <code>HSImage</code> type</td>
+<td>see <a href="#rebuilding-ui-with-hsui">hs.ui</a></td>
+</tr>
+<tr>
+<td><code>hs.inspect</code></td>
+<td>Gone</td>
+<td><code>console.log</code>/<code>JSON.stringify</code></td>
+</tr>
+<tr>
+<td><code>hs.ipc</code></td>
+<td>Present</td>
+<td>XPC-based now, must be started explicitly</td>
+</tr>
+<tr>
+<td><code>hs.itunes</code></td>
+<td>Gone</td>
+<td>drive via <code>hs.osascript</code> instead</td>
+</tr>
+<tr>
+<td><code>hs.javascript</code></td>
+<td>→ <code>hs.osascript</code></td>
+<td><a href="#hsosascript">details</a></td>
+</tr>
+<tr>
+<td><code>hs.json</code></td>
+<td>Gone</td>
+<td>native <code>JSON.parse</code>/<code>JSON.stringify</code></td>
+</tr>
+<tr>
+<td><code>hs.keycodes</code></td>
+<td>Present</td>
+<td>watcher folded in</td>
+</tr>
+<tr>
+<td><code>hs.layout</code></td>
+<td>Gone</td>
+<td>see <a href="#window-management">Window management</a></td>
+</tr>
+<tr>
+<td><code>hs.location</code> (+<code>.geocoder</code>)</td>
+<td>Present</td>
+<td>geocoding folded in as methods</td>
+</tr>
+<tr>
+<td><code>hs.logger</code></td>
+<td>Gone</td>
+<td>no per-instance/leveled logger, only flat <code>console.*</code></td>
+</tr>
+<tr>
+<td><code>hs.math</code></td>
+<td>Gone</td>
+<td>native <code>Math</code></td>
+</tr>
+<tr>
+<td><code>hs.menubar</code></td>
+<td>Present</td>
+<td>close to a direct port</td>
+</tr>
+<tr>
+<td><code>hs.messages</code></td>
+<td>Gone</td>
+<td>drive via <code>hs.osascript</code> instead</td>
+</tr>
+<tr>
+<td><code>hs.midi</code></td>
+<td>Present</td>
+<td>lightly tested; watcher shape differs</td>
+</tr>
+<tr>
+<td><code>hs.milight</code></td>
+<td>Gone</td>
+<td>niche hardware</td>
+</tr>
+<tr>
+<td><code>hs.mjomatic</code></td>
+<td>Gone</td>
+<td>niche ASCII-layout module</td>
+</tr>
+<tr>
+<td><code>hs.mouse</code></td>
+<td>Present</td>
+<td>close to a direct port</td>
+</tr>
+<tr>
+<td><code>hs.network</code> (+<code>.configuration</code>,<code>.host</code>,<code>.ping</code>,<code>.reachability</code>)</td>
+<td>Present</td>
+<td>consolidated, see below</td>
+</tr>
+<tr>
+<td><code>hs.noises</code></td>
+<td>Gone</td>
+<td>niche</td>
+</tr>
+<tr>
+<td><code>hs.notify</code></td>
+<td>Present</td>
+<td>requires explicit permission request now</td>
+</tr>
+<tr>
+<td><code>hs.osascript</code></td>
+<td>Present</td>
+<td>see <a href="#hsosascript">details</a></td>
+</tr>
+<tr>
+<td><code>hs.pasteboard</code> (+<code>.watcher</code>)</td>
+<td>Present</td>
+<td>watcher folded in</td>
+</tr>
+<tr>
+<td><code>hs.pathwatcher</code></td>
+<td>→ <code>hs.fs</code></td>
+<td><code>hs.fs.createPathWatcher()</code>, ~1s batching</td>
+</tr>
+<tr>
+<td><code>hs.plist</code></td>
+<td>Present</td>
+<td>close to a direct port</td>
+</tr>
+<tr>
+<td><code>hs.razer</code></td>
+<td>Gone</td>
+<td>niche hardware</td>
+</tr>
+<tr>
+<td><code>hs.redshift</code></td>
+<td>Gone</td>
+<td>macOS Night Shift covers this now</td>
+</tr>
+<tr>
+<td><code>hs.screen</code> (+<code>.watcher</code>)</td>
+<td>Present</td>
+<td>watcher folded in, see <a href="#hsscreen">details</a></td>
+</tr>
+<tr>
+<td><code>hs.serial</code></td>
+<td>Present</td>
+<td>lightly tested; watcher folded in</td>
+</tr>
+<tr>
+<td><code>hs.settings</code></td>
+<td>→ <code>hs.userdefaults</code></td>
+<td>gained a watcher</td>
+</tr>
+<tr>
+<td><code>hs.sharing</code></td>
+<td>Present</td>
+<td>close to a direct port</td>
+</tr>
+<tr>
+<td><code>hs.shortcuts</code></td>
+<td>Present</td>
+<td>close to a direct port</td>
+</tr>
+<tr>
+<td><code>hs.socket</code> (+<code>.udp</code>)</td>
+<td>Gone</td>
+<td>no raw TCP/UDP; WebSocket via <code>hs.http</code>/<code>hs.httpserver</code></td>
+</tr>
+<tr>
+<td><code>hs.sound</code></td>
+<td>Present</td>
+<td><a href="#hssound">details</a></td>
+</tr>
+<tr>
+<td><code>hs.spaces</code> (+<code>.watcher</code>)</td>
+<td>Gone</td>
+<td>no public macOS API, never was reliable</td>
+</tr>
+<tr>
+<td><code>hs.speech</code> (+<code>.listener</code>)</td>
+<td>Gone</td>
+<td>no TTS or speech recognition</td>
+</tr>
+<tr>
+<td><code>hs.spoons</code></td>
+<td>Present</td>
+<td><a href="#hsspoons-and-spoons">details</a></td>
+</tr>
+<tr>
+<td><code>hs.spotify</code></td>
+<td>Gone</td>
+<td>drive via <code>hs.osascript</code> instead</td>
+</tr>
+<tr>
+<td><code>hs.spotlight</code> (+<code>.group</code>,<code>.item</code>)</td>
+<td>Present</td>
+<td>reshaped to a query-object/builder pattern</td>
+</tr>
+<tr>
+<td><code>hs.sqlite3</code></td>
+<td>Gone</td>
+<td>no embedded database</td>
+</tr>
+<tr>
+<td><code>hs.streamdeck</code></td>
+<td>Present</td>
+<td>watcher folded in</td>
+</tr>
+<tr>
+<td><code>hs.styledtext</code></td>
+<td>→ <code>hs.ui</code> text elements</td>
+<td>see <a href="#rebuilding-ui-with-hsui">hs.ui</a></td>
+</tr>
+<tr>
+<td><code>hs.tabs</code></td>
+<td>Gone</td>
+<td>no native window-tabbing control</td>
+</tr>
+<tr>
+<td><code>hs.tangent</code></td>
+<td>Gone</td>
+<td>niche hardware</td>
+</tr>
+<tr>
+<td><code>hs.task</code></td>
+<td>Present</td>
+<td>gained <code>parallel()</code>/<code>sequence()</code>/<code>shell()</code>/builder</td>
+</tr>
+<tr>
+<td><code>hs.timer</code> (+<code>.delayed</code>)</td>
+<td>Present</td>
+<td><code>.delayed</code> folded in as <code>doAfter</code>/<code>doEvery</code></td>
+</tr>
+<tr>
+<td><code>hs.uielement</code> (+<code>.watcher</code>)</td>
+<td>→ <code>hs.ax</code></td>
+<td><a href="#hsax-accessibility">details</a></td>
+</tr>
+<tr>
+<td><code>hs.urlevent</code></td>
+<td>Present</td>
+<td>scheme renamed to <code>hammerspoon2://</code></td>
+</tr>
+<tr>
+<td><code>hs.usb</code> (+<code>.watcher</code>)</td>
+<td>Present</td>
+<td>watcher folded in</td>
+</tr>
+<tr>
+<td><code>hs.utf8</code></td>
+<td>Gone</td>
+<td>native Unicode-aware strings</td>
+</tr>
+<tr>
+<td><code>hs.vox</code></td>
+<td>Gone</td>
+<td>drive via <code>hs.osascript</code> instead</td>
+</tr>
+<tr>
+<td><code>hs.watchable</code></td>
+<td>Gone</td>
+<td>only per-module watchers remain, no generic pub/sub</td>
+</tr>
+<tr>
+<td><code>hs.webview</code> (+<code>.datastore</code>,<code>.toolbar</code>,<code>.usercontent</code>)</td>
+<td>→ <code>hs.ui</code></td>
+<td><a href="#rebuilding-ui-with-hsui">details</a></td>
+</tr>
+<tr>
+<td><code>hs.wifi</code> (+<code>.watcher</code>)</td>
+<td>Present</td>
+<td>watcher folded in, new permission gate</td>
+</tr>
+<tr>
+<td><code>hs.window</code> (+<code>.filter</code>,<code>.highlight</code>,<code>.layout</code>,<code>.switcher</code>,<code>.tiling</code>)</td>
+<td>Present, ecosystem gone</td>
+<td><a href="#window-management">details</a></td>
+</tr>
+</tbody></table>
+<h2 id="present-but-check-before-you-port">Present, but check before you port</h2>
+<p>Modules with a same-named v2 counterpart still shifted shape in ways worth knowing before
+you port line-by-line.</p>
+<p><strong><code>hs.application</code></strong> — richer than v1: instance objects now expose a full menu-item API
+(<code>getMenuItems()</code>, <code>selectMenuItemByName()</code>) and <code>axElement()</code> to drop straight into <code>hs.ax</code>.
+Watching launch/quit/activate events moved from <code>hs.application.watcher</code> to
+<code>hs.application.addWatcher((event, app) =&gt; {...})</code> on the main module; the callback argument
+order differs from v1&#39;s <code>(appName, eventType, appObject)</code>, so check it before porting.</p>
+<p><strong><code>hs.chooser</code></strong> — construction changed from <code>hs.chooser.new(completionFn)</code> to
+<code>hs.chooser.create()</code> followed by setting <code>onSelect</code>/<code>onQueryChange</code>/<code>onShow</code>/<code>onHide</code>/
+<code>onInvalid</code> and calling fluent, chainable <code>setChoices()</code>/<code>show()</code>. Choices gained an optional
+per-row <code>contextMenu</code>. Check the styling-property list before assuming appearance options
+(custom fonts/colors) carried over.</p>
+<p><strong><code>hs.eventtap</code></strong> — <code>hs.eventtap.event</code> folded directly into <code>hs.eventtap</code> (build events with
+<code>hs.eventtap.makeKeyEvent()</code> instead of <code>hs.eventtap.event.newKeyEvent()</code>; <code>.post()</code> is
+unchanged). The tap/watcher pattern also changed: instead of <code>hs.eventtap.new(types, fn):start()</code>
+returning <code>true</code> from the callback to consume an event, v2 uses <code>hs.eventtap.addWatcher(fn)</code>
+with <code>consume</code> as a settable property on the watcher object.</p>
+<p><strong><code>hs.http</code></strong> — every request method returns a Promise resolving to <code>{status, body, headers}</code>;
+there&#39;s no callback argument any more. A network failure <em>resolves</em> with <code>status: -1</code>, it
+doesn&#39;t reject — check <code>status</code> rather than relying on <code>.catch()</code>. Gained <code>openWebSocket()</code>
+for WebSocket clients (no dedicated WebSocket story existed in v1&#39;s <code>hs.http</code>).</p>
+<p><strong><code>hs.ipc</code></strong> — same purpose (the <code>hs2</code> CLI talking to the running app), but the transport is
+now XPC over a named Mach service rather than a bare process pipe, and you must call
+<code>hs.ipc.start()</code> explicitly — it doesn&#39;t auto-start the way v1&#39;s did. In release builds,
+connections are restricted to binaries signed with the same Team ID.</p>
+<p><strong><code>hs.pasteboard</code></strong> — <code>hs.pasteboard.watcher</code> is gone as a separate submodule; it&#39;s
+<code>hs.pasteboard.addWatcher(handler)</code>/<code>removeWatcher(handler)</code> directly on the main module, and
+multiple watchers can be registered independently.</p>
+<p><strong><code>hs.spotlight</code></strong> — reshaped from a one-shot query call into a builder/query-object pattern:
+<code>hs.spotlight.create()</code> returns an object configured with <code>setQuery()</code>/<code>setScopes()</code>/
+<code>setCallback()</code> then <code>.start()</code>. Live-updating queries are now first-class — a query left
+running after its <code>didFinish</code> event keeps firing <code>didUpdate</code> as matching files change. What
+were <code>hs.spotlight.group</code>/<code>hs.spotlight.item</code> are now plain objects returned by
+<code>q.groups()</code>/<code>q.results()</code>, not separate module names.</p>
+<p><strong><code>hs.task</code></strong> — gained <code>runAsync()</code>, <code>shell(command)</code> (no manual <code>/bin/sh -c</code> wrapping),
+<code>parallel()</code>, <code>sequence</code>, and a <code>builder()</code>/<code>TaskBuilder</code> fluent API. If your v1 code
+hand-tracked multiple concurrent <code>hs.task</code> objects and their completion callbacks, check
+<code>parallel()</code>/<code>sequence</code> before porting that orchestration logic by hand.</p>
+<p><strong><code>hs.notify</code></strong> — you must call <code>hs.permissions.requestNotifications()</code> (a Promise) before
+notifications will appear; macOS enforces this now where v1 didn&#39;t need it. <code>hs.notify.create({...})</code>
+adds actionable buttons (including text-input replies), thread grouping, and scheduled/calendar
+triggers, none of which v1 had.</p>
+<p><strong><code>hs.wifi</code></strong> — <code>hs.wifi.watcher</code> folded into <code>hs.wifi.addWatcher()</code>, which returns a watcher
+object configured via an <code>events</code> array property and <code>hs.wifi.watcherEventTypes</code> rather than
+one-watcher-per-event-type. <code>associate()</code>/<code>scanNetworks()</code> are now Promise-based. New and
+important: <code>ssid</code>, <code>bssid</code>, <code>countryCode</code>, and scan-result BSSIDs only populate once
+<code>hs.permissions.requestLocation()</code> has been granted — without it they come back <code>null</code>, not
+an error, which can silently break configs that assume <code>ssid</code> is always present.</p>
+<p><strong><code>hs.urlevent</code></strong> — the scheme is <code>hammerspoon2://</code>, not <code>hammerspoon://</code> — update anything
+external that invokes your config. <code>httpCallback</code>/<code>mailtoCallback</code> are now plain assignable
+properties instead of a separate registration call.</p>
+<p><strong><code>hs.bonjour</code></strong>, <strong><code>hs.camera</code></strong>, <strong><code>hs.keycodes</code></strong>, <strong><code>hs.menubar</code></strong>, <strong><code>hs.midi</code></strong>,
+<strong><code>hs.mouse</code></strong>, <strong><code>hs.plist</code></strong>, <strong><code>hs.serial</code></strong>, <strong><code>hs.sharing</code></strong>, <strong><code>hs.shortcuts</code></strong>,
+<strong><code>hs.streamdeck</code></strong>, <strong><code>hs.usb</code></strong> are all close, direct ports — the main adjustment is
+watchers moving to <code>addWatcher()</code>/<code>removeWatcher()</code> on the main module (see
+<a href="#the-big-picture">The big picture</a>) and callbacks becoming JS closures instead of Lua
+function references. <code>hs.midi</code> and <code>hs.serial</code> both carry a doc-comment warning that they
+haven&#39;t seen much real-world hardware testing yet — treat as lower-confidence if you&#39;re
+driving real devices.</p>
+<h2 id="partially-recreated--read-this-if-somethings-missing">Partially recreated — read this if something's missing</h2>
+<p>These are the &quot;spread across several modules&quot; cases — worth checking closely, since what
+you&#39;re looking for may exist under a name you wouldn&#39;t guess.</p>
+<h3 id="hshost">hs.host</h3>
+<p>v1&#39;s <code>hs.host</code> was a grab-bag of &quot;info about this Mac.&quot; Its pieces landed in different v2
+modules, and a few have no home at all:</p>
+<table>
+<thead>
+<tr>
+<th>v1 <code>hs.host</code> function</th>
+<th>v2 location</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>locale</code> (submodule)</td>
+<td><code>hs.locale</code></td>
+</tr>
+<tr>
+<td><code>addresses()</code></td>
+<td><code>hs.network.addresses()</code></td>
+</tr>
+<tr>
+<td><code>names()</code></td>
+<td><code>hs.network.hostnames()</code></td>
+</tr>
+<tr>
+<td><code>localizedName()</code> (machine name)</td>
+<td><code>hs.appinfo.machineName</code></td>
+</tr>
+<tr>
+<td><code>operatingSystemVersion()</code>/<code>...String()</code></td>
+<td><code>hs.appinfo.osVersion</code> / <code>.osVersionParts</code></td>
+</tr>
+<tr>
+<td><code>thermalState()</code></td>
+<td><code>hs.power.thermalState</code></td>
+</tr>
+<tr>
+<td><code>volumeInformation()</code></td>
+<td><code>hs.fs.volumes()</code></td>
+</tr>
+<tr>
+<td><code>idleTime()</code></td>
+<td><strong>No v2 equivalent found.</strong></td>
+</tr>
+<tr>
+<td><code>cpuUsage()</code>/<code>cpuUsageTicks()</code></td>
+<td><strong>No v2 equivalent</strong> (<code>hs.appinfo.cpuCount</code> is a static core count, not live usage)</td>
+</tr>
+<tr>
+<td><code>vmStat()</code></td>
+<td><strong>No v2 equivalent</strong> (<code>hs.appinfo.ramAmount</code> is static total RAM, not live pressure/paging)</td>
+</tr>
+<tr>
+<td><code>gpuVRAM()</code></td>
+<td><strong>No v2 equivalent found.</strong></td>
+</tr>
+<tr>
+<td><code>interfaceStyle()</code> (light/dark mode)</td>
+<td><strong>No v2 equivalent found.</strong></td>
+</tr>
+<tr>
+<td><code>globallyUniqueString()</code>/<code>uuid()</code></td>
+<td>No dedicated method; JavaScriptCore&#39;s <code>crypto.randomUUID()</code> likely covers the practical need</td>
+</tr>
+</tbody></table>
+<p>If your config gated automations on idle time, CPU/memory pressure, or light/dark mode, there
+is currently nothing in v2 to read that from.</p>
+<h3 id="hsax-accessibility">hs.ax (accessibility)</h3>
+<p><code>hs.axuielement</code> (+ <code>.axtextmarker</code>, <code>.observer</code>) and <code>hs.uielement</code> (+ <code>.watcher</code>) all merge
+into <strong><code>hs.ax</code></strong>, with a much smaller surface than v1&#39;s combined AX modules:
+<code>systemWideElement</code>, <code>applicationElement</code>, <code>windowElement</code>, <code>elementAtPoint</code>,
+<code>focusedElement</code>, <code>findByRole</code>, <code>findByTitle</code>, <code>printHierarchy</code>, <code>addWatcher</code>, <code>removeWatcher</code>,
+plus an <code>HSAXElement</code> type with the common properties/actions (<code>role</code>, <code>title</code>, <code>value</code>,
+<code>frame</code>, <code>children()</code>, <code>attributeValue()</code>/<code>setAttributeValue()</code>, <code>performAction()</code>, etc.).</p>
+<p>Two real capability regressions to know about:</p>
+<ul>
+<li><strong>No AXTextMarker support at all.</strong> If you manipulated text-position markers in editors or
+PDF viewers via <code>hs.axuielement.axtextmarker</code>, there&#39;s no path forward.</li>
+<li><strong>Watching is application-scoped only.</strong> <code>hs.ax.addWatcher(app, notification, listener)</code>
+watches notifications on a whole app, not on an arbitrary element you&#39;ve drilled into the
+way v1&#39;s generic <code>hs.axuielement.observer</code>/<code>hs.uielement.watcher</code> could. If you built a
+watcher on one specific, deeply-nested element, restructure around app-level watching plus
+your own filtering in the callback.</li>
+</ul>
+<h3 id="window-management">Window management</h3>
+<p>Core <code>hs.window</code> covers direct queries and single-window actions well — <code>focusedWindow()</code>,
+<code>allWindows()</code>, <code>windowsForApp()</code>, and instance actions like <code>focus()</code>, <code>raise()</code>,
+<code>toggleFullscreen()</code>, <code>centerOnScreen()</code>. What&#39;s gone is the rest of v1&#39;s window ecosystem,
+module by module:</p>
+<ul>
+<li><strong><code>hs.window.filter</code></strong> — no equivalent. This was one of v1&#39;s most-used modules: persistent,
+rule-based window filters with subscriptions to lifecycle events. <code>hs.window</code> gives you
+one-shot queries and direct actions only, with no &quot;tell me whenever a window matching X
+changes&quot; subscription system. Reactive window management needs to be hand-built on top of
+<code>hs.ax</code>&#39;s app-level <code>addWatcher</code> notifications.</li>
+<li><strong><code>hs.window.highlight</code></strong> — no equivalent. The animated focus flash/dim effects have nothing
+built-in; approximate it yourself with <code>hs.ui</code> if needed.</li>
+<li><strong><code>hs.window.layout</code></strong> — no equivalent saved-layout/continuous-enforcement system.</li>
+<li><strong><code>hs.window.switcher</code></strong> — no cmd-tab-replacement UI. <code>hs.chooser</code> can serve as a basic
+type-to-select switcher, but the hold-a-modifier UX has to be built by hand.</li>
+<li><strong><code>hs.grid</code>, <code>hs.layout</code>, <code>hs.window.tiling</code></strong> — no dedicated modules. <code>hs.window.js</code> (the
+JS enhancement layer) ships small <code>grid</code>/<code>tiling</code> helper objects, but they&#39;re stub-quality —
+screen dimensions are hardcoded to 1920×1080 rather than read from <code>hs.screen</code>, and there&#39;s
+no rule-table or multi-window fitting like v1&#39;s <code>hs.layout</code>/<code>tileWindows()</code> had. Treat them
+as scaffolding to build your own layout system on, not as parity replacements.</li>
+<li><strong><code>hs.expose</code> / <code>hs.hints</code></strong> — no equivalent. The Exposé-style thumbnail overlay and
+keyboard jump-hints have no built-in replacement; both would need to be built from scratch
+with <code>hs.window</code> + <code>hs.ui</code>.</li>
+</ul>
+<p>If your v1 config&#39;s window management was mostly &quot;get the focused window, move/resize/center
+it,&quot; porting to <code>hs.window</code> is straightforward. If it leaned on filters, subscriptions, saved
+layouts, or a switcher/highlight/expose UI, expect to rebuild that logic yourself on the
+smaller primitive set (<code>hs.window</code> + <code>hs.ax</code> + <code>hs.ui</code> + <code>hs.screen</code>).</p>
+<h3 id="hspower">hs.power</h3>
+<p><code>hs.battery</code> (+<code>.watcher</code>) and <code>hs.caffeinate</code> (+<code>.watcher</code>) both merge into <strong><code>hs.power</code></strong>:
+<code>batteryInfo()</code> covers nearly all of <code>hs.battery</code>&#39;s per-field getters, <code>addBatteryWatcher()</code>
+replaces <code>hs.battery.watcher</code>, and <code>addEventWatcher()</code> replaces <code>hs.caffeinate.watcher</code> (all
+12 of v1&#39;s event names carry over: <code>screensDidSleep</code>, <code>systemWillSleep</code>, etc.).
+<code>preventSleep()</code>/<code>allowSleep()</code>/<code>declareActivity()</code> replace the sleep-assertion functions, and
+<code>systemSleep()</code>/<code>lockScreen()</code>/<code>startScreensaver()</code> carry over directly.</p>
+<p>Not carried over: <code>fastUserSwitch()</code>, <code>logOut()</code>, <code>restartSystem()</code>, <code>shutdownSystem()</code> — the
+&quot;drastic&quot; session/system control actions have no v2 equivalent anywhere. If your config
+triggers a logout/restart/shutdown, there&#39;s currently no way to do that. Also missing:
+<code>otherBatteryInfo()</code>/<code>privateBluetoothBatteryInfo()</code> for non-PSU accessory batteries.</p>
+<h3 id="hshid--hskeyboard">hs.hid / hs.keyboard</h3>
+<p>There&#39;s no module called <code>hs.hid</code> in v2, but this isn&#39;t a clean removal: v1&#39;s <code>hs.hid</code>
+(CapsLock get/set/toggle) and <code>hs.hid.led</code> (LED control) landed as a direct, essentially
+complete replacement inside the new <strong><code>hs.keyboard</code></strong> module — <code>capsLockState()</code>,
+<code>setCapsLockState()</code>, <code>toggleCapsLockState()</code>, <code>setLED()</code> — which goes further than v1 by also
+letting you enumerate individual attached keyboards and address their LEDs/CapsLock state
+per-device (<code>attachedKeyboards()</code>, <code>keyboardCapsLockState()</code>, <code>setKeyboardLED()</code>).</p>
+<h3 id="hsosascript">hs.osascript</h3>
+<p><code>hs.applescript</code>, <code>hs.javascript</code>, and <code>hs.osascript</code> all collapse into one <strong><code>hs.osascript</code></strong>
+module: <code>applescript()</code>/<code>javascript()</code> (Promise-based) plus <code>*Sync</code> and <code>*FromFile</code> variants
+for both languages. Scripts now run in a separate XPC helper process, so a crashing or
+deadlocking script no longer takes the whole app down with it. Important behavioral change:
+the async functions <strong>always resolve</strong>, never reject — check the <code>success</code> field of the
+resolved <code>{success, result, raw}</code> object rather than using <code>.catch()</code>.</p>
+<h3 id="hsgeometry">hs.geometry</h3>
+<p>There is no <code>hs.geometry</code> module or constructor function. Construct <code>HSPoint</code>, <code>HSRect</code>, and
+<code>HSSize</code> directly with <code>new HSPoint(x, y)</code> / <code>new HSRect(x, y, w, h)</code> / <code>new HSSize(w, h)</code>
+(used across <code>hs.screen</code>, <code>hs.window</code>, <code>hs.ax</code>, etc.) — the same <code>{x, y}</code> / <code>{x, y, w, h}</code> /
+<code>{w, h}</code> shapes as v1. v1&#39;s <code>hs.geometry</code> math methods are now instance methods on these
+types directly, applied to whichever type they make sense for: <code>equals</code>, <code>floor</code>, and <code>scale</code>
+work on all three; <code>angle</code>, <code>inside</code>, <code>move</code>, <code>normalize</code>, <code>rotateCCW</code>, and <code>vector</code> are on
+<code>HSPoint</code>; <code>angleTo</code> and <code>distance</code> are on <code>HSPoint</code>/<code>HSRect</code>; and <code>fit</code>, <code>fromUnitRect</code>,
+<code>inside</code>, <code>intersect</code>, <code>toUnitRect</code>, and <code>union</code> are on <code>HSRect</code>. <code>type()</code> isn&#39;t present —
+use the <code>typeName</code> property instead. There&#39;s no free-standing <code>hs.geometry.new()</code>/coercion
+function either, so build the object you need directly rather than passing loose numbers or
+tables around.</p>
+<h3 id="hsnetwork">hs.network</h3>
+<p><code>hs.network.configuration</code>, <code>.host</code>, <code>.ping</code> (+<code>.echoRequest</code>), and <code>.reachability</code> all fold
+into one <strong><code>hs.network</code></strong> module — a real consolidation, not a cut-down module. Reachability
+monitors, hostname resolution (<code>resolve()</code>), network-location configuration access, and real
+ICMP ping (<code>hs.network.ping()</code>, not a TCP-connect approximation) are all present, just
+flattened onto the parent module with longer method names instead of dotted submodules.</p>
+<h3 id="hsfs">hs.fs</h3>
+<p><code>hs.fs.volume</code>, <code>hs.fs.xattr</code>, and <code>hs.pathwatcher</code> all fold into one comprehensive
+<strong><code>hs.fs</code></strong> module (42 methods) — a genuine superset of what the four v1 pieces did.
+Volumes are <code>hs.fs.volumes()</code>/<code>ejectVolume()</code>/<code>addVolumeWatcher()</code>; extended attributes are
+<code>xattrGet</code>/<code>xattrList</code>/<code>xattrSet</code>/<code>xattrRemove</code>; <strong><code>hs.pathwatcher</code> is not gone</strong> — it&#39;s
+<code>hs.fs.createPathWatcher(path)</code>, returning a watcher object you call <code>.setCallback()</code> and
+<code>.start()</code> on (events batch with ~1 second latency, worth checking if your v1 code assumed
+near-instant delivery). <code>hs.fs</code> also now covers what Lua&#39;s built-in <code>io</code>/file functions did in
+v1 configs, since JS has no built-in filesystem API — raw file I/O needs to move to
+<code>hs.fs.read</code>/<code>write</code>/<code>append</code>.</p>
+<h3 id="hssound">hs.sound</h3>
+<p><code>hs.sound</code> is close to feature-complete against v1 despite sounding minimal — <code>play()</code>,
+<code>volume</code>, <code>loops</code>, <code>currentTime</code> (seeking), <code>duration</code>, and completion callbacks are all
+present. What&#39;s actually missing: <strong>playback device selection</strong> (v1&#39;s <code>device([deviceUID])</code>
+routing a sound to a specific output has no equivalent — <code>hs.audiodevice</code> can change the
+system-wide default output as a workaround, but not per-sound routing), and
+<code>getAudioEffectNames()</code>/file-type introspection helpers.</p>
+<h3 id="hsscreen">hs.screen</h3>
+<p>Display enumeration, mode setting, and screenshots (<code>snapshot()</code>, now Promise-based via
+ScreenCaptureKit) all carry over, plus new <code>ambientLight</code> sensor access. Brightness control
+is also back — <code>getBrightness()</code>/<code>setBrightness()</code> are the same names and same 0.0–1.0 scale
+as v1, and cover the same displays v1 did (the built-in panel plus Apple/LG displays that
+expose software brightness); v1 never did true DDC/CI brightness control of arbitrary
+third-party monitors over I2C either, so there&#39;s no loss of scope there, just a swap of
+private API underneath (v1&#39;s IOKit <code>IODisplay</code> calls don&#39;t work on Apple Silicon, so v2 talks
+to <code>DisplayServices.framework</code> instead). <code>hs.screen.watcher</code> also carries over: it&#39;s
+<code>hs.screen.addWatcher(fn)</code>/<code>removeWatcher(fn)</code> directly on the main module now (no separate
+watcher object to construct/<code>:start()</code>), and the callback still takes no arguments — call
+<code>all()</code>/<code>main()</code>/<code>primary()</code> inside it to inspect the new configuration. There&#39;s no v2
+equivalent of <code>newWithActiveScreen()</code>&#39;s active-display-changed variant (it relied on an
+undocumented <code>NSWorkspace</code> notification); if your config used that specifically to detect
+Mission Control&#39;s per-display Spaces switching focus, that distinction isn&#39;t available —
+only the general &quot;layout changed&quot; event is.</p>
+<h2 id="rebuilding-ui-with-hsui">Rebuilding UI with hs.ui</h2>
+<p>This is the biggest single change in the whole migration. <code>hs.alert</code>, <code>hs.canvas</code>
+(+<code>.matrix</code>), <code>hs.dialog</code> (+<code>.color</code>), <code>hs.drawing</code> (+<code>.color</code>), <code>hs.image</code>, <code>hs.styledtext</code>,
+and <code>hs.webview</code> (+<code>.datastore</code>, <code>.toolbar</code>, <code>.usercontent</code>) are all gone, replaced by one
+new module: <strong><code>hs.ui</code></strong>.</p>
+<p>In v1, this whole family was <strong>imperative</strong>: you created an object
+(<code>hs.drawing.rectangle(rect)</code>, <code>hs.canvas.new(rect)</code>, <code>hs.webview.new(rect)</code>), got a handle
+back, and mutated it over time with setter calls (<code>rect:setFillColor(...)</code>,
+<code>canvas:appendElements(...)</code>). Each drawing primitive, canvas, dialog, and webview was its
+own independently managed screen object.</p>
+<p><code>hs.ui</code> replaces all of that with two ideas:</p>
+<ol>
+<li><strong>A declarative element tree, built with a fluent/chained builder.</strong> Call
+<code>hs.ui.window({x, y, w, h})</code> to get a window builder, then chain elements onto it —
+<code>.vstack()</code>/<code>.hstack()</code>/<code>.zstack()</code> for layout, <code>.rectangle()</code>/<code>.circle()</code> for shapes,
+<code>.text()</code>/<code>.image()</code>/<code>.video()</code>/<code>.button()</code>/<code>.webview()</code> for content — with styling
+(<code>.fill()</code>, <code>.cornerRadius()</code>, <code>.frame()</code>, <code>.font()</code>, <code>.foregroundColor()</code>) and
+interaction (<code>.onClick()</code>, <code>.onHover()</code>) calls applying to whatever preceded them.
+Containers close with <code>.end()</code>. You build the tree once and call <code>.show()</code> — there&#39;s no
+&quot;append/remove element&quot; API like <code>hs.canvas</code> had; to change <em>structure</em>, you rebuild and
+re-show.</li>
+<li><strong>Reactive values for anything that changes after the window is shown.</strong> Instead of
+calling a setter on a screen object, create a shared reactive value — <code>HSColor.hex(...)</code>,
+<code>hs.ui.string(...)</code> (an <code>HSString</code>), or an <code>HSImage</code> — pass it into <code>.fill()</code>/<code>.text()</code>/
+<code>.image()</code> when building the element, and later call <code>.replaceWithHex()</code>/<code>.set()</code>/
+<code>.replaceWithImage()</code> on <em>that value</em> from any callback. The UI updates automatically; you
+never touch the element or window object again.</li>
+</ol>
+<p>Where each v1 module&#39;s job landed:</p>
+<ul>
+<li><strong><code>hs.drawing</code> / <code>hs.canvas</code></strong> → <code>.rectangle()</code>/<code>.circle()</code>/<code>.text()</code>/<code>.image()</code> elements in
+the builder. There&#39;s no equivalent of <code>hs.canvas</code>&#39;s arbitrary paths, arcs, or
+compositing/blend modes — the shape vocabulary is currently just rectangle and circle.</li>
+<li><strong><code>hs.canvas.matrix</code></strong> → gone entirely; no 2D transform/matrix math (rotate/scale/skew)
+exists anywhere in <code>hs.ui</code>.</li>
+<li><strong><code>hs.drawing.color</code> / <code>hs.dialog.color</code></strong> → the shared <code>HSColor</code> type
+(<code>HSColor.hex(&quot;#RRGGBB&quot;)</code>) used everywhere a color is accepted. No system color-picker
+panel (<code>NSColorPanel</code>) is wrapped.</li>
+<li><strong><code>hs.alert</code></strong> → <code>hs.ui.alert(text).duration(seconds).show()</code>. Multiple concurrent alerts
+now stack automatically instead of needing manual Y-offset math.</li>
+<li><strong><code>hs.dialog</code></strong> → split across three builders: <code>hs.ui.dialog(text)</code> for message/button
+dialogs, <code>hs.ui.textPrompt(text)</code> for text input, <code>hs.ui.filePicker()</code> for file/folder
+selection. The key behavioral change: v1&#39;s dialog functions were <strong>blocking</strong> (execution
+paused for a return value); v2&#39;s are <strong>callback-driven</strong> (<code>onButton</code>/<code>onSelection</code>) and
+non-blocking. Code written as <code>local result = hs.dialog.blockAlert(...)</code> needs restructuring
+around a callback.</li>
+<li><strong><code>hs.image</code></strong> → the <code>HSImage</code> reactive type. Loading covers most of v1 (<code>.fromPath()</code>,
+<code>.fromName()</code>, plus new capabilities like <code>.fromSymbol()</code> for SF Symbols), but there&#39;s no
+general &quot;draw shapes/text into an image and rasterize&quot; compositing API, since canvas
+rasterization itself doesn&#39;t exist.</li>
+<li><strong><code>hs.styledtext</code></strong> → styling calls directly on a <code>.text()</code> element
+(<code>.text(&quot;Hello&quot;).font(HSFont.title()).foregroundColor(&quot;#FFFFFF&quot;)</code>) instead of an
+attributed-string object built from a table of runs. There&#39;s no way to mix multiple
+styles/colors within one text run — each <code>.text()</code> element has one font and one color for
+its whole content; multi-style text needs multiple adjacent <code>.text()</code> elements in an
+<code>.hstack()</code>.</li>
+<li><strong><code>hs.webview</code></strong> → <code>hs.ui.webview()</code>, embedded into a window with <code>.webview(wv)</code>. Requires
+macOS 26+ (built on SwiftUI&#39;s <code>WebView</code>, not raw <code>WKWebView</code>). <code>evaluateJavaScript()</code>
+becomes <code>.execJS()</code> (fire-and-forget) or <code>.evalJSResult()</code> (callback with a result). A
+built-in <code>.toolbar([...])</code> exists, but only for standard nav items and custom buttons.
+<strong>Important:</strong> registering <code>onLoadChange</code>/<code>onNavigate</code>/<code>onTitleChange</code> callbacks disables
+automatic garbage-collection cleanup of the webview — call <code>.destroy()</code> explicitly when
+you&#39;re done with it.</li>
+<li><strong><code>hs.webview.datastore</code></strong> → gone. No cookie/storage isolation exists for <code>hs.ui.webview()</code>
+— every webview uses the default shared data store, with no way to isolate or clear it.</li>
+<li><strong><code>hs.webview.toolbar</code></strong> → only partially recreated, as <code>hs.ui.webview().toolbar()</code> — scoped
+to that one webview&#39;s own navigation toolbar, not a general <code>NSToolbar</code> attachable to any
+window with arbitrary item types.</li>
+<li><strong><code>hs.webview.usercontent</code></strong> → gone. There&#39;s no JS→native message-passing bridge
+(<code>WKUserContentController</code>/<code>postMessage</code>). <code>hs.ui.webview()</code> interaction is one-directional
+and host-initiated only — Hammerspoon can push code into the page and read a result, but
+the page can&#39;t proactively call back into your config. If you need that, poll page state
+with <code>.evalJSResult()</code> instead.</li>
+</ul>
+<h2 id="hsspoons-and-spoons">hs.spoons and Spoons</h2>
+<p><code>hs.loadSpoon()</code> exists in v2, but the surrounding ecosystem is smaller and reshaped — see the
+<a href="spoons-guide.html">Spoons guide</a> for the full picture (installing, using, and writing one,
+with a worked example). The short version, if you&#39;re porting v1 Spoons or config that used
+them:</p>
+<ul>
+<li><strong>Bundles are <code>.spoon2</code>, not <code>.spoon</code></strong> — a deliberate rename, since the two formats aren&#39;t
+interchangeable and both might be installed side by side during a transition. A v1 <code>.spoon</code>
+(Lua) won&#39;t load in v2; it needs rewriting in JavaScript.</li>
+<li><strong><code>init()</code> is still called automatically, but that&#39;s as far as the built-in lifecycle goes.</strong>
+v1 called a Spoon&#39;s <code>:init()</code> automatically and had framework-level hotkey-binding helpers.
+v2 does the same for <code>init()</code> (called on the returned object, after metadata injection) - but
+<code>start()</code>/<code>stop()</code>/<code>bindHotkeys()</code> are just conventions a Spoon&#39;s own code can choose to
+implement, not something the runtime provides or invokes. One behavioral difference: v2&#39;s
+<code>require()</code> caches <code>init.js</code> itself, but re-runs <code>init()</code> on every <code>hs.loadSpoon()</code> call for
+an already-loaded Spoon - write it to tolerate being called more than once.</li>
+<li><strong>Metadata moved to <code>spoon.json</code>, off the returned object,</strong> and gained enforcement: v1&#39;s
+<code>name</code>/<code>version</code>/<code>author</code>/<code>license</code> (+ optional <code>homepage</code>) were properties a Spoon&#39;s Lua
+table needed to set itself, checked by convention rather than by Hammerspoon. v2 requires a
+<code>spoon.json</code> with <code>name</code>/<code>author</code>/<code>version</code>/<code>description</code> (no <code>license</code> field currently) and
+refuses to load a Spoon whose <code>spoon.json</code> is missing, malformed, or has an empty field. It
+then injects <code>author</code>/<code>description</code>/<code>version</code> onto the loaded object for you.</li>
+<li><strong><code>hs.spoons</code> is a plain namespace now, not a module.</strong> v1&#39;s <code>hs.spoons</code> provided helpers
+(<code>resourcePath()</code>, <code>scriptPath()</code>, <code>bindHotkeysToSpec()</code>); v2&#39;s <code>hs.spoons</code> only holds loaded
+Spoons by name (<code>hs.spoons.MySpoon</code>, after calling <code>hs.loadSpoon(&quot;MySpoon&quot;)</code>). <code>__dirname</code>
+(built into <code>require()</code>) covers what <code>resourcePath()</code>/<code>scriptPath()</code> did.</li>
+<li><strong>No repository or discovery mechanism yet.</strong> Installation itself works (double-click a
+<code>.spoon2</code> bundle, same UX as v1&#39;s <code>.spoon</code>), but there&#39;s nothing like spoons.hammerspoon.org
+to browse or discover v2 Spoons from — sharing a bundle directly is the only distribution
+path today.</li>
+</ul>
+<h2 id="removed-with-no-equivalent">Removed with no equivalent</h2>
+<p>Everything below has no v2 module and no meaningful coverage elsewhere. Grouped by theme:</p>
+<p><strong>Documentation, logging, and dev tooling:</strong> <code>hs.doc</code> (+<code>.builder</code>/<code>.hsdocs</code>/<code>.markdown</code> — the
+doc-generation toolkit that backed Spoon docs and inline help; <code>hs.docs</code> is an unrelated
+bundled-doc <em>viewer</em>), <code>hs.logger</code> (no per-instance, leveled loggers — only flat
+<code>console.log</code>/<code>error</code>/<code>warn</code>), <code>hs.crash</code>, <code>hs.watchable</code> (no generic pub/sub — only
+per-module watchers), <code>hs.sqlite3</code>.</p>
+<p><strong>Window/UI tools with no built-in replacement:</strong> <code>hs.appfinder</code> (superseded in v1 itself —
+use <code>hs.application</code>/<code>hs.window</code> directly), <code>hs.dockicon</code>, <code>hs.expose</code>, <code>hs.hints</code>, <code>hs.grid</code>,
+<code>hs.layout</code>, <code>hs.tabs</code>, <code>hs.mjomatic</code> — see <a href="#window-management">Window management</a> for what&#39;s
+salvageable from the JS enhancement layer&#39;s stub helpers.</p>
+<p><strong>System monitoring:</strong> idle time, live CPU/memory usage, GPU VRAM, and light/dark-mode
+interface style — see <a href="#hshost">hs.host</a> for the full breakdown of what did and didn&#39;t find a
+new home.</p>
+<p><strong>Third-party hardware:</strong> <code>hs.milight</code>, <code>hs.razer</code>, <code>hs.tangent</code> — niche peripherals, not
+ported.</p>
+<p><strong>Third-party app remote control:</strong> <code>hs.deezer</code>, <code>hs.itunes</code>, <code>hs.messages</code>, <code>hs.spotify</code>,
+<code>hs.vox</code> had dedicated AppleScript-wrapper modules in v1. None exist in v2, but the underlying
+capability isn&#39;t gone — <code>hs.osascript.applescript(...)</code> can send the same AppleScript commands
+these modules used internally (e.g. <code>tell application &quot;Spotify&quot; to playpause</code>), just without
+the convenience method names.</p>
+<p><strong>System/session control:</strong> <code>fastUserSwitch()</code>, <code>logOut()</code>, <code>restartSystem()</code>,
+<code>shutdownSystem()</code> (previously on <code>hs.caffeinate</code>) have no v2 equivalent anywhere — there is
+currently no way to trigger a logout, restart, or shutdown from a v2 config.</p>
+<p><strong>Spaces, speech, and misc OS integrations:</strong> <code>hs.spaces</code> (+<code>.watcher</code> — macOS has never had a
+public Spaces API, and v1&#39;s implementation was always fragile/private-API-based; v2 doesn&#39;t
+carry that forward), <code>hs.speech</code> (+<code>.listener</code> — no text-to-speech or speech recognition of
+any kind), <code>hs.noises</code>, <code>hs.redshift</code> (macOS&#39;s native Night Shift covers most of this now).</p>
+<p><strong>Networking:</strong> <code>hs.socket</code> (+<code>.udp</code> — no raw TCP/UDP module; <code>hs.http</code>&#39;s
+<code>openWebSocket()</code> client and <code>hs.httpserver</code>&#39;s WebSocket support cover the common
+bidirectional-messaging use case, but arbitrary protocol work has no home), <code>hs.httpserver.hsminweb</code>
+(+<code>.cgilua</code>/<code>.cgilua.lp</code>/<code>.cgilua.urlcode</code> — the whole CGI-style templating framework; v2&#39;s
+<code>hs.httpserver</code> is a bare HTTP(S) server with a request-handler callback, not a web
+framework), <code>hs.distributednotifications</code> (no general-purpose observer for arbitrary
+distributed notifications — v2 uses <code>NSDistributedNotificationCenter</code> internally in a couple
+of places, but doesn&#39;t expose it to JS).</p>
+<p><strong>From the <code>hs.ui</code> rewrite specifically:</strong> <code>hs.canvas.matrix</code> (2D transform math),
+<code>hs.webview.datastore</code> (per-webview cookie/storage isolation), <code>hs.webview.usercontent</code>
+(page-to-native message passing), and the system color-picker panel previously reachable via
+<code>hs.dialog.color</code> — see <a href="#rebuilding-ui-with-hsui">Rebuilding UI with hs.ui</a> for details.</p>
+<h2 id="hs-and-hsappinfo">hs and hs.appinfo</h2>
+<p>In v1, the bare <code>hs</code> table carried a grab-bag of globals — <code>hs.configdir</code>, <code>hs.reload()</code>,
+version info, <code>hs.autoLaunch()</code>, <code>hs.docstrings</code>, and more. v2 splits this cleanly: <code>hs</code> keeps
+only runtime-control basics (<code>hs.reload()</code>, <code>hs.collectGarbage()</code>, <code>hs.openConsole()</code>,
+<code>hs.closeConsole()</code>, <code>hs.clearConsole()</code>). App/version/path metadata (<code>configDir</code>,
+<code>bundlePath</code>, <code>version</code>, <code>pid</code>, <code>osVersion</code>, <code>machineName</code>, etc.) moved to <strong><code>hs.appinfo</code></strong> as
+properties. Command-line/REPL access moved to explicit <strong><code>hs.ipc</code></strong>, which must be started
+manually (<code>hs.ipc.start()</code>) — it no longer auto-starts. Autolaunch-at-login moved to the app&#39;s
+Settings UI / <code>hs.userdefaults</code>. There is no <code>hs.docstrings</code> inline-help lookup any more — see
+<code>hs.docs</code> for the closest equivalent (a documentation <em>viewer</em>, not a query API).</p>
+<h2 id="hsconsole">hs.console</h2>
+<p>v1&#39;s <code>hs.console</code> was large: it controlled the REPL/log window&#39;s fonts, colors, toolbar,
+window level, history (<code>getHistory()</code>/<code>setHistory()</code>), and buffer contents
+(<code>getConsole()</code>/<code>setConsole()</code>). Almost none of that survives. v2 splits what remains in two:
+the lowercase <strong><code>console</code></strong> module gives you <code>console.log()</code>/<code>error()</code>/<code>warn()</code>/<code>info()</code>/
+<code>debug()</code> — plain output, styled after JS&#39;s <code>console.log</code>, nothing more. Window lifecycle
+(<code>open</code>/<code>close</code>/<code>clear</code>) moved to the bare <code>hs</code> object (<code>hs.openConsole()</code>, <code>hs.closeConsole()</code>,
+<code>hs.clearConsole()</code>). There is currently no v2 API for console window styling, colors, fonts,
+history access, or a toolbar — if a v1 config customized the console&#39;s appearance or read its
+history programmatically, that capability is gone.</p>
+</div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('migration-guide');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

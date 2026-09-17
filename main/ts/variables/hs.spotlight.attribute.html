@@ -1,0 +1,115 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>attribute | hammerspoon2-docs</title><meta name="description" content="Documentation for hammerspoon2-docs"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="../index.html" class="title">hammerspoon2-docs</a><div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><ul class="tsd-breadcrumb" aria-label="Breadcrumb"><li><a href="../modules/hs.html">hs</a></li><li><a href="../modules/hs.spotlight.html">spotlight</a></li><li><a href="" aria-current="page">attribute</a></li></ul><h1>Variable attribute<code class="tsd-tag">Const</code></h1></div><div class="tsd-signature"><span class="tsd-kind-variable">attribute</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></div><div class="tsd-comment tsd-typography"><p>Common Spotlight metadata attribute key shortcuts.
+These are plain <code>kMDItem*</code> string values — using them is equivalent to typing
+the raw key name, but they provide autocomplete and avoid typos.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path</code></td>
+<td><code>kMDItemPath</code></td>
+<td>Absolute filesystem path</td>
+</tr>
+<tr>
+<td><code>displayName</code></td>
+<td><code>kMDItemDisplayName</code></td>
+<td>User-visible display name</td>
+</tr>
+<tr>
+<td><code>fsName</code></td>
+<td><code>kMDItemFSName</code></td>
+<td>Filename on disk</td>
+</tr>
+<tr>
+<td><code>contentType</code></td>
+<td><code>kMDItemContentType</code></td>
+<td>UTI content type</td>
+</tr>
+<tr>
+<td><code>contentTypeTree</code></td>
+<td><code>kMDItemContentTypeTree</code></td>
+<td>Full UTI conformance tree</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><code>kMDItemKind</code></td>
+<td>Finder &quot;Kind&quot; string</td>
+</tr>
+<tr>
+<td><code>fileSize</code></td>
+<td><code>kMDItemFSSize</code></td>
+<td>File size in bytes</td>
+</tr>
+<tr>
+<td><code>creationDate</code></td>
+<td><code>kMDItemFSCreationDate</code></td>
+<td>Filesystem creation date</td>
+</tr>
+<tr>
+<td><code>modifiedDate</code></td>
+<td><code>kMDItemFSContentChangeDate</code></td>
+<td>Last content modification date</td>
+</tr>
+<tr>
+<td><code>lastUsedDate</code></td>
+<td><code>kMDItemLastUsedDate</code></td>
+<td>Last time the item was opened</td>
+</tr>
+<tr>
+<td><code>useCount</code></td>
+<td><code>kMDItemUseCount</code></td>
+<td>Number of times opened</td>
+</tr>
+<tr>
+<td><code>authors</code></td>
+<td><code>kMDItemAuthors</code></td>
+<td>Document authors</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>kMDItemTitle</code></td>
+<td>Document title</td>
+</tr>
+<tr>
+<td><code>comment</code></td>
+<td><code>kMDItemComment</code></td>
+<td>User comment</td>
+</tr>
+<tr>
+<td><code>keywords</code></td>
+<td><code>kMDItemKeywords</code></td>
+<td>Tags/keywords</td>
+</tr>
+<tr>
+<td><code>durationSeconds</code></td>
+<td><code>kMDItemDurationSeconds</code></td>
+<td>Media duration in seconds</td>
+</tr>
+<tr>
+<td><code>pixelWidth</code></td>
+<td><code>kMDItemPixelWidth</code></td>
+<td>Image/video width in pixels</td>
+</tr>
+<tr>
+<td><code>pixelHeight</code></td>
+<td><code>kMDItemPixelHeight</code></td>
+<td>Image/video height in pixels</td>
+</tr>
+<tr>
+<td><code>whereFroms</code></td>
+<td><code>kMDItemWhereFroms</code></td>
+<td>Download source URLs</td>
+</tr>
+<tr>
+<td><code>bundleIdentifier</code></td>
+<td><code>kMDItemCFBundleIdentifier</code></td>
+<td>App bundle identifier</td>
+</tr>
+</tbody>
+</table>
+</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div></div><div class="site-menu"><nav class="tsd-navigation"><a href="../modules.html">hammerspoon2-docs</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer><p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer><div class="overlay"></div></body></html>
