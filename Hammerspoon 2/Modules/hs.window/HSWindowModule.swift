@@ -91,6 +91,10 @@ import AXSwift
     /// ```
     @objc func snapshotForID(_ id: Int, _ keepTransparency: Bool) -> JSPromise?
 
+    /// A list of bundle identifiers to ignore when fetching a list of all windows
+    /// Note: This property is writeable, but you cannot mutate the default list in-place. To add or remove entries, assign this to a variable in JavaScript, modify that, and assign it back to this property. Also, if you find commonly used processes that should belong in this by default, please file an issue on GitHub!
+    @objc var allWindowsIgnore: [String] { get set }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.window.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -163,6 +167,15 @@ import AXSwift
         MainActor.assumeIsolated { toString() }
     }
 
+    @objc var allWindowsIgnore: [String] = [
+        "com.apple.WebKit.WebContent",
+        "com.apple.WebKit.Networking",
+        "com.apple.WebKit.GPU",
+        "com.apple.universalcontrol",
+        "com.apple.hiservices-xpcservice",
+        "com.hnc.Discord.helper.Renderer"
+    ]
+
     // MARK: - Swift-retained storage for JS-defined functions
     @objc var focused: JSFunction? = nil
     @objc var findByTitle: JSFunction? = nil
@@ -201,7 +214,12 @@ import AXSwift
     /// processes that don't respond to the Accessibility APIs, so querying
     /// them stalls on a system timeout instead of returning quickly.
     private func candidateApplications() -> [NSRunningApplication] {
-        return NSWorkspace.shared.runningApplications.filter { $0.activationPolicy != .prohibited }
+        return NSWorkspace.shared.runningApplications.filter {
+            if let bundleID = $0.bundleIdentifier, allWindowsIgnore.contains(bundleID) {
+                return false
+            }
+            return $0.activationPolicy != .prohibited
+        }
     }
 
     // MARK: - API Implementation
