@@ -58,7 +58,7 @@ import Carbon
     /// ```js
     /// const hk = hs.hotkey.create(["cmd","shift"], "h", () => {
     ///     console.log("Hello!")
-    /// }, null)
+    /// })
     /// hk.enable()
     /// ```
     @objc func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?

@@ -49,8 +49,8 @@ class HSHotkeyModal {
      * @param {string[]} mods - Modifier keys for the hotkey (e.g. ["cmd", "shift"])
      * @param {string} key - Key name for the hotkey (e.g. "h")
      * @param {Function|null} callbackPressed - Called when the hotkey is pressed, or null
-     * @param {Function|null} callbackReleased - Called when the hotkey is released, or null
-     * @param {Function|null} [callbackRepeat] - Called repeatedly while the hotkey is held down, or null
+     * @param {Function|null} [callbackReleased] - Called when the hotkey is released, or null/omitted
+     * @param {Function|null} [callbackRepeat] - Called repeatedly while the hotkey is held down, or null/omitted
      * @returns {HSHotkeyModal} This modal, for chaining
      */
     bind(mods, key, callbackPressed, callbackReleased, callbackRepeat) {
@@ -115,16 +115,16 @@ class HSHotkeyModal {
 /// Example:
 /// ```js
 /// const m = hs.hotkey.createModal(['cmd'], 'h')
-/// m.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)
+/// m.bind(['shift'], 'j', () => console.log('shift-j pressed'))
 /// m.enterFn = () => console.log('modal entered')
 /// m.exitFn  = () => console.log('modal exited')
-/// m.bind([], 'escape', () => m.exit(), null)
+/// m.bind([], 'escape', () => m.exit())
 /// ```
 hs.hotkey.createModal = function(mods, key) {
     const modal = new HSHotkeyModal();
 
     if (key !== '') {
-        const trigger = hs.hotkey.bind(mods, key, () => modal.enter(), null);
+        const trigger = hs.hotkey.bind(mods, key, () => modal.enter());
         if (trigger) modal._trigger = trigger;
     }
 
