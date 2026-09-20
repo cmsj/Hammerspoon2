@@ -54,6 +54,26 @@ struct SettingsAdvancedView: View {
                             .fixedSize(horizontal: true, vertical: true)
                     }
                     GridRow {
+                        Text("Keep console window on top:")
+                            .gridColumnAlignment(.trailing)
+                        Toggle("Keep console window on top", isOn: Bindable(settingsManager).consoleAlwaysOnTop)
+                            .labelsHidden()
+                    }
+                    GridRow {
+                        Text("Console window opacity:")
+                            .gridColumnAlignment(.trailing)
+                        HStack {
+                            Slider(value: $settingsManager.consoleAlpha, in: 0.2...1.0) {
+                                Text("Console window opacity")
+                            }
+                            .labelsHidden()
+                            .frame(width: 160)
+                            Text(settingsManager.consoleAlpha, format: .percent.precision(.fractionLength(0)))
+                                .monospacedDigit()
+                                .frame(width: 44, alignment: .trailing)
+                        }
+                    }
+                    GridRow {
                         Text("Enable garbage collection logging:")
                             .gridColumnAlignment(.trailing)
                         Toggle("Enable garbage collection logging", isOn: Bindable(settingsManager).garbageLoggingEnabled)

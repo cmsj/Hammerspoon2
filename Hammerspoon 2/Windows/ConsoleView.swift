@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 @_documentation(visibility: private)
 struct ConsoleView: View {
     @State var logs = HammerspoonLog.shared
+    @State private var settingsManager = SettingsManager.shared
 
     @State var evalString: String = ""
     @State var evalHistory: [String] = []
@@ -327,6 +328,43 @@ struct ConsoleView: View {
                 AKError("Unknown console event: \(url)")
             }
         }
+        // Applies the persisted window appearance (always-on-top level and opacity) to the
+        // hosting NSWindow. Reading the settings here makes `body` depend on them, so toggling
+        // either in Settings re-runs this and updates the live window.
+        .background(
+            ConsoleWindowConfigurator(
+                alwaysOnTop: settingsManager.consoleAlwaysOnTop,
+                alpha: settingsManager.consoleAlpha
+            )
+        )
+    }
+}
+
+/// Bridges to the console's hosting `NSWindow` so window-level (always-on-top) and opacity can be
+/// driven from settings — SwiftUI's `Window` scene exposes neither directly.
+private struct ConsoleWindowConfigurator: NSViewRepresentable {
+    let alwaysOnTop: Bool
+    let alpha: Double
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        // `view.window` is nil until the view joins the hierarchy, so defer the first apply.
+        Task { @MainActor in
+            apply(to: view.window)
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        apply(to: nsView.window)
+    }
+
+    @MainActor
+    private func apply(to window: NSWindow?) {
+        guard let window else { return }
+        window.level = alwaysOnTop ? .floating : .normal
+        // Clamp defensively; a fully transparent window would be invisible and unrecoverable.
+        window.alphaValue = min(max(alpha, 0.2), 1.0)
     }
 }
 

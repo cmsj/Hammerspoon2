@@ -121,6 +121,8 @@ final class SettingsManager {
         case dockMenuBehaviour
         case hasCompletedOnboarding
         case garbageLoggingEnabled
+        case consoleAlwaysOnTop
+        case consoleAlpha
 
         var id: String { "\(self)" }
 
@@ -138,6 +140,10 @@ final class SettingsManager {
                 return false
             case .garbageLoggingEnabled:
                 return false
+            case .consoleAlwaysOnTop:
+                return false
+            case .consoleAlpha:
+                return 1.0
             }
         }
     }
@@ -179,6 +185,20 @@ final class SettingsManager {
             notifyDelegates()
         }
     }
+    var consoleAlwaysOnTop: Bool {
+        didSet {
+            UserDefaults.standard.set(consoleAlwaysOnTop, forKey: Keys.consoleAlwaysOnTop.rawValue)
+            notifyDelegates()
+        }
+    }
+    /// Console window opacity, 0 (fully transparent) to 1 (fully opaque). Mirrors
+    /// Hammerspoon 1's `hs.console.alpha()`.
+    var consoleAlpha: Double {
+        didSet {
+            UserDefaults.standard.set(consoleAlpha, forKey: Keys.consoleAlpha.rawValue)
+            notifyDelegates()
+        }
+    }
 
     @ObservationIgnored
     private var defaultsObserver: (any NSObjectProtocol)?
@@ -190,7 +210,9 @@ final class SettingsManager {
             Keys.relaunchOnReload.rawValue: Keys.relaunchOnReload.defaultValue,
             Keys.dockMenuBehaviour.rawValue: Keys.dockMenuBehaviour.defaultValue,
             Keys.hasCompletedOnboarding.rawValue: Keys.hasCompletedOnboarding.defaultValue,
-            Keys.garbageLoggingEnabled.rawValue: Keys.garbageLoggingEnabled.defaultValue
+            Keys.garbageLoggingEnabled.rawValue: Keys.garbageLoggingEnabled.defaultValue,
+            Keys.consoleAlwaysOnTop.rawValue: Keys.consoleAlwaysOnTop.defaultValue,
+            Keys.consoleAlpha.rawValue: Keys.consoleAlpha.defaultValue
         ])
         configLocation = UserDefaults.standard.url(forKey: Keys.configLocation.rawValue)
             ?? (Keys.configLocation.defaultValue as! URL)
@@ -198,6 +220,8 @@ final class SettingsManager {
         relaunchOnReload = UserDefaults.standard.bool(forKey: Keys.relaunchOnReload.rawValue)
         hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding.rawValue)
         garbageLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.garbageLoggingEnabled.rawValue)
+        consoleAlwaysOnTop = UserDefaults.standard.bool(forKey: Keys.consoleAlwaysOnTop.rawValue)
+        consoleAlpha = UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue)
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
         dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
@@ -245,6 +269,12 @@ final class SettingsManager {
 
         let newGarbageLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.garbageLoggingEnabled.rawValue)
         if newGarbageLoggingEnabled != garbageLoggingEnabled { garbageLoggingEnabled = newGarbageLoggingEnabled }
+
+        let newConsoleAlwaysOnTop = UserDefaults.standard.bool(forKey: Keys.consoleAlwaysOnTop.rawValue)
+        if newConsoleAlwaysOnTop != consoleAlwaysOnTop { consoleAlwaysOnTop = newConsoleAlwaysOnTop }
+
+        let newConsoleAlpha = UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue)
+        if newConsoleAlpha != consoleAlpha { consoleAlpha = newConsoleAlpha }
     }
 }
 
@@ -255,6 +285,8 @@ extension SettingsManager: SettingsManagerProtocol {
         consoleHistoryLength = Keys.consoleHistoryLength.defaultValue as! Int
         relaunchOnReload = Keys.relaunchOnReload.defaultValue as! Bool
         garbageLoggingEnabled = Keys.garbageLoggingEnabled.defaultValue as! Bool
+        consoleAlwaysOnTop = Keys.consoleAlwaysOnTop.defaultValue as! Bool
+        consoleAlpha = Keys.consoleAlpha.defaultValue as! Double
 
         let dockMenuType = DockMenubarType(rawValue: Keys.dockMenuBehaviour.defaultValue as! String)!
         dockMenuBehaviour = dockMenuType
