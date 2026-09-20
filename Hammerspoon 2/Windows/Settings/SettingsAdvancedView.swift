@@ -31,6 +31,7 @@ struct SettingsAdvancedView: View {
                             .gridColumnAlignment(.trailing)
                         Toggle("Automatically check for updates", isOn: $automaticallyChecksForUpdates)
                             .labelsHidden()
+                            .gridColumnAlignment(.leading)
                             .onChange(of: automaticallyChecksForUpdates) { _, newValue in
                                 updaterController.updater.automaticallyChecksForUpdates = newValue
                             }

@@ -71,6 +71,7 @@ struct SettingsConfigView: View {
                                 .tag(ConfigFilePickerValues.select)
                         }
                         .labelsHidden()
+                        .gridColumnAlignment(.leading)
                         .onChange(of: configFilePicker, initial: true) {
                             handleConfigFilePickerChange()
                         }
