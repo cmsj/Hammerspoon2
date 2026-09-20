@@ -5,13 +5,13 @@ interactively, with optional live log streaming.
 Communication is secured with a same-team code-signing requirement in release builds,
 so only binaries signed with the same Team ID can connect.</p>
 <h2 id="quick-start" class="tsd-anchor-link">Quick start<a href="#quick-start" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<pre><code class="js"><span class="hl-7">// In your Hammerspoon 2 config (init.js):</span><br/><span class="hl-3">hs</span><span class="hl-1">.</span><span class="hl-3">ipc</span><span class="hl-1">.</span><span class="hl-4">start</span><span class="hl-1">()</span>
+<pre><code class="js"><span class="hl-10">// In your Hammerspoon 2 config (init.js):</span><br/><span class="hl-3">hs</span><span class="hl-1">.</span><span class="hl-3">ipc</span><span class="hl-1">.</span><span class="hl-4">start</span><span class="hl-1">()</span>
 </code><button type="button">Copy</button></pre>
 
-<pre><code class="js"><span class="hl-3">hs</span><span class="hl-1">.</span><span class="hl-3">ipc</span><span class="hl-1">.</span><span class="hl-4">installBinary</span><span class="hl-1">()   </span><span class="hl-7">// symlinks hs2 to /usr/local/bin/hs2</span>
+<pre><code class="js"><span class="hl-3">hs</span><span class="hl-1">.</span><span class="hl-3">ipc</span><span class="hl-1">.</span><span class="hl-4">installBinary</span><span class="hl-1">()   </span><span class="hl-10">// symlinks hs2 to /usr/local/bin/hs2</span>
 </code><button type="button">Copy</button></pre>
 
-<pre><code class="bash"><span class="hl-4">hs2</span><br/><span class="hl-4">hs2</span><span class="hl-1">&gt; </span><span class="hl-5">hs.reload</span><span class="hl-1">()</span><br/><span class="hl-4">undefined</span><br/><span class="hl-4">hs2</span><span class="hl-1">&gt; </span><span class="hl-8">2</span><span class="hl-1"> </span><span class="hl-5">+</span><span class="hl-1"> </span><span class="hl-8">2</span><br/><span class="hl-4">4</span>
+<pre><code class="bash"><span class="hl-4">hs2</span><br/><span class="hl-4">hs2</span><span class="hl-1">&gt; </span><span class="hl-5">hs.reload</span><span class="hl-1">()</span><br/><span class="hl-4">undefined</span><br/><span class="hl-4">hs2</span><span class="hl-1">&gt; </span><span class="hl-11">2</span><span class="hl-1"> </span><span class="hl-5">+</span><span class="hl-1"> </span><span class="hl-11">2</span><br/><span class="hl-4">4</span>
 </code><button type="button">Copy</button></pre>
 
 <pre><code class="bash"><span class="hl-4">hs2</span><span class="hl-1"> </span><span class="hl-0">--log-level</span><span class="hl-1"> </span><span class="hl-5">info</span>

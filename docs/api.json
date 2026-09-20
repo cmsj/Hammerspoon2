@@ -9279,7 +9279,7 @@
           "name": "create",
           "signature": "func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?",
           "isStatic": false,
-          "rawDocumentation": "Create a hotkey without enabling it\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback\n  - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.\n- Example:\n```js\nconst hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\nhk.enable()\n```",
+          "rawDocumentation": "Create a hotkey without enabling it\n- Parameters:\n  - mods: An array of modifier key strings (e.g., `[\"cmd\", \"shift\"]`). Supported names:\n    `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.\n  - key: The key name or character (e.g., \"a\", \"space\", \"return\", \"f1\")\n  - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback\n  - callbackReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback\n  - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat\n- Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.\n- Example:\n```js\nconst hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\nhk.enable()\n```",
           "description": "Create a hotkey without enabling it\n`cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.",
           "params": [
             {
@@ -9326,7 +9326,7 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n}, null)\nhk.enable()"
+              "code": "const hk = hs.hotkey.create([\"cmd\",\"shift\"], \"h\", () => {\n    console.log(\"Hello!\")\n})\nhk.enable()"
             }
           ],
           "source": "swift",
@@ -9526,7 +9526,7 @@
         },
         {
           "name": "createModal",
-          "rawDocumentation": "Create a new modal hotkey group, optionally entered via a trigger key combination\nParameters:\n- mods: Modifier keys for the trigger hotkey (e.g. [\"cmd\", \"shift\"]), or an empty array for no trigger\n- key: Key name for the trigger hotkey (e.g. \"h\"), or an empty string for no trigger\nReturns: {HSHotkeyModal} A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and enterFn/exitFn callbacks\nExample:\n```js\nconst m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\nm.bind([], 'escape', () => m.exit(), null)\n```",
+          "rawDocumentation": "Create a new modal hotkey group, optionally entered via a trigger key combination\nParameters:\n- mods: Modifier keys for the trigger hotkey (e.g. [\"cmd\", \"shift\"]), or an empty array for no trigger\n- key: Key name for the trigger hotkey (e.g. \"h\"), or an empty string for no trigger\nReturns: {HSHotkeyModal} A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and enterFn/exitFn callbacks\nExample:\n```js\nconst m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'))\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\nm.bind([], 'escape', () => m.exit())\n```",
           "description": "Create a new modal hotkey group, optionally entered via a trigger key combination",
           "params": [
             {
@@ -9549,7 +9549,7 @@
           "examples": [
             {
               "lang": "js",
-              "code": "const m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'), null)\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\nm.bind([], 'escape', () => m.exit(), null)"
+              "code": "const m = hs.hotkey.createModal(['cmd'], 'h')\nm.bind(['shift'], 'j', () => console.log('shift-j pressed'))\nm.enterFn = () => console.log('modal entered')\nm.exitFn  = () => console.log('modal exited')\nm.bind([], 'escape', () => m.exit())"
             }
           ],
           "source": "javascript",
@@ -9852,12 +9852,6 @@
                   "type": "Function|null",
                   "rest": false,
                   "description": "- Called when the hotkey is pressed, or null"
-                },
-                {
-                  "name": "callbackReleased",
-                  "type": "Function|null",
-                  "rest": false,
-                  "description": "- Called when the hotkey is released, or null"
                 }
               ],
               "returns": {
@@ -16198,11 +16192,13 @@
           "name": "lockScreen",
           "signature": "func lockScreen()",
           "isStatic": false,
-          "rawDocumentation": "Locks the screen immediately.\n\n- Example:\n  ```js\n  hs.power.lockScreen()\n  ```",
+          "rawDocumentation": "Locks the screen immediately.\n\n- Note: This function uses private API to lock the screen, it may break in a future macOS update\n- Example:\n  ```js\n  hs.power.lockScreen()\n  ```",
           "description": "Locks the screen immediately.",
           "params": [],
           "returns": null,
-          "notes": [],
+          "notes": [
+            "This function uses private API to lock the screen, it may break in a future macOS update"
+          ],
           "examples": [
             {
               "lang": "js",
@@ -16211,7 +16207,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 116
+          "lineNumber": 117
         },
         {
           "name": "startScreensaver",
@@ -16230,7 +16226,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 124
+          "lineNumber": 125
         },
         {
           "name": "batteryInfo",
@@ -16252,7 +16248,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 198
+          "lineNumber": 199
         },
         {
           "name": "addEventWatcher",
@@ -16279,7 +16275,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 217
+          "lineNumber": 218
         },
         {
           "name": "removeEventWatcher",
@@ -16306,7 +16302,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 228
+          "lineNumber": 229
         },
         {
           "name": "addBatteryWatcher",
@@ -16333,7 +16329,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 253
+          "lineNumber": 254
         },
         {
           "name": "removeBatteryWatcher",
@@ -16360,7 +16356,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 264
+          "lineNumber": 265
         }
       ],
       "properties": [
@@ -16379,7 +16375,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 134
+          "lineNumber": 135
         },
         {
           "name": "isCharging",
@@ -16396,7 +16392,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 143
+          "lineNumber": 144
         },
         {
           "name": "powerSource",
@@ -16413,7 +16409,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 153
+          "lineNumber": 154
         },
         {
           "name": "isLowPowerMode",
@@ -16430,7 +16426,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 161
+          "lineNumber": 162
         },
         {
           "name": "thermalState",
@@ -16447,7 +16443,7 @@
           ],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.power/HSPowerModule.swift",
-          "lineNumber": 170
+          "lineNumber": 171
         }
       ],
       "types": [],
@@ -27694,5 +27690,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-12T20:26:40.403Z"
+  "generatedAt": "2026-09-20T15:52:09.213Z"
 }

@@ -3857,10 +3857,9 @@ declare class HSHotkeyModal {
      * @param mods - Modifier keys for the hotkey (e.g. ["cmd", "shift"])
      * @param key - Key name for the hotkey (e.g. "h")
      * @param callbackPressed - Called when the hotkey is pressed, or null
-     * @param callbackReleased - Called when the hotkey is released, or null
      * @returns This modal, for chaining
      */
-    bind(mods: string[], key: string, callbackPressed: Function|null, callbackReleased: Function|null): HSHotkeyModal;
+    bind(mods: string[], key: string, callbackPressed: Function|null): HSHotkeyModal;
 
     /**
      * Enter the modal: its trigger (if any) is disabled and its bound hotkeys are enabled.
@@ -6270,6 +6269,7 @@ Requires the Automation permission for System Events.
 
     /**
      * Locks the screen immediately.
+     * @remarks This function uses private API to lock the screen, it may break in a future macOS update
      */
     function lockScreen(): void;
 

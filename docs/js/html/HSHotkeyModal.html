@@ -89,13 +89,13 @@
 <h2 class="section-heading">Methods</h2>
     <div class="method" id="bind">
         <h3>
-<a href="#bind">bind(mods, key, callbackPressed, callbackReleased) -> HSHotkeyModal</a>
+<a href="#bind">bind(mods, key, callbackPressed) -> HSHotkeyModal</a>
         </h3>
 
         <div class="description">Bind a hotkey to this modal. The hotkey is only enabled while the modal is active.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">bind(mods, key, callbackPressed, callbackReleased) -> HSHotkeyModal</code></pre>
+        <pre><code class="language-javascript">bind(mods, key, callbackPressed) -> HSHotkeyModal</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -121,11 +121,6 @@
                     <td class="param-name">callbackPressed</td>
                     <td class="param-type">Function|null</td>
                     <td class="param-desc">- Called when the hotkey is pressed, or null</td>
-                </tr>
-                <tr>
-                    <td class="param-name">callbackReleased</td>
-                    <td class="param-type">Function|null</td>
-                    <td class="param-desc">- Called when the hotkey is released, or null</td>
                 </tr>
             </tbody>
         </table>
