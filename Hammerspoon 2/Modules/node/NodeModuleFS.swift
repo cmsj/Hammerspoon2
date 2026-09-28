@@ -886,6 +886,8 @@ enum NodeFS {
 
 /// The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.
 ///
+/// WARNING: This module is an experiment to see if high levels of Node.js compatibility can be achieved with AI agents.
+///
 /// Covers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus
 /// `fs.promises`. There is no `Buffer` type in this engine yet, so file content is always
 /// UTF-8 text - passing any `encoding` other than `"utf8"` throws.
@@ -1261,6 +1263,8 @@ enum NodeFS {
 
 /// The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`
 /// and `require('fs/promises')`.
+///
+/// WARNING: This module is an experiment to see if high levels of Node.js compatibility can be achieved with AI agents.
 ///
 /// Every function here runs its work synchronously (there is no background I/O thread pool in
 /// this engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still
