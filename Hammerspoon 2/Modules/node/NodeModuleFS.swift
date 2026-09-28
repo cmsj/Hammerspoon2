@@ -350,18 +350,27 @@ enum NodeFS {
 
     /// Maps a Node write `flag` string to the `open()` flags it corresponds to. Only the four
     /// flags most JS code actually uses are supported: `"w"` (default), `"wx"`, `"a"`, `"ax"`.
-    private static func openFlags(forWriteFlag flag: String?) -> Int32 {
+    /// Any other flag - including a real Node flag this module just doesn't implement, like
+    /// `"a+"`/`"r+"`/`"w+"` - is rejected rather than silently treated as `"w"`, which would
+    /// otherwise truncate the file when the caller expected append (or read/write) semantics.
+    private static func openFlags(forWriteFlag flag: String?) throws -> Int32 {
         switch flag {
-        case "a":  return O_WRONLY | O_CREAT | O_APPEND
-        case "ax": return O_WRONLY | O_CREAT | O_APPEND | O_EXCL
-        case "wx": return O_WRONLY | O_CREAT | O_TRUNC | O_EXCL
-        default:   return O_WRONLY | O_CREAT | O_TRUNC
+        case nil, "w": return O_WRONLY | O_CREAT | O_TRUNC
+        case "wx":     return O_WRONLY | O_CREAT | O_TRUNC | O_EXCL
+        case "a":      return O_WRONLY | O_CREAT | O_APPEND
+        case "ax":     return O_WRONLY | O_CREAT | O_APPEND | O_EXCL
+        default:
+            throw NodeFSFailure.generic(
+                code: "ERR_INVALID_ARG_VALUE",
+                message: "The \"flag\" argument must be one of 'w', 'wx', 'a', 'ax'; other flags are not supported by this engine. Received '\(flag ?? "")'"
+            )
         }
     }
 
     static func writeFile(_ path: String, _ content: String, flag: String?) throws {
         let full = expand(path)
-        let fd = unsafe open(full, openFlags(forWriteFlag: flag), 0o666)
+        let flags = try openFlags(forWriteFlag: flag)
+        let fd = unsafe open(full, flags, 0o666)
         guard fd >= 0 else { throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "open", path: path, path2: nil) }
         defer { close(fd) }
 
@@ -978,7 +987,7 @@ enum NodeFS {
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - data: String to write.
-    ///   - flag?: One of `"w"` (default: create/truncate), `"wx"` (like `"w"` but fails if the file already exists), `"a"` (append), or `"ax"` (like `"a"` but fails if the file already exists).
+    ///   - flag?: One of `"w"` (default: create/truncate), `"wx"` (like `"w"` but fails if the file already exists), `"a"` (append), or `"ax"` (like `"a"` but fails if the file already exists). Any other value throws - including a real Node flag this engine doesn't implement (eg. `"a+"`, `"r+"`) - rather than being silently treated as `"w"`.
     /// - Example: `fs.writeFileSync("/tmp/hello.txt", "Hello, world!\n")`
     @objc func writeFileSync(_ path: JSString, _ data: JSString, _ flag: JSString?)
 

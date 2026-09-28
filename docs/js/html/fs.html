@@ -110,7 +110,7 @@ try {
 `X_OK`), `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_*`), file mode bits (`S_I*`,
 checked against `Stats.mode`), and `open()` flags (`O_*`).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L953" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:953</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L962" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:962</a>
         </div>
     </div>
 
@@ -150,7 +150,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L967" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:967</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L976" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:976</a>
         </div>
     </div>
     <div class="method" id="readFileSync">
@@ -191,7 +191,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L975" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:975</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L984" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:984</a>
         </div>
     </div>
     <div class="method" id="writeFileSync">
@@ -225,7 +225,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
                 <tr>
                     <td class="param-name">flag</td>
                     <td class="param-type">JSString</td>
-                    <td class="param-desc">One of `&quot;w&quot;` (default: create/truncate), `&quot;wx&quot;` (like `&quot;w&quot;` but fails if the file already exists), `&quot;a&quot;` (append), or `&quot;ax&quot;` (like `&quot;a&quot;` but fails if the file already exists).</td>
+                    <td class="param-desc">One of `&quot;w&quot;` (default: create/truncate), `&quot;wx&quot;` (like `&quot;w&quot;` but fails if the file already exists), `&quot;a&quot;` (append), or `&quot;ax&quot;` (like `&quot;a&quot;` but fails if the file already exists). Any other value throws - including a real Node flag this engine doesn&#39;t implement (eg. `&quot;a+&quot;`, `&quot;r+&quot;`) - rather than being silently treated as `&quot;w&quot;`.</td>
                 </tr>
             </tbody>
         </table>
@@ -236,7 +236,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L983" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:983</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L992" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:992</a>
         </div>
     </div>
     <div class="method" id="appendFileSync">
@@ -276,7 +276,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L990" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:990</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L999" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:999</a>
         </div>
     </div>
     <div class="method" id="mkdirSync">
@@ -316,7 +316,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L998" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:998</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1007" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1007</a>
         </div>
     </div>
     <div class="method" id="rmdirSync">
@@ -356,7 +356,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1005" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1005</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1014" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1014</a>
         </div>
     </div>
     <div class="method" id="rmSync">
@@ -398,7 +398,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1015" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1015</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1024" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1024</a>
         </div>
     </div>
     <div class="method" id="unlinkSync">
@@ -433,7 +433,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1020" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1020</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1029" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1029</a>
         </div>
     </div>
     <div class="method" id="readdirSync">
@@ -474,7 +474,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1030" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1030</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1039" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1039</a>
         </div>
     </div>
     <div class="method" id="statSync">
@@ -515,7 +515,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1038" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1038</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1047" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1047</a>
         </div>
     </div>
     <div class="method" id="lstatSync">
@@ -556,7 +556,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1046" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1046</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1055" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1055</a>
         </div>
     </div>
     <div class="method" id="renameSync">
@@ -596,7 +596,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1053" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1053</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1062" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1062</a>
         </div>
     </div>
     <div class="method" id="copyFileSync">
@@ -641,7 +641,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1061" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1061</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1070" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1070</a>
         </div>
     </div>
     <div class="method" id="symlinkSync">
@@ -681,7 +681,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1068" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1068</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1077" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1077</a>
         </div>
     </div>
     <div class="method" id="readlinkSync">
@@ -717,7 +717,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1074" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1074</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1083" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1083</a>
         </div>
     </div>
     <div class="method" id="realpathSync">
@@ -753,7 +753,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1080" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1080</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1089" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1089</a>
         </div>
     </div>
     <div class="method" id="linkSync">
@@ -793,7 +793,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1087" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1087</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1096" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1096</a>
         </div>
     </div>
     <div class="method" id="accessSync">
@@ -833,7 +833,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1094" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1094</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1103" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1103</a>
         </div>
     </div>
     <div class="method" id="truncateSync">
@@ -873,7 +873,7 @@ is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matchi
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1101" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1101</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1110" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1110</a>
         </div>
     </div>
         </main>

@@ -708,6 +708,27 @@ struct NodeFSTests {
             #expect(code == "EEXIST")
         }
 
+        @Test("writeFileSync rejects an unsupported (but real Node) flag instead of truncating")
+        func testWriteFileSyncUnsupportedFlagRejected() throws {
+            // Regression test: any flag other than 'w'/'wx'/'a'/'ax' used to fall through to
+            // the default (create+truncate) case, so a real Node flag like 'a+' - which this
+            // module doesn't implement, but which callers might reasonably expect to append
+            // rather than overwrite - silently destroyed the existing content instead of
+            // being rejected.
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("unsupported-flag.txt")
+            ctx.eval("fs.writeFileSync('\(p)', 'do not lose me')")
+
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.writeFileSync('\(p)', 'new content', 'a+'); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "ERR_INVALID_ARG_VALUE")
+            #expect(ctx.evalString("fs.readFileSync('\(p)')") == "do not lose me")
+        }
+
         @Test("rmdirSync on a file (not a directory) throws ENOTDIR")
         func testRmdirOnFile() throws {
             let ctx = try NodeFSTestContext()
