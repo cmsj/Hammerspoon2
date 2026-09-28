@@ -208,6 +208,45 @@ struct NodeUtilTests {
             """) == "[ [Circular *1] ]")
         }
 
+        @Test("cycle detection survives a script deleting/overriding the global Object.is")
+        func testCycleDetectionSurvivesObjectIsTampering() throws {
+            // Regression test: the ancestor check used to go through the JS-level global
+            // `Object.is`, which the very script being inspected can reassign or delete before
+            // calling `util.inspect` - it's ordinary mutable global state, not something this
+            // engine controls. An override that always returns `false` (or a missing/deleted
+            // `Object.is`) would silently disable cycle detection, letting a genuine cycle
+            // recurse without bound under `{ depth: null }`; one that always returns `true`
+            // would falsely flag unrelated nested objects as circular. Covers both directions
+            // plus outright deletion, none of which should be able to affect the result now
+            // that identity goes through JSValue's own native `isEqual(_:)` instead.
+            let ctx = try NodeUtilTestContext()
+
+            #expect(ctx.evalString("""
+                (function() {
+                    Object.is = function() { return false; };
+                    const o = {};
+                    o.self = o;
+                    return util.inspect(o, { depth: null });
+                })()
+            """) == "{ self: [Circular *1] }")
+
+            #expect(ctx.evalString("""
+                (function() {
+                    delete Object.is;
+                    const o = {};
+                    o.self = o;
+                    return util.inspect(o, { depth: null });
+                })()
+            """) == "{ self: [Circular *1] }")
+
+            #expect(ctx.evalString("""
+                (function() {
+                    Object.is = function() { return true; };
+                    return util.inspect({ a: { x: 1 }, b: { y: 2 } }, { depth: null });
+                })()
+            """) == "{ a: { x: 1 }, b: { y: 2 } }")
+        }
+
         @Test("getters: true still catches a cycle through the getter's returned value")
         func testCircularReferenceThroughGetter() throws {
             // Regression test: a getter that returns its own owning object must not bypass

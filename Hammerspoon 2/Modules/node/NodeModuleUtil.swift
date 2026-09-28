@@ -74,14 +74,18 @@ enum NodeUtil {
         /// (an ancestor in the current recursion path) - not merely equal to some unrelated
         /// sibling value elsewhere in the tree, which Node formats normally, not as circular.
         fileprivate func isAncestor(of value: JSValue) -> Bool {
-            guard !seen.isEmpty, let objectConstructor = value.context.objectForKeyedSubscript("Object") else {
-                return false
-            }
-            // Object.is() performs JS's SameValue identity check - plain Swift `===`/`==` on
-            // JSValue can't be used here, since JavaScriptCore doesn't guarantee the same
-            // underlying JS object is wrapped by referentially-identical JSValue instances
-            // across separate property accesses.
-            return seen.contains { objectConstructor.invokeMethod("is", withArguments: [$0, value])?.toBool() == true }
+            // Identity is checked via JSValue's native `isEqual(_:)` (Obj-C `isEqualToObject:`,
+            // the engine's own implementation of JS's `===`), not the JS-level global
+            // `Object.is` - a script
+            // being inspected can reassign or delete `Object.is` (or `Object` itself) before
+            // `util.inspect` runs, since it's ordinary mutable global state. An override that
+            // always returns `true` would flag unrelated values as circular; one that returns
+            // `false` (or a missing/deleted `Object.is`, whose `JSValue` isn't callable) would
+            // silently disable cycle detection, letting a genuine cycle recurse without bound
+            // under `{ depth: null }`. `isEqualToObject:` isn't reachable from JS at all, so it
+            // can't be tampered with. (`===`/`Object.is` differ only for `NaN`/`-0`, irrelevant
+            // here since `seen` only ever holds container objects, never primitives.)
+            seen.contains { $0.isEqual(value) }
         }
 
         fileprivate var isExhausted: Bool {
