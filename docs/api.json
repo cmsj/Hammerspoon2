@@ -25607,7 +25607,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 953
+          "lineNumber": 959
         },
         {
           "name": "readFileSync",
@@ -25639,7 +25639,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 961
+          "lineNumber": 967
         },
         {
           "name": "writeFileSync",
@@ -25675,7 +25675,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 969
+          "lineNumber": 975
         },
         {
           "name": "appendFileSync",
@@ -25704,7 +25704,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 976
+          "lineNumber": 982
         },
         {
           "name": "mkdirSync",
@@ -25733,7 +25733,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 984
+          "lineNumber": 990
         },
         {
           "name": "rmdirSync",
@@ -25762,7 +25762,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 991
+          "lineNumber": 997
         },
         {
           "name": "rmSync",
@@ -25791,7 +25791,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 998
+          "lineNumber": 1004
         },
         {
           "name": "unlinkSync",
@@ -25813,7 +25813,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1003
+          "lineNumber": 1009
         },
         {
           "name": "readdirSync",
@@ -25845,7 +25845,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1013
+          "lineNumber": 1019
         },
         {
           "name": "statSync",
@@ -25877,7 +25877,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1021
+          "lineNumber": 1027
         },
         {
           "name": "lstatSync",
@@ -25909,7 +25909,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1029
+          "lineNumber": 1035
         },
         {
           "name": "renameSync",
@@ -25938,7 +25938,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1036
+          "lineNumber": 1042
         },
         {
           "name": "copyFileSync",
@@ -25974,7 +25974,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1044
+          "lineNumber": 1050
         },
         {
           "name": "symlinkSync",
@@ -26003,7 +26003,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1051
+          "lineNumber": 1057
         },
         {
           "name": "readlinkSync",
@@ -26028,7 +26028,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1057
+          "lineNumber": 1063
         },
         {
           "name": "realpathSync",
@@ -26053,7 +26053,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1063
+          "lineNumber": 1069
         },
         {
           "name": "linkSync",
@@ -26082,7 +26082,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1070
+          "lineNumber": 1076
         },
         {
           "name": "accessSync",
@@ -26111,7 +26111,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1077
+          "lineNumber": 1083
         },
         {
           "name": "truncateSync",
@@ -26140,7 +26140,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1084
+          "lineNumber": 1090
         }
       ],
       "properties": [
@@ -26154,7 +26154,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 939
+          "lineNumber": 945
         }
       ],
       "types": [
@@ -26179,7 +26179,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 739
+              "lineNumber": 745
             },
             {
               "name": "isDirectory",
@@ -26196,7 +26196,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 743
+              "lineNumber": 749
             },
             {
               "name": "isSymbolicLink",
@@ -26213,7 +26213,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 747
+              "lineNumber": 753
             },
             {
               "name": "isBlockDevice",
@@ -26230,7 +26230,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 750
+              "lineNumber": 756
             },
             {
               "name": "isCharacterDevice",
@@ -26247,7 +26247,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 753
+              "lineNumber": 759
             },
             {
               "name": "isFIFO",
@@ -26264,7 +26264,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 756
+              "lineNumber": 762
             },
             {
               "name": "isSocket",
@@ -26281,7 +26281,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 759
+              "lineNumber": 765
             }
           ],
           "properties": [
@@ -26295,7 +26295,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 700
+              "lineNumber": 706
             },
             {
               "name": "ino",
@@ -26307,7 +26307,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 702
+              "lineNumber": 708
             },
             {
               "name": "mode",
@@ -26319,7 +26319,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 704
+              "lineNumber": 710
             },
             {
               "name": "nlink",
@@ -26331,7 +26331,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 706
+              "lineNumber": 712
             },
             {
               "name": "uid",
@@ -26343,7 +26343,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 708
+              "lineNumber": 714
             },
             {
               "name": "gid",
@@ -26355,7 +26355,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 710
+              "lineNumber": 716
             },
             {
               "name": "rdev",
@@ -26367,7 +26367,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 712
+              "lineNumber": 718
             },
             {
               "name": "size",
@@ -26379,7 +26379,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 714
+              "lineNumber": 720
             },
             {
               "name": "blksize",
@@ -26391,7 +26391,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 716
+              "lineNumber": 722
             },
             {
               "name": "blocks",
@@ -26403,7 +26403,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 718
+              "lineNumber": 724
             },
             {
               "name": "atimeMs",
@@ -26415,7 +26415,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 720
+              "lineNumber": 726
             },
             {
               "name": "mtimeMs",
@@ -26427,7 +26427,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 722
+              "lineNumber": 728
             },
             {
               "name": "ctimeMs",
@@ -26439,7 +26439,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 724
+              "lineNumber": 730
             },
             {
               "name": "birthtimeMs",
@@ -26451,7 +26451,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 726
+              "lineNumber": 732
             },
             {
               "name": "atime",
@@ -26463,7 +26463,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 728
+              "lineNumber": 734
             },
             {
               "name": "mtime",
@@ -26475,7 +26475,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 730
+              "lineNumber": 736
             },
             {
               "name": "ctime",
@@ -26487,7 +26487,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 732
+              "lineNumber": 738
             },
             {
               "name": "birthtime",
@@ -26499,7 +26499,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 734
+              "lineNumber": 740
             }
           ]
         },
@@ -26524,7 +26524,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 848
+              "lineNumber": 854
             },
             {
               "name": "isDirectory",
@@ -26541,7 +26541,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 851
+              "lineNumber": 857
             },
             {
               "name": "isSymbolicLink",
@@ -26558,7 +26558,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 854
+              "lineNumber": 860
             },
             {
               "name": "isBlockDevice",
@@ -26575,7 +26575,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 857
+              "lineNumber": 863
             },
             {
               "name": "isCharacterDevice",
@@ -26592,7 +26592,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 860
+              "lineNumber": 866
             },
             {
               "name": "isFIFO",
@@ -26609,7 +26609,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 863
+              "lineNumber": 869
             },
             {
               "name": "isSocket",
@@ -26626,7 +26626,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 866
+              "lineNumber": 872
             }
           ],
           "properties": [
@@ -26640,7 +26640,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 844
+              "lineNumber": 850
             }
           ]
         }
@@ -26681,7 +26681,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1314
+          "lineNumber": 1320
         },
         {
           "name": "writeFile",
@@ -26720,7 +26720,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1323
+          "lineNumber": 1329
         },
         {
           "name": "appendFile",
@@ -26752,7 +26752,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1331
+          "lineNumber": 1337
         },
         {
           "name": "mkdir",
@@ -26784,7 +26784,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1339
+          "lineNumber": 1345
         },
         {
           "name": "rmdir",
@@ -26816,7 +26816,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1347
+          "lineNumber": 1353
         },
         {
           "name": "rm",
@@ -26848,7 +26848,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1355
+          "lineNumber": 1361
         },
         {
           "name": "unlink",
@@ -26873,7 +26873,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1361
+          "lineNumber": 1367
         },
         {
           "name": "readdir",
@@ -26905,7 +26905,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1369
+          "lineNumber": 1375
         },
         {
           "name": "stat",
@@ -26930,7 +26930,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1375
+          "lineNumber": 1381
         },
         {
           "name": "lstat",
@@ -26955,7 +26955,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1381
+          "lineNumber": 1387
         },
         {
           "name": "rename",
@@ -26987,7 +26987,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1389
+          "lineNumber": 1395
         },
         {
           "name": "copyFile",
@@ -27026,7 +27026,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1398
+          "lineNumber": 1404
         },
         {
           "name": "symlink",
@@ -27058,7 +27058,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1406
+          "lineNumber": 1412
         },
         {
           "name": "readlink",
@@ -27083,7 +27083,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1412
+          "lineNumber": 1418
         },
         {
           "name": "realpath",
@@ -27108,7 +27108,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1418
+          "lineNumber": 1424
         },
         {
           "name": "link",
@@ -27140,7 +27140,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1426
+          "lineNumber": 1432
         },
         {
           "name": "access",
@@ -27172,7 +27172,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1434
+          "lineNumber": 1440
         },
         {
           "name": "truncate",
@@ -27204,7 +27204,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1442
+          "lineNumber": 1448
         }
       ],
       "properties": [
@@ -27218,7 +27218,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1306
+          "lineNumber": 1312
         }
       ],
       "types": [],
@@ -29345,5 +29345,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-28T13:53:09.525Z"
+  "generatedAt": "2026-09-28T14:54:16.633Z"
 }

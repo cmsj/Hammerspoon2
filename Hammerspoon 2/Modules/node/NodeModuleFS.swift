@@ -393,9 +393,15 @@ enum NodeFS {
             return
         }
 
+        // Preserve whether `full` is absolute or relative: unconditionally prefixing every
+        // accumulated component with "/" would root a relative path (eg. "build/dist") at
+        // "/build/dist" instead of resolving it against the current working directory.
+        let isAbsolute = full.hasPrefix("/")
         var accumulated = ""
         for component in full.split(separator: "/") {
-            accumulated += "/\(component)"
+            accumulated = accumulated.isEmpty
+                ? (isAbsolute ? "/\(component)" : String(component))
+                : "\(accumulated)/\(component)"
             if unsafe Darwin.mkdir(accumulated, 0o777) != 0, Darwin.errno != EEXIST {
                 throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "mkdir", path: path, path2: nil)
             }

@@ -238,6 +238,23 @@ struct NodeFSTests {
             #expect(ctx.evalBool("fs.existsSync('\(dir)')") == true)
         }
 
+        @Test("mkdirSync with recursive resolves a relative path against the cwd, not root")
+        func testMkdirRecursiveRelativePath() throws {
+            // Regression test: the recursive path-walking loop used to unconditionally prefix
+            // every accumulated component with "/", so a relative path like "build/dist" was
+            // rooted at "/build/dist" instead of resolving against the current working
+            // directory, the way a relative path always should.
+            let ctx = try NodeFSTestContext()
+            let fm = FileManager.default
+            let originalCWD = fm.currentDirectoryPath
+            #expect(fm.changeCurrentDirectoryPath(ctx.tempDir.path))
+            defer { fm.changeCurrentDirectoryPath(originalCWD) }
+
+            ctx.eval("fs.mkdirSync('build/dist', { recursive: true })")
+            #expect(!ctx.hadException)
+            #expect(fm.fileExists(atPath: ctx.tempDir.appendingPathComponent("build/dist").path))
+        }
+
         @Test("readdirSync withFileTypes returns Dirent objects")
         func testReaddirWithFileTypes() throws {
             let ctx = try NodeFSTestContext()
