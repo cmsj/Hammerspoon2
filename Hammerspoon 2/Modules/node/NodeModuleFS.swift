@@ -47,7 +47,12 @@ private enum NodeFSFailure: Error, @unchecked Sendable {
             return error ?? JSValue(undefinedIn: context)
         case .invalidArgType(let argName, let actual):
             let message = "The \"\(argName)\" argument must be of type string. Received \(NodeFS.describeType(actual))"
-            let error = JSValue(newErrorFromMessage: message, in: context) ?? JSValue(undefinedIn: context)
+            // Real Node throws a `TypeError` for `ERR_INVALID_ARG_TYPE`, not a plain `Error` -
+            // `JSValue(newErrorFromMessage:in:)` only ever builds the latter, so the `TypeError`
+            // constructor has to be invoked directly to get an object where `instanceof
+            // TypeError`/`error.constructor.name === "TypeError"` checks pass, matching Node.
+            let error = context.objectForKeyedSubscript("TypeError")?.construct(withArguments: [message])
+                ?? JSValue(undefinedIn: context)
             error?.setObject("ERR_INVALID_ARG_TYPE", forKeyedSubscript: "code" as NSString)
             return error ?? JSValue(undefinedIn: context)
         }

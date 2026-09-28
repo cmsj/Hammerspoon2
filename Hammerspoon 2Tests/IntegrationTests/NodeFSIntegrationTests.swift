@@ -817,6 +817,35 @@ struct NodeFSTests {
             #expect(message == "The \"oldPath\" argument must be of type string. Received type number (123)")
         }
 
+        @Test("ERR_INVALID_ARG_TYPE is a real TypeError, not a plain Error")
+        func testInvalidArgTypeIsTypeError() throws {
+            // Regression test: code review found `NodeFSFailure.invalidArgType` was built via
+            // `JSValue(newErrorFromMessage:in:)`, which only ever produces a plain `Error` -
+            // so `error instanceof TypeError`/`error.constructor.name` checks (which real
+            // Node's ERR_INVALID_ARG_TYPE satisfies) silently failed despite `.code` being
+            // correct. Fixed by invoking the JS `TypeError` constructor directly.
+            let ctx = try NodeFSTestContext()
+            #expect(ctx.evalBool("""
+                (function() {
+                    try { fs.renameSync(123, 'x'); return false; }
+                    catch (e) { return e instanceof TypeError; }
+                })()
+            """) == true)
+            #expect(ctx.evalString("""
+                (function() {
+                    try { fs.renameSync(123, 'x'); return null; }
+                    catch (e) { return e.constructor.name; }
+                })()
+            """) == "TypeError")
+            // .code must survive alongside the correct constructor.
+            #expect(ctx.evalString("""
+                (function() {
+                    try { fs.renameSync(123, 'x'); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """) == "ERR_INVALID_ARG_TYPE")
+        }
+
         @Test("writeFileSync throws ERR_INVALID_ARG_TYPE for non-string data")
         func testWriteFileSyncInvalidDataType() throws {
             let ctx = try NodeFSTestContext()
