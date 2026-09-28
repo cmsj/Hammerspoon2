@@ -33,6 +33,12 @@ enum NodeUtil {
         /// When `true`, invokes getters and formats their returned value instead of showing a
         /// `[Getter]`/`[Getter/Setter]` placeholder.
         var getters: Bool
+        /// The container values (objects/arrays/`Set`/`Map`) currently being formatted, from
+        /// outermost to innermost - used to detect circular references. Without this, a
+        /// self-referencing value (`const o = {}; o.self = o`) recurses forever with `depth:
+        /// null`, and even with a finite depth produces confusing repeated nesting instead of
+        /// Node's `[Circular *1]` marker.
+        fileprivate var seen: [JSValue] = []
 
         static let `default` = InspectOptions(depth: defaultInspectDepth, getters: false)
 
@@ -52,7 +58,30 @@ enum NodeUtil {
 
         /// The same options, one level deeper into the value tree.
         fileprivate func descending() -> InspectOptions {
-            InspectOptions(depth: depth.map { $0 - 1 }, getters: getters)
+            InspectOptions(depth: depth.map { $0 - 1 }, getters: getters, seen: seen)
+        }
+
+        /// The same options (depth unchanged - this isn't "one level deeper", it's "about to
+        /// recurse into `container`'s own children"), with `container` added to the ancestor
+        /// list so a later cycle back to it can be detected.
+        fileprivate func visiting(_ container: JSValue) -> InspectOptions {
+            var next = self
+            next.seen.append(container)
+            return next
+        }
+
+        /// Whether `value` is one of the containers we're already in the middle of formatting
+        /// (an ancestor in the current recursion path) - not merely equal to some unrelated
+        /// sibling value elsewhere in the tree, which Node formats normally, not as circular.
+        fileprivate func isAncestor(of value: JSValue) -> Bool {
+            guard !seen.isEmpty, let objectConstructor = value.context.objectForKeyedSubscript("Object") else {
+                return false
+            }
+            // Object.is() performs JS's SameValue identity check - plain Swift `===`/`==` on
+            // JSValue can't be used here, since JavaScriptCore doesn't guarantee the same
+            // underlying JS object is wrapped by referentially-identical JSValue instances
+            // across separate property accesses.
+            return seen.contains { objectConstructor.invokeMethod("is", withArguments: [$0, value])?.toBool() == true }
         }
 
         fileprivate var isExhausted: Bool {
@@ -84,11 +113,18 @@ enum NodeUtil {
         if value.isString { return quoted(value.toString() ?? "") }
         if value.isDate { return formatDate(value) }
         if value.isInstanceOf(className: "Error") { return formatError(value) }
-        if value.isSet { return formatSet(value, options: options) }
-        if value.isInstanceOf(className: "Map") { return formatMap(value, options: options) }
-        if value.isArray { return formatArray(value, options: options) }
         if value.isFunction { return formatFunction(value) }
-        if value.isObject { return formatObject(value, options: options) }
+        // Only containers (Set/Map/Array/plain object) can participate in a cycle - a Date,
+        // Error, etc. is a leaf that never recurses back into `value`, so only these need the
+        // ancestor check before recursing into their children.
+        if value.isSet || value.isInstanceOf(className: "Map") || value.isArray || value.isObject {
+            if options.isAncestor(of: value) { return "[Circular *1]" }
+            let nested = options.visiting(value)
+            if value.isSet { return formatSet(value, options: nested) }
+            if value.isInstanceOf(className: "Map") { return formatMap(value, options: nested) }
+            if value.isArray { return formatArray(value, options: nested) }
+            return formatObject(value, options: nested)
+        }
         return value.toString() ?? "undefined"
     }
 

@@ -151,5 +151,61 @@ struct NodeUtilTests {
             #expect(ctx.evalString("util.inspect({ a: 1 }, 'ignored')") == "{ a: 1 }")
             #expect(!ctx.hadException)
         }
+
+        @Test("depth: null terminates on a self-referencing object instead of recursing forever")
+        func testCircularReferenceUnlimitedDepth() throws {
+            // Regression test: the review's exact example. Without cycle detection this
+            // recurses indefinitely (stack overflow/hang) once `depth: null` removes the only
+            // thing that used to stop it.
+            let ctx = try NodeUtilTestContext()
+            #expect(ctx.evalString("""
+                (function() {
+                    const o = {};
+                    o.self = o;
+                    return util.inspect(o, { depth: null });
+                })()
+            """) == "{ self: [Circular *1] }")
+        }
+
+        @Test("a finite depth still reports a genuine cycle as circular, not as [Object]")
+        func testCircularReferenceFiniteDepth() throws {
+            // Even when a depth limit would eventually stop the recursion anyway, Node still
+            // recognizes the true cycle and reports it distinctly from an unrelated value that
+            // merely got collapsed for being too deep.
+            let ctx = try NodeUtilTestContext()
+            #expect(ctx.evalString("""
+                (function() {
+                    const o = {};
+                    o.self = o;
+                    return util.inspect(o, { depth: 4 });
+                })()
+            """) == "{ self: [Circular *1] }")
+        }
+
+        @Test("equal but unrelated sibling values are not mistaken for a cycle")
+        func testEqualSiblingsAreNotCircular() throws {
+            // The ancestor check must only match values still on the current path down to the
+            // root, not any value that happens to be `===` to something formatted elsewhere in
+            // the tree.
+            let ctx = try NodeUtilTestContext()
+            #expect(ctx.evalString("""
+                (function() {
+                    const shared = { x: 1 };
+                    return util.inspect({ a: shared, b: shared }, { depth: null });
+                })()
+            """) == "{ a: { x: 1 }, b: { x: 1 } }")
+        }
+
+        @Test("a cycle through an array is also reported as circular")
+        func testCircularReferenceInArray() throws {
+            let ctx = try NodeUtilTestContext()
+            #expect(ctx.evalString("""
+                (function() {
+                    const a = [];
+                    a.push(a);
+                    return util.inspect(a, { depth: null });
+                })()
+            """) == "[ [Circular *1] ]")
+        }
     }
 }
