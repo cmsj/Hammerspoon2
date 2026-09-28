@@ -91,7 +91,7 @@ main()
         <div class="prop-type">NSDictionary</div>
         <div class="description">The same object as `fs.constants`, matching Node.</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1167" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1167</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1217" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1217</a>
         </div>
     </div>
 
@@ -134,7 +134,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1175" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1175</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1225" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1225</a>
         </div>
     </div>
     <div class="method" id="writeFile">
@@ -180,7 +180,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1184" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1184</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1234" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1234</a>
         </div>
     </div>
     <div class="method" id="appendFile">
@@ -221,16 +221,16 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1192" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1192</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1242" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1242</a>
         </div>
     </div>
     <div class="method" id="mkdir">
-        <h3><a href="#mkdir">fs.promises.mkdir(path, recursive) -> Promise&lt;any&gt;</a></h3>
+        <h3><a href="#mkdir">fs.promises.mkdir(path, options) -> Promise&lt;any&gt;</a></h3>
 
         <div class="description">Create a directory. See `fs.mkdirSync` for details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.promises.mkdir(path, recursive) -> Promise&lt;any&gt;</code></pre>
+        <pre><code class="language-javascript">fs.promises.mkdir(path, options) -> Promise&lt;any&gt;</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -248,9 +248,9 @@ main()
                     <td class="param-desc">Path of the directory to create. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">recursive</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, creates all missing intermediate directories. Defaults to `false`.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, creates all missing intermediate directories. Defaults to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -262,16 +262,16 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1200" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1200</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1250" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1250</a>
         </div>
     </div>
     <div class="method" id="rmdir">
-        <h3><a href="#rmdir">fs.promises.rmdir(path, recursive) -> Promise&lt;any&gt;</a></h3>
+        <h3><a href="#rmdir">fs.promises.rmdir(path, options) -> Promise&lt;any&gt;</a></h3>
 
         <div class="description">Remove an empty directory. See `fs.rmdirSync` for details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.promises.rmdir(path, recursive) -> Promise&lt;any&gt;</code></pre>
+        <pre><code class="language-javascript">fs.promises.rmdir(path, options) -> Promise&lt;any&gt;</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -289,9 +289,9 @@ main()
                     <td class="param-desc">Path of the directory to remove. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">recursive</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, removes the directory and its entire contents. Defaults to `false`.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -303,16 +303,16 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1208" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1208</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1258" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1258</a>
         </div>
     </div>
     <div class="method" id="rm">
-        <h3><a href="#rm">fs.promises.rm(path, recursive, force) -> Promise&lt;any&gt;</a></h3>
+        <h3><a href="#rm">fs.promises.rm(path, options) -> Promise&lt;any&gt;</a></h3>
 
         <div class="description">Remove a file or directory. See `fs.rmSync` for details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.promises.rm(path, recursive, force) -> Promise&lt;any&gt;</code></pre>
+        <pre><code class="language-javascript">fs.promises.rm(path, options) -> Promise&lt;any&gt;</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -330,14 +330,9 @@ main()
                     <td class="param-desc">Path to remove. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">recursive</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.</td>
-                </tr>
-                <tr>
-                    <td class="param-name">force</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, a missing path is not treated as an error. Defaults to `false`.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -349,7 +344,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1217" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1217</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1266" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1266</a>
         </div>
     </div>
     <div class="method" id="unlink">
@@ -385,16 +380,16 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1223" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1223</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1272" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1272</a>
         </div>
     </div>
     <div class="method" id="readdir">
-        <h3><a href="#readdir">fs.promises.readdir(path, withFileTypes, recursive) -> Promise&lt;any&gt;</a></h3>
+        <h3><a href="#readdir">fs.promises.readdir(path, options) -> Promise&lt;any&gt;</a></h3>
 
         <div class="description">List the contents of a directory. See `fs.readdirSync` for details.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.promises.readdir(path, withFileTypes, recursive) -> Promise&lt;any&gt;</code></pre>
+        <pre><code class="language-javascript">fs.promises.readdir(path, options) -> Promise&lt;any&gt;</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -412,14 +407,9 @@ main()
                     <td class="param-desc">Path to the directory. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">withFileTypes</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.</td>
-                </tr>
-                <tr>
-                    <td class="param-name">recursive</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, walks subdirectories too. Defaults to `false`.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. Both default to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -431,7 +421,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1232" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1232</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1280" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1280</a>
         </div>
     </div>
     <div class="method" id="stat">
@@ -467,7 +457,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1238" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1238</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1286" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1286</a>
         </div>
     </div>
     <div class="method" id="lstat">
@@ -503,7 +493,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1244" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1244</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1292" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1292</a>
         </div>
     </div>
     <div class="method" id="rename">
@@ -544,7 +534,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1252" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1252</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1300" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1300</a>
         </div>
     </div>
     <div class="method" id="copyFile">
@@ -590,7 +580,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1261" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1261</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1309" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1309</a>
         </div>
     </div>
     <div class="method" id="symlink">
@@ -631,7 +621,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1269" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1269</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1317" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1317</a>
         </div>
     </div>
     <div class="method" id="readlink">
@@ -667,7 +657,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1275" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1275</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1323" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1323</a>
         </div>
     </div>
     <div class="method" id="realpath">
@@ -703,7 +693,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1281" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1281</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1329" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1329</a>
         </div>
     </div>
     <div class="method" id="link">
@@ -744,7 +734,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1289" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1289</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1337" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1337</a>
         </div>
     </div>
     <div class="method" id="access">
@@ -785,7 +775,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1297" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1297</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1345" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1345</a>
         </div>
     </div>
     <div class="method" id="truncate">
@@ -826,7 +816,7 @@ main()
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1305" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1305</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1353" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1353</a>
         </div>
     </div>
         </main>

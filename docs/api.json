@@ -25607,7 +25607,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 826
+          "lineNumber": 874
         },
         {
           "name": "readFileSync",
@@ -25639,7 +25639,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 834
+          "lineNumber": 882
         },
         {
           "name": "writeFileSync",
@@ -25675,7 +25675,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 842
+          "lineNumber": 890
         },
         {
           "name": "appendFileSync",
@@ -25704,13 +25704,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 849
+          "lineNumber": 897
         },
         {
           "name": "mkdirSync",
-          "signature": "func mkdirSync(_ path: JSString, _ recursive: Bool)",
+          "signature": "func mkdirSync(_ path: JSString, _ options: JSValue?)",
           "isStatic": false,
-          "rawDocumentation": "Synchronously create a directory.\n- Parameters:\n  - path: Path of the directory to create. `~` is expanded.\n  - recursive?: When `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.\n- Example: `fs.mkdirSync(\"~/Projects/new-thing\", { recursive: true })`\n- Example: `fs.mkdirSync(\"~/Projects/new-thing\", true)`",
+          "rawDocumentation": "Synchronously create a directory.\n- Parameters:\n  - path: Path of the directory to create. `~` is expanded.\n  - options?: A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `recursive` is `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.\n- Example: `fs.mkdirSync(\"~/Projects/new-thing\", { recursive: true })`\n- Example: `fs.mkdirSync(\"~/Projects/new-thing\", true)`",
           "description": "Synchronously create a directory.",
           "params": [
             {
@@ -25721,9 +25721,9 @@
               "tsType": null
             },
             {
-              "name": "recursive",
-              "type": "boolean",
-              "description": "When `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `recursive` is `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.",
               "optional": true,
               "tsType": null
             }
@@ -25733,13 +25733,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 857
+          "lineNumber": 905
         },
         {
           "name": "rmdirSync",
-          "signature": "func rmdirSync(_ path: JSString, _ recursive: Bool)",
+          "signature": "func rmdirSync(_ path: JSString, _ options: JSValue?)",
           "isStatic": false,
-          "rawDocumentation": "Synchronously remove an empty directory.\n- Parameters:\n  - path: Path of the directory to remove. `~` is expanded.\n  - recursive?: When `true`, removes the directory and its entire contents. Defaults to `false`.\n- Example: `fs.rmdirSync(\"/tmp/empty-dir\")`",
+          "rawDocumentation": "Synchronously remove an empty directory.\n- Parameters:\n  - path: Path of the directory to remove. `~` is expanded.\n  - options?: A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.\n- Example: `fs.rmdirSync(\"/tmp/empty-dir\")`",
           "description": "Synchronously remove an empty directory.",
           "params": [
             {
@@ -25750,9 +25750,9 @@
               "tsType": null
             },
             {
-              "name": "recursive",
-              "type": "boolean",
-              "description": "When `true`, removes the directory and its entire contents. Defaults to `false`.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.",
               "optional": true,
               "tsType": null
             }
@@ -25762,13 +25762,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 864
+          "lineNumber": 912
         },
         {
           "name": "rmSync",
-          "signature": "func rmSync(_ path: JSString, _ recursive: Bool, _ force: Bool)",
+          "signature": "func rmSync(_ path: JSString, _ options: JSValue?)",
           "isStatic": false,
-          "rawDocumentation": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.\n- Parameters:\n  - path: Path to remove. `~` is expanded.\n  - recursive?: When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.\n  - force?: When `true`, a missing path is not treated as an error. Defaults to `false`.\n- Example: `fs.rmSync(\"/tmp/old-dir\", { recursive: true, force: true })`",
+          "rawDocumentation": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.\n- Parameters:\n  - path: Path to remove. `~` is expanded.\n  - options?: A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.\n- Example: `fs.rmSync(\"/tmp/old-dir\", { recursive: true, force: true })`",
           "description": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.",
           "params": [
             {
@@ -25779,16 +25779,9 @@
               "tsType": null
             },
             {
-              "name": "recursive",
-              "type": "boolean",
-              "description": "When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.",
-              "optional": true,
-              "tsType": null
-            },
-            {
-              "name": "force",
-              "type": "boolean",
-              "description": "When `true`, a missing path is not treated as an error. Defaults to `false`.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.",
               "optional": true,
               "tsType": null
             }
@@ -25798,7 +25791,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 872
+          "lineNumber": 919
         },
         {
           "name": "unlinkSync",
@@ -25820,13 +25813,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 877
+          "lineNumber": 924
         },
         {
           "name": "readdirSync",
-          "signature": "func readdirSync(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> [Any]?",
+          "signature": "func readdirSync(_ path: JSString, _ options: JSValue?) -> [Any]?",
           "isStatic": false,
-          "rawDocumentation": "Synchronously list the contents of a directory.\n- Parameters:\n  - path: Path to the directory. `~` is expanded.\n  - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.\n  - recursive?: When `true`, walks subdirectories too. Filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`). Defaults to `false`.\n- Returns: An array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.\n- Example: `const files = fs.readdirSync(\"~/Documents\")`\n- Example: `fs.readdirSync(\"~/Documents\", { withFileTypes: true }).forEach(d => console.log(d.name, d.isDirectory()))`\n- Example: `const allFiles = fs.readdirSync(\"~/Documents\", { recursive: true })`",
+          "rawDocumentation": "Synchronously list the contents of a directory.\n- Parameters:\n  - path: Path to the directory. `~` is expanded.\n  - options?: A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. `withFileTypes`: returns `Dirent` objects instead of bare filenames; defaults to `false`. `recursive`: walks subdirectories too - filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`); defaults to `false`.\n- Returns: An array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.\n- Example: `const files = fs.readdirSync(\"~/Documents\")`\n- Example: `fs.readdirSync(\"~/Documents\", { withFileTypes: true }).forEach(d => console.log(d.name, d.isDirectory()))`\n- Example: `const allFiles = fs.readdirSync(\"~/Documents\", { recursive: true })`",
           "description": "Synchronously list the contents of a directory.",
           "params": [
             {
@@ -25837,16 +25830,9 @@
               "tsType": null
             },
             {
-              "name": "withFileTypes",
-              "type": "boolean",
-              "description": "When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.",
-              "optional": true,
-              "tsType": null
-            },
-            {
-              "name": "recursive",
-              "type": "boolean",
-              "description": "When `true`, walks subdirectories too. Filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`). Defaults to `false`.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. `withFileTypes`: returns `Dirent` objects instead of bare filenames; defaults to `false`. `recursive`: walks subdirectories too - filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`); defaults to `false`.",
               "optional": true,
               "tsType": null
             }
@@ -25859,13 +25845,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 888
+          "lineNumber": 934
         },
         {
           "name": "statSync",
-          "signature": "func statSync(_ path: JSString, _ throwIfNoEntry: Bool) -> NodeFSStats?",
+          "signature": "func statSync(_ path: JSString, _ options: JSValue?) -> NodeFSStats?",
           "isStatic": false,
-          "rawDocumentation": "Synchronously get file metadata, following symbolic links.\n- Parameters:\n  - path: Path to inspect. `~` is expanded.\n  - throwIfNoEntry?: Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.\n- Returns: A `Stats` object.\n- Example: `console.log(fs.statSync(\"/etc/hosts\").size)`",
+          "rawDocumentation": "Synchronously get file metadata, following symbolic links.\n- Parameters:\n  - path: Path to inspect. `~` is expanded.\n  - options?: A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.\n- Returns: A `Stats` object.\n- Example: `console.log(fs.statSync(\"/etc/hosts\").size)`",
           "description": "Synchronously get file metadata, following symbolic links.",
           "params": [
             {
@@ -25876,9 +25862,9 @@
               "tsType": null
             },
             {
-              "name": "throwIfNoEntry",
-              "type": "boolean",
-              "description": "Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.",
               "optional": true,
               "tsType": null
             }
@@ -25891,13 +25877,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 896
+          "lineNumber": 942
         },
         {
           "name": "lstatSync",
-          "signature": "func lstatSync(_ path: JSString, _ throwIfNoEntry: Bool) -> NodeFSStats?",
+          "signature": "func lstatSync(_ path: JSString, _ options: JSValue?) -> NodeFSStats?",
           "isStatic": false,
-          "rawDocumentation": "Synchronously get file metadata, without following symbolic links.\n- Parameters:\n  - path: Path to inspect. `~` is expanded.\n  - throwIfNoEntry?: Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.\n- Returns: A `Stats` object.\n- Example: `console.log(fs.lstatSync(\"/var\").isSymbolicLink())`",
+          "rawDocumentation": "Synchronously get file metadata, without following symbolic links.\n- Parameters:\n  - path: Path to inspect. `~` is expanded.\n  - options?: A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.\n- Returns: A `Stats` object.\n- Example: `console.log(fs.lstatSync(\"/var\").isSymbolicLink())`",
           "description": "Synchronously get file metadata, without following symbolic links.",
           "params": [
             {
@@ -25908,9 +25894,9 @@
               "tsType": null
             },
             {
-              "name": "throwIfNoEntry",
-              "type": "boolean",
-              "description": "Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.",
               "optional": true,
               "tsType": null
             }
@@ -25923,7 +25909,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 904
+          "lineNumber": 950
         },
         {
           "name": "renameSync",
@@ -25952,7 +25938,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 911
+          "lineNumber": 957
         },
         {
           "name": "copyFileSync",
@@ -25988,7 +25974,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 919
+          "lineNumber": 965
         },
         {
           "name": "symlinkSync",
@@ -26017,7 +26003,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 926
+          "lineNumber": 972
         },
         {
           "name": "readlinkSync",
@@ -26042,7 +26028,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 932
+          "lineNumber": 978
         },
         {
           "name": "realpathSync",
@@ -26067,7 +26053,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 938
+          "lineNumber": 984
         },
         {
           "name": "linkSync",
@@ -26096,7 +26082,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 945
+          "lineNumber": 991
         },
         {
           "name": "accessSync",
@@ -26125,7 +26111,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 952
+          "lineNumber": 998
         },
         {
           "name": "truncateSync",
@@ -26154,7 +26140,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 959
+          "lineNumber": 1005
         }
       ],
       "properties": [
@@ -26168,7 +26154,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 812
+          "lineNumber": 860
         }
       ],
       "types": [
@@ -26193,7 +26179,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 643
+              "lineNumber": 691
             },
             {
               "name": "isDirectory",
@@ -26210,7 +26196,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 647
+              "lineNumber": 695
             },
             {
               "name": "isSymbolicLink",
@@ -26227,7 +26213,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 651
+              "lineNumber": 699
             },
             {
               "name": "isBlockDevice",
@@ -26244,7 +26230,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 654
+              "lineNumber": 702
             },
             {
               "name": "isCharacterDevice",
@@ -26261,7 +26247,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 657
+              "lineNumber": 705
             },
             {
               "name": "isFIFO",
@@ -26278,7 +26264,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 660
+              "lineNumber": 708
             },
             {
               "name": "isSocket",
@@ -26295,7 +26281,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 663
+              "lineNumber": 711
             }
           ],
           "properties": [
@@ -26309,7 +26295,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 604
+              "lineNumber": 652
             },
             {
               "name": "ino",
@@ -26321,7 +26307,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 606
+              "lineNumber": 654
             },
             {
               "name": "mode",
@@ -26333,7 +26319,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 608
+              "lineNumber": 656
             },
             {
               "name": "nlink",
@@ -26345,7 +26331,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 610
+              "lineNumber": 658
             },
             {
               "name": "uid",
@@ -26357,7 +26343,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 612
+              "lineNumber": 660
             },
             {
               "name": "gid",
@@ -26369,7 +26355,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 614
+              "lineNumber": 662
             },
             {
               "name": "rdev",
@@ -26381,7 +26367,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 616
+              "lineNumber": 664
             },
             {
               "name": "size",
@@ -26393,7 +26379,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 618
+              "lineNumber": 666
             },
             {
               "name": "blksize",
@@ -26405,7 +26391,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 620
+              "lineNumber": 668
             },
             {
               "name": "blocks",
@@ -26417,7 +26403,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 622
+              "lineNumber": 670
             },
             {
               "name": "atimeMs",
@@ -26429,7 +26415,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 624
+              "lineNumber": 672
             },
             {
               "name": "mtimeMs",
@@ -26441,7 +26427,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 626
+              "lineNumber": 674
             },
             {
               "name": "ctimeMs",
@@ -26453,7 +26439,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 628
+              "lineNumber": 676
             },
             {
               "name": "birthtimeMs",
@@ -26465,7 +26451,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 630
+              "lineNumber": 678
             },
             {
               "name": "atime",
@@ -26477,7 +26463,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 632
+              "lineNumber": 680
             },
             {
               "name": "mtime",
@@ -26489,7 +26475,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 634
+              "lineNumber": 682
             },
             {
               "name": "ctime",
@@ -26501,7 +26487,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 636
+              "lineNumber": 684
             },
             {
               "name": "birthtime",
@@ -26513,7 +26499,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 638
+              "lineNumber": 686
             }
           ]
         },
@@ -26538,7 +26524,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 735
+              "lineNumber": 783
             },
             {
               "name": "isDirectory",
@@ -26555,7 +26541,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 738
+              "lineNumber": 786
             },
             {
               "name": "isSymbolicLink",
@@ -26572,7 +26558,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 741
+              "lineNumber": 789
             },
             {
               "name": "isBlockDevice",
@@ -26589,7 +26575,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 744
+              "lineNumber": 792
             },
             {
               "name": "isCharacterDevice",
@@ -26606,7 +26592,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 747
+              "lineNumber": 795
             },
             {
               "name": "isFIFO",
@@ -26623,7 +26609,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 750
+              "lineNumber": 798
             },
             {
               "name": "isSocket",
@@ -26640,7 +26626,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 753
+              "lineNumber": 801
             }
           ],
           "properties": [
@@ -26654,7 +26640,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 731
+              "lineNumber": 779
             }
           ]
         }
@@ -26695,7 +26681,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1175
+          "lineNumber": 1225
         },
         {
           "name": "writeFile",
@@ -26734,7 +26720,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1184
+          "lineNumber": 1234
         },
         {
           "name": "appendFile",
@@ -26766,13 +26752,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1192
+          "lineNumber": 1242
         },
         {
           "name": "mkdir",
-          "signature": "func mkdir(_ path: JSString, _ recursive: Bool) -> JSPromise?",
+          "signature": "func mkdir(_ path: JSString, _ options: JSValue?) -> JSPromise?",
           "isStatic": false,
-          "rawDocumentation": "Create a directory. See `fs.mkdirSync` for details.\n- Parameters:\n  - path: Path of the directory to create. `~` is expanded.\n  - recursive?: When `true`, creates all missing intermediate directories. Defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.mkdir(\"~/Projects/new-thing\", { recursive: true })`",
+          "rawDocumentation": "Create a directory. See `fs.mkdirSync` for details.\n- Parameters:\n  - path: Path of the directory to create. `~` is expanded.\n  - options?: A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, creates all missing intermediate directories. Defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.mkdir(\"~/Projects/new-thing\", { recursive: true })`",
           "description": "Create a directory. See `fs.mkdirSync` for details.",
           "params": [
             {
@@ -26783,9 +26769,9 @@
               "tsType": null
             },
             {
-              "name": "recursive",
-              "type": "boolean",
-              "description": "When `true`, creates all missing intermediate directories. Defaults to `false`.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, creates all missing intermediate directories. Defaults to `false`.",
               "optional": true,
               "tsType": null
             }
@@ -26798,13 +26784,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1200
+          "lineNumber": 1250
         },
         {
           "name": "rmdir",
-          "signature": "func rmdir(_ path: JSString, _ recursive: Bool) -> JSPromise?",
+          "signature": "func rmdir(_ path: JSString, _ options: JSValue?) -> JSPromise?",
           "isStatic": false,
-          "rawDocumentation": "Remove an empty directory. See `fs.rmdirSync` for details.\n- Parameters:\n  - path: Path of the directory to remove. `~` is expanded.\n  - recursive?: When `true`, removes the directory and its entire contents. Defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.rmdir(\"/tmp/empty-dir\")`",
+          "rawDocumentation": "Remove an empty directory. See `fs.rmdirSync` for details.\n- Parameters:\n  - path: Path of the directory to remove. `~` is expanded.\n  - options?: A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.rmdir(\"/tmp/empty-dir\")`",
           "description": "Remove an empty directory. See `fs.rmdirSync` for details.",
           "params": [
             {
@@ -26815,9 +26801,9 @@
               "tsType": null
             },
             {
-              "name": "recursive",
-              "type": "boolean",
-              "description": "When `true`, removes the directory and its entire contents. Defaults to `false`.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.",
               "optional": true,
               "tsType": null
             }
@@ -26830,13 +26816,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1208
+          "lineNumber": 1258
         },
         {
           "name": "rm",
-          "signature": "func rm(_ path: JSString, _ recursive: Bool, _ force: Bool) -> JSPromise?",
+          "signature": "func rm(_ path: JSString, _ options: JSValue?) -> JSPromise?",
           "isStatic": false,
-          "rawDocumentation": "Remove a file or directory. See `fs.rmSync` for details.\n- Parameters:\n  - path: Path to remove. `~` is expanded.\n  - recursive?: When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.\n  - force?: When `true`, a missing path is not treated as an error. Defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.rm(\"/tmp/old-dir\", { recursive: true, force: true })`",
+          "rawDocumentation": "Remove a file or directory. See `fs.rmSync` for details.\n- Parameters:\n  - path: Path to remove. `~` is expanded.\n  - options?: A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.\n- Returns: A `Promise` resolving to `undefined`.\n- Example: `await fs.promises.rm(\"/tmp/old-dir\", { recursive: true, force: true })`",
           "description": "Remove a file or directory. See `fs.rmSync` for details.",
           "params": [
             {
@@ -26847,16 +26833,9 @@
               "tsType": null
             },
             {
-              "name": "recursive",
-              "type": "boolean",
-              "description": "When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.",
-              "optional": true,
-              "tsType": null
-            },
-            {
-              "name": "force",
-              "type": "boolean",
-              "description": "When `true`, a missing path is not treated as an error. Defaults to `false`.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.",
               "optional": true,
               "tsType": null
             }
@@ -26869,7 +26848,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1217
+          "lineNumber": 1266
         },
         {
           "name": "unlink",
@@ -26894,13 +26873,13 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1223
+          "lineNumber": 1272
         },
         {
           "name": "readdir",
-          "signature": "func readdir(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> JSPromise?",
+          "signature": "func readdir(_ path: JSString, _ options: JSValue?) -> JSPromise?",
           "isStatic": false,
-          "rawDocumentation": "List the contents of a directory. See `fs.readdirSync` for details.\n- Parameters:\n  - path: Path to the directory. `~` is expanded.\n  - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.\n  - recursive?: When `true`, walks subdirectories too. Defaults to `false`.\n- Returns: A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.\n- Example: `const files = await fs.promises.readdir(\"~/Documents\")`",
+          "rawDocumentation": "List the contents of a directory. See `fs.readdirSync` for details.\n- Parameters:\n  - path: Path to the directory. `~` is expanded.\n  - options?: A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. Both default to `false`.\n- Returns: A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.\n- Example: `const files = await fs.promises.readdir(\"~/Documents\")`",
           "description": "List the contents of a directory. See `fs.readdirSync` for details.",
           "params": [
             {
@@ -26911,16 +26890,9 @@
               "tsType": null
             },
             {
-              "name": "withFileTypes",
-              "type": "boolean",
-              "description": "When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.",
-              "optional": true,
-              "tsType": null
-            },
-            {
-              "name": "recursive",
-              "type": "boolean",
-              "description": "When `true`, walks subdirectories too. Defaults to `false`.",
+              "name": "options",
+              "type": "JSValue",
+              "description": "A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. Both default to `false`.",
               "optional": true,
               "tsType": null
             }
@@ -26933,7 +26905,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1232
+          "lineNumber": 1280
         },
         {
           "name": "stat",
@@ -26958,7 +26930,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1238
+          "lineNumber": 1286
         },
         {
           "name": "lstat",
@@ -26983,7 +26955,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1244
+          "lineNumber": 1292
         },
         {
           "name": "rename",
@@ -27015,7 +26987,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1252
+          "lineNumber": 1300
         },
         {
           "name": "copyFile",
@@ -27054,7 +27026,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1261
+          "lineNumber": 1309
         },
         {
           "name": "symlink",
@@ -27086,7 +27058,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1269
+          "lineNumber": 1317
         },
         {
           "name": "readlink",
@@ -27111,7 +27083,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1275
+          "lineNumber": 1323
         },
         {
           "name": "realpath",
@@ -27136,7 +27108,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1281
+          "lineNumber": 1329
         },
         {
           "name": "link",
@@ -27168,7 +27140,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1289
+          "lineNumber": 1337
         },
         {
           "name": "access",
@@ -27200,7 +27172,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1297
+          "lineNumber": 1345
         },
         {
           "name": "truncate",
@@ -27232,7 +27204,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1305
+          "lineNumber": 1353
         }
       ],
       "properties": [
@@ -27246,7 +27218,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1167
+          "lineNumber": 1217
         }
       ],
       "types": [],
@@ -27286,7 +27258,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleUtil.swift",
-          "lineNumber": 245
+          "lineNumber": 258
         }
       ],
       "properties": [],
@@ -29373,5 +29345,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-14T09:52:12.739Z"
+  "generatedAt": "2026-09-27T22:49:45.028Z"
 }

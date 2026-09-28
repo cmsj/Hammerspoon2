@@ -95,6 +95,54 @@ enum NodeFS {
         return value.toString() ?? ""
     }
 
+    /// Extracts a boolean flag from a Node-style options argument (eg. `{ recursive: true }`).
+    ///
+    /// Real Node functions like `mkdirSync`/`rmSync`/`readdirSync` take a single options
+    /// *object* here, not a positional boolean - passing a bare boolean (as this module's first
+    /// implementation did, and as some of this module's own tests still do for convenience) is
+    /// something Node itself never supported. To stay compatible with real Node code while not
+    /// breaking that shorthand, a bare boolean is accepted too and treated as this flag's value
+    /// directly. Anything else (omitted/`undefined`/`null`, or an object missing this field)
+    /// yields `defaultValue`.
+    fileprivate static func optionsFlag(_ options: JSValue?, _ field: String, default defaultValue: Bool = false) -> Bool {
+        guard let options, !options.isUndefined, !options.isNull else { return defaultValue }
+        if options.isBoolean { return options.toBool() }
+        guard options.isObject, let value = options.objectForKeyedSubscript(field), !value.isUndefined, !value.isNull else {
+            return defaultValue
+        }
+        return value.toBool()
+    }
+
+    /// Extracts an integer field from a Node-style options object (eg. `{ mode: 0o755 }`).
+    /// Unlike `optionsFlag`, there's no bare-value shorthand: a non-object `options` (or an
+    /// object missing this field) yields `defaultValue`.
+    fileprivate static func optionsInt(_ options: JSValue?, _ field: String, default defaultValue: Int) -> Int {
+        guard let options, options.isObject,
+              let value = options.objectForKeyedSubscript(field), !value.isUndefined, !value.isNull
+        else { return defaultValue }
+        return Int(value.toInt32())
+    }
+
+    /// Parses `readdirSync`/`fs.promises.readdir`'s options argument. A bare boolean is
+    /// shorthand for `withFileTypes` only (matching this module's pre-options-object API) -
+    /// `recursive` is never implied by it, only ever read from an actual options object.
+    fileprivate static func parseReaddirOptions(_ options: JSValue?) -> (withFileTypes: Bool, recursive: Bool) {
+        if let options, options.isBoolean {
+            return (options.toBool(), false)
+        }
+        return (optionsFlag(options, "withFileTypes"), optionsFlag(options, "recursive"))
+    }
+
+    /// Parses `rmSync`/`fs.promises.rm`'s options argument. A bare boolean is shorthand for
+    /// `recursive` only (the flag anyone reaching for a shorthand almost always means) -
+    /// `force` is never implied by it, only ever read from an actual options object.
+    fileprivate static func parseRmOptions(_ options: JSValue?) -> (recursive: Bool, force: Bool) {
+        if let options, options.isBoolean {
+            return (options.toBool(), false)
+        }
+        return (optionsFlag(options, "recursive"), optionsFlag(options, "force"))
+    }
+
     /// Mirrors Node's internal `determineSpecificType()`, used to build the "Received ..."
     /// suffix of `ERR_INVALID_ARG_TYPE` messages.
     fileprivate nonisolated static func describeType(_ value: JSValue) -> String {
@@ -851,25 +899,24 @@ enum NodeFS {
     /// Synchronously create a directory.
     /// - Parameters:
     ///   - path: Path of the directory to create. `~` is expanded.
-    ///   - recursive?: When `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.
+    ///   - options?: A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `recursive` is `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.
     /// - Example: `fs.mkdirSync("~/Projects/new-thing", { recursive: true })`
     /// - Example: `fs.mkdirSync("~/Projects/new-thing", true)`
-    @objc func mkdirSync(_ path: JSString, _ recursive: Bool)
+    @objc func mkdirSync(_ path: JSString, _ options: JSValue?)
 
     /// Synchronously remove an empty directory.
     /// - Parameters:
     ///   - path: Path of the directory to remove. `~` is expanded.
-    ///   - recursive?: When `true`, removes the directory and its entire contents. Defaults to `false`.
+    ///   - options?: A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.
     /// - Example: `fs.rmdirSync("/tmp/empty-dir")`
-    @objc func rmdirSync(_ path: JSString, _ recursive: Bool)
+    @objc func rmdirSync(_ path: JSString, _ options: JSValue?)
 
     /// Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.
     /// - Parameters:
     ///   - path: Path to remove. `~` is expanded.
-    ///   - recursive?: When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.
-    ///   - force?: When `true`, a missing path is not treated as an error. Defaults to `false`.
+    ///   - options?: A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.
     /// - Example: `fs.rmSync("/tmp/old-dir", { recursive: true, force: true })`
-    @objc func rmSync(_ path: JSString, _ recursive: Bool, _ force: Bool)
+    @objc func rmSync(_ path: JSString, _ options: JSValue?)
 
     /// Synchronously delete a single file.
     /// - Parameter path: Path to the file. `~` is expanded.
@@ -879,29 +926,28 @@ enum NodeFS {
     /// Synchronously list the contents of a directory.
     /// - Parameters:
     ///   - path: Path to the directory. `~` is expanded.
-    ///   - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.
-    ///   - recursive?: When `true`, walks subdirectories too. Filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`). Defaults to `false`.
+    ///   - options?: A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. `withFileTypes`: returns `Dirent` objects instead of bare filenames; defaults to `false`. `recursive`: walks subdirectories too - filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`); defaults to `false`.
     /// - Returns: An array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.
     /// - Example: `const files = fs.readdirSync("~/Documents")`
     /// - Example: `fs.readdirSync("~/Documents", { withFileTypes: true }).forEach(d => console.log(d.name, d.isDirectory()))`
     /// - Example: `const allFiles = fs.readdirSync("~/Documents", { recursive: true })`
-    @objc func readdirSync(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> [Any]?
+    @objc func readdirSync(_ path: JSString, _ options: JSValue?) -> [Any]?
 
     /// Synchronously get file metadata, following symbolic links.
     /// - Parameters:
     ///   - path: Path to inspect. `~` is expanded.
-    ///   - throwIfNoEntry?: Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
+    ///   - options?: A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
     /// - Returns: A `Stats` object.
     /// - Example: `console.log(fs.statSync("/etc/hosts").size)`
-    @objc func statSync(_ path: JSString, _ throwIfNoEntry: Bool) -> NodeFSStats?
+    @objc func statSync(_ path: JSString, _ options: JSValue?) -> NodeFSStats?
 
     /// Synchronously get file metadata, without following symbolic links.
     /// - Parameters:
     ///   - path: Path to inspect. `~` is expanded.
-    ///   - throwIfNoEntry?: Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
+    ///   - options?: A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
     /// - Returns: A `Stats` object.
     /// - Example: `console.log(fs.lstatSync("/var").isSymbolicLink())`
-    @objc func lstatSync(_ path: JSString, _ throwIfNoEntry: Bool) -> NodeFSStats?
+    @objc func lstatSync(_ path: JSString, _ options: JSValue?) -> NodeFSStats?
 
     /// Synchronously rename (move) a file or directory.
     /// - Parameters:
@@ -1018,23 +1064,24 @@ enum NodeFS {
         }
     }
 
-    @objc func mkdirSync(_ path: JSString, _ recursive: Bool) {
+    @objc func mkdirSync(_ path: JSString, _ options: JSValue?) {
         _ = sync {
             let p = try NodeFS.requireString(path, "path")
-            try NodeFS.mkdir(p, recursive: recursive)
+            try NodeFS.mkdir(p, recursive: NodeFS.optionsFlag(options, "recursive"))
         }
     }
 
-    @objc func rmdirSync(_ path: JSString, _ recursive: Bool) {
+    @objc func rmdirSync(_ path: JSString, _ options: JSValue?) {
         _ = sync {
             let p = try NodeFS.requireString(path, "path")
-            try NodeFS.rmdir(p, recursive: recursive)
+            try NodeFS.rmdir(p, recursive: NodeFS.optionsFlag(options, "recursive"))
         }
     }
 
-    @objc func rmSync(_ path: JSString, _ recursive: Bool, _ force: Bool) {
+    @objc func rmSync(_ path: JSString, _ options: JSValue?) {
         _ = sync {
             let p = try NodeFS.requireString(path, "path")
+            let (recursive, force) = NodeFS.parseRmOptions(options)
             try NodeFS.rm(p, recursive: recursive, force: force)
         }
     }
@@ -1046,14 +1093,16 @@ enum NodeFS {
         }
     }
 
-    @objc func readdirSync(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> [Any]? {
+    @objc func readdirSync(_ path: JSString, _ options: JSValue?) -> [Any]? {
         sync {
             let p = try NodeFS.requireString(path, "path")
+            let (withFileTypes, recursive) = NodeFS.parseReaddirOptions(options)
             return try NodeFS.readdir(p, withFileTypes: withFileTypes, recursive: recursive)
         }
     }
 
-    @objc func statSync(_ path: JSString, _ throwIfNoEntry: Bool = true) -> NodeFSStats? {
+    @objc func statSync(_ path: JSString, _ options: JSValue? = nil) -> NodeFSStats? {
+        let throwIfNoEntry = NodeFS.optionsFlag(options, "throwIfNoEntry", default: true)
         guard let context = JSContext.current() else { return nil }
         do {
             let p = try NodeFS.requireString(path, "path")
@@ -1068,7 +1117,8 @@ enum NodeFS {
         }
     }
 
-    @objc func lstatSync(_ path: JSString, _ throwIfNoEntry: Bool = true) -> NodeFSStats? {
+    @objc func lstatSync(_ path: JSString, _ options: JSValue? = nil) -> NodeFSStats? {
+        let throwIfNoEntry = NodeFS.optionsFlag(options, "throwIfNoEntry", default: true)
         guard let context = JSContext.current() else { return nil }
         do {
             let p = try NodeFS.requireString(path, "path")
@@ -1194,27 +1244,26 @@ enum NodeFS {
     /// Create a directory. See `fs.mkdirSync` for details.
     /// - Parameters:
     ///   - path: Path of the directory to create. `~` is expanded.
-    ///   - recursive?: When `true`, creates all missing intermediate directories. Defaults to `false`.
+    ///   - options?: A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, creates all missing intermediate directories. Defaults to `false`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.mkdir("~/Projects/new-thing", { recursive: true })`
-    @objc func mkdir(_ path: JSString, _ recursive: Bool) -> JSPromise?
+    @objc func mkdir(_ path: JSString, _ options: JSValue?) -> JSPromise?
 
     /// Remove an empty directory. See `fs.rmdirSync` for details.
     /// - Parameters:
     ///   - path: Path of the directory to remove. `~` is expanded.
-    ///   - recursive?: When `true`, removes the directory and its entire contents. Defaults to `false`.
+    ///   - options?: A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.rmdir("/tmp/empty-dir")`
-    @objc func rmdir(_ path: JSString, _ recursive: Bool) -> JSPromise?
+    @objc func rmdir(_ path: JSString, _ options: JSValue?) -> JSPromise?
 
     /// Remove a file or directory. See `fs.rmSync` for details.
     /// - Parameters:
     ///   - path: Path to remove. `~` is expanded.
-    ///   - recursive?: When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.
-    ///   - force?: When `true`, a missing path is not treated as an error. Defaults to `false`.
+    ///   - options?: A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.rm("/tmp/old-dir", { recursive: true, force: true })`
-    @objc func rm(_ path: JSString, _ recursive: Bool, _ force: Bool) -> JSPromise?
+    @objc func rm(_ path: JSString, _ options: JSValue?) -> JSPromise?
 
     /// Delete a single file. See `fs.unlinkSync` for details.
     /// - Parameter path: Path to the file. `~` is expanded.
@@ -1225,11 +1274,10 @@ enum NodeFS {
     /// List the contents of a directory. See `fs.readdirSync` for details.
     /// - Parameters:
     ///   - path: Path to the directory. `~` is expanded.
-    ///   - withFileTypes?: When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.
-    ///   - recursive?: When `true`, walks subdirectories too. Defaults to `false`.
+    ///   - options?: A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. Both default to `false`.
     /// - Returns: A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.
     /// - Example: `const files = await fs.promises.readdir("~/Documents")`
-    @objc func readdir(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> JSPromise?
+    @objc func readdir(_ path: JSString, _ options: JSValue?) -> JSPromise?
 
     /// Get file metadata, following symbolic links. See `fs.statSync` for details.
     /// - Parameter path: Path to inspect. `~` is expanded.
@@ -1369,23 +1417,24 @@ enum NodeFS {
         }
     }
 
-    @objc func mkdir(_ path: JSString, _ recursive: Bool) -> JSPromise? {
+    @objc func mkdir(_ path: JSString, _ options: JSValue?) -> JSPromise? {
         wrap {
             let p = try NodeFS.requireString(path, "path")
-            try NodeFS.mkdir(p, recursive: recursive)
+            try NodeFS.mkdir(p, recursive: NodeFS.optionsFlag(options, "recursive"))
         }
     }
 
-    @objc func rmdir(_ path: JSString, _ recursive: Bool) -> JSPromise? {
+    @objc func rmdir(_ path: JSString, _ options: JSValue?) -> JSPromise? {
         wrap {
             let p = try NodeFS.requireString(path, "path")
-            try NodeFS.rmdir(p, recursive: recursive)
+            try NodeFS.rmdir(p, recursive: NodeFS.optionsFlag(options, "recursive"))
         }
     }
 
-    @objc func rm(_ path: JSString, _ recursive: Bool, _ force: Bool) -> JSPromise? {
+    @objc func rm(_ path: JSString, _ options: JSValue?) -> JSPromise? {
         wrap {
             let p = try NodeFS.requireString(path, "path")
+            let (recursive, force) = NodeFS.parseRmOptions(options)
             try NodeFS.rm(p, recursive: recursive, force: force)
         }
     }
@@ -1397,9 +1446,10 @@ enum NodeFS {
         }
     }
 
-    @objc func readdir(_ path: JSString, _ withFileTypes: Bool, _ recursive: Bool) -> JSPromise? {
+    @objc func readdir(_ path: JSString, _ options: JSValue?) -> JSPromise? {
         wrap {
             let p = try NodeFS.requireString(path, "path")
+            let (withFileTypes, recursive) = NodeFS.parseReaddirOptions(options)
             return try NodeFS.readdir(p, withFileTypes: withFileTypes, recursive: recursive)
         }
     }

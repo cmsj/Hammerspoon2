@@ -69,6 +69,19 @@ struct NodeUtilTests {
                     == "{ a: { b: { c: [Object] } } }")
         }
 
+        @Test("inspecting a native (JSExport-bridged) object shows no spurious 'undefined' prefix")
+        func testNativeObjectNoUndefinedPrefix() throws {
+            // Regression test: a native object's `constructor.name` is JS `undefined` (not
+            // missing - JSExport-bridged objects don't get a named constructor), and
+            // `.toString()` on that faithfully stringifies to the literal text "undefined",
+            // which `constructorPrefix` used to treat as a real class name. Uses fs.statSync's
+            // Stats object as a convenient native object; the bug wasn't specific to fs.
+            let ctx = try NodeUtilTestContext()
+            ctx.eval("var fs = require('fs')")
+            let result = ctx.evalString("util.inspect(fs.statSync('/tmp'))")
+            #expect(result == "{}")
+        }
+
         @Test("does not invoke getters by default")
         func testGettersSkippedByDefault() throws {
             let ctx = try NodeUtilTestContext()

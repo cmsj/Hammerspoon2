@@ -229,6 +229,15 @@ struct NodeFSTests {
             #expect(ctx.evalBool("fs.existsSync('\(dir)')") == true)
         }
 
+        @Test("mkdirSync accepts a real Node-style { recursive: true } options object")
+        func testMkdirRecursiveOptionsObject() throws {
+            let ctx = try NodeFSTestContext()
+            let dir = ctx.path("x/y/z")
+            ctx.eval("fs.mkdirSync('\(dir)', { recursive: true })")
+            #expect(!ctx.hadException)
+            #expect(ctx.evalBool("fs.existsSync('\(dir)')") == true)
+        }
+
         @Test("readdirSync withFileTypes returns Dirent objects")
         func testReaddirWithFileTypes() throws {
             let ctx = try NodeFSTestContext()
@@ -275,7 +284,7 @@ struct NodeFSTests {
             let dir = ctx.path("tree")
             ctx.eval("fs.mkdirSync('\(dir)')")
             ctx.eval("fs.writeFileSync('\(dir)/x.txt', 'x')")
-            ctx.eval("fs.rmSync('\(dir)', true, false)")
+            ctx.eval("fs.rmSync('\(dir)', { recursive: true })")
             #expect(!ctx.hadException)
             #expect(ctx.evalBool("fs.existsSync('\(dir)')") == false)
         }
@@ -283,30 +292,63 @@ struct NodeFSTests {
         @Test("rmSync with force does not throw for a missing path")
         func testRmForce() throws {
             let ctx = try NodeFSTestContext()
-            ctx.eval("fs.rmSync('\(ctx.path("missing"))', false, true)")
+            ctx.eval("fs.rmSync('\(ctx.path("missing"))', { force: true })")
             #expect(!ctx.hadException)
+        }
+
+        @Test("rmSync bare-boolean shorthand means recursive, not force")
+        func testRmBareBooleanShorthand() throws {
+            // A bare boolean is a convenience this module accepts beyond real Node (which only
+            // ever takes an options object here) - it means `recursive`. `force` is never
+            // implied by it, only ever read from an actual options object.
+            let ctx = try NodeFSTestContext()
+            let dir = ctx.path("bool-shorthand")
+            ctx.eval("fs.mkdirSync('\(dir)')")
+            ctx.eval("fs.writeFileSync('\(dir)/x.txt', 'x')")
+            ctx.eval("fs.rmSync('\(dir)', true)")
+            #expect(!ctx.hadException)
+            #expect(ctx.evalBool("fs.existsSync('\(dir)')") == false)
         }
 
         @Test("readdirSync with recursive walks subdirectories")
         func testReaddirRecursive() throws {
             let ctx = try NodeFSTestContext()
             let dir = ctx.path("tree")
-            ctx.eval("fs.mkdirSync('\(dir)/sub', true)")
+            ctx.eval("fs.mkdirSync('\(dir)/sub', { recursive: true })")
             ctx.eval("fs.writeFileSync('\(dir)/top.txt', '1')")
             ctx.eval("fs.writeFileSync('\(dir)/sub/nested.txt', '2')")
 
-            let flat = (ctx.evalValue("fs.readdirSync('\(dir)', false, true).sort()")?.toArray() ?? [])
+            let flat = (ctx.evalValue("fs.readdirSync('\(dir)', { recursive: true }).sort()")?.toArray() ?? [])
                 .compactMap { $0 as? String }
             #expect(flat == ["sub", "sub/nested.txt", "top.txt"])
 
             // withFileTypes + recursive: Dirent.name stays the bare filename (no .parentPath).
             ctx.eval("""
-                var entries = fs.readdirSync('\(dir)', true, true);
+                var entries = fs.readdirSync('\(dir)', { withFileTypes: true, recursive: true });
                 var nested = entries.find(function(e) { return e.name === 'nested.txt'; });
                 var __nestedIsFile = nested ? nested.isFile() : false;
             """)
             #expect(!ctx.hadException)
             #expect(ctx.evalBool("__nestedIsFile") == true)
+        }
+
+        @Test("readdirSync bare-boolean shorthand means withFileTypes, not recursive")
+        func testReaddirBareBooleanShorthand() throws {
+            let ctx = try NodeFSTestContext()
+            let dir = ctx.path("readdir-bool-shorthand")
+            ctx.eval("fs.mkdirSync('\(dir)/sub', { recursive: true })")
+            ctx.eval("fs.writeFileSync('\(dir)/top.txt', '1')")
+            ctx.eval("fs.writeFileSync('\(dir)/sub/nested.txt', '2')")
+
+            // A bare `true` means withFileTypes, and must NOT also imply recursive.
+            ctx.eval("""
+                var entries = fs.readdirSync('\(dir)', true);
+                var __count = entries.length;
+                var __allDirent = entries.every(function(e) { return typeof e.isFile === 'function'; });
+            """)
+            #expect(!ctx.hadException)
+            #expect(ctx.evalInt("__count") == 2)
+            #expect(ctx.evalBool("__allDirent") == true)
         }
     }
 
@@ -328,6 +370,13 @@ struct NodeFSTests {
         func testStatNoThrow() throws {
             let ctx = try NodeFSTestContext()
             #expect(ctx.evalString("typeof fs.statSync('\(ctx.path("nope"))', false)") == "undefined")
+            #expect(!ctx.hadException)
+        }
+
+        @Test("statSync accepts a real Node-style { throwIfNoEntry: false } options object")
+        func testStatNoThrowOptionsObject() throws {
+            let ctx = try NodeFSTestContext()
+            #expect(ctx.evalString("typeof fs.statSync('\(ctx.path("nope"))', { throwIfNoEntry: false })") == "undefined")
             #expect(!ctx.hadException)
         }
 

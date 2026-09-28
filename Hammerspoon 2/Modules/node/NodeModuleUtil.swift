@@ -107,12 +107,26 @@ enum NodeUtil {
     }
 
     private static func formatError(_ value: JSValue) -> String {
-        if let stack = value.objectForKeyedSubscript("stack")?.toString(), !stack.isEmpty {
+        if let stack = definedString(value.objectForKeyedSubscript("stack")), !stack.isEmpty {
             return stack
         }
-        let name = value.objectForKeyedSubscript("name")?.toString() ?? "Error"
-        let message = value.objectForKeyedSubscript("message")?.toString() ?? ""
+        let name = definedString(value.objectForKeyedSubscript("name")) ?? "Error"
+        let message = definedString(value.objectForKeyedSubscript("message")) ?? ""
         return message.isEmpty ? name : "\(name): \(message)"
+    }
+
+    /// Reads a `JSValue` as a string, but only if it actually holds one - `nil`/`undefined`/
+    /// `null` all yield `nil` here, rather than `.toString()`'s literal `"undefined"`/`"null"`.
+    /// Every optional property read in this file that's then checked for emptiness/fallback
+    /// must go through this: `value.objectForKeyedSubscript("x")?.toString()` looks like it
+    /// safely unwraps a *missing* property, but a JS property that exists and is genuinely
+    /// `undefined` (eg. a bridged native object's `constructor.name`) still produces a real,
+    /// non-empty `JSValue`, whose `.toString()` faithfully stringifies to the word "undefined" -
+    /// which then reads as legitimate content to every caller here (`!name.isEmpty` passes,
+    /// `?? "fallback"` never fires).
+    private static func definedString(_ value: JSValue?) -> String? {
+        guard let value, !value.isUndefined, !value.isNull else { return nil }
+        return value.toString()
     }
 
     private static func formatFunction(_ value: JSValue) -> String {
@@ -207,8 +221,7 @@ enum NodeUtil {
 
     private static func constructorPrefix(_ value: JSValue) -> String {
         guard
-            let name = value.objectForKeyedSubscript("constructor")?
-                .objectForKeyedSubscript("name")?.toString(),
+            let name = definedString(value.objectForKeyedSubscript("constructor")?.objectForKeyedSubscript("name")),
             !name.isEmpty, name != "Object"
         else { return "" }
         return "\(name) "

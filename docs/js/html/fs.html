@@ -109,7 +109,7 @@ try {
 `X_OK`), `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_*`), file mode bits (`S_I*`,
 checked against `Stats.mode`), and `open()` flags (`O_*`).</div>
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L812" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:812</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L860" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:860</a>
         </div>
     </div>
 
@@ -149,7 +149,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L826" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:826</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L874" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:874</a>
         </div>
     </div>
     <div class="method" id="readFileSync">
@@ -190,7 +190,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L834" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:834</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L882" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:882</a>
         </div>
     </div>
     <div class="method" id="writeFileSync">
@@ -235,7 +235,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L842" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:842</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L890" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:890</a>
         </div>
     </div>
     <div class="method" id="appendFileSync">
@@ -275,16 +275,16 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L849" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:849</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L897" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:897</a>
         </div>
     </div>
     <div class="method" id="mkdirSync">
-        <h3><a href="#mkdirSync">fs.mkdirSync(path, recursive) -> None</a></h3>
+        <h3><a href="#mkdirSync">fs.mkdirSync(path, options) -> None</a></h3>
 
         <div class="description">Synchronously create a directory.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.mkdirSync(path, recursive) -> None</code></pre>
+        <pre><code class="language-javascript">fs.mkdirSync(path, options) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -302,9 +302,9 @@ this never throws (matching Node) - a non-string argument is simply treated as
                     <td class="param-desc">Path of the directory to create. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">recursive</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `recursive` is `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.</td>
                 </tr>
             </tbody>
         </table>
@@ -315,16 +315,16 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L857" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:857</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L905" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:905</a>
         </div>
     </div>
     <div class="method" id="rmdirSync">
-        <h3><a href="#rmdirSync">fs.rmdirSync(path, recursive) -> None</a></h3>
+        <h3><a href="#rmdirSync">fs.rmdirSync(path, options) -> None</a></h3>
 
         <div class="description">Synchronously remove an empty directory.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.rmdirSync(path, recursive) -> None</code></pre>
+        <pre><code class="language-javascript">fs.rmdirSync(path, options) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -342,9 +342,9 @@ this never throws (matching Node) - a non-string argument is simply treated as
                     <td class="param-desc">Path of the directory to remove. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">recursive</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, removes the directory and its entire contents. Defaults to `false`.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -355,16 +355,16 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L864" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:864</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L912" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:912</a>
         </div>
     </div>
     <div class="method" id="rmSync">
-        <h3><a href="#rmSync">fs.rmSync(path, recursive, force) -> None</a></h3>
+        <h3><a href="#rmSync">fs.rmSync(path, options) -> None</a></h3>
 
         <div class="description">Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.rmSync(path, recursive, force) -> None</code></pre>
+        <pre><code class="language-javascript">fs.rmSync(path, options) -> None</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -382,14 +382,9 @@ this never throws (matching Node) - a non-string argument is simply treated as
                     <td class="param-desc">Path to remove. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">recursive</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.</td>
-                </tr>
-                <tr>
-                    <td class="param-name">force</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, a missing path is not treated as an error. Defaults to `false`.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -400,7 +395,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L872" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:872</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L919" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:919</a>
         </div>
     </div>
     <div class="method" id="unlinkSync">
@@ -435,16 +430,16 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L877" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:877</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L924" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:924</a>
         </div>
     </div>
     <div class="method" id="readdirSync">
-        <h3><a href="#readdirSync">fs.readdirSync(path, withFileTypes, recursive) -> [Any]</a></h3>
+        <h3><a href="#readdirSync">fs.readdirSync(path, options) -> [Any]</a></h3>
 
         <div class="description">Synchronously list the contents of a directory.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.readdirSync(path, withFileTypes, recursive) -> [Any]</code></pre>
+        <pre><code class="language-javascript">fs.readdirSync(path, options) -> [Any]</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -462,14 +457,9 @@ this never throws (matching Node) - a non-string argument is simply treated as
                     <td class="param-desc">Path to the directory. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">withFileTypes</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.</td>
-                </tr>
-                <tr>
-                    <td class="param-name">recursive</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">When `true`, walks subdirectories too. Filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn&#39;t implement `Dirent.parentPath`). Defaults to `false`.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. `withFileTypes`: returns `Dirent` objects instead of bare filenames; defaults to `false`. `recursive`: walks subdirectories too - filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn&#39;t implement `Dirent.parentPath`); defaults to `false`.</td>
                 </tr>
             </tbody>
         </table>
@@ -481,16 +471,16 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L888" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:888</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L934" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:934</a>
         </div>
     </div>
     <div class="method" id="statSync">
-        <h3><a href="#statSync">fs.statSync(path, throwIfNoEntry) -> NodeFSStats</a></h3>
+        <h3><a href="#statSync">fs.statSync(path, options) -> NodeFSStats</a></h3>
 
         <div class="description">Synchronously get file metadata, following symbolic links.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.statSync(path, throwIfNoEntry) -> NodeFSStats</code></pre>
+        <pre><code class="language-javascript">fs.statSync(path, options) -> NodeFSStats</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -508,9 +498,9 @@ this never throws (matching Node) - a non-string argument is simply treated as
                     <td class="param-desc">Path to inspect. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">throwIfNoEntry</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.</td>
                 </tr>
             </tbody>
         </table>
@@ -522,16 +512,16 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L896" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:896</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L942" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:942</a>
         </div>
     </div>
     <div class="method" id="lstatSync">
-        <h3><a href="#lstatSync">fs.lstatSync(path, throwIfNoEntry) -> NodeFSStats</a></h3>
+        <h3><a href="#lstatSync">fs.lstatSync(path, options) -> NodeFSStats</a></h3>
 
         <div class="description">Synchronously get file metadata, without following symbolic links.</div>
 
         <div class="card-section-label">Declaration</div>
-        <pre><code class="language-javascript">fs.lstatSync(path, throwIfNoEntry) -> NodeFSStats</code></pre>
+        <pre><code class="language-javascript">fs.lstatSync(path, options) -> NodeFSStats</code></pre>
 
         <div class="card-section-label">Parameters</div>
         <table class="params-table">
@@ -549,9 +539,9 @@ this never throws (matching Node) - a non-string argument is simply treated as
                     <td class="param-desc">Path to inspect. `~` is expanded.</td>
                 </tr>
                 <tr>
-                    <td class="param-name">throwIfNoEntry</td>
-                    <td class="param-type">boolean</td>
-                    <td class="param-desc">Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.</td>
+                    <td class="param-name">options</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.</td>
                 </tr>
             </tbody>
         </table>
@@ -563,7 +553,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L904" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:904</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L950" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:950</a>
         </div>
     </div>
     <div class="method" id="renameSync">
@@ -603,7 +593,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L911" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:911</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L957" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:957</a>
         </div>
     </div>
     <div class="method" id="copyFileSync">
@@ -648,7 +638,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L919" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:919</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L965" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:965</a>
         </div>
     </div>
     <div class="method" id="symlinkSync">
@@ -688,7 +678,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L926" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:926</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L972" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:972</a>
         </div>
     </div>
     <div class="method" id="readlinkSync">
@@ -724,7 +714,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L932" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:932</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L978" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:978</a>
         </div>
     </div>
     <div class="method" id="realpathSync">
@@ -760,7 +750,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L938" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:938</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L984" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:984</a>
         </div>
     </div>
     <div class="method" id="linkSync">
@@ -800,7 +790,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L945" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:945</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L991" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:991</a>
         </div>
     </div>
     <div class="method" id="accessSync">
@@ -840,7 +830,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L952" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:952</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L998" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:998</a>
         </div>
     </div>
     <div class="method" id="truncateSync">
@@ -880,7 +870,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L959" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:959</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1005" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1005</a>
         </div>
     </div>
         </main>
