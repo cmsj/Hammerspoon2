@@ -25607,7 +25607,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 929
+          "lineNumber": 953
         },
         {
           "name": "readFileSync",
@@ -25639,7 +25639,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 937
+          "lineNumber": 961
         },
         {
           "name": "writeFileSync",
@@ -25675,7 +25675,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 945
+          "lineNumber": 969
         },
         {
           "name": "appendFileSync",
@@ -25704,7 +25704,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 952
+          "lineNumber": 976
         },
         {
           "name": "mkdirSync",
@@ -25733,7 +25733,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 960
+          "lineNumber": 984
         },
         {
           "name": "rmdirSync",
@@ -25762,7 +25762,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 967
+          "lineNumber": 991
         },
         {
           "name": "rmSync",
@@ -25791,7 +25791,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 974
+          "lineNumber": 998
         },
         {
           "name": "unlinkSync",
@@ -25813,7 +25813,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 979
+          "lineNumber": 1003
         },
         {
           "name": "readdirSync",
@@ -25845,7 +25845,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 989
+          "lineNumber": 1013
         },
         {
           "name": "statSync",
@@ -25877,7 +25877,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 997
+          "lineNumber": 1021
         },
         {
           "name": "lstatSync",
@@ -25909,7 +25909,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1005
+          "lineNumber": 1029
         },
         {
           "name": "renameSync",
@@ -25938,7 +25938,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1012
+          "lineNumber": 1036
         },
         {
           "name": "copyFileSync",
@@ -25974,7 +25974,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1020
+          "lineNumber": 1044
         },
         {
           "name": "symlinkSync",
@@ -26003,7 +26003,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1027
+          "lineNumber": 1051
         },
         {
           "name": "readlinkSync",
@@ -26028,7 +26028,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1033
+          "lineNumber": 1057
         },
         {
           "name": "realpathSync",
@@ -26053,7 +26053,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1039
+          "lineNumber": 1063
         },
         {
           "name": "linkSync",
@@ -26082,7 +26082,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1046
+          "lineNumber": 1070
         },
         {
           "name": "accessSync",
@@ -26111,7 +26111,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1053
+          "lineNumber": 1077
         },
         {
           "name": "truncateSync",
@@ -26140,7 +26140,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1060
+          "lineNumber": 1084
         }
       ],
       "properties": [
@@ -26154,7 +26154,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 915
+          "lineNumber": 939
         }
       ],
       "types": [
@@ -26179,7 +26179,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 717
+              "lineNumber": 739
             },
             {
               "name": "isDirectory",
@@ -26196,7 +26196,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 721
+              "lineNumber": 743
             },
             {
               "name": "isSymbolicLink",
@@ -26213,7 +26213,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 725
+              "lineNumber": 747
             },
             {
               "name": "isBlockDevice",
@@ -26230,7 +26230,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 728
+              "lineNumber": 750
             },
             {
               "name": "isCharacterDevice",
@@ -26247,7 +26247,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 731
+              "lineNumber": 753
             },
             {
               "name": "isFIFO",
@@ -26264,7 +26264,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 734
+              "lineNumber": 756
             },
             {
               "name": "isSocket",
@@ -26281,7 +26281,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 737
+              "lineNumber": 759
             }
           ],
           "properties": [
@@ -26295,7 +26295,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 678
+              "lineNumber": 700
             },
             {
               "name": "ino",
@@ -26307,7 +26307,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 680
+              "lineNumber": 702
             },
             {
               "name": "mode",
@@ -26319,7 +26319,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 682
+              "lineNumber": 704
             },
             {
               "name": "nlink",
@@ -26331,7 +26331,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 684
+              "lineNumber": 706
             },
             {
               "name": "uid",
@@ -26343,7 +26343,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 686
+              "lineNumber": 708
             },
             {
               "name": "gid",
@@ -26355,7 +26355,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 688
+              "lineNumber": 710
             },
             {
               "name": "rdev",
@@ -26367,7 +26367,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 690
+              "lineNumber": 712
             },
             {
               "name": "size",
@@ -26379,7 +26379,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 692
+              "lineNumber": 714
             },
             {
               "name": "blksize",
@@ -26391,7 +26391,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 694
+              "lineNumber": 716
             },
             {
               "name": "blocks",
@@ -26403,7 +26403,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 696
+              "lineNumber": 718
             },
             {
               "name": "atimeMs",
@@ -26415,7 +26415,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 698
+              "lineNumber": 720
             },
             {
               "name": "mtimeMs",
@@ -26427,7 +26427,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 700
+              "lineNumber": 722
             },
             {
               "name": "ctimeMs",
@@ -26439,7 +26439,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 702
+              "lineNumber": 724
             },
             {
               "name": "birthtimeMs",
@@ -26451,7 +26451,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 704
+              "lineNumber": 726
             },
             {
               "name": "atime",
@@ -26463,7 +26463,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 706
+              "lineNumber": 728
             },
             {
               "name": "mtime",
@@ -26475,7 +26475,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 708
+              "lineNumber": 730
             },
             {
               "name": "ctime",
@@ -26487,7 +26487,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 710
+              "lineNumber": 732
             },
             {
               "name": "birthtime",
@@ -26499,7 +26499,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 712
+              "lineNumber": 734
             }
           ]
         },
@@ -26524,7 +26524,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 826
+              "lineNumber": 848
             },
             {
               "name": "isDirectory",
@@ -26541,7 +26541,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 829
+              "lineNumber": 851
             },
             {
               "name": "isSymbolicLink",
@@ -26558,7 +26558,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 832
+              "lineNumber": 854
             },
             {
               "name": "isBlockDevice",
@@ -26575,7 +26575,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 835
+              "lineNumber": 857
             },
             {
               "name": "isCharacterDevice",
@@ -26592,7 +26592,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 838
+              "lineNumber": 860
             },
             {
               "name": "isFIFO",
@@ -26609,7 +26609,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 841
+              "lineNumber": 863
             },
             {
               "name": "isSocket",
@@ -26626,7 +26626,7 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 844
+              "lineNumber": 866
             }
           ],
           "properties": [
@@ -26640,13 +26640,13 @@
               "examples": [],
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-              "lineNumber": 822
+              "lineNumber": 844
             }
           ]
         }
       ],
-      "description": "The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.\nCovers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus\n`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always\nUTF-8 text - passing any `encoding` other than `\"utf8\"` throws.\nEvery `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string\nNode would use (`\"ENOENT\"`, `\"EEXIST\"`, `\"ENOTEMPTY\"`, etc.), plus `.errno`, `.syscall`, and\n`.path`. Passing a non-string where a string is expected throws a `TypeError` with\n`.code === \"ERR_INVALID_ARG_TYPE\"`, matching Node.",
-      "rawDocumentation": "The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.\n\nCovers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus\n`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always\nUTF-8 text - passing any `encoding` other than `\"utf8\"` throws.\n\nEvery `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string\nNode would use (`\"ENOENT\"`, `\"EEXIST\"`, `\"ENOTEMPTY\"`, etc.), plus `.errno`, `.syscall`, and\n`.path`. Passing a non-string where a string is expected throws a `TypeError` with\n`.code === \"ERR_INVALID_ARG_TYPE\"`, matching Node.\n\n- Example:\n```js\nconst fs = require('fs')\n\nfs.writeFileSync(\"/tmp/hello.txt\", \"Hello, world!\\n\")\nconsole.log(fs.readFileSync(\"/tmp/hello.txt\"))\n\ntry {\n    fs.readFileSync(\"/does/not/exist\")\n} catch (e) {\n    console.log(e.code) // \"ENOENT\"\n}\n```"
+      "description": "The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.\nWARNING: This module is an experiment to see if high levels of Node.js compatibility can be achieved with AI agents.\nCovers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus\n`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always\nUTF-8 text - passing any `encoding` other than `\"utf8\"` throws.\nEvery `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string\nNode would use (`\"ENOENT\"`, `\"EEXIST\"`, `\"ENOTEMPTY\"`, etc.), plus `.errno`, `.syscall`, and\n`.path`. Passing a non-string where a string is expected throws a `TypeError` with\n`.code === \"ERR_INVALID_ARG_TYPE\"`, matching Node.",
+      "rawDocumentation": "The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.\n\nWARNING: This module is an experiment to see if high levels of Node.js compatibility can be achieved with AI agents.\n\nCovers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus\n`fs.promises`. There is no `Buffer` type in this engine yet, so file content is always\nUTF-8 text - passing any `encoding` other than `\"utf8\"` throws.\n\nEvery `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string\nNode would use (`\"ENOENT\"`, `\"EEXIST\"`, `\"ENOTEMPTY\"`, etc.), plus `.errno`, `.syscall`, and\n`.path`. Passing a non-string where a string is expected throws a `TypeError` with\n`.code === \"ERR_INVALID_ARG_TYPE\"`, matching Node.\n\n- Example:\n```js\nconst fs = require('fs')\n\nfs.writeFileSync(\"/tmp/hello.txt\", \"Hello, world!\\n\")\nconsole.log(fs.readFileSync(\"/tmp/hello.txt\"))\n\ntry {\n    fs.readFileSync(\"/does/not/exist\")\n} catch (e) {\n    console.log(e.code) // \"ENOENT\"\n}\n```"
     },
     {
       "name": "fs.promises",
@@ -26681,7 +26681,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1288
+          "lineNumber": 1314
         },
         {
           "name": "writeFile",
@@ -26720,7 +26720,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1297
+          "lineNumber": 1323
         },
         {
           "name": "appendFile",
@@ -26752,7 +26752,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1305
+          "lineNumber": 1331
         },
         {
           "name": "mkdir",
@@ -26784,7 +26784,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1313
+          "lineNumber": 1339
         },
         {
           "name": "rmdir",
@@ -26816,7 +26816,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1321
+          "lineNumber": 1347
         },
         {
           "name": "rm",
@@ -26848,7 +26848,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1329
+          "lineNumber": 1355
         },
         {
           "name": "unlink",
@@ -26873,7 +26873,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1335
+          "lineNumber": 1361
         },
         {
           "name": "readdir",
@@ -26905,7 +26905,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1343
+          "lineNumber": 1369
         },
         {
           "name": "stat",
@@ -26930,7 +26930,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1349
+          "lineNumber": 1375
         },
         {
           "name": "lstat",
@@ -26955,7 +26955,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1355
+          "lineNumber": 1381
         },
         {
           "name": "rename",
@@ -26987,7 +26987,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1363
+          "lineNumber": 1389
         },
         {
           "name": "copyFile",
@@ -27026,7 +27026,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1372
+          "lineNumber": 1398
         },
         {
           "name": "symlink",
@@ -27058,7 +27058,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1380
+          "lineNumber": 1406
         },
         {
           "name": "readlink",
@@ -27083,7 +27083,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1386
+          "lineNumber": 1412
         },
         {
           "name": "realpath",
@@ -27108,7 +27108,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1392
+          "lineNumber": 1418
         },
         {
           "name": "link",
@@ -27140,7 +27140,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1400
+          "lineNumber": 1426
         },
         {
           "name": "access",
@@ -27172,7 +27172,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1408
+          "lineNumber": 1434
         },
         {
           "name": "truncate",
@@ -27204,7 +27204,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1416
+          "lineNumber": 1442
         }
       ],
       "properties": [
@@ -27218,12 +27218,12 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1280
+          "lineNumber": 1306
         }
       ],
       "types": [],
-      "description": "The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`\nand `require('fs/promises')`.\nEvery function here runs its work synchronously (there is no background I/O thread pool in\nthis engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still\nwork exactly as in Node, just without any real concurrency.",
-      "rawDocumentation": "The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`\nand `require('fs/promises')`.\n\nEvery function here runs its work synchronously (there is no background I/O thread pool in\nthis engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still\nwork exactly as in Node, just without any real concurrency.\n- Example:\n```js\nconst fs = require('fs')\n\nasync function main() {\n    await fs.promises.writeFile(\"/tmp/hello.txt\", \"Hello, world!\\n\")\n    console.log(await fs.promises.readFile(\"/tmp/hello.txt\"))\n}\nmain()\n```"
+      "description": "The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`\nand `require('fs/promises')`.\nWARNING: This module is an experiment to see if high levels of Node.js compatibility can be achieved with AI agents.\nEvery function here runs its work synchronously (there is no background I/O thread pool in\nthis engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still\nwork exactly as in Node, just without any real concurrency.",
+      "rawDocumentation": "The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`\nand `require('fs/promises')`.\n\nWARNING: This module is an experiment to see if high levels of Node.js compatibility can be achieved with AI agents.\n\nEvery function here runs its work synchronously (there is no background I/O thread pool in\nthis engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still\nwork exactly as in Node, just without any real concurrency.\n- Example:\n```js\nconst fs = require('fs')\n\nasync function main() {\n    await fs.promises.writeFile(\"/tmp/hello.txt\", \"Hello, world!\\n\")\n    console.log(await fs.promises.readFile(\"/tmp/hello.txt\"))\n}\nmain()\n```"
     },
     {
       "name": "util",
@@ -29345,5 +29345,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-28T09:12:32.541Z"
+  "generatedAt": "2026-09-28T13:53:09.525Z"
 }

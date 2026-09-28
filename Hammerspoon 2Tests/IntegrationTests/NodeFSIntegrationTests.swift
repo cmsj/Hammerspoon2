@@ -468,6 +468,63 @@ struct NodeFSTests {
             #expect(code == "EEXIST")
         }
 
+        @Test("copyFileSync refuses to copy a file onto itself instead of emptying it")
+        func testCopyFileSelfCopy() throws {
+            // Regression test: opening the destination with O_TRUNC happens before any bytes
+            // are read from the source, so if src and dest resolve to the same file, truncating
+            // dest also truncates src out from under the read loop - the call would silently
+            // "succeed" with the file emptied and its content lost.
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("self-copy.txt")
+            ctx.eval("fs.writeFileSync('\(p)', 'do not lose me')")
+
+            let sameCode = ctx.evalString("""
+                (function() {
+                    try { fs.copyFileSync('\(p)', '\(p)', 0); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(sameCode == "EINVAL")
+            #expect(ctx.evalString("fs.readFileSync('\(p)')") == "do not lose me")
+        }
+
+        @Test("copyFileSync refuses to copy onto a hard link of the source")
+        func testCopyFileSelfCopyViaHardLink() throws {
+            let ctx = try NodeFSTestContext()
+            let a = ctx.path("hardlink-src.txt")
+            let b = ctx.path("hardlink-dst.txt")
+            ctx.eval("fs.writeFileSync('\(a)', 'shared inode')")
+            ctx.eval("fs.linkSync('\(a)', '\(b)')")
+
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.copyFileSync('\(a)', '\(b)', 0); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "EINVAL")
+            #expect(ctx.evalString("fs.readFileSync('\(a)')") == "shared inode")
+            #expect(ctx.evalString("fs.readFileSync('\(b)')") == "shared inode")
+        }
+
+        @Test("copyFileSync refuses to copy onto a symlink pointing back at the source")
+        func testCopyFileSelfCopyViaSymlink() throws {
+            let ctx = try NodeFSTestContext()
+            let a = ctx.path("symlink-src.txt")
+            let link = ctx.path("symlink-dst.txt")
+            ctx.eval("fs.writeFileSync('\(a)', 'linked content')")
+            ctx.eval("fs.symlinkSync('\(a)', '\(link)')")
+
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.copyFileSync('\(a)', '\(link)', 0); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "EINVAL")
+            #expect(ctx.evalString("fs.readFileSync('\(a)')") == "linked content")
+        }
+
         @Test("realpathSync resolves symlinks to a canonical path")
         func testRealpath() throws {
             let ctx = try NodeFSTestContext()

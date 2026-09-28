@@ -589,6 +589,28 @@ enum NodeFS {
         guard srcFD >= 0 else { throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "open", path: src, path2: nil) }
         defer { close(srcFD) }
 
+        var srcStat = Darwin.stat()
+        guard unsafe fstat(srcFD, &srcStat) == 0 else {
+            throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "fstat", path: src, path2: nil)
+        }
+
+        // Guard against src and dest resolving to the same file (the same path, a hard link to
+        // the same inode, or dest being a symlink that points back at src): opening dest with
+        // O_TRUNC below would otherwise truncate the shared file before any bytes are read,
+        // silently destroying its content while still reporting success. realpath() resolves
+        // any symlinks in dest's path (including a symlink dest itself), so lstat-ing the
+        // result is equivalent to stat-ing the original dest path.
+        if let destResolvedPtr = unsafe Darwin.realpath(d, nil) {
+            defer { unsafe free(destResolvedPtr) }
+            if let destResolved = unsafe String(validatingCString: destResolvedPtr) {
+                var destStat = Darwin.stat()
+                if unsafe Darwin.lstat(destResolved, &destStat) == 0,
+                   destStat.st_dev == srcStat.st_dev, destStat.st_ino == srcStat.st_ino {
+                    throw NodeFSFailure.posix(errnoValue: EINVAL, syscall: "copyfile", path: dest, path2: nil)
+                }
+            }
+        }
+
         var destFlags: Int32 = O_WRONLY | O_CREAT | O_TRUNC
         if excl { destFlags |= O_EXCL }
         let destFD = unsafe open(d, destFlags, 0o666)
