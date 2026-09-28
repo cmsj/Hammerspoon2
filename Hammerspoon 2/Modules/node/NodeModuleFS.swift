@@ -443,22 +443,22 @@ enum NodeFS {
             return
         }
 
-        if recursive {
-            do {
-                try FileManager.default.removeItem(atPath: full)
-            } catch {
-                let failure = wrap(error, syscall: "rm", path: path)
-                if case .posix(let errnoValue, _, _, _) = failure, errnoValue == ENOENT, force { return }
-                throw failure
-            }
-        } else {
-            guard unsafe Darwin.rmdir(full) == 0 else {
-                // Same restriction as above - notably, this means `force` does NOT suppress
-                // ENOTEMPTY, so a non-empty directory is still reported as a failure even with
-                // `force: true` (matching Node - `force` is not a substitute for `recursive`).
-                if Darwin.errno == ENOENT, force { return }
-                throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "rmdir", path: path, path2: nil)
-            }
+        // Unlike `rmdirSync`, `rmSync` never removes a directory - empty or not - unless
+        // `recursive` is set. `force` doesn't substitute for this either: it's a wholly
+        // separate option, only ever about the path already being missing.
+        guard recursive else {
+            throw NodeFSFailure.generic(
+                code: "ERR_FS_EISDIR",
+                message: "Path is a directory: rm returned EISDIR (is a directory) \(path)"
+            )
+        }
+
+        do {
+            try FileManager.default.removeItem(atPath: full)
+        } catch {
+            let failure = wrap(error, syscall: "rm", path: path)
+            if case .posix(let errnoValue, _, _, _) = failure, errnoValue == ENOENT, force { return }
+            throw failure
         }
     }
 
@@ -1005,9 +1005,12 @@ enum NodeFS {
     @objc func rmdirSync(_ path: JSString, _ options: JSValue?)
 
     /// Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.
+    ///
+    /// Unlike `rmdirSync`, this never removes a directory - empty or not - unless `recursive`
+    /// is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matching Node.
     /// - Parameters:
     ///   - path: Path to remove. `~` is expanded.
-    ///   - options?: A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.
+    ///   - options?: A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`. `force` never substitutes for `recursive` - a directory without `recursive` still throws even with `force: true`.
     /// - Example: `fs.rmSync("/tmp/old-dir", { recursive: true, force: true })`
     @objc func rmSync(_ path: JSString, _ options: JSValue?)
 

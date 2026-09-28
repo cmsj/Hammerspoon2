@@ -362,7 +362,9 @@ this never throws (matching Node) - a non-string argument is simply treated as
     <div class="method" id="rmSync">
         <h3><a href="#rmSync">fs.rmSync(path, options) -> None</a></h3>
 
-        <div class="description">Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.</div>
+        <div class="description">Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.
+Unlike `rmdirSync`, this never removes a directory - empty or not - unless `recursive`
+is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matching Node.</div>
 
         <div class="card-section-label">Declaration</div>
         <pre><code class="language-javascript">fs.rmSync(path, options) -> None</code></pre>
@@ -385,7 +387,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
                 <tr>
                     <td class="param-name">options</td>
                     <td class="param-type">JSValue</td>
-                    <td class="param-desc">A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.</td>
+                    <td class="param-desc">A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`. `force` never substitutes for `recursive` - a directory without `recursive` still throws even with `force: true`.</td>
                 </tr>
             </tbody>
         </table>
@@ -396,7 +398,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1012" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1012</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1015" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1015</a>
         </div>
     </div>
     <div class="method" id="unlinkSync">
@@ -431,7 +433,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1017" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1017</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1020" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1020</a>
         </div>
     </div>
     <div class="method" id="readdirSync">
@@ -472,7 +474,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1027" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1027</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1030" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1030</a>
         </div>
     </div>
     <div class="method" id="statSync">
@@ -513,7 +515,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1035" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1035</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1038" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1038</a>
         </div>
     </div>
     <div class="method" id="lstatSync">
@@ -554,7 +556,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1043" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1043</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1046" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1046</a>
         </div>
     </div>
     <div class="method" id="renameSync">
@@ -594,7 +596,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1050" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1050</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1053" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1053</a>
         </div>
     </div>
     <div class="method" id="copyFileSync">
@@ -639,7 +641,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1058" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1058</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1061" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1061</a>
         </div>
     </div>
     <div class="method" id="symlinkSync">
@@ -679,7 +681,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1065" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1065</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1068" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1068</a>
         </div>
     </div>
     <div class="method" id="readlinkSync">
@@ -715,7 +717,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1071" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1071</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1074" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1074</a>
         </div>
     </div>
     <div class="method" id="realpathSync">
@@ -751,7 +753,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1077" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1077</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1080" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1080</a>
         </div>
     </div>
     <div class="method" id="linkSync">
@@ -791,7 +793,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1084" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1084</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1087" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1087</a>
         </div>
     </div>
     <div class="method" id="accessSync">
@@ -831,7 +833,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1091" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1091</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1094" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1094</a>
         </div>
     </div>
     <div class="method" id="truncateSync">
@@ -871,7 +873,7 @@ this never throws (matching Node) - a non-string argument is simply treated as
 
 
         <div class="source-link">
-            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1098" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1098</a>
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/node/NodeModuleFS.swift#L1101" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/node/NodeModuleFS.swift:1101</a>
         </div>
     </div>
         </main>

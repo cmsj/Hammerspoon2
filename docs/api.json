@@ -25768,8 +25768,8 @@
           "name": "rmSync",
           "signature": "func rmSync(_ path: JSString, _ options: JSValue?)",
           "isStatic": false,
-          "rawDocumentation": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.\n- Parameters:\n  - path: Path to remove. `~` is expanded.\n  - options?: A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.\n- Example: `fs.rmSync(\"/tmp/old-dir\", { recursive: true, force: true })`",
-          "description": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.",
+          "rawDocumentation": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.\n\nUnlike `rmdirSync`, this never removes a directory - empty or not - unless `recursive`\nis `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matching Node.\n- Parameters:\n  - path: Path to remove. `~` is expanded.\n  - options?: A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`. `force` never substitutes for `recursive` - a directory without `recursive` still throws even with `force: true`.\n- Example: `fs.rmSync(\"/tmp/old-dir\", { recursive: true, force: true })`",
+          "description": "Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.\nUnlike `rmdirSync`, this never removes a directory - empty or not - unless `recursive`\nis `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matching Node.",
           "params": [
             {
               "name": "path",
@@ -25781,7 +25781,7 @@
             {
               "name": "options",
               "type": "JSValue",
-              "description": "A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.",
+              "description": "A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`. `force` never substitutes for `recursive` - a directory without `recursive` still throws even with `force: true`.",
               "optional": true,
               "tsType": null
             }
@@ -25791,7 +25791,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1012
+          "lineNumber": 1015
         },
         {
           "name": "unlinkSync",
@@ -25813,7 +25813,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1017
+          "lineNumber": 1020
         },
         {
           "name": "readdirSync",
@@ -25845,7 +25845,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1027
+          "lineNumber": 1030
         },
         {
           "name": "statSync",
@@ -25877,7 +25877,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1035
+          "lineNumber": 1038
         },
         {
           "name": "lstatSync",
@@ -25909,7 +25909,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1043
+          "lineNumber": 1046
         },
         {
           "name": "renameSync",
@@ -25938,7 +25938,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1050
+          "lineNumber": 1053
         },
         {
           "name": "copyFileSync",
@@ -25974,7 +25974,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1058
+          "lineNumber": 1061
         },
         {
           "name": "symlinkSync",
@@ -26003,7 +26003,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1065
+          "lineNumber": 1068
         },
         {
           "name": "readlinkSync",
@@ -26028,7 +26028,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1071
+          "lineNumber": 1074
         },
         {
           "name": "realpathSync",
@@ -26053,7 +26053,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1077
+          "lineNumber": 1080
         },
         {
           "name": "linkSync",
@@ -26082,7 +26082,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1084
+          "lineNumber": 1087
         },
         {
           "name": "accessSync",
@@ -26111,7 +26111,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1091
+          "lineNumber": 1094
         },
         {
           "name": "truncateSync",
@@ -26140,7 +26140,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1098
+          "lineNumber": 1101
         }
       ],
       "properties": [
@@ -26681,7 +26681,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1328
+          "lineNumber": 1331
         },
         {
           "name": "writeFile",
@@ -26720,7 +26720,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1337
+          "lineNumber": 1340
         },
         {
           "name": "appendFile",
@@ -26752,7 +26752,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1345
+          "lineNumber": 1348
         },
         {
           "name": "mkdir",
@@ -26784,7 +26784,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1353
+          "lineNumber": 1356
         },
         {
           "name": "rmdir",
@@ -26816,7 +26816,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1361
+          "lineNumber": 1364
         },
         {
           "name": "rm",
@@ -26848,7 +26848,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1369
+          "lineNumber": 1372
         },
         {
           "name": "unlink",
@@ -26873,7 +26873,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1375
+          "lineNumber": 1378
         },
         {
           "name": "readdir",
@@ -26905,7 +26905,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1383
+          "lineNumber": 1386
         },
         {
           "name": "stat",
@@ -26930,7 +26930,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1389
+          "lineNumber": 1392
         },
         {
           "name": "lstat",
@@ -26955,7 +26955,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1395
+          "lineNumber": 1398
         },
         {
           "name": "rename",
@@ -26987,7 +26987,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1403
+          "lineNumber": 1406
         },
         {
           "name": "copyFile",
@@ -27026,7 +27026,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1412
+          "lineNumber": 1415
         },
         {
           "name": "symlink",
@@ -27058,7 +27058,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1420
+          "lineNumber": 1423
         },
         {
           "name": "readlink",
@@ -27083,7 +27083,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1426
+          "lineNumber": 1429
         },
         {
           "name": "realpath",
@@ -27108,7 +27108,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1432
+          "lineNumber": 1435
         },
         {
           "name": "link",
@@ -27140,7 +27140,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1440
+          "lineNumber": 1443
         },
         {
           "name": "access",
@@ -27172,7 +27172,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1448
+          "lineNumber": 1451
         },
         {
           "name": "truncate",
@@ -27204,7 +27204,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1456
+          "lineNumber": 1459
         }
       ],
       "properties": [
@@ -27218,7 +27218,7 @@
           "examples": [],
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/node/NodeModuleFS.swift",
-          "lineNumber": 1320
+          "lineNumber": 1323
         }
       ],
       "types": [],
@@ -29345,5 +29345,5 @@
       "types": []
     }
   ],
-  "generatedAt": "2026-09-28T14:58:28.400Z"
+  "generatedAt": "2026-09-28T15:03:24.627Z"
 }

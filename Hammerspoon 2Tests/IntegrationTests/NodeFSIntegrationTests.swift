@@ -328,8 +328,10 @@ struct NodeFSTests {
         @Test("rmSync with force does not suppress ENOTEMPTY - force is not a substitute for recursive")
         func testRmForceDoesNotSuppressNonEmptyDirectory() throws {
             // Regression test: `force` must only ignore the path already being missing, not
-            // any other failure. A non-empty directory without `recursive` must still fail
-            // even with `force: true`, and must be left in place.
+            // any other failure. A directory without `recursive` must still fail even with
+            // `force: true`, and must be left in place. (Rejected as ERR_FS_EISDIR before
+            // `rmdir` is ever attempted - see testRmSyncRejectsDirectoryWithoutRecursive - so
+            // this never reaches an ENOTEMPTY from rmdir() itself.)
             let ctx = try NodeFSTestContext()
             let dir = ctx.path("force-nonempty")
             ctx.eval("fs.mkdirSync('\(dir)')")
@@ -341,8 +343,27 @@ struct NodeFSTests {
                     catch (e) { return e.code; }
                 })()
             """)
-            #expect(code == "ENOTEMPTY")
+            #expect(code == "ERR_FS_EISDIR")
             #expect(ctx.evalBool("fs.existsSync('\(dir)/x.txt')") == true)
+        }
+
+        @Test("rmSync rejects a directory - even an empty one - unless recursive is set")
+        func testRmSyncRejectsDirectoryWithoutRecursive() throws {
+            // Regression test: unlike rmdirSync, Node's rm/rmSync never removes a directory -
+            // empty or not - unless `recursive` is set. A caller intending to remove only a
+            // file must not have an incidental empty directory deleted out from under them.
+            let ctx = try NodeFSTestContext()
+            let dir = ctx.path("rm-empty-dir")
+            ctx.eval("fs.mkdirSync('\(dir)')")
+
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.rmSync('\(dir)'); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "ERR_FS_EISDIR")
+            #expect(ctx.evalBool("fs.existsSync('\(dir)')") == true)
         }
 
         @Test("rmSync with force does not suppress a permission error", .disabled(if: getuid() == 0, "running as root bypasses the permission check this test relies on"))
