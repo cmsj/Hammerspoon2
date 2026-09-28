@@ -9812,17 +9812,20 @@ A value of 0 or -1 likely means no window ID could be determined.
 
 /**
  * The JS-facing surface of Node's `fs` module, reachable as `require('fs')`.
+WARNING: This module is an experiment to see if high levels of Node.js compatibility can be achieved with AI agents.
 Covers the synchronous API (`readFileSync`, `writeFileSync`, `statSync`, etc.) plus
 `fs.promises`. There is no `Buffer` type in this engine yet, so file content is always
 UTF-8 text - passing any `encoding` other than `"utf8"` throws.
 Every `*Sync` function throws a JS `Error` on failure, with `.code` set to the same string
 Node would use (`"ENOENT"`, `"EEXIST"`, `"ENOTEMPTY"`, etc.), plus `.errno`, `.syscall`, and
-`.path`.
+`.path`. Passing a non-string where a string is expected throws a `TypeError` with
+`.code === "ERR_INVALID_ARG_TYPE"`, matching Node.
  */
 declare namespace fs {
     /**
      * Synchronously check whether a path exists. Unlike every other function in this module,
-this never throws - any error checking the path is treated as "does not exist".
+this never throws (matching Node) - a non-string argument is simply treated as
+"does not exist", the same as any other error checking the path.
      * @param path Path to check. `~` is expanded.
      * @returns `true` if anything exists at the path.
      */
@@ -9840,9 +9843,9 @@ this never throws - any error checking the path is treated as "does not exist".
      * Synchronously write a UTF-8 string to a file, creating or truncating it.
      * @param path Path to the file. `~` is expanded.
      * @param data String to write.
-     * @param flag One of `"w"` (default: create/truncate), `"wx"` (like `"w"` but fails if the file already exists), `"a"` (append), or `"ax"` (like `"a"` but fails if the file already exists).
+     * @param options Either a bare flag string, or a `{ encoding?, flag? }` object (matching Node). A bare string is this module's own shorthand for `flag` directly (not `encoding`, unlike real Node) - kept for backward compatibility. `flag` is one of `"w"` (default: create/truncate), `"wx"` (like `"w"` but fails if the file already exists), `"a"` (append), or `"ax"` (like `"a"` but fails if the file already exists); any other value throws - including a real Node flag this engine doesn't implement (eg. `"a+"`, `"r+"`) - rather than being silently treated as `"w"`. `encoding` must be `"utf8"` (or omitted); any other value throws, since this engine has no `Buffer` type. `mode` (also a real Node option here) isn't implemented.
      */
-    function writeFileSync(path: string, data: string, flag?: string | null): void;
+    function writeFileSync(path: string, data: string, options?: any | null): void;
 
     /**
      * Synchronously append a UTF-8 string to a file, creating it if needed.
@@ -9854,24 +9857,25 @@ this never throws - any error checking the path is treated as "does not exist".
     /**
      * Synchronously create a directory.
      * @param path Path of the directory to create. `~` is expanded.
-     * @param recursive When `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.
+     * @param options A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `recursive` is `true`, creates all missing intermediate directories and does not throw if the directory already exists. Defaults to `false`, matching Node.
      */
-    function mkdirSync(path: string, recursive?: boolean): void;
+    function mkdirSync(path: string, options?: any | null): void;
 
     /**
      * Synchronously remove an empty directory.
      * @param path Path of the directory to remove. `~` is expanded.
-     * @param recursive When `true`, removes the directory and its entire contents. Defaults to `false`.
+     * @param options A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.
      */
-    function rmdirSync(path: string, recursive?: boolean): void;
+    function rmdirSync(path: string, options?: any | null): void;
 
     /**
      * Synchronously remove a file or directory. The modern replacement for `unlinkSync`/`rmdirSync`.
+Unlike `rmdirSync`, this never removes a directory - empty or not - unless `recursive`
+is `true`; without it, `path` being a directory throws (`ERR_FS_EISDIR`), matching Node.
      * @param path Path to remove. `~` is expanded.
-     * @param recursive When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.
-     * @param force When `true`, a missing path is not treated as an error. Defaults to `false`.
+     * @param options A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`. `force` never substitutes for `recursive` - a directory without `recursive` still throws even with `force: true`.
      */
-    function rmSync(path: string, recursive?: boolean, force?: boolean): void;
+    function rmSync(path: string, options?: any | null): void;
 
     /**
      * Synchronously delete a single file.
@@ -9882,26 +9886,26 @@ this never throws - any error checking the path is treated as "does not exist".
     /**
      * Synchronously list the contents of a directory.
      * @param path Path to the directory. `~` is expanded.
-     * @param withFileTypes When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.
+     * @param options A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. `withFileTypes`: returns `Dirent` objects instead of bare filenames; defaults to `false`. `recursive`: walks subdirectories too - filenames (when `withFileTypes` is `false`) become paths relative to `path`; `Dirent.name` stays the bare filename either way (this engine doesn't implement `Dirent.parentPath`); defaults to `false`.
      * @returns An array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.
      */
-    function readdirSync(path: string, withFileTypes?: boolean): any[] | null;
+    function readdirSync(path: string, options?: any | null): any[] | null;
 
     /**
      * Synchronously get file metadata, following symbolic links.
      * @param path Path to inspect. `~` is expanded.
-     * @param throwIfNoEntry Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
+     * @param options A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
      * @returns A `Stats` object.
      */
-    function statSync(path: string, throwIfNoEntry?: boolean): NodeFSStats | null;
+    function statSync(path: string, options?: any | null): NodeFSStats | null;
 
     /**
      * Synchronously get file metadata, without following symbolic links.
      * @param path Path to inspect. `~` is expanded.
-     * @param throwIfNoEntry Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
+     * @param options A `{ throwIfNoEntry?: boolean }` object (matching Node), or a bare boolean as shorthand for `throwIfNoEntry`. Defaults to `true`. When `false`, returns `undefined` instead of throwing if the path does not exist.
      * @returns A `Stats` object.
      */
-    function lstatSync(path: string, throwIfNoEntry?: boolean): NodeFSStats | null;
+    function lstatSync(path: string, options?: any | null): NodeFSStats | null;
 
     /**
      * Synchronously rename (move) a file or directory.
@@ -9962,7 +9966,8 @@ this never throws - any error checking the path is treated as "does not exist".
 
     /**
      * Filesystem constants used by `accessSync`/`fs.promises.access` (`F_OK`, `R_OK`, `W_OK`,
-`X_OK`) and `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_EXCL`).
+`X_OK`), `copyFileSync`/`fs.promises.copyFile` (`COPYFILE_*`), file mode bits (`S_I*`,
+checked against `Stats.mode`), and `open()` flags (`O_*`).
      */
     const constants: Record<string, number>;
 
@@ -10162,7 +10167,9 @@ declare class NodeFSDirent {
 }
 
 /**
- * The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`.
+ * The promise-based equivalents of `fs`'s `*Sync` functions, reachable as `require('fs').promises`
+and `require('fs/promises')`.
+WARNING: This module is an experiment to see if high levels of Node.js compatibility can be achieved with AI agents.
 Every function here runs its work synchronously (there is no background I/O thread pool in
 this engine) and wraps the result in an already-settled `Promise`, so `await`/`.then()` still
 work exactly as in Node, just without any real concurrency.
@@ -10180,10 +10187,10 @@ declare namespace fs.promises {
      * Write a UTF-8 string to a file, creating or truncating it. See `fs.writeFileSync` for details.
      * @param path Path to the file. `~` is expanded.
      * @param data String to write.
-     * @param flag One of `"w"` (default), `"wx"`, `"a"`, or `"ax"`.
+     * @param options Either a bare flag string, or a `{ encoding?, flag? }` object. See `fs.writeFileSync` for details.
      * @returns A `Promise` resolving to `undefined`.
      */
-    function writeFile(path: string, data: string, flag?: string | null): Promise<any>;
+    function writeFile(path: string, data: string, options?: any | null): Promise<any>;
 
     /**
      * Append a UTF-8 string to a file, creating it if needed. See `fs.appendFileSync` for details.
@@ -10196,27 +10203,26 @@ declare namespace fs.promises {
     /**
      * Create a directory. See `fs.mkdirSync` for details.
      * @param path Path of the directory to create. `~` is expanded.
-     * @param recursive When `true`, creates all missing intermediate directories. Defaults to `false`.
+     * @param options A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, creates all missing intermediate directories. Defaults to `false`.
      * @returns A `Promise` resolving to `undefined`.
      */
-    function mkdir(path: string, recursive?: boolean): Promise<any>;
+    function mkdir(path: string, options?: any | null): Promise<any>;
 
     /**
      * Remove an empty directory. See `fs.rmdirSync` for details.
      * @param path Path of the directory to remove. `~` is expanded.
-     * @param recursive When `true`, removes the directory and its entire contents. Defaults to `false`.
+     * @param options A `{ recursive: boolean }` object (matching Node), or a bare boolean as shorthand for `recursive`. When `true`, removes the directory and its entire contents. Defaults to `false`.
      * @returns A `Promise` resolving to `undefined`.
      */
-    function rmdir(path: string, recursive?: boolean): Promise<any>;
+    function rmdir(path: string, options?: any | null): Promise<any>;
 
     /**
      * Remove a file or directory. See `fs.rmSync` for details.
      * @param path Path to remove. `~` is expanded.
-     * @param recursive When `true` and `path` is a directory, removes it and its entire contents. Defaults to `false`.
-     * @param force When `true`, a missing path is not treated as an error. Defaults to `false`.
+     * @param options A `{ recursive?: boolean, force?: boolean }` object, matching Node. `recursive`: when `true` and `path` is a directory, removes it and its entire contents; defaults to `false`. `force`: when `true`, a missing path is not treated as an error; defaults to `false`.
      * @returns A `Promise` resolving to `undefined`.
      */
-    function rm(path: string, recursive?: boolean, force?: boolean): Promise<any>;
+    function rm(path: string, options?: any | null): Promise<any>;
 
     /**
      * Delete a single file. See `fs.unlinkSync` for details.
@@ -10228,10 +10234,10 @@ declare namespace fs.promises {
     /**
      * List the contents of a directory. See `fs.readdirSync` for details.
      * @param path Path to the directory. `~` is expanded.
-     * @param withFileTypes When `true`, returns `Dirent` objects instead of bare filenames. Defaults to `false`.
+     * @param options A `{ withFileTypes?: boolean, recursive?: boolean }` object (matching Node), or a bare boolean as shorthand for `withFileTypes`. Both default to `false`.
      * @returns A `Promise` resolving to an array of filenames, or of `Dirent` objects if `withFileTypes` is `true`.
      */
-    function readdir(path: string, withFileTypes?: boolean): Promise<any>;
+    function readdir(path: string, options?: any | null): Promise<any>;
 
     /**
      * Get file metadata, following symbolic links. See `fs.statSync` for details.
@@ -10310,6 +10316,11 @@ declare namespace fs.promises {
      */
     function truncate(path: string, len?: number): Promise<any>;
 
+    /**
+     * The same object as `fs.constants`, matching Node.
+     */
+    const constants: Record<string, number>;
+
 }
 
 /**
@@ -10321,9 +10332,10 @@ declare namespace util {
 Objects, arrays, `Map`/`Set`, functions, dates, and errors are formatted the way
 Node/browser consoles render them; a top-level string is returned as-is.
      * @param value The value to format.
+     * @param options Formatting options. Supports `depth` (levels of nested objects/arrays to expand before collapsing to a placeholder; `null` for unlimited; defaults to `2`) and `getters` (when `true`, invokes own enumerable getter properties and shows their result instead of a `[Getter]` placeholder; defaults to `false`). Node's much larger options surface (`showHidden`, `colors`, `compact`, etc.) is not implemented - in particular, `getters` alone does not reach getters defined in a `class` body, since those are non-enumerable and live on the prototype.
      * @returns A formatted string.
      */
-    function inspect(value: any): string;
+    function inspect(value: any, options?: any | null): string;
 
 }
 
