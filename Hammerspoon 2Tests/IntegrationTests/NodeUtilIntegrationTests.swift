@@ -208,6 +208,34 @@ struct NodeUtilTests {
             """) == "[ [Circular *1] ]")
         }
 
+        @Test("a cycle through a Set is also reported as circular")
+        func testCircularReferenceInSet() throws {
+            // Regression test: Set values are delivered to Swift via a `forEach` callback
+            // block, a genuinely different JavaScriptCore code path than the plain-object/
+            // array cases above (which read values via `objectForKeyedSubscript`) - verifies
+            // ancestor identity holds across that path too, not just property access.
+            let ctx = try NodeUtilTestContext()
+            #expect(ctx.evalString("""
+                (function() {
+                    const s = new Set();
+                    s.add(s);
+                    return util.inspect(s, { depth: null });
+                })()
+            """) == "Set(1) { [Circular *1] }")
+        }
+
+        @Test("a cycle through a Map is also reported as circular")
+        func testCircularReferenceInMap() throws {
+            let ctx = try NodeUtilTestContext()
+            #expect(ctx.evalString("""
+                (function() {
+                    const m = new Map();
+                    m.set('self', m);
+                    return util.inspect(m, { depth: null });
+                })()
+            """) == "Map(1) { 'self' => [Circular *1] }")
+        }
+
         @Test("cycle detection survives a script deleting/overriding the global Object.is")
         func testCycleDetectionSurvivesObjectIsTampering() throws {
             // Regression test: the ancestor check used to go through the JS-level global
