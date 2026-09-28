@@ -184,6 +184,32 @@ struct NodeFSTests {
             #expect(ctx.evalString("fs.readFileSync('\(p)')") == "ab")
         }
 
+        @Test("writeFileSync accepts a real Node-style { flag, encoding } options object")
+        func testWriteFileSyncOptionsObject() throws {
+            // Regression test: the third argument used to require a bare string, so a real
+            // Node call passing an options object (as Node's own docs show) threw
+            // ERR_INVALID_ARG_TYPE instead of appending.
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("write-options.txt")
+            ctx.eval("fs.writeFileSync('\(p)', 'a')")
+            ctx.eval("fs.writeFileSync('\(p)', 'b', { flag: 'a', encoding: 'utf8' })")
+            #expect(!ctx.hadException)
+            #expect(ctx.evalString("fs.readFileSync('\(p)')") == "ab")
+        }
+
+        @Test("writeFileSync's options object rejects a non-utf8 encoding")
+        func testWriteFileSyncOptionsObjectBadEncoding() throws {
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("write-options-bad-encoding.txt")
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.writeFileSync('\(p)', 'x', { encoding: 'latin1' }); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "ERR_INVALID_ARG_VALUE")
+        }
+
         @Test("existsSync reflects file presence")
         func testExists() throws {
             let ctx = try NodeFSTestContext()
@@ -869,6 +895,22 @@ struct NodeFSTests {
             let ok = await ctx.waitForAsync { ctx.evalBool("__done") == true }
             #expect(ok)
             #expect(ctx.evalString("__result") == "async hello")
+        }
+
+        @Test("promises.writeFile accepts a real Node-style { flag, encoding } options object")
+        func testPromiseWriteFileOptionsObject() async throws {
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("async-write-options.txt")
+            ctx.eval("fs.writeFileSync('\(p)', 'a')")
+            ctx.eval("""
+                var __done = false;
+                fs.promises.writeFile('\(p)', 'b', { flag: 'a', encoding: 'utf8' }).then(function() {
+                    __done = true;
+                });
+            """)
+            let ok = await ctx.waitForAsync { ctx.evalBool("__done") == true }
+            #expect(ok)
+            #expect(ctx.evalString("fs.readFileSync('\(p)')") == "ab")
         }
 
         @Test("promises.readFile rejects with an ENOENT-coded error for a missing file")

@@ -169,6 +169,27 @@ enum NodeFS {
         return (optionsFlag(options, "recursive"), optionsFlag(options, "force"))
     }
 
+    /// Parses `writeFileSync`/`fs.promises.writeFile`'s third argument, which real Node accepts
+    /// as either a bare string (a shorthand for `encoding`) or a `{ encoding?, flag? }` options
+    /// object - not just a bare `flag` string the way this module's own docs describe it, which
+    /// is itself a simplification kept for backward compatibility with existing callers/tests.
+    /// `mode` (also real Node options) isn't implemented; `writeFile` always creates with `0o666`.
+    fileprivate static func parseWriteFileOptions(_ options: JSValue?) throws -> (flag: String?, encoding: String?) {
+        guard let options, !options.isUndefined, !options.isNull else { return (nil, nil) }
+        if options.isString {
+            // Bare string: this module's own shorthand for `flag` (not `encoding`, unlike real
+            // Node) - matches writeFileSync's existing, already-documented, already-tested
+            // three-positional-argument form.
+            return (try requireString(options, "flag"), nil)
+        }
+        guard options.isObject else {
+            throw NodeFSFailure.invalidArgType(argName: "options", actual: options)
+        }
+        let flag = try requireOptionalString(options.objectForKeyedSubscript("flag"), "options.flag")
+        let encoding = try requireOptionalString(options.objectForKeyedSubscript("encoding"), "options.encoding")
+        return (flag, encoding)
+    }
+
     /// Mirrors Node's internal `determineSpecificType()`, used to build the "Received ..."
     /// suffix of `ERR_INVALID_ARG_TYPE` messages.
     fileprivate nonisolated static func describeType(_ value: JSValue) -> String {
@@ -367,7 +388,13 @@ enum NodeFS {
         }
     }
 
-    static func writeFile(_ path: String, _ content: String, flag: String?) throws {
+    static func writeFile(_ path: String, _ content: String, flag: String?, encoding: String? = nil) throws {
+        if let encoding, !["utf8", "utf-8"].contains(encoding.lowercased()) {
+            throw NodeFSFailure.generic(
+                code: "ERR_INVALID_ARG_VALUE",
+                message: "The \"encoding\" argument must be 'utf8'; Buffer output is not supported. Received '\(encoding)'"
+            )
+        }
         let full = expand(path)
         let flags = try openFlags(forWriteFlag: flag)
         let fd = unsafe open(full, flags, 0o666)
@@ -987,9 +1014,10 @@ enum NodeFS {
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - data: String to write.
-    ///   - flag?: One of `"w"` (default: create/truncate), `"wx"` (like `"w"` but fails if the file already exists), `"a"` (append), or `"ax"` (like `"a"` but fails if the file already exists). Any other value throws - including a real Node flag this engine doesn't implement (eg. `"a+"`, `"r+"`) - rather than being silently treated as `"w"`.
+    ///   - options?: Either a bare flag string, or a `{ encoding?, flag? }` object (matching Node). A bare string is this module's own shorthand for `flag` directly (not `encoding`, unlike real Node) - kept for backward compatibility. `flag` is one of `"w"` (default: create/truncate), `"wx"` (like `"w"` but fails if the file already exists), `"a"` (append), or `"ax"` (like `"a"` but fails if the file already exists); any other value throws - including a real Node flag this engine doesn't implement (eg. `"a+"`, `"r+"`) - rather than being silently treated as `"w"`. `encoding` must be `"utf8"` (or omitted); any other value throws, since this engine has no `Buffer` type. `mode` (also a real Node option here) isn't implemented.
     /// - Example: `fs.writeFileSync("/tmp/hello.txt", "Hello, world!\n")`
-    @objc func writeFileSync(_ path: JSString, _ data: JSString, _ flag: JSString?)
+    /// - Example: `fs.writeFileSync("/tmp/log.txt", "another line\n", { flag: "a" })`
+    @objc func writeFileSync(_ path: JSString, _ data: JSString, _ options: JSValue?)
 
     /// Synchronously append a UTF-8 string to a file, creating it if needed.
     /// - Parameters:
@@ -1152,12 +1180,12 @@ enum NodeFS {
         }
     }
 
-    @objc func writeFileSync(_ path: JSString, _ data: JSString, _ flag: JSString?) {
+    @objc func writeFileSync(_ path: JSString, _ data: JSString, _ options: JSValue?) {
         _ = sync {
             let p = try NodeFS.requireString(path, "path")
             let d = try NodeFS.requireString(data, "data")
-            let f = try NodeFS.requireOptionalString(flag, "flag")
-            try NodeFS.writeFile(p, d, flag: f)
+            let (flag, encoding) = try NodeFS.parseWriteFileOptions(options)
+            try NodeFS.writeFile(p, d, flag: flag, encoding: encoding)
         }
     }
 
@@ -1343,10 +1371,10 @@ enum NodeFS {
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - data: String to write.
-    ///   - flag?: One of `"w"` (default), `"wx"`, `"a"`, or `"ax"`.
+    ///   - options?: Either a bare flag string, or a `{ encoding?, flag? }` object. See `fs.writeFileSync` for details.
     /// - Returns: A `Promise` resolving to `undefined`.
     /// - Example: `await fs.promises.writeFile("/tmp/hello.txt", "Hello, world!\n")`
-    @objc func writeFile(_ path: JSString, _ data: JSString, _ flag: JSString?) -> JSPromise?
+    @objc func writeFile(_ path: JSString, _ data: JSString, _ options: JSValue?) -> JSPromise?
 
     /// Append a UTF-8 string to a file, creating it if needed. See `fs.appendFileSync` for details.
     /// - Parameters:
@@ -1515,12 +1543,12 @@ enum NodeFS {
         }
     }
 
-    @objc func writeFile(_ path: JSString, _ data: JSString, _ flag: JSString?) -> JSPromise? {
+    @objc func writeFile(_ path: JSString, _ data: JSString, _ options: JSValue?) -> JSPromise? {
         wrap {
             let p = try NodeFS.requireString(path, "path")
             let d = try NodeFS.requireString(data, "data")
-            let f = try NodeFS.requireOptionalString(flag, "flag")
-            try NodeFS.writeFile(p, d, flag: f)
+            let (flag, encoding) = try NodeFS.parseWriteFileOptions(options)
+            try NodeFS.writeFile(p, d, flag: flag, encoding: encoding)
         }
     }
 
