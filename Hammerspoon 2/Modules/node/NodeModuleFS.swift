@@ -434,7 +434,10 @@ enum NodeFS {
         let isDirectory = (st.st_mode & S_IFMT) == S_IFDIR
         guard isDirectory else {
             guard unsafe Darwin.unlink(full) == 0 else {
-                if force { return }
+                // `force` (matching Node) only ignores the path already being gone - a TOCTOU
+                // race is possible even though the lstat() above just confirmed it existed -
+                // not any other failure (permissions, etc.), which must still be reported.
+                if Darwin.errno == ENOENT, force { return }
                 throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "unlink", path: path, path2: nil)
             }
             return
@@ -444,11 +447,16 @@ enum NodeFS {
             do {
                 try FileManager.default.removeItem(atPath: full)
             } catch {
-                if !force { throw wrap(error, syscall: "rm", path: path) }
+                let failure = wrap(error, syscall: "rm", path: path)
+                if case .posix(let errnoValue, _, _, _) = failure, errnoValue == ENOENT, force { return }
+                throw failure
             }
         } else {
             guard unsafe Darwin.rmdir(full) == 0 else {
-                if force { return }
+                // Same restriction as above - notably, this means `force` does NOT suppress
+                // ENOTEMPTY, so a non-empty directory is still reported as a failure even with
+                // `force: true` (matching Node - `force` is not a substitute for `recursive`).
+                if Darwin.errno == ENOENT, force { return }
                 throw NodeFSFailure.posix(errnoValue: Darwin.errno, syscall: "rmdir", path: path, path2: nil)
             }
         }

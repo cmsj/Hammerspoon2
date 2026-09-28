@@ -325,6 +325,48 @@ struct NodeFSTests {
             #expect(!ctx.hadException)
         }
 
+        @Test("rmSync with force does not suppress ENOTEMPTY - force is not a substitute for recursive")
+        func testRmForceDoesNotSuppressNonEmptyDirectory() throws {
+            // Regression test: `force` must only ignore the path already being missing, not
+            // any other failure. A non-empty directory without `recursive` must still fail
+            // even with `force: true`, and must be left in place.
+            let ctx = try NodeFSTestContext()
+            let dir = ctx.path("force-nonempty")
+            ctx.eval("fs.mkdirSync('\(dir)')")
+            ctx.eval("fs.writeFileSync('\(dir)/x.txt', 'x')")
+
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.rmSync('\(dir)', { force: true }); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "ENOTEMPTY")
+            #expect(ctx.evalBool("fs.existsSync('\(dir)/x.txt')") == true)
+        }
+
+        @Test("rmSync with force does not suppress a permission error", .disabled(if: getuid() == 0, "running as root bypasses the permission check this test relies on"))
+        func testRmForceDoesNotSuppressPermissionError() throws {
+            let ctx = try NodeFSTestContext()
+            let parent = ctx.path("force-noperm")
+            let file = "\(parent)/locked.txt"
+            ctx.eval("fs.mkdirSync('\(parent)')")
+            ctx.eval("fs.writeFileSync('\(file)', 'keep me')")
+            // Deleting a file requires write permission on its *parent* directory, not the
+            // file itself - remove that so unlink() genuinely fails with EACCES.
+            #expect(chmod(parent, 0o555) == 0)
+            defer { chmod(parent, 0o755) }
+
+            let code = ctx.evalString("""
+                (function() {
+                    try { fs.rmSync('\(file)', { force: true }); return null; }
+                    catch (e) { return e.code; }
+                })()
+            """)
+            #expect(code == "EACCES")
+            #expect(ctx.evalBool("fs.existsSync('\(file)')") == true)
+        }
+
         @Test("rmSync bare-boolean shorthand means recursive, not force")
         func testRmBareBooleanShorthand() throws {
             // A bare boolean is a convenience this module accepts beyond real Node (which only
