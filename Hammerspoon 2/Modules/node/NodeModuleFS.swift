@@ -123,6 +123,32 @@ enum NodeFS {
         return Int(value.toInt32())
     }
 
+    /// Defines each key/value pair in `fields` as a real *own*, enumerable data property on
+    /// `target`, via `Object.defineProperty` rather than plain assignment. This matters because
+    /// every `@objc` property JSExport bridges (eg. `NodeFSStats.size`) is installed as a
+    /// non-enumerable *inherited* accessor on a shared per-class prototype (mirroring how a
+    /// JS `class { get size() {} }` behaves) - so a plain `target[key] = value` wouldn't create
+    /// a new own property at all; it would invoke that inherited accessor's setter (or silently
+    /// no-op for a getter-only one). `defineProperty` bypasses the prototype chain entirely and
+    /// writes straight to `target`'s own property table, so the new property shadows the
+    /// inherited one for `Object.keys()`/`JSON.stringify()`/`util.inspect()`/spread - while
+    /// direct access (`stats.size`) already worked fine either way, since normal property
+    /// *reads* do walk the prototype chain regardless of enumerability.
+    ///
+    /// See `NodeFSStats.primeEnumerableProperties(in:)` / `NodeFSDirent.primeEnumerableProperties(in:)`,
+    /// which use this to match Node's real `fs.Stats`/`fs.Dirent` (whose constructors assign
+    /// their data fields with `this.x = value`, an own-and-enumerable JS mechanism from the
+    /// start - fundamentally different from a class-body accessor, not just a different flag).
+    fileprivate static func defineEnumerableProperties(on target: JSValue, in context: JSContext, _ fields: [String: Any]) {
+        guard let objectConstructor = context.objectForKeyedSubscript("Object") else { return }
+        for (key, value) in fields {
+            _ = objectConstructor.invokeMethod("defineProperty", withArguments: [
+                target, key,
+                ["value": value, "enumerable": true, "writable": false, "configurable": true] as [String: Any],
+            ])
+        }
+    }
+
     /// Parses `readdirSync`/`fs.promises.readdir`'s options argument. A bare boolean is
     /// shorthand for `withFileTypes` only (matching this module's pre-options-object API) -
     /// `recursive` is never implied by it, only ever read from an actual options object.
@@ -768,6 +794,23 @@ enum NodeFS {
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    /// Must be called (with the current `JSContext`) before this object is first returned to
+    /// JS, so its data fields show up under `Object.keys()`/`JSON.stringify()`/`util.inspect()`/
+    /// spread, matching Node's own `fs.Stats` - see `NodeFS.defineEnumerableProperties` for why
+    /// this is otherwise not the case. `isFile()` etc. intentionally stay as ordinary
+    /// (non-enumerable) prototype methods, matching Node's own `Stats.prototype.isFile` etc.
+    @discardableResult
+    func primeEnumerableProperties(in context: JSContext) -> JSValue {
+        let wrapper = JSValue(object: self, in: context)!
+        NodeFS.defineEnumerableProperties(on: wrapper, in: context, [
+            "dev": dev, "ino": ino, "mode": mode, "nlink": nlink, "uid": uid, "gid": gid,
+            "rdev": rdev, "size": size, "blksize": blksize, "blocks": blocks,
+            "atimeMs": atimeMs, "mtimeMs": mtimeMs, "ctimeMs": ctimeMs, "birthtimeMs": birthtimeMs,
+            "atime": atime, "mtime": mtime, "ctime": ctime, "birthtime": birthtime,
+        ])
+        return wrapper
+    }
 }
 
 // MARK: - fs.Dirent
@@ -824,6 +867,18 @@ enum NodeFS {
     @objc func toString() -> String { "<NodeFSDirent: \(name) (\(type))>" }
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
+    }
+
+    /// Must be called (with the current `JSContext`) before this object is first returned to
+    /// JS, so `name` shows up under `Object.keys()`/`JSON.stringify()`/`util.inspect()`/spread,
+    /// matching Node's own `fs.Dirent` - see `NodeFS.defineEnumerableProperties` for why this is
+    /// otherwise not the case. `isFile()` etc. intentionally stay as ordinary (non-enumerable)
+    /// prototype methods, matching Node's own `Dirent.prototype.isFile` etc.
+    @discardableResult
+    func primeEnumerableProperties(in context: JSContext) -> JSValue {
+        let wrapper = JSValue(object: self, in: context)!
+        NodeFS.defineEnumerableProperties(on: wrapper, in: context, ["name": name])
+        return wrapper
     }
 }
 
@@ -1097,7 +1152,11 @@ enum NodeFS {
         sync {
             let p = try NodeFS.requireString(path, "path")
             let (withFileTypes, recursive) = NodeFS.parseReaddirOptions(options)
-            return try NodeFS.readdir(p, withFileTypes: withFileTypes, recursive: recursive)
+            let results = try NodeFS.readdir(p, withFileTypes: withFileTypes, recursive: recursive)
+            if withFileTypes, let context = JSContext.current() {
+                for case let dirent as NodeFSDirent in results { dirent.primeEnumerableProperties(in: context) }
+            }
+            return results
         }
     }
 
@@ -1106,7 +1165,9 @@ enum NodeFS {
         guard let context = JSContext.current() else { return nil }
         do {
             let p = try NodeFS.requireString(path, "path")
-            return try NodeFS.stat(p)
+            let stats = try NodeFS.stat(p)
+            stats.primeEnumerableProperties(in: context)
+            return stats
         } catch let failure as NodeFSFailure {
             if case .posix(let errnoValue, _, _, _) = failure, errnoValue == ENOENT, !throwIfNoEntry { return nil }
             context.exception = failure.jsValue(in: context)
@@ -1122,7 +1183,9 @@ enum NodeFS {
         guard let context = JSContext.current() else { return nil }
         do {
             let p = try NodeFS.requireString(path, "path")
-            return try NodeFS.lstat(p)
+            let stats = try NodeFS.lstat(p)
+            stats.primeEnumerableProperties(in: context)
+            return stats
         } catch let failure as NodeFSFailure {
             if case .posix(let errnoValue, _, _, _) = failure, errnoValue == ENOENT, !throwIfNoEntry { return nil }
             context.exception = failure.jsValue(in: context)
@@ -1450,21 +1513,29 @@ enum NodeFS {
         wrap {
             let p = try NodeFS.requireString(path, "path")
             let (withFileTypes, recursive) = NodeFS.parseReaddirOptions(options)
-            return try NodeFS.readdir(p, withFileTypes: withFileTypes, recursive: recursive)
+            let results = try NodeFS.readdir(p, withFileTypes: withFileTypes, recursive: recursive)
+            if withFileTypes, let context = JSContext.current() {
+                for case let dirent as NodeFSDirent in results { dirent.primeEnumerableProperties(in: context) }
+            }
+            return results
         }
     }
 
     @objc func stat(_ path: JSString) -> JSPromise? {
         wrap {
             let p = try NodeFS.requireString(path, "path")
-            return try NodeFS.stat(p)
+            let stats = try NodeFS.stat(p)
+            if let context = JSContext.current() { stats.primeEnumerableProperties(in: context) }
+            return stats
         }
     }
 
     @objc func lstat(_ path: JSString) -> JSPromise? {
         wrap {
             let p = try NodeFS.requireString(path, "path")
-            return try NodeFS.lstat(p)
+            let stats = try NodeFS.lstat(p)
+            if let context = JSContext.current() { stats.primeEnumerableProperties(in: context) }
+            return stats
         }
     }
 

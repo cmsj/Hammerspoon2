@@ -32,7 +32,7 @@ private final class NodeFSTestContext {
         ctx.exceptionHandler = { [weak self] _, exc in self?.lastException = exc }
         try NodeBuiltinModulesInstaller().install(in: ctx)
         try RequireInstaller().install(in: ctx)
-        ctx.evaluateScript("var fs = require('fs')")
+        ctx.evaluateScript("var fs = require('fs'); var util = require('util')")
     }
 
     deinit {
@@ -257,6 +257,18 @@ struct NodeFSTests {
             #expect(ctx.evalBool("__dirIsDir") == true)
         }
 
+        @Test("Dirent.name is a real own, enumerable property, matching Node")
+        func testDirentEnumerable() throws {
+            let ctx = try NodeFSTestContext()
+            let dir = ctx.path("dirent-enumerable")
+            ctx.eval("fs.mkdirSync('\(dir)')")
+            ctx.eval("fs.writeFileSync('\(dir)/f.txt', 'x')")
+            let keys = (ctx.evalValue("Object.keys(fs.readdirSync('\(dir)', true)[0])")?.toArray() ?? [])
+                .compactMap { $0 as? String }
+            #expect(keys == ["name"])
+            #expect(ctx.evalBool("JSON.stringify(fs.readdirSync('\(dir)', true)[0]) === '{\"name\":\"f.txt\"}'") == true)
+        }
+
         @Test("rmdirSync removes an empty directory but throws ENOTEMPTY for a non-empty one")
         func testRmdir() throws {
             let ctx = try NodeFSTestContext()
@@ -364,6 +376,27 @@ struct NodeFSTests {
             #expect(ctx.evalInt("fs.statSync('\(p)').size") == 5)
             #expect(ctx.evalBool("fs.statSync('\(p)').isFile()") == true)
             #expect(ctx.evalBool("fs.statSync('\(p)').isDirectory()") == false)
+        }
+
+        @Test("statSync's Stats data fields are real own, enumerable properties, matching Node")
+        func testStatEnumerable() throws {
+            // Regression test: every @objc property JSExport bridges is a non-enumerable
+            // *inherited* accessor by default (shared on the class prototype), so without
+            // explicit priming, Object.keys/JSON.stringify/spread would all see nothing here,
+            // diverging from real Node (whose Stats constructor assigns these with `this.x =
+            // value`, an inherently own-and-enumerable JS mechanism).
+            let ctx = try NodeFSTestContext()
+            let p = ctx.path("enumerable-stat.txt")
+            ctx.eval("fs.writeFileSync('\(p)', 'hello')")
+            ctx.eval("var st = fs.statSync('\(p)')")
+            let keys = (ctx.evalValue("Object.keys(st).sort()")?.toArray() ?? []).compactMap { $0 as? String }
+            #expect(keys.contains("size"))
+            #expect(keys.contains("mode"))
+            #expect(keys.contains("mtime"))
+            // Methods are NOT enumerable, matching Node's own Stats.prototype.isFile etc.
+            #expect(!keys.contains("isFile"))
+            #expect(ctx.evalBool("JSON.parse(JSON.stringify(st)).size === 5") == true)
+            #expect(ctx.evalString("util.inspect(st)")?.contains("size: 5") == true)
         }
 
         @Test("statSync with throwIfNoEntry=false returns undefined for a missing path")

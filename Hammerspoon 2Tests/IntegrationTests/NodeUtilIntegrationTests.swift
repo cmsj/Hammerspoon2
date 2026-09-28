@@ -79,7 +79,11 @@ struct NodeUtilTests {
             let ctx = try NodeUtilTestContext()
             ctx.eval("var fs = require('fs')")
             let result = ctx.evalString("util.inspect(fs.statSync('/tmp'))")
-            #expect(result == "{}")
+            #expect(result?.hasPrefix("undefined") == false)
+            // Stats' data fields are primed as real own, enumerable properties (see
+            // NodeFSStats.primeEnumerableProperties), so they're genuinely visible here too -
+            // this isn't just "no longer says undefined", it shows real content.
+            #expect(result?.contains("size:") == true)
         }
 
         @Test("does not invoke getters by default")
