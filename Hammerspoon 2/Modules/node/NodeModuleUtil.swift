@@ -209,7 +209,11 @@ enum NodeUtil {
             let hasSetter = descriptor?.objectForKeyedSubscript("set")?.isFunction ?? false
             let label = hasSetter ? "Getter/Setter" : "Getter"
             guard options.getters else { return "[\(label)]" }
-            let gotten = getter.call(withArguments: []) ?? JSValue(undefinedIn: value.context)
+            // `getter.call(withArguments:)` would invoke the getter with `this` unset, not
+            // `value` - so a getter reading its own object's other properties (eg. `get x() {
+            // return this.a }`) would see the wrong receiver. Invoke it as `getter.call(value)`
+            // in JS terms instead, via Function.prototype.call, to pass `value` as the receiver.
+            let gotten = getter.invokeMethod("call", withArguments: [value]) ?? JSValue(undefinedIn: value.context)
             guard let gotten else { return "[\(label)]" }
             if gotten.isObject, !gotten.isNull {
                 return "[\(label)] \(format(gotten, options: options))"

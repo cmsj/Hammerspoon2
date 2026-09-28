@@ -120,6 +120,16 @@ struct NodeUtilTests {
                     == "{ x: [Getter: 42] }")
         }
 
+        @Test("getters: true invokes the getter with the inspected object as its receiver")
+        func testGettersOptionReceiver() throws {
+            // Regression test: the getter must see `this` as the object actually being
+            // inspected, not undefined/global - otherwise a getter that reads a sibling
+            // property (the common case) reports the wrong value.
+            let ctx = try NodeUtilTestContext()
+            #expect(ctx.evalString("util.inspect({ a: 1, get x() { return this.a; } }, { getters: true })")
+                    == "{ a: 1, x: [Getter: 1] }")
+        }
+
         @Test("getters: true shows an object result on its own formatted value")
         func testGettersOptionObject() throws {
             let ctx = try NodeUtilTestContext()
