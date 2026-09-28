@@ -207,5 +207,40 @@ struct NodeUtilTests {
                 })()
             """) == "[ [Circular *1] ]")
         }
+
+        @Test("getters: true still catches a cycle through the getter's returned value")
+        func testCircularReferenceThroughGetter() throws {
+            // Regression test: a getter that returns its own owning object must not bypass
+            // the ancestor check - verified against real Node (v26.8.2), which produces
+            // "<ref *1> { self: [Getter] [Circular *1] }" here (this module omits the
+            // "<ref *1>" back-reference decoration, per the existing simplification used by
+            // the plain-property circular tests above, but still must label the cycle).
+            let ctx = try NodeUtilTestContext()
+            #expect(ctx.evalString("""
+                (function() {
+                    const o = {};
+                    Object.defineProperty(o, 'self', { get() { return o; }, enumerable: true });
+                    return util.inspect(o, { getters: true });
+                })()
+            """) == "{ self: [Getter] [Circular *1] }")
+        }
+
+        @Test("a getter's returned object is collapsed at the same depth as an equivalent plain property")
+        func testGetterResultUsesSameDepthAsPlainProperty() throws {
+            // Regression test: verified against real Node (v26.8.2) - a getter's returned
+            // object is formatted at the *same* recursion depth as the property itself would
+            // use for a plain value, not one level deeper. Consuming an extra depth level for
+            // the getter indirection (as naive intuition might suggest) would make
+            // getter-wrapped objects collapse a level earlier than their plain-property
+            // equivalents, which would be a real divergence from Node - so this locks in the
+            // current (correct) behaviour against that regression.
+            let ctx = try NodeUtilTestContext()
+            let plain = ctx.evalString("util.inspect({ a: { b: { c: { d: 1 } } } })")
+            let viaGetter = ctx.evalString("""
+                util.inspect({ get a() { return { b: { c: { d: 1 } } }; } }, { getters: true })
+            """)
+            #expect(plain == "{ a: { b: { c: [Object] } } }")
+            #expect(viaGetter == "{ a: [Getter] { b: { c: [Object] } } }")
+        }
     }
 }
