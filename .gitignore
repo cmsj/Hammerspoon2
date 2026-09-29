@@ -45,6 +45,7 @@ docs/api.json
 docs/hammerspoon.d.ts
 docs/js/
 docs/ts/
+docs/.placeholder-docs
 
 # Claude
 .claude/settings.local.json

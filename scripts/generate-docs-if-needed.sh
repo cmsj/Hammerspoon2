@@ -12,6 +12,16 @@ cd "$(dirname "$0")/.."
 # installed (Homebrew) so `npm` can be found.
 export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
 
+# The paths that `npm run docs:generate` produces and that get bundled into
+# the app. Tracked as a list so a failed or placeholder generation can be
+# cleaned up without leaving any of them looking like current output.
+GENERATED_PATHS=(docs/api.json docs/hammerspoon.d.ts docs/js/html docs/ts/html)
+
+# Marks output written by the no-npm placeholder branch below, so that once
+# npm becomes available again the next build always regenerates for real
+# instead of trusting the placeholder as current.
+PLACEHOLDER_MARKER="docs/.placeholder-docs"
+
 if ! command -v npm >/dev/null 2>&1; then
     # A Release build (Archive/distribution) must never ship placeholder
     # documentation, so fail hard rather than silently bundling empty docs.
@@ -27,6 +37,7 @@ if ! command -v npm >/dev/null 2>&1; then
     [ -f docs/hammerspoon.d.ts ] || : > docs/hammerspoon.d.ts
     [ -f docs/js/html/index.html ] || : > docs/js/html/index.html
     [ -f docs/ts/html/index.html ] || : > docs/ts/html/index.html
+    : > "$PLACEHOLDER_MARKER"
     exit 0
 fi
 
@@ -38,7 +49,7 @@ fi
 STAMP="docs/api.json"
 NEEDS_GENERATE=0
 
-if [ ! -f "$STAMP" ] || [ ! -d docs/js/html ] || [ ! -d docs/ts/html ]; then
+if [ ! -f "$STAMP" ] || [ ! -d docs/js/html ] || [ ! -d docs/ts/html ] || [ -f "$PLACEHOLDER_MARKER" ]; then
     NEEDS_GENERATE=1
 elif find "Hammerspoon 2" scripts docs/*.md package.json \
         \( -name "*.swift" -o -name "*.js" -o -name "*.md" -o -name "package.json" \) \
@@ -48,7 +59,15 @@ fi
 
 if [ "$NEEDS_GENERATE" -eq 1 ]; then
     echo "Documentation is stale or missing, regenerating..."
-    npm run docs:generate
+    if ! npm run docs:generate; then
+        # api.json lands before the HTML/TypeScript steps run, so a failure
+        # partway through can otherwise leave a fresh-looking api.json next
+        # to stale js/ts output that a later build would trust as current.
+        echo "${BASH_SOURCE[0]}:${LINENO}: error: documentation generation failed; removing partial output so it isn't mistaken for current on the next build." >&2
+        rm -rf "${GENERATED_PATHS[@]}" "$PLACEHOLDER_MARKER"
+        exit 1
+    fi
+    [ -f "${PLACEHOLDER_MARKER}" ] && rm -f "$PLACEHOLDER_MARKER"
 else
     echo "Documentation is up to date, skipping generation."
 fi
