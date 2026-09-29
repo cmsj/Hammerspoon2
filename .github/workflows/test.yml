@@ -41,6 +41,9 @@ jobs:
       - name: Run documentation linter
         run: ./scripts/test-docs.sh
 
+      - name: Generate documentation for app bundle
+        run: npm run docs:generate
+
       - name: Resolve Swift package dependencies
         run: xcodebuild -resolvePackageDependencies -scheme Development
 
