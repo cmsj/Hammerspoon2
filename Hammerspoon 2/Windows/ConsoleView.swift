@@ -10,7 +10,18 @@ import AppKit
 import UniformTypeIdentifiers
 
 class ConsoleViewModel: WindowAccessorDelegate {
-    var window: NSWindow? = nil
+    /// Applies `alpha` as soon as the window attaches, in case it becomes available
+    /// after `alpha` has already been set (or vice versa).
+    var window: NSWindow? = nil {
+        didSet { applyAlpha() }
+    }
+    var alpha: CGFloat = 1.0 {
+        didSet { applyAlpha() }
+    }
+
+    private func applyAlpha() {
+        window?.alphaValue = alpha
+    }
 }
 
 @_documentation(visibility: private)
@@ -40,7 +51,10 @@ struct ConsoleView: View {
 
     @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Debug
 
-    private var viewModel = ConsoleViewModel()
+    // @State keeps this instance stable across body re-evaluations, which can otherwise
+    // reconstruct ConsoleView (and a plain stored property along with it) while the
+    // window accessor below keeps pointing at the original instance via its own @State.
+    @State private var viewModel = ConsoleViewModel()
 
     /// Bounds how many entries get laid out regardless of how much history the
     /// per-level buffers retain, so render cost doesn't grow just because retention did.
@@ -265,10 +279,9 @@ struct ConsoleView: View {
                 }
         }
         .onChange(of: settingsManager.consoleAlpha, initial: true) {
-            Task { @MainActor in
-                // Doing this in a task means the initial run has time for the window accessor delegate to be populated
-                viewModel.window?.alphaValue = min(max(settingsManager.consoleAlpha, 0.2), 1.0)
-            }
+            // viewModel.alpha applies itself once the window attaches, so this is safe
+            // even if the window accessor hasn't populated viewModel.window yet.
+            viewModel.alpha = min(max(settingsManager.consoleAlpha, 0.2), 1.0)
         }
         .toolbar(id: "console-toolbar") {
             ToolbarItem(id: "minimumLogLevel") {
