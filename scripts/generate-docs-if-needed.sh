@@ -60,7 +60,12 @@ fi
 STAMP="docs/api.json"
 NEEDS_GENERATE=0
 
-if [ ! -f "$STAMP" ] || [ ! -d docs/js/html ] || [ ! -d docs/ts/html ] || [ -f "$PLACEHOLDER_MARKER" ]; then
+# A Release build must always ship documentation generated from its own
+# source, never output left over from a previous build, so it skips the
+# staleness check below and regenerates unconditionally.
+if [ "${CONFIGURATION:-}" = "Release" ]; then
+    NEEDS_GENERATE=1
+elif [ ! -f "$STAMP" ] || [ ! -d docs/js/html ] || [ ! -d docs/ts/html ] || [ -f "$PLACEHOLDER_MARKER" ]; then
     NEEDS_GENERATE=1
 elif find "Hammerspoon 2" scripts docs/*.md docs/tsconfig.docs.json package.json \
         \( -name "*.swift" -o -name "*.js" -o -name "*.md" -o -name "*.njk" -o -name "*.css" \
@@ -79,7 +84,9 @@ if [ "$NEEDS_GENERATE" -eq 1 ]; then
         rm -rf "${GENERATED_PATHS[@]}" "$PLACEHOLDER_MARKER"
         exit 1
     fi
-    [ -f "${PLACEHOLDER_MARKER}" ] && rm -f "$PLACEHOLDER_MARKER"
+    # `-f` makes this a no-op (exit 0) when no placeholder marker exists; a
+    # bare `[ -f ... ] && rm ...` would instead trip `set -e` on that case.
+    rm -f "$PLACEHOLDER_MARKER"
 else
     echo "Documentation is up to date, skipping generation."
 fi
