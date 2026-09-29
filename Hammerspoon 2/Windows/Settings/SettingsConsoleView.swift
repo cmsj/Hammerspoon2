@@ -85,5 +85,5 @@ struct SettingsConsoleView: View {
 }
 
 #Preview {
-    SettingsConfigView()
+    SettingsConsoleView()
 }
