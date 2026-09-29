@@ -219,7 +219,7 @@ final class SettingsManager {
         hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding.rawValue)
         garbageLoggingEnabled = UserDefaults.standard.bool(forKey: Keys.garbageLoggingEnabled.rawValue)
         consoleAlwaysOnTop = UserDefaults.standard.bool(forKey: Keys.consoleAlwaysOnTop.rawValue)
-        consoleAlpha = UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue)
+        consoleAlpha = min(max(UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue), 0.2), 1.0)
 
         let dockMenuBehaviourString = UserDefaults.standard.string(forKey: Keys.dockMenuBehaviour.rawValue) ?? Keys.dockMenuBehaviour.defaultValue as! String
         dockMenuBehaviour = DockMenubarType(rawValue: dockMenuBehaviourString) ?? .both
@@ -271,7 +271,9 @@ final class SettingsManager {
         let newConsoleAlwaysOnTop = UserDefaults.standard.bool(forKey: Keys.consoleAlwaysOnTop.rawValue)
         if newConsoleAlwaysOnTop != consoleAlwaysOnTop { consoleAlwaysOnTop = newConsoleAlwaysOnTop }
 
-        let newConsoleAlpha = UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue)
+        // Clamped in case another preferences client (e.g. iCloud sync) stores a value
+        // outside the range the console UI allows, so displayed and applied opacity agree.
+        let newConsoleAlpha = min(max(UserDefaults.standard.double(forKey: Keys.consoleAlpha.rawValue), 0.2), 1.0)
         if newConsoleAlpha != consoleAlpha { consoleAlpha = newConsoleAlpha }
     }
 }
