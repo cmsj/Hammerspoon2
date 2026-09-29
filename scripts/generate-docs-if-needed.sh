@@ -17,21 +17,26 @@ export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
 # cleaned up without leaving any of them looking like current output.
 GENERATED_PATHS=(docs/api.json docs/hammerspoon.d.ts docs/js/html docs/ts/html)
 
-# Marks output written by the no-npm placeholder branch below, so that once
-# npm becomes available again the next build always regenerates for real
-# instead of trusting the placeholder as current.
+# Marks output written by the placeholder fallback below, so that once real
+# documentation can be generated again the next build always regenerates for
+# real instead of trusting the placeholder as current.
 PLACEHOLDER_MARKER="docs/.placeholder-docs"
 
-if ! command -v npm >/dev/null 2>&1; then
-    # A Release build (Archive/distribution) must never ship placeholder
-    # documentation, so fail hard rather than silently bundling empty docs.
+# A Release build (Archive/distribution) must never ship placeholder
+# documentation, so fail hard rather than silently bundling empty docs. A
+# Debug build falls back to placeholder docs (leaving any already-generated
+# real docs in place) so local iteration isn't blocked by missing Node.js or
+# an unreachable npm registry.
+fail_or_use_placeholder() {
+    local reason="$1"
     if [ "${CONFIGURATION:-}" = "Release" ]; then
-        echo "${BASH_SOURCE[0]}:${LINENO}: error: npm not found on PATH; cannot generate documentation for a Release build. Install Node.js (https://nodejs.org) before building for release." >&2
+        echo "${BASH_SOURCE[0]}:${LINENO}: error: ${reason} cannot generate documentation for a Release build." >&2
         exit 1
     fi
-    echo "${BASH_SOURCE[0]}:${LINENO}: warning: npm not found on PATH; skipping documentation generation for this Debug build."
+    echo "${BASH_SOURCE[0]}:${LINENO}: warning: ${reason} skipping documentation generation for this Debug build."
     # Make sure the bundle resources Xcode expects at these paths exist, even
     # if empty, so the build doesn't fail on a missing folder/file reference.
+    # Existing real docs from an earlier successful generation are left as-is.
     mkdir -p docs/js/html docs/ts/html
     [ -f docs/api.json ] || echo '{}' > docs/api.json
     [ -f docs/hammerspoon.d.ts ] || : > docs/hammerspoon.d.ts
@@ -39,11 +44,17 @@ if ! command -v npm >/dev/null 2>&1; then
     [ -f docs/ts/html/index.html ] || : > docs/ts/html/index.html
     : > "$PLACEHOLDER_MARKER"
     exit 0
+}
+
+if ! command -v npm >/dev/null 2>&1; then
+    fail_or_use_placeholder "npm not found on PATH;"
 fi
 
 if [ ! -d node_modules ]; then
     echo "node_modules missing, running npm install..."
-    npm install
+    if ! npm install; then
+        fail_or_use_placeholder "npm install failed (offline, or the npm registry is unreachable);"
+    fi
 fi
 
 STAMP="docs/api.json"
