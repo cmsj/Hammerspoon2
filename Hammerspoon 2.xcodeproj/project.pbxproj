@@ -281,6 +281,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4F5641A42E8333840099EB4C /* Build configuration list for PBXNativeTarget "Hammerspoon 2" */;
 			buildPhases = (
+				4FB6657D306BE916001B87E9 /* Highlight TODO/FIXME */,
 				336D11A35383A7FA66D4E288 /* Generate API Documentation */,
 				4F56417F2E8333830099EB4C /* Sources */,
 				4F5641802E8333830099EB4C /* Frameworks */,
@@ -483,6 +484,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/scripts/generate-docs-if-needed.sh\"\n";
+		};
+		4FB6657D306BE916001B87E9 /* Highlight TODO/FIXME */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Highlight TODO/FIXME";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "TAGS=\"TODO:|FIXME:\"\nERRORTAG=\"ERROR:\"\nfind \"${SRCROOT}\" \\( -name \"*.h\" -or -name \"*.m\" -or -name \"*.swift\" \\) -print0 | xargs -0 egrep --with-filename --line-number --only-matching \"($TAGS).*\\$|($ERRORTAG).*\\$\" | perl -p -e \"s/($TAGS)/ warning: \\$1/\" | perl -p -e \"s/($ERRORTAG)/ error: \\$1/\"\n\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

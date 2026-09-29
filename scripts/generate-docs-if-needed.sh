@@ -13,7 +13,13 @@ cd "$(dirname "$0")/.."
 export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
 
 if ! command -v npm >/dev/null 2>&1; then
-    echo "warning: npm not found on PATH; skipping documentation generation. Install Node.js (https://nodejs.org) so the bundled hs.docs content stays up to date."
+    # A Release build (Archive/distribution) must never ship placeholder
+    # documentation, so fail hard rather than silently bundling empty docs.
+    if [ "${CONFIGURATION:-}" = "Release" ]; then
+        echo "${BASH_SOURCE[0]}:${LINENO}: error: npm not found on PATH; cannot generate documentation for a Release build. Install Node.js (https://nodejs.org) before building for release." >&2
+        exit 1
+    fi
+    echo "${BASH_SOURCE[0]}:${LINENO}: warning: npm not found on PATH; skipping documentation generation for this Debug build."
     # Make sure the bundle resources Xcode expects at these paths exist, even
     # if empty, so the build doesn't fail on a missing folder/file reference.
     mkdir -p docs/js/html docs/ts/html
