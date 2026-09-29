@@ -147,7 +147,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     @objc func attachedDevices() -> [[String: Any]] {
         var iterator: io_iterator_t = IO_OBJECT_NULL
         guard unsafe IOServiceGetMatchingServices(kIOMainPortDefault,
-                                          IOServiceMatching("IOUSBDevice"),
+                                          IOServiceMatching("IOUSBHostDevice"),
                                           &iterator) == KERN_SUCCESS else {
             AKWarning("hs.usb.attachedDevices(): Failed to enumerate USB devices")
             return []
@@ -194,7 +194,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
         // "Device added" notifications
         let addedStatus = unsafe IOServiceAddMatchingNotification(
-            port, kIOFirstMatchNotification, IOServiceMatching("IOUSBDevice"),
+            port, kIOFirstMatchNotification, IOServiceMatching("IOUSBHostDevice"),
             { (refCon: UnsafeMutableRawPointer?, iterator: io_iterator_t) in
                 guard let refCon = unsafe refCon else { return }
                 let infos = drainUSBIterator(iterator)
@@ -213,7 +213,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
         // "Device removed" notifications
         let removedStatus = unsafe IOServiceAddMatchingNotification(
-            port, kIOTerminatedNotification, IOServiceMatching("IOUSBDevice"),
+            port, kIOTerminatedNotification, IOServiceMatching("IOUSBHostDevice"),
             { (refCon: UnsafeMutableRawPointer?, iterator: io_iterator_t) in
                 guard let refCon = unsafe refCon else { return }
                 let infos = drainUSBIterator(iterator)
