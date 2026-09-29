@@ -256,6 +256,38 @@ struct HSAXTests {
         }
     }
 
+    // MARK: - Suite 1.5: Watcher key hashing (no accessibility permissions required)
+
+    /// HSAXModule keys its watcher table by element+notification, and every JS-side call hands it
+    /// an element that has been wrapped afresh, so the key type must hash elements by value:
+    /// equal elements have to hash equally or lookups miss (and, when the hash reaches CFHash()
+    /// on the wrapper instead of the element, recursion into a stack overflow inside the app).
+    ///
+    /// Hashing an AX element needs no accessibility permission, so unlike the other watcher
+    /// suites this one must not be disabled without permissions - that gate is exactly why the
+    /// stale AXSwift revision escaped CI.
+    @Suite("hs.ax watcher key tests")
+    struct HSAXWatcherKeyTests {
+
+        @Test("UIElement hashes by its underlying AXUIElement, not by the wrapper instance")
+        func testUIElementHashingIsValueBased() {
+            let app = AXUIElementCreateApplication(getpid())
+            let key = UIElement(app)
+
+            var table: [UIElement: String] = [:]
+            table[key] = "watcher"
+            #expect(table.count == 1)
+
+            let rewrapped = UIElement(app)
+            #expect(rewrapped == key)
+            #expect(rewrapped.hashValue == key.hashValue)
+            #expect(table[rewrapped] == "watcher")
+
+            table.removeValue(forKey: key)
+            #expect(table.isEmpty)
+        }
+    }
+
     // MARK: - Suite 2: Element inspection (requires accessibility permissions)
 
     /// Tests that inspect real AX elements. Uses Finder as the target application
