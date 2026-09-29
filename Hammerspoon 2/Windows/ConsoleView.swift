@@ -9,9 +9,14 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
+class ConsoleViewModel: WindowAccessorDelegate {
+    var window: NSWindow? = nil
+}
+
 @_documentation(visibility: private)
 struct ConsoleView: View {
     @State var logs = HammerspoonLog.shared
+    @State private var settingsManager = SettingsManager.shared
 
     @State var evalString: String = ""
     @State var evalHistory: [String] = []
@@ -34,6 +39,8 @@ struct ConsoleView: View {
     @Environment(\.calendar) var calendar
 
     @AppStorage("minimumLogLevel") var minimumLogLevel: HammerspoonLogType = .Debug
+
+    private var viewModel = ConsoleViewModel()
 
     /// Bounds how many entries get laid out regardless of how much history the
     /// per-level buffers retain, so render cost doesn't grow just because retention did.
@@ -195,6 +202,10 @@ struct ConsoleView: View {
 
     var body: some View {
         VStack {
+            // This is just a neat place to hide a view that populates viewModel.window
+            NSWindowAccessor(delegate: viewModel)
+                .frame(width: 0, height: 0)
+
             ScrollViewReader { proxy in
                 ScrollView {
                     Text(displayedLogText)
@@ -252,6 +263,12 @@ struct ConsoleView: View {
                     activeCompletion = nil
                     handleSubmit()
                 }
+        }
+        .onChange(of: settingsManager.consoleAlpha, initial: true) {
+            Task { @MainActor in
+                // Doing this in a task means the initial run has time for the window accessor delegate to be populated
+                viewModel.window?.alphaValue = min(max(settingsManager.consoleAlpha, 0.2), 1.0)
+            }
         }
         .toolbar(id: "console-toolbar") {
             ToolbarItem(id: "minimumLogLevel") {

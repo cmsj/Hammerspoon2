@@ -42,29 +42,7 @@ struct SettingsAdvancedView: View {
                         Toggle("Relaunch app on config reload", isOn: Bindable(settingsManager).relaunchOnReload)
                             .labelsHidden()
                     }
-                    GridRow {
-                        Divider()
-                            .gridCellColumns(2)
-                    }
-                    GridRow {
-                        Text("Console history length:")
-                            .gridColumnAlignment(.trailing)
-                        TextField("Length", value: $settingsManager.consoleHistoryLength, formatter: NumberFormatter())
-                            .labelsHidden()
-                            .frame(width: 120)
-                            .fixedSize(horizontal: true, vertical: true)
-                    }
-                    GridRow(alignment: .top) {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("Enable garbage collection logging:")
-                            Text("Requires Console log level “Garbage”.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .gridColumnAlignment(.trailing)
-                        Toggle("Enable garbage collection logging", isOn: Bindable(settingsManager).garbageLoggingEnabled)
-                            .labelsHidden()
-                    }
+
                     GridRow {
                         Spacer()
                     }
