@@ -134,6 +134,79 @@ import SwiftUI
     /// ```
     @objc var visibleRows: Int { get set }
 
+    /// Background color of the chooser panel. When `nil` (the default), the panel uses
+    /// the system's translucent glass/material effect.
+    ///
+    /// If you set this to a solid or near-opaque color, also set `textColor`, `subTextColor`,
+    /// and `placeholderColor` to ensure readable contrast — they are not adjusted automatically.
+    /// - Example:
+    /// ```js
+    /// chooser.backgroundColor = HSColor.hex("#2E3440") // Nord "polar night"
+    /// ```
+    @objc var backgroundColor: HSColor? { get set }
+
+    /// Corner radius of the chooser panel, in points (default: `14`).
+    /// - Example:
+    /// ```js
+    /// chooser.cornerRadius = 20
+    /// ```
+    @objc var cornerRadius: Double { get set }
+
+    /// Border color drawn around the chooser panel. When `nil` (the default), no border is drawn.
+    /// - Example:
+    /// ```js
+    /// chooser.borderColor = HSColor.hex("#88C0D0")
+    /// ```
+    @objc var borderColor: HSColor? { get set }
+
+    /// Width of the border drawn around the chooser panel, in points (default: `1`).
+    /// Has no effect unless `borderColor` is also set.
+    /// - Example:
+    /// ```js
+    /// chooser.borderWidth = 2
+    /// ```
+    @objc var borderWidth: Double { get set }
+
+    /// Color of each result row's main text. When `nil` (the default), the system's
+    /// primary label color is used.
+    /// - Example:
+    /// ```js
+    /// chooser.textColor = HSColor.hex("#ECEFF4")
+    /// ```
+    @objc var textColor: HSColor? { get set }
+
+    /// Color of each result row's subtext. When `nil` (the default), the system's
+    /// secondary label color is used.
+    /// - Example:
+    /// ```js
+    /// chooser.subTextColor = HSColor.hex("#D8DEE9")
+    /// ```
+    @objc var subTextColor: HSColor? { get set }
+
+    /// Color of the text the user types into the search field. When `nil` (the default),
+    /// the system's primary label color is used.
+    /// - Example:
+    /// ```js
+    /// chooser.queryColor = HSColor.hex("#ECEFF4")
+    /// ```
+    @objc var queryColor: HSColor? { get set }
+
+    /// Color of the placeholder text (and search icon) shown in an empty search field.
+    /// When `nil` (the default), the system's secondary label color is used.
+    /// - Example:
+    /// ```js
+    /// chooser.placeholderColor = HSColor.hex("#4C566A")
+    /// ```
+    @objc var placeholderColor: HSColor? { get set }
+
+    /// Background tint of the highlighted row. When `nil` (the default), a translucent
+    /// tint of the system accent color is used.
+    /// - Example:
+    /// ```js
+    /// chooser.selectionColor = HSColor.rgb(0.37, 0.51, 0.68, 0.35) // Nord "frost" blue, 35% opacity
+    /// ```
+    @objc var selectionColor: HSColor? { get set }
+
     // MARK: Lifecycle
 
     /// Show the chooser.
@@ -267,6 +340,53 @@ import SwiftUI
     @objc var visibleRows: Int {
         get { viewModel.visibleRows }
         set { viewModel.visibleRows = newValue }
+    }
+
+    // MARK: - Styling
+
+    @objc var backgroundColor: HSColor? {
+        get { viewModel.backgroundColor.map { HSColor(color: $0) } }
+        set { viewModel.backgroundColor = newValue?.color }
+    }
+
+    @objc var cornerRadius: Double {
+        get { Double(viewModel.cornerRadius) }
+        set { viewModel.cornerRadius = CGFloat(newValue) }
+    }
+
+    @objc var borderColor: HSColor? {
+        get { viewModel.borderColor.map { HSColor(color: $0) } }
+        set { viewModel.borderColor = newValue?.color }
+    }
+
+    @objc var borderWidth: Double {
+        get { Double(viewModel.borderWidth) }
+        set { viewModel.borderWidth = CGFloat(newValue) }
+    }
+
+    @objc var textColor: HSColor? {
+        get { viewModel.textColor.map { HSColor(color: $0) } }
+        set { viewModel.textColor = newValue?.color }
+    }
+
+    @objc var subTextColor: HSColor? {
+        get { viewModel.subTextColor.map { HSColor(color: $0) } }
+        set { viewModel.subTextColor = newValue?.color }
+    }
+
+    @objc var queryColor: HSColor? {
+        get { viewModel.queryColor.map { HSColor(color: $0) } }
+        set { viewModel.queryColor = newValue?.color }
+    }
+
+    @objc var placeholderColor: HSColor? {
+        get { viewModel.placeholderColor.map { HSColor(color: $0) } }
+        set { viewModel.placeholderColor = newValue?.color }
+    }
+
+    @objc var selectionColor: HSColor? {
+        get { viewModel.selectionColor.map { HSColor(color: $0) } }
+        set { viewModel.selectionColor = newValue?.color }
     }
 
     private var _onSelect: JSCallback?

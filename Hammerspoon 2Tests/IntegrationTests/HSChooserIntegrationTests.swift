@@ -168,6 +168,71 @@ struct HSChooserTests {
         func testSelectedRowContentsIsFunction() {
             #expect(makeHarness().evalTypeOf("hs.chooser.create().selectedRowContents") == "function")
         }
+
+        // MARK: Styling defaults
+
+        @Test("backgroundColor defaults to null")
+        func testBackgroundColorDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("c.backgroundColor == null")
+        }
+
+        @Test("cornerRadius defaults to 14")
+        func testCornerRadiusDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("Math.abs(c.cornerRadius - 14) < 0.01")
+        }
+
+        @Test("borderColor defaults to null")
+        func testBorderColorDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("c.borderColor == null")
+        }
+
+        @Test("borderWidth defaults to 1")
+        func testBorderWidthDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("Math.abs(c.borderWidth - 1) < 0.01")
+        }
+
+        @Test("textColor defaults to null")
+        func testTextColorDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("c.textColor == null")
+        }
+
+        @Test("subTextColor defaults to null")
+        func testSubTextColorDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("c.subTextColor == null")
+        }
+
+        @Test("queryColor defaults to null")
+        func testQueryColorDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("c.queryColor == null")
+        }
+
+        @Test("placeholderColor defaults to null")
+        func testPlaceholderColorDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("c.placeholderColor == null")
+        }
+
+        @Test("selectionColor defaults to null")
+        func testSelectionColorDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("c.selectionColor == null")
+        }
     }
 
     // MARK: - Behaviour
@@ -269,6 +334,110 @@ struct HSChooserTests {
             c.width = 0.6
         """)
             harness.expectTrue("Math.abs(c.width - 0.6) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        // MARK: Styling setters
+
+        @Test("backgroundColor setter round-trips an HSColor")
+        func testBackgroundColorSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.backgroundColor = HSColor.hex("#2E3440")
+        """)
+            harness.expectTrue("c.backgroundColor !== null && c.backgroundColor.toString() === HSColor.hex('#2E3440').toString()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("backgroundColor setter accepts null to reset")
+        func testBackgroundColorSetterNull() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.backgroundColor = HSColor.hex("#2E3440")
+            c.backgroundColor = null
+        """)
+            harness.expectTrue("c.backgroundColor == null")
+            #expect(!harness.hasException)
+        }
+
+        @Test("cornerRadius setter updates value")
+        func testCornerRadiusSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.cornerRadius = 20
+        """)
+            harness.expectTrue("Math.abs(c.cornerRadius - 20) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        @Test("borderColor and borderWidth setters round-trip")
+        func testBorderSetters() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.borderColor = HSColor.hex("#88C0D0")
+            c.borderWidth = 2
+        """)
+            harness.expectTrue("c.borderColor !== null && c.borderColor.toString() === HSColor.hex('#88C0D0').toString()")
+            harness.expectTrue("Math.abs(c.borderWidth - 2) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        @Test("textColor setter round-trips an HSColor")
+        func testTextColorSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.textColor = HSColor.hex("#ECEFF4")
+        """)
+            harness.expectTrue("c.textColor !== null && c.textColor.toString() === HSColor.hex('#ECEFF4').toString()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("subTextColor setter round-trips an HSColor")
+        func testSubTextColorSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.subTextColor = HSColor.hex("#D8DEE9")
+        """)
+            harness.expectTrue("c.subTextColor !== null && c.subTextColor.toString() === HSColor.hex('#D8DEE9').toString()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("queryColor setter round-trips an HSColor")
+        func testQueryColorSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.queryColor = HSColor.hex("#ECEFF4")
+        """)
+            harness.expectTrue("c.queryColor !== null && c.queryColor.toString() === HSColor.hex('#ECEFF4').toString()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("placeholderColor setter round-trips an HSColor")
+        func testPlaceholderColorSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.placeholderColor = HSColor.hex("#4C566A")
+        """)
+            harness.expectTrue("c.placeholderColor !== null && c.placeholderColor.toString() === HSColor.hex('#4C566A').toString()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("selectionColor setter round-trips an HSColor")
+        func testSelectionColorSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.selectionColor = HSColor.rgb(0.37, 0.51, 0.68, 0.35)
+        """)
+            harness.expectTrue("c.selectionColor !== null && c.selectionColor.toString() === HSColor.rgb(0.37, 0.51, 0.68, 0.35).toString()")
             #expect(!harness.hasException)
         }
 

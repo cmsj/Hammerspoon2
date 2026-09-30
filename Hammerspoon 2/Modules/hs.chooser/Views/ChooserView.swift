@@ -25,7 +25,7 @@ struct ChooserView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .chooserBackground()
+        .chooserBackground(viewModel)
         .onAppear { searchFocused = true }
         .onChange(of: viewModel.isVisible) { _, visible in
             if visible { searchFocused = true }
@@ -49,10 +49,16 @@ struct ChooserView: View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
-                .foregroundStyle(.secondary)
-            TextField(viewModel.placeholder, text: queryBinding, selection: $querySelection)
+                .foregroundStyle(viewModel.placeholderColor ?? Color.secondary)
+            TextField(
+                viewModel.placeholder,
+                text: queryBinding,
+                selection: $querySelection,
+                prompt: Text(viewModel.placeholder).foregroundStyle(viewModel.placeholderColor ?? Color.secondary)
+            )
                 .textFieldStyle(.plain)
                 .font(.system(size: 20))
+                .foregroundStyle(viewModel.queryColor ?? Color.primary)
                 .focused($searchFocused)
                 .onChange(of: viewModel.isVisible) { _, visible in
                     guard visible == true else { return }
@@ -73,6 +79,7 @@ struct ChooserView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(viewModel.filteredChoices.enumerated()), id: \.element.id) { index, item in
                         ChooserRowView(
+                            viewModel: viewModel,
                             item: item,
                             isSelected: index == viewModel.selectedIndex,
                             shortcutDigit: index < 10 ? (index + 1) % 10 : nil
@@ -117,24 +124,35 @@ extension ChooserView {
 // MARK: - Glass background modifier
 
 private extension View {
-    func chooserBackground() -> some View {
-        modifier(ChooserBackgroundModifier())
+    func chooserBackground(_ viewModel: ChooserViewModel) -> some View {
+        modifier(ChooserBackgroundModifier(viewModel: viewModel))
     }
 }
 
 private struct ChooserBackgroundModifier: ViewModifier {
+    var viewModel: ChooserViewModel
+
     func body(content: Content) -> some View {
-        if #available(macOS 26.0, *) {
-            content
-                .glassEffect(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .shadow(color: .black.opacity(0.15), radius: 24, y: 12)
-        } else {
-            content
-                .background(
-                    .ultraThinMaterial,
-                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                )
-                .shadow(color: .black.opacity(0.25), radius: 20, y: 8)
+        let shape = RoundedRectangle(cornerRadius: viewModel.cornerRadius, style: .continuous)
+        Group {
+            if let backgroundColor = viewModel.backgroundColor {
+                content
+                    .background(backgroundColor, in: shape)
+                    .shadow(color: .black.opacity(0.25), radius: 20, y: 8)
+            } else if #available(macOS 26.0, *) {
+                content
+                    .glassEffect(in: shape)
+                    .shadow(color: .black.opacity(0.15), radius: 24, y: 12)
+            } else {
+                content
+                    .background(.ultraThinMaterial, in: shape)
+                    .shadow(color: .black.opacity(0.25), radius: 20, y: 8)
+            }
+        }
+        .overlay {
+            if let borderColor = viewModel.borderColor {
+                shape.strokeBorder(borderColor, lineWidth: viewModel.borderWidth)
+            }
         }
     }
 }
