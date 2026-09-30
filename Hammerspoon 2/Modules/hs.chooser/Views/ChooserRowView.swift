@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 
 struct ChooserRowView: View {
+    var viewModel: ChooserViewModel
     let item: ChooserItem
     let isSelected: Bool
     /// The digit (0-9) for this row's Cmd-<digit> shortcut, or `nil` if this row is beyond the first ten.
@@ -27,13 +28,13 @@ struct ChooserRowView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.text)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(viewModel.textColor ?? Color.primary)
                     .lineLimit(1)
 
                 if let subText = item.subText {
                     Text(subText)
                         .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(viewModel.subTextColor ?? Color.secondary)
                         .lineLimit(1)
                 }
             }
@@ -43,14 +44,14 @@ struct ChooserRowView: View {
             if let shortcutDigit {
                 Text("⌘\(shortcutDigit)")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(viewModel.subTextColor ?? Color.secondary)
             }
         }
         .frame(height: ChooserViewModel.rowHeight)
         .padding(.horizontal, 16)
         .background(
             isSelected
-                ? Color.accentColor.opacity(0.18)
+                ? (viewModel.selectionColor ?? Color.accentColor.opacity(0.18))
                 : Color.clear,
             in: Rectangle()
         )
