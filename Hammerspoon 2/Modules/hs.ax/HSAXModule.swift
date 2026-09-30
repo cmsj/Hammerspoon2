@@ -529,7 +529,7 @@ import AXSwift
 
         // Check the AXUIElement is still valid
         var pid_unused: pid_t = 0
-        guard unsafe AXUIElementGetPid(watcherObject.element.element, &pid_unused) != AXError.success else {
+        guard unsafe AXUIElementGetPid(watcherObject.element.element, &pid_unused) == AXError.success else {
             // The AXUIElement is no longer valid, which likely means the UI changed or the app quit, so we'll
             // silently give up
             return
