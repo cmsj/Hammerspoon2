@@ -200,24 +200,6 @@ import AXSwift
     private struct WatcherKey: Hashable {
         let element: UIElement
         let notification: String
-
-        // Hash the underlying AXUIElement rather than AXSwift's UIElement wrapper, whose own
-        // hash(into:) calls CFHash() on the wrapper instance itself. That hashes the wrapper's
-        // identity, so two wrappers around the same element - which is what every removeWatcher()
-        // call receives, since the JS side wraps the element afresh - land in different buckets
-        // and the lookup misses. Inside the app it is worse than a miss: CFHash() on the Swift
-        // object goes through -[SwiftObject hash] into hashValue, which is itself derived from
-        // hash(into:), so the first lookup recurses until the stack dies.
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(CFHash(element.element))
-            hasher.combine(notification)
-        }
-
-        // Hashable only promises that equal values collide, never that unequal ones differ, so
-        // the real comparison stays here.
-        static func == (lhs: Self, rhs: Self) -> Bool {
-            lhs.notification == rhs.notification && lhs.element == rhs.element
-        }
     }
 
     // Store watchers by element+notification, so multiple elements (e.g. two different
