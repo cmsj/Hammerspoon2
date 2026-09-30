@@ -406,6 +406,28 @@ struct HSChooserTests {
             #expect(!harness.hasException)
         }
 
+        @Test("selectedRow set before show() survives the search field's binding establishing itself")
+        func testSelectedRowSurvivesShow() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: "index 0"}, {text: "index 1"}, {text: "index 2"},
+                          {text: "index 3"}, {text: "index 4"}])
+            c.selectedRow = 3
+            c.show()
+        """)
+            #expect(!harness.hasException)
+            #expect(harness.evalInt("c.selectedRow") == 3, "selectedRow should read back 3 immediately after show()")
+
+            // Pump the run loop so SwiftUI has a chance to lay out the panel and establish
+            // the search field's TextField binding, which previously performed a spurious
+            // no-op write that reset selectedIndex to 0. See #227.
+            _ = harness.waitFor(timeout: 0.3) { false }
+
+            #expect(harness.evalInt("c.selectedRow") == 3, "selectedRow should still be 3 once the search field has settled")
+            #expect(!harness.hasException)
+        }
+
         @Test("activating an invalid row fires onInvalid and does not fire onSelect")
         func testInvalidRowFiresOnInvalid() {
             let harness = makeHarness()

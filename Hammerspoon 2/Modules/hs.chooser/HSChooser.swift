@@ -609,6 +609,11 @@ import SwiftUI
             get: { [weak self] in self?._storedQuery ?? "" },
             set: { [weak self] newValue in
                 guard let self else { return }
+                // SwiftUI writes the TextField's current value back through this binding
+                // when the field establishes itself (shortly after show()), even though
+                // nothing changed. Without this guard that no-op write is indistinguishable
+                // from a real edit and resets selectedIndex out from under selectedRow. See #227.
+                guard newValue != self._storedQuery else { return }
                 self._storedQuery = newValue
                 self.viewModel.onUserQueryChange?(newValue)
             }
