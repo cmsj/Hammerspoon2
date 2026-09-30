@@ -159,6 +159,7 @@ struct Hammerspoon_2App: App {
             ConsoleView()
         }
         .restorationBehavior(.disabled)
+        .windowLevel(settingsManager.consoleAlwaysOnTop ? .floating : .normal)
         .handlesExternalEvents(matching: ["openConsole", "closeConsole"])
         .commands {
             // About

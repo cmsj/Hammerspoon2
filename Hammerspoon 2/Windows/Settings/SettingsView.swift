@@ -20,6 +20,9 @@ struct SettingsView: View {
             Tab("Permissions", systemImage: "lock.shield") {
                 SettingsPermissionsView()
             }
+            Tab("Console", systemImage: "line.3.horizontal") {
+                SettingsConsoleView()
+            }
             Tab("Advanced", systemImage: "hammer") {
                 SettingsAdvancedView()
             }
