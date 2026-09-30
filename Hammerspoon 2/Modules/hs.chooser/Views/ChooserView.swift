@@ -134,25 +134,28 @@ private struct ChooserBackgroundModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: viewModel.cornerRadius, style: .continuous)
+        let usesGlassEffect = viewModel.backgroundColor == nil
+
+        // clipShape is required here: .background(_, in:) only clips the background fill
+        // itself, not `content` on top of it, so a selected row's square highlight in the
+        // last row would otherwise poke past the panel's rounded corners.
         Group {
             if let backgroundColor = viewModel.backgroundColor {
-                content
-                    .background(backgroundColor, in: shape)
-                    .shadow(color: .black.opacity(0.25), radius: 20, y: 8)
-            } else if #available(macOS 26.0, *) {
-                content
-                    .glassEffect(in: shape)
-                    .shadow(color: .black.opacity(0.15), radius: 24, y: 12)
+                content.background(backgroundColor, in: shape)
             } else {
-                content
-                    .background(.ultraThinMaterial, in: shape)
-                    .shadow(color: .black.opacity(0.25), radius: 20, y: 8)
+                content.glassEffect(in: shape)
             }
         }
+        .clipShape(shape)
         .overlay {
             if let borderColor = viewModel.borderColor {
                 shape.strokeBorder(borderColor, lineWidth: viewModel.borderWidth)
             }
         }
+        .shadow(
+            color: .black.opacity(usesGlassEffect ? 0.15 : 0.25),
+            radius: usesGlassEffect ? 24 : 20,
+            y: usesGlassEffect ? 12 : 8
+        )
     }
 }
