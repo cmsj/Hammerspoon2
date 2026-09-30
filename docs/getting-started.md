@@ -78,7 +78,7 @@ later. If you're building several of these, a single top-level array works well 
 
 ```js
 const keepAlive = []
-keepAlive.push(hs.hotkey.bind(["cmd", "alt"], "h", () => console.log("hello"), null, null))
+keepAlive.push(hs.hotkey.bind(["cmd", "alt"], "h", () => console.log("hello")))
 keepAlive.push(hs.timer.doEvery(60, () => console.log("still here")))
 ```
 
@@ -294,8 +294,8 @@ module.exports = { centerFocused, snapLeft, LEFT_HALF }
 ```js
 // init.js
 const { centerFocused, snapLeft } = require("./window-management.js")
-hs.hotkey.bind(["cmd", "alt"], "c", centerFocused, null)
-hs.hotkey.bind(["cmd", "alt"], "left", snapLeft, null)
+hs.hotkey.bind(["cmd", "alt"], "c", centerFocused)
+hs.hotkey.bind(["cmd", "alt"], "left", snapLeft)
 ```
 
 `module.exports` isn't limited to functions — it's a plain object, so export whatever a
