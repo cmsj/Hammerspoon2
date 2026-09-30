@@ -209,7 +209,8 @@ import SwiftUI
 
     /// Font size of each result row's main text, in points (default: `14`). Changing this
     /// also rescales the ⌘-digit shortcut hint shown on the first ten rows, and changes the
-    /// row height (and therefore the panel height) to fit.
+    /// row height (and therefore the panel height) to fit. Must be a positive, finite number;
+    /// invalid values are ignored (with a warning logged).
     /// - Example:
     /// ```js
     /// chooser.textSize = 18
@@ -217,7 +218,8 @@ import SwiftUI
     @objc var textSize: Double { get set }
 
     /// Font size of each result row's subtext, in points (default: `12`). Changing this
-    /// also changes the row height (and therefore the panel height) to fit.
+    /// also changes the row height (and therefore the panel height) to fit. Must be a
+    /// positive, finite number; invalid values are ignored (with a warning logged).
     /// - Example:
     /// ```js
     /// chooser.subTextSize = 14
@@ -226,7 +228,8 @@ import SwiftUI
 
     /// Font size of the search field's typed text and placeholder, in points (default: `20`).
     /// Changing this also rescales the search icon, and changes the search bar height
-    /// (and therefore the panel height) to fit.
+    /// (and therefore the panel height) to fit. Must be a positive, finite number; invalid
+    /// values are ignored (with a warning logged).
     /// - Example:
     /// ```js
     /// chooser.querySize = 24
@@ -418,6 +421,10 @@ import SwiftUI
     @objc var textSize: Double {
         get { Double(viewModel.textSize) }
         set {
+            guard newValue.isFinite && newValue > 0 else {
+                AKWarning("hs.chooser.textSize: value must be a positive, finite number (got \(newValue))")
+                return
+            }
             viewModel.textSize = CGFloat(newValue)
             viewModel.onContentSizeChange?(viewModel.expectedHeight())
         }
@@ -426,6 +433,10 @@ import SwiftUI
     @objc var subTextSize: Double {
         get { Double(viewModel.subTextSize) }
         set {
+            guard newValue.isFinite && newValue > 0 else {
+                AKWarning("hs.chooser.subTextSize: value must be a positive, finite number (got \(newValue))")
+                return
+            }
             viewModel.subTextSize = CGFloat(newValue)
             viewModel.onContentSizeChange?(viewModel.expectedHeight())
         }
@@ -434,6 +445,10 @@ import SwiftUI
     @objc var querySize: Double {
         get { Double(viewModel.querySize) }
         set {
+            guard newValue.isFinite && newValue > 0 else {
+                AKWarning("hs.chooser.querySize: value must be a positive, finite number (got \(newValue))")
+                return
+            }
             viewModel.querySize = CGFloat(newValue)
             viewModel.onContentSizeChange?(viewModel.expectedHeight())
         }
