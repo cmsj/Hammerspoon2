@@ -99,7 +99,14 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var listener: JSCallback?
+    // A plain strong reference, not a JSCallback/JSManagedValue: this module is a Swift-lifecycle
+    // singleton (torn down deterministically via shutdown(), not by JS reachability), and
+    // ModuleRoot.usb is a computed accessor with no JS wrapper ever pinned for it - so
+    // JSManagedValue's "owner reachable from JS" condition goes false on the very next GC pass
+    // after _addWatcher() returns, silently killing the callback while the native IOKit watcher
+    // keeps running. shutdown()/_removeWatcher() already explicitly nil this out, same as
+    // _watcherEmitter above, so there is no actual leak risk in holding it directly.
+    private var listener: JSFunction?
     private var notificationPort: IONotificationPortRef?
     private var runLoopSource: CFRunLoopSource?
     private var addedIterator: io_iterator_t = IO_OBJECT_NULL
@@ -157,11 +164,10 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
             return false
         }
 
-        self.listener = JSCallback(value: listener, owner: self)
+        self.listener = listener
 
         guard let port = unsafe IONotificationPortCreate(kIOMainPortDefault) else {
             AKError("hs.usb._addWatcher(): Failed to create IOKit notification port")
-            self.listener?.detach(from: self)
             self.listener = nil
             return false
         }
@@ -242,7 +248,6 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
         unsafe selfRef?.release()
         unsafe selfRef = nil
 
-        listener?.detach(from: self)
         listener = nil
 
         AKDebug("hs.usb._removeWatcher(): Stopped")
@@ -252,7 +257,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
     private func fireWatcherEvent(_ eventType: String, infos: [[String: Any]]) {
         for info in infos {
-            _ = listener?.value?.call(withArguments: [eventType, info])
+            _ = listener?.call(withArguments: [eventType, info])
         }
     }
 }
