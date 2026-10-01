@@ -971,12 +971,13 @@ function parseDocCStyleComment(docText, realParamNames = null) {
     // flattened into extra top-level parameters that don't exist in the actual signature.
     const paramNames = realParamNames || Object.keys(descriptions);
     for (const paramName of paramNames) {
-        const paramInfo = descriptions[paramName] || { description: '', optional: false };
+        const paramInfo = descriptions[paramName] || { description: '', optional: false, tsType: null };
         doc.params.push({
             name: paramName,
             type: 'any',
             description: paramInfo.description,
-            optional: paramInfo.optional
+            optional: paramInfo.optional,
+            tsType: paramInfo.tsType || null
         });
     }
 
