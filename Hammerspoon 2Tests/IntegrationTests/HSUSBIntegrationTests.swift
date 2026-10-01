@@ -151,5 +151,31 @@ struct HSUSBTests {
             harness.expectEqual("count", 1)
             #expect(!harness.hasException)
         }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            // hs.usb exposed as a computed accessor (see makeUnpinned), not a stored value, so
+            // no particular JS wrapper for the module is kept reachable. on/off/once are set by
+            // hs.usb.js as plain JS-function assignments (`hs.usb.on = function(...) {...}`);
+            // those only survive a GC pass because HSUSBModuleAPI pre-declares `on`/`off`/`once`
+            // as real @objc properties (Swift-retained storage) rather than leaving them as
+            // dynamically-added JS properties, which JavaScriptCore drops the first time it
+            // collects a wrapper - see issue #185.
+            let (harness, _) = JSTestHarness.makeUnpinned(HSUSBModule.self, as: "usb")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.usb.on") == "function")
+            #expect(harness.evalTypeOf("hs.usb.off") == "function")
+            #expect(harness.evalTypeOf("hs.usb.once") == "function")
+
+            harness.eval("""
+                var fn = function(device) {};
+                hs.usb.on('added', fn);
+                hs.usb.off('added', fn);
+            """)
+            #expect(!harness.hasException)
+        }
     }
 }

@@ -73,6 +73,18 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSValue? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.usb.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -84,6 +96,9 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     let engineID: UUID
 
     @objc var _watcherEmitter: JSValue? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
     private var listener: JSCallback?
     private var notificationPort: IONotificationPortRef?
     private var runLoopSource: CFRunLoopSource?
@@ -101,6 +116,9 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     func shutdown() {
         _removeWatcher()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
