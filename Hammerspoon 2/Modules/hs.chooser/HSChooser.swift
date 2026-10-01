@@ -207,6 +207,35 @@ import SwiftUI
     /// ```
     @objc var selectionColor: HSColor? { get set }
 
+    /// Font size of each result row's main text, in points (default: `14`). Changing this
+    /// also rescales the ⌘-digit shortcut hint shown on the first ten rows, and changes the
+    /// row height (and therefore the panel height) to fit. Must be a positive, finite number;
+    /// invalid values are ignored (with a warning logged).
+    /// - Example:
+    /// ```js
+    /// chooser.textSize = 18
+    /// ```
+    @objc var textSize: Double { get set }
+
+    /// Font size of each result row's subtext, in points (default: `12`). Changing this
+    /// also changes the row height (and therefore the panel height) to fit. Must be a
+    /// positive, finite number; invalid values are ignored (with a warning logged).
+    /// - Example:
+    /// ```js
+    /// chooser.subTextSize = 14
+    /// ```
+    @objc var subTextSize: Double { get set }
+
+    /// Font size of the search field's typed text and placeholder, in points (default: `20`).
+    /// Changing this also rescales the search icon, and changes the search bar height
+    /// (and therefore the panel height) to fit. Must be a positive, finite number; invalid
+    /// values are ignored (with a warning logged).
+    /// - Example:
+    /// ```js
+    /// chooser.querySize = 24
+    /// ```
+    @objc var querySize: Double { get set }
+
     // MARK: Lifecycle
 
     /// Show the chooser.
@@ -387,6 +416,42 @@ import SwiftUI
     @objc var selectionColor: HSColor? {
         get { viewModel.selectionColor.map { HSColor(color: $0) } }
         set { viewModel.selectionColor = newValue?.color }
+    }
+
+    @objc var textSize: Double {
+        get { Double(viewModel.textSize) }
+        set {
+            guard newValue.isFinite && newValue > 0 else {
+                AKWarning("hs.chooser.textSize: value must be a positive, finite number (got \(newValue))")
+                return
+            }
+            viewModel.textSize = CGFloat(newValue)
+            viewModel.onContentSizeChange?(viewModel.expectedHeight())
+        }
+    }
+
+    @objc var subTextSize: Double {
+        get { Double(viewModel.subTextSize) }
+        set {
+            guard newValue.isFinite && newValue > 0 else {
+                AKWarning("hs.chooser.subTextSize: value must be a positive, finite number (got \(newValue))")
+                return
+            }
+            viewModel.subTextSize = CGFloat(newValue)
+            viewModel.onContentSizeChange?(viewModel.expectedHeight())
+        }
+    }
+
+    @objc var querySize: Double {
+        get { Double(viewModel.querySize) }
+        set {
+            guard newValue.isFinite && newValue > 0 else {
+                AKWarning("hs.chooser.querySize: value must be a positive, finite number (got \(newValue))")
+                return
+            }
+            viewModel.querySize = CGFloat(newValue)
+            viewModel.onContentSizeChange?(viewModel.expectedHeight())
+        }
     }
 
     private var _onSelect: JSCallback?

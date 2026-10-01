@@ -48,7 +48,7 @@ struct ChooserView: View {
     private var searchBar: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 17, weight: .medium))
+                .font(.system(size: viewModel.iconSize, weight: .medium))
                 .foregroundStyle(viewModel.placeholderColor ?? Color.secondary)
             TextField(
                 viewModel.placeholder,
@@ -57,7 +57,7 @@ struct ChooserView: View {
                 prompt: Text(viewModel.placeholder).foregroundStyle(viewModel.placeholderColor ?? Color.secondary)
             )
                 .textFieldStyle(.plain)
-                .font(.system(size: 20))
+                .font(.system(size: viewModel.querySize))
                 .foregroundStyle(viewModel.queryColor ?? Color.primary)
                 .focused($searchFocused)
                 .onChange(of: viewModel.isVisible) { _, visible in
@@ -68,7 +68,7 @@ struct ChooserView: View {
                 }
         }
         .padding(.horizontal, 16)
-        .frame(height: ChooserViewModel.searchBarHeight)
+        .frame(height: viewModel.searchBarHeight)
     }
 
     private var resultsList: some View {
@@ -98,7 +98,7 @@ struct ChooserView: View {
                     }
                 }
             }
-            .frame(height: CGFloat(visibleCount) * ChooserViewModel.rowHeight)
+            .frame(height: CGFloat(visibleCount) * viewModel.rowHeight)
             .onChange(of: viewModel.selectedIndex) { _, newIndex in
                 guard newIndex < viewModel.filteredChoices.count else { return }
                 proxy.scrollTo(viewModel.filteredChoices[newIndex].id, anchor: .center)

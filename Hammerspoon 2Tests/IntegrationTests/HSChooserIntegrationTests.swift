@@ -233,6 +233,27 @@ struct HSChooserTests {
             harness.eval("var c = hs.chooser.create()")
             harness.expectTrue("c.selectionColor == null")
         }
+
+        @Test("textSize defaults to 14")
+        func testTextSizeDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("Math.abs(c.textSize - 14) < 0.01")
+        }
+
+        @Test("subTextSize defaults to 12")
+        func testSubTextSizeDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("Math.abs(c.subTextSize - 12) < 0.01")
+        }
+
+        @Test("querySize defaults to 20")
+        func testQuerySizeDefault() {
+            let harness = makeHarness()
+            harness.eval("var c = hs.chooser.create()")
+            harness.expectTrue("Math.abs(c.querySize - 20) < 0.01")
+        }
     }
 
     // MARK: - Behaviour
@@ -438,6 +459,98 @@ struct HSChooserTests {
             c.selectionColor = HSColor.rgb(0.37, 0.51, 0.68, 0.35)
         """)
             harness.expectTrue("c.selectionColor !== null && c.selectionColor.toString() === HSColor.rgb(0.37, 0.51, 0.68, 0.35).toString()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("textSize setter updates value")
+        func testTextSizeSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.textSize = 18
+        """)
+            harness.expectTrue("Math.abs(c.textSize - 18) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        @Test("textSize setter rejects non-finite and non-positive values")
+        func testTextSizeSetterRejectsInvalid() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.textSize = 18
+            c.textSize = NaN
+            c.textSize = Infinity
+            c.textSize = 0
+            c.textSize = -5
+        """)
+            harness.expectTrue("Math.abs(c.textSize - 18) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        @Test("subTextSize setter updates value")
+        func testSubTextSizeSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.subTextSize = 16
+        """)
+            harness.expectTrue("Math.abs(c.subTextSize - 16) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        @Test("subTextSize setter rejects non-finite and non-positive values")
+        func testSubTextSizeSetterRejectsInvalid() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.subTextSize = 16
+            c.subTextSize = NaN
+            c.subTextSize = Infinity
+            c.subTextSize = 0
+            c.subTextSize = -5
+        """)
+            harness.expectTrue("Math.abs(c.subTextSize - 16) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        @Test("querySize setter updates value")
+        func testQuerySizeSetter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.querySize = 26
+        """)
+            harness.expectTrue("Math.abs(c.querySize - 26) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        @Test("querySize setter rejects non-finite and non-positive values")
+        func testQuerySizeSetterRejectsInvalid() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.querySize = 26
+            c.querySize = NaN
+            c.querySize = Infinity
+            c.querySize = 0
+            c.querySize = -5
+        """)
+            harness.expectTrue("Math.abs(c.querySize - 26) < 0.01")
+            #expect(!harness.hasException)
+        }
+
+        @Test("changing font sizes while the chooser is visible does not throw")
+        func testFontSizeChangeWhileVisible() {
+            let harness = makeHarness()
+            harness.eval("""
+            var c = hs.chooser.create()
+            c.setChoices([{text: "Option A"}, {text: "Option B"}])
+            c.show()
+            c.textSize = 22
+            c.subTextSize = 16
+            c.querySize = 28
+        """)
             #expect(!harness.hasException)
         }
 

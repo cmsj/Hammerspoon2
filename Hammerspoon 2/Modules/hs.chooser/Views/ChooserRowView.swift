@@ -27,13 +27,13 @@ struct ChooserRowView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.text)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: viewModel.textSize, weight: .medium))
                     .foregroundStyle(viewModel.textColor ?? Color.primary)
                     .lineLimit(1)
 
                 if let subText = item.subText {
                     Text(subText)
-                        .font(.system(size: 12))
+                        .font(.system(size: viewModel.subTextSize))
                         .foregroundStyle(viewModel.subTextColor ?? Color.secondary)
                         .lineLimit(1)
                 }
@@ -43,11 +43,11 @@ struct ChooserRowView: View {
 
             if let shortcutDigit {
                 Text("⌘\(shortcutDigit)")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: viewModel.shortcutSize, weight: .medium))
                     .foregroundStyle(viewModel.subTextColor ?? Color.secondary)
             }
         }
-        .frame(height: ChooserViewModel.rowHeight)
+        .frame(height: viewModel.rowHeight)
         .padding(.horizontal, 16)
         .background(
             isSelected

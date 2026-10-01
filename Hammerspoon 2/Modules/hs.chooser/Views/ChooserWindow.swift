@@ -21,7 +21,7 @@ final class ChooserPanel: NSPanel {
         onSelect: @escaping (Int?) -> Void
     ) {
         let s = screen ?? NSScreen.main ?? NSScreen.screens[0]
-        let frame = ChooserPanel.initialFrame(on: s, width: width, height: ChooserViewModel.searchBarHeight)
+        let frame = ChooserPanel.initialFrame(on: s, width: width, height: viewModel.searchBarHeight)
 
         super.init(
             contentRect: frame,
