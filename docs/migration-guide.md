@@ -31,12 +31,13 @@ diving into specifics:
   construct and `:start()` — but the exact shape varies enough that it's worth checking each
   module's own signature rather than assuming. Most use Node-style `on(event, listener)`/
   `off(event, listener)`/`once(event, listener)` — `hs.application`, `hs.audiodevice`, `hs.ax`,
-  `hs.camera`, `hs.pasteboard`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`. A few
-  kept the older `addWatcher(listener)`/`removeWatcher(listener)` shape instead, taking your
-  callback directly with no event name argument — `hs.keycodes`, `hs.locale`, `hs.screen`. The
-  rest don't fit either shape: `hs.location`/`hs.wifi`'s `addWatcher()` takes no callback at all,
-  returning a configurable watcher object instead; `hs.eventtap.addWatcher()` needs an event
-  types array and a listen-only flag (see [below](#present-but-check-before-you-port));
+  `hs.camera`, `hs.pasteboard`, `hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`,
+  `hs.userdefaults`. A few kept the older `addWatcher(listener)`/`removeWatcher(listener)` shape
+  instead, taking your callback directly with no event name argument — `hs.keycodes`,
+  `hs.locale`. The rest don't fit either shape: `hs.location`/`hs.wifi`'s `addWatcher()` takes no
+  callback at all, returning a configurable watcher object instead; `hs.eventtap.addWatcher()`
+  needs an event types array and a listen-only flag (see
+  [below](#present-but-check-before-you-port));
   `hs.power` uses `addEventWatcher()`/`addBatteryWatcher()` (see [details](#hspower)); and
   `hs.fs` uses `createPathWatcher()`/`addVolumeWatcher()` (see [details](#hsfs)). If a v1 module
   you're porting had a `.watcher` submodule and you don't see it mentioned below, check the
@@ -447,7 +448,7 @@ expose software brightness); v1 never did true DDC/CI brightness control of arbi
 third-party monitors over I2C either, so there's no loss of scope there, just a swap of
 private API underneath (v1's IOKit `IODisplay` calls don't work on Apple Silicon, so v2 talks
 to `DisplayServices.framework` instead). `hs.screen.watcher` also carries over: it's
-`hs.screen.addWatcher(fn)`/`removeWatcher(fn)` directly on the main module now (no separate
+`hs.screen.on('change', fn)`/`off('change', fn)` directly on the main module now (no separate
 watcher object to construct/`:start()`), and the callback still takes no arguments — call
 `all()`/`main()`/`primary()` inside it to inspect the new configuration. There's no v2
 equivalent of `newWithActiveScreen()`'s active-display-changed variant (it relied on an

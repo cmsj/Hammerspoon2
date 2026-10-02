@@ -151,12 +151,12 @@ hs.ax.on(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, 
 ```
 
 A few modules instead kept the older `addWatcher()`/`removeWatcher()` names from v1, taking
-your callback directly with no event name argument. `hs.screen`'s watcher is a typical example;
-the callback takes no arguments, so query current state from inside it:
+your callback directly with no event name argument. `hs.keycodes`'s watcher is a typical
+example; the callback takes no arguments, so query current state from inside it:
 
 ```js
-hs.screen.addWatcher(() => {
-    console.log(`Screen layout changed, now ${hs.screen.all().length} screen(s)`)
+hs.keycodes.addWatcher(() => {
+    console.log("Now using: " + hs.keycodes.currentLayout())
 })
 ```
 

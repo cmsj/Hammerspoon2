@@ -46,7 +46,7 @@ import JavaScriptCore
 /// ## Watching for display changes
 ///
 /// ```javascript
-/// hs.screen.addWatcher(() => {
+/// hs.screen.on('change', () => {
 ///     console.log("Display configuration changed:", hs.screen.all().length, "screens");
 /// });
 /// ```
@@ -81,42 +81,27 @@ import JavaScriptCore
     /// ```
     @objc func primary() -> HSScreen?
 
-    // MARK: Watcher (Pattern A)
+    // MARK: Watcher
 
-    /// Registers a listener that fires whenever the display configuration changes —
-    /// monitors connected/disconnected, resolution or arrangement changed, or the
-    /// menu bar moved to a different display.
-    ///
-    /// The listener receives no arguments; call `all()`/`main()`/`primary()` inside
-    /// the callback to inspect the new configuration.
-    ///
-    /// The OS notification subscription starts lazily on the first listener and
-    /// is released automatically when the last listener is removed.
-    /// - Parameter listener: {() => void} A function called with no arguments when the display configuration changes.
-    /// - Example:
-    /// ```js
-    /// hs.screen.addWatcher(() => {
-    ///     console.log("Screens changed, now: " + hs.screen.all().length)
-    /// })
-    /// ```
-    @objc func addWatcher(_ listener: JSFunction)
-
-    /// Removes a previously registered display-configuration listener.
-    /// - Parameter listener: The function originally passed to `addWatcher`.
-    /// - Example:
-    /// ```js
-    /// const handler = () => console.log("screens changed")
-    /// hs.screen.addWatcher(handler)
-    /// hs.screen.removeWatcher(handler)
-    /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
-
+    // NOTE: Private API consumed only by hs.screen.js
     /// SKIP_DOCS
     @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.screen.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -128,6 +113,9 @@ import JavaScriptCore
     let engineID: UUID
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
     private var watcherCallback: JSFunction?
     private var watcherObserver: NSObjectProtocol?
 
@@ -140,6 +128,9 @@ import JavaScriptCore
     func shutdown() {
         _removeWatcher()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -170,15 +161,7 @@ import JavaScriptCore
         return HSScreen(screen: primary)
     }
 
-    // MARK: - Watcher (Pattern A)
-
-    @objc func addWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
+    // MARK: - Watcher
 
     @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
         guard watcherCallback == nil else {
