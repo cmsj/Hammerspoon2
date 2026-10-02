@@ -69,9 +69,9 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
 /// const fn = (isInUse) => {
 ///     console.log(cam.name + " is now " + (isInUse ? "in use" : "not in use"))
 /// }
-/// cam.addWatcher(fn)
+/// cam.on(fn)
 /// // later…
-/// cam.removeWatcher(fn)
+/// cam.off(fn)
 /// ```
 ///
 /// ## Capturing a still image
@@ -113,28 +113,37 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     /// Register a listener that fires whenever this camera's in-use state changes.
     ///
     /// The listener receives one argument: a boolean that is `true` when the camera
-    /// starts being used and `false` when it is released.
+    /// starts being used and `false` when it is released. A camera only has one kind
+    /// of event, so unlike the module-level watchers there is no event name to pass.
     ///
     /// - Parameter listener: {(isInUse: boolean) => void} A JavaScript function called with `true` when the camera starts being used and `false` when released
     /// - Example:
     /// ```js
     /// const cam = hs.camera.all()[0]
-    /// cam.addWatcher((inUse) => {
+    /// cam.on((inUse) => {
     ///     console.log(cam.name + " is " + (inUse ? "now in use" : "no longer in use"))
     /// })
     /// ```
-    @objc func addWatcher(_ listener: JSFunction)
+    @objc func on(_ listener: JSFunction)
 
     /// Remove a previously registered per-camera in-use listener.
-    /// - Parameter listener: The function originally passed to ``addWatcher(_:)``
+    /// - Parameter listener: The function originally passed to ``on(_:)``
     /// - Example:
     /// ```js
-    /// cam.removeWatcher(myHandler)
+    /// cam.off(myHandler)
     /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
+    @objc func off(_ listener: JSFunction)
+
+    /// Register a listener that fires at most once, the next time this camera's in-use state changes.
+    /// - Parameter listener: {(isInUse: boolean) => void} Called once, then automatically removed
+    /// - Example:
+    /// ```js
+    /// cam.once((inUse) => console.log("First change:", inUse))
+    /// ```
+    @objc func once(_ listener: JSFunction)
 
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
@@ -214,43 +223,63 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     // Self-retain while a watcher is active — keeps the object alive across GC cycles.
     private var selfRetain: HSCamera? = nil
 
-    @objc func addWatcher(_ listener: JSFunction) {
-        // invokeMethod doesn't propagate JS exceptions to the calling context's try-catch,
-        // so validate the listener and emitter before delegating.
-        guard let ctx = JSContext.current() else { return }
-        guard listener.isFunction else {
-            ctx.exception = JSValue(newErrorFromMessage: "hs.camera device.addWatcher(): listener must be a function", in: ctx)
-            return
-        }
+    // A camera only has one kind of event (its in-use state changing), so on/off/once hide the
+    // event name from the public per-camera API and always use this fixed internal name when
+    // talking to the shared (event, listener) emitter underneath.
+    private static let changeEvent = "change"
+
+    /// Lazily creates this camera's JS watcher emitter (via the module's `_makeCameraEmitter`
+    /// factory) if one doesn't already exist. Returns nil (having already set `ctx.exception`)
+    /// on failure - invokeMethod doesn't propagate JS exceptions to the calling context's
+    /// try-catch, so failures must be surfaced this way rather than by throwing from here.
+    private func ensureWatcherEmitter(_ ctx: JSContext) -> JSValue? {
         if _watcherEmitter == nil {
             guard let emitterFactory = cameraModule?._makeCameraEmitter,
                   emitterFactory.isFunction else {
                 ctx.exception = JSValue(
-                    newErrorFromMessage: "hs.camera device.addWatcher(): camera watcher emitter factory is unavailable",
+                    newErrorFromMessage: "hs.camera device: camera watcher emitter factory is unavailable",
                     in: ctx
                 )
-                return
+                return nil
             }
             let emitter = ctx.callCapturingException { emitterFactory.call(withArguments: [self]) }
             guard ctx.exception == nil, let emitter, emitter.isObject else {
                 if ctx.exception == nil {
                     ctx.exception = JSValue(
-                        newErrorFromMessage: "hs.camera device.addWatcher(): failed to create camera watcher emitter",
+                        newErrorFromMessage: "hs.camera device: failed to create camera watcher emitter",
                         in: ctx
                     )
                 }
-                return
+                return nil
             }
             _watcherEmitter = emitter
         }
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
+        return _watcherEmitter
     }
 
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
+    @objc func on(_ listener: JSFunction) {
+        guard let ctx = JSContext.current() else { return }
+        guard listener.isFunction else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.camera device.on(): listener must be a function", in: ctx)
+            return
+        }
+        ensureWatcherEmitter(ctx)?.invokeMethod("on", withArguments: [Self.changeEvent, listener])
     }
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
+    @objc func off(_ listener: JSFunction) {
+        _watcherEmitter?.invokeMethod("off", withArguments: [Self.changeEvent, listener])
+    }
+
+    @objc func once(_ listener: JSFunction) {
+        guard let ctx = JSContext.current() else { return }
+        guard listener.isFunction else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.camera device.once(): listener must be a function", in: ctx)
+            return
+        }
+        ensureWatcherEmitter(ctx)?.invokeMethod("once", withArguments: [Self.changeEvent, listener])
+    }
+
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) {
         guard watcherCallback == nil else {
             AKWarning("hs.camera._addWatcher(): Already watching '\(name)'. Refusing to create a second.")
             return
@@ -260,7 +289,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             return
         }
 
-        watcherCallback = callback
+        watcherCallback = listener
         watcherCMIOID = cmioID
         selfRetain = self
 

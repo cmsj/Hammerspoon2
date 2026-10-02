@@ -41,21 +41,16 @@ import AVFoundation
 /// ## Watching for connect / disconnect events
 ///
 /// ```javascript
-/// const handler = (event, camera) => {
-///     if (event === "connected")    console.log("Camera connected: " + camera.name)
-///     if (event === "disconnected") console.log("Camera disconnected: " + camera.name)
-/// }
-/// hs.camera.addWatcher(handler)
-/// // Later…
-/// hs.camera.removeWatcher(handler)
+/// hs.camera.on("connected", camera => console.log("Camera connected: " + camera.name))
+/// hs.camera.on("disconnected", camera => console.log("Camera disconnected: " + camera.name))
 /// ```
 ///
 /// ## Watching a camera's in-use state
 ///
 /// ```javascript
 /// const cam = hs.camera.all()[0]
-/// cam.addWatcher((isInUse) => {
-///     console.log(cam.name + " is now " + (isInUse ? "in use" : "idle"))
+/// cam.on(() => {
+///     console.log(cam.name + " is now " + (cam.isInUse ? "in use" : "idle"))
 /// })
 /// ```
 @objc protocol HSCameraModuleAPI: JSExport {
@@ -86,37 +81,26 @@ import AVFoundation
     /// ```
     @objc func findByUID(_ uid: String) -> HSCamera?
 
-    /// Register a listener for camera device connect/disconnect events.
-    ///
-    /// The listener is called with two arguments:
-    /// - `event` — either `"connected"` or `"disconnected"`
-    /// - `camera` — an `HSCamera` representing the affected device
-    ///
-    /// - Parameter listener: {(event: string, camera: HSCamera) => void} A JavaScript function called with the event name (`"connected"` or `"disconnected"`) and the affected camera
-    /// - Example:
-    /// ```js
-    /// hs.camera.addWatcher((event, camera) => {
-    ///     console.log(event + ": " + camera.name)
-    /// })
-    /// ```
-    @objc func addWatcher(_ listener: JSFunction)
-
-    /// Remove a previously registered module-level event listener.
-    /// - Parameter listener: The function originally passed to ``addWatcher(_:)``
-    /// - Example:
-    /// ```js
-    /// hs.camera.removeWatcher(myHandler)
-    /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
-
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
     /// SKIP_DOCS
     @objc var _makeCameraEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.camera.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -145,6 +129,9 @@ import AVFoundation
         cameraCache.removeAll()
         _watcherEmitter = nil
         _makeCameraEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -195,24 +182,12 @@ import AVFoundation
 
     @objc var _watcherEmitter: JSFunction? = nil
     @objc var _makeCameraEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
     private var moduleCallback: JSFunction? = nil
 
-    @objc func addWatcher(_ listener: JSFunction) {
-        // invokeMethod doesn't propagate JS exceptions to the calling context's try-catch,
-        // so we validate here and throw via context.exception before delegating.
-        guard let context = JSContext.current() else { return }
-        guard listener.isFunction else {
-            context.exception = JSValue(newErrorFromMessage: "hs.camera.addWatcher(): listener must be a function", in: context)
-            return
-        }
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
-
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) {
         guard moduleCallback == nil else {
             AKWarning("hs.camera._addWatcher(): Already watching. Refusing to create a second.")
             return
@@ -220,7 +195,7 @@ import AVFoundation
         // Populate the cache now so any camera that disconnects before all() is ever
         // called still has an HSCamera entry — not a raw UID string — in the callback.
         _ = all()
-        moduleCallback = callback
+        moduleCallback = listener
 
         let nc = NotificationCenter.default
 

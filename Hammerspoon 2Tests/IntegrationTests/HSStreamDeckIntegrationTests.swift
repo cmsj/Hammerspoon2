@@ -57,11 +57,12 @@ struct HSStreamDeckTests {
             #expect(result?.isNull == true || result?.isUndefined == true)
         }
 
-        @Test("addWatcher() and removeWatcher() methods exist")
+        @Test("on, off and once methods exist")
         func testWatcherMethodsExist() {
             let harness = makeHarness()
-            #expect(harness.evalTypeOf("hs.streamdeck.addWatcher") == "function")
-            #expect(harness.evalTypeOf("hs.streamdeck.removeWatcher") == "function")
+            #expect(harness.evalTypeOf("hs.streamdeck.on") == "function")
+            #expect(harness.evalTypeOf("hs.streamdeck.off") == "function")
+            #expect(harness.evalTypeOf("hs.streamdeck.once") == "function")
         }
 
         @Test("_watcherEmitter is initialized by hs.streamdeck.js")
@@ -70,53 +71,100 @@ struct HSStreamDeckTests {
             harness.expectTrue("hs.streamdeck._watcherEmitter !== null && hs.streamdeck._watcherEmitter !== undefined")
         }
 
-        @Test("module-level addWatcher() / removeWatcher() cycle is safe")
+        @Test("module-level on() / off() cycle is safe")
         func testModuleWatcherCycle() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
-                var fn = function(e, d) {};
-                hs.streamdeck.addWatcher(fn);
-                hs.streamdeck.removeWatcher(fn);
+                var fn = function(d) {};
+                hs.streamdeck.on('connected', fn);
+                hs.streamdeck.off('connected', fn);
                 return true;
             })()
         """)
         }
 
-        @Test("removeWatcher() with an unregistered listener does not crash")
-        func testRemoveUnregisteredWatcherIsSafe() {
+        @Test("off() with an unregistered listener does not crash")
+        func testOffUnregisteredWatcherIsSafe() {
             let harness = makeHarness()
-            harness.eval("hs.streamdeck.removeWatcher(function() {})")
+            harness.eval("hs.streamdeck.off('connected', function() {})")
             #expect(!harness.hasException)
         }
 
-        @Test("addWatcher() with the same listener twice does not crash")
-        func testAddWatcherIdempotent() {
+        @Test("on() with the same listener twice does not crash")
+        func testOnIdempotent() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
-                var fn = function(e, d) {};
-                hs.streamdeck.addWatcher(fn);
-                hs.streamdeck.addWatcher(fn);
-                hs.streamdeck.removeWatcher(fn);
+                var fn = function(d) {};
+                hs.streamdeck.on('connected', fn);
+                hs.streamdeck.on('connected', fn);
+                hs.streamdeck.off('connected', fn);
                 return true;
             })()
         """)
         }
 
-        @Test("addWatcher() throws when given a non-function")
-        func testAddWatcherThrowsOnNonFunction() {
+        @Test("on() throws when given a non-function")
+        func testOnThrowsOnNonFunction() {
             let harness = makeHarness()
             var threw = false
-            harness.registerCallback("addWatcherThrew") { threw = true }
+            harness.registerCallback("onThrew") { threw = true }
             harness.eval("""
             try {
-                hs.streamdeck.addWatcher("not a function");
+                hs.streamdeck.on('connected', "not a function");
             } catch(e) {
-                __test_callback("addWatcherThrew");
+                __test_callback("onThrew");
             }
         """)
             #expect(threw)
+        }
+
+        @Test("listeners only receive the event they registered for")
+        func testListenersAreFilteredByEvent() {
+            let harness = makeHarness()
+            harness.eval("""
+                var connectedCount = 0;
+                var disconnectedCount = 0;
+                hs.streamdeck.on('connected', function() { connectedCount++; });
+                hs.streamdeck.on('disconnected', function() { disconnectedCount++; });
+                hs.streamdeck._watcherEmitter.emit('connected', {});
+            """)
+            harness.expectEqual("connectedCount", 1)
+            harness.expectEqual("disconnectedCount", 0)
+            #expect(!harness.hasException)
+        }
+
+        @Test("once-registered listener fires only one time")
+        func testOnceFiresOnlyOnce() {
+            let harness = makeHarness()
+            harness.eval("""
+                var count = 0;
+                hs.streamdeck.once('connected', function() { count++; });
+                hs.streamdeck._watcherEmitter.emit('connected', {});
+                hs.streamdeck._watcherEmitter.emit('connected', {});
+            """)
+            harness.expectEqual("count", 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSStreamDeckModule.self, as: "streamdeck")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.streamdeck.on") == "function")
+            #expect(harness.evalTypeOf("hs.streamdeck.off") == "function")
+            #expect(harness.evalTypeOf("hs.streamdeck.once") == "function")
+
+            harness.eval("""
+                var fn = function(d) {};
+                hs.streamdeck.on('connected', fn);
+                hs.streamdeck.off('connected', fn);
+            """)
+            #expect(!harness.hasException)
         }
     }
 

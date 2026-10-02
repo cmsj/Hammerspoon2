@@ -298,62 +298,81 @@ struct HSAudioDeviceTests {
 
         // MARK: - Module-level watcher
 
-        @Test("module addWatcher() and removeWatcher() cycle is safe")
-        func testModuleWatcherAddRemoveCycle() {
+        @Test("module on() and off() cycle is safe")
+        func testModuleWatcherOnOffCycle() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
-                var fn = function(e) {};
-                hs.audiodevice.addWatcher(fn);
-                hs.audiodevice.removeWatcher(fn);
+                var fn = function() {};
+                hs.audiodevice.on('dOut', fn);
+                hs.audiodevice.off('dOut', fn);
                 return true;
             })()
         """)
         }
 
-        @Test("module removeWatcher() with unregistered listener is safe")
-        func testModuleRemoveUnregisteredWatcher() {
+        @Test("module off() with unregistered listener is safe")
+        func testModuleOffUnregisteredWatcher() {
             let harness = makeHarness()
-            harness.eval("hs.audiodevice.removeWatcher(function() {});")
+            harness.eval("hs.audiodevice.off('dOut', function() {});")
             harness.expectTrue("true")
         }
 
-        @Test("module addWatcher() with the same listener twice is safe")
-        func testModuleAddWatcherIdempotent() {
+        @Test("module on() with the same listener twice is safe")
+        func testModuleOnIdempotent() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
-                var fn = function(e) {};
-                hs.audiodevice.addWatcher(fn);
-                hs.audiodevice.addWatcher(fn); // duplicate — should not crash
-                hs.audiodevice.removeWatcher(fn);
+                var fn = function() {};
+                hs.audiodevice.on('dOut', fn);
+                hs.audiodevice.on('dOut', fn); // duplicate — should not crash
+                hs.audiodevice.off('dOut', fn);
                 return true;
             })()
         """)
+        }
+
+        @Test("module on/off/once survive garbage collection of the module's JS wrapper")
+        func testModuleOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSAudioDeviceModule.self, as: "audiodevice")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.audiodevice.on") == "function")
+            #expect(harness.evalTypeOf("hs.audiodevice.off") == "function")
+            #expect(harness.evalTypeOf("hs.audiodevice.once") == "function")
+
+            harness.eval("""
+                var fn = function() {};
+                hs.audiodevice.on('dOut', fn);
+                hs.audiodevice.off('dOut', fn);
+            """)
+            #expect(!harness.hasException)
         }
 
         // MARK: - Per-device watcher
 
-        @Test("device addWatcher() and removeWatcher() cycle is safe")
-        func testDeviceWatcherAddRemoveCycle() {
+        @Test("device on() and off() cycle is safe")
+        func testDeviceWatcherOnOffCycle() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
                 var dev = hs.audiodevice.all()[0];
-                var fn = function(e) {};
-                dev.addWatcher(fn);
-                dev.removeWatcher(fn);
+                var fn = function() {};
+                dev.on('vmout', fn);
+                dev.off('vmout', fn);
                 return true;
             })()
         """)
         }
 
-        @Test("device removeWatcher() with unregistered listener is safe")
-        func testDeviceRemoveUnregisteredWatcher() {
+        @Test("device off() with unregistered listener is safe")
+        func testDeviceOffUnregisteredWatcher() {
             let harness = makeHarness()
             harness.eval("""
             var _safeRemoveDev = hs.audiodevice.all()[0];
-            _safeRemoveDev.removeWatcher(function() {});
+            _safeRemoveDev.off('vmout', function() {});
         """)
             harness.expectTrue("true")
         }
@@ -374,17 +393,17 @@ struct HSAudioDeviceTests {
                                   : originalVolume.doubleValue + 0.05)
 
             harness.eval("""
-            var _devWatchEvents = [];
-            var _watchFn = function(e) { _devWatchEvents.push(e); };
+            var _devWatchFired = false;
+            var _watchFn = function() { _devWatchFired = true; };
             var _volDev = hs.audiodevice.defaultOutputDevice();
-            _volDev.addWatcher(_watchFn);
+            _volDev.on('vmout', _watchFn);
         """)
-            defer { harness.eval("_volDev.removeWatcher(_watchFn);") }
+            defer { harness.eval("_volDev.off('vmout', _watchFn);") }
 
             dev.volume = nudged
             try await Task.sleep(for: .milliseconds(500))
 
-            harness.expectTrue("_devWatchEvents.indexOf('vmout') !== -1")
+            harness.expectTrue("_devWatchFired")
         }
 
         @Test("multiple device watcher listeners all fire on the same event")
@@ -404,15 +423,15 @@ struct HSAudioDeviceTests {
 
             harness.eval("""
             var _multiCallCount1 = 0, _multiCallCount2 = 0;
-            var _multiFn1 = function(e) { if (e === 'vmout') _multiCallCount1++; };
-            var _multiFn2 = function(e) { if (e === 'vmout') _multiCallCount2++; };
+            var _multiFn1 = function() { _multiCallCount1++; };
+            var _multiFn2 = function() { _multiCallCount2++; };
             var _multiDev = hs.audiodevice.defaultOutputDevice();
-            _multiDev.addWatcher(_multiFn1);
-            _multiDev.addWatcher(_multiFn2);
+            _multiDev.on('vmout', _multiFn1);
+            _multiDev.on('vmout', _multiFn2);
         """)
             defer { harness.eval("""
-            _multiDev.removeWatcher(_multiFn1);
-            _multiDev.removeWatcher(_multiFn2);
+            _multiDev.off('vmout', _multiFn1);
+            _multiDev.off('vmout', _multiFn2);
         """) }
 
             dev.volume = nudged
@@ -423,8 +442,6 @@ struct HSAudioDeviceTests {
             let multiCallCount2 = harness.eval("_multiCallCount2") as! Int
             #expect(multiCallCount1 > 0)
             #expect(multiCallCount2 > 0)
-            //        harness.expectTrue("_multiCallCount1 > 0")
-            //        harness.expectTrue("_multiCallCount2 > 0")
         }
 
         // MARK: - System watcher callbacks
@@ -442,16 +459,16 @@ struct HSAudioDeviceTests {
             defer { _ = originalDefault.setDefaultOutputDevice() }
 
             harness.eval("""
-            var _sysOutEvents = [];
-            var _sysOutFn = function(e) { _sysOutEvents.push(e); };
-            hs.audiodevice.addWatcher(_sysOutFn);
+            var _sysOutFired = false;
+            var _sysOutFn = function() { _sysOutFired = true; };
+            hs.audiodevice.on('dOut', _sysOutFn);
         """)
-            defer { harness.eval("hs.audiodevice.removeWatcher(_sysOutFn);") }
+            defer { harness.eval("hs.audiodevice.off('dOut', _sysOutFn);") }
 
             _ = altDevice.setDefaultOutputDevice()
             try await Task.sleep(for: .milliseconds(500))
 
-            harness.expectTrue("_sysOutEvents.indexOf('dOut') !== -1")
+            harness.expectTrue("_sysOutFired")
         }
 
         @Test("system watcher fires dIn event when default input device changes")
@@ -467,16 +484,16 @@ struct HSAudioDeviceTests {
             defer { _ = originalDefault.setDefaultInputDevice() }
 
             harness.eval("""
-            var _sysInEvents = [];
-            var _sysInFn = function(e) { _sysInEvents.push(e); };
-            hs.audiodevice.addWatcher(_sysInFn);
+            var _sysInFired = false;
+            var _sysInFn = function() { _sysInFired = true; };
+            hs.audiodevice.on('dIn', _sysInFn);
         """)
-            defer { harness.eval("hs.audiodevice.removeWatcher(_sysInFn);") }
+            defer { harness.eval("hs.audiodevice.off('dIn', _sysInFn);") }
 
             _ = altDevice.setDefaultInputDevice()
             try await Task.sleep(for: .milliseconds(500))
 
-            harness.expectTrue("_sysInEvents.indexOf('dIn') !== -1")
+            harness.expectTrue("_sysInFired")
         }
 
         // MARK: - Default device setters (smoke tests only — no mutation)
@@ -536,18 +553,18 @@ struct HSAudioDeviceTests {
             unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
 
             #expect(harness.evalTypeOf("hs.audiodevice._makeDeviceEmitter") == "function")
-            // Confirm the survivor is a genuine, working AudioDeviceWatcherEmitter, not just any
+            // Confirm the survivor is a genuine, working LazyWatcherEmitter, not just any
             // object shaped like one.
             harness.expectTrue("""
             (function() {
-                var e = hs.audiodevice._makeDeviceEmitter({});
-                return typeof e.on === 'function' && typeof e.removeListener === 'function';
+                var e = hs.audiodevice._makeDeviceEmitter({ _addWatcher: function() {}, _removeWatcher: function() {} });
+                return typeof e.on === 'function' && typeof e.off === 'function' && typeof e.once === 'function';
             })()
         """)
         }
 
-        @Test("per-device addWatcher() finds its emitter factory after the hs.audiodevice module wrapper is collected")
-        func testDeviceAddWatcherSurvivesModuleWrapperGC() {
+        @Test("per-device on() finds its emitter factory after the hs.audiodevice module wrapper is collected")
+        func testDeviceOnSurvivesModuleWrapperGC() {
             // hs.audiodevice exposed as a computed accessor (see makeUnpinned), not a stored
             // value, so no particular JS wrapper for the module is kept reachable.
             let (harness, _) = JSTestHarness.makeUnpinned(HSAudioDeviceModule.self, as: "audiodevice")
@@ -558,17 +575,17 @@ struct HSAudioDeviceTests {
             unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
             unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
 
-            // HSAudioDevice.addWatcher() re-fetches `hs.audiodevice` from JS on every call and
-            // reads `_makeDeviceEmitter` off whatever wrapper it finds there — which, after a GC
-            // pass with no wrapper pinned, could be a fresh one. That's only safe because the
-            // factory is now the native `_makeDeviceEmitter` property (Swift-object-backed, so
-            // any wrapper for the same object exposes it) rather than a JS expando (wrapper-local,
-            // and lost when that specific wrapper is collected) — so a real end-to-end
-            // addWatcher()/removeWatcher() cycle must still succeed here.
+            // HSAudioDevice.on() re-fetches `hs.audiodevice` from JS on every call and reads
+            // `_makeDeviceEmitter` off whatever wrapper it finds there — which, after a GC pass
+            // with no wrapper pinned, could be a fresh one. That's only safe because the factory
+            // is the native `_makeDeviceEmitter` property (Swift-object-backed, so any wrapper
+            // for the same object exposes it) rather than a JS expando (wrapper-local, and lost
+            // when that specific wrapper is collected) — so a real end-to-end on()/off() cycle
+            // must still succeed here.
             harness.eval("""
-            var fn = function(e) {};
-            __gcTestDevice.addWatcher(fn);
-            __gcTestDevice.removeWatcher(fn);
+            var fn = function() {};
+            __gcTestDevice.on('vmout', fn);
+            __gcTestDevice.off('vmout', fn);
         """)
             #expect(!harness.hasException)
         }

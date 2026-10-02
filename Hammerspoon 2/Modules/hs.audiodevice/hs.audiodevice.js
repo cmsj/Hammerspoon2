@@ -5,106 +5,68 @@
 
 "use strict";
 
-// one-to-many emitter for hs.audiodevice module-level events.
-// All listeners receive every event; filtering by type is the caller's responsibility.
-class AudioDeviceModuleWatcherEmitter {
-    #listeners = []
+// Lazily starts the underlying CoreAudio listener on the first listener (for any event) and
+// stops it once the last listener (across all events) is removed. See Engine/engine.js for
+// LazyWatcherEmitter itself.
+hs.audiodevice._watcherEmitter = new LazyWatcherEmitter("hs.audiodevice", function() {
+    hs.audiodevice._addWatcher((event) => {
+        hs.audiodevice._watcherEmitter.emit(event);
+    });
+}, function() {
+    hs.audiodevice._removeWatcher();
+});
 
-    constructor() {}
+/// Register a listener for a named system-level audio configuration event.
+/// Parameters:
+///  - event: {string} The event to listen for: `"dOut"`, `"dIn"`, `"dSErr"`, `"dev+"`, or `"dev-"`
+///  - listener: {() => void} Called when the event occurs
+/// Example:
+/// ```js
+/// hs.audiodevice.on('dOut', () => console.log("Default output changed"))
+/// hs.audiodevice.on('dev+', () => console.log("A device was added"))
+/// ```
+hs.audiodevice.on = function(event, listener) {
+    hs.audiodevice._watcherEmitter.on(event, listener);
+};
 
-    #handleEvent(event) {
-        var listeners = this.#listeners.slice();
-        const length = listeners.length;
+/// Remove a previously registered system-level audio event listener.
+/// Parameters:
+///  - event: {string} The event the listener was registered for
+///  - listener: {() => void} The function originally passed to `on`
+/// Example:
+/// ```js
+/// const onDefaultOutChange = () => console.log("changed")
+/// hs.audiodevice.on('dOut', onDefaultOutChange)
+/// // later…
+/// hs.audiodevice.off('dOut', onDefaultOutChange)
+/// ```
+hs.audiodevice.off = function(event, listener) {
+    hs.audiodevice._watcherEmitter.off(event, listener);
+};
 
-        for (var i = 0; i < length; i++) {
-            listeners[i].apply(null, [event]);
-        }
-    }
+/// Register a listener that fires at most once for a system-level audio configuration event.
+/// Parameters:
+///  - event: {string} The event to listen for
+///  - listener: {() => void} Called the next time a matching event occurs, then automatically removed
+/// Example:
+/// ```js
+/// hs.audiodevice.once('dev+', () => console.log("First device-added event seen"))
+/// ```
+hs.audiodevice.once = function(event, listener) {
+    hs.audiodevice._watcherEmitter.once(event, listener);
+};
 
-    on(listener) {
-        if (typeof listener !== 'function') {
-            throw new Error("hs.audiodevice.addWatcher(): The provided handler must be a function")
-        }
-
-        if (this.#listeners.includes(listener)) {
-            console.error("hs.audiodevice.addWatcher(): The provided handler is already registered.")
-            return;
-        }
-
-        if (this.#listeners.length === 0) {
-            hs.audiodevice._addWatcher((event) => { this.#handleEvent(event) });
-        }
-
-        this.#listeners.push(listener);
-    }
-
-    removeListener(listener) {
-        var idx = this.#listeners.indexOf(listener);
-
-        if (idx > -1) {
-            this.#listeners.splice(idx, 1);
-        }
-
-        if (this.#listeners.length === 0) {
-            hs.audiodevice._removeWatcher();
-        }
-    }
-}
-
-// one-to-many emitter for per-device events.
-// All listeners receive every event; filtering by type is the caller's responsibility.
-class AudioDeviceWatcherEmitter {
-    #device
-    #listeners = []
-
-    constructor(device) {
-        this.#device = device;
-    }
-
-    #handleEvent(event) {
-        var listeners = this.#listeners.slice();
-        const length = listeners.length;
-
-        for (var i = 0; i < length; i++) {
-            listeners[i].apply(null, [event]);
-        }
-    }
-
-    on(listener) {
-        if (typeof listener !== 'function') {
-            throw new Error("hs.audiodevice device.addWatcher(): The provided handler must be a function")
-        }
-
-        if (this.#listeners.includes(listener)) {
-            console.error("hs.audiodevice device.addWatcher(): The provided handler is already registered.")
-            return;
-        }
-
-        if (this.#listeners.length === 0) {
-            this.#device._addWatcher((event) => { this.#handleEvent(event) });
-        }
-
-        this.#listeners.push(listener);
-    }
-
-    removeListener(listener) {
-        var idx = this.#listeners.indexOf(listener);
-
-        if (idx > -1) {
-            this.#listeners.splice(idx, 1);
-        }
-
-        if (this.#listeners.length === 0) {
-            this.#device._removeWatcher();
-        }
-    }
-}
-
-// Store an instance of the module-level Watcher/Emitter in a Swift-retained property so it is not garbage collected.
-hs.audiodevice._watcherEmitter = new AudioDeviceModuleWatcherEmitter();
-
-// Factory for per-device emitters; called lazily from Swift when the first watcher is registered on a device.
+// Factory for per-device emitters; called lazily from Swift when the first on()/once() call is
+// made on a device. `device` is the HSAudioDevice instance; its own on/off/once methods (native
+// Swift, not JS-assigned - a per-instance object has no enhancement script to hang them on)
+// forward into this emitter.
 /// SKIP_DOCS
 hs.audiodevice._makeDeviceEmitter = function(device) {
-    return new AudioDeviceWatcherEmitter(device);
+    return new LazyWatcherEmitter("hs.audiodevice device", function() {
+        device._addWatcher((event) => {
+            device._watcherEmitter.emit(event);
+        });
+    }, function() {
+        device._removeWatcher();
+    });
 };
