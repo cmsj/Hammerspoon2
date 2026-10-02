@@ -28,14 +28,19 @@ diving into specifics:
   for the full picture, or [hs.spoons and Spoons](#hsspoons-and-spoons) below for what
   specifically changed from v1.
 - **Watchers are usually on the main module now,** not a separate `.watcher` submodule you
-  construct and `:start()`. Most of these use Node-style `on(event, listener)`/`off(event,
-  listener)`/`once(event, listener)` — `hs.application`, `hs.audiodevice`, `hs.ax`, `hs.camera`,
-  `hs.pasteboard`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`. A few kept the
-  older `addWatcher()`/`removeWatcher()` names instead, taking your callback directly with no
-  event name argument — `hs.eventtap`, `hs.fs`, `hs.keycodes`, `hs.locale`, `hs.location`,
-  `hs.power`, `hs.screen`, `hs.wifi`, and more. If a v1 module you're porting had a `.watcher`
-  submodule and you don't see it mentioned below, check for `on()`/`addWatcher()` on the parent
-  module first.
+  construct and `:start()` — but the exact shape varies enough that it's worth checking each
+  module's own signature rather than assuming. Most use Node-style `on(event, listener)`/
+  `off(event, listener)`/`once(event, listener)` — `hs.application`, `hs.audiodevice`, `hs.ax`,
+  `hs.camera`, `hs.pasteboard`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`. A few
+  kept the older `addWatcher(listener)`/`removeWatcher(listener)` shape instead, taking your
+  callback directly with no event name argument — `hs.keycodes`, `hs.locale`, `hs.screen`. The
+  rest don't fit either shape: `hs.location`/`hs.wifi`'s `addWatcher()` takes no callback at all,
+  returning a configurable watcher object instead; `hs.eventtap.addWatcher()` needs an event
+  types array and a listen-only flag (see [below](#present-but-check-before-you-port));
+  `hs.power` uses `addEventWatcher()`/`addBatteryWatcher()` (see [details](#hspower)); and
+  `hs.fs` uses `createPathWatcher()`/`addVolumeWatcher()` (see [details](#hsfs)). If a v1 module
+  you're porting had a `.watcher` submodule and you don't see it mentioned below, check the
+  parent module's own method signatures first.
 - **Async is Promise-based, not callback-based.** `hs.http`, `hs.osascript`, `hs.network`,
   `hs.shortcuts`, `hs.application.launchOrFocus()`, and others now return Promises you
   `.then()` rather than taking a completion-callback argument. A few (`hs.osascript`) always
@@ -126,7 +131,7 @@ for what changed within it.
 | `hs.doc` (+`.builder`,`.hsdocs`,`.markdown`) | Gone | `hs.docs` is unrelated (read-only bundled-doc viewer) |
 | `hs.dockicon` | Gone | no Dock icon control |
 | `hs.drawing` (+`.color`) | → `hs.ui` | [details](#rebuilding-ui-with-hsui) |
-| `hs.eventtap` (+`.event`) | Present | `.event` folded in; "consume" is now a property |
+| `hs.eventtap` (+`.event`) | Present | `.event` folded in; consume/suppress via a callback return value, not a settable property |
 | `hs.expose` | Gone | no window-overlay/hint-code equivalent |
 | `hs.fnutils` | Gone | native JS array methods |
 | `hs.fs` (+`.volume`,`.xattr`) | Present | comprehensive; see below |
@@ -216,9 +221,15 @@ per-row `contextMenu`. Check the styling-property list before assuming appearanc
 
 **`hs.eventtap`** — `hs.eventtap.event` folded directly into `hs.eventtap` (build events with
 `hs.eventtap.makeKeyEvent()` instead of `hs.eventtap.event.newKeyEvent()`; `.post()` is
-unchanged). The tap/watcher pattern also changed: instead of `hs.eventtap.new(types, fn):start()`
-returning `true` from the callback to consume an event, v2 uses `hs.eventtap.addWatcher(fn)`
-with `consume` as a settable property on the watcher object.
+unchanged). The tap/watcher pattern also changed shape: `hs.eventtap.addWatcher(types, callback,
+listenOnly)` takes an array of event types from `hs.eventtap.eventTypes`, the callback, and an
+optional listen-only flag, returning a watcher you still need to call `.start()` on. For a
+modify tap (`listenOnly` omitted/`false`) the callback's return value does the consuming —
+return `hs.eventtap.consume` to suppress the event or `hs.eventtap.emit` to pass it through
+(there's no settable `consume` property); a listen-only tap's return value is ignored and events
+always pass through. Call `hs.eventtap.removeWatcher(tap)` with the watcher `addWatcher()`
+returned (not the callback) to tear it down — unlike most other watchers, it is **not**
+automatically cleaned up by garbage collection.
 
 **`hs.http`** — every request method returns a Promise resolving to `{status, body, headers}`;
 there's no callback argument any more. A network failure *resolves* with `status: -1`, it
