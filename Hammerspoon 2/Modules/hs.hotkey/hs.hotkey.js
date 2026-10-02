@@ -32,15 +32,15 @@ hs.hotkey.bindSpec = function(spec) {
  * A modal hotkey group returned by hs.hotkey.createModal(). Hotkeys bound to the modal
  * via bind() are only enabled while the modal is active (i.e. between enter() and exit()).
  * @property {boolean} isActive - Whether the modal is currently active
- * @property {Function|null} enterFn - Callback invoked when the modal is entered
- * @property {Function|null} exitFn - Callback invoked when the modal is exited
+ * @property {Function|null} onEnter - Callback invoked when the modal is entered
+ * @property {Function|null} onExit - Callback invoked when the modal is exited
  */
 class HSHotkeyModal {
     constructor() {
         this._hotkeys = [];
         this._trigger = null;
-        this.enterFn = null;
-        this.exitFn = null;
+        this.onEnter = null;
+        this.onExit = null;
         this.isActive = false;
     }
 
@@ -48,13 +48,13 @@ class HSHotkeyModal {
      * Bind a hotkey to this modal. The hotkey is only enabled while the modal is active.
      * @param {string[]} mods - Modifier keys for the hotkey (e.g. ["cmd", "shift"])
      * @param {string} key - Key name for the hotkey (e.g. "h")
-     * @param {Function|null} callbackPressed - Called when the hotkey is pressed, or null
-     * @param {Function|null} [callbackReleased] - Called when the hotkey is released, or null/omitted
-     * @param {Function|null} [callbackRepeat] - Called repeatedly while the hotkey is held down, or null/omitted
+     * @param {Function|null} onPressed - Called when the hotkey is pressed, or null
+     * @param {Function|null} [onReleased] - Called when the hotkey is released, or null/omitted
+     * @param {Function|null} [onRepeat] - Called repeatedly while the hotkey is held down, or null/omitted
      * @returns {HSHotkeyModal} This modal, for chaining
      */
-    bind(mods, key, callbackPressed, callbackReleased, callbackRepeat) {
-        const hk = hs.hotkey.create(mods, key, callbackPressed, callbackReleased, callbackRepeat);
+    bind(mods, key, onPressed, onReleased, onRepeat) {
+        const hk = hs.hotkey.create(mods, key, onPressed, onReleased, onRepeat);
         if (!hk) return this;
         this._hotkeys.push(hk);
         if (this.isActive) hk.enable();
@@ -70,8 +70,8 @@ class HSHotkeyModal {
         this.isActive = true;
         if (this._trigger) this._trigger.disable();
         for (const hk of this._hotkeys) hk.enable();
-        if (typeof this.enterFn === 'function') {
-            try { this.enterFn(); } catch(e) { console.error("hs.hotkey modal enterFn error: " + e); }
+        if (typeof this.onEnter === 'function') {
+            try { this.onEnter(); } catch(e) { console.error("hs.hotkey modal onEnter error: " + e); }
         }
         console.debug("hs.hotkey: modal entered")
         return this;
@@ -86,8 +86,8 @@ class HSHotkeyModal {
         this.isActive = false;
         for (const hk of this._hotkeys) hk.disable();
         if (this._trigger) this._trigger.enable();
-        if (typeof this.exitFn === 'function') {
-            try { this.exitFn(); } catch(e) { console.error("hs.hotkey modal exitFn error: " + e); }
+        if (typeof this.onExit === 'function') {
+            try { this.onExit(); } catch(e) { console.error("hs.hotkey modal onExit error: " + e); }
         }
         console.debug("hs.hotkey: modal exited")
         return this;
@@ -111,13 +111,13 @@ class HSHotkeyModal {
 /// Parameters:
 ///  - mods: Modifier keys for the trigger hotkey (e.g. ["cmd", "shift"]), or an empty array for no trigger
 ///  - key: Key name for the trigger hotkey (e.g. "h"), or an empty string for no trigger
-/// Returns: {HSHotkeyModal} A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and enterFn/exitFn callbacks
+/// Returns: {HSHotkeyModal} A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and onEnter/onExit callbacks
 /// Example:
 /// ```js
 /// const m = hs.hotkey.createModal(['cmd'], 'h')
 /// m.bind(['shift'], 'j', () => console.log('shift-j pressed'))
-/// m.enterFn = () => console.log('modal entered')
-/// m.exitFn  = () => console.log('modal exited')
+/// m.onEnter = () => console.log('modal entered')
+/// m.onExit  = () => console.log('modal exited')
 /// m.bind([], 'escape', () => m.exit())
 /// ```
 hs.hotkey.createModal = function(mods, key) {

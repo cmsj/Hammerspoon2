@@ -162,8 +162,8 @@ import JavaScriptCoreExtras
     private let arguments: [String]
     private var _environment: [String: String]
     private var _workingDirectory: String?
-    private var terminationCallback: JSCallback?
-    private var streamingCallback: JSCallback?
+    private var onTermination: JSCallback?
+    private var onOutput: JSCallback?
 
     private var process: Process?
     private var stdoutPipe: Pipe?
@@ -217,14 +217,14 @@ import JavaScriptCoreExtras
         return process?.isRunning ?? false
     }
 
-    init(launchPath: String, arguments: [String], environment: [String: String]?, terminationCallback: JSFunction?, streamingCallback: JSFunction?, module: HSTaskModule?) {
+    init(launchPath: String, arguments: [String], environment: [String: String]?, onTermination: JSFunction?, onOutput: JSFunction?, module: HSTaskModule?) {
         self.launchPath = launchPath
         self.arguments = arguments
         self._environment = environment ?? ProcessInfo.processInfo.environment
         self.module = module
         super.init()
-        self.terminationCallback = terminationCallback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
-        self.streamingCallback = streamingCallback.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+        self.onTermination = onTermination.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+        self.onOutput = onOutput.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
     }
 
     isolated deinit {
@@ -233,10 +233,10 @@ import JavaScriptCoreExtras
     }
 
     func destroy() {
-        terminationCallback?.detach(from: self)
-        terminationCallback = nil
-        streamingCallback?.detach(from: self)
-        streamingCallback = nil
+        onTermination?.detach(from: self)
+        onTermination = nil
+        onOutput?.detach(from: self)
+        onOutput = nil
 
         // This is called when HS is restarting/exiting, to clean up this HSTask.
         // We will send it a SIGTERM, then attempt to wait a few seconds and send a SIGKILL.
@@ -290,7 +290,7 @@ import JavaScriptCoreExtras
         self.stdinPipe = stdinPipe
 
         // Set up streaming callbacks if provided
-        if streamingCallback != nil && streamingCallback?.value != nil {
+        if onOutput != nil && onOutput?.value != nil {
             setupStreamingCallbacks(stdout: stdoutPipe, stderr: stderrPipe)
         }
 
@@ -410,7 +410,7 @@ import JavaScriptCoreExtras
 
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
-                guard let cb = self.streamingCallback?.value, !cb.isUndefined else { return }
+                guard let cb = self.onOutput?.value, !cb.isUndefined else { return }
                 guard let context = cb.context else { return }
                 cb.call(withArguments: ["stdout", output])
                 if let exception = context.exception, !exception.isUndefined {
@@ -437,7 +437,7 @@ import JavaScriptCoreExtras
 
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
-                guard let cb = self.streamingCallback?.value, !cb.isUndefined else { return }
+                guard let cb = self.onOutput?.value, !cb.isUndefined else { return }
                 guard let context = cb.context else { return }
                 cb.call(withArguments: ["stderr", output])
                 if let exception = context.exception, !exception.isUndefined {
@@ -451,7 +451,7 @@ import JavaScriptCoreExtras
     private func callTerminationCallbackIfReady() {
         guard processExited && stdoutEOF && stderrEOF else { return }
 
-        if let cb = terminationCallback?.value, cb.isFunction, !cb.isUndefined {
+        if let cb = onTermination?.value, cb.isFunction, !cb.isUndefined {
             guard let context = cb.context else {
                 module?.unregisterActiveTask(self)
                 return

@@ -43,7 +43,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 /// const deck = hs.streamdeck.all()[0]
 /// deck.setBrightness(50)
 /// deck.setButtonColor(1, HSColor.named("red"))
-/// deck.buttonCallback((device, button, isDown) => {
+/// deck.onButton((device, button, isDown) => {
 ///     console.log("button " + button + (isDown ? " down" : " up"))
 /// })
 /// ```

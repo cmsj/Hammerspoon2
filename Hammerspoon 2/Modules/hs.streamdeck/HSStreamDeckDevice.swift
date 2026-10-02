@@ -44,7 +44,7 @@ nonisolated private func hsStreamDeckInputReportCallback(
 /// ```js
 /// const deck = hs.streamdeck.all()[0]
 /// deck.setBrightness(50)
-/// deck.buttonCallback((device, button, isDown) => {
+/// deck.onButton((device, button, isDown) => {
 ///     if (isDown) device.setButtonColor(button, HSColor.named("red"))
 /// })
 /// ```
@@ -143,11 +143,11 @@ nonisolated private func hsStreamDeckInputReportCallback(
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
-    /// hs.streamdeck.all()[0].buttonCallback((device, button, isDown) => {
+    /// hs.streamdeck.all()[0].onButton((device, button, isDown) => {
     ///     console.log("button " + button + (isDown ? " pressed" : " released"))
     /// })
     /// ```
-    @objc @discardableResult func buttonCallback(_ fn: JSFunction) -> HSStreamDeckDevice
+    @objc @discardableResult func onButton(_ fn: JSFunction) -> HSStreamDeckDevice
 
     /// Sets the callback for encoder press/release/rotation events (Stream Deck Plus only).
     /// Replaces any previously set callback.
@@ -158,11 +158,11 @@ nonisolated private func hsStreamDeckInputReportCallback(
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
-    /// hs.streamdeck.all()[0].encoderCallback((device, encoder, isDown, left, right) => {
+    /// hs.streamdeck.all()[0].onEncoder((device, encoder, isDown, left, right) => {
     ///     if (left) console.log("encoder " + encoder + " turned left")
     /// })
     /// ```
-    @objc @discardableResult func encoderCallback(_ fn: JSFunction) -> HSStreamDeckDevice
+    @objc @discardableResult func onEncoder(_ fn: JSFunction) -> HSStreamDeckDevice
 
     /// Sets the callback for LCD touch-screen events (Stream Deck Plus only). Replaces any
     /// previously set callback.
@@ -173,11 +173,11 @@ nonisolated private func hsStreamDeckInputReportCallback(
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
-    /// hs.streamdeck.all()[0].screenCallback((device, eventType, startX, startY, endX, endY) => {
+    /// hs.streamdeck.all()[0].onScreen((device, eventType, startX, startY, endX, endY) => {
     ///     console.log(eventType + " at " + startX + "," + startY)
     /// })
     /// ```
-    @objc @discardableResult func screenCallback(_ fn: JSFunction) -> HSStreamDeckDevice
+    @objc @discardableResult func onScreen(_ fn: JSFunction) -> HSStreamDeckDevice
 
     /// Stops delivering events and releases all callbacks. Called automatically when the
     /// device is disconnected or the module shuts down.
@@ -208,9 +208,9 @@ nonisolated private func hsStreamDeckInputReportCallback(
     private var buttonStateCache: [Int]
     private var encoderStateCache: [Int]
 
-    private var buttonCallbackHandler: JSCallback?
-    private var encoderCallbackHandler: JSCallback?
-    private var screenCallbackHandler: JSCallback?
+    private var onButtonHandler: JSCallback?
+    private var onEncoderHandler: JSCallback?
+    private var onScreenHandler: JSCallback?
 
     // Fixed, persistently-allocated buffer IOKit writes input reports into. Must not move
     // for as long as IOHIDDeviceRegisterInputReportCallback is registered, so it can't be a
@@ -248,12 +248,12 @@ nonisolated private func hsStreamDeckInputReportCallback(
         guard isValid else { return }
         isValid = false
         unsafe IOHIDDeviceRegisterInputReportCallback(device, reportBuffer, HSStreamDeckDevice.reportBufferLength, nil, nil)
-        buttonCallbackHandler?.detach(from: self)
-        buttonCallbackHandler = nil
-        encoderCallbackHandler?.detach(from: self)
-        encoderCallbackHandler = nil
-        screenCallbackHandler?.detach(from: self)
-        screenCallbackHandler = nil
+        onButtonHandler?.detach(from: self)
+        onButtonHandler = nil
+        onEncoderHandler?.detach(from: self)
+        onEncoderHandler = nil
+        onScreenHandler?.detach(from: self)
+        onScreenHandler = nil
         selfRetain = nil
     }
 
@@ -368,21 +368,21 @@ nonisolated private func hsStreamDeckInputReportCallback(
 
     // MARK: - Callbacks
 
-    @objc @discardableResult func buttonCallback(_ fn: JSFunction) -> HSStreamDeckDevice {
-        buttonCallbackHandler?.detach(from: self)
-        buttonCallbackHandler = JSCallback(value: fn, owner: self)
+    @objc @discardableResult func onButton(_ fn: JSFunction) -> HSStreamDeckDevice {
+        onButtonHandler?.detach(from: self)
+        onButtonHandler = JSCallback(value: fn, owner: self)
         return self
     }
 
-    @objc @discardableResult func encoderCallback(_ fn: JSFunction) -> HSStreamDeckDevice {
-        encoderCallbackHandler?.detach(from: self)
-        encoderCallbackHandler = JSCallback(value: fn, owner: self)
+    @objc @discardableResult func onEncoder(_ fn: JSFunction) -> HSStreamDeckDevice {
+        onEncoderHandler?.detach(from: self)
+        onEncoderHandler = JSCallback(value: fn, owner: self)
         return self
     }
 
-    @objc @discardableResult func screenCallback(_ fn: JSFunction) -> HSStreamDeckDevice {
-        screenCallbackHandler?.detach(from: self)
-        screenCallbackHandler = JSCallback(value: fn, owner: self)
+    @objc @discardableResult func onScreen(_ fn: JSFunction) -> HSStreamDeckDevice {
+        onScreenHandler?.detach(from: self)
+        onScreenHandler = JSCallback(value: fn, owner: self)
         return self
     }
 
@@ -400,8 +400,8 @@ nonisolated private func hsStreamDeckInputReportCallback(
 
     private func handleButtonReport(_ report: [UInt8]) {
         guard model.keyCount > 0 else { return }
-        guard let callback = buttonCallbackHandler?.value else {
-            AKWarning("hs.streamdeck: received a button input, but no callback has been set. See buttonCallback()")
+        guard let callback = onButtonHandler?.value else {
+            AKWarning("hs.streamdeck: received a button input, but no callback has been set. See onButton()")
             return
         }
         let offset = model.dataKeyOffset
@@ -425,8 +425,8 @@ nonisolated private func hsStreamDeckInputReportCallback(
 
         switch report[4] {
         case 0x00: // press/release
-            guard let callback = encoderCallbackHandler?.value else {
-                AKWarning("hs.streamdeck: received an encoder input, but no callback has been set. See encoderCallback()")
+            guard let callback = onEncoderHandler?.value else {
+                AKWarning("hs.streamdeck: received an encoder input, but no callback has been set. See onEncoder()")
                 return
             }
             for encoder in 1...model.encoderCount {
@@ -436,8 +436,8 @@ nonisolated private func hsStreamDeckInputReportCallback(
                 _ = callback.call(withArguments: [self, encoder, raw != 0, false, false])
             }
         case 0x01: // turn
-            guard let callback = encoderCallbackHandler?.value else {
-                AKWarning("hs.streamdeck: received an encoder turn, but no callback has been set. See encoderCallback()")
+            guard let callback = onEncoderHandler?.value else {
+                AKWarning("hs.streamdeck: received an encoder turn, but no callback has been set. See onEncoder()")
                 return
             }
             for encoder in 1...model.encoderCount {
@@ -453,8 +453,8 @@ nonisolated private func hsStreamDeckInputReportCallback(
 
     private func handleScreenReport(_ report: [UInt8]) {
         guard model.hasScreen, report.count > 9 else { return }
-        guard let callback = screenCallbackHandler?.value else {
-            AKWarning("hs.streamdeck: received a screen input, but no callback has been set. See screenCallback()")
+        guard let callback = onScreenHandler?.value else {
+            AKWarning("hs.streamdeck: received a screen input, but no callback has been set. See onScreen()")
             return
         }
 

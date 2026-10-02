@@ -17,9 +17,9 @@ import JavaScriptCoreExtras
     /// - Parameters:
     ///   - launchPath: The full path to the executable to run
     ///   - arguments: An array of arguments to pass to the executable
-    ///   - completionCallback: {((exitCode: number, exitReason: string) => void) | null} Optional callback called when the task terminates with exit code and reason
+    ///   - onTermination: {((exitCode: number, exitReason: string) => void) | null} Optional callback called when the task terminates with exit code and reason
     ///   - environment: Optional dictionary of environment variables for the task
-    ///   - streamingCallback: {((stream: string, data: string) => void) | null} Optional callback called when the task produces output; stream is "stdout" or "stderr"
+    ///   - onOutput: {((stream: string, data: string) => void) | null} Optional callback called when the task produces output; stream is "stdout" or "stderr"
     /// - Returns: A task object. Call start() to begin execution.
     /// - Example:
     /// ```js
@@ -29,7 +29,7 @@ import JavaScriptCoreExtras
     /// task.start()
     /// ```
     @objc(create:::::)
-    func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSFunction?, _ environment: [String: String]?, _ streamingCallback: JSFunction?) -> HSTask
+    func create(_ launchPath: String, _ arguments: [String], _ onTermination: JSFunction?, _ environment: [String: String]?, _ onOutput: JSFunction?) -> HSTask
 
     /// SKIP_DOCS
     @objc var runAsync: JSFunction? { get set }
@@ -168,14 +168,14 @@ struct TaskTracker {
 
     // MARK: - Task constructors
 
-    @objc func create(_ launchPath: String, _ arguments: [String], _ completionCallback: JSFunction? = nil, _ environment: [String: String]? = nil, _ streamingCallback: JSFunction? = nil) -> HSTask {
+    @objc func create(_ launchPath: String, _ arguments: [String], _ onTermination: JSFunction? = nil, _ environment: [String: String]? = nil, _ onOutput: JSFunction? = nil) -> HSTask {
 
         let task = HSTask(
             launchPath: launchPath,
             arguments: arguments,
             environment: environment,
-            terminationCallback: completionCallback,
-            streamingCallback: streamingCallback,
+            onTermination: onTermination,
+            onOutput: onOutput,
             module: self
         )
 

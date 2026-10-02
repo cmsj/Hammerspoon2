@@ -449,14 +449,14 @@ struct HSStreamDeckTests {
         """)
         }
 
-        @Test("buttonCallback/encoderCallback/screenCallback don't throw and return the device")
+        @Test("onButton/onEncoder/onScreen don't throw and return the device")
         func testCallbackChaining() {
             harness.expectTrue("""
             (function() {
                 var d = hs.streamdeck.all()[0];
-                var r1 = d.buttonCallback(function() {});
-                var r2 = d.encoderCallback(function() {});
-                var r3 = d.screenCallback(function() {});
+                var r1 = d.onButton(function() {});
+                var r2 = d.onEncoder(function() {});
+                var r3 = d.onScreen(function() {});
                 return r1 === d && r2 === d && r3 === d;
             })()
         """)
