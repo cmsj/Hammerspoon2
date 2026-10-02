@@ -12,7 +12,13 @@ console.log("engine.js loading...")
 
 // MARK: - EventEmitter
 var EventEmitter = function () {
-    this.events = {};
+    // Object.create(null), not {}: a plain object literal inherits Object.prototype, so an
+    // event/key name that collides with one of ITS properties (`__proto__`, `constructor`,
+    // `toString`, `hasOwnProperty`, ...) would read/write that inherited property instead of a
+    // listener array - breaking registration and leaving removeListener() with no way to find
+    // it again. hs.userdefaults keys are arbitrary user-chosen strings, so this is reachable in
+    // practice (e.g. watching a preference literally named "__proto__"), not just theoretical.
+    this.events = Object.create(null);
 };
 
 EventEmitter.prototype.on = function (event, listener) {

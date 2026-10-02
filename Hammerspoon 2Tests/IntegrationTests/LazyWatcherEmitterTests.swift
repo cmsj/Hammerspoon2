@@ -78,4 +78,39 @@ struct LazyWatcherEmitterTests {
         harness.expectEqual("stopCalls", 1)
         #expect(!harness.hasException)
     }
+
+    @Test("an event name of '__proto__' does not collide with Object.prototype")
+    func testProtoEventNameDoesNotCollideWithObjectPrototype() {
+        let harness = makeHarness()
+        harness.eval("""
+            var startedEvents = [], stoppedEvents = [];
+            var e = new KeyedLazyWatcherEmitter("test", function(event) {
+                startedEvents.push(event);
+            }, function(event) {
+                stoppedEvents.push(event);
+            });
+
+            var fn = function() {};
+            var onThrew = false;
+            try {
+                e.on('__proto__', fn);
+            } catch (err) {
+                onThrew = true;
+            }
+        """)
+        #expect(!harness.hasException)
+        harness.expectFalse("onThrew")
+        // The native watcher must actually have been started for this key, not silently skipped.
+        harness.expectTrue("startedEvents.includes('__proto__')")
+        // And the listener must be findable again afterwards, not swallowed into Object.prototype.
+        harness.expectTrue("Array.isArray(e.events['__proto__'])")
+        harness.expectTrue("e.events['__proto__'].includes(fn)")
+
+        harness.eval("""
+            e.off('__proto__', fn);
+        """)
+        #expect(!harness.hasException)
+        // off() must have found the listener and actually called stop() for this key.
+        harness.expectTrue("stoppedEvents.includes('__proto__')")
+    }
 }
