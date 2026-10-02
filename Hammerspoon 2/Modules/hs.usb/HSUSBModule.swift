@@ -99,13 +99,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    // A plain strong reference, not a JSCallback/JSManagedValue: this module is a Swift-lifecycle
-    // singleton (torn down deterministically via shutdown(), not by JS reachability), and
-    // ModuleRoot.usb is a computed accessor with no JS wrapper ever pinned for it - so
-    // JSManagedValue's "owner reachable from JS" condition goes false on the very next GC pass
-    // after _addWatcher() returns, silently killing the callback while the native IOKit watcher
-    // keeps running. shutdown()/_removeWatcher() already explicitly nil this out, same as
-    // _watcherEmitter above, so there is no actual leak risk in holding it directly.
+
     private var listener: JSFunction?
     private var notificationPort: IONotificationPortRef?
     private var runLoopSource: CFRunLoopSource?
