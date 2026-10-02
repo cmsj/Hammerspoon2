@@ -73,7 +73,11 @@ EventEmitter.prototype.once = function (event, listener) {
 // is registered, and stopped once the last listener across ALL events is removed. This is the
 // exact lifecycle every watcher module used to reimplement individually - see issue #234.
 //
-// `start`/`stop` are called with no arguments; native events are fed back in via `emitter.emit(name, ...)`.
+// `start`/`stop` are called with no arguments; native events are fed back in via
+// `emitter.emit(name, ...)`. `start` MUST throw if it fails to start the native watcher - that
+// exception propagates straight out of `on()`/`once()`, and (precisely because nothing is
+// recorded until after `start` returns without throwing) a later call, even with the exact same
+// listener, retries `start` cleanly instead of silently never attempting it again.
 class LazyWatcherEmitter extends EventEmitter {
     constructor(label, start, stop) {
         super();
@@ -92,11 +96,14 @@ class LazyWatcherEmitter extends EventEmitter {
             return this;
         }
 
-        super.on(event, listener);
-        this._listenerCount++;
-        if (this._listenerCount === 1) {
+        // Start before recording anything: if `_start` throws, nothing here has been mutated,
+        // so the next on() call - even for the same listener - sees _listenerCount still at 0
+        // and retries start() instead of treating the never-started watcher as already running.
+        if (this._listenerCount === 0) {
             this._start();
         }
+        super.on(event, listener);
+        this._listenerCount++;
         return this;
     }
 
