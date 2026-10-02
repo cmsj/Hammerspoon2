@@ -113,4 +113,51 @@ struct LazyWatcherEmitterTests {
         // off() must have found the listener and actually called stop() for this key.
         harness.expectTrue("stoppedEvents.includes('__proto__')")
     }
+
+    @Test("once() rejects a non-function listener instead of registering it")
+    func testOnceRejectsNonFunctionListener() {
+        let harness = makeHarness()
+        harness.eval("""
+            var e = new EventEmitter();
+            var threw = false;
+            try {
+                e.once('x', 42);
+            } catch (err) {
+                threw = true;
+            }
+        """)
+        #expect(!harness.hasException)
+        harness.expectTrue("threw")
+        // Nothing should have been recorded for the rejected listener.
+        harness.expectFalse("e.events['x'] && e.events['x'].length > 0")
+    }
+
+    @Test("a rejected once() listener does not block delivery to other listeners")
+    func testRejectedOnceListenerDoesNotBlockOtherListeners() {
+        // Regression test for a code review comment: once() used to only validate the function it
+        // wraps `listener` in (always callable), never `listener` itself, so an invalid listener
+        // would register successfully and only throw once emit() invoked it - aborting delivery to
+        // every other listener still queued in that same emit() call. Exercised on LazyWatcherEmitter
+        // (not just the base EventEmitter) since that's the class every hs.foo module-level watcher
+        // actually uses, and it inherits once() unchanged.
+        let harness = makeHarness()
+        harness.eval("""
+            var received = null;
+            var e = new LazyWatcherEmitter("test", function() {}, function() {});
+            e.on('x', function(value) { received = value; });
+
+            var threw = false;
+            try {
+                e.once('x', 'not a function');
+            } catch (err) {
+                threw = true;
+            }
+
+            e.emit('x', 'hello');
+        """)
+        #expect(!harness.hasException)
+        harness.expectTrue("threw")
+        // The valid listener registered via on() must still have received the event.
+        harness.expectEqual("received", "hello")
+    }
 }

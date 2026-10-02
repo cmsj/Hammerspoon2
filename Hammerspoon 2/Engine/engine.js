@@ -22,6 +22,10 @@ var EventEmitter = function () {
 };
 
 EventEmitter.prototype.on = function (event, listener) {
+    if (typeof listener !== 'function') {
+        throw new Error("EventEmitter.on(): listener must be a function");
+    }
+
     if (typeof this.events[event] !== 'object') {
         this.events[event] = [];
     }
@@ -61,8 +65,16 @@ EventEmitter.prototype.off = function (event, listener) {
     return this.removeListener(event, listener);
 };
 
-// Calls through `this.on`/`this.removeListener` for the same reason as `off` above.
+// Calls through `this.on`/`this.removeListener` for the same reason as `off` above. Validates
+// `listener` itself here, before wrapping it: `this.on(event, wrapped)` below always passes a
+// real function (`wrapped`), so `on()`'s own type-check can never see - and therefore can never
+// reject - an invalid `listener` smuggled in through once(). Left unchecked, a bad listener would
+// register successfully and only throw when `wrapped` is invoked from inside `emit()`, aborting
+// delivery to every listener still left in that emit() call.
 EventEmitter.prototype.once = function (event, listener) {
+    if (typeof listener !== 'function') {
+        throw new Error("EventEmitter.once(): listener must be a function");
+    }
     var emitter = this;
     function wrapped() {
         emitter.removeListener(event, wrapped);
