@@ -32,10 +32,10 @@ diving into specifics:
   module's own signature rather than assuming. Most use Node-style `on(event, listener)`/
   `off(event, listener)`/`once(event, listener)` — `hs.application`, `hs.audiodevice`, `hs.ax`,
   `hs.camera`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`, `hs.screen`, `hs.serial`,
-  `hs.streamdeck`, `hs.usb`, `hs.userdefaults`. The rest don't fit that shape:
-  `hs.location`/`hs.wifi`'s `addWatcher()` takes no callback at all, returning a configurable
-  watcher object instead; `hs.eventtap.addWatcher()` needs an event types array and a listen-only
-  flag (see [below](#present-but-check-before-you-port)); and `hs.fs` uses
+  `hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.wifi`. The rest don't fit that shape:
+  `hs.location`'s `addWatcher()` takes no callback at all, returning a configurable watcher
+  object instead; `hs.eventtap.addWatcher()` needs an event types array and a listen-only flag
+  (see [below](#present-but-check-before-you-port)); and `hs.fs` uses
   `createPathWatcher()`/`addVolumeWatcher()` (see [details](#hsfs)). If a v1 module
   you're porting had a `.watcher` submodule and you don't see it mentioned below, check the
   parent module's own method signatures first.
@@ -260,10 +260,13 @@ notifications will appear; macOS enforces this now where v1 didn't need it. `hs.
 adds actionable buttons (including text-input replies), thread grouping, and scheduled/calendar
 triggers, none of which v1 had.
 
-**`hs.wifi`** — `hs.wifi.watcher` folded into `hs.wifi.addWatcher()`, which returns a watcher
-object configured via an `events` array property and `hs.wifi.watcherEventTypes` rather than
-one-watcher-per-event-type. `associate()`/`scanNetworks()` are now Promise-based. New and
-important: `ssid`, `bssid`, `countryCode`, and scan-result BSSIDs only populate once
+**`hs.wifi`** — `hs.wifi.watcher` folded into `hs.wifi.on(event, listener)`/`off()`/`once()`
+directly on the main module, one named event per registration (`ssidChange`, `bssidChange`,
+`countryCodeChange`, `linkChange`, `linkQualityChange`, `modeChange`, `powerChange`,
+`scanCacheUpdated`) rather than a single watcher object configured with an `events` array; the
+listener receives an info dictionary, not `(event, info)`, since the event name is already known
+from the `on()` call. `associate()`/`scanNetworks()` are now Promise-based. New and important:
+`ssid`, `bssid`, `countryCode`, and scan-result BSSIDs only populate once
 `hs.permissions.requestLocation()` has been granted — without it they come back `null`, not
 an error, which can silently break configs that assume `ssid` is always present.
 

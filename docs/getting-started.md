@@ -132,7 +132,7 @@ The `on()`/`off()`/`once()` pattern shown above is consistent across most module
 ongoing state changes — clipboard contents, application launch/quit, connected hardware, input
 source and locale changes, system power/session events, and more (`hs.application`,
 `hs.audiodevice`, `hs.camera`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`,
-`hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`). For these, the first
+`hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.wifi`). For these, the first
 argument is always the event name; most modules emit several, so check the API reference for
 the exact set a given module supports:
 
@@ -152,10 +152,10 @@ hs.ax.on(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, 
 ```
 
 A handful of modules instead return a configurable watcher object rather than taking your
-callback directly — `hs.location`, `hs.wifi`, `hs.eventtap` (whose `addWatcher()` also takes an
-event-types array and a listen-only flag), and `hs.fs`'s path watcher. The same lifecycle rule
-from above applies to those: the object itself is what needs to stay referenced, not a callback
-you passed in.
+callback directly — `hs.location`, `hs.eventtap` (whose `addWatcher()` also takes an event-types
+array and a listen-only flag), and `hs.fs`'s path watcher. The same lifecycle rule from above
+applies to those: the object itself is what needs to stay referenced, not a callback you passed
+in.
 
 For filesystem changes specifically, `hs.fs.createPathWatcher(path)` returns an object you
 configure and start (remember: keep a reference to it):

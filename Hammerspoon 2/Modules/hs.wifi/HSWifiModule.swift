@@ -190,6 +190,12 @@ private enum HSWifiError: LocalizedError {
 /// and BSSIDs inside scan results — are only populated once Location Services is enabled and
 /// the user has authorized this app; call `hs.permissions.requestLocation()` first (the same
 /// gate `hs.location` uses). Without authorization these fields are `null`/omitted, not errors.
+///
+/// ## Watching for Wi-Fi events
+///
+/// ```js
+/// hs.wifi.on('ssidChange', info => console.log("SSID changed on " + info.interface))
+/// ```
 @objc protocol HSWifiModuleAPI: JSExport {
 
     /// Returns the names of all Wi-Fi interfaces attached to the system (e.g. `["en0"]`).
@@ -267,22 +273,29 @@ private enum HSWifiError: LocalizedError {
     /// ```
     @objc func scanNetworks(_ interface: String?) -> JSPromise?
 
-    /// The Wi-Fi event types that can be passed to `HSWifiWatcher.events`.
-    /// - Example:
-    /// ```js
-    /// console.log(hs.wifi.watcherEventTypes)
-    /// ```
-    @objc var watcherEventTypes: [String] { get }
+    // MARK: Watcher
 
-    /// Creates a new Wi-Fi event watcher. Call `.setCallback()` and `.start()` to activate it.
-    /// The watcher is stopped automatically when the module shuts down.
-    /// - Returns: an HSWifiWatcher
-    /// - Example:
-    /// ```js
-    /// const w = hs.wifi.addWatcher()
-    /// w.setCallback((event, info) => console.log(event, info)).start()
-    /// ```
-    @objc func addWatcher() -> HSWifiWatcher
+    // NOTE: Private API consumed only by hs.wifi.js. Each event type is an independent native
+    // CoreWLAN registration, so this uses the keyed (per-event-name) private API shape - see
+    // KeyedLazyWatcherEmitter in Engine/engine.js, same as hs.userdefaults.
+    /// SKIP_DOCS
+    @objc(_addWatcher::) func _addWatcher(_ event: String, _ listener: JSFunction) -> Bool
+    /// SKIP_DOCS
+    @objc func _removeWatcher(_ event: String)
+    /// SKIP_DOCS
+    @objc var _watcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.wifi.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Module implementation
@@ -294,8 +307,12 @@ private enum HSWifiError: LocalizedError {
     let engineID: UUID
 
     private let client = CWWiFiClient()
-    private var eventRefCounts: [CWEventType: Int] = [:]
-    private var watchers = HSWeakObjectSet<HSWifiWatcher>()
+    private var watcherCallbacks: [String: JSFunction] = [:]
+
+    @objc var _watcherEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -305,9 +322,11 @@ private enum HSWifiError: LocalizedError {
     }
 
     func shutdown() {
-        for watcher in watchers.allObjects { watcher.destroy() }
-        watchers.removeAllObjects()
-        eventRefCounts.removeAll()
+        watcherCallbacks.removeAll()
+        _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
         client.delegate = nil
         try? client.stopMonitoringAllEvents()
     }
@@ -318,8 +337,8 @@ private enum HSWifiError: LocalizedError {
     }
 
     @objc func toString() -> String {
-        let n = watchers.allObjects.count
-        return "<\(moduleName): \(n) watcher\(n == 1 ? "" : "s")>"
+        let n = watcherCallbacks.count
+        return "<\(moduleName): \(n) watched event\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {
@@ -413,76 +432,43 @@ private enum HSWifiError: LocalizedError {
         }
     }
 
-    @objc var watcherEventTypes: [String] {
-        wifiWatcherValidEvents.sorted()
-    }
+    // MARK: - Watcher
 
-    @objc func addWatcher() -> HSWifiWatcher {
-        let watcher = HSWifiWatcher()
-        watcher.module = self
-        watchers.add(watcher)
-        return watcher
-    }
-
-    // MARK: - Watcher event (de)registration, ref-counted per CWEventType (see HSAXModule for precedent)
-
-    /// Registers any of `watcher.events` not already in `watcher.registeredEvents`. Each event
-    /// type is independent: on success it's added to the returned set and the shared ref count
-    /// is incremented; on failure it's logged and left alone — no ref count change, nothing to
-    /// roll back. Already-registered names are passed through unchanged, so calling this again
-    /// after a partial failure only retries the names that are still missing, rather than
-    /// double-incrementing the ones that already succeeded.
-    @discardableResult
-    func startWatching(_ watcher: HSWifiWatcher) -> Set<String> {
-        var registered = watcher.registeredEvents
-        for name in watcher.events where !registered.contains(name) {
-            guard let type = wifiEventTypeMap[name] else { continue }
-            let currentCount = eventRefCounts[type, default: 0]
-            if currentCount > 0 {
-                eventRefCounts[type] = currentCount + 1
-                registered.insert(name)
-                continue
-            }
-            do {
-                try client.startMonitoringEvent(with: type)
-                eventRefCounts[type] = 1
-                registered.insert(name)
-                AKDebug("hs.wifi: started monitoring \(name)")
-            } catch {
-                AKError("hs.wifi: failed to start monitoring \(name): \(error.localizedDescription)")
-            }
+    /// Starts native CoreWLAN monitoring for one event type and records the listener callback
+    /// for it. Each event type is an entirely independent native registration - see
+    /// KeyedLazyWatcherEmitter in Engine/engine.js, which calls this only on a 0->1 listener
+    /// transition for `event`, so no ref-counting is needed here.
+    @objc(_addWatcher::) func _addWatcher(_ event: String, _ listener: JSFunction) -> Bool {
+        guard let type = wifiEventTypeMap[event] else {
+            AKWarning("hs.wifi.on(): unrecognized event name '\(event)'")
+            return false
         }
-        return registered
+        guard watcherCallbacks[event] == nil else {
+            AKWarning("hs.wifi.on(): already watching '\(event)'. Refusing to create a second.")
+            return false
+        }
+        do {
+            try client.startMonitoringEvent(with: type)
+            watcherCallbacks[event] = listener
+            AKDebug("hs.wifi.on(): started watching '\(event)'")
+            return true
+        } catch {
+            AKError("hs.wifi.on(): failed to start monitoring '\(event)': \(error.localizedDescription)")
+            return false
+        }
     }
 
-    /// Unregisters any of `watcher.registeredEvents`. Each event type is independent: on success
-    /// (or if the ref count is simply decremented without reaching zero) it's removed from the
-    /// returned set; on failure to actually deregister with CoreWLAN it's logged and left in the
-    /// returned set — we can't confirm CoreWLAN stopped monitoring it, so bookkeeping keeps
-    /// treating it as registered rather than claiming ownership of it is free.
-    @discardableResult
-    func stopWatching(_ watcher: HSWifiWatcher) -> Set<String> {
-        var registered = watcher.registeredEvents
-        for name in watcher.registeredEvents {
-            guard let type = wifiEventTypeMap[name], let currentCount = eventRefCounts[type], currentCount > 0 else {
-                registered.remove(name)
-                continue
-            }
-            guard currentCount == 1 else {
-                eventRefCounts[type] = currentCount - 1
-                registered.remove(name)
-                continue
-            }
-            do {
-                try client.stopMonitoringEvent(with: type)
-                eventRefCounts[type] = 0
-                registered.remove(name)
-                AKDebug("hs.wifi: stopped monitoring \(name)")
-            } catch {
-                AKError("hs.wifi: failed to stop monitoring \(name): \(error.localizedDescription)")
-            }
+    /// Stops native CoreWLAN monitoring for one event type. Called only on a 1->0 listener
+    /// transition for `event` - see `_addWatcher` above.
+    @objc func _removeWatcher(_ event: String) {
+        guard let type = wifiEventTypeMap[event], watcherCallbacks[event] != nil else { return }
+        do {
+            try client.stopMonitoringEvent(with: type)
+        } catch {
+            AKError("hs.wifi.off(): failed to stop monitoring '\(event)': \(error.localizedDescription)")
         }
-        return registered
+        watcherCallbacks.removeValue(forKey: event)
+        AKDebug("hs.wifi.off(): stopped watching '\(event)'")
     }
 
     // MARK: - Off-main-thread scan/associate work (nonisolated static — no access to `self`)
@@ -516,12 +502,11 @@ private enum HSWifiError: LocalizedError {
 
     nonisolated private func fireEvent(_ name: String, interfaceName: String, rssi: Int? = nil, transmitRate: Double? = nil) {
         Task { @MainActor in
+            guard let callback = self.watcherCallbacks[name] else { return }
             var info: [String: Any] = ["interface": interfaceName]
             if let rssi { info["rssi"] = rssi }
             if let transmitRate { info["transmitRate"] = transmitRate }
-            for watcher in self.watchers.allObjects {
-                watcher.fire(event: name, info: info)
-            }
+            _ = callback.call(withArguments: [info])
         }
     }
 

@@ -61,28 +61,26 @@ struct HSWifiTests {
             #expect(makeHarness().evalTypeOf("hs.wifi.scanNetworks") == "function")
         }
 
-        @Test("watcherEventTypes is an object")
-        func testWatcherEventTypesIsObject() {
-            #expect(makeHarness().evalTypeOf("hs.wifi.watcherEventTypes") == "object")
+        @Test("on is a function")
+        func testOnIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.wifi.on") == "function")
         }
 
-        @Test("addWatcher is a function")
-        func testAddWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.wifi.addWatcher") == "function")
+        @Test("off is a function")
+        func testOffIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.wifi.off") == "function")
         }
 
-        @Test("addWatcher returns an object with the expected shape")
-        func testAddWatcherShape() {
-            let harness = makeHarness()
-            harness.eval("var w = hs.wifi.addWatcher()")
-            #expect(!harness.hasException)
-            #expect(harness.evalTypeOf("w.identifier") == "string")
-            #expect(harness.evalTypeOf("w.events") == "object")
-            #expect(harness.evalTypeOf("w.start") == "function")
-            #expect(harness.evalTypeOf("w.stop") == "function")
-            #expect(harness.evalTypeOf("w.setCallback") == "function")
-            #expect(harness.evalTypeOf("w.destroy") == "function")
-            harness.eval("w.destroy()")
+        @Test("once is a function")
+        func testOnceIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.wifi.once") == "function")
+        }
+
+        @Test("_watcherEmitter is initialized by hs.wifi.js")
+        func testWatcherEmitterInitialized() {
+            makeHarness().expectTrue(
+                "hs.wifi._watcherEmitter !== null && hs.wifi._watcherEmitter !== undefined"
+            )
         }
     }
 
@@ -97,75 +95,124 @@ struct HSWifiTests {
             return harness
         }
 
-        @Test("watcherEventTypes contains exactly the expected event names")
-        func testWatcherEventTypesContents() {
+        @Test("on throws when listener is not a function")
+        func testOnThrowsForNonFunction() {
             let harness = makeHarness()
-            let result = harness.evalValue("hs.wifi.watcherEventTypes.slice().sort()")
-            let events = result?.toArray() as? [String]
-            #expect(events == [
-                "bssidChange", "countryCodeChange", "linkChange", "linkQualityChange",
-                "modeChange", "powerChange", "scanCacheUpdated", "ssidChange"
-            ])
+            harness.eval("hs.wifi.on('ssidChange', 'not a function')")
+            #expect(harness.hasException)
         }
 
-        @Test("a new watcher defaults to watching ssidChange only")
-        func testWatcherDefaultEvents() {
+        @Test("on throws when listener is null")
+        func testOnThrowsForNull() {
             let harness = makeHarness()
-            harness.eval("var w = hs.wifi.addWatcher()")
-            let events = harness.evalValue("w.events")?.toArray() as? [String]
-            #expect(events == ["ssidChange"])
-            harness.eval("w.destroy()")
+            harness.eval("hs.wifi.on('ssidChange', null)")
+            #expect(harness.hasException)
         }
 
-        @Test("setting events to a valid list is reflected back")
-        func testSetValidEvents() {
+        @Test("on and off cycle completes without error")
+        func testOnOffCycleIsSafe() {
             let harness = makeHarness()
             harness.eval("""
-                var w = hs.wifi.addWatcher()
-                w.events = ["powerChange", "linkChange"]
+                var fn = function(info) {};
+                hs.wifi.on('ssidChange', fn);
+                hs.wifi.off('ssidChange', fn);
             """)
-            let events = harness.evalValue("w.events")?.toArray() as? [String]
-            #expect(Set(events ?? []) == Set(["powerChange", "linkChange"]))
             #expect(!harness.hasException)
-            harness.eval("w.destroy()")
         }
 
-        @Test("setting events with an unrecognized name drops it without throwing")
-        func testSetInvalidEventDropped() {
+        @Test("adding the same listener twice is idempotent")
+        func testAddSameListenerTwiceIsIdempotent() {
             let harness = makeHarness()
             harness.eval("""
-                var w = hs.wifi.addWatcher()
-                w.events = ["powerChange", "bogusEvent"]
+                var fn = function(info) {};
+                hs.wifi.on('ssidChange', fn);
+                hs.wifi.on('ssidChange', fn);
+                hs.wifi.off('ssidChange', fn);
             """)
-            let events = harness.evalValue("w.events")?.toArray() as? [String]
-            #expect(events == ["powerChange"])
             #expect(!harness.hasException)
-            harness.eval("w.destroy()")
         }
 
-        @Test("setting events to an empty or all-invalid list is refused, keeping the previous value")
-        func testSetEmptyEventsRefused() {
+        @Test("multiple distinct event types can be watched and removed independently")
+        func testMultipleDistinctEvents() {
             let harness = makeHarness()
             harness.eval("""
-                var w = hs.wifi.addWatcher()
-                w.events = ["bogusEvent"]
+                var fn1 = function(info) {};
+                var fn2 = function(info) {};
+                hs.wifi.on('ssidChange', fn1);
+                hs.wifi.on('powerChange', fn2);
+                hs.wifi.off('ssidChange', fn1);
+                hs.wifi.off('powerChange', fn2);
             """)
-            let events = harness.evalValue("w.events")?.toArray() as? [String]
-            #expect(events == ["ssidChange"])
             #expect(!harness.hasException)
-            harness.eval("w.destroy()")
         }
 
-        @Test("start/stop/setCallback are chainable")
-        func testChaining() {
+        @Test("multiple listeners for the same event share one native registration")
+        func testMultipleListenersSameEvent() {
             let harness = makeHarness()
             harness.eval("""
-                var w = hs.wifi.addWatcher()
-                var chained = w.setCallback(function(event, info) {}).start().stop() === w
+                var fn1 = function(info) {};
+                var fn2 = function(info) {};
+                hs.wifi.on('ssidChange', fn1);
+                hs.wifi.on('ssidChange', fn2);
             """)
-            #expect(harness.evalBool("chained") == true)
             #expect(!harness.hasException)
-            harness.eval("w.destroy()")
+            harness.expectTrue("hs.wifi._watcherEmitter.events['ssidChange'].includes(fn1)")
+            harness.expectTrue("hs.wifi._watcherEmitter.events['ssidChange'].includes(fn2)")
+            harness.eval("""
+                hs.wifi.off('ssidChange', fn1);
+                hs.wifi.off('ssidChange', fn2);
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("off with an unregistered listener does not throw")
+        func testRemoveUnregisteredListenerIsSafe() {
+            let harness = makeHarness()
+            harness.eval("hs.wifi.off('ssidChange', function(info) {})")
+            #expect(!harness.hasException)
+        }
+
+        @Test("on with an unrecognized event name does not throw, and does not register")
+        func testUnrecognizedEventNameIsSilentlyRefused() {
+            let harness = makeHarness()
+            harness.eval("""
+                var fn = function(info) {};
+                hs.wifi.on('bogusEvent', fn);
+            """)
+            #expect(!harness.hasException)
+            harness.expectFalse("Array.isArray(hs.wifi._watcherEmitter.events['bogusEvent'])")
+        }
+
+        @Test("once-registered listener fires only one time")
+        func testOnceFiresOnlyOnce() {
+            let harness = makeHarness()
+            harness.eval("""
+                var count = 0;
+                hs.wifi.once('ssidChange', function() { count++; });
+                hs.wifi._watcherEmitter.emit('ssidChange', {interface: "en0"});
+                hs.wifi._watcherEmitter.emit('ssidChange', {interface: "en0"});
+            """)
+            harness.expectEqual("count", 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSWifiModule.self, as: "wifi")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.wifi.on") == "function")
+            #expect(harness.evalTypeOf("hs.wifi.off") == "function")
+            #expect(harness.evalTypeOf("hs.wifi.once") == "function")
+
+            harness.eval("""
+                var fn = function(info) {};
+                hs.wifi.on('ssidChange', fn);
+                hs.wifi.off('ssidChange', fn);
+            """)
+            #expect(!harness.hasException)
         }
     }
 
@@ -266,26 +313,4 @@ struct HSWifiTests {
         }
     }
 
-    // MARK: - Memory Leak Tests
-
-    @Test("Active HSWifiWatcher is released after shutdown")
-    func testWifiWatcherDoesNotLeakAfterReload() {
-        let tracker = WeakLeakTracker()
-        autoreleasepool {
-            let harness = JSTestHarness()
-            harness.loadModule(HSWifiModule.self, as: "wifi")
-            harness.eval("""
-                var w = hs.wifi.addWatcher()
-                w.events = ["ssidChange", "powerChange"]
-                w.setCallback(function(event, info) {})
-                w.start()
-            """)
-            if let obj = harness.evalValue("w")?.toObjectOf(HSWifiWatcher.self) as? HSWifiWatcher {
-                tracker.track(obj)
-            }
-            harness.eval("w = null")
-            harness.shutdownForLeakTest()
-        }
-        tracker.assertNoLeaks()
-    }
 }
