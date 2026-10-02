@@ -27,12 +27,15 @@ diving into specifics:
   spoons.hammerspoon.org-equivalent repository yet. See the [Spoons guide](spoons-guide.html)
   for the full picture, or [hs.spoons and Spoons](#hsspoons-and-spoons) below for what
   specifically changed from v1.
-- **Watchers are usually `addWatcher()`/`removeWatcher()` on the main module now,** not a
-  separate `.watcher` submodule you construct and `:start()`. This pattern is consistent
-  across `hs.audiodevice`, `hs.camera`, `hs.eventtap`, `hs.keycodes`, `hs.mouse`, `hs.screen`,
-  `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.wifi`, `hs.pasteboard`, `hs.power`, `hs.fs`, and
-  more. If a v1 module you're porting had a `.watcher` submodule and you don't see it
-  mentioned below, check for `addWatcher()` on the parent module first.
+- **Watchers are usually on the main module now,** not a separate `.watcher` submodule you
+  construct and `:start()`. Most of these use Node-style `on(event, listener)`/`off(event,
+  listener)`/`once(event, listener)` — `hs.application`, `hs.audiodevice`, `hs.ax`, `hs.camera`,
+  `hs.pasteboard`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`. A few kept the
+  older `addWatcher()`/`removeWatcher()` names instead, taking your callback directly with no
+  event name argument — `hs.eventtap`, `hs.fs`, `hs.keycodes`, `hs.locale`, `hs.location`,
+  `hs.power`, `hs.screen`, `hs.wifi`, and more. If a v1 module you're porting had a `.watcher`
+  submodule and you don't see it mentioned below, check for `on()`/`addWatcher()` on the parent
+  module first.
 - **Async is Promise-based, not callback-based.** `hs.http`, `hs.osascript`, `hs.network`,
   `hs.shortcuts`, `hs.application.launchOrFocus()`, and others now return Promises you
   `.then()` rather than taking a completion-callback argument. A few (`hs.osascript`) always
@@ -102,10 +105,10 @@ for what changed within it.
 | `hs.appfinder` | Gone | superseded in v1 itself; use `hs.application.matchingName()` etc. |
 | `hs.applescript` | → `hs.osascript` | [details](#hsosascript) |
 | `hs.application` | Present | watcher folded in, see below |
-| `hs.application.watcher` | → `hs.application` | `addWatcher()`, different callback shape |
+| `hs.application.watcher` | → `hs.application` | `on()`/`off()`/`once()`, different callback shape |
 | `hs.audiodevice` | Present | watcher folded in; no `.datasource` equivalent |
 | `hs.audiodevice.datasource` | Gone | no separate data-source API found |
-| `hs.audiodevice.watcher` | → `hs.audiodevice` | `addWatcher()` |
+| `hs.audiodevice.watcher` | → `hs.audiodevice` | `on()`/`off()`/`once()` |
 | `hs.axuielement` (+`.axtextmarker`, `.observer`) | → `hs.ax` | [details](#hsax-accessibility) |
 | `hs.base64` | → `hs.hash` | `base64Encode`/`base64Decode` |
 | `hs.battery` (+`.watcher`) | → `hs.power` | [details](#hspower) |
@@ -200,8 +203,10 @@ you port line-by-line.
 **`hs.application`** — richer than v1: instance objects now expose a full menu-item API
 (`getMenuItems()`, `selectMenuItemByName()`) and `axElement()` to drop straight into `hs.ax`.
 Watching launch/quit/activate events moved from `hs.application.watcher` to
-`hs.application.addWatcher((event, app) => {...})` on the main module; the callback argument
-order differs from v1's `(appName, eventType, appObject)`, so check it before porting.
+`hs.application.on(event, app => {...})` on the main module — one named event per registration
+(`willLaunch`, `didLaunch`, `didTerminate`, `didHide`, `didUnhide`, `didActivate`,
+`didDeactivate`) rather than a single callback that received every event type, and the listener
+itself just takes the affected app, not v1's `(appName, eventType, appObject)` triple.
 
 **`hs.chooser`** — construction changed from `hs.chooser.new(completionFn)` to
 `hs.chooser.create()` followed by setting `onSelect`/`onQueryChange`/`onShow`/`onHide`/
@@ -226,8 +231,8 @@ now XPC over a named Mach service rather than a bare process pipe, and you must 
 connections are restricted to binaries signed with the same Team ID.
 
 **`hs.pasteboard`** — `hs.pasteboard.watcher` is gone as a separate submodule; it's
-`hs.pasteboard.addWatcher(handler)`/`removeWatcher(handler)` directly on the main module, and
-multiple watchers can be registered independently.
+`hs.pasteboard.on('change', handler)`/`off('change', handler)` directly on the main module, and
+multiple listeners can be registered independently.
 
 **`hs.spotlight`** — reshaped from a one-shot query call into a builder/query-object pattern:
 `hs.spotlight.create()` returns an object configured with `setQuery()`/`setScopes()`/
@@ -257,14 +262,15 @@ an error, which can silently break configs that assume `ssid` is always present.
 external that invokes your config. `httpCallback`/`mailtoCallback` are now plain assignable
 properties instead of a separate registration call.
 
-**`hs.bonjour`**, **`hs.camera`**, **`hs.keycodes`**, **`hs.menubar`**, **`hs.midi`**,
-**`hs.mouse`**, **`hs.plist`**, **`hs.serial`**, **`hs.sharing`**, **`hs.shortcuts`**,
-**`hs.streamdeck`**, **`hs.usb`** are all close, direct ports — the main adjustment is
-watchers moving to `addWatcher()`/`removeWatcher()` on the main module (see
-[The big picture](#the-big-picture)) and callbacks becoming JS closures instead of Lua
-function references. `hs.midi` and `hs.serial` both carry a doc-comment warning that they
-haven't seen much real-world hardware testing yet — treat as lower-confidence if you're
-driving real devices.
+**`hs.bonjour`**, **`hs.keycodes`**, **`hs.menubar`**, **`hs.midi`**, **`hs.mouse`**,
+**`hs.plist`**, **`hs.sharing`**, **`hs.shortcuts`** are all close, direct ports, with callbacks
+becoming JS closures instead of Lua function references as the main adjustment; `hs.keycodes`
+also kept the `addWatcher()`/`removeWatcher()` pattern (see
+[The big picture](#the-big-picture)). **`hs.camera`**, **`hs.serial`**, **`hs.streamdeck`**, and
+**`hs.usb`** are likewise close ports, but their watchers moved to `on()`/`off()`/`once()` on
+the main module instead. `hs.midi` and `hs.serial` both carry a doc-comment warning that they
+haven't seen much real-world hardware testing yet — treat as lower-confidence if you're driving
+real devices.
 
 ## Partially recreated — read this if something's missing
 
@@ -300,7 +306,7 @@ is currently nothing in v2 to read that from.
 `hs.axuielement` (+ `.axtextmarker`, `.observer`) and `hs.uielement` (+ `.watcher`) all merge
 into **`hs.ax`**, with a much smaller surface than v1's combined AX modules:
 `systemWideElement`, `applicationElement`, `windowElement`, `elementAtPoint`,
-`focusedElement`, `findByRole`, `findByTitle`, `printHierarchy`, `addWatcher`, `removeWatcher`,
+`focusedElement`, `findByRole`, `findByTitle`, `printHierarchy`, `on`, `off`, `once`,
 plus an `HSAXElement` type with the common properties/actions (`role`, `title`, `value`,
 `frame`, `children()`, `attributeValue()`/`setAttributeValue()`, `performAction()`, etc.).
 
@@ -308,11 +314,11 @@ Two real capability regressions to know about:
 
 - **No AXTextMarker support at all.** If you manipulated text-position markers in editors or
   PDF viewers via `hs.axuielement.axtextmarker`, there's no path forward.
-- **Watching is application-scoped only.** `hs.ax.addWatcher(app, notification, listener)`
-  watches notifications on a whole app, not on an arbitrary element you've drilled into the
-  way v1's generic `hs.axuielement.observer`/`hs.uielement.watcher` could. If you built a
-  watcher on one specific, deeply-nested element, restructure around app-level watching plus
-  your own filtering in the callback.
+- **Watching is application-scoped only.** `hs.ax.on(app, notification, listener)` watches
+  notifications on a whole app, not on an arbitrary element you've drilled into the way v1's
+  generic `hs.axuielement.observer`/`hs.uielement.watcher` could. If you built a watcher on one
+  specific, deeply-nested element, restructure around app-level watching plus your own
+  filtering in the callback.
 
 ### Window management
 
@@ -325,7 +331,7 @@ module by module:
   rule-based window filters with subscriptions to lifecycle events. `hs.window` gives you
   one-shot queries and direct actions only, with no "tell me whenever a window matching X
   changes" subscription system. Reactive window management needs to be hand-built on top of
-  `hs.ax`'s app-level `addWatcher` notifications.
+  `hs.ax`'s app-level `on()` notifications.
 - **`hs.window.highlight`** — no equivalent. The animated focus flash/dim effects have nothing
   built-in; approximate it yourself with `hs.ui` if needed.
 - **`hs.window.layout`** — no equivalent saved-layout/continuous-enforcement system.

@@ -82,19 +82,22 @@ keepAlive.push(hs.hotkey.bind(["cmd", "alt"], "h", () => console.log("hello")))
 keepAlive.push(hs.timer.doEvery(60, () => console.log("still here")))
 ```
 
-One family of APIs behaves differently: modules with `addWatcher()`/`removeWatcher()` (
-`hs.pasteboard`, `hs.screen`, `hs.wifi`, `hs.application`, and others) take your callback
-function directly rather than handing back a separate object — the module itself holds the
+One family of APIs behaves differently: modules with `on()`/`off()`/`once()` (`hs.pasteboard`,
+`hs.application`, `hs.usb`, and others) take your callback function directly rather than
+handing back a separate object — the module itself holds the
 reference, so you don't need a variable just to keep it alive. You *do* still need to keep a
-reference to the function if you ever want to call `removeWatcher()` with it later, since
-removal matches on function identity, not on when/how it was registered:
+reference to the function if you ever want to call `off()` with it later, since removal matches
+on function identity, not on when/how it was registered:
 
 ```js
 const onPaste = () => console.log("clipboard changed")
-hs.pasteboard.addWatcher(onPaste)
+hs.pasteboard.on('change', onPaste)
 // ... later ...
-hs.pasteboard.removeWatcher(onPaste)  // only works because we kept `onPaste` around
+hs.pasteboard.off('change', onPaste)  // only works because we kept `onPaste` around
 ```
+
+Use `once()` instead of `on()` if you only care about the next occurrence of an event — it
+removes itself automatically, so there's no listener reference to track for removal at all.
 
 If a hotkey, timer, or watcher you built mysteriously stops working after your config has been
 running a while, this is the first thing to check.
@@ -125,10 +128,20 @@ hs.hotkey.bindSpec({
 
 ## Watching for changes
 
-The `addWatcher()`/`removeWatcher()` pattern shown above is consistent across most modules
-that report ongoing state changes — clipboard contents, display configuration, application
-launch/quit, and more. `hs.screen`'s watcher is a typical example; the callback takes no
-arguments, so query current state from inside it:
+The `on()`/`off()`/`once()` pattern shown above is consistent across most modules that report
+ongoing state changes — clipboard contents, application launch/quit, connected hardware, and
+more (`hs.application`, `hs.audiodevice`, `hs.camera`, `hs.pasteboard`, `hs.serial`,
+`hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.ax`). The first argument is always the event
+name; most modules emit several, so check the API reference for the exact set a given module
+supports:
+
+```js
+hs.application.on('didLaunch', app => console.log(`launched: ${app.title}`))
+```
+
+A few modules instead kept the older `addWatcher()`/`removeWatcher()` names from v1, taking
+your callback directly with no event name argument. `hs.screen`'s watcher is a typical example;
+the callback takes no arguments, so query current state from inside it:
 
 ```js
 hs.screen.addWatcher(() => {
@@ -136,7 +149,7 @@ hs.screen.addWatcher(() => {
 })
 ```
 
-A few modules (`hs.wifi`, `hs.fs`'s path watcher) instead return a configurable watcher
+A few others (`hs.wifi`, `hs.fs`'s path watcher) instead return a configurable watcher
 object rather than taking your callback directly — the same lifecycle rule from above
 applies to those, since the object itself is what needs to stay referenced.
 
