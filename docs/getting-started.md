@@ -131,12 +131,23 @@ hs.hotkey.bindSpec({
 The `on()`/`off()`/`once()` pattern shown above is consistent across most modules that report
 ongoing state changes — clipboard contents, application launch/quit, connected hardware, and
 more (`hs.application`, `hs.audiodevice`, `hs.camera`, `hs.pasteboard`, `hs.serial`,
-`hs.streamdeck`, `hs.usb`, `hs.userdefaults`, `hs.ax`). The first argument is always the event
+`hs.streamdeck`, `hs.usb`, `hs.userdefaults`). For these, the first argument is always the event
 name; most modules emit several, so check the API reference for the exact set a given module
 supports:
 
 ```js
 hs.application.on('didLaunch', app => console.log(`launched: ${app.title}`))
+```
+
+`hs.ax` uses the same `on()`/`off()`/`once()` names but a different argument order —
+`hs.ax.on(element, notification, listener)` — since a listener there is scoped to one specific
+accessibility element, not just an event name:
+
+```js
+const app = hs.application.frontmost()
+hs.ax.on(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
+    console.log("New window:", element.title)
+})
 ```
 
 A few modules instead kept the older `addWatcher()`/`removeWatcher()` names from v1, taking
