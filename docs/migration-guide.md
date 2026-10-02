@@ -31,15 +31,12 @@ diving into specifics:
   construct and `:start()` — but the exact shape varies enough that it's worth checking each
   module's own signature rather than assuming. Most use Node-style `on(event, listener)`/
   `off(event, listener)`/`once(event, listener)` — `hs.application`, `hs.audiodevice`, `hs.ax`,
-  `hs.camera`, `hs.pasteboard`, `hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`,
-  `hs.userdefaults`. A few kept the older `addWatcher(listener)`/`removeWatcher(listener)` shape
-  instead, taking your callback directly with no event name argument — `hs.keycodes`,
-  `hs.locale`. The rest don't fit either shape: `hs.location`/`hs.wifi`'s `addWatcher()` takes no
-  callback at all, returning a configurable watcher object instead; `hs.eventtap.addWatcher()`
-  needs an event types array and a listen-only flag (see
-  [below](#present-but-check-before-you-port));
-  `hs.power` uses `addEventWatcher()`/`addBatteryWatcher()` (see [details](#hspower)); and
-  `hs.fs` uses `createPathWatcher()`/`addVolumeWatcher()` (see [details](#hsfs)). If a v1 module
+  `hs.camera`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`, `hs.screen`, `hs.serial`,
+  `hs.streamdeck`, `hs.usb`, `hs.userdefaults`. The rest don't fit that shape:
+  `hs.location`/`hs.wifi`'s `addWatcher()` takes no callback at all, returning a configurable
+  watcher object instead; `hs.eventtap.addWatcher()` needs an event types array and a listen-only
+  flag (see [below](#present-but-check-before-you-port)); and `hs.fs` uses
+  `createPathWatcher()`/`addVolumeWatcher()` (see [details](#hsfs)). If a v1 module
   you're porting had a `.watcher` submodule and you don't see it mentioned below, check the
   parent module's own method signatures first.
 - **Async is Promise-based, not callback-based.** `hs.http`, `hs.osascript`, `hs.network`,
@@ -274,15 +271,13 @@ an error, which can silently break configs that assume `ssid` is always present.
 external that invokes your config. `httpCallback`/`mailtoCallback` are now plain assignable
 properties instead of a separate registration call.
 
-**`hs.bonjour`**, **`hs.keycodes`**, **`hs.menubar`**, **`hs.midi`**, **`hs.mouse`**,
-**`hs.plist`**, **`hs.sharing`**, **`hs.shortcuts`** are all close, direct ports, with callbacks
-becoming JS closures instead of Lua function references as the main adjustment; `hs.keycodes`
-also kept the `addWatcher()`/`removeWatcher()` pattern (see
-[The big picture](#the-big-picture)). **`hs.camera`**, **`hs.serial`**, **`hs.streamdeck`**, and
-**`hs.usb`** are likewise close ports, but their watchers moved to `on()`/`off()`/`once()` on
-the main module instead. `hs.midi` and `hs.serial` both carry a doc-comment warning that they
-haven't seen much real-world hardware testing yet — treat as lower-confidence if you're driving
-real devices.
+**`hs.bonjour`**, **`hs.menubar`**, **`hs.midi`**, **`hs.mouse`**, **`hs.plist`**,
+**`hs.sharing`**, **`hs.shortcuts`** are all close, direct ports, with callbacks becoming JS
+closures instead of Lua function references as the main adjustment. **`hs.camera`**,
+**`hs.keycodes`**, **`hs.serial`**, **`hs.streamdeck`**, and **`hs.usb`** are likewise close
+ports, but their watchers moved to `on()`/`off()`/`once()` on the main module instead. `hs.midi`
+and `hs.serial` both carry a doc-comment warning that they haven't seen much real-world hardware
+testing yet — treat as lower-confidence if you're driving real devices.
 
 ## Partially recreated — read this if something's missing
 
@@ -366,9 +361,10 @@ smaller primitive set (`hs.window` + `hs.ax` + `hs.ui` + `hs.screen`).
 ### hs.power
 
 `hs.battery` (+`.watcher`) and `hs.caffeinate` (+`.watcher`) both merge into **`hs.power`**:
-`batteryInfo()` covers nearly all of `hs.battery`'s per-field getters, `addBatteryWatcher()`
-replaces `hs.battery.watcher`, and `addEventWatcher()` replaces `hs.caffeinate.watcher` (all
-12 of v1's event names carry over: `screensDidSleep`, `systemWillSleep`, etc.).
+`batteryInfo()` covers nearly all of `hs.battery`'s per-field getters, `on('change', fn)`
+replaces `hs.battery.watcher`, and `on(event, fn)` replaces `hs.caffeinate.watcher` for all
+12 of v1's event names (`screensDidSleep`, `systemWillSleep`, etc. — unlike v1, each is
+registered by name rather than one callback receiving every event type).
 `preventSleep()`/`allowSleep()`/`declareActivity()` replace the sleep-assertion functions, and
 `systemSleep()`/`lockScreen()`/`startScreensaver()` carry over directly.
 

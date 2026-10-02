@@ -129,11 +129,12 @@ hs.hotkey.bindSpec({
 ## Watching for changes
 
 The `on()`/`off()`/`once()` pattern shown above is consistent across most modules that report
-ongoing state changes — clipboard contents, application launch/quit, connected hardware, and
-more (`hs.application`, `hs.audiodevice`, `hs.camera`, `hs.pasteboard`, `hs.serial`,
-`hs.streamdeck`, `hs.usb`, `hs.userdefaults`). For these, the first argument is always the event
-name; most modules emit several, so check the API reference for the exact set a given module
-supports:
+ongoing state changes — clipboard contents, application launch/quit, connected hardware, input
+source and locale changes, system power/session events, and more (`hs.application`,
+`hs.audiodevice`, `hs.camera`, `hs.keycodes`, `hs.locale`, `hs.pasteboard`, `hs.power`,
+`hs.screen`, `hs.serial`, `hs.streamdeck`, `hs.usb`, `hs.userdefaults`). For these, the first
+argument is always the event name; most modules emit several, so check the API reference for
+the exact set a given module supports:
 
 ```js
 hs.application.on('didLaunch', app => console.log(`launched: ${app.title}`))
@@ -150,19 +151,11 @@ hs.ax.on(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, 
 })
 ```
 
-A few modules instead kept the older `addWatcher()`/`removeWatcher()` names from v1, taking
-your callback directly with no event name argument. `hs.keycodes`'s watcher is a typical
-example; the callback takes no arguments, so query current state from inside it:
-
-```js
-hs.keycodes.addWatcher(() => {
-    console.log("Now using: " + hs.keycodes.currentLayout())
-})
-```
-
-A few others (`hs.wifi`, `hs.fs`'s path watcher) instead return a configurable watcher
-object rather than taking your callback directly — the same lifecycle rule from above
-applies to those, since the object itself is what needs to stay referenced.
+A handful of modules instead return a configurable watcher object rather than taking your
+callback directly — `hs.location`, `hs.wifi`, `hs.eventtap` (whose `addWatcher()` also takes an
+event-types array and a listen-only flag), and `hs.fs`'s path watcher. The same lifecycle rule
+from above applies to those: the object itself is what needs to stay referenced, not a callback
+you passed in.
 
 For filesystem changes specifically, `hs.fs.createPathWatcher(path)` returns an object you
 configure and start (remember: keep a reference to it):
