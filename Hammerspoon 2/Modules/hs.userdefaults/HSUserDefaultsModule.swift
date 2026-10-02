@@ -86,35 +86,25 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     /// ```
     @objc func getKeys() -> [String]
 
-    /// Watch a key for changes.
-    /// - Parameters:
-    ///   - key: The name of the setting to watch
-    ///   - listener: {(key: string, newValue: any) => void} Called with the key and its new value whenever it changes
-    /// - Example:
-    /// ```js
-    /// hs.userdefaults.addWatcher("username", (key, newValue) => {
-    ///     console.log(key + " changed to " + newValue)
-    /// })
-    /// ```
-    @objc func addWatcher(_ key: String, _ listener: JSFunction)
-
-    /// Remove a previously registered watcher.
-    /// - Parameters:
-    ///   - key: The name of the setting originally passed to `addWatcher`
-    ///   - listener: The function originally passed to `addWatcher`
-    /// - Example:
-    /// ```js
-    /// hs.userdefaults.removeWatcher("username", myHandler)
-    /// ```
-    @objc func removeWatcher(_ key: String, _ listener: JSFunction)
-
     // NOTE: These are private API for the companion JS file only
     /// SKIP_DOCS
-    @objc(_addWatcher::) func _addWatcher(_ key: String, callback: JSFunction)
+    @objc(_addWatcher::) func _addWatcher(_ key: String, listener: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher(_ key: String)
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.userdefaults.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -129,6 +119,9 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     private var watcherCallbacks: [String: JSFunction] = [:]
 
     @objc var _watcherEmitter: JSFunction?
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -148,6 +141,9 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
         }
         watcherCallbacks.removeAll()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -206,37 +202,29 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
 
     // MARK: - Watchers
 
-    @objc func addWatcher(_ key: String, _ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [key, listener])
-    }
-
-    @objc func removeWatcher(_ key: String, _ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [key, listener])
-    }
-
-    @objc(_addWatcher::) func _addWatcher(_ key: String, callback: JSFunction) {
+    @objc(_addWatcher::) func _addWatcher(_ key: String, listener: JSFunction) {
         guard let suite else {
-            AKError("hs.userdefaults.addWatcher(): No UserDefaults suite available")
+            AKError("hs.userdefaults.on(): No UserDefaults suite available")
             return
         }
         guard watcherCallbacks[key] == nil else {
-            AKWarning("hs.userdefaults.addWatcher(): Already watching '\(key)'. Refusing to create a second.")
+            AKWarning("hs.userdefaults.on(): Already watching '\(key)'. Refusing to create a second.")
             return
         }
-        watcherCallbacks[key] = callback
+        watcherCallbacks[key] = listener
         unsafe suite.addObserver(self, forKeyPath: key, options: [.new], context: nil)
-        AKDebug("hs.userdefaults.addWatcher(): Started watching '\(key)'")
+        AKDebug("hs.userdefaults.on(): Started watching '\(key)'")
     }
 
     @objc func _removeWatcher(_ key: String) {
         guard let suite else {
-            AKError("hs.userdefaults.removeWatcher(): No UserDefaults suite available")
+            AKError("hs.userdefaults.off(): No UserDefaults suite available")
             return
         }
         guard watcherCallbacks[key] != nil else { return }
         suite.removeObserver(self, forKeyPath: key)
         watcherCallbacks.removeValue(forKey: key)
-        AKDebug("hs.userdefaults.removeWatcher(): Stopped watching '\(key)'")
+        AKDebug("hs.userdefaults.off(): Stopped watching '\(key)'")
     }
 
     nonisolated override func observeValue(

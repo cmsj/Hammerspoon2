@@ -114,3 +114,55 @@ class LazyWatcherEmitter extends EventEmitter {
     }
 }
 
+// MARK: - KeyedLazyWatcherEmitter
+//
+// Like LazyWatcherEmitter, but starts/stops the native watcher independently PER EVENT NAME,
+// rather than tracking one shared resource across every event. Use this when each named event
+// has its own independent native resource - e.g. hs.userdefaults, where each watched key gets
+// its own KVO observer - rather than one native stream multiplexing several named events (the
+// LazyWatcherEmitter case, e.g. hs.usb's single IOKit watcher covering both 'added'/'removed').
+//
+// `start(event)` is called when that event's listener count goes 0->1; returning `false` means
+// native registration failed, and the listener is not recorded (mirrors how a failed
+// registration must not leave a phantom bucket behind). `stop(event)` is called when that
+// event's listener count goes 1->0.
+class KeyedLazyWatcherEmitter extends EventEmitter {
+    constructor(label, start, stop) {
+        super();
+        this._label = label;
+        this._start = start;
+        this._stop = stop;
+    }
+
+    on(event, listener) {
+        if (typeof listener !== 'function') {
+            throw new Error(this._label + ".on(): listener must be a function");
+        }
+        const existing = Array.isArray(this.events[event]) ? this.events[event] : [];
+        if (existing.includes(listener)) {
+            console.error(this._label + ".on(): listener for '" + event + "' is already registered.");
+            return this;
+        }
+
+        if (existing.length === 0) {
+            if (this._start(event) === false) {
+                return this;
+            }
+        }
+        super.on(event, listener);
+        return this;
+    }
+
+    removeListener(event, listener) {
+        if (!Array.isArray(this.events[event]) || !this.events[event].includes(listener)) {
+            return this;
+        }
+
+        super.removeListener(event, listener);
+        if (!Array.isArray(this.events[event]) || this.events[event].length === 0) {
+            this._stop(event);
+        }
+        return this;
+    }
+}
+
