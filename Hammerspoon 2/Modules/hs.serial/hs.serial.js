@@ -21,7 +21,7 @@ hs.serial._watcherEmitter = new LazyWatcherEmitter("hs.serial", function() {
 
 /// Register a listener for serial port connection and disconnection events.
 /// Parameters:
-///  - event: {string} The event to listen for: `"added"` or `"removed"`
+///  - event: {"added" | "removed"} The event to listen for
 ///  - listener: {(port: {name: string, path: string}) => void} Called when a matching serial port event occurs
 /// Example:
 /// ```js
@@ -34,7 +34,7 @@ hs.serial.on = function(event, listener) {
 
 /// Remove a previously registered serial port event listener.
 /// Parameters:
-///  - event: {string} The event the listener was registered for (`"added"` or `"removed"`)
+///  - event: {"added" | "removed"} The event the listener was registered for
 ///  - listener: {(port: object) => void} The function originally passed to `on`
 /// Example:
 /// ```js
@@ -49,7 +49,7 @@ hs.serial.off = function(event, listener) {
 
 /// Register a listener that fires at most once for a serial port event.
 /// Parameters:
-///  - event: {string} The event to listen for: `"added"` or `"removed"`
+///  - event: {"added" | "removed"} The event to listen for
 ///  - listener: {(port: object) => void} Called the next time a matching event occurs, then automatically removed
 /// Example:
 /// ```js

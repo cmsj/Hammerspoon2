@@ -20,7 +20,7 @@ hs.pasteboard._watcherEmitter = new LazyWatcherEmitter("hs.pasteboard", function
 /// Because macOS provides no pasteboard change notification API, this is implemented by
 /// polling `changeCount` at the interval specified by `watcherInterval`.
 /// Parameters:
-///  - event: {string} The event to listen for: `"change"` (the only event this module emits)
+///  - event: {"change"} The event to listen for (the only event this module emits)
 ///  - listener: {(changeCount: number) => void} Called with the new changeCount whenever the pasteboard changes
 /// Example:
 /// ```js
@@ -32,7 +32,7 @@ hs.pasteboard.on = function(event, listener) {
 
 /// Remove a previously registered pasteboard change listener.
 /// Parameters:
-///  - event: {string} The event the listener was registered for (`"change"`)
+///  - event: {"change"} The event the listener was registered for
 ///  - listener: {(changeCount: number) => void} The function originally passed to `on`
 /// Example:
 /// ```js
@@ -47,7 +47,7 @@ hs.pasteboard.off = function(event, listener) {
 
 /// Register a listener that fires at most once, the next time the pasteboard contents change.
 /// Parameters:
-///  - event: {string} The event to listen for: `"change"`
+///  - event: {"change"} The event to listen for
 ///  - listener: {(changeCount: number) => void} Called once, then automatically removed
 /// Example:
 /// ```js

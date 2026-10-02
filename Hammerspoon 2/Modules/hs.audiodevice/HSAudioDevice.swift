@@ -440,7 +440,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// - `"dsin"` — input data source changed
     ///
     /// - Parameters:
-    ///   - event: The event to listen for
+    ///   - event: {"vmout" | "vmin" | "mout" | "min" | "rate" | "dsout" | "dsin"} The event to listen for
     ///   - listener: {() => void} Called when the event occurs
     /// - Example:
     /// ```js
@@ -451,7 +451,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
 
     /// Remove a previously registered per-device event listener.
     /// - Parameters:
-    ///   - event: The event the listener was registered for
+    ///   - event: {"vmout" | "vmin" | "mout" | "min" | "rate" | "dsout" | "dsin"} The event the listener was registered for
     ///   - listener: The function originally passed to `on`
     /// - Example:
     /// ```js
@@ -461,7 +461,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
 
     /// Register a listener that fires at most once for a per-device event.
     /// - Parameters:
-    ///   - event: The event to listen for
+    ///   - event: {"vmout" | "vmin" | "mout" | "min" | "rate" | "dsout" | "dsin"} The event to listen for
     ///   - listener: {() => void} Called once, then automatically removed
     /// - Example:
     /// ```js

@@ -13,7 +13,7 @@ hs.camera._watcherEmitter = new LazyWatcherEmitter("hs.camera", function() {
 
 /// Register a listener for camera device connect/disconnect events.
 /// Parameters:
-///  - event: {string} The event to listen for: `"connected"` or `"disconnected"`
+///  - event: {"connected" | "disconnected"} The event to listen for
 ///  - listener: {(camera: HSCamera) => void} Called with the affected camera when a matching event occurs
 /// Example:
 /// ```js
@@ -26,7 +26,7 @@ hs.camera.on = function(event, listener) {
 
 /// Remove a previously registered camera device event listener.
 /// Parameters:
-///  - event: {string} The event the listener was registered for (`"connected"` or `"disconnected"`)
+///  - event: {"connected" | "disconnected"} The event the listener was registered for
 ///  - listener: {(camera: HSCamera) => void} The function originally passed to `on`
 /// Example:
 /// ```js
@@ -41,7 +41,7 @@ hs.camera.off = function(event, listener) {
 
 /// Register a listener that fires at most once for a camera device event.
 /// Parameters:
-///  - event: {string} The event to listen for: `"connected"` or `"disconnected"`
+///  - event: {"connected" | "disconnected"} The event to listen for
 ///  - listener: {(camera: HSCamera) => void} Called the next time a matching event occurs, then automatically removed
 /// Example:
 /// ```js

@@ -13,7 +13,7 @@ hs.streamdeck._watcherEmitter = new LazyWatcherEmitter("hs.streamdeck", function
 
 /// Register a listener for Stream Deck connect/disconnect events.
 /// Parameters:
-///  - event: {string} The event to listen for: `"connected"` or `"disconnected"`
+///  - event: {"connected" | "disconnected"} The event to listen for
 ///  - listener: {(device: HSStreamDeckDevice) => void} Called with the affected device when a matching event occurs
 /// Example:
 /// ```js
@@ -26,7 +26,7 @@ hs.streamdeck.on = function(event, listener) {
 
 /// Remove a previously registered Stream Deck connect/disconnect listener.
 /// Parameters:
-///  - event: {string} The event the listener was registered for (`"connected"` or `"disconnected"`)
+///  - event: {"connected" | "disconnected"} The event the listener was registered for
 ///  - listener: {(device: HSStreamDeckDevice) => void} The function originally passed to `on`
 /// Example:
 /// ```js
@@ -41,7 +41,7 @@ hs.streamdeck.off = function(event, listener) {
 
 /// Register a listener that fires at most once for a Stream Deck connect/disconnect event.
 /// Parameters:
-///  - event: {string} The event to listen for: `"connected"` or `"disconnected"`
+///  - event: {"connected" | "disconnected"} The event to listen for
 ///  - listener: {(device: HSStreamDeckDevice) => void} Called the next time a matching event occurs, then automatically removed
 /// Example:
 /// ```js

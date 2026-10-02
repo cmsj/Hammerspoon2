@@ -20,7 +20,7 @@ hs.application._watcherEmitter = new LazyWatcherEmitter("hs.application", functi
 
 /// Register a listener for application events.
 /// Parameters:
-///  - event: {string} The event to listen for: `"willLaunch"`, `"didLaunch"`, `"didTerminate"`, `"didHide"`, `"didUnhide"`, `"didActivate"`, or `"didDeactivate"`
+///  - event: {"willLaunch" | "didLaunch" | "didTerminate" | "didHide" | "didUnhide" | "didActivate" | "didDeactivate"} The event to listen for
 ///  - listener: {(app: HSApplication | null) => void} Called when a matching application event occurs
 /// Example:
 /// ```js
@@ -33,7 +33,7 @@ hs.application.on = function(event, listener) {
 
 /// Remove a previously registered application event listener.
 /// Parameters:
-///  - event: {string} The event the listener was registered for
+///  - event: {"willLaunch" | "didLaunch" | "didTerminate" | "didHide" | "didUnhide" | "didActivate" | "didDeactivate"} The event the listener was registered for
 ///  - listener: {(app: HSApplication | null) => void} The function originally passed to `on`
 /// Example:
 /// ```js
@@ -48,7 +48,7 @@ hs.application.off = function(event, listener) {
 
 /// Register a listener that fires at most once for an application event.
 /// Parameters:
-///  - event: {string} The event to listen for
+///  - event: {"willLaunch" | "didLaunch" | "didTerminate" | "didHide" | "didUnhide" | "didActivate" | "didDeactivate"} The event to listen for
 ///  - listener: {(app: HSApplication | null) => void} Called the next time a matching event occurs, then automatically removed
 /// Example:
 /// ```js

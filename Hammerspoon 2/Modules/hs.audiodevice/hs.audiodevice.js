@@ -18,7 +18,7 @@ hs.audiodevice._watcherEmitter = new LazyWatcherEmitter("hs.audiodevice", functi
 
 /// Register a listener for a named system-level audio configuration event.
 /// Parameters:
-///  - event: {string} The event to listen for: `"dOut"`, `"dIn"`, `"dSErr"`, `"dev+"`, or `"dev-"`
+///  - event: {"dOut" | "dIn" | "dSErr" | "dev+" | "dev-"} The event to listen for
 ///  - listener: {() => void} Called when the event occurs
 /// Example:
 /// ```js
@@ -31,7 +31,7 @@ hs.audiodevice.on = function(event, listener) {
 
 /// Remove a previously registered system-level audio event listener.
 /// Parameters:
-///  - event: {string} The event the listener was registered for
+///  - event: {"dOut" | "dIn" | "dSErr" | "dev+" | "dev-"} The event the listener was registered for
 ///  - listener: {() => void} The function originally passed to `on`
 /// Example:
 /// ```js
@@ -46,7 +46,7 @@ hs.audiodevice.off = function(event, listener) {
 
 /// Register a listener that fires at most once for a system-level audio configuration event.
 /// Parameters:
-///  - event: {string} The event to listen for
+///  - event: {"dOut" | "dIn" | "dSErr" | "dev+" | "dev-"} The event to listen for
 ///  - listener: {() => void} Called the next time a matching event occurs, then automatically removed
 /// Example:
 /// ```js
