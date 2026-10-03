@@ -82,12 +82,6 @@ jobs:
       - name: Generate documentation
         run: npm run docs:generate
 
-      - name: Copy TypeScript files to JS HTML output
-        run: |
-          cp docs/hammerspoon.d.ts docs/js/html/
-          cp docs/tsconfig.example.json docs/js/html/
-          cp docs/TYPESCRIPT.md docs/js/html/
-
       - name: Fetch existing versioned site
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -114,6 +108,9 @@ jobs:
           mkdir -p "site/$VERSION"
           cp -r docs/js/html "site/$VERSION/js"
           cp -r docs/ts/html "site/$VERSION/ts"
+          cp docs/hammerspoon.d.ts "site/$VERSION/hammerspoon.d.ts"
+          cp docs/tsconfig.example.json "site/$VERSION/tsconfig.example.json"
+          cp docs/TYPESCRIPT.md "site/$VERSION/TYPESCRIPT.md"
 
       - name: Generate root version index
         run: node scripts/generate-versions-index.js site
