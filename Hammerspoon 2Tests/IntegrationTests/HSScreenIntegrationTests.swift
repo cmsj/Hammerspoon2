@@ -45,8 +45,9 @@ struct HSScreenIntegrationTests {
         #expect(harness.evalTypeOf("hs.screen.all") == "function")
         #expect(harness.evalTypeOf("hs.screen.main") == "function")
         #expect(harness.evalTypeOf("hs.screen.primary") == "function")
-        #expect(harness.evalTypeOf("hs.screen.addWatcher") == "function")
-        #expect(harness.evalTypeOf("hs.screen.removeWatcher") == "function")
+        #expect(harness.evalTypeOf("hs.screen.on") == "function")
+        #expect(harness.evalTypeOf("hs.screen.off") == "function")
+        #expect(harness.evalTypeOf("hs.screen.once") == "function")
     }
 
     @Test("_watcherEmitter is populated after module load")
@@ -468,25 +469,35 @@ struct HSScreenIntegrationTests {
 
     // MARK: - Watcher
 
-    @Test("addWatcher and removeWatcher with the same function do not throw")
+    @Test("on is populated after module load")
+    func testWatcherOnOffOnceExist() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        #expect(harness.evalTypeOf("hs.screen.on") == "function")
+        #expect(harness.evalTypeOf("hs.screen.off") == "function")
+        #expect(harness.evalTypeOf("hs.screen.once") == "function")
+    }
+
+    @Test("on and off with the same function do not throw")
     func testAddThenRemoveWatcher() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
         var _handler = function() {};
-        hs.screen.addWatcher(_handler);
-        hs.screen.removeWatcher(_handler);
+        hs.screen.on('change', _handler);
+        hs.screen.off('change', _handler);
         """)
         #expect(!harness.hasException)
     }
 
-    @Test("removeWatcher with an unregistered function does not throw")
+    @Test("off with an unregistered function does not throw")
     func testRemoveWatcherUnregistered() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("hs.screen.removeWatcher(function() {})")
+        harness.eval("hs.screen.off('change', function() {})")
         #expect(!harness.hasException)
     }
 
@@ -498,62 +509,96 @@ struct HSScreenIntegrationTests {
         harness.eval("""
         var _w1 = function() {};
         var _w2 = function() {};
-        hs.screen.addWatcher(_w1);
-        hs.screen.addWatcher(_w2);
-        hs.screen.removeWatcher(_w1);
-        hs.screen.removeWatcher(_w2);
+        hs.screen.on('change', _w1);
+        hs.screen.on('change', _w2);
+        hs.screen.off('change', _w1);
+        hs.screen.off('change', _w2);
         """)
         #expect(!harness.hasException)
     }
 
-    @Test("duplicate addWatcher registration is idempotent and does not throw")
+    @Test("duplicate on registration is idempotent and does not throw")
     func testDuplicateWatcherIsIdempotent() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
         var _dupFn = function() {};
-        hs.screen.addWatcher(_dupFn);
-        hs.screen.addWatcher(_dupFn);
-        hs.screen.removeWatcher(_dupFn);
+        hs.screen.on('change', _dupFn);
+        hs.screen.on('change', _dupFn);
+        hs.screen.off('change', _dupFn);
         """)
         #expect(!harness.hasException)
     }
 
-    @Test("addWatcher with a number throws")
+    @Test("on with a number listener throws")
     func testAddWatcherNumberThrows() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("hs.screen.addWatcher(42)")
+        harness.eval("hs.screen.on('change', 42)")
         #expect(harness.hasException)
     }
 
-    @Test("addWatcher with a string throws")
+    @Test("on with a string listener throws")
     func testAddWatcherStringThrows() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("hs.screen.addWatcher('callback')")
+        harness.eval("hs.screen.on('change', 'callback')")
         #expect(harness.hasException)
     }
 
-    @Test("addWatcher with null throws")
+    @Test("on with a null listener throws")
     func testAddWatcherNullThrows() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("hs.screen.addWatcher(null)")
+        harness.eval("hs.screen.on('change', null)")
         #expect(harness.hasException)
     }
 
-    @Test("addWatcher with an object throws")
+    @Test("on with an object listener throws")
     func testAddWatcherObjectThrows() {
         let harness = JSTestHarness()
         harness.loadModule(HSScreenModule.self, as: "screen")
 
-        harness.eval("hs.screen.addWatcher({})")
+        harness.eval("hs.screen.on('change', {})")
         #expect(harness.hasException)
+    }
+
+    @Test("once-registered listener fires only one time")
+    func testOnceFiresOnlyOnce() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("""
+            var count = 0;
+            hs.screen.once('change', function() { count++; });
+            hs.screen._watcherEmitter.emit('change');
+            hs.screen._watcherEmitter.emit('change');
+        """)
+        harness.expectEqual("count", 1)
+        #expect(!harness.hasException)
+    }
+
+    @Test("on/off/once survive garbage collection of the module's JS wrapper")
+    func testOnOffOnceSurviveModuleWrapperGC() {
+        let (harness, _) = JSTestHarness.makeUnpinned(HSScreenModule.self, as: "screen")
+
+        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+        #expect(harness.evalTypeOf("hs.screen.on") == "function")
+        #expect(harness.evalTypeOf("hs.screen.off") == "function")
+        #expect(harness.evalTypeOf("hs.screen.once") == "function")
+
+        harness.eval("""
+            var fn = function() {};
+            hs.screen.on('change', fn);
+            hs.screen.off('change', fn);
+        """)
+        #expect(!harness.hasException)
     }
 
     @Test("_addWatcher and _removeWatcher cycle is safe")

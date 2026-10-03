@@ -191,10 +191,10 @@ private func caDataSourceName(_ objectID: AudioObjectID,
 /// ```javascript
 /// const dev = hs.audiodevice.defaultOutputDevice();
 /// if (dev) {
-///     var fn = function(event) { console.log("Device event:", event); };
-///     dev.addWatcher(fn);
+///     var fn = function() { console.log("Output volume changed"); };
+///     dev.on('vmout', fn);
 ///     // later…
-///     dev.removeWatcher(fn);
+///     dev.off('vmout', fn);
 /// }
 /// ```
 @objc protocol HSAudioDeviceAPI: HSTypeAPI, JSExport {
@@ -428,9 +428,9 @@ private func caDataSourceName(_ objectID: AudioObjectID,
 
     // MARK: Per-device watcher
 
-    /// Register a listener for a per-device property-change event.
+    /// Register a listener for a named per-device property-change event.
     ///
-    /// The callback receives one of these event strings:
+    /// Available events:
     /// - `"vmout"` — output volume changed
     /// - `"vmin"` — input volume changed
     /// - `"mout"` — output mute state changed
@@ -439,31 +439,43 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// - `"dsout"` — output data source changed
     /// - `"dsin"` — input data source changed
     ///
-    /// - Parameter listener: {(event: string) => void} A JavaScript function that receives an event name string
+    /// - Parameters:
+    ///   - event: {"vmout" | "vmin" | "mout" | "min" | "rate" | "dsout" | "dsin"} The event to listen for
+    ///   - listener: {() => void} Called when the event occurs
     /// - Example:
     /// ```js
     /// const dev = hs.audiodevice.defaultOutputDevice()
-    /// dev.addWatcher((event) => console.log("Event:", event))
+    /// dev.on('vmout', () => console.log("Output volume changed"))
     /// ```
-    @objc func addWatcher(_ listener: JSFunction)
+    @objc func on(_ event: String, _ listener: JSFunction)
 
-    /// Remove a previously registered per-device listener.
-    ///
-    /// - Parameter listener: The JavaScript function that was passed to ``addWatcher(_:)``
+    /// Remove a previously registered per-device event listener.
+    /// - Parameters:
+    ///   - event: {"vmout" | "vmin" | "mout" | "min" | "rate" | "dsout" | "dsin"} The event the listener was registered for
+    ///   - listener: The function originally passed to `on`
     /// - Example:
     /// ```js
-    /// const dev = hs.audiodevice.defaultOutputDevice()
-    /// dev.removeWatcher(myHandler)
+    /// dev.off('vmout', myListener)
     /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
+    @objc func off(_ event: String, _ listener: JSFunction)
+
+    /// Register a listener that fires at most once for a per-device event.
+    /// - Parameters:
+    ///   - event: {"vmout" | "vmin" | "mout" | "min" | "rate" | "dsout" | "dsin"} The event to listen for
+    ///   - listener: {() => void} Called once, then automatically removed
+    /// - Example:
+    /// ```js
+    /// dev.once('vmout', () => console.log("Volume changed once"))
+    /// ```
+    @objc func once(_ event: String, _ listener: JSFunction)
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc(_removeWatcher) func _removeWatcher()
 
-    /// Swift-retained storage for the JS AudioDeviceWatcherEmitter instance
+    /// Swift-retained storage for the JS watcher emitter instance
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 }
@@ -701,21 +713,36 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     // Strong self-reference to keep the device alive while any watcher is active.
     private var selfRetain: HSAudioDevice? = nil
 
-    @objc func addWatcher(_ listener: JSFunction) {
+    /// Lazily creates this device's JS watcher emitter (via the module's `_makeDeviceEmitter`
+    /// factory) if one doesn't already exist.
+    private func ensureWatcherEmitter() -> JSValue? {
         if _watcherEmitter == nil {
-            guard let ctx = JSContext.current() else { return }
+            guard let ctx = JSContext.current() else { return nil }
             let audiodevice = ctx.objectForKeyedSubscript("hs")?.objectForKeyedSubscript("audiodevice")
             _watcherEmitter = audiodevice?.invokeMethod("_makeDeviceEmitter", withArguments: [self])
         }
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
+        return _watcherEmitter
     }
 
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
+    @objc func on(_ event: String, _ listener: JSFunction) {
+        guard let ctx = JSContext.current(), let emitter = ensureWatcherEmitter() else { return }
+        // callCapturingException, not plain invokeMethod: a throw from inside the emitter's
+        // on() (e.g. the native watcher failing to start) must reach this call's own JS
+        // caller - see callCapturingException's doc comment for why invokeMethod alone can't.
+        _ = ctx.callCapturingException { emitter.invokeMethod("on", withArguments: [event, listener]) }
     }
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
-        guard unsafe deviceRegistrations.isEmpty else { return }
+    @objc func off(_ event: String, _ listener: JSFunction) {
+        _watcherEmitter?.invokeMethod("off", withArguments: [event, listener])
+    }
+
+    @objc func once(_ event: String, _ listener: JSFunction) {
+        guard let ctx = JSContext.current(), let emitter = ensureWatcherEmitter() else { return }
+        _ = ctx.callCapturingException { emitter.invokeMethod("once", withArguments: [event, listener]) }
+    }
+
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
+        guard unsafe deviceRegistrations.isEmpty else { return false }
         selfRetain = self
 
         let candidates: [(AudioObjectPropertySelector, AudioObjectPropertyScope, String)] = [
@@ -732,18 +759,24 @@ private func caDataSourceName(_ objectID: AudioObjectID,
             guard caHasProperty(objectID, selector, scope) else { continue }
             var a = caAddr(selector, scope)
             let block: AudioObjectPropertyListenerBlock = { _, _ in
-                callback.call(withArguments: [eventName])
+                listener.call(withArguments: [eventName])
             }
             if unsafe AudioObjectAddPropertyListenerBlock(objectID, &a, .main, block) == noErr {
                 unsafe deviceRegistrations[eventName] = (address: a, block: block)
             }
         }
 
+        guard unsafe !deviceRegistrations.isEmpty else {
+            AKError(unsafe "HSAudioDevice id=\(objectID): Failed to register any property listeners")
+            selfRetain = nil
+            return false
+        }
         AKDebug(unsafe "HSAudioDevice id=\(objectID): watcher started (\(deviceRegistrations.count) listeners)")
+        return true
     }
 
     @objc(_removeWatcher) func _removeWatcher() {
-        // Clear the emitter first so the next addWatcher() creates a fresh one
+        // Clear the emitter first so the next on()/once() creates a fresh one
         // in the caller's JSVirtualMachine. Leaving a stale emitter here causes
         // cross-VM JSValue passing when subsequent harnesses reuse this device.
         _watcherEmitter = nil

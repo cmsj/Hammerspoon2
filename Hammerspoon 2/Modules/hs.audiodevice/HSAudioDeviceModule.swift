@@ -28,14 +28,15 @@ import JavaScriptCore
 ///
 /// ## Watching for system-level changes
 ///
+/// Available events: `"dOut"` (default output changed), `"dIn"` (default input changed),
+/// `"dSErr"` (default alert sound device changed), `"dev+"` (a device was added), `"dev-"`
+/// (a device was removed).
+///
 /// ```javascript
-/// var fn = function(event) {
-///     if (event === "dOut") console.log("Default output changed");
-///     if (event === "dev+") console.log("A device was added");
-/// };
-/// hs.audiodevice.addWatcher(fn);
+/// var fn = function() { console.log("Default output changed") };
+/// hs.audiodevice.on("dOut", fn);
 /// // later…
-/// hs.audiodevice.removeWatcher(fn);
+/// hs.audiodevice.off("dOut", fn);
 /// ```
 @objc protocol HSAudioDeviceModuleAPI: JSExport {
     /// All audio devices attached to the system.
@@ -106,40 +107,13 @@ import JavaScriptCore
     /// ```
     @objc func findDeviceByUID(_ uid: String) -> HSAudioDevice?
 
-    /// Register a listener for all system-level audio configuration events.
-    ///
-    /// The listener receives one of the following event name strings:
-    /// - `"dOut"` — the default output device changed
-    /// - `"dIn"` — the default input device changed
-    /// - `"dSErr"` — the default alert sound device changed
-    /// - `"dev+"` — an audio device was added
-    /// - `"dev-"` — an audio device was removed
-    ///
-    /// - Parameter listener: {(event: string) => void} A JavaScript function that receives the event name string
-    /// - Example:
-    /// ```js
-    /// hs.audiodevice.addWatcher((event) => {
-    ///     if (event === "dOut") console.log("Default output changed")
-    /// })
-    /// ```
-    @objc func addWatcher(_ listener: JSFunction)
-
-    /// Remove a previously registered system-level listener.
-    ///
-    /// - Parameter listener: The JavaScript function that was passed to ``addWatcher(_:)``
-    /// - Example:
-    /// ```js
-    /// hs.audiodevice.removeWatcher(myHandler)
-    /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
-
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc(_removeWatcher) func _removeWatcher()
 
-    /// Swift-retained storage for the JS AudioDeviceModuleWatcherEmitter instance
+    /// Swift-retained storage for the JS watcher emitter instance
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
@@ -147,6 +121,18 @@ import JavaScriptCore
     /// than as a bare JS expando) keeps it alive across garbage collection of the module wrapper.
     /// SKIP_DOCS
     @objc var _makeDeviceEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.audiodevice.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -170,6 +156,9 @@ import JavaScriptCore
         HSAudioDeviceManager.shared.stopAllWatchers()
         _watcherEmitter = nil
         _makeDeviceEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -219,21 +208,16 @@ import JavaScriptCore
 
     @objc var _watcherEmitter: JSFunction? = nil
     @objc var _makeDeviceEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
     private var moduleCallback: JSFunction? = nil
     private var moduleRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:]
     private var previousDeviceIDs: Set<AudioObjectID> = []
 
-    @objc func addWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
-
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
-        guard unsafe moduleRegistrations.isEmpty else { return }
-        moduleCallback = callback
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
+        guard unsafe moduleRegistrations.isEmpty else { return false }
+        moduleCallback = listener
         let sysObjID = AudioObjectID(kAudioObjectSystemObject)
 
         let propertyEvents: [(String, AudioObjectPropertySelector)] = [
@@ -263,6 +247,13 @@ import JavaScriptCore
         if unsafe AudioObjectAddPropertyListenerBlock(sysObjID, &devAddr, .main, devBlock) == noErr {
             unsafe moduleRegistrations["__devices"] = (address: devAddr, block: devBlock)
         }
+
+        guard unsafe !moduleRegistrations.isEmpty else {
+            AKError("hs.audiodevice._addWatcher(): Failed to register any property listeners")
+            moduleCallback = nil
+            return false
+        }
+        return true
     }
 
     @objc(_removeWatcher) func _removeWatcher() {

@@ -971,12 +971,13 @@ function parseDocCStyleComment(docText, realParamNames = null) {
     // flattened into extra top-level parameters that don't exist in the actual signature.
     const paramNames = realParamNames || Object.keys(descriptions);
     for (const paramName of paramNames) {
-        const paramInfo = descriptions[paramName] || { description: '', optional: false };
+        const paramInfo = descriptions[paramName] || { description: '', optional: false, tsType: null };
         doc.params.push({
             name: paramName,
             type: 'any',
             description: paramInfo.description,
-            optional: paramInfo.optional
+            optional: paramInfo.optional,
+            tsType: paramInfo.tsType || null
         });
     }
 
@@ -1027,7 +1028,11 @@ function parseJSDoc(docText) {
             // (JSDoc property paths)
             const afterTag = line.replace(/^@param\s*/, '');
             const { type: bracedType, rest: afterType } = extractBracedType(afterTag);
-            const nameMatch = afterType.match(/^([\w.]+)\s*(.*)$/);
+            // Standard JSDoc marks an optional param by wrapping the whole name in brackets,
+            // e.g. "[onRepeat]" or "[onRepeat=defaultValue]" - match that form first, falling
+            // back to a plain (required) name.
+            const optionalMatch = afterType.match(/^\[([\w.]+)(?:=[^\]]*)?\]\s*(.*)$/);
+            const nameMatch = optionalMatch || afterType.match(/^([\w.]+)\s*(.*)$/);
             if (nameMatch && !nameMatch[1].includes('.')) {
                 // Skip property-path docs (e.g. @param options.foo) — they document sub-fields of an
                 // existing param and must not appear as separate parameters in the TypeScript output.
@@ -1042,6 +1047,7 @@ function parseJSDoc(docText) {
                     name: nameMatch[1],
                     type,
                     rest,
+                    optional: !!optionalMatch,
                     description: nameMatch[2]
                 });
             }

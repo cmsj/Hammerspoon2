@@ -164,31 +164,24 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
     /// ```
     @objc func createPortAtPath(_ path: String) -> HSSerialPort
 
-    /// Register a listener for serial port connection and disconnection events.
-    ///
-    /// The listener is called with two arguments: the event type string (`"added"` or `"removed"`)
-    /// and a port-info object with `name` and `path` fields.
-    /// - Parameter listener: {(event: string, port: {name: string, path: string}) => void} The function to call when a serial port is added or removed
-    /// - Example:
-    /// ```js
-    /// hs.serial.addWatcher((event, port) => console.log(event + ": " + port.name))
-    /// ```
-    @objc func addWatcher(_ listener: JSFunction)
-
-    /// Remove a previously registered serial port event listener.
-    /// - Parameter listener: The function originally passed to `addWatcher`
-    /// - Example:
-    /// ```js
-    /// hs.serial.removeWatcher(myHandler)
-    /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
-
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.serial.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -201,7 +194,16 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
     private var ports = HSWeakObjectSet<HSSerialPort>()
 
     @objc var _watcherEmitter: JSFunction? = nil
-    private var watcherCallback: JSCallback?
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
+    // A plain strong reference, not a JSCallback/JSManagedValue - see HSUSBModule.listener for
+    // the full rationale (ModuleRoot.serial is an unpinned computed accessor; JSManagedValue's
+    // owner-reachability condition silently kills a module-level callback once the registering
+    // call's stack frame goes cold, confirmed by direct reproduction in
+    // JSCallbackOwnerReachabilityProbeTests). shutdown()/_removeWatcher() already nil this out
+    // deterministically, so there is no leak risk.
+    private var listener: JSFunction?
     private var notificationPort: IONotificationPortRef?
     private var runLoopSource: CFRunLoopSource?
     private var addedIterator: io_iterator_t = IO_OBJECT_NULL
@@ -218,6 +220,9 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
     func shutdown() {
         _removeWatcher()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
         for port in ports.allObjects {
             port.destroy()
         }
@@ -287,28 +292,19 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
         return port
     }
 
-    @objc func addWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
-
     // MARK: - Pattern A watcher internals
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool {
-        guard watcherCallback == nil else {
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
+        guard self.listener == nil else {
             AKWarning("hs.serial._addWatcher(): Already watching. Refusing to create a second.")
             return false
         }
 
-        watcherCallback = JSCallback(value: callback, owner: self)
+        self.listener = listener
 
         guard let port = unsafe IONotificationPortCreate(kIOMainPortDefault) else {
             AKError("hs.serial._addWatcher(): Failed to create IOKit notification port")
-            watcherCallback?.detach(from: self)
-            watcherCallback = nil
+            self.listener = nil
             return false
         }
         unsafe notificationPort = port
@@ -361,7 +357,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
     }
 
     @objc func _removeWatcher() {
-        guard watcherCallback != nil else { return }
+        guard listener != nil else { return }
 
         if addedIterator != IO_OBJECT_NULL {
             IOObjectRelease(addedIterator)
@@ -384,8 +380,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
         unsafe selfRef?.release()
         unsafe selfRef = nil
 
-        watcherCallback?.detach(from: self)
-        watcherCallback = nil
+        listener = nil
 
         AKDebug("hs.serial._removeWatcher(): Stopped")
     }
@@ -394,7 +389,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
 
     private func fireWatcherEvent(_ eventType: String, infos: [[String: Any]]) {
         for info in infos {
-            _ = watcherCallback?.value?.call(withArguments: [eventType, info])
+            _ = listener?.call(withArguments: [eventType, info])
         }
     }
 }

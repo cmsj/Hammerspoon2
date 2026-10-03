@@ -48,7 +48,10 @@ final class JSCallback {
             AKError("Unable to create JSCallback: value is not a function")
             return nil
         }
-        guard let currentVM = value.context?.virtualMachine else { return nil }
+        guard let currentVM = value.context?.virtualMachine else {
+            AKError("Unable to create JSCallback: value has no VM")
+            return nil
+        }
 
         let managedValue = JSManagedValue(value: value)
         currentVM.addManagedReference(managedValue, withOwner: owner)

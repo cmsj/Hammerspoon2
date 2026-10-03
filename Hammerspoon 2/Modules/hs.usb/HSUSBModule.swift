@@ -67,37 +67,24 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     /// ```
     @objc func attachedDevices() -> [[String: Any]]
 
-    /// Register a listener for USB device connection and disconnection events.
-    ///
-    /// The listener is called with two arguments: the event type string (`"added"` or `"removed"`) and a device-info object with the same fields as `attachedDevices()`.
-    /// - Parameter listener: {(event: string, device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void} The function to call when a USB device is added or removed
-    /// - Example:
-    /// ```js
-    /// const handler = (event, device) => {
-    ///   console.log(event + ": " + device.productName + " by " + device.vendorName)
-    /// }
-    /// hs.usb.addWatcher(handler)
-    /// ```
-    @objc func addWatcher(_ listener: JSValue)
-
-    /// Remove a previously registered USB event listener.
-    ///
-    /// - Parameter listener: {(event: string, device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void} The function originally passed to `addWatcher`
-    /// - Example:
-    /// ```js
-    /// const handler = (event, device) => console.log(event + ": " + device.productName)
-    /// hs.usb.addWatcher(handler)
-    /// // later…
-    /// hs.usb.removeWatcher(handler)
-    /// ```
-    @objc func removeWatcher(_ listener: JSValue)
-
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) -> Bool
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSValue? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.usb.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -109,7 +96,11 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     let engineID: UUID
 
     @objc var _watcherEmitter: JSValue? = nil
-    private var watcherCallback: JSCallback?
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
+
+    private var listener: JSFunction?
     private var notificationPort: IONotificationPortRef?
     private var runLoopSource: CFRunLoopSource?
     private var addedIterator: io_iterator_t = IO_OBJECT_NULL
@@ -126,6 +117,9 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     func shutdown() {
         _removeWatcher()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -156,28 +150,19 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
         return drainUSBIterator(iterator)
     }
 
-    @objc func addWatcher(_ listener: JSValue) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    @objc func removeWatcher(_ listener: JSValue) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
-
     // MARK: - Pattern A watcher internals
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) -> Bool {
-        guard watcherCallback == nil else {
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
+        guard self.listener == nil else {
             AKWarning("hs.usb._addWatcher(): Already watching. Refusing to create a second.")
             return false
         }
 
-        watcherCallback = JSCallback(value: callback, owner: self)
+        self.listener = listener
 
         guard let port = unsafe IONotificationPortCreate(kIOMainPortDefault) else {
             AKError("hs.usb._addWatcher(): Failed to create IOKit notification port")
-            watcherCallback?.detach(from: self)
-            watcherCallback = nil
+            self.listener = nil
             return false
         }
         unsafe notificationPort = port
@@ -234,7 +219,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     }
 
     @objc func _removeWatcher() {
-        guard watcherCallback != nil else { return }
+        guard listener != nil else { return }
 
         if addedIterator != IO_OBJECT_NULL {
             IOObjectRelease(addedIterator)
@@ -257,8 +242,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
         unsafe selfRef?.release()
         unsafe selfRef = nil
 
-        watcherCallback?.detach(from: self)
-        watcherCallback = nil
+        listener = nil
 
         AKDebug("hs.usb._removeWatcher(): Stopped")
     }
@@ -267,7 +251,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
     private func fireWatcherEvent(_ eventType: String, infos: [[String: Any]]) {
         for info in infos {
-            _ = watcherCallback?.value?.call(withArguments: [eventType, info])
+            _ = listener?.call(withArguments: [eventType, info])
         }
     }
 }

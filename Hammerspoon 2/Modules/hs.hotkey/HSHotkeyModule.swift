@@ -17,9 +17,9 @@ import Carbon
     ///   - mods: An array of modifier key strings (e.g., `["cmd", "shift"]`). Supported names:
     ///     `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.
     ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
-    ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
-    ///   - callbackReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback
-    ///   - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
+    ///   - onPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
+    ///   - onReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback
+    ///   - onRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
     /// - Returns: A hotkey object, or null if binding failed (including when none of the callbacks is a function — at least one is required)
     /// - Example:
     /// ```js
@@ -27,7 +27,7 @@ import Carbon
     ///     console.log("Hello!")
     /// }, null, () => console.log("still held"))
     /// ```
-    @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?
+    @objc func bind(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey?
 
     /// Get the system-wide mapping of key names to key codes
     /// - Returns: A dictionary mapping key names to numeric key codes
@@ -50,9 +50,9 @@ import Carbon
     ///   - mods: An array of modifier key strings (e.g., `["cmd", "shift"]`). Supported names:
     ///     `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.
     ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
-    ///   - callbackPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
-    ///   - callbackReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback
-    ///   - callbackRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
+    ///   - onPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
+    ///   - onReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback
+    ///   - onRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
     /// - Returns: A hotkey object, or null if creation failed. Call `.enable()` to activate it.
     /// - Example:
     /// ```js
@@ -61,7 +61,7 @@ import Carbon
     /// })
     /// hk.enable()
     /// ```
-    @objc func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey?
+    @objc func create(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey?
 
     /// Get a list of all currently-enabled hotkeys
     /// - Returns: An array of objects, each with `mods`, `key`, `message` and `enabled` fields
@@ -184,16 +184,16 @@ import Carbon
 
     // MARK: - Hotkey binding
 
-    @objc func bind(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey? {
+    @objc func bind(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey? {
         // bind() enables the hotkey immediately, so a hotkey with no callbacks at all would
         // silently claim the key combination and do nothing. Require at least one callback.
         // (create() stays permissive so callers can build a hotkey and assign callbacks later.)
-        guard callbackPressed.isFunction || callbackReleased.isFunction || callbackRepeat.isFunction else {
-            AKError("hs.hotkey.bind: at least one of callbackPressed, callbackReleased, or callbackRepeat must be a function")
+        guard onPressed.isFunction || onReleased.isFunction || onRepeat.isFunction else {
+            AKError("hs.hotkey.bind: at least one of onPressed, onReleased, or onRepeat must be a function")
             return nil
         }
 
-        guard let hotkey = create(mods, key, callbackPressed, callbackReleased, callbackRepeat) else { return nil }
+        guard let hotkey = create(mods, key, onPressed, onReleased, onRepeat) else { return nil }
 
         guard hotkey.enable() else {
             AKError("hs.hotkey.bind(): failed to enable hotkey: " + mods.joined(separator: ",") + ", " + key)
@@ -207,7 +207,7 @@ import Carbon
 
     // MARK: - Hotkey creation (without enabling)
 
-    @objc func create(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction, _ callbackRepeat: JSFunction) -> HSHotkey? {
+    @objc func create(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey? {
         guard let modifierFlags = parseModifiers(mods) else {
             AKError("hs.hotkey.create: Invalid modifiers")
             return nil
@@ -216,16 +216,16 @@ import Carbon
             AKError("hs.hotkey.create: Unknown key '\(key)'")
             return nil
         }
-        guard callbackPressed.isFunction || callbackPressed.isNull else {
-            AKError("hs.hotkey.create: callbackPressed must be either a function or null")
+        guard onPressed.isFunction || onPressed.isNull else {
+            AKError("hs.hotkey.create: onPressed must be either a function or null")
             return nil
         }
-        guard callbackReleased.isFunction || callbackReleased.isNull || callbackReleased.isUndefined else {
-            AKError("hs.hotkey.create: callbackReleased must be either a function, null, or omitted")
+        guard onReleased.isFunction || onReleased.isNull || onReleased.isUndefined else {
+            AKError("hs.hotkey.create: onReleased must be either a function, null, or omitted")
             return nil
         }
-        guard callbackRepeat.isFunction || callbackRepeat.isNull || callbackRepeat.isUndefined else {
-            AKError("hs.hotkey.create: callbackRepeat must be either a function, null, or omitted")
+        guard onRepeat.isFunction || onRepeat.isNull || onRepeat.isUndefined else {
+            AKError("hs.hotkey.create: onRepeat must be either a function, null, or omitted")
             return nil
         }
 
@@ -234,9 +234,9 @@ import Carbon
             modifiers: modifierFlags,
             mods: mods,
             key: key,
-            callbackPressed: callbackPressed.isFunction ? callbackPressed : nil,
-            callbackReleased: callbackReleased.isFunction ? callbackReleased : nil,
-            callbackRepeat: callbackRepeat.isFunction ? callbackRepeat : nil
+            onPressed: onPressed.isFunction ? onPressed : nil,
+            onReleased: onReleased.isFunction ? onReleased : nil,
+            onRepeat: onRepeat.isFunction ? onRepeat : nil
         )
 
         activeHotkeys.add(hotkey)

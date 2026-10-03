@@ -27,9 +27,7 @@ import IOKit.pwr_mgt
 /// ## Watching for system events
 ///
 /// ```js
-/// hs.power.addEventWatcher(event => {
-///     if (event === "screensDidLock") console.log("Screen locked!")
-/// })
+/// hs.power.on("screensDidLock", () => console.log("Screen locked!"))
 /// ```
 ///
 /// ## Reading battery state
@@ -198,36 +196,11 @@ import IOKit.pwr_mgt
     ///   ```
     func batteryInfo() -> [String: Any]?
 
-    // MARK: Event Watcher (Pattern A)
+    // MARK: Watcher
 
-    /// Registers a listener that fires when system power events occur.
-    ///
-    /// The listener receives a single string identifying the event. Possible values:
-    /// `"screensDidSleep"`, `"screensDidWake"`, `"screensDidLock"`, `"screensDidUnlock"`,
-    /// `"screensaverDidStart"`, `"screensaverDidStop"`, `"screensaverWillStop"`,
-    /// `"systemWillSleep"`, `"systemDidWake"`, `"systemWillPowerOff"`,
-    /// `"sessionDidBecomeActive"`, `"sessionDidResignActive"`.
-    ///
-    /// The OS notification subscription starts lazily on the first listener and
-    /// is released automatically when the last listener is removed.
-    /// - Parameter listener: {(eventName: string) => void} A function called with the power event name string.
-    /// - Example:
-    ///   ```js
-    ///   hs.power.addEventWatcher(event => console.log("Power event: " + event))
-    ///   ```
-    func addEventWatcher(_ listener: JSFunction)
-
-    /// Removes a previously registered power event listener.
-    ///
-    /// - Parameter listener: The function originally passed to `addEventWatcher`.
-    /// - Example:
-    ///   ```js
-    ///   const handler = event => console.log(event)
-    ///   hs.power.addEventWatcher(handler)
-    ///   hs.power.removeEventWatcher(handler)
-    ///   ```
-    func removeEventWatcher(_ listener: JSFunction)
-
+    // NOTE: Private API consumed only by hs.power.js. Two independent native watcher
+    // families exist - system power/session events share one notification stream, battery
+    // state uses a separate IOPS run-loop source - so each gets its own emitter in JS.
     /// SKIP_DOCS
     @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSFunction)
     /// SKIP_DOCS
@@ -235,41 +208,24 @@ import IOKit.pwr_mgt
     /// SKIP_DOCS
     @objc var _eventWatcherEmitter: JSFunction? { get set }
 
-    // MARK: Battery Watcher (Pattern A)
-
-    /// Registers a listener that fires whenever battery state changes.
-    ///
-    /// The listener receives no arguments; call `batteryInfo()` or read individual
-    /// properties inside the callback to determine what changed.
-    ///
-    /// The OS notification subscription starts lazily on the first listener and
-    /// is released automatically when the last listener is removed.
-    /// - Parameter listener: {() => void} A function called with no arguments on battery state change.
-    /// - Example:
-    ///   ```js
-    ///   hs.power.addBatteryWatcher(() => {
-    ///       console.log("Battery now: " + hs.power.percentage + "%")
-    ///   })
-    ///   ```
-    func addBatteryWatcher(_ listener: JSFunction)
-
-    /// Removes a previously registered battery change listener.
-    ///
-    /// - Parameter listener: The function originally passed to `addBatteryWatcher`.
-    /// - Example:
-    ///   ```js
-    ///   const handler = () => console.log("battery changed")
-    ///   hs.power.addBatteryWatcher(handler)
-    ///   hs.power.removeBatteryWatcher(handler)
-    ///   ```
-    func removeBatteryWatcher(_ listener: JSFunction)
-
     /// SKIP_DOCS
-    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction)
+    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeBatteryWatcher()
     /// SKIP_DOCS
     @objc var _batteryWatcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.power.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Module implementation
@@ -283,6 +239,9 @@ import IOKit.pwr_mgt
     private var sleepAssertions: [String: IOPMAssertionID] = [:]
 
     @objc var _eventWatcherEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
     private var eventWatcherCallback: JSFunction?
     private var workspaceObservers: [NSObjectProtocol] = []
     private var distributedObservers: [NSObjectProtocol] = []
@@ -324,6 +283,9 @@ import IOKit.pwr_mgt
         _removeBatteryWatcher()
         _eventWatcherEmitter = nil
         _batteryWatcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -552,15 +514,7 @@ import IOKit.pwr_mgt
         return info
     }
 
-    // MARK: - Event Watcher (Pattern A)
-
-    func addEventWatcher(_ listener: JSFunction) {
-        _eventWatcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    func removeEventWatcher(_ listener: JSFunction) {
-        _eventWatcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
+    // MARK: - Event Watcher
 
     @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSFunction) {
         guard eventWatcherCallback == nil else {
@@ -610,20 +564,12 @@ import IOKit.pwr_mgt
         AKDebug("hs.power._removeEventWatcher: stopped")
     }
 
-    // MARK: - Battery Watcher (Pattern A)
+    // MARK: - Battery Watcher
 
-    func addBatteryWatcher(_ listener: JSFunction) {
-        _batteryWatcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    func removeBatteryWatcher(_ listener: JSFunction) {
-        _batteryWatcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
-
-    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction) {
+    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction) -> Bool {
         guard batteryWatcherCallback == nil else {
             AKWarning("hs.power._addBatteryWatcher: already watching — refusing second subscription")
-            return
+            return false
         }
         batteryWatcherCallback = callback
 
@@ -647,12 +593,13 @@ import IOKit.pwr_mgt
             unsafe Unmanaged<HSPowerModule>.fromOpaque(ptr).release()
             unsafe batteryContextPointer = nil
             batteryWatcherCallback = nil
-            return
+            return false
         }
 
         batteryRunLoopSource = source
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .defaultMode)
         AKDebug("hs.power._addBatteryWatcher: started")
+        return true
     }
 
     @objc func _removeBatteryWatcher() {

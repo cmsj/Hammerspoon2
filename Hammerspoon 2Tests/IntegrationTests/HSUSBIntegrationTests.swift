@@ -26,14 +26,19 @@ struct HSUSBTests {
             #expect(makeHarness().evalTypeOf("hs.usb.attachedDevices") == "function")
         }
 
-        @Test("addWatcher is a function")
-        func testAddWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.usb.addWatcher") == "function")
+        @Test("on is a function")
+        func testOnIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.usb.on") == "function")
         }
 
-        @Test("removeWatcher is a function")
-        func testRemoveWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.usb.removeWatcher") == "function")
+        @Test("off is a function")
+        func testOffIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.usb.off") == "function")
+        }
+
+        @Test("once is a function")
+        func testOnceIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.usb.once") == "function")
         }
 
         @Test("_addWatcher is a function")
@@ -88,32 +93,87 @@ struct HSUSBTests {
             #expect(!harness.hasException)
         }
 
-        @Test("addWatcher with non-function causes a context exception")
-        func testAddWatcherNonFunctionCausesException() {
+        @Test("on with non-function listener causes a context exception")
+        func testOnNonFunctionCausesException() {
             let harness = makeHarness()
-            harness.eval("hs.usb.addWatcher('notAFunction')")
+            harness.eval("hs.usb.on('added', 'notAFunction')")
             harness.expectException()
         }
 
-        @Test("addWatcher and removeWatcher do not throw with a function")
-        func testAddRemoveWatcherNoThrow() {
+        @Test("on and off do not throw with a function")
+        func testOnOffNoThrow() {
             let harness = makeHarness()
             harness.eval("""
-                var fn = function(event, device) {};
-                hs.usb.addWatcher(fn);
-                hs.usb.removeWatcher(fn);
+                var fn = function(device) {};
+                hs.usb.on('added', fn);
+                hs.usb.off('added', fn);
             """)
             #expect(!harness.hasException)
         }
 
-        @Test("duplicate addWatcher registration is silently rejected")
-        func testDuplicateWatcherRejected() {
+        @Test("duplicate on registration for the same event is silently rejected")
+        func testDuplicateListenerRejected() {
             let harness = makeHarness()
             harness.eval("""
-                var fn = function(event, device) {};
-                hs.usb.addWatcher(fn);
-                hs.usb.addWatcher(fn);
-                hs.usb.removeWatcher(fn);
+                var fn = function(device) {};
+                hs.usb.on('added', fn);
+                hs.usb.on('added', fn);
+                hs.usb.off('added', fn);
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("listeners only receive the event they registered for")
+        func testListenersAreFilteredByEvent() {
+            let harness = makeHarness()
+            harness.eval("""
+                var addedCount = 0;
+                var removedCount = 0;
+                hs.usb.on('added', function() { addedCount++; });
+                hs.usb.on('removed', function() { removedCount++; });
+                // Simulate a native 'added' event without a real USB device attached.
+                hs.usb._watcherEmitter.emit('added', {});
+            """)
+            harness.expectEqual("addedCount", 1)
+            harness.expectEqual("removedCount", 0)
+            #expect(!harness.hasException)
+        }
+
+        @Test("once-registered listener fires only one time")
+        func testOnceFiresOnlyOnce() {
+            let harness = makeHarness()
+            harness.eval("""
+                var count = 0;
+                hs.usb.once('added', function() { count++; });
+                hs.usb._watcherEmitter.emit('added', {});
+                hs.usb._watcherEmitter.emit('added', {});
+            """)
+            harness.expectEqual("count", 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            // hs.usb exposed as a computed accessor (see makeUnpinned), not a stored value, so
+            // no particular JS wrapper for the module is kept reachable. on/off/once are set by
+            // hs.usb.js as plain JS-function assignments (`hs.usb.on = function(...) {...}`);
+            // those only survive a GC pass because HSUSBModuleAPI pre-declares `on`/`off`/`once`
+            // as real @objc properties (Swift-retained storage) rather than leaving them as
+            // dynamically-added JS properties, which JavaScriptCore drops the first time it
+            // collects a wrapper - see issue #185.
+            let (harness, _) = JSTestHarness.makeUnpinned(HSUSBModule.self, as: "usb")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.usb.on") == "function")
+            #expect(harness.evalTypeOf("hs.usb.off") == "function")
+            #expect(harness.evalTypeOf("hs.usb.once") == "function")
+
+            harness.eval("""
+                var fn = function(device) {};
+                hs.usb.on('added', fn);
+                hs.usb.off('added', fn);
             """)
             #expect(!harness.hasException)
         }

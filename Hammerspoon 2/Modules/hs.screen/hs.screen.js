@@ -5,44 +5,55 @@
 
 "use strict";
 
-// One-to-many event emitter for hs.screen display-configuration-change events.
-// Lazily starts the underlying watcher on first listener and stops it when the last one is removed.
-class ScreenWatcherEmitter {
-    #listeners = []
+// Lazily starts the underlying display-configuration-change watcher on the first listener and
+// stops it once the last listener is removed. See Engine/engine.js for LazyWatcherEmitter itself.
+// hs.screen only ever emits one kind of event ("change"), but on/off/once still take an explicit
+// event name for consistency with every other hs.* module-level watcher.
+hs.screen._watcherEmitter = new LazyWatcherEmitter("hs.screen", function() {
+    hs.screen._addWatcher(() => {
+        hs.screen._watcherEmitter.emit('change');
+    });
+}, function() {
+    hs.screen._removeWatcher();
+});
 
-    #handleChange() {
-        const listeners = this.#listeners.slice();
-        for (var i = 0; i < listeners.length; i++) {
-            listeners[i].call(null);
-        }
-    }
+/// Register a listener that fires whenever the display configuration changes — monitors
+/// connected/disconnected displays, resolution or arrangement changes, or the menu bar moving
+/// to a different display.
+/// Parameters:
+///  - event: {"change"} The event to listen for (the only event this module emits)
+///  - listener: {() => void} Called with no arguments when the display configuration changes; call all()/main()/primary() inside it to inspect the new configuration
+/// Example:
+/// ```js
+/// hs.screen.on('change', () => console.log("Screens changed, now: " + hs.screen.all().length))
+/// ```
+hs.screen.on = function(event, listener) {
+    hs.screen._watcherEmitter.on(event, listener);
+};
 
-    on(listener) {
-        if (typeof listener !== 'function') {
-            throw new Error("hs.screen.addWatcher(): listener must be a function");
-        }
-        if (this.#listeners.includes(listener)) {
-            console.error("hs.screen.addWatcher(): listener is already registered");
-            return;
-        }
-        if (this.#listeners.length === 0) {
-            hs.screen._addWatcher(() => {
-                this.#handleChange();
-            });
-        }
-        this.#listeners.push(listener);
-    }
+/// Remove a previously registered display-configuration listener.
+/// Parameters:
+///  - event: {"change"} The event the listener was registered for
+///  - listener: {() => void} The function originally passed to `on`
+/// Example:
+/// ```js
+/// const onChange = () => console.log("screens changed")
+/// hs.screen.on('change', onChange)
+/// // later…
+/// hs.screen.off('change', onChange)
+/// ```
+hs.screen.off = function(event, listener) {
+    hs.screen._watcherEmitter.off(event, listener);
+};
 
-    removeListener(listener) {
-        const idx = this.#listeners.indexOf(listener);
-        if (idx > -1) {
-            this.#listeners.splice(idx, 1);
-        }
-        if (this.#listeners.length === 0) {
-            hs.screen._removeWatcher();
-        }
-    }
-}
-
-// Store the emitter in a Swift-retained property so it is not garbage collected.
-hs.screen._watcherEmitter = new ScreenWatcherEmitter();
+/// Register a listener that fires at most once, the next time the display configuration changes.
+/// Parameters:
+///  - event: {"change"} The event to listen for
+///  - listener: {() => void} Called once, then automatically removed
+/// Example:
+/// ```js
+/// hs.screen.once('change', () => console.log("First change detected"))
+/// ```
+hs.screen.once = function(event, listener) {
+    hs.screen._watcherEmitter.once(event, listener);
+};

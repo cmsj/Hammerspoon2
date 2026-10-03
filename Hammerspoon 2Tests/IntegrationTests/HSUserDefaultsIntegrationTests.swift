@@ -42,14 +42,38 @@ struct HSUserDefaultsTests {
             #expect(makeHarness().evalTypeOf("hs.userdefaults.getKeys") == "function")
         }
 
-        @Test("addWatcher is a function")
-        func testAddWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.userdefaults.addWatcher") == "function")
+        @Test("on is a function")
+        func testOnIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.on") == "function")
         }
 
-        @Test("removeWatcher is a function")
-        func testRemoveWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.userdefaults.removeWatcher") == "function")
+        @Test("off is a function")
+        func testOffIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.off") == "function")
+        }
+
+        @Test("once is a function")
+        func testOnceIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.userdefaults.once") == "function")
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSUserDefaultsModule.self, as: "userdefaults")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.userdefaults.on") == "function")
+            #expect(harness.evalTypeOf("hs.userdefaults.off") == "function")
+            #expect(harness.evalTypeOf("hs.userdefaults.once") == "function")
+
+            harness.eval("""
+                var fn = function(v) {};
+                hs.userdefaults.on('__gcTestKey', fn);
+                hs.userdefaults.off('__gcTestKey', fn);
+            """)
+            #expect(!harness.hasException)
         }
 
         @Test("_watcherEmitter is initialized by hs.userdefaults.js")
@@ -269,26 +293,24 @@ struct HSUserDefaultsTests {
             "hs_userdefaults_test_\(UUID().uuidString)"
         }
 
-        @Test("watcher fires with the key and new value when the key changes")
+        @Test("watcher fires with the new value when the key changes")
         func testWatcherFiresOnChange() {
             let key = testKey()
             let harness = makeHarness()
             defer { harness.eval("hs.userdefaults.clear('\(key)')") }
 
             harness.eval("""
-                var seenKey = null
                 var seenValue = null
-                function handler(k, v) { seenKey = k; seenValue = v }
-                hs.userdefaults.addWatcher('\(key)', handler)
+                function handler(v) { seenValue = v }
+                hs.userdefaults.on('\(key)', handler)
                 hs.userdefaults.set('\(key)', 'watched-value')
             """)
-            #expect(harness.evalString("seenKey") == "\(key)")
             #expect(harness.evalString("seenValue") == "watched-value")
             #expect(!harness.hasException)
         }
 
-        @Test("removeWatcher stops further callbacks for that listener")
-        func testRemoveWatcherStopsCallbacks() {
+        @Test("off stops further callbacks for that listener")
+        func testOffStopsCallbacks() {
             let key = testKey()
             let harness = makeHarness()
             defer { harness.eval("hs.userdefaults.clear('\(key)')") }
@@ -296,9 +318,9 @@ struct HSUserDefaultsTests {
             harness.eval("""
                 var callCount = 0
                 function handler() { callCount++ }
-                hs.userdefaults.addWatcher('\(key)', handler)
+                hs.userdefaults.on('\(key)', handler)
                 hs.userdefaults.set('\(key)', 'first')
-                hs.userdefaults.removeWatcher('\(key)', handler)
+                hs.userdefaults.off('\(key)', handler)
                 hs.userdefaults.set('\(key)', 'second')
             """)
             #expect(harness.evalInt("callCount") == 1)
@@ -316,8 +338,8 @@ struct HSUserDefaultsTests {
                 var bCount = 0
                 function handlerA() { aCount++ }
                 function handlerB() { bCount++ }
-                hs.userdefaults.addWatcher('\(key)', handlerA)
-                hs.userdefaults.addWatcher('\(key)', handlerB)
+                hs.userdefaults.on('\(key)', handlerA)
+                hs.userdefaults.on('\(key)', handlerB)
                 hs.userdefaults.set('\(key)', 'value')
             """)
             #expect(harness.evalInt("aCount") == 1)
@@ -334,11 +356,48 @@ struct HSUserDefaultsTests {
             harness.eval("""
                 var callCount = 0
                 function handler() { callCount++ }
-                hs.userdefaults.addWatcher('\(key)', handler)
-                hs.userdefaults.addWatcher('\(key)', handler)
+                hs.userdefaults.on('\(key)', handler)
+                hs.userdefaults.on('\(key)', handler)
                 hs.userdefaults.set('\(key)', 'value')
             """)
             #expect(harness.evalInt("callCount") == 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("watching two different keys fires independently")
+        func testIndependentKeysFireIndependently() {
+            let keyA = testKey()
+            let keyB = testKey()
+            let harness = makeHarness()
+            defer {
+                harness.eval("hs.userdefaults.clear('\(keyA)')")
+                harness.eval("hs.userdefaults.clear('\(keyB)')")
+            }
+
+            harness.eval("""
+                var aCount = 0, bCount = 0
+                hs.userdefaults.on('\(keyA)', function() { aCount++; });
+                hs.userdefaults.on('\(keyB)', function() { bCount++; });
+                hs.userdefaults.set('\(keyA)', 'value');
+            """)
+            #expect(harness.evalInt("aCount") == 1)
+            #expect(harness.evalInt("bCount") == 0)
+            #expect(!harness.hasException)
+        }
+
+        @Test("once-registered listener fires only one time")
+        func testOnceFiresOnlyOnce() {
+            let key = testKey()
+            let harness = makeHarness()
+            defer { harness.eval("hs.userdefaults.clear('\(key)')") }
+
+            harness.eval("""
+                var count = 0
+                hs.userdefaults.once('\(key)', function() { count++; })
+                hs.userdefaults.set('\(key)', 'first')
+                hs.userdefaults.set('\(key)', 'second')
+            """)
+            #expect(harness.evalInt("count") == 1)
             #expect(!harness.hasException)
         }
     }
