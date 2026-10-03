@@ -294,10 +294,6 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             return false
         }
 
-        watcherCallback = listener
-        watcherCMIOID = cmioID
-        selfRetain = self
-
         var address = CMIOObjectPropertyAddress(
             mSelector: CMIOObjectPropertySelector(kCMIODevicePropertyDeviceIsRunningSomewhere),
             mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeWildcard),
@@ -310,8 +306,15 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
                 _ = self.watcherCallback?.call(withArguments: [inUse])
             }
         }
+        guard unsafe CMIOObjectAddPropertyListenerBlock(cmioID, &address, .main, block) == noErr else {
+            AKError("hs.camera._addWatcher(): CMIOObjectAddPropertyListenerBlock failed for '\(name)'")
+            return false
+        }
+
+        watcherCallback = listener
+        watcherCMIOID = cmioID
+        selfRetain = self
         unsafe cmioListenerBlock = block
-        unsafe CMIOObjectAddPropertyListenerBlock(cmioID, &address, .main, block)
         AKDebug("hs.camera._addWatcher(): Started watching '\(name)'")
         return true
     }
