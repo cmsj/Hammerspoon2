@@ -443,9 +443,15 @@ private enum HSWifiError: LocalizedError {
             AKWarning("hs.wifi.on(): unrecognized event name '\(event)'")
             return false
         }
-        guard watcherCallbacks[event] == nil else {
-            AKWarning("hs.wifi.on(): already watching '\(event)'. Refusing to create a second.")
-            return false
+        if watcherCallbacks[event] != nil {
+            // Either genuinely already watching (shouldn't happen - the JS emitter only calls
+            // this on a 0->1 listener transition), or - more likely - a previous _removeWatcher
+            // for this event failed to actually stop CoreWLAN monitoring (see below), leaving
+            // native delivery still active. Either way, reuse the existing registration rather
+            // than attempting (and likely failing identically) a redundant startMonitoringEvent.
+            AKWarning("hs.wifi.on(): '\(event)' is already active; reusing the existing registration")
+            watcherCallbacks[event] = listener
+            return true
         }
         do {
             try client.startMonitoringEvent(with: type)
@@ -465,7 +471,12 @@ private enum HSWifiError: LocalizedError {
         do {
             try client.stopMonitoringEvent(with: type)
         } catch {
-            AKError("hs.wifi.off(): failed to stop monitoring '\(event)': \(error.localizedDescription)")
+            // CoreWLAN may still be delivering native events for this type - keep the callback
+            // registered (rather than clearing it) so dispatch keeps working and state stays
+            // consistent with reality, instead of silently going deaf and letting a later on()
+            // attempt a redundant (and likely failing) re-registration. See _addWatcher above.
+            AKError("hs.wifi.off(): failed to stop monitoring '\(event)' - leaving watcher state intact: \(error.localizedDescription)")
+            return
         }
         watcherCallbacks.removeValue(forKey: event)
         AKDebug("hs.wifi.off(): stopped watching '\(event)'")

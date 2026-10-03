@@ -183,6 +183,33 @@ struct HSWifiTests {
             harness.expectFalse("Array.isArray(hs.wifi._watcherEmitter.events['bogusEvent'])")
         }
 
+        @Test("_addWatcher reuses an already-active registration instead of refusing")
+        func testAddWatcherReusesAlreadyActiveRegistration() {
+            // Regression test for a code review comment: if a previous _removeWatcher call for
+            // an event failed to actually stop CoreWLAN monitoring, the old behavior cleared
+            // watcherCallbacks anyway, leaving no way to recover - a later on() call would hit
+            // "already watching" from CoreWLAN's perspective (if it re-attempted) with no state
+            // on our side to detect or handle that. The real CoreWLAN stop failure can't be
+            // forced from a test (no hardware mocking for CWWiFiClient), but the externally
+            // observable fix is here: _addWatcher must now succeed (reusing the existing
+            // registration) rather than warn-and-refuse when called while already registered -
+            // exactly the state a failed stop would have left behind. Calling it directly twice
+            // in a row exercises that same "already registered" branch without needing to
+            // simulate the failure that would normally lead to it.
+            let harness = makeHarness()
+            harness.eval("""
+                var fn1 = function() {};
+                var started1 = hs.wifi._addWatcher('ssidChange', fn1);
+                var fn2 = function() {};
+                var started2 = hs.wifi._addWatcher('ssidChange', fn2);
+            """)
+            #expect(!harness.hasException)
+            harness.expectTrue("started1")
+            harness.expectTrue("started2")
+            harness.eval("hs.wifi._removeWatcher('ssidChange')")
+            #expect(!harness.hasException)
+        }
+
         @Test("once-registered listener fires only one time")
         func testOnceFiresOnlyOnce() {
             let harness = makeHarness()
