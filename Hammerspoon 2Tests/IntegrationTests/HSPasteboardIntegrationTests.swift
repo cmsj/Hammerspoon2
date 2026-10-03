@@ -120,14 +120,19 @@ struct HSPasteboardTests {
 
         // MARK: Watcher API
 
-        @Test("addWatcher is a function") func testAddWatcherIsFunction() {
+        @Test("on is a function") func testOnIsFunction() {
             let harness = makeHarness()
-            #expect(harness.evalTypeOf("hs.pasteboard.addWatcher") == "function")
+            #expect(harness.evalTypeOf("hs.pasteboard.on") == "function")
         }
 
-        @Test("removeWatcher is a function") func testRemoveWatcherIsFunction() {
+        @Test("off is a function") func testOffIsFunction() {
             let harness = makeHarness()
-            #expect(harness.evalTypeOf("hs.pasteboard.removeWatcher") == "function")
+            #expect(harness.evalTypeOf("hs.pasteboard.off") == "function")
+        }
+
+        @Test("once is a function") func testOnceIsFunction() {
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.pasteboard.once") == "function")
         }
 
         @Test("watcherInterval is a number") func testWatcherIntervalIsNumber() {
@@ -443,27 +448,27 @@ struct HSPasteboardTests {
             return harness
         }
 
-        @Test("addWatcher throws when listener is not a function")
-        func testAddWatcherThrowsForNonFunction() {
+        @Test("on throws when listener is not a function")
+        func testOnThrowsForNonFunction() {
             let harness = makeHarness()
-            harness.eval("hs.pasteboard.addWatcher('not a function')")
+            harness.eval("hs.pasteboard.on('change', 'not a function')")
             #expect(harness.hasException)
         }
 
-        @Test("addWatcher throws when listener is null")
-        func testAddWatcherThrowsForNull() {
+        @Test("on throws when listener is null")
+        func testOnThrowsForNull() {
             let harness = makeHarness()
-            harness.eval("hs.pasteboard.addWatcher(null)")
+            harness.eval("hs.pasteboard.on('change', null)")
             #expect(harness.hasException)
         }
 
-        @Test("addWatcher and removeWatcher cycle completes without error")
+        @Test("on and off cycle completes without error")
         func testAddRemoveCycleIsSafe() {
             let harness = makeHarness()
             harness.eval("""
             var _pw1Fn = function(count) {};
-            hs.pasteboard.addWatcher(_pw1Fn);
-            hs.pasteboard.removeWatcher(_pw1Fn);
+            hs.pasteboard.on('change', _pw1Fn);
+            hs.pasteboard.off('change', _pw1Fn);
         """)
             #expect(!harness.hasException)
         }
@@ -473,9 +478,9 @@ struct HSPasteboardTests {
             let harness = makeHarness()
             harness.eval("""
             var _pw2Fn = function(count) {};
-            hs.pasteboard.addWatcher(_pw2Fn);
-            hs.pasteboard.addWatcher(_pw2Fn);
-            hs.pasteboard.removeWatcher(_pw2Fn);
+            hs.pasteboard.on('change', _pw2Fn);
+            hs.pasteboard.on('change', _pw2Fn);
+            hs.pasteboard.off('change', _pw2Fn);
         """)
             #expect(!harness.hasException)
         }
@@ -487,20 +492,20 @@ struct HSPasteboardTests {
             var _pw3Fn1 = function(count) {};
             var _pw3Fn2 = function(count) {};
             var _pw3Fn3 = function(count) {};
-            hs.pasteboard.addWatcher(_pw3Fn1);
-            hs.pasteboard.addWatcher(_pw3Fn2);
-            hs.pasteboard.addWatcher(_pw3Fn3);
-            hs.pasteboard.removeWatcher(_pw3Fn1);
-            hs.pasteboard.removeWatcher(_pw3Fn2);
-            hs.pasteboard.removeWatcher(_pw3Fn3);
+            hs.pasteboard.on('change', _pw3Fn1);
+            hs.pasteboard.on('change', _pw3Fn2);
+            hs.pasteboard.on('change', _pw3Fn3);
+            hs.pasteboard.off('change', _pw3Fn1);
+            hs.pasteboard.off('change', _pw3Fn2);
+            hs.pasteboard.off('change', _pw3Fn3);
         """)
             #expect(!harness.hasException)
         }
 
-        @Test("removeWatcher with an unregistered listener does not throw")
+        @Test("off with an unregistered listener does not throw")
         func testRemoveUnregisteredListenerIsSafe() {
             let harness = makeHarness()
-            harness.eval("hs.pasteboard.removeWatcher(function(count) {})")
+            harness.eval("hs.pasteboard.off('change', function(count) {})")
             #expect(!harness.hasException)
         }
 
@@ -510,10 +515,10 @@ struct HSPasteboardTests {
             harness.eval("""
             var _pw4Fn1 = function(count) {};
             var _pw4Fn2 = function(count) {};
-            hs.pasteboard.addWatcher(_pw4Fn1);
-            hs.pasteboard.addWatcher(_pw4Fn2);
-            hs.pasteboard.removeWatcher(_pw4Fn1);
-            hs.pasteboard.removeWatcher(_pw4Fn2);
+            hs.pasteboard.on('change', _pw4Fn1);
+            hs.pasteboard.on('change', _pw4Fn2);
+            hs.pasteboard.off('change', _pw4Fn1);
+            hs.pasteboard.off('change', _pw4Fn2);
         """)
             #expect(!harness.hasException)
         }
@@ -541,10 +546,10 @@ struct HSPasteboardTests {
             harness.eval("""
             var _we1Count = 0;
             var _we1Fn = function(changeCount) { _we1Count++; };
-            hs.pasteboard.addWatcher(_we1Fn);
+            hs.pasteboard.on('change', _we1Fn);
         """)
             defer {
-                harness.eval("hs.pasteboard.removeWatcher(_we1Fn)")
+                harness.eval("hs.pasteboard.off('change', _we1Fn)")
                 harness.eval("hs.pasteboard.watcherInterval = 0.5")
             }
 
@@ -568,10 +573,10 @@ struct HSPasteboardTests {
             var _we2Fn = function(changeCount) {
                 if (_we2ReceivedCount === null) { _we2ReceivedCount = changeCount; }
             };
-            hs.pasteboard.addWatcher(_we2Fn);
+            hs.pasteboard.on('change', _we2Fn);
         """)
             defer {
-                harness.eval("hs.pasteboard.removeWatcher(_we2Fn)")
+                harness.eval("hs.pasteboard.off('change', _we2Fn)")
                 harness.eval("hs.pasteboard.watcherInterval = 0.5")
             }
 
@@ -599,13 +604,13 @@ struct HSPasteboardTests {
             var _we3Count1 = 0, _we3Count2 = 0;
             var _we3Fn1 = function(c) { _we3Count1++; };
             var _we3Fn2 = function(c) { _we3Count2++; };
-            hs.pasteboard.addWatcher(_we3Fn1);
-            hs.pasteboard.addWatcher(_we3Fn2);
+            hs.pasteboard.on('change', _we3Fn1);
+            hs.pasteboard.on('change', _we3Fn2);
         """)
             defer {
                 harness.eval("""
-                hs.pasteboard.removeWatcher(_we3Fn1);
-                hs.pasteboard.removeWatcher(_we3Fn2);
+                hs.pasteboard.off('change', _we3Fn1);
+                hs.pasteboard.off('change', _we3Fn2);
             """)
                 harness.eval("hs.pasteboard.watcherInterval = 0.5")
             }
@@ -634,12 +639,12 @@ struct HSPasteboardTests {
             var _we4RemovedCount = 0, _we4KeptCount = 0;
             var _we4RemovedFn = function(c) { _we4RemovedCount++; };
             var _we4KeptFn    = function(c) { _we4KeptCount++; };
-            hs.pasteboard.addWatcher(_we4RemovedFn);
-            hs.pasteboard.addWatcher(_we4KeptFn);
-            hs.pasteboard.removeWatcher(_we4RemovedFn);
+            hs.pasteboard.on('change', _we4RemovedFn);
+            hs.pasteboard.on('change', _we4KeptFn);
+            hs.pasteboard.off('change', _we4RemovedFn);
         """)
             defer {
-                harness.eval("hs.pasteboard.removeWatcher(_we4KeptFn)")
+                harness.eval("hs.pasteboard.off('change', _we4KeptFn)")
                 harness.eval("hs.pasteboard.watcherInterval = 0.5")
             }
 
@@ -656,6 +661,38 @@ struct HSPasteboardTests {
             } else {
                 #expect(Bool(false), "The kept watcher callback should have fired")
             }
+        }
+
+        @Test("once-registered listener fires only one time")
+        func testOnceFiresOnlyOnce() {
+            let harness = makeHarness()
+            harness.eval("""
+                var count = 0;
+                hs.pasteboard.once('change', function() { count++; });
+                hs.pasteboard._watcherEmitter.emit('change', 1);
+                hs.pasteboard._watcherEmitter.emit('change', 2);
+            """)
+            harness.expectEqual("count", 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSPasteboardModule.self, as: "pasteboard")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.pasteboard.on") == "function")
+            #expect(harness.evalTypeOf("hs.pasteboard.off") == "function")
+            #expect(harness.evalTypeOf("hs.pasteboard.once") == "function")
+
+            harness.eval("""
+                var fn = function(count) {};
+                hs.pasteboard.on('change', fn);
+                hs.pasteboard.off('change', fn);
+            """)
+            #expect(!harness.hasException)
         }
     }
 }

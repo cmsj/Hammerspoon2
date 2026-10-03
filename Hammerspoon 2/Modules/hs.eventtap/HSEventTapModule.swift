@@ -390,8 +390,8 @@ import AppKit
     ///     `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
     ///     `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
     ///   - key: The key name or character (e.g., "a", "space", "f1")
-    ///   - callbackPressed: {(() => void) | null} Called when the key combination is pressed, or null
-    ///   - callbackReleased: {(() => void) | null} Called when the key combination is released, or null
+    ///   - onPressed: {(() => void) | null} Called when the key combination is pressed, or null
+    ///   - onReleased: {(() => void) | null} Called when the key combination is released, or null
     /// - Returns: An `HSEventTapHotkey` object, or null if binding failed
     /// - Example:
     /// ```js
@@ -405,7 +405,7 @@ import AppKit
     ///     console.log("Left Cmd+H!")
     /// }, null)
     /// ```
-    @objc func bindHotkey(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSEventTapHotkey?
+    @objc func bindHotkey(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction) -> HSEventTapHotkey?
 
     /// Remove a previously bound hotkey and stop it from firing
     /// - Parameter hotkey: The HSEventTapHotkey returned by `bindHotkey`
@@ -803,7 +803,7 @@ import AppKit
 
     // MARK: - Hotkey binding
 
-    @objc func bindHotkey(_ mods: [String], _ key: String, _ callbackPressed: JSFunction, _ callbackReleased: JSFunction) -> HSEventTapHotkey? {
+    @objc func bindHotkey(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction) -> HSEventTapHotkey? {
         guard let (flags, deviceBits) = EventTapModifierMapper.parse(mods) else {
             AKError("hs.eventtap.bindHotkey: Invalid modifiers")
             return nil
@@ -812,12 +812,12 @@ import AppKit
             AKError("hs.eventtap.bindHotkey: Unknown key '\(key)'")
             return nil
         }
-        guard callbackPressed.isFunction || callbackPressed.isNull else {
-            AKError("hs.eventtap.bindHotkey: callbackPressed must be a function or null")
+        guard onPressed.isFunction || onPressed.isNull else {
+            AKError("hs.eventtap.bindHotkey: onPressed must be a function or null")
             return nil
         }
-        guard callbackReleased.isFunction || callbackReleased.isNull else {
-            AKError("hs.eventtap.bindHotkey: callbackReleased must be a function or null")
+        guard onReleased.isFunction || onReleased.isNull else {
+            AKError("hs.eventtap.bindHotkey: onReleased must be a function or null")
             return nil
         }
 
@@ -826,8 +826,8 @@ import AppKit
             requiredFlags: flags,
             requiredDeviceBits: deviceBits,
             coordinator: self,
-            callbackPressed: callbackPressed.isNull ? nil : callbackPressed,
-            callbackReleased: callbackReleased.isNull ? nil : callbackReleased
+            onPressed: onPressed.isNull ? nil : onPressed,
+            onReleased: onReleased.isNull ? nil : onReleased
         )
 
         guard hotkey.enable() else {

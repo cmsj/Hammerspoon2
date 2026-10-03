@@ -178,11 +178,11 @@ struct HSHotkeyTests {
             }
         }
 
-        @Test("callbackPressed is settable after bind")
+        @Test("onPressed is settable after bind")
         func testCallbackPressedIsSettable() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], '5', () => {}, () => {})")
-            harness.eval("hk.callbackPressed = () => {}")
+            harness.eval("hk.onPressed = () => {}")
             #expect(!harness.hasException)
         }
 
@@ -219,44 +219,44 @@ struct HSHotkeyTests {
             #expect(!harness.hasException)
         }
 
-        @Test("callbackRepeat is settable after bind")
+        @Test("onRepeat is settable after bind")
         func testCallbackRepeatIsSettable() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'q', () => {}, () => {})")
-            harness.eval("hk.callbackRepeat = () => {}")
-            harness.expectTrue("typeof hk.callbackRepeat === 'function'")
+            harness.eval("hk.onRepeat = () => {}")
+            harness.expectTrue("typeof hk.onRepeat === 'function'")
             #expect(!harness.hasException)
         }
 
-        @Test("bind accepts callbackRepeat as a 5th positional argument")
+        @Test("bind accepts onRepeat as a 5th positional argument")
         func testBindAcceptsCallbackRepeatAsFifthArgument() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'g', () => {}, () => {}, () => {})")
-            harness.expectTrue("typeof hk.callbackRepeat === 'function'")
+            harness.expectTrue("typeof hk.onRepeat === 'function'")
             #expect(!harness.hasException)
         }
 
-        @Test("create accepts callbackRepeat as a 5th positional argument")
+        @Test("create accepts onRepeat as a 5th positional argument")
         func testCreateAcceptsCallbackRepeatAsFifthArgument() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.create(['ctrl'], 'h', () => {}, () => {}, () => {})")
-            harness.expectTrue("typeof hk.callbackRepeat === 'function'")
+            harness.expectTrue("typeof hk.onRepeat === 'function'")
             #expect(!harness.hasException)
         }
 
-        @Test("bind without a 5th argument leaves callbackRepeat unset")
+        @Test("bind without a 5th argument leaves onRepeat unset")
         func testBindWithoutFifthArgumentLeavesCallbackRepeatUnset() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'j', () => {}, () => {})")
-            harness.expectTrue("hk.callbackRepeat === null || hk.callbackRepeat === undefined")
+            harness.expectTrue("hk.onRepeat === null || hk.onRepeat === undefined")
             #expect(!harness.hasException)
         }
 
-        @Test("bind treats an explicit null callbackRepeat the same as omitting it")
+        @Test("bind treats an explicit null onRepeat the same as omitting it")
         func testBindWithNullCallbackRepeat() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'k', () => {}, () => {}, null)")
-            harness.expectTrue("hk.callbackRepeat === null || hk.callbackRepeat === undefined")
+            harness.expectTrue("hk.onRepeat === null || hk.onRepeat === undefined")
             #expect(!harness.hasException)
         }
 
@@ -273,7 +273,7 @@ struct HSHotkeyTests {
         func testBindOmittedReleasedIsUnset() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'd', () => {})")
-            harness.expectTrue("hk.callbackReleased === null || hk.callbackReleased === undefined")
+            harness.expectTrue("hk.onReleased === null || hk.onReleased === undefined")
             #expect(!harness.hasException)
         }
 
@@ -285,13 +285,13 @@ struct HSHotkeyTests {
             #expect(!harness.hasException)
         }
 
-        @Test("repeat-only hotkey (pressed and released null) sets callbackRepeat")
+        @Test("repeat-only hotkey (pressed and released null) sets onRepeat")
         func testRepeatOnlyHotkeySetsRepeat() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'm', null, null, () => {})")
             harness.expectTrue("typeof hk === 'object' && hk !== null")
-            #expect(harness.evalTypeOf("hk.callbackRepeat") == "function")
-            harness.expectTrue("hk.callbackPressed === null || hk.callbackPressed === undefined")
+            #expect(harness.evalTypeOf("hk.onRepeat") == "function")
+            harness.expectTrue("hk.onPressed === null || hk.onPressed === undefined")
             #expect(!harness.hasException)
         }
 
@@ -299,7 +299,7 @@ struct HSHotkeyTests {
         func testTriggerWithRepeatDoesNotThrow() {
             let harness = makeHarness()
             harness.eval("var hk = hs.hotkey.bind(['ctrl'], 'w', () => {}, () => {})")
-            harness.eval("hk.callbackRepeat = () => {}")
+            harness.eval("hk.onRepeat = () => {}")
             guard let hotkey = harness.evalValue("hk")?.toObjectOf(HSHotkey.self) as? HSHotkey else {
                 Issue.record("Could not extract HSHotkey")
                 return

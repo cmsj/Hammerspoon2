@@ -38,8 +38,8 @@ import AppKit
 ///     console.log("Pasteboard changed, count:", changeCount)
 ///     console.log("New text:", hs.pasteboard.readString())
 /// }
-/// hs.pasteboard.addWatcher(handler)
-/// // Later: hs.pasteboard.removeWatcher(handler)
+/// hs.pasteboard.on("change", handler)
+/// // Later: hs.pasteboard.off("change", handler)
 /// ```
 ///
 /// ## Pasteboard Conventions (nspasteboard.org)
@@ -94,7 +94,7 @@ import AppKit
 ///
 /// ### For scripts that monitor the pasteboard
 ///
-/// If you are building a clipboard history tool with `addWatcher`, skip or obfuscate entries that
+/// If you are building a clipboard history tool with `on`, skip or obfuscate entries that
 /// carry any of the marker UTIs listed above:
 ///
 /// ```js
@@ -110,7 +110,7 @@ import AppKit
 ///     "com.agilebits.onepassword",
 /// ]
 ///
-/// hs.pasteboard.addWatcher((changeCount) => {
+/// hs.pasteboard.on("change", (changeCount) => {
 ///     const types = hs.pasteboard.types()
 ///     if (SKIP_TYPES.some(t => types.includes(t))) return        // ignore transient
 ///     const conceal = CONCEAL_TYPES.some(t => types.includes(t)) // handle sensitively
@@ -292,34 +292,25 @@ import AppKit
     /// ```
     @objc var watcherInterval: Double { get set }
 
-    /// Add a watcher that is called whenever the pasteboard contents change.
-    /// Multiple watchers may be registered; they are each called independently.
-    /// Because macOS provides no pasteboard change notification API, this is implemented
-    /// by polling `changeCount` at the interval specified by `watcherInterval`.
-    /// - Parameter listener: {(changeCount: number) => void} A function called with the new `changeCount` integer whenever the pasteboard changes
-    /// - Example:
-    /// ```js
-    /// hs.pasteboard.addWatcher((count) => {
-    ///     console.log("Pasteboard changed:", count)
-    /// })
-    /// ```
-    @objc func addWatcher(_ listener: JSFunction)
-
-    /// Remove a previously registered pasteboard watcher
-    /// - Parameter listener: The function previously passed to `addWatcher`
-    /// - Example:
-    /// ```js
-    /// hs.pasteboard.removeWatcher(myHandler)
-    /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
-
     // NOTE: Private API consumed only by hs.pasteboard.js
     /// SKIP_DOCS
-    @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ callback: JSFunction)
+    @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ listener: JSFunction)
     /// SKIP_DOCS
     @objc func _stopWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.pasteboard.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -332,6 +323,9 @@ import AppKit
 
     @objc var watcherInterval: Double = 0.5
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
 
     private var watcherTimer: Timer? = nil
     private var watcherCallback: JSFunction? = nil
@@ -346,6 +340,9 @@ import AppKit
     func shutdown() {
         _stopWatcher()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -476,18 +473,10 @@ import AppKit
 
     // MARK: - Watcher
 
-    @objc func addWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
-
-    @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ callback: JSFunction) {
+    @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ listener: JSFunction) {
         _stopWatcher()
         lastChangeCount = NSPasteboard.general.changeCount
-        watcherCallback = callback
+        watcherCallback = listener
         watcherTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }

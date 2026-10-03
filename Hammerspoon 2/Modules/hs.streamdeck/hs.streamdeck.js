@@ -1,42 +1,52 @@
 "use strict";
 
-// Module-level one-to-many emitter for device connect/disconnect events.
-class StreamDeckModuleWatcherEmitter {
-    #listeners = []
+// Lazily starts the underlying IOKit watcher on the first listener (for either event) and stops
+// it once the last listener (across both events) is removed. See Engine/engine.js for
+// LazyWatcherEmitter itself.
+hs.streamdeck._watcherEmitter = new LazyWatcherEmitter("hs.streamdeck", function() {
+    hs.streamdeck._addWatcher((event, device) => {
+        hs.streamdeck._watcherEmitter.emit(event, device);
+    });
+}, function() {
+    hs.streamdeck._removeWatcher();
+});
 
-    #handleEvent(event, device) {
-        var listeners = this.#listeners.slice();
-        for (var i = 0; i < listeners.length; i++) {
-            listeners[i].apply(null, [event, device]);
-        }
-    }
+/// Register a listener for Stream Deck connect/disconnect events.
+/// Parameters:
+///  - event: {"connected" | "disconnected"} The event to listen for
+///  - listener: {(device: HSStreamDeckDevice) => void} Called with the affected device when a matching event occurs
+/// Example:
+/// ```js
+/// hs.streamdeck.on('connected', device => console.log("connected: " + device.deckType))
+/// hs.streamdeck.on('disconnected', device => console.log("disconnected: " + device.deckType))
+/// ```
+hs.streamdeck.on = function(event, listener) {
+    hs.streamdeck._watcherEmitter.on(event, listener);
+};
 
-    on(listener) {
-        if (typeof listener !== 'function') {
-            throw new Error("hs.streamdeck.addWatcher(): listener must be a function");
-        }
-        if (this.#listeners.includes(listener)) {
-            console.error("hs.streamdeck.addWatcher(): listener is already registered.");
-            return;
-        }
-        if (this.#listeners.length === 0) {
-            hs.streamdeck._addWatcher((event, device) => {
-                this.#handleEvent(event, device);
-            });
-        }
-        this.#listeners.push(listener);
-    }
+/// Remove a previously registered Stream Deck connect/disconnect listener.
+/// Parameters:
+///  - event: {"connected" | "disconnected"} The event the listener was registered for
+///  - listener: {(device: HSStreamDeckDevice) => void} The function originally passed to `on`
+/// Example:
+/// ```js
+/// const onConnected = device => console.log(device.deckType)
+/// hs.streamdeck.on('connected', onConnected)
+/// // later…
+/// hs.streamdeck.off('connected', onConnected)
+/// ```
+hs.streamdeck.off = function(event, listener) {
+    hs.streamdeck._watcherEmitter.off(event, listener);
+};
 
-    removeListener(listener) {
-        const idx = this.#listeners.indexOf(listener);
-        if (idx > -1) {
-            this.#listeners.splice(idx, 1);
-        }
-        if (this.#listeners.length === 0) {
-            hs.streamdeck._removeWatcher();
-        }
-    }
-}
-
-// Store in a Swift-retained property so the emitter is not garbage collected.
-hs.streamdeck._watcherEmitter = new StreamDeckModuleWatcherEmitter();
+/// Register a listener that fires at most once for a Stream Deck connect/disconnect event.
+/// Parameters:
+///  - event: {"connected" | "disconnected"} The event to listen for
+///  - listener: {(device: HSStreamDeckDevice) => void} Called the next time a matching event occurs, then automatically removed
+/// Example:
+/// ```js
+/// hs.streamdeck.once('connected', device => console.log("First deck seen: " + device.deckType))
+/// ```
+hs.streamdeck.once = function(event, listener) {
+    hs.streamdeck._watcherEmitter.once(event, listener);
+};

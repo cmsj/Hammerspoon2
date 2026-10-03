@@ -1,41 +1,59 @@
+//
+//  hs.keycodes.js
+//  Hammerspoon 2
+//
+
 "use strict";
 
-class KeycodesWatcherEmitter {
-    #listeners = []
+// Lazily starts the underlying input-source-change watcher on the first listener and stops it
+// once the last listener is removed. See Engine/engine.js for LazyWatcherEmitter itself.
+// hs.keycodes only ever emits one kind of event ("change"), but on/off/once still take an
+// explicit event name for consistency with every other hs.* module-level watcher.
+hs.keycodes._watcherEmitter = new LazyWatcherEmitter("hs.keycodes", function() {
+    hs.keycodes._addWatcher(() => {
+        hs.keycodes._watcherEmitter.emit('change');
+    });
+}, function() {
+    hs.keycodes._removeWatcher();
+});
 
-    #handleChange() {
-        const listeners = this.#listeners.slice();
-        for (var i = 0; i < listeners.length; i++) {
-            listeners[i].call(null);
-        }
-    }
+/// Register a listener that fires whenever the keyboard input source changes.
+/// Read `currentLayout()`, `currentSourceID()`, or `map` inside the listener to inspect the new
+/// state.
+/// Parameters:
+///  - event: {"change"} The event to listen for (the only event this module emits)
+///  - listener: {() => void} Called with no arguments when the input source changes
+/// Example:
+/// ```js
+/// hs.keycodes.on('change', () => console.log("Now using: " + hs.keycodes.currentLayout()))
+/// ```
+hs.keycodes.on = function(event, listener) {
+    hs.keycodes._watcherEmitter.on(event, listener);
+};
 
-    on(listener) {
-        if (typeof listener !== 'function') {
-            throw new Error("hs.keycodes.addWatcher(): listener must be a function");
-        }
-        if (this.#listeners.includes(listener)) {
-            console.error("hs.keycodes.addWatcher(): listener is already registered");
-            return;
-        }
-        if (this.#listeners.length === 0) {
-            hs.keycodes._addWatcher(() => {
-                this.#handleChange();
-            });
-        }
-        this.#listeners.push(listener);
-    }
+/// Remove a previously registered input source change listener.
+/// Parameters:
+///  - event: {"change"} The event the listener was registered for
+///  - listener: {() => void} The function originally passed to `on`
+/// Example:
+/// ```js
+/// const onChange = () => console.log("changed")
+/// hs.keycodes.on('change', onChange)
+/// // later…
+/// hs.keycodes.off('change', onChange)
+/// ```
+hs.keycodes.off = function(event, listener) {
+    hs.keycodes._watcherEmitter.off(event, listener);
+};
 
-    removeListener(listener) {
-        const idx = this.#listeners.indexOf(listener);
-        if (idx > -1) {
-            this.#listeners.splice(idx, 1);
-            if (this.#listeners.length === 0) {
-                hs.keycodes._removeWatcher();
-            }
-        }
-    }
-}
-
-// Store emitter in a Swift-retained property so it is not garbage collected.
-hs.keycodes._watcherEmitter = new KeycodesWatcherEmitter();
+/// Register a listener that fires at most once, the next time the keyboard input source changes.
+/// Parameters:
+///  - event: {"change"} The event to listen for
+///  - listener: {() => void} Called once, then automatically removed
+/// Example:
+/// ```js
+/// hs.keycodes.once('change', () => console.log("First change detected"))
+/// ```
+hs.keycodes.once = function(event, listener) {
+    hs.keycodes._watcherEmitter.once(event, listener);
+};

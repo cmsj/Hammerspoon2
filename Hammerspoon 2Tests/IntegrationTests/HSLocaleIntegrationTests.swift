@@ -46,14 +46,19 @@ struct HSLocaleTests {
             #expect(makeHarness().evalTypeOf("hs.locale.localizedName") == "function")
         }
 
-        @Test("addWatcher is a function")
-        func testAddWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.locale.addWatcher") == "function")
+        @Test("on is a function")
+        func testOnIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.locale.on") == "function")
         }
 
-        @Test("removeWatcher is a function")
-        func testRemoveWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.locale.removeWatcher") == "function")
+        @Test("off is a function")
+        func testOffIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.locale.off") == "function")
+        }
+
+        @Test("once is a function")
+        func testOnceIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.locale.once") == "function")
         }
 
         @Test("_watcherEmitter is initialized by hs.locale.js")
@@ -225,20 +230,20 @@ struct HSLocaleTests {
             return harness
         }
 
-        @Test("addWatcher with non-function throws")
+        @Test("on with non-function throws")
         func testAddWatcherNonFunction() {
             let harness = makeHarness()
-            harness.eval("hs.locale.addWatcher('not a function')")
+            harness.eval("hs.locale.on('change', 'not a function')")
             harness.expectException()
         }
 
-        @Test("addWatcher and removeWatcher do not throw with a valid function")
+        @Test("on and off do not throw with a valid function")
         func testAddRemoveWatcherValid() {
             let harness = makeHarness()
             harness.eval("""
                 var handler = function() {};
-                hs.locale.addWatcher(handler);
-                hs.locale.removeWatcher(handler);
+                hs.locale.on('change', handler);
+                hs.locale.off('change', handler);
             """)
             #expect(!harness.hasException)
         }
@@ -248,9 +253,41 @@ struct HSLocaleTests {
             let harness = makeHarness()
             harness.eval("""
                 var handler = function() {};
-                hs.locale.addWatcher(handler);
-                hs.locale.addWatcher(handler);
-                hs.locale.removeWatcher(handler);
+                hs.locale.on('change', handler);
+                hs.locale.on('change', handler);
+                hs.locale.off('change', handler);
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("once-registered listener fires only one time")
+        func testOnceFiresOnlyOnce() {
+            let harness = makeHarness()
+            harness.eval("""
+                var count = 0;
+                hs.locale.once('change', function() { count++; });
+                hs.locale._watcherEmitter.emit('change');
+                hs.locale._watcherEmitter.emit('change');
+            """)
+            harness.expectEqual("count", 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSLocaleModule.self, as: "locale")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.locale.on") == "function")
+            #expect(harness.evalTypeOf("hs.locale.off") == "function")
+            #expect(harness.evalTypeOf("hs.locale.once") == "function")
+
+            harness.eval("""
+                var fn = function() {};
+                hs.locale.on('change', fn);
+                hs.locale.off('change', fn);
             """)
             #expect(!harness.hasException)
         }

@@ -968,11 +968,11 @@ struct HSEventTapTests {
             #expect(!harness.hasException)
         }
 
-        @Test("callbackPressed is settable after bindHotkey")
+        @Test("onPressed is settable after bindHotkey")
         func testBindHotkeyCallbackSettable() {
             let harness = makeHarness()
             harness.eval("var hk = hs.eventtap.bindHotkey(['cmd'], 'h', () => {}, () => {})")
-            harness.eval("hk.callbackPressed = () => {}")
+            harness.eval("hk.onPressed = () => {}")
             #expect(!harness.hasException)
         }
 

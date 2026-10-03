@@ -43,9 +43,9 @@ import Carbon
     /// - Example:
     /// ```js
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
-    /// hk.callbackRepeat = () => console.log("still held")
+    /// hk.onRepeat = () => console.log("still held")
     /// ```
-    @objc var callbackRepeat: JSFunction? { get set }
+    @objc var onRepeat: JSFunction? { get set }
 
     /// Enable the hotkey
     /// - Returns: True if the hotkey was enabled, otherwise False
@@ -77,17 +77,17 @@ import Carbon
     /// - Example:
     /// ```js
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
-    /// hk.callbackPressed = () => console.log("new handler")
+    /// hk.onPressed = () => console.log("new handler")
     /// ```
-    @objc var callbackPressed: JSFunction? { get set }
+    @objc var onPressed: JSFunction? { get set }
 
     /// {(() => void) | null} The callback function to be called when the hotkey is released, or null to remove it
     /// - Example:
     /// ```js
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
-    /// hk.callbackReleased = () => console.log("released")
+    /// hk.onReleased = () => console.log("released")
     /// ```
-    @objc var callbackReleased: JSFunction? { get set }
+    @objc var onReleased: JSFunction? { get set }
 
     /// Disable and permanently remove this hotkey, releasing all associated resources
     /// - Example:
@@ -118,29 +118,29 @@ import Carbon
     @objc let mods: [String]
     @objc let key: String
     @objc var message: String?
-    private var _callbackPressed: JSCallback?
-    private var _callbackReleased: JSCallback?
-    private var _callbackRepeat: JSCallback?
+    private var _onPressed: JSCallback?
+    private var _onReleased: JSCallback?
+    private var _onRepeat: JSCallback?
 
-    @objc var callbackPressed: JSFunction? {
-        get { _callbackPressed?.value }
+    @objc var onPressed: JSFunction? {
+        get { _onPressed?.value }
         set {
-            _callbackPressed?.detach(from: self)
-            _callbackPressed = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+            _onPressed?.detach(from: self)
+            _onPressed = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
-    @objc var callbackReleased: JSFunction? {
-        get { _callbackReleased?.value }
+    @objc var onReleased: JSFunction? {
+        get { _onReleased?.value }
         set {
-            _callbackReleased?.detach(from: self)
-            _callbackReleased = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+            _onReleased?.detach(from: self)
+            _onReleased = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
-    @objc var callbackRepeat: JSFunction? {
-        get { _callbackRepeat?.value }
+    @objc var onRepeat: JSFunction? {
+        get { _onRepeat?.value }
         set {
-            _callbackRepeat?.detach(from: self)
-            _callbackRepeat = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+            _onRepeat?.detach(from: self)
+            _onRepeat = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 
@@ -151,8 +151,8 @@ import Carbon
     private var repeatIntervalTimer: Timer?
 
     init(keyCode: UInt32, modifiers: UInt32, mods: [String], key: String,
-         callbackPressed: JSFunction? = nil, callbackReleased: JSFunction? = nil,
-         callbackRepeat: JSFunction? = nil) {
+         onPressed: JSFunction? = nil, onReleased: JSFunction? = nil,
+         onRepeat: JSFunction? = nil) {
         self.keyCode = keyCode
         self.modifiers = modifiers
         self.mods = mods
@@ -160,9 +160,9 @@ import Carbon
         self.hotkeyID = HotkeyManager.shared.nextID
         super.init()
 
-        self.callbackPressed = callbackPressed
-        self.callbackReleased = callbackReleased
-        self.callbackRepeat = callbackRepeat
+        self.onPressed = onPressed
+        self.onReleased = onReleased
+        self.onRepeat = onRepeat
     }
 
     isolated deinit {
@@ -177,12 +177,12 @@ import Carbon
 
     @objc func destroy() {
         disable()
-        _callbackPressed?.detach(from: self)
-        _callbackPressed = nil
-        _callbackReleased?.detach(from: self)
-        _callbackReleased = nil
-        _callbackRepeat?.detach(from: self)
-        _callbackRepeat = nil
+        _onPressed?.detach(from: self)
+        _onPressed = nil
+        _onReleased?.detach(from: self)
+        _onReleased = nil
+        _onRepeat?.detach(from: self)
+        _onRepeat = nil
     }
 
     @objc func enable() -> Bool {
@@ -223,18 +223,18 @@ import Carbon
         case UInt32(kEventHotKeyPressed):
             // A message is shown before the pressed callback whenever one exists,
             // whether or not a released callback also exists.
-            if let context = _callbackPressed?.value?.context {
+            if let context = _onPressed?.value?.context {
                 showMessageAlert(in: context)
             }
-            invoke(_callbackPressed?.value)
+            invoke(_onPressed?.value)
             startRepeatingIfNeeded()
         case UInt32(kEventHotKeyReleased):
             // Only shown before the released callback when there's no pressed callback
             // to have already shown it.
-            if _callbackPressed == nil, let context = _callbackReleased?.value?.context {
+            if _onPressed == nil, let context = _onReleased?.value?.context {
                 showMessageAlert(in: context)
             }
-            invoke(_callbackReleased?.value)
+            invoke(_onReleased?.value)
             stopRepeating()
         default:
             AKError("hs.hotkey: Unknown event kind: \(eventKind)")
@@ -267,7 +267,7 @@ import Carbon
     // MARK: - Repeat
 
     private func startRepeatingIfNeeded() {
-        guard _callbackRepeat != nil else { return }
+        guard _onRepeat != nil else { return }
         stopRepeating()
         repeatDelayTimer = Timer.scheduledTimer(withTimeInterval: NSEvent.keyRepeatDelay, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -286,7 +286,7 @@ import Carbon
     }
 
     private func fireRepeatCallback() {
-        invoke(_callbackRepeat?.value)
+        invoke(_onRepeat?.value)
     }
 
     private func stopRepeating() {

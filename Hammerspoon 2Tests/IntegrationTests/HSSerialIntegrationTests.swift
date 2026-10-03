@@ -6,6 +6,7 @@
 import Testing
 import Foundation
 import Darwin
+import JavaScriptCore
 @testable import Hammerspoon_2
 
 // MARK: - Helpers
@@ -107,14 +108,19 @@ struct HSSerialTests {
             #expect(makeHarness().evalTypeOf("hs.serial.createPortAtPath") == "function")
         }
 
-        @Test("addWatcher is a function")
-        func testAddWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.serial.addWatcher") == "function")
+        @Test("on is a function")
+        func testOnIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.serial.on") == "function")
         }
 
-        @Test("removeWatcher is a function")
-        func testRemoveWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.serial.removeWatcher") == "function")
+        @Test("off is a function")
+        func testOffIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.serial.off") == "function")
+        }
+
+        @Test("once is a function")
+        func testOnceIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.serial.once") == "function")
         }
 
         @Test("_addWatcher is a function")
@@ -579,32 +585,79 @@ struct HSSerialTests {
             return harness
         }
 
-        @Test("addWatcher with non-function causes a context exception")
-        func testAddWatcherNonFunctionCausesException() {
+        @Test("on with non-function listener causes a context exception")
+        func testOnNonFunctionCausesException() {
             let harness = makeHarness()
-            harness.eval("hs.serial.addWatcher('notAFunction')")
+            harness.eval("hs.serial.on('added', 'notAFunction')")
             harness.expectException()
         }
 
-        @Test("addWatcher and removeWatcher do not throw with a function")
-        func testAddRemoveWatcherNoThrow() {
+        @Test("on and off do not throw with a function")
+        func testOnOffNoThrow() {
             let harness = makeHarness()
             harness.eval("""
-                var fn = function(event, port) {};
-                hs.serial.addWatcher(fn);
-                hs.serial.removeWatcher(fn);
+                var fn = function(port) {};
+                hs.serial.on('added', fn);
+                hs.serial.off('added', fn);
             """)
             #expect(!harness.hasException)
         }
 
-        @Test("duplicate addWatcher registration is silently rejected")
-        func testDuplicateWatcherRejected() {
+        @Test("duplicate on registration for the same event is silently rejected")
+        func testDuplicateListenerRejected() {
             let harness = makeHarness()
             harness.eval("""
-                var fn = function(event, port) {};
-                hs.serial.addWatcher(fn);
-                hs.serial.addWatcher(fn);
-                hs.serial.removeWatcher(fn);
+                var fn = function(port) {};
+                hs.serial.on('added', fn);
+                hs.serial.on('added', fn);
+                hs.serial.off('added', fn);
+            """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("listeners only receive the event they registered for")
+        func testListenersAreFilteredByEvent() {
+            let harness = makeHarness()
+            harness.eval("""
+                var addedCount = 0;
+                var removedCount = 0;
+                hs.serial.on('added', function() { addedCount++; });
+                hs.serial.on('removed', function() { removedCount++; });
+                hs.serial._watcherEmitter.emit('added', {});
+            """)
+            harness.expectEqual("addedCount", 1)
+            harness.expectEqual("removedCount", 0)
+            #expect(!harness.hasException)
+        }
+
+        @Test("once-registered listener fires only one time")
+        func testOnceFiresOnlyOnce() {
+            let harness = makeHarness()
+            harness.eval("""
+                var count = 0;
+                hs.serial.once('added', function() { count++; });
+                hs.serial._watcherEmitter.emit('added', {});
+                hs.serial._watcherEmitter.emit('added', {});
+            """)
+            harness.expectEqual("count", 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSSerialModule.self, as: "serial")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.serial.on") == "function")
+            #expect(harness.evalTypeOf("hs.serial.off") == "function")
+            #expect(harness.evalTypeOf("hs.serial.once") == "function")
+
+            harness.eval("""
+                var fn = function(port) {};
+                hs.serial.on('added', fn);
+                hs.serial.off('added', fn);
             """)
             #expect(!harness.hasException)
         }

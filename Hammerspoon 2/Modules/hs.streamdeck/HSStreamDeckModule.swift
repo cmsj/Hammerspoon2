@@ -33,10 +33,8 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 /// ## Watching for connect / disconnect events
 ///
 /// ```javascript
-/// hs.streamdeck.addWatcher((event, device) => {
-///     if (event === "connected") console.log("Connected: " + device.deckType)
-///     if (event === "disconnected") console.log("Disconnected: " + device.deckType)
-/// })
+/// hs.streamdeck.on("connected", device => console.log("Connected: " + device.deckType))
+/// hs.streamdeck.on("disconnected", device => console.log("Disconnected: " + device.deckType))
 /// ```
 ///
 /// ## Driving a device
@@ -45,7 +43,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 /// const deck = hs.streamdeck.all()[0]
 /// deck.setBrightness(50)
 /// deck.setButtonColor(1, HSColor.named("red"))
-/// deck.buttonCallback((device, button, isDown) => {
+/// deck.onButton((device, button, isDown) => {
 ///     console.log("button " + button + (isDown ? " down" : " up"))
 /// })
 /// ```
@@ -68,32 +66,24 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
     /// ```
     @objc func findBySerialNumber(_ serialNumber: String) -> HSStreamDeckDevice?
 
-    /// Register a listener for Stream Deck connect/disconnect events.
-    ///
-    /// The listener is called with two arguments:
-    /// - `event` — either `"connected"` or `"disconnected"`
-    /// - `device` — an `HSStreamDeckDevice` representing the affected device
-    /// - Parameter listener: {(event: string, device: HSStreamDeckDevice) => void} A JavaScript function called with the event name and the affected device
-    /// - Example:
-    /// ```js
-    /// hs.streamdeck.addWatcher((event, device) => console.log(event + ": " + device.deckType))
-    /// ```
-    @objc func addWatcher(_ listener: JSFunction)
-
-    /// Remove a previously registered connect/disconnect listener.
-    /// - Parameter listener: The function originally passed to ``addWatcher(_:)``
-    /// - Example:
-    /// ```js
-    /// hs.streamdeck.removeWatcher(myHandler)
-    /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
-
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.streamdeck.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -151,6 +141,9 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 
         _removeWatcher()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
 
         IOHIDManagerRegisterDeviceMatchingCallback(ioHIDManager, nil, nil)
         IOHIDManagerRegisterDeviceRemovalCallback(ioHIDManager, nil, nil)
@@ -248,29 +241,17 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
     // MARK: - Module-level watcher
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
     private var moduleCallback: JSFunction? = nil
 
-    @objc func addWatcher(_ listener: JSFunction) {
-        // invokeMethod doesn't propagate JS exceptions to the calling context's try-catch,
-        // so we validate here and throw via context.exception before delegating.
-        guard let context = JSContext.current() else { return }
-        guard listener.isObject else {
-            context.exception = JSValue(newErrorFromMessage: "hs.streamdeck.addWatcher(): listener must be a function", in: context)
-            return
-        }
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
-
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) {
         guard moduleCallback == nil else {
             AKWarning("hs.streamdeck._addWatcher(): Already watching. Refusing to create a second.")
             return
         }
-        moduleCallback = callback
+        moduleCallback = listener
         AKDebug("hs.streamdeck._addWatcher(): Started")
     }
 

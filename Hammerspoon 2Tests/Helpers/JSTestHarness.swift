@@ -67,11 +67,17 @@ class JSTestHarness {
             print("⚠️ Failed to install type bridges: \(error)")
         }
 
+        // Inject basic logging for debugging tests. This must run before engine.js, since its
+        // top-level code calls console.log().
+        setupConsoleLogging()
+
+        // Load engine.js (EventEmitter/LazyWatcherEmitter) - mirrors production's JSEngine
+        // bootstrap order, so hs.foo.js enhancement files that rely on these globals behave the
+        // same under test as they do for real.
+        loadEngineJS()
+
         // Create the hs namespace object
         setupHSNamespace()
-
-        // Inject basic logging for debugging tests
-        setupConsoleLogging()
 
         // Add test helper functions
         setupTestHelpers()
@@ -140,6 +146,28 @@ class JSTestHarness {
         if let jsCode = Self.enhancementScriptSource(for: name) {
             context.evaluateScript(jsCode)
         }
+    }
+
+    /// Evaluates engine.js (EventEmitter/LazyWatcherEmitter) from the app bundle into this
+    /// harness's context. Must run before any module enhancement script that references those
+    /// globals, and after console logging is set up (engine.js logs at the top level).
+    private func loadEngineJS() {
+        let bundles = [
+            Bundle.main,
+            Bundle(identifier: "net.tenshu.Hammerspoon-2")
+        ].compactMap { $0 }
+
+        for bundle in bundles {
+            if let url = bundle.url(forResource: "engine", withExtension: "js") {
+                do {
+                    context.evaluateScript(try String(contentsOf: url, encoding: .utf8), withSourceURL: url)
+                    return
+                } catch {
+                    print("⚠️ Could not load engine.js: \(error)")
+                }
+            }
+        }
+        print("⚠️ engine.js not found in bundle; EventEmitter/LazyWatcherEmitter unavailable in this test context")
     }
 
     /// Reads a module's `hs.<name>.js` enhancement file source from the app bundle, without

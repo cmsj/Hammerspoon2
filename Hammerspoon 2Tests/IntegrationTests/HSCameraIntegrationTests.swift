@@ -68,11 +68,31 @@ struct HSCameraTests {
             #expect(result?.isNull == true || result?.isUndefined == true)
         }
 
-        @Test("addWatcher() and removeWatcher() methods exist")
+        @Test("on, off and once methods exist")
         func testWatcherMethodsExist() {
             let harness = makeHarness()
-            #expect(harness.evalTypeOf("hs.camera.addWatcher") == "function")
-            #expect(harness.evalTypeOf("hs.camera.removeWatcher") == "function")
+            #expect(harness.evalTypeOf("hs.camera.on") == "function")
+            #expect(harness.evalTypeOf("hs.camera.off") == "function")
+            #expect(harness.evalTypeOf("hs.camera.once") == "function")
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSCameraModule.self, as: "camera")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.camera.on") == "function")
+            #expect(harness.evalTypeOf("hs.camera.off") == "function")
+            #expect(harness.evalTypeOf("hs.camera.once") == "function")
+
+            harness.eval("""
+                var fn = function(c) {};
+                hs.camera.on('connected', fn);
+                hs.camera.off('connected', fn);
+            """)
+            #expect(!harness.hasException)
         }
 
         @Test("hs.camera.js emitter factory survives garbage collection of the module wrapper")
@@ -97,63 +117,78 @@ struct HSCameraTests {
             unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
 
             #expect(harness.evalTypeOf("hs.camera._makeCameraEmitter") == "function")
-            // Confirm the survivor is a genuine, working CameraWatcherEmitter, not just any
+            // Confirm the survivor is a genuine, working LazyWatcherEmitter, not just any
             // object shaped like one.
             harness.expectTrue("""
             (function() {
-                var e = hs.camera._makeCameraEmitter({});
-                return typeof e.on === 'function' && typeof e.removeListener === 'function';
+                var e = hs.camera._makeCameraEmitter({ _addWatcher: function() {}, _removeWatcher: function() {} });
+                return typeof e.on === 'function' && typeof e.off === 'function' && typeof e.once === 'function';
             })()
         """)
         }
 
-        @Test("module-level addWatcher() / removeWatcher() cycle is safe")
+        @Test("module-level on() / off() cycle is safe")
         func testModuleWatcherCycle() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
-                var fn = function(e, c) {};
-                hs.camera.addWatcher(fn);
-                hs.camera.removeWatcher(fn);
+                var fn = function(c) {};
+                hs.camera.on('connected', fn);
+                hs.camera.off('connected', fn);
                 return true;
             })()
         """)
         }
 
-        @Test("removeWatcher() with an unregistered listener does not crash")
-        func testRemoveUnregisteredWatcherIsSafe() {
+        @Test("off() with an unregistered listener does not crash")
+        func testOffUnregisteredWatcherIsSafe() {
             let harness = makeHarness()
-            harness.eval("hs.camera.removeWatcher(function() {})")
+            harness.eval("hs.camera.off('connected', function() {})")
             #expect(!harness.hasException)
         }
 
-        @Test("addWatcher() with the same listener twice does not crash")
-        func testAddWatcherIdempotent() {
+        @Test("on() with the same listener twice does not crash")
+        func testOnIdempotent() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
-                var fn = function(e, c) {};
-                hs.camera.addWatcher(fn);
-                hs.camera.addWatcher(fn);
-                hs.camera.removeWatcher(fn);
+                var fn = function(c) {};
+                hs.camera.on('connected', fn);
+                hs.camera.on('connected', fn);
+                hs.camera.off('connected', fn);
                 return true;
             })()
         """)
         }
 
-        @Test("addWatcher() throws when given a non-function")
-        func testAddWatcherThrowsOnNonFunction() {
+        @Test("on() throws when given a non-function")
+        func testOnThrowsOnNonFunction() {
             let harness = makeHarness()
             var threw = false
-            harness.registerCallback("addWatcherThrew") { threw = true }
+            harness.registerCallback("onThrew") { threw = true }
             harness.eval("""
             try {
-                hs.camera.addWatcher("not a function");
+                hs.camera.on('connected', "not a function");
             } catch(e) {
-                __test_callback("addWatcherThrew");
+                __test_callback("onThrew");
             }
         """)
             #expect(threw)
+        }
+
+        @Test("listeners only receive the event they registered for")
+        func testListenersAreFilteredByEvent() {
+            let harness = makeHarness()
+            harness.eval("""
+                var connectedCount = 0;
+                var disconnectedCount = 0;
+                hs.camera.on('connected', function() { connectedCount++; });
+                hs.camera.on('disconnected', function() { disconnectedCount++; });
+                hs.camera._watcherEmitter.emit('connected', {});
+            """)
+            harness.expectEqual("connectedCount", 1)
+            harness.expectEqual("disconnectedCount", 0)
+            #expect(!harness.hasException)
         }
 
         @Test("multiple module-level listeners can be registered")
@@ -161,12 +196,12 @@ struct HSCameraTests {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
-                var fn1 = function(e, c) {};
-                var fn2 = function(e, c) {};
-                hs.camera.addWatcher(fn1);
-                hs.camera.addWatcher(fn2);
-                hs.camera.removeWatcher(fn1);
-                hs.camera.removeWatcher(fn2);
+                var fn1 = function(c) {};
+                var fn2 = function(c) {};
+                hs.camera.on('connected', fn1);
+                hs.camera.on('connected', fn2);
+                hs.camera.off('connected', fn1);
+                hs.camera.off('connected', fn2);
                 return true;
             })()
         """)
@@ -233,14 +268,15 @@ struct HSCameraTests {
             #expect(harness.evalTypeOf("hs.camera.all()[0].captureImage") == "function")
         }
 
-        @Test("camera has addWatcher() and removeWatcher() methods")
+        @Test("camera has on, off and once methods")
         func testCameraWatcherMethodsExist() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
                 var c = hs.camera.all()[0];
-                return typeof c.addWatcher === 'function' &&
-                       typeof c.removeWatcher === 'function';
+                return typeof c.on === 'function' &&
+                       typeof c.off === 'function' &&
+                       typeof c.once === 'function';
             })()
         """)
         }
@@ -304,55 +340,101 @@ struct HSCameraTests {
             return harness
         }
 
-        @Test("per-camera addWatcher() / removeWatcher() cycle is safe")
+        @Test("per-camera on() / off() cycle is safe")
         func testAddRemoveCycle() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
                 var cam = hs.camera.all()[0];
                 var fn = function(inUse) {};
-                cam.addWatcher(fn);
-                cam.removeWatcher(fn);
+                cam.on(fn);
+                cam.off(fn);
                 return true;
             })()
         """)
         }
 
-        @Test("per-camera removeWatcher() with unregistered listener does not crash")
+        @Test("per-camera off() with unregistered listener does not crash")
         func testRemoveUnregisteredWatcher() {
             let harness = makeHarness()
-            harness.eval("hs.camera.all()[0].removeWatcher(function() {})")
+            harness.eval("hs.camera.all()[0].off(function() {})")
             #expect(!harness.hasException)
         }
 
-        @Test("per-camera addWatcher() with same listener twice does not crash")
-        func testAddWatcherIdempotent() {
+        @Test("per-camera on() with same listener twice does not crash")
+        func testOnIdempotent() {
             let harness = makeHarness()
             harness.expectTrue("""
             (function() {
                 var cam = hs.camera.all()[0];
                 var fn = function(inUse) {};
-                cam.addWatcher(fn);
-                cam.addWatcher(fn);
-                cam.removeWatcher(fn);
+                cam.on(fn);
+                cam.on(fn);
+                cam.off(fn);
                 return true;
             })()
         """)
         }
 
-        @Test("per-camera addWatcher() throws when given a non-function")
-        func testAddWatcherThrowsOnNonFunction() {
+        @Test("per-camera on() throws when given a non-function")
+        func testOnThrowsOnNonFunction() {
             let harness = makeHarness()
             var threw = false
             harness.registerCallback("cameraWatcherThrew") { threw = true }
             harness.eval("""
             try {
-                hs.camera.all()[0].addWatcher("not a function");
+                hs.camera.all()[0].on("not a function");
             } catch(e) {
                 __test_callback("cameraWatcherThrew");
             }
         """)
             #expect(threw)
+        }
+
+        @Test("per-camera on() throws if the native watcher fails to start")
+        func testOnThrowsWhenNativeStartFails() {
+            // Regression test for a code review comment (same class of bug fixed for
+            // hs.power's battery watcher): if the per-device _addWatcher fails (e.g. the CMIO
+            // device lookup for this camera's UID fails), the LazyWatcherEmitter's start()
+            // function must throw rather than silently succeed - otherwise the listener gets
+            // recorded as if the watcher were running and never receives events. Simulates the
+            // native failure by swapping in a stub that returns false, since the real CMIO
+            // lookup can't be forced to fail from a test.
+            //
+            // Does not assert !harness.hasException: on()/once() are native Swift methods that
+            // invokeMethod into the JS emitter, and the context's exceptionHandler legitimately
+            // fires for any exception crossing that call boundary - even one this test's own
+            // try/catch goes on to catch correctly (see callCapturingException's doc comment).
+            // testOnThrowsOnNonFunction above exercises the same call shape and likewise only
+            // checks that the throw was caught, not hasException.
+            let harness = makeHarness()
+            harness.eval("""
+                var _failCam = hs.camera.all()[0];
+                _failCam._addWatcher = function(fn) { return false; };
+                var threw = false;
+                try {
+                    _failCam.on(function() {});
+                } catch (err) {
+                    threw = true;
+                }
+            """)
+            harness.expectTrue("threw")
+        }
+
+        @Test("per-camera once() fires only one time")
+        func testOnceFiresOnlyOnce() {
+            let harness = makeHarness()
+            // Drive the real per-camera emitter directly rather than needing a real
+            // camera-in-use transition - mirrors how the module-level tests simulate events.
+            harness.eval("""
+            var _onceCount = 0;
+            var _onceCam = hs.camera.all()[0];
+            _onceCam.once(function() { _onceCount++; });
+            _onceCam._watcherEmitter.emit('change', true);
+            _onceCam._watcherEmitter.emit('change', false);
+        """)
+            harness.expectEqual("_onceCount", 1)
+            #expect(!harness.hasException)
         }
 
         @Test("multiple cameras can have independent watchers")
@@ -363,10 +445,10 @@ struct HSCameraTests {
                 var cameras = hs.camera.all();
                 var fns = cameras.map(function() { return function(inUse) {}; });
                 for (var i = 0; i < cameras.length; i++) {
-                    cameras[i].addWatcher(fns[i]);
+                    cameras[i].on(fns[i]);
                 }
                 for (var i = 0; i < cameras.length; i++) {
-                    cameras[i].removeWatcher(fns[i]);
+                    cameras[i].off(fns[i]);
                 }
                 return true;
             })()
@@ -381,17 +463,17 @@ struct HSCameraTests {
                 var cam = hs.camera.all()[0];
                 var fn1 = function(inUse) {};
                 var fn2 = function(inUse) {};
-                cam.addWatcher(fn1);
-                cam.addWatcher(fn2);
-                cam.removeWatcher(fn1);
-                cam.removeWatcher(fn2);
+                cam.on(fn1);
+                cam.on(fn2);
+                cam.off(fn1);
+                cam.off(fn2);
                 return true;
             })()
         """)
         }
 
-        @Test("per-camera addWatcher() finds its emitter factory after the hs.camera module wrapper is collected")
-        func testAddWatcherSurvivesModuleWrapperGC() {
+        @Test("per-camera on() finds its emitter factory after the hs.camera module wrapper is collected")
+        func testOnSurvivesModuleWrapperGC() {
             // hs.camera exposed as a computed accessor (see makeUnpinned), not a stored value,
             // so no particular JS wrapper for the module is kept reachable.
             let (harness, _) = JSTestHarness.makeUnpinned(HSCameraModule.self, as: "camera")
@@ -402,15 +484,16 @@ struct HSCameraTests {
             unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
             unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
 
-            // The pre-fix HSCamera.addWatcher() re-fetched `hs.camera` from JS on every call and
-            // read a bare JS expando off whatever wrapper it found there — which, after a GC pass
-            // with no wrapper pinned, could be a fresh one missing the factory. The fix reads the
-            // factory through a direct Swift reference to the owning HSCameraModule instead, so a
-            // real end-to-end addWatcher()/removeWatcher() cycle must still succeed here.
+            // HSCamera.on() re-fetches `hs.camera` from JS on every call and reads
+            // `_makeCameraEmitter` off whatever wrapper it finds there — which, after a GC pass
+            // with no wrapper pinned, could be a fresh one. That's only safe because the factory
+            // is the native `_makeCameraEmitter` property (Swift-object-backed, so any wrapper
+            // for the same object exposes it) rather than a JS expando, so a real end-to-end
+            // on()/off() cycle must still succeed here.
             harness.eval("""
             var fn = function(inUse) {};
-            __gcTestCamera.addWatcher(fn);
-            __gcTestCamera.removeWatcher(fn);
+            __gcTestCamera.on(fn);
+            __gcTestCamera.off(fn);
         """)
             #expect(!harness.hasException)
         }

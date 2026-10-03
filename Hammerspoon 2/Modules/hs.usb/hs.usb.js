@@ -5,48 +5,56 @@
 
 "use strict";
 
-// One-to-many event emitter for hs.usb device events.
-// Lazily starts the underlying IOKit watcher on first listener and stops it when the last one is removed.
-class UsbModuleWatcherEmitter {
-    #listeners = []
-
-    #handleEvent(eventType, deviceInfo) {
-        var listeners = this.#listeners.slice();
-        const length = listeners.length;
-        for (var i = 0; i < length; i++) {
-            listeners[i].apply(null, [eventType, deviceInfo]);
-        }
+// Lazily starts the underlying IOKit watcher on the first listener (for either event) and stops
+// it once the last listener (across both events) is removed. See Engine/engine.js for
+// LazyWatcherEmitter itself.
+hs.usb._watcherEmitter = new LazyWatcherEmitter("hs.usb", function() {
+    const started = hs.usb._addWatcher((eventType, deviceInfo) => {
+        hs.usb._watcherEmitter.emit(eventType, deviceInfo);
+    });
+    if (!started) {
+        throw new Error("hs.usb.on(): Failed to start USB watcher");
     }
+}, function() {
+    hs.usb._removeWatcher();
+});
 
-    on(listener) {
-        if (typeof listener !== 'function') {
-            throw new Error("hs.usb.addWatcher(): The provided handler must be a function");
-        }
-        if (this.#listeners.includes(listener)) {
-            console.error("hs.usb.addWatcher(): The provided handler is already registered.");
-            return;
-        }
-        if (this.#listeners.length === 0) {
-            const started = hs.usb._addWatcher((eventType, deviceInfo) => {
-                this.#handleEvent(eventType, deviceInfo);
-            });
-            if (!started) {
-                throw new Error("hs.usb.addWatcher(): Failed to start USB watcher");
-            }
-        }
-        this.#listeners.push(listener);
-    }
+/// Register a listener for USB device connection and disconnection events.
+/// Parameters:
+///  - event: {"added" | "removed"} The event to listen for
+///  - listener: {(device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void} Called when a matching device event occurs
+/// Example:
+/// ```js
+/// hs.usb.on('added', device => console.log(device.vendorName + " " + device.productName + " connected"))
+/// hs.usb.on('removed', device => console.log(device.vendorName + " " + device.productName + " removed"))
+/// ```
+hs.usb.on = function(event, listener) {
+    hs.usb._watcherEmitter.on(event, listener);
+};
 
-    removeListener(listener) {
-        const idx = this.#listeners.indexOf(listener);
-        if (idx > -1) {
-            this.#listeners.splice(idx, 1);
-        }
-        if (this.#listeners.length === 0) {
-            hs.usb._removeWatcher();
-        }
-    }
-}
+/// Remove a previously registered USB device event listener.
+/// Parameters:
+///  - event: {"added" | "removed"} The event the listener was registered for
+///  - listener: {(device: object) => void} The function originally passed to `on`
+/// Example:
+/// ```js
+/// const onAdded = device => console.log(device.productName)
+/// hs.usb.on('added', onAdded)
+/// // later…
+/// hs.usb.off('added', onAdded)
+/// ```
+hs.usb.off = function(event, listener) {
+    hs.usb._watcherEmitter.off(event, listener);
+};
 
-// Store the emitter in a Swift-retained property so it is not garbage collected.
-hs.usb._watcherEmitter = new UsbModuleWatcherEmitter();
+/// Register a listener that fires at most once for a USB device event.
+/// Parameters:
+///  - event: {"added" | "removed"} The event to listen for
+///  - listener: {(device: object) => void} Called the next time a matching device event occurs, then automatically removed
+/// Example:
+/// ```js
+/// hs.usb.once('added', device => console.log("First device seen: " + device.productName))
+/// ```
+hs.usb.once = function(event, listener) {
+    hs.usb._watcherEmitter.once(event, listener);
+};

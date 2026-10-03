@@ -59,19 +59,19 @@ struct HSHotkeyModalTests {
             #expect(!harness.hasException)
         }
 
-        @Test("created modal has enterFn as null initially")
+        @Test("created modal has onEnter as null initially")
         func testEnterFnIsInitiallyNull() {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
-            harness.expectTrue("m.enterFn === null || m.enterFn === undefined")
+            harness.expectTrue("m.onEnter === null || m.onEnter === undefined")
             #expect(!harness.hasException)
         }
 
-        @Test("created modal has exitFn as null initially")
+        @Test("created modal has onExit as null initially")
         func testExitFnIsInitiallyNull() {
             let harness = makeHarness()
             harness.eval("var m = hs.hotkey.createModal([], '')")
-            harness.expectTrue("m.exitFn === null || m.exitFn === undefined")
+            harness.expectTrue("m.onExit === null || m.onExit === undefined")
             #expect(!harness.hasException)
         }
 
@@ -163,21 +163,21 @@ struct HSHotkeyModalTests {
             #expect(!harness.hasException)
         }
 
-        @Test("enterFn is called when enter() is called")
+        @Test("onEnter is called when enter() is called")
         func testEnterFnCalledOnEnter() {
             let harness = makeHarness()
             var called = false
             harness.registerCallback("onEnter") { called = true }
             harness.eval("""
                 var m = hs.hotkey.createModal([], '')
-                m.enterFn = () => __test_callback('onEnter')
+                m.onEnter = () => __test_callback('onEnter')
                 m.enter()
             """)
-            #expect(called, "enterFn should have been called synchronously")
+            #expect(called, "onEnter should have been called synchronously")
             #expect(!harness.hasException)
         }
 
-        @Test("exitFn is called when exit() is called")
+        @Test("onExit is called when exit() is called")
         func testExitFnCalledOnExit() {
             let harness = makeHarness()
             var called = false
@@ -185,39 +185,39 @@ struct HSHotkeyModalTests {
             harness.eval("""
                 var m = hs.hotkey.createModal([], '')
                 m.enter()
-                m.exitFn = () => __test_callback('onExit')
+                m.onExit = () => __test_callback('onExit')
                 m.exit()
             """)
-            #expect(called, "exitFn should have been called synchronously")
+            #expect(called, "onExit should have been called synchronously")
             #expect(!harness.hasException)
         }
 
-        @Test("enterFn is not called on repeated enter() calls")
+        @Test("onEnter is not called on repeated enter() calls")
         func testEnterFnNotCalledTwice() {
             let harness = makeHarness()
             var callCount = 0
             harness.registerCallback("onEnter") { callCount += 1 }
             harness.eval("""
                 var m = hs.hotkey.createModal([], '')
-                m.enterFn = () => __test_callback('onEnter')
+                m.onEnter = () => __test_callback('onEnter')
                 m.enter()
                 m.enter()  // second call is a no-op while already active
             """)
-            #expect(callCount == 1, "enterFn should only fire once")
+            #expect(callCount == 1, "onEnter should only fire once")
             #expect(!harness.hasException)
         }
 
-        @Test("exitFn is not called when exit() called while not active")
+        @Test("onExit is not called when exit() called while not active")
         func testExitFnNotCalledWhenNotActive() {
             let harness = makeHarness()
             var called = false
             harness.registerCallback("onExit") { called = true }
             harness.eval("""
                 var m = hs.hotkey.createModal([], '')
-                m.exitFn = () => __test_callback('onExit')
+                m.onExit = () => __test_callback('onExit')
                 m.exit()  // no-op — never entered
             """)
-            #expect(!called, "exitFn should not fire when not active")
+            #expect(!called, "onExit should not fire when not active")
             #expect(!harness.hasException)
         }
 
@@ -265,10 +265,10 @@ struct HSHotkeyModalTests {
             harness.registerCallback("second") { secondCount += 1 }
             harness.eval("""
                 var m = hs.hotkey.createModal([], '')
-                m.enterFn = () => __test_callback('first')
+                m.onEnter = () => __test_callback('first')
                 m.enter()
                 m.exit()
-                m.enterFn = () => __test_callback('second')
+                m.onEnter = () => __test_callback('second')
                 m.enter()
             """)
             #expect(firstCount == 1)

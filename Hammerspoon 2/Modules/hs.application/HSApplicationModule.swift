@@ -119,35 +119,27 @@ import UniformTypeIdentifiers
     /// ```
     @objc func launchOrFocus(_ bundleID: String) -> JSPromise?
 
-    /// Create a watcher for application events
-    /// - Parameters:
-    ///    - listener: {(event: string, app: HSApplication | null) => void} A javascript function/lambda to call when any application event is received. The function will be called with two parameters: the name of the event, and the associated HSApplication object
-    /// - Example:
-    /// ```js
-    /// hs.application.addWatcher((event, app) => {
-    ///     console.log(event + app && app.title)
-    /// })
-    /// ```
-    @objc func addWatcher(_ listener: JSFunction)
-
-    /// Remove a watcher for application events
-    /// - Parameters:
-    ///   - listener: The javascript function/lambda that was previously being used to handle events
-    /// - Example:
-    /// ```js
-    /// hs.application.removeWatcher(myHandler)
-    /// ```
-    @objc func removeWatcher(_ listener: JSFunction)
-
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(callback: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(listener: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
 
-    /// Swift-retained storage for the JS ApplicationModuleWatcherEmitter instance
+    /// Swift-retained storage for the JS watcher emitter instance
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.application.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Implementations
@@ -186,8 +178,11 @@ class HSApplicationWatcherObject {
     let engineID: UUID
     private var watcher: HSApplicationWatcherObject? = nil
 
-    // Swift-retained storage for the JS-defined ApplicationModuleWatcherEmitter instance
+    // Swift-retained storage for the JS-defined watcher emitter instance
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
@@ -199,6 +194,9 @@ class HSApplicationWatcherObject {
     func shutdown() {
         _removeWatcher()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -241,21 +239,13 @@ class HSApplicationWatcherObject {
         return NSWorkspace.shared.menuBarOwningApplication?.asHSApplication()
     }
 
-    @objc func addWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    @objc func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
-
-    @objc(_addWatcher:) func _addWatcher(callback: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(listener: JSFunction) {
         if watcher != nil {
             AKWarning("hs.application._addWatcher(): Already watching. Refusing to create a second.")
             return
         }
 
-        let watcherObject = HSApplicationWatcherObject(callback: callback)
+        let watcherObject = HSApplicationWatcherObject(callback: listener)
         let selector = #selector(HSApplicationWatcherObject.handleEvent(notification:))
 
         for notificationName in HSApplicationWatcherObject.notificationToEventName.keys {

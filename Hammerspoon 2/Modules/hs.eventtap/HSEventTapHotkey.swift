@@ -51,17 +51,17 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     /// - Example:
     /// ```js
     /// const hk = hs.eventtap.bindHotkey(["fn"], "f1", () => {}, null)
-    /// hk.callbackPressed = () => console.log("new handler")
+    /// hk.onPressed = () => console.log("new handler")
     /// ```
-    @objc var callbackPressed: JSFunction? { get set }
+    @objc var onPressed: JSFunction? { get set }
 
     /// {(() => void) | null} The callback function to be called when the hotkey is released, or null to remove it
     /// - Example:
     /// ```js
     /// const hk = hs.eventtap.bindHotkey(["fn"], "f1", () => {}, null)
-    /// hk.callbackReleased = () => console.log("released")
+    /// hk.onReleased = () => console.log("released")
     /// ```
-    @objc var callbackReleased: JSFunction? { get set }
+    @objc var onReleased: JSFunction? { get set }
 }
 
 // MARK: - Implementation
@@ -86,21 +86,21 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     /// Side-specific NX_DEVICE*KEYMASK bits that must be set (0 if not side-specific).
     let requiredDeviceBits: UInt64
 
-    private var _callbackPressed: JSCallback?
-    private var _callbackReleased: JSCallback?
+    private var _onPressed: JSCallback?
+    private var _onReleased: JSCallback?
 
-    @objc var callbackPressed: JSFunction? {
-        get { _callbackPressed?.value }
+    @objc var onPressed: JSFunction? {
+        get { _onPressed?.value }
         set {
-            _callbackPressed?.detach(from: self)
-            _callbackPressed = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+            _onPressed?.detach(from: self)
+            _onPressed = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
-    @objc var callbackReleased: JSFunction? {
-        get { _callbackReleased?.value }
+    @objc var onReleased: JSFunction? {
+        get { _onReleased?.value }
         set {
-            _callbackReleased?.detach(from: self)
-            _callbackReleased = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
+            _onReleased?.detach(from: self)
+            _onReleased = newValue.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         }
     }
 
@@ -120,8 +120,8 @@ protocol EventTapHotkeyCoordinator: AnyObject {
          requiredFlags: CGEventFlags,
          requiredDeviceBits: UInt64,
          coordinator: any EventTapHotkeyCoordinator,
-         callbackPressed: JSFunction? = nil,
-         callbackReleased: JSFunction? = nil) {
+         onPressed: JSFunction? = nil,
+         onReleased: JSFunction? = nil) {
         self.keyCode = keyCode
         self.cachedKeyCode = Int64(keyCode)
         self.requiredFlags = requiredFlags
@@ -129,8 +129,8 @@ protocol EventTapHotkeyCoordinator: AnyObject {
         self.coordinator = coordinator
         super.init()
         // Phase 2 — JSContext.current() is valid because this init is called from a JS bridge method
-        if let cb = callbackPressed { self.callbackPressed = cb }
-        if let cb = callbackReleased { self.callbackReleased = cb }
+        if let cb = onPressed { self.onPressed = cb }
+        if let cb = onReleased { self.onReleased = cb }
     }
 
     isolated deinit {
@@ -139,10 +139,10 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     }
 
     func destroy() {
-        _callbackPressed?.detach(from: self)
-        _callbackPressed = nil
-        _callbackReleased?.detach(from: self)
-        _callbackReleased = nil
+        _onPressed?.detach(from: self)
+        _onPressed = nil
+        _onReleased?.detach(from: self)
+        _onReleased = nil
         disable()
     }
 
@@ -186,8 +186,8 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     func trigger(type: CGEventType) {
         let callback: JSFunction?
         switch type {
-        case .keyDown: callback = _callbackPressed?.value
-        case .keyUp:   callback = _callbackReleased?.value
+        case .keyDown: callback = _onPressed?.value
+        case .keyUp:   callback = _onReleased?.value
         default:       return
         }
         guard let callback, !callback.isNull else { return }

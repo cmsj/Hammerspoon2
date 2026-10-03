@@ -3,58 +3,52 @@
 
 "use strict";
 
-// One-to-many event emitter for hs.userdefaults key-change events.
-// Allows multiple JavaScript listeners for the same key while Swift manages
-// only a single KVO observer per key.
-class UserDefaultsWatcherEmitter {
-    #events = {};
+// Lazily starts a KVO observer for a given key on its first listener, and stops it once the
+// last listener for that key is removed. Unlike LazyWatcherEmitter (used by e.g. hs.usb), each
+// key's native watcher here is entirely independent of every other key's - see
+// Engine/engine.js for KeyedLazyWatcherEmitter.
+hs.userdefaults._watcherEmitter = new KeyedLazyWatcherEmitter("hs.userdefaults", function(key) {
+    hs.userdefaults._addWatcher(key, (k, newValue) => {
+        hs.userdefaults._watcherEmitter.emit(k, newValue);
+    });
+}, function(key) {
+    hs.userdefaults._removeWatcher(key);
+});
 
-    #handleEvent(key, newValue) {
-        if (Array.isArray(this.#events[key])) {
-            var listeners = this.#events[key].slice();
-            const length = listeners.length;
+/// Watch a key for changes.
+/// Parameters:
+///  - key: {string} The name of the setting to watch
+///  - listener: {(newValue: any) => void} Called with the new value whenever this key changes
+/// Example:
+/// ```js
+/// hs.userdefaults.on("username", (newValue) => {
+///     console.log("username changed to " + newValue)
+/// })
+/// ```
+hs.userdefaults.on = function(key, listener) {
+    hs.userdefaults._watcherEmitter.on(key, listener);
+};
 
-            for (var i = 0; i < length; i++) {
-                listeners[i].apply(null, [key, newValue]);
-            }
-        }
-    }
+/// Remove a previously registered watcher.
+/// Parameters:
+///  - key: {string} The name of the setting originally passed to `on`
+///  - listener: {(newValue: any) => void} The function originally passed to `on`
+/// Example:
+/// ```js
+/// hs.userdefaults.off("username", myHandler)
+/// ```
+hs.userdefaults.off = function(key, listener) {
+    hs.userdefaults._watcherEmitter.off(key, listener);
+};
 
-    on(key, listener) {
-        if (typeof listener !== 'function') {
-            throw new Error("hs.userdefaults.addWatcher(): The provided handler must be a function");
-        }
-
-        if (!Array.isArray(this.#events[key])) {
-            this.#events[key] = [];
-            hs.userdefaults._addWatcher(key, (k, newValue) => {
-                this.#handleEvent(k, newValue);
-            });
-        }
-
-        if (this.#events[key].includes(listener)) {
-            console.error("hs.userdefaults.addWatcher(): The provided handler for '" + key + "' is already registered.");
-            return;
-        }
-
-        this.#events[key].push(listener);
-    }
-
-    removeListener(key, listener) {
-        if (Array.isArray(this.#events[key])) {
-            const idx = this.#events[key].indexOf(listener);
-
-            if (idx > -1) {
-                this.#events[key].splice(idx, 1);
-            }
-
-            if (this.#events[key].length === 0) {
-                hs.userdefaults._removeWatcher(key);
-                delete this.#events[key];
-            }
-        }
-    }
-}
-
-// Store in a Swift-retained property so the emitter is not garbage collected.
-hs.userdefaults._watcherEmitter = new UserDefaultsWatcherEmitter();
+/// Register a listener that fires at most once for changes to a key.
+/// Parameters:
+///  - key: {string} The name of the setting to watch
+///  - listener: {(newValue: any) => void} Called once, then automatically removed
+/// Example:
+/// ```js
+/// hs.userdefaults.once("username", (newValue) => console.log("First change:", newValue))
+/// ```
+hs.userdefaults.once = function(key, listener) {
+    hs.userdefaults._watcherEmitter.once(key, listener);
+};

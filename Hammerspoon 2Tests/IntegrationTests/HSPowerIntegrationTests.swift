@@ -86,24 +86,19 @@ struct HSPowerTests {
             #expect(makeHarness().evalTypeOf("hs.power.batteryInfo") == "function")
         }
 
-        @Test("addEventWatcher is a function")
-        func testAddEventWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.power.addEventWatcher") == "function")
+        @Test("on is a function")
+        func testOnIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.power.on") == "function")
         }
 
-        @Test("removeEventWatcher is a function")
-        func testRemoveEventWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.power.removeEventWatcher") == "function")
+        @Test("off is a function")
+        func testOffIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.power.off") == "function")
         }
 
-        @Test("addBatteryWatcher is a function")
-        func testAddBatteryWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.power.addBatteryWatcher") == "function")
-        }
-
-        @Test("removeBatteryWatcher is a function")
-        func testRemoveBatteryWatcherIsFunction() {
-            #expect(makeHarness().evalTypeOf("hs.power.removeBatteryWatcher") == "function")
+        @Test("once is a function")
+        func testOnceIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.power.once") == "function")
         }
 
         // MARK: Properties (not functions)
@@ -816,21 +811,21 @@ struct HSPowerTests {
 
         // MARK: Event watcher — valid usage
 
-        @Test("addEventWatcher and removeEventWatcher with the same function do not throw")
+        @Test("on and off with the same function do not throw")
         func testAddThenRemoveEventWatcher() {
             let harness = makeHarness()
             harness.eval("""
-            var _evtHandler = function(e) {};
-            hs.power.addEventWatcher(_evtHandler);
-            hs.power.removeEventWatcher(_evtHandler);
+            var _evtHandler = function() {};
+            hs.power.on('systemWillSleep', _evtHandler);
+            hs.power.off('systemWillSleep', _evtHandler);
         """)
             #expect(!harness.hasException)
         }
 
-        @Test("removeEventWatcher with an unregistered function does not throw")
+        @Test("off with an unregistered function does not throw")
         func testRemoveEventWatcherUnregistered() {
             let harness = makeHarness()
-            harness.eval("hs.power.removeEventWatcher(function(e) {})")
+            harness.eval("hs.power.off('systemWillSleep', function() {})")
             #expect(!harness.hasException)
         }
 
@@ -838,75 +833,90 @@ struct HSPowerTests {
         func testMultipleEventWatchersCanBeAdded() {
             let harness = makeHarness()
             harness.eval("""
-            var _fn1 = function(e) {};
-            var _fn2 = function(e) {};
-            hs.power.addEventWatcher(_fn1);
-            hs.power.addEventWatcher(_fn2);
-            hs.power.removeEventWatcher(_fn1);
-            hs.power.removeEventWatcher(_fn2);
+            var _fn1 = function() {};
+            var _fn2 = function() {};
+            hs.power.on('systemWillSleep', _fn1);
+            hs.power.on('systemDidWake', _fn2);
+            hs.power.off('systemWillSleep', _fn1);
+            hs.power.off('systemDidWake', _fn2);
         """)
             #expect(!harness.hasException)
         }
 
-        @Test("duplicate addEventWatcher registration is idempotent and does not throw")
+        @Test("duplicate on registration is idempotent and does not throw")
         func testDuplicateEventWatcherIsIdempotent() {
             let harness = makeHarness()
             harness.eval("""
-            var _dupEvtFn = function(e) {};
-            hs.power.addEventWatcher(_dupEvtFn);
-            hs.power.addEventWatcher(_dupEvtFn);
-            hs.power.removeEventWatcher(_dupEvtFn);
+            var _dupEvtFn = function() {};
+            hs.power.on('systemWillSleep', _dupEvtFn);
+            hs.power.on('systemWillSleep', _dupEvtFn);
+            hs.power.off('systemWillSleep', _dupEvtFn);
         """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on with a named power event routes to the event emitter, not the battery emitter")
+        func testPowerEventRoutesToEventEmitter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _routeFn = function() {};
+            hs.power.on('systemWillSleep', _routeFn);
+        """)
+            harness.expectTrue("hs.power._eventWatcherEmitter.events['systemWillSleep'].includes(_routeFn)")
+            harness.expectFalse(
+                "hs.power._batteryWatcherEmitter.events['systemWillSleep'] && hs.power._batteryWatcherEmitter.events['systemWillSleep'].includes(_routeFn)"
+            )
+            harness.eval("hs.power.off('systemWillSleep', _routeFn)")
             #expect(!harness.hasException)
         }
 
         // MARK: Event watcher — type validation
 
-        @Test("addEventWatcher with a non-function string throws")
+        @Test("on with a non-function string throws")
         func testAddEventWatcherStringThrows() {
             let harness = makeHarness()
-            harness.eval("hs.power.addEventWatcher('not a function')")
+            harness.eval("hs.power.on('systemWillSleep', 'not a function')")
             #expect(harness.hasException)
         }
 
-        @Test("addEventWatcher with a number throws")
+        @Test("on with a number throws")
         func testAddEventWatcherNumberThrows() {
             let harness = makeHarness()
-            harness.eval("hs.power.addEventWatcher(42)")
+            harness.eval("hs.power.on('systemWillSleep', 42)")
             #expect(harness.hasException)
         }
 
-        @Test("addEventWatcher with null throws")
+        @Test("on with null throws")
         func testAddEventWatcherNullThrows() {
             let harness = makeHarness()
-            harness.eval("hs.power.addEventWatcher(null)")
+            harness.eval("hs.power.on('systemWillSleep', null)")
             #expect(harness.hasException)
         }
 
-        @Test("addEventWatcher with an object throws")
+        @Test("on with an object throws")
         func testAddEventWatcherObjectThrows() {
             let harness = makeHarness()
-            harness.eval("hs.power.addEventWatcher({})")
+            harness.eval("hs.power.on('systemWillSleep', {})")
             #expect(harness.hasException)
         }
 
         // MARK: Battery watcher — valid usage
 
-        @Test("addBatteryWatcher and removeBatteryWatcher with the same function do not throw")
+        @Test("on and off with the same function do not throw (battery)")
         func testAddThenRemoveBatteryWatcher() {
             let harness = makeHarness()
             harness.eval("""
             var _batHandler = function() {};
-            hs.power.addBatteryWatcher(_batHandler);
-            hs.power.removeBatteryWatcher(_batHandler);
+            hs.power.on('change', _batHandler);
+            hs.power.off('change', _batHandler);
         """)
             #expect(!harness.hasException)
         }
 
-        @Test("removeBatteryWatcher with an unregistered function does not throw")
+        @Test("off with an unregistered function does not throw (battery)")
         func testRemoveBatteryWatcherUnregistered() {
             let harness = makeHarness()
-            harness.eval("hs.power.removeBatteryWatcher(function() {})")
+            harness.eval("hs.power.off('change', function() {})")
             #expect(!harness.hasException)
         }
 
@@ -916,54 +926,120 @@ struct HSPowerTests {
             harness.eval("""
             var _bat1 = function() {};
             var _bat2 = function() {};
-            hs.power.addBatteryWatcher(_bat1);
-            hs.power.addBatteryWatcher(_bat2);
-            hs.power.removeBatteryWatcher(_bat1);
-            hs.power.removeBatteryWatcher(_bat2);
+            hs.power.on('change', _bat1);
+            hs.power.on('change', _bat2);
+            hs.power.off('change', _bat1);
+            hs.power.off('change', _bat2);
         """)
             #expect(!harness.hasException)
         }
 
-        @Test("duplicate addBatteryWatcher registration is idempotent and does not throw")
+        @Test("duplicate on registration is idempotent and does not throw (battery)")
         func testDuplicateBatteryWatcherIsIdempotent() {
             let harness = makeHarness()
             harness.eval("""
             var _dupBatFn = function() {};
-            hs.power.addBatteryWatcher(_dupBatFn);
-            hs.power.addBatteryWatcher(_dupBatFn);
-            hs.power.removeBatteryWatcher(_dupBatFn);
+            hs.power.on('change', _dupBatFn);
+            hs.power.on('change', _dupBatFn);
+            hs.power.off('change', _dupBatFn);
         """)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on with 'change' routes to the battery emitter, not the event emitter")
+        func testChangeRoutesToBatteryEmitter() {
+            let harness = makeHarness()
+            harness.eval("""
+            var _routeFn = function() {};
+            hs.power.on('change', _routeFn);
+        """)
+            harness.expectTrue("hs.power._batteryWatcherEmitter.events['change'].includes(_routeFn)")
+            harness.expectFalse(
+                "hs.power._eventWatcherEmitter.events['change'] && hs.power._eventWatcherEmitter.events['change'].includes(_routeFn)"
+            )
+            harness.eval("hs.power.off('change', _routeFn)")
             #expect(!harness.hasException)
         }
 
         // MARK: Battery watcher — type validation
 
-        @Test("addBatteryWatcher with a number throws")
+        @Test("on with a number throws (battery)")
         func testAddBatteryWatcherNumberThrows() {
             let harness = makeHarness()
-            harness.eval("hs.power.addBatteryWatcher(42)")
+            harness.eval("hs.power.on('change', 42)")
             #expect(harness.hasException)
         }
 
-        @Test("addBatteryWatcher with a string throws")
+        @Test("on with a string throws (battery)")
         func testAddBatteryWatcherStringThrows() {
             let harness = makeHarness()
-            harness.eval("hs.power.addBatteryWatcher('callback')")
+            harness.eval("hs.power.on('change', 'callback')")
             #expect(harness.hasException)
         }
 
-        @Test("addBatteryWatcher with null throws")
+        @Test("on with null throws (battery)")
         func testAddBatteryWatcherNullThrows() {
             let harness = makeHarness()
-            harness.eval("hs.power.addBatteryWatcher(null)")
+            harness.eval("hs.power.on('change', null)")
             #expect(harness.hasException)
         }
 
-        @Test("addBatteryWatcher with an object throws")
+        @Test("on with an object throws (battery)")
         func testAddBatteryWatcherObjectThrows() {
             let harness = makeHarness()
-            harness.eval("hs.power.addBatteryWatcher({})")
+            harness.eval("hs.power.on('change', {})")
             #expect(harness.hasException)
+        }
+
+        // MARK: once
+
+        @Test("once-registered listener fires only one time for a power event")
+        func testOnceFiresOnlyOnceForEvent() {
+            let harness = makeHarness()
+            harness.eval("""
+                var count = 0;
+                hs.power.once('systemWillSleep', function() { count++; });
+                hs.power._eventWatcherEmitter.emit('systemWillSleep');
+                hs.power._eventWatcherEmitter.emit('systemWillSleep');
+            """)
+            harness.expectEqual("count", 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("once-registered listener fires only one time for battery change")
+        func testOnceFiresOnlyOnceForBattery() {
+            let harness = makeHarness()
+            harness.eval("""
+                var count = 0;
+                hs.power.once('change', function() { count++; });
+                hs.power._batteryWatcherEmitter.emit('change');
+                hs.power._batteryWatcherEmitter.emit('change');
+            """)
+            harness.expectEqual("count", 1)
+            #expect(!harness.hasException)
+        }
+
+        @Test("on/off/once survive garbage collection of the module's JS wrapper")
+        func testOnOffOnceSurviveModuleWrapperGC() {
+            let (harness, _) = JSTestHarness.makeUnpinned(HSPowerModule.self, as: "power")
+
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+
+            #expect(harness.evalTypeOf("hs.power.on") == "function")
+            #expect(harness.evalTypeOf("hs.power.off") == "function")
+            #expect(harness.evalTypeOf("hs.power.once") == "function")
+
+            harness.eval("""
+                var fn1 = function() {};
+                hs.power.on('systemWillSleep', fn1);
+                hs.power.off('systemWillSleep', fn1);
+
+                var fn2 = function() {};
+                hs.power.on('change', fn2);
+                hs.power.off('change', fn2);
+            """)
+            #expect(!harness.hasException)
         }
 
         // MARK: Internal plumbing
@@ -1000,6 +1076,31 @@ struct HSPowerTests {
             let harness = makeHarness()
             harness.eval("hs.power._removeBatteryWatcher()")
             #expect(!harness.hasException)
+        }
+
+        @Test("on('change', ...) throws if the native battery watcher fails to start")
+        func testOnBatteryThrowsWhenNativeStartFails() {
+            // Regression test for a code review comment: _addBatteryWatcher can fail (e.g.
+            // IOPSNotificationCreateRunLoopSource returning nil) without the LazyWatcherEmitter's
+            // start() throwing, which would record the listener as if the watcher were running -
+            // stranding it until every listener is removed and re-added. Simulates the native
+            // failure by swapping in a stub that returns false, since the real IOPS call can't be
+            // forced to fail from a test.
+            let harness = makeHarness()
+            harness.eval("""
+                hs.power._addBatteryWatcher = function(fn) { return false; };
+                var threw = false;
+                try {
+                    hs.power.on('change', function() {});
+                } catch (err) {
+                    threw = true;
+                }
+            """)
+            #expect(!harness.hasException)
+            harness.expectTrue("threw")
+            harness.expectFalse(
+                "hs.power._batteryWatcherEmitter.events['change'] && hs.power._batteryWatcherEmitter.events['change'].length > 0"
+            )
         }
     }
 }

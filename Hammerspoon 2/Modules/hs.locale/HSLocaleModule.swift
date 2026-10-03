@@ -103,7 +103,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
 /// ## Watching for changes
 ///
 /// ```js
-/// hs.locale.addWatcher(() => {
+/// hs.locale.on('change', () => {
 ///     console.log("Locale settings changed: " + JSON.stringify(hs.locale.details()))
 /// })
 /// ```
@@ -175,41 +175,27 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     /// ```
     func localizedName(_ localeCode: String, _ baseLocaleCode: String?) -> [String: String]?
 
-    // MARK: Watcher (Pattern A)
+    // MARK: Watcher
 
-    /// Registers a listener that fires whenever any of the user's locale settings change.
-    ///
-    /// The listener is called with no arguments. Read `current()` or `details()` inside the
-    /// callback to inspect the new state.
-    ///
-    /// The OS subscription starts lazily on the first listener and is released automatically
-    /// when the last listener is removed via `removeWatcher`.
-    /// - Parameter listener: {() => void} A function called when locale settings change.
-    /// - Example:
-    /// ```js
-    /// hs.locale.addWatcher(() => {
-    ///     console.log("Locale changed to: " + hs.locale.current())
-    /// })
-    /// ```
-    func addWatcher(_ listener: JSFunction)
-
-    /// Removes a previously registered locale change listener.
-    ///
-    /// - Parameter listener: The function originally passed to `addWatcher`.
-    /// - Example:
-    /// ```js
-    /// const handler = () => console.log("changed")
-    /// hs.locale.addWatcher(handler)
-    /// hs.locale.removeWatcher(handler)
-    /// ```
-    func removeWatcher(_ listener: JSFunction)
-
+    // NOTE: Private API consumed only by hs.locale.js
     /// SKIP_DOCS
     @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    // MARK: - Swift-retained storage for JS-defined enhancements
+    // These are set by hs.locale.js. They must be real, pre-declared properties (not
+    // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
+    // it garbage collects the wrapper it created for this object - see issue #185.
+
+    /// SKIP_DOCS
+    @objc var on: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var off: JSFunction? { get set }
+    /// SKIP_DOCS
+    @objc var once: JSFunction? { get set }
 }
 
 // MARK: - Module implementation
@@ -220,8 +206,11 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     var moduleName = "hs.locale"
     let engineID: UUID
 
-    // MARK: - Watcher (Pattern A)
+    // MARK: - Watcher
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var on: JSFunction? = nil
+    @objc var off: JSFunction? = nil
+    @objc var once: JSFunction? = nil
     private var watcherCallback: JSFunction?
     private var localeChangeObserver: NSObjectProtocol?
 
@@ -236,6 +225,9 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     func shutdown() {
         _removeWatcher()
         _watcherEmitter = nil
+        on = nil
+        off = nil
+        once = nil
     }
 
     isolated deinit {
@@ -296,15 +288,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
         return ["name": localName, "nameWithDialect": nameWithDialect]
     }
 
-    // MARK: - Watcher (Pattern A)
-
-    func addWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("on", withArguments: [listener])
-    }
-
-    func removeWatcher(_ listener: JSFunction) {
-        _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-    }
+    // MARK: - Watcher
 
     @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
         guard watcherCallback == nil else {
