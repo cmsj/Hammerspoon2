@@ -1,0 +1,55 @@
+{
+  "compilerOptions": {
+    // Target modern JavaScript
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+
+    // Output directory for compiled JavaScript
+    "outDir": "./compiled",
+
+    // Strict type checking
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    // Additional checks
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Module resolution
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+
+    // Source maps for debugging
+    "sourceMap": true,
+
+    // Skip lib check for faster compilation
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Include Hammerspoon type definitions
+    "types": []
+  },
+
+  // Include your TypeScript config files
+  "include": [
+    "*.ts",
+    "src/**/*.ts"
+  ],
+
+  // Exclude output and dependencies
+  "exclude": [
+    "node_modules",
+    "compiled"
+  ]
+}
