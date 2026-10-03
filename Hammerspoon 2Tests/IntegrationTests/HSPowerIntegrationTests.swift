@@ -1077,5 +1077,30 @@ struct HSPowerTests {
             harness.eval("hs.power._removeBatteryWatcher()")
             #expect(!harness.hasException)
         }
+
+        @Test("on('change', ...) throws if the native battery watcher fails to start")
+        func testOnBatteryThrowsWhenNativeStartFails() {
+            // Regression test for a code review comment: _addBatteryWatcher can fail (e.g.
+            // IOPSNotificationCreateRunLoopSource returning nil) without the LazyWatcherEmitter's
+            // start() throwing, which would record the listener as if the watcher were running -
+            // stranding it until every listener is removed and re-added. Simulates the native
+            // failure by swapping in a stub that returns false, since the real IOPS call can't be
+            // forced to fail from a test.
+            let harness = makeHarness()
+            harness.eval("""
+                hs.power._addBatteryWatcher = function(fn) { return false; };
+                var threw = false;
+                try {
+                    hs.power.on('change', function() {});
+                } catch (err) {
+                    threw = true;
+                }
+            """)
+            #expect(!harness.hasException)
+            harness.expectTrue("threw")
+            harness.expectFalse(
+                "hs.power._batteryWatcherEmitter.events['change'] && hs.power._batteryWatcherEmitter.events['change'].length > 0"
+            )
+        }
     }
 }

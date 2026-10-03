@@ -109,7 +109,7 @@ import JavaScriptCore
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc(_removeWatcher) func _removeWatcher()
 
@@ -215,8 +215,8 @@ import JavaScriptCore
     private var moduleRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:]
     private var previousDeviceIDs: Set<AudioObjectID> = []
 
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) {
-        guard unsafe moduleRegistrations.isEmpty else { return }
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
+        guard unsafe moduleRegistrations.isEmpty else { return false }
         moduleCallback = listener
         let sysObjID = AudioObjectID(kAudioObjectSystemObject)
 
@@ -247,6 +247,13 @@ import JavaScriptCore
         if unsafe AudioObjectAddPropertyListenerBlock(sysObjID, &devAddr, .main, devBlock) == noErr {
             unsafe moduleRegistrations["__devices"] = (address: devAddr, block: devBlock)
         }
+
+        guard unsafe !moduleRegistrations.isEmpty else {
+            AKError("hs.audiodevice._addWatcher(): Failed to register any property listeners")
+            moduleCallback = nil
+            return false
+        }
+        return true
     }
 
     @objc(_removeWatcher) func _removeWatcher() {

@@ -21,9 +21,12 @@ hs.power._eventWatcherEmitter = new LazyWatcherEmitter("hs.power", function() {
 });
 
 hs.power._batteryWatcherEmitter = new LazyWatcherEmitter("hs.power", function() {
-    hs.power._addBatteryWatcher(() => {
+    const started = hs.power._addBatteryWatcher(() => {
         hs.power._batteryWatcherEmitter.emit('change');
     });
+    if (!started) {
+        throw new Error("hs.power.on(): Failed to start battery watcher");
+    }
 }, function() {
     hs.power._removeBatteryWatcher();
 });

@@ -143,7 +143,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     @objc func once(_ listener: JSFunction)
 
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
@@ -263,7 +263,11 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             ctx.exception = JSValue(newErrorFromMessage: "hs.camera device.on(): listener must be a function", in: ctx)
             return
         }
-        ensureWatcherEmitter(ctx)?.invokeMethod("on", withArguments: [Self.changeEvent, listener])
+        guard let emitter = ensureWatcherEmitter(ctx) else { return }
+        // callCapturingException, not plain invokeMethod: a throw from inside the emitter's
+        // on() (e.g. the native watcher failing to start) must reach this call's own JS
+        // caller - see callCapturingException's doc comment for why invokeMethod alone can't.
+        _ = ctx.callCapturingException { emitter.invokeMethod("on", withArguments: [Self.changeEvent, listener]) }
     }
 
     @objc func off(_ listener: JSFunction) {
@@ -276,17 +280,18 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             ctx.exception = JSValue(newErrorFromMessage: "hs.camera device.once(): listener must be a function", in: ctx)
             return
         }
-        ensureWatcherEmitter(ctx)?.invokeMethod("once", withArguments: [Self.changeEvent, listener])
+        guard let emitter = ensureWatcherEmitter(ctx) else { return }
+        _ = ctx.callCapturingException { emitter.invokeMethod("once", withArguments: [Self.changeEvent, listener]) }
     }
 
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
         guard watcherCallback == nil else {
             AKWarning("hs.camera._addWatcher(): Already watching '\(name)'. Refusing to create a second.")
-            return
+            return false
         }
         guard let cmioID = HSCamera.cmioDeviceID(matchingUID: device.uniqueID) else {
             AKError("hs.camera._addWatcher(): Cannot find CMIO device for '\(name)'")
-            return
+            return false
         }
 
         watcherCallback = listener
@@ -308,6 +313,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         unsafe cmioListenerBlock = block
         unsafe CMIOObjectAddPropertyListenerBlock(cmioID, &address, .main, block)
         AKDebug("hs.camera._addWatcher(): Started watching '\(name)'")
+        return true
     }
 
     @objc func _removeWatcher() {

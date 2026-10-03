@@ -424,8 +424,12 @@ import AXSwift
             AKError("hs.ax.on(): notification must be a string or an array of strings")
             return
         }
+        guard let ctx = JSContext.current() else { return }
         for notif in notifications {
-            _watcherEmitter?.invokeMethod("on", withArguments: [element, notif, listener])
+            // callCapturingException, not plain invokeMethod: a throw from inside the emitter's
+            // on() (e.g. an invalid listener) must reach this call's own JS caller - see
+            // callCapturingException's doc comment for why invokeMethod alone can't.
+            _ = ctx.callCapturingException { _watcherEmitter?.invokeMethod("on", withArguments: [element, notif, listener]) }
         }
     }
 
@@ -444,8 +448,9 @@ import AXSwift
             AKError("hs.ax.once(): notification must be a string or an array of strings")
             return
         }
+        guard let ctx = JSContext.current() else { return }
         for notif in notifications {
-            _watcherEmitter?.invokeMethod("once", withArguments: [element, notif, listener])
+            _ = ctx.callCapturingException { _watcherEmitter?.invokeMethod("once", withArguments: [element, notif, listener]) }
         }
     }
 

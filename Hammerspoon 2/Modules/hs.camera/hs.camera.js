@@ -58,9 +58,12 @@ hs.camera.once = function(event, listener) {
 /// SKIP_DOCS
 hs.camera._makeCameraEmitter = function(camera) {
     return new LazyWatcherEmitter("hs.camera device", function() {
-        camera._addWatcher((isInUse) => {
+        const started = camera._addWatcher((isInUse) => {
             camera._watcherEmitter.emit("change", isInUse);
         });
+        if (!started) {
+            throw new Error("hs.camera device.on(): Failed to start watcher");
+        }
     }, function() {
         camera._removeWatcher();
     });

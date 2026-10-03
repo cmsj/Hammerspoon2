@@ -209,7 +209,7 @@ import IOKit.pwr_mgt
     @objc var _eventWatcherEmitter: JSFunction? { get set }
 
     /// SKIP_DOCS
-    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction)
+    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeBatteryWatcher()
     /// SKIP_DOCS
@@ -566,10 +566,10 @@ import IOKit.pwr_mgt
 
     // MARK: - Battery Watcher
 
-    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction) {
+    @objc(_addBatteryWatcher:) func _addBatteryWatcher(_ callback: JSFunction) -> Bool {
         guard batteryWatcherCallback == nil else {
             AKWarning("hs.power._addBatteryWatcher: already watching — refusing second subscription")
-            return
+            return false
         }
         batteryWatcherCallback = callback
 
@@ -593,12 +593,13 @@ import IOKit.pwr_mgt
             unsafe Unmanaged<HSPowerModule>.fromOpaque(ptr).release()
             unsafe batteryContextPointer = nil
             batteryWatcherCallback = nil
-            return
+            return false
         }
 
         batteryRunLoopSource = source
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .defaultMode)
         AKDebug("hs.power._addBatteryWatcher: started")
+        return true
     }
 
     @objc func _removeBatteryWatcher() {

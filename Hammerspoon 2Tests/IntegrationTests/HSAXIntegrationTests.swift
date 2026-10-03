@@ -1173,6 +1173,29 @@ struct HSAXTests {
             #expect(harness.hasException)
         }
 
+        @Test("on's exception from an invalid listener is catchable by the caller's own try/catch")
+        func testOnInvalidListenerExceptionIsCatchable() {
+            // Regression test: the tests above only check harness.hasException, which fires for
+            // any exception crossing an invokeMethod call boundary regardless of whether a JS
+            // try/catch around the call would see it (see callCapturingException's doc comment)
+            // - so they didn't actually verify a caller's own try/catch works. on()/off()/once()
+            // are native Swift methods that invokeMethod into the JS emitter; before using
+            // callCapturingException there, the emitter's "listener must be a function" throw
+            // never reached this try/catch at all.
+            let harness = makeHarness()
+            harness.eval("""
+            var _catchFinder = hs.application.matchingBundleID('com.apple.finder');
+            var _catchElem = hs.ax.applicationElement(_catchFinder);
+            var threw = false;
+            try {
+                hs.ax.on(_catchElem, 'AXWindowCreated', 'not a function');
+            } catch (err) {
+                threw = true;
+            }
+        """)
+            harness.expectTrue("threw")
+        }
+
         @Test("removing one of two listeners leaves the other in place")
         func testRemovingOneListenerLeavesOtherIntact() {
             let harness = makeHarness()

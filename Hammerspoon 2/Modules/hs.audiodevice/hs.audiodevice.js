@@ -9,9 +9,12 @@
 // stops it once the last listener (across all events) is removed. See Engine/engine.js for
 // LazyWatcherEmitter itself.
 hs.audiodevice._watcherEmitter = new LazyWatcherEmitter("hs.audiodevice", function() {
-    hs.audiodevice._addWatcher((event) => {
+    const started = hs.audiodevice._addWatcher((event) => {
         hs.audiodevice._watcherEmitter.emit(event);
     });
+    if (!started) {
+        throw new Error("hs.audiodevice.on(): Failed to start watcher");
+    }
 }, function() {
     hs.audiodevice._removeWatcher();
 });
@@ -63,9 +66,12 @@ hs.audiodevice.once = function(event, listener) {
 /// SKIP_DOCS
 hs.audiodevice._makeDeviceEmitter = function(device) {
     return new LazyWatcherEmitter("hs.audiodevice device", function() {
-        device._addWatcher((event) => {
+        const started = device._addWatcher((event) => {
             device._watcherEmitter.emit(event);
         });
+        if (!started) {
+            throw new Error("hs.audiodevice device.on(): Failed to start watcher");
+        }
     }, function() {
         device._removeWatcher();
     });

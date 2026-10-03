@@ -391,6 +391,36 @@ struct HSCameraTests {
             #expect(threw)
         }
 
+        @Test("per-camera on() throws if the native watcher fails to start")
+        func testOnThrowsWhenNativeStartFails() {
+            // Regression test for a code review comment (same class of bug fixed for
+            // hs.power's battery watcher): if the per-device _addWatcher fails (e.g. the CMIO
+            // device lookup for this camera's UID fails), the LazyWatcherEmitter's start()
+            // function must throw rather than silently succeed - otherwise the listener gets
+            // recorded as if the watcher were running and never receives events. Simulates the
+            // native failure by swapping in a stub that returns false, since the real CMIO
+            // lookup can't be forced to fail from a test.
+            //
+            // Does not assert !harness.hasException: on()/once() are native Swift methods that
+            // invokeMethod into the JS emitter, and the context's exceptionHandler legitimately
+            // fires for any exception crossing that call boundary - even one this test's own
+            // try/catch goes on to catch correctly (see callCapturingException's doc comment).
+            // testOnThrowsOnNonFunction above exercises the same call shape and likewise only
+            // checks that the throw was caught, not hasException.
+            let harness = makeHarness()
+            harness.eval("""
+                var _failCam = hs.camera.all()[0];
+                _failCam._addWatcher = function(fn) { return false; };
+                var threw = false;
+                try {
+                    _failCam.on(function() {});
+                } catch (err) {
+                    threw = true;
+                }
+            """)
+            harness.expectTrue("threw")
+        }
+
         @Test("per-camera once() fires only one time")
         func testOnceFiresOnlyOnce() {
             let harness = makeHarness()

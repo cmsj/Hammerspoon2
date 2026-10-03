@@ -332,6 +332,30 @@ struct HSAudioDeviceTests {
         """)
         }
 
+        @Test("module on() throws if the native watcher fails to start")
+        func testModuleOnThrowsWhenNativeStartFails() {
+            // Regression test for a code review comment (same class of bug fixed for
+            // hs.power's battery watcher): if _addWatcher fails to register any CoreAudio
+            // property listener, the LazyWatcherEmitter's start() function must throw rather
+            // than silently succeed - otherwise the listener gets recorded as if the watcher
+            // were running and never receives events. Simulates total native failure by
+            // swapping in a stub that returns false, since real CoreAudio registration can't
+            // be forced to fail from a test. hs.audiodevice.on() is pure JS (unlike the
+            // per-device case below), so checking !hasException is valid here.
+            let harness = makeHarness()
+            harness.eval("""
+                hs.audiodevice._addWatcher = function(fn) { return false; };
+                var threw = false;
+                try {
+                    hs.audiodevice.on('dOut', function() {});
+                } catch (err) {
+                    threw = true;
+                }
+            """)
+            #expect(!harness.hasException)
+            harness.expectTrue("threw")
+        }
+
         @Test("module on/off/once survive garbage collection of the module's JS wrapper")
         func testModuleOnOffOnceSurviveModuleWrapperGC() {
             let (harness, _) = JSTestHarness.makeUnpinned(HSAudioDeviceModule.self, as: "audiodevice")
@@ -375,6 +399,28 @@ struct HSAudioDeviceTests {
             _safeRemoveDev.off('vmout', function() {});
         """)
             harness.expectTrue("true")
+        }
+
+        @Test("device on() throws if the native watcher fails to start")
+        func testDeviceOnThrowsWhenNativeStartFails() {
+            // Same regression as the module-level test above, for the per-device watcher.
+            // Does not assert !harness.hasException: device on()/once() are native Swift
+            // methods that invokeMethod into the JS emitter, and the context's
+            // exceptionHandler legitimately fires for any exception crossing that call
+            // boundary - even one this test's own try/catch goes on to catch correctly (see
+            // callCapturingException's doc comment, and hs.camera's identical test).
+            let harness = makeHarness()
+            harness.eval("""
+                var _failDev = hs.audiodevice.all()[0];
+                _failDev._addWatcher = function(fn) { return false; };
+                var threw = false;
+                try {
+                    _failDev.on('vmout', function() {});
+                } catch (err) {
+                    threw = true;
+                }
+            """)
+            harness.expectTrue("threw")
         }
 
         @Test("device watcher fires vmout event when output volume changes")

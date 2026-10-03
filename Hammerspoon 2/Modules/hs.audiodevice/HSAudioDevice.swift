@@ -471,7 +471,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc(_removeWatcher) func _removeWatcher()
 
@@ -725,7 +725,11 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     }
 
     @objc func on(_ event: String, _ listener: JSFunction) {
-        ensureWatcherEmitter()?.invokeMethod("on", withArguments: [event, listener])
+        guard let ctx = JSContext.current(), let emitter = ensureWatcherEmitter() else { return }
+        // callCapturingException, not plain invokeMethod: a throw from inside the emitter's
+        // on() (e.g. the native watcher failing to start) must reach this call's own JS
+        // caller - see callCapturingException's doc comment for why invokeMethod alone can't.
+        _ = ctx.callCapturingException { emitter.invokeMethod("on", withArguments: [event, listener]) }
     }
 
     @objc func off(_ event: String, _ listener: JSFunction) {
@@ -733,11 +737,12 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     }
 
     @objc func once(_ event: String, _ listener: JSFunction) {
-        ensureWatcherEmitter()?.invokeMethod("once", withArguments: [event, listener])
+        guard let ctx = JSContext.current(), let emitter = ensureWatcherEmitter() else { return }
+        _ = ctx.callCapturingException { emitter.invokeMethod("once", withArguments: [event, listener]) }
     }
 
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) {
-        guard unsafe deviceRegistrations.isEmpty else { return }
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
+        guard unsafe deviceRegistrations.isEmpty else { return false }
         selfRetain = self
 
         let candidates: [(AudioObjectPropertySelector, AudioObjectPropertyScope, String)] = [
@@ -761,7 +766,13 @@ private func caDataSourceName(_ objectID: AudioObjectID,
             }
         }
 
+        guard unsafe !deviceRegistrations.isEmpty else {
+            AKError(unsafe "HSAudioDevice id=\(objectID): Failed to register any property listeners")
+            selfRetain = nil
+            return false
+        }
         AKDebug(unsafe "HSAudioDevice id=\(objectID): watcher started (\(deviceRegistrations.count) listeners)")
+        return true
     }
 
     @objc(_removeWatcher) func _removeWatcher() {
