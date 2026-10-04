@@ -348,6 +348,7 @@ that asymmetry deliberately; pass values between files through `module.exports` 
 The [API reference](index.html) covers every module and type in full, with parameters and
 examples for each method — this guide only scratched the surface of what's available. Want to
 install someone else's packaged automation, or share your own? See the
-[Spoons guide](spoons-guide.html). Coming from Hammerspoon 1? See the
+[Spoons guide](spoons-guide.html). Prefer writing your config in TypeScript? See the
+[TypeScript guide](typescript-guide.html). Coming from Hammerspoon 1? See the
 [migration guide](migration-guide.html) for what moved, what changed shape, and what has no v2
 equivalent yet.

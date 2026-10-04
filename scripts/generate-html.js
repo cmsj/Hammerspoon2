@@ -46,6 +46,13 @@ const GUIDES = [
         slug: 'canvas-guide',
         pageTitle: 'hs.canvas',
         searchDescription: 'A complete guide to hs.canvas: the element/property reference, the action pipeline, and worked examples combining shapes, text, images, gradients, and mouse interaction.'
+    },
+    {
+        sourcePath: path.join(__dirname, '..', 'docs', 'typescript-guide.md'),
+        outputName: 'typescript-guide.html',
+        slug: 'typescript-guide',
+        pageTitle: 'TypeScript',
+        searchDescription: 'How to write your Hammerspoon 2 config in TypeScript: setup, the ambient hammerspoon.d.ts globals, compiling, and editor support.'
     }
 ];
 

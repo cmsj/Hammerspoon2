@@ -110,7 +110,6 @@ jobs:
           cp -r docs/ts/html "site/$VERSION/ts"
           cp docs/hammerspoon.d.ts "site/$VERSION/hammerspoon.d.ts"
           cp docs/tsconfig.example.json "site/$VERSION/tsconfig.example.json"
-          cp docs/TYPESCRIPT.md "site/$VERSION/TYPESCRIPT.md"
 
       - name: Generate root version index
         run: node scripts/generate-versions-index.js site
