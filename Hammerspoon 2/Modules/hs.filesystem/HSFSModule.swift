@@ -54,8 +54,9 @@ import UniformTypeIdentifiers
 ///
 /// ## Errors
 ///
-/// Functions that fail return `null` or `false`, log the failure to the Console, and set
-/// `hs.fs.lastError` to an object like `{code: "ENOENT", message: "No such file or directory"}`.
+/// Functions that fail return `null` or `false` and set `hs.fs.lastError` to an object like
+/// `{code: "ENOENT", message: "No such file or directory"}`. Most failures are also logged to the
+/// Console; failures that are often expected (such as `hs.fs.open()` on a missing file) are not.
 ///
 /// ## Directory operations
 ///
@@ -117,8 +118,12 @@ import UniformTypeIdentifiers
     /// Add `x` to a `w` mode (`"wx"`, `"w+x"`) to fail if the file already exists. A `b` is accepted and
     /// ignored, since all files can be read as text or bytes.
     ///
-    /// Directories cannot be opened. Close the file with `close()` when you are finished with it;
-    /// any files still open are closed automatically when your configuration is reloaded.
+    /// Directories cannot be opened. A file that can't be opened (for example because it doesn't exist) is
+    /// not logged to the Console, since that is often an expected outcome; check `hs.fs.lastError` instead.
+    /// Invalid arguments, such as an unknown mode, are logged.
+    ///
+    /// Close the file with `close()` when you are finished with it; any files still open are closed
+    /// automatically when your configuration is reloaded.
     ///
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
@@ -964,14 +969,16 @@ import UniformTypeIdentifiers
         let expandedPath = expand(path)
         let fd = unsafe Darwin.open(expandedPath, flags, createMode)
         guard fd >= 0 else {
-            fail("hs.fs.open", errno: errno, path: path)
+            // Not logged: "try to open, fall back if it's missing" is a normal pattern, and the
+            // caller gets null plus lastError. Invalid arguments (above) are still logged.
+            record(errno: errno)
             return nil
         }
 
         var st = Darwin.stat()
         if unsafe fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFDIR {
             Darwin.close(fd)
-            fail("hs.fs.open", errno: EISDIR, path: path)
+            record(errno: EISDIR)
             return nil
         }
 
