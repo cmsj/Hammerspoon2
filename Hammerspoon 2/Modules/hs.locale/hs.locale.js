@@ -10,7 +10,7 @@
 // only ever emits one kind of event ("change"), but on/off/once still take an explicit event
 // name for consistency with every other hs.* module-level watcher.
 hs.locale._watcherEmitter = new LazyWatcherEmitter("hs.locale", function() {
-    hs.locale._addWatcher((event) => {
+    return hs.locale._addWatcher((event) => {
         hs.locale._watcherEmitter.emit(event);
     });
 }, function() {
@@ -22,9 +22,14 @@ hs.locale._watcherEmitter = new LazyWatcherEmitter("hs.locale", function() {
 /// Parameters:
 ///  - event: {"change"} The event to listen for (the only event this module emits)
 ///  - listener: {() => void} Called with no arguments when locale settings change
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.locale.on('change', () => console.log("Locale changed to: " + hs.locale.current()))
+/// try {
+///     hs.locale.on('change', () => console.log("Locale changed to: " + hs.locale.current()))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.locale.on = function(event, listener) {
     hs.locale._watcherEmitter.on(event, listener);
@@ -49,9 +54,14 @@ hs.locale.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"change"} The event to listen for
 ///  - listener: {() => void} Called once, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.locale.once('change', () => console.log("First change detected"))
+/// try {
+///     hs.locale.once('change', () => console.log("First change detected"))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.locale.once = function(event, listener) {
     hs.locale._watcherEmitter.once(event, listener);

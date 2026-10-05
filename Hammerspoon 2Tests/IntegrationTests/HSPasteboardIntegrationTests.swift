@@ -448,6 +448,17 @@ struct HSPasteboardTests {
             return harness
         }
 
+        @Test("_startWatcher reports success")
+        func testStartWatcherReportsSuccess() {
+            let harness = makeHarness()
+            harness.eval("""
+            var started = hs.pasteboard._startWatcher(0.5, function() {});
+            hs.pasteboard._stopWatcher();
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalBool("started") == true)
+        }
+
         @Test("on throws when listener is not a function")
         func testOnThrowsForNonFunction() {
             let harness = makeHarness()

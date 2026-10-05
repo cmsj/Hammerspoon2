@@ -431,11 +431,9 @@ struct HSAudioDeviceTests {
         @Test("device on() throws if the native watcher fails to start")
         func testDeviceOnThrowsWhenNativeStartFails() {
             // Same regression as the module-level test above, for the per-device watcher.
-            // Does not assert !harness.hasException: device on()/once() are native Swift
-            // methods that invokeMethod into the JS emitter, and the context's
-            // exceptionHandler legitimately fires for any exception crossing that call
-            // boundary - even one this test's own try/catch goes on to catch correctly (see
-            // callCapturingException's doc comment, and hs.camera's identical test).
+            // device on()/once() are native Swift methods that invokeMethod into the JS
+            // emitter; an exception the caller catches must not also reach the context's
+            // exceptionHandler (which logs it as an error), hence the !hasException check.
             let harness = makeHarness()
             harness.eval("""
                 var _failDev = hs.audiodevice.all()[0];
@@ -447,6 +445,7 @@ struct HSAudioDeviceTests {
                     threw = true;
                 }
             """)
+            #expect(!harness.hasException)
             harness.expectTrue("threw")
         }
 

@@ -52,6 +52,87 @@ struct LazyWatcherEmitterTests {
         #expect(!harness.hasException)
     }
 
+    @Test("a start() returning false makes on() throw, records nothing, and allows a retry")
+    func testStartReturningFalseThrows() {
+        let harness = makeHarness()
+        harness.eval("""
+            var startCalls = 0;
+            var shouldFail = true;
+            var e = new LazyWatcherEmitter("hs.test", function() {
+                startCalls++;
+                return !shouldFail;
+            }, function() {});
+
+            var fn = function() {};
+            var message = null;
+            try {
+                e.on('x', fn);
+            } catch (err) {
+                message = err.message;
+            }
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalString("message") == "hs.test.on(): failed to start watcher")
+        harness.expectFalse("e.events['x'] && e.events['x'].includes(fn)")
+
+        harness.eval("""
+            shouldFail = false;
+            e.on('x', fn);
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalInt("startCalls") == 2)
+        harness.expectTrue("e.events['x'].includes(fn)")
+    }
+
+    @Test("a start() returning false makes once() throw too")
+    func testStartReturningFalseThrowsFromOnce() {
+        let harness = makeHarness()
+        harness.eval("""
+            var e = new LazyWatcherEmitter("hs.test", function() { return false; }, function() {});
+            var threw = false;
+            try {
+                e.once('x', function() {});
+            } catch (err) {
+                threw = true;
+            }
+        """)
+        #expect(!harness.hasException)
+        harness.expectTrue("threw")
+        harness.expectFalse("e.events['x'] && e.events['x'].length > 0")
+    }
+
+    @Test("a keyed start() returning false makes on() throw, records nothing, and allows a retry")
+    func testKeyedStartReturningFalseThrows() {
+        let harness = makeHarness()
+        harness.eval("""
+            var startCalls = 0;
+            var shouldFail = true;
+            var e = new KeyedLazyWatcherEmitter("hs.test", function(event) {
+                startCalls++;
+                return !shouldFail;
+            }, function(event) {});
+
+            var fn = function() {};
+            var message = null;
+            try {
+                e.on('x', fn);
+            } catch (err) {
+                message = err.message;
+            }
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalString("message") == "hs.test.on(): failed to start watcher for 'x'")
+        harness.expectFalse("e.events['x'] && e.events['x'].includes(fn)")
+
+        harness.eval("""
+            shouldFail = false;
+            e.on('x', fn);
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalInt("startCalls") == 2)
+        harness.expectTrue("e.events['x'].includes(fn)")
+    }
+
     @Test("a successful start() is only called once across multiple listeners")
     func testSuccessfulStartCalledOnce() {
         let harness = makeHarness()

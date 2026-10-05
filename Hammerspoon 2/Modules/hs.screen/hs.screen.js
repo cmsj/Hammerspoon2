@@ -10,7 +10,7 @@
 // hs.screen only ever emits one kind of event ("change"), but on/off/once still take an explicit
 // event name for consistency with every other hs.* module-level watcher.
 hs.screen._watcherEmitter = new LazyWatcherEmitter("hs.screen", function() {
-    hs.screen._addWatcher((event) => {
+    return hs.screen._addWatcher((event) => {
         hs.screen._watcherEmitter.emit(event);
     });
 }, function() {
@@ -23,9 +23,14 @@ hs.screen._watcherEmitter = new LazyWatcherEmitter("hs.screen", function() {
 /// Parameters:
 ///  - event: {"change"} The event to listen for (the only event this module emits)
 ///  - listener: {() => void} Called with no arguments when the display configuration changes; call all()/main()/primary() inside it to inspect the new configuration
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.screen.on('change', () => console.log("Screens changed, now: " + hs.screen.all().length))
+/// try {
+///     hs.screen.on('change', () => console.log("Screens changed, now: " + hs.screen.all().length))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.screen.on = function(event, listener) {
     hs.screen._watcherEmitter.on(event, listener);
@@ -50,9 +55,14 @@ hs.screen.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"change"} The event to listen for
 ///  - listener: {() => void} Called once, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.screen.once('change', () => console.log("First change detected"))
+/// try {
+///     hs.screen.once('change', () => console.log("First change detected"))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.screen.once = function(event, listener) {
     hs.screen._watcherEmitter.once(event, listener);

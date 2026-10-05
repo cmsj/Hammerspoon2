@@ -117,12 +117,17 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     /// of event, so unlike the module-level watchers there is no event name to pass.
     ///
     /// - Parameter listener: {(isInUse: boolean) => void} A JavaScript function called with `true` when the camera starts being used and `false` when released
+    /// - Throws: true
     /// - Example:
     /// ```js
     /// const cam = hs.camera.all()[0]
-    /// cam.on((inUse) => {
-    ///     console.log(cam.name + " is " + (inUse ? "now in use" : "no longer in use"))
-    /// })
+    /// try {
+    ///     cam.on((inUse) => {
+    ///         console.log(cam.name + " is " + (inUse ? "now in use" : "no longer in use"))
+    ///     })
+    /// } catch (err) {
+    ///     console.error(err.message)
+    /// }
     /// ```
     @objc func on(_ listener: JSFunction)
 
@@ -136,9 +141,14 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
 
     /// Register a listener that fires at most once, the next time this camera's in-use state changes.
     /// - Parameter listener: {(isInUse: boolean) => void} Called once, then automatically removed
+    /// - Throws: true
     /// - Example:
     /// ```js
-    /// cam.once((inUse) => console.log("First change:", inUse))
+    /// try {
+    ///     cam.once((inUse) => console.log("First change:", inUse))
+    /// } catch (err) {
+    ///     console.error(err.message)
+    /// }
     /// ```
     @objc func once(_ listener: JSFunction)
 

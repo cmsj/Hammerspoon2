@@ -230,6 +230,19 @@ struct HSLocaleTests {
             return harness
         }
 
+        @Test("_addWatcher reports success, then refuses a second subscription by returning false")
+        func testAddWatcherReportsRefusal() {
+            let harness = makeHarness()
+            harness.eval("""
+            var first = hs.locale._addWatcher(function() {});
+            var second = hs.locale._addWatcher(function() {});
+            hs.locale._removeWatcher();
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalBool("first") == true)
+            #expect(harness.evalBool("second") == false)
+        }
+
         @Test("on with non-function throws")
         func testAddWatcherNonFunction() {
             let harness = makeHarness()

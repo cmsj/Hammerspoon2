@@ -82,7 +82,7 @@ import AVFoundation
     @objc func findByUID(_ uid: String) -> HSCamera?
 
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
@@ -198,10 +198,10 @@ nonisolated enum HSCameraEvent: String, HSEventName {
     @objc var once: JSFunction? = nil
     private var moduleCallback: JSFunction? = nil
 
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
         guard moduleCallback == nil else {
             AKWarning("hs.camera._addWatcher(): Already watching. Refusing to create a second.")
-            return
+            return false
         }
         // Populate the cache now so any camera that disconnects before all() is ever
         // called still has an HSCamera entry — not a raw UID string — in the callback.
@@ -245,6 +245,7 @@ nonisolated enum HSCameraEvent: String, HSEventName {
         }
 
         AKDebug("hs.camera._addWatcher(): Started")
+        return true
     }
 
     @objc func _removeWatcher() {

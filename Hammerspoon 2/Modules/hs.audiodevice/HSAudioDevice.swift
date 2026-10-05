@@ -442,10 +442,15 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// - Parameters:
     ///   - event: {"vmout" | "vmin" | "mout" | "min" | "rate" | "dsout" | "dsin"} The event to listen for
     ///   - listener: {() => void} Called when the event occurs
+    /// - Throws: true
     /// - Example:
     /// ```js
     /// const dev = hs.audiodevice.defaultOutputDevice()
-    /// dev.on('vmout', () => console.log("Output volume changed"))
+    /// try {
+    ///     dev.on('vmout', () => console.log("Output volume changed"))
+    /// } catch (err) {
+    ///     console.error(err.message)
+    /// }
     /// ```
     @objc func on(_ event: String, _ listener: JSFunction)
 
@@ -463,9 +468,14 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// - Parameters:
     ///   - event: {"vmout" | "vmin" | "mout" | "min" | "rate" | "dsout" | "dsin"} The event to listen for
     ///   - listener: {() => void} Called once, then automatically removed
+    /// - Throws: true
     /// - Example:
     /// ```js
-    /// dev.once('vmout', () => console.log("Volume changed once"))
+    /// try {
+    ///     dev.once('vmout', () => console.log("Volume changed once"))
+    /// } catch (err) {
+    ///     console.error(err.message)
+    /// }
     /// ```
     @objc func once(_ event: String, _ listener: JSFunction)
 

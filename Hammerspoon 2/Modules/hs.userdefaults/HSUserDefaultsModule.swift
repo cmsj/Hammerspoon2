@@ -88,7 +88,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
 
     // NOTE: These are private API for the companion JS file only
     /// SKIP_DOCS
-    @objc(_addWatcher::) func _addWatcher(_ key: String, listener: JSFunction)
+    @objc(_addWatcher::) func _addWatcher(_ key: String, listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher(_ key: String)
     /// SKIP_DOCS
@@ -202,18 +202,19 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
 
     // MARK: - Watchers
 
-    @objc(_addWatcher::) func _addWatcher(_ key: String, listener: JSFunction) {
+    @objc(_addWatcher::) func _addWatcher(_ key: String, listener: JSFunction) -> Bool {
         guard let suite else {
             AKError("hs.userdefaults.on(): No UserDefaults suite available")
-            return
+            return false
         }
         guard watcherCallbacks[key] == nil else {
             AKWarning("hs.userdefaults.on(): Already watching '\(key)'. Refusing to create a second.")
-            return
+            return false
         }
         watcherCallbacks[key] = listener
         unsafe suite.addObserver(self, forKeyPath: key, options: [.new], context: nil)
         AKDebug("hs.userdefaults.on(): Started watching '\(key)'")
+        return true
     }
 
     @objc func _removeWatcher(_ key: String) {

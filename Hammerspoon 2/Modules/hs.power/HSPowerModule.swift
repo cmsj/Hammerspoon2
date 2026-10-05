@@ -202,7 +202,7 @@ import IOKit.pwr_mgt
     // families exist - system power/session events share one notification stream, battery
     // state uses a separate IOPS run-loop source - so each gets its own emitter in JS.
     /// SKIP_DOCS
-    @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSFunction)
+    @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeEventWatcher()
     /// SKIP_DOCS
@@ -531,10 +531,10 @@ nonisolated enum HSPowerEvent: String, HSEventName {
 
     // MARK: - Event Watcher
 
-    @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSFunction) {
+    @objc(_addEventWatcher:) func _addEventWatcher(_ callback: JSFunction) -> Bool {
         guard eventWatcherCallback == nil else {
             AKWarning("hs.power._addEventWatcher: already watching — refusing second subscription")
-            return
+            return false
         }
         eventWatcherCallback = callback
 
@@ -561,6 +561,7 @@ nonisolated enum HSPowerEvent: String, HSEventName {
         }
 
         AKDebug("hs.power._addEventWatcher: started")
+        return true
     }
 
     @objc func _removeEventWatcher() {

@@ -14,6 +14,9 @@ const path = require('path');
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_FILE = path.join(__dirname, '..', 'docs', 'hammerspoon.d.ts');
 
+// Rendered for any method whose docs carry a `Throws: true` marker (see extract-docs.js).
+const THROWS_DESCRIPTION = 'Throws an Error on failure; wrap calls in try/catch to handle it.';
+
 // Words TypeScript reserves even as `declare namespace { function <name>() }` identifiers
 // (unlike plain JS, where e.g. `new`/`delete` are valid property names called as
 // `obj.new()`). Mirrors extract-docs.js's escapeFunctionName -- same convention (`_` prefix),
@@ -180,6 +183,9 @@ function generateModuleDefinitions(moduleData) {
         if (method.returns && method.returns.description) {
             output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
         }
+        if (method.throws) {
+            output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
+        }
         output += `     */\n`;
 
         // Method signature — p.optional maps to TypeScript's optional parameter (name?: type),
@@ -258,6 +264,9 @@ function generateJSClassDefinition(cls) {
         if (method.returns && method.returns.description) {
             output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
         }
+        if (method.throws) {
+            output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
+        }
         output += `     */\n`;
 
         const params = (method.params || []).map(p => {
@@ -327,6 +336,9 @@ function generateTypeDefinition(protocol) {
             }
             if (method.returns && method.returns.description) {
                 output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
+            }
+            if (method.throws) {
+                output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
             }
             output += `     */\n`;
 
@@ -412,6 +424,9 @@ function generateTypeDefinition(protocol) {
             }
             if (method.returns && method.returns.description) {
                 output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
+            }
+            if (method.throws) {
+                output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
             }
             output += `     */\n`;
 

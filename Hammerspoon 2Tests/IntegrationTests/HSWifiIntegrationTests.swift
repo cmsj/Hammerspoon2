@@ -95,6 +95,23 @@ struct HSWifiTests {
             return harness
         }
 
+        @Test("on() throws and records nothing when the native watcher fails to start")
+        func testOnThrowsWhenNativeStartFails() {
+            let harness = makeHarness()
+            harness.eval("""
+            hs.wifi._addWatcher = function(event, fn) { return false; };
+            var threw = false;
+            try {
+                hs.wifi.on('ssidChange', function() {});
+            } catch (err) {
+                threw = true;
+            }
+            """)
+            #expect(!harness.hasException)
+            harness.expectTrue("threw")
+            harness.expectFalse("hs.wifi._watcherEmitter.events['ssidChange'] && hs.wifi._watcherEmitter.events['ssidChange'].length > 0")
+        }
+
         @Test("on throws when listener is not a function")
         func testOnThrowsForNonFunction() {
             let harness = makeHarness()

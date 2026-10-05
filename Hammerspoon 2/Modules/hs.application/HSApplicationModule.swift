@@ -121,7 +121,7 @@ import UniformTypeIdentifiers
 
     // NOTE: These are not documented because they are private API for our JavaScript code
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(listener: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
 
@@ -249,10 +249,10 @@ class HSApplicationWatcherObject {
         return NSWorkspace.shared.menuBarOwningApplication?.asHSApplication()
     }
 
-    @objc(_addWatcher:) func _addWatcher(listener: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(listener: JSFunction) -> Bool {
         if watcher != nil {
             AKWarning("hs.application._addWatcher(): Already watching. Refusing to create a second.")
-            return
+            return false
         }
 
         let watcherObject = HSApplicationWatcherObject(callback: listener)
@@ -267,6 +267,7 @@ class HSApplicationWatcherObject {
         }
 
         watcher = watcherObject
+        return true
     }
 
     @objc func _removeWatcher() {

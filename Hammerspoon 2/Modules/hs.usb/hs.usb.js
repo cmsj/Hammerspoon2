@@ -9,12 +9,9 @@
 // it once the last listener (across both events) is removed. See Engine/engine.js for
 // LazyWatcherEmitter itself.
 hs.usb._watcherEmitter = new LazyWatcherEmitter("hs.usb", function() {
-    const started = hs.usb._addWatcher((eventType, deviceInfo) => {
+    return hs.usb._addWatcher((eventType, deviceInfo) => {
         hs.usb._watcherEmitter.emit(eventType, deviceInfo);
     });
-    if (!started) {
-        throw new Error("hs.usb.on(): Failed to start USB watcher");
-    }
 }, function() {
     hs.usb._removeWatcher();
 }, hs.usb._eventNames);
@@ -23,10 +20,15 @@ hs.usb._watcherEmitter = new LazyWatcherEmitter("hs.usb", function() {
 /// Parameters:
 ///  - event: {"added" | "removed"} The event to listen for
 ///  - listener: {(device: {productName: string, vendorName: string, productID: number, vendorID: number, serialNumber?: string, locationID?: number}) => void} Called when a matching device event occurs
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.usb.on('added', device => console.log(device.vendorName + " " + device.productName + " connected"))
-/// hs.usb.on('removed', device => console.log(device.vendorName + " " + device.productName + " removed"))
+/// try {
+///     hs.usb.on('added', device => console.log(device.vendorName + " " + device.productName + " connected"))
+///     hs.usb.on('removed', device => console.log(device.vendorName + " " + device.productName + " removed"))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.usb.on = function(event, listener) {
     hs.usb._watcherEmitter.on(event, listener);
@@ -51,9 +53,14 @@ hs.usb.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"added" | "removed"} The event to listen for
 ///  - listener: {(device: object) => void} Called the next time a matching device event occurs, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.usb.once('added', device => console.log("First device seen: " + device.productName))
+/// try {
+///     hs.usb.once('added', device => console.log("First device seen: " + device.productName))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.usb.once = function(event, listener) {
     hs.usb._watcherEmitter.once(event, listener);

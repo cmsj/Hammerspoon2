@@ -8,7 +8,7 @@
 // key's native watcher here is entirely independent of every other key's - see
 // Engine/engine.js for KeyedLazyWatcherEmitter.
 hs.userdefaults._watcherEmitter = new KeyedLazyWatcherEmitter("hs.userdefaults", function(key) {
-    hs.userdefaults._addWatcher(key, (k, newValue) => {
+    return hs.userdefaults._addWatcher(key, (k, newValue) => {
         hs.userdefaults._watcherEmitter.emit(k, newValue);
     });
 }, function(key) {
@@ -19,11 +19,16 @@ hs.userdefaults._watcherEmitter = new KeyedLazyWatcherEmitter("hs.userdefaults",
 /// Parameters:
 ///  - key: {string} The name of the setting to watch
 ///  - listener: {(newValue: any) => void} Called with the new value whenever this key changes
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.userdefaults.on("username", (newValue) => {
-///     console.log("username changed to " + newValue)
-/// })
+/// try {
+///     hs.userdefaults.on("username", (newValue) => {
+///         console.log("username changed to " + newValue)
+///     })
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.userdefaults.on = function(key, listener) {
     hs.userdefaults._watcherEmitter.on(key, listener);
@@ -45,9 +50,14 @@ hs.userdefaults.off = function(key, listener) {
 /// Parameters:
 ///  - key: {string} The name of the setting to watch
 ///  - listener: {(newValue: any) => void} Called once, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.userdefaults.once("username", (newValue) => console.log("First change:", newValue))
+/// try {
+///     hs.userdefaults.once("username", (newValue) => console.log("First change:", newValue))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.userdefaults.once = function(key, listener) {
     hs.userdefaults._watcherEmitter.once(key, listener);

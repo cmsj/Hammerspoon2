@@ -85,7 +85,7 @@ import JavaScriptCore
 
     // NOTE: Private API consumed only by hs.screen.js
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
@@ -173,10 +173,10 @@ nonisolated enum HSScreenEvent: String, HSEventName {
 
     // MARK: - Watcher
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool {
         guard watcherCallback == nil else {
             AKWarning("hs.screen._addWatcher: already watching — refusing second subscription")
-            return
+            return false
         }
         watcherCallback = callback
 
@@ -189,6 +189,7 @@ nonisolated enum HSScreenEvent: String, HSEventName {
         }
 
         AKDebug("hs.screen._addWatcher: started")
+        return true
     }
 
     @objc func _removeWatcher() {

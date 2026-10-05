@@ -9,12 +9,9 @@
 // stops it once the last listener (across all events) is removed. See Engine/engine.js for
 // LazyWatcherEmitter itself.
 hs.audiodevice._watcherEmitter = new LazyWatcherEmitter("hs.audiodevice", function() {
-    const started = hs.audiodevice._addWatcher((event) => {
+    return hs.audiodevice._addWatcher((event) => {
         hs.audiodevice._watcherEmitter.emit(event);
     });
-    if (!started) {
-        throw new Error("hs.audiodevice.on(): Failed to start watcher");
-    }
 }, function() {
     hs.audiodevice._removeWatcher();
 }, hs.audiodevice._eventNames);
@@ -23,10 +20,15 @@ hs.audiodevice._watcherEmitter = new LazyWatcherEmitter("hs.audiodevice", functi
 /// Parameters:
 ///  - event: {"dOut" | "dIn" | "dSErr" | "dev+" | "dev-"} The event to listen for
 ///  - listener: {() => void} Called when the event occurs
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.audiodevice.on('dOut', () => console.log("Default output changed"))
-/// hs.audiodevice.on('dev+', () => console.log("A device was added"))
+/// try {
+///     hs.audiodevice.on('dOut', () => console.log("Default output changed"))
+///     hs.audiodevice.on('dev+', () => console.log("A device was added"))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.audiodevice.on = function(event, listener) {
     hs.audiodevice._watcherEmitter.on(event, listener);
@@ -51,9 +53,14 @@ hs.audiodevice.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"dOut" | "dIn" | "dSErr" | "dev+" | "dev-"} The event to listen for
 ///  - listener: {() => void} Called the next time a matching event occurs, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.audiodevice.once('dev+', () => console.log("First device-added event seen"))
+/// try {
+///     hs.audiodevice.once('dev+', () => console.log("First device-added event seen"))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.audiodevice.once = function(event, listener) {
     hs.audiodevice._watcherEmitter.once(event, listener);
@@ -66,12 +73,9 @@ hs.audiodevice.once = function(event, listener) {
 /// SKIP_DOCS
 hs.audiodevice._makeDeviceEmitter = function(device) {
     return new LazyWatcherEmitter("hs.audiodevice device", function() {
-        const started = device._addWatcher((event) => {
+        return device._addWatcher((event) => {
             device._watcherEmitter.emit(event);
         });
-        if (!started) {
-            throw new Error("hs.audiodevice device.on(): Failed to start watcher");
-        }
     }, function() {
         device._removeWatcher();
     }, device._eventNames);

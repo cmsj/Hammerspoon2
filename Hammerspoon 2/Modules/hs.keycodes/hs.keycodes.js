@@ -10,7 +10,7 @@
 // hs.keycodes only ever emits one kind of event ("change"), but on/off/once still take an
 // explicit event name for consistency with every other hs.* module-level watcher.
 hs.keycodes._watcherEmitter = new LazyWatcherEmitter("hs.keycodes", function() {
-    hs.keycodes._addWatcher((event) => {
+    return hs.keycodes._addWatcher((event) => {
         hs.keycodes._watcherEmitter.emit(event);
     });
 }, function() {
@@ -23,9 +23,14 @@ hs.keycodes._watcherEmitter = new LazyWatcherEmitter("hs.keycodes", function() {
 /// Parameters:
 ///  - event: {"change"} The event to listen for (the only event this module emits)
 ///  - listener: {() => void} Called with no arguments when the input source changes
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.keycodes.on('change', () => console.log("Now using: " + hs.keycodes.currentLayout()))
+/// try {
+///     hs.keycodes.on('change', () => console.log("Now using: " + hs.keycodes.currentLayout()))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.keycodes.on = function(event, listener) {
     hs.keycodes._watcherEmitter.on(event, listener);
@@ -50,9 +55,14 @@ hs.keycodes.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"change"} The event to listen for
 ///  - listener: {() => void} Called once, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.keycodes.once('change', () => console.log("First change detected"))
+/// try {
+///     hs.keycodes.once('change', () => console.log("First change detected"))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.keycodes.once = function(event, listener) {
     hs.keycodes._watcherEmitter.once(event, listener);

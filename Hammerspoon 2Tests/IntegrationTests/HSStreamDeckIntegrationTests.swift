@@ -36,6 +36,19 @@ struct HSStreamDeckTests {
             return harness
         }
 
+        @Test("_addWatcher reports success, then refuses a second subscription by returning false")
+        func testAddWatcherReportsRefusal() {
+            let harness = makeHarness()
+            harness.eval("""
+            var first = hs.streamdeck._addWatcher(function() {});
+            var second = hs.streamdeck._addWatcher(function() {});
+            hs.streamdeck._removeWatcher();
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalBool("first") == true)
+            #expect(harness.evalBool("second") == false)
+        }
+
         @Test("hs.streamdeck object exists")
         func testModuleExists() {
             let harness = makeHarness()

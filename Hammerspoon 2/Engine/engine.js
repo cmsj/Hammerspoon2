@@ -103,10 +103,12 @@ function assertKnownEvent(caller, event, knownEvents) {
 // exact lifecycle every watcher module used to reimplement individually - see issue #234.
 //
 // `start`/`stop` are called with no arguments; native events are fed back in via
-// `emitter.emit(name, ...)`. `start` MUST throw if it fails to start the native watcher - that
-// exception propagates straight out of `on()`/`once()`, and (precisely because nothing is
-// recorded until after `start` returns without throwing) a later call, even with the exact same
-// listener, retries `start` cleanly instead of silently never attempting it again.
+// `emitter.emit(name, ...)`. `start` reports failure to start the native watcher by returning
+// `false` (typically just passing through a native `_addWatcher(...) -> Bool`), which makes
+// `on()`/`once()` throw. This is the contract every watcher module shares (issue #254): if
+// `on()` returns, the listener is registered AND the native watcher is running. Because nothing
+// is recorded until after `start` succeeds, a later call, even with the exact same listener,
+// retries `start` cleanly instead of silently never attempting it again.
 //
 // `knownEvents` is the list of event names the native side can emit (each module's Swift
 // `_eventNames`, see Engine/HSEventName.swift). When given, on()/once() throw for any other
@@ -135,11 +137,11 @@ class LazyWatcherEmitter extends EventEmitter {
             return this;
         }
 
-        // Start before recording anything: if `_start` throws, nothing here has been mutated,
+        // Start before recording anything: if `_start` fails, nothing here has been mutated,
         // so the next on() call - even for the same listener - sees _listenerCount still at 0
         // and retries start() instead of treating the never-started watcher as already running.
-        if (this._listenerCount === 0) {
-            this._start();
+        if (this._listenerCount === 0 && this._start() === false) {
+            throw new Error(this._label + ".on(): failed to start watcher");
         }
         super.on(event, listener);
         this._listenerCount++;
@@ -169,9 +171,9 @@ class LazyWatcherEmitter extends EventEmitter {
 // LazyWatcherEmitter case, e.g. hs.usb's single IOKit watcher covering both 'added'/'removed').
 //
 // `start(event)` is called when that event's listener count goes 0->1; returning `false` means
-// native registration failed, and the listener is not recorded (mirrors how a failed
-// registration must not leave a phantom bucket behind). `stop(event)` is called when that
-// event's listener count goes 1->0.
+// native registration failed, in which case `on()`/`once()` throw and the listener is not
+// recorded (same contract as LazyWatcherEmitter). `stop(event)` is called when that event's
+// listener count goes 1->0.
 //
 // `knownEvents` works as for LazyWatcherEmitter. hs.userdefaults omits it, since its event names
 // are arbitrary user-chosen preference keys.
@@ -197,10 +199,8 @@ class KeyedLazyWatcherEmitter extends EventEmitter {
             return this;
         }
 
-        if (existing.length === 0) {
-            if (this._start(event) === false) {
-                return this;
-            }
+        if (existing.length === 0 && this._start(event) === false) {
+            throw new Error(this._label + ".on(): failed to start watcher for '" + event + "'");
         }
         super.on(event, listener);
         return this;

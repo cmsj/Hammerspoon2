@@ -161,7 +161,7 @@ import AppKit
 
     // NOTE: Private API consumed only by hs.keycodes.js
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
@@ -408,13 +408,14 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
 
     // MARK: - Watcher
 
-    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool {
         guard watcherCallback == nil else {
             AKWarning("hs.keycodes._addWatcher: already watching — refusing second subscription")
-            return
+            return false
         }
         watcherCallback = callback
         AKDebug("hs.keycodes._addWatcher: started")
+        return true
     }
 
     @objc func _removeWatcher() {
