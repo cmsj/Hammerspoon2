@@ -190,6 +190,15 @@ enum HSFSSupport {
         return JSValue(object: value, in: context)
     }
 
+    /// Whether a JS value is callable, checked natively with `JSObjectIsFunction` rather than by
+    /// evaluating JS in a context that user code shares.
+    static func isFunction(_ value: JSValue) -> Bool {
+        guard value.isObject else { return false }
+        let ctx = unsafe value.context.jsGlobalContextRef
+        guard let object = unsafe JSValueToObject(ctx, value.jsValueRef, nil) else { return false }
+        return unsafe JSObjectIsFunction(ctx, object)
+    }
+
     // MARK: - Permissions
 
     /// Validate a JS permissions argument: it must be an integer between `0` and `0o7777`.

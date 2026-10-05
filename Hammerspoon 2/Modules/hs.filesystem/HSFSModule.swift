@@ -156,17 +156,20 @@ import UniformTypeIdentifiers
     /// propagates to you). The function must do all its work synchronously: an `async` function would
     /// find the file already closed after its first `await`.
     ///
+    /// The mode may be omitted, in which case the file is opened for reading (`"r"`):
+    /// `hs.fs.withFile(path, f => ...)`.
+    ///
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
-    ///   - mode: The open mode, as for `hs.fs.open()`.
-    ///   - callback: {(file: HSFile) => any} Called with the open file.
-    /// - Returns: {any} Whatever `callback` returns, or `null` if the file could not be opened (see `hs.fs.lastError`).
+    ///   - mode?: {string | ((file: HSFile) => any)} The open mode, as for `hs.fs.open()`. Defaults to `"r"`; if you omit it, pass the callback in its place.
+    ///   - callback?: {(file: HSFile) => any} Called with the open file. Required unless it was passed in place of `mode`.
+    /// - Returns: {any} Whatever `callback` returns, or `null` if the file could not be opened or no callback was given (see `hs.fs.lastError`).
     /// - Example:
     /// ```js
-    /// const header = hs.fs.withFile("/etc/hosts", "r", f => f.readLine())
+    /// const header = hs.fs.withFile("/etc/hosts", f => f.readLine())
     ///
-    /// hs.fs.withFile("~/counter.txt", "w+", f => {
-    ///     const n = parseInt(f.read() ?? "0") + 1
+    /// hs.fs.withFile("~/counter.txt", "r+", f => {
+    ///     const n = (parseInt(f.read()) || 0) + 1
     ///     f.truncate()
     ///     f.rewind()
     ///     f.write(String(n))
@@ -1003,10 +1006,22 @@ import UniformTypeIdentifiers
 
     @objc func withFile(_ path: String, _ mode: String, _ callback: JSFunction) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
-        guard let file = openFile(path, mode, permissions: nil) else { return JSValue(nullIn: context) }
+        // Support withFile(path, fn): the mode was omitted and the callback is the second argument.
+        var fileMode = mode
+        var function = callback
+        if let arguments = JSContext.currentArguments() as? [JSValue], arguments.count >= 2,
+           HSFSSupport.isFunction(arguments[1]) {
+            fileMode = "r"
+            function = arguments[1]
+        }
+        guard HSFSSupport.isFunction(function) else {
+            fail("hs.fs.withFile", code: "EINVAL", message: "a callback function is required")
+            return JSValue(nullIn: context)
+        }
+        guard let file = openFile(path, fileMode, permissions: nil) else { return JSValue(nullIn: context) }
         defer { _ = file.close() }
         // callCapturingException ensures a throw inside the callback reaches the JS caller.
-        return context.callCapturingException { callback.call(withArguments: [file]) }
+        return context.callCapturingException { function.call(withArguments: [file]) }
     }
 
     // MARK: - File I/O

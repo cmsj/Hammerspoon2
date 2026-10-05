@@ -870,6 +870,27 @@ struct HSFSFileTests {
             #expect(!harness.hasException)
         }
 
+        @Test("withFile defaults to read mode when the mode is omitted")
+        func withFileDefaultMode() throws {
+            let dir = try FileTestDir()
+            let file = try dir.makeFile("a.txt", "first\nsecond\n")
+            let harness = makeHarness()
+            harness.eval("var kept = null; var r = hs.fs.withFile('\(file)', f => { kept = f; return f.readLine() })")
+            #expect(harness.evalString("r") == "first")
+            #expect(harness.evalString("kept.mode") == "r")
+            #expect(harness.evalBool("kept.isOpen") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("withFile without a callback returns null with EINVAL and opens nothing")
+        func withFileNoCallback() throws {
+            let dir = try FileTestDir()
+            let harness = makeHarness()
+            harness.expectTrue("hs.fs.withFile('\(dir.child("new.txt"))', 'w') === null")
+            #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
+            #expect(!FileManager.default.fileExists(atPath: dir.child("new.txt")))
+        }
+
         @Test("withFile closes the file and propagates exceptions")
         func withFileThrows() throws {
             let dir = try FileTestDir()
