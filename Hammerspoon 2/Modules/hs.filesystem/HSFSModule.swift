@@ -71,7 +71,7 @@ import UniformTypeIdentifiers
 ///
 /// ```javascript
 /// const abs  = hs.fs.pathToAbsolute("~/Library");
-/// const tmp  = hs.fs.temporaryDirectory();
+/// const tmp  = hs.fs.tempDirectory();
 /// const home = hs.fs.homeDirectory();
 /// ```
 ///
@@ -142,7 +142,8 @@ import UniformTypeIdentifiers
 
     /// Create and open a new, uniquely named temporary file.
     ///
-    /// The file is created in `hs.fs.temporaryDirectory()` with permissions `0o600` and opened in `"w+"` mode.
+    /// The file is created in `hs.fs.tempDirectory()` with permissions `0o600` and opened in `"w+"` mode, so its
+    /// `path` always starts with `hs.fs.tempDirectory()`.
     /// It is not deleted automatically; call `remove()` on it when you no longer need it on disk.
     ///
     /// - Parameter prefix?: A prefix for the file name. Must not contain `/`. Defaults to `"hs"`.
@@ -457,12 +458,15 @@ import UniformTypeIdentifiers
 
     /// Returns the temporary directory for the current user.
     ///
-    /// - Returns: Temporary directory path (always ends with `/`).
+    /// The path is fully resolved (e.g. `/private/var/folders/...` rather than the `/var/folders/...`
+    /// symlink), so it matches the `path` of files created by `hs.fs.tempFile()`.
+    ///
+    /// - Returns: Absolute temporary directory path, with symlinks resolved (always ends with `/`).
     /// - Example:
     /// ```js
-    /// console.log(hs.fs.temporaryDirectory())
+    /// console.log(hs.fs.tempDirectory())
     /// ```
-    @objc func temporaryDirectory() -> String
+    @objc func tempDirectory() -> String
 
     /// Returns the home directory for the current user.
     ///
@@ -998,7 +1002,7 @@ import UniformTypeIdentifiers
             fail("hs.fs.tempFile", code: "EINVAL", message: "prefix must not contain \"/\"")
             return nil
         }
-        var template = Array(((NSTemporaryDirectory() as NSString)
+        var template = Array(((tempDirectory() as NSString)
             .appendingPathComponent("\(namePrefix).XXXXXX")).utf8CString)
         let fd = template.withUnsafeMutableBufferPointer { unsafe mkostemp($0.baseAddress, O_CLOEXEC) }
         guard fd >= 0 else {
@@ -1236,8 +1240,13 @@ import UniformTypeIdentifiers
         return fm.displayName(atPath: expandedPath)
     }
 
-    @objc func temporaryDirectory() -> String {
-        NSTemporaryDirectory()
+    @objc func tempDirectory() -> String {
+        // Resolve symlinks so this matches HSFile.path, which comes from the kernel (F_GETPATH).
+        let directory = NSTemporaryDirectory()
+        guard let resolved = unsafe realpath(directory, nil) else { return directory }
+        defer { unsafe free(resolved) }
+        let path = unsafe String(cString: resolved)
+        return path.hasSuffix("/") ? path : path + "/"
     }
 
     @objc func homeDirectory() -> String {

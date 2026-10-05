@@ -512,12 +512,13 @@ struct HSFSIntegrationTests {
         #expect(abs == target, "resolved path should point to the real file")
     }
 
-    @Test("temporaryDirectory returns a non-empty path")
-    func temporaryDirectoryNonEmpty() {
+    @Test("tempDirectory returns an existing, symlink-resolved directory ending in /")
+    func tempDirectoryResolved() {
         let sut = HSFSModule(engineID: UUID())
-        let tmp = sut.temporaryDirectory()
-        #expect(tmp.isEmpty == false)
+        let tmp = sut.tempDirectory()
+        #expect(tmp.hasSuffix("/"))
         #expect(sut.isDirectory(tmp))
+        #expect(sut.pathToAbsolute(tmp).map { $0 + "/" } == tmp)
     }
 
     @Test("homeDirectory returns the current user's home directory")

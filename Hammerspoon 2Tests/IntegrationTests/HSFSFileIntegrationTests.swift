@@ -87,6 +87,13 @@ struct HSFSFileTests {
             #expect(makeHarness().evalTypeOf("hs.fs.readLines") == "undefined")
         }
 
+        @Test("hs.fs.temporaryDirectory has been renamed to hs.fs.tempDirectory")
+        func temporaryDirectoryRenamed() {
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.fs.temporaryDirectory") == "undefined")
+            #expect(harness.evalTypeOf("hs.fs.tempDirectory") == "function")
+        }
+
         @Test("hs.fs.chmod has been renamed to hs.fs.setPermissions")
         func chmodRenamed() {
             #expect(makeHarness().evalTypeOf("hs.fs.chmod") == "undefined")
@@ -857,6 +864,7 @@ struct HSFSFileTests {
             let path = try #require(harness.evalString("a.path"))
             #expect((path as NSString).lastPathComponent.hasPrefix("myspoon."))
             #expect(path.hasPrefix(resolvedPath(NSTemporaryDirectory())))
+            harness.expectTrue("a.path.startsWith(hs.fs.tempDirectory())")
             let attrs = try FileManager.default.attributesOfItem(atPath: path)
             #expect((attrs[.posixPermissions] as? Int) == 0o600)
             harness.eval("a.remove(); a.close(); b.remove(); b.close()")
