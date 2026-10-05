@@ -231,17 +231,20 @@ import Darwin
 
     /// Move the current position.
     ///
+    /// Unlike Lua's `f:seek()`, the offset is required: to find the current position or the size of the
+    /// file without moving, use the `position` and `size` properties.
+    ///
     /// - Parameters:
-    ///   - offset: The byte offset, relative to `whence`. May be negative for `"cur"` and `"end"`.
+    ///   - offset: The byte offset (an integer), relative to `whence`. May be negative for `"cur"` and `"end"`.
     ///   - whence?: {"set" | "cur" | "end"} `"set"` (from the start of the file), `"cur"` (from the current position), or `"end"` (from the end of the file). Defaults to `"set"`.
-    /// - Returns: The new position, or `null` on failure.
+    /// - Returns: The new position, or `null` on failure (including `EINVAL` if `offset` is missing or not an integer).
     /// - Example:
     /// ```js
     /// f.seek(0, "end")       // jump to the end
     /// f.seek(-10, "cur")     // back 10 bytes
     /// const pos = f.seek(0, "cur")
     /// ```
-    @objc func seek(_ offset: Int, _ whence: String) -> NSNumber?
+    @objc func seek(_ offset: Double, _ whence: String) -> NSNumber?
 
     /// Move the current position back to the start of the file.
     ///
@@ -870,8 +873,21 @@ import Darwin
 
     // MARK: - Positioning
 
-    @objc func seek(_ offset: Int, _ whence: String = "set") -> NSNumber? {
+    // `offset` is a Double so that an omitted offset (NaN) is rejected rather than becoming 0. Lua's
+    // `f:seek()` and `f:seek("end")` report the position/size; silently rewinding would break ports.
+    @objc func seek(_ offset: Double, _ whence: String = "set") -> NSNumber? {
         guard requireOpen("seek") else { return nil }
+        guard let requested = HSFSSupport.optionalNumberArgument(offset, at: 0),
+              let byteOffset = Int(exactly: requested) else {
+            fail(code: "EINVAL",
+                 message: "seek() requires an integer offset; use the position and size properties to read them",
+                 "seek")
+            return nil
+        }
+        return seek(to: byteOffset, whence: whence)
+    }
+
+    private func seek(to offset: Int, whence: String) -> NSNumber? {
         let origin: Int32
         switch whence {
         case "set", "", "undefined": origin = SEEK_SET
@@ -890,7 +906,8 @@ import Darwin
     }
 
     @objc func rewind() -> Bool {
-        seek(0, "set") != nil
+        guard requireOpen("rewind") else { return false }
+        return seek(to: 0, whence: "set") != nil
     }
 
     // MARK: - Path operations

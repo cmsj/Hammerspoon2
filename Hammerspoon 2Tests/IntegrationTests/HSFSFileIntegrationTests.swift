@@ -612,6 +612,13 @@ struct HSFSFileTests {
             #expect(harness.evalString("f.lastError.code") == "EINVAL")
             harness.expectTrue("f.seek(-100) == null")
             #expect(harness.evalString("f.lastError.code") == "EINVAL")
+            // Lua idioms for reading the position / size must not silently rewind.
+            harness.eval("f.seek(4)")
+            for call in ["f.seek()", "f.seek('end')", "f.seek(undefined, 'end')", "f.seek(1.5)", "f.seek(NaN)"] {
+                harness.expectTrue("\(call) == null")
+                #expect(harness.evalString("f.lastError.code") == "EINVAL", "\(call)")
+                #expect(harness.evalInt("f.position") == 4, "\(call) must not move the position")
+            }
             #expect(harness.evalBool("f.rewind()") == true)
             #expect(harness.evalInt("f.position") == 0)
             harness.eval("f.close()")

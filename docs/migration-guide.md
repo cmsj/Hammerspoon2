@@ -438,7 +438,8 @@ returns an `HSFile` object with the same `fopen()` modes (`"r"`, `"w+"`, `"a"`, 
 | `for line in f:lines()` / `io.lines(path)` | `f.eachLine(fn)` or `f.readLines()` / `hs.fs.readLines(path, fn)` |
 | binary reads/writes (Lua strings) | `f.readBytes(n)` / `f.writeBytes(uint8Array)` |
 | `f:write(...)` | `f.write(text)` / `f.writeLine(text)` (one string per call) |
-| `f:seek(whence, offset)` | `f.seek(offset, whence)` — **argument order is swapped**; also `f.position`, `f.rewind()` |
+| `f:seek(whence, offset)` | `f.seek(offset, whence)` — **argument order is swapped**, and the offset is required |
+| `f:seek()` / `f:seek("end")` (to read the position / size) | `f.position` / `f.size` — `f.seek()` without an offset fails rather than reporting |
 | `f:flush()` / `f:close()` | `f.flush()` / `f.close()` |
 | `io.tmpfile()` / `os.tmpname()` | `hs.fs.tempFile(prefix)` |
 | `os.rename(a, b)` / `os.remove(p)` | `hs.fs.move(a, b)` / `hs.fs.deletePath(p)`, or `f.rename(b)` / `f.remove()` on an open file |
