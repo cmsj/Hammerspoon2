@@ -428,14 +428,14 @@ near-instant delivery).
 
 `hs.fs` also covers what Lua's built-in `io`/`os` file functions did in v1 configs, since JS
 has no built-in filesystem API. For whole-file reads and writes, `hs.fs.read`/`write`/`append`/
-`readLines` are the quickest route. For anything that used a Lua file handle, `hs.fs.open()`
+`eachLine` are the quickest route. For anything that used a Lua file handle, `hs.fs.open()`
 returns an `HSFile` object with the same `fopen()` modes (`"r"`, `"w+"`, `"a"`, ...):
 
 | v1 (Lua) | v2 |
 |---|---|
 | `io.open(path, mode)` | `hs.fs.open(path, mode)` — returns `null` on failure, with the reason in `hs.fs.lastError` |
 | `f:read("a")` / `f:read("l")` / `f:read("L")` / `f:read(n)` | `f.read()` / `f.readLine()` / `f.readLine(true)` / `f.read(n)` |
-| `for line in f:lines()` / `io.lines(path)` | `f.eachLine(fn)` or `f.readLines()` / `hs.fs.readLines(path, fn)` |
+| `for line in f:lines()` / `io.lines(path)` | `f.eachLine(fn)` or `f.readLines()` / `hs.fs.eachLine(path, fn)` |
 | binary reads/writes (Lua strings) | `f.readBytes(n)` / `f.writeBytes(uint8Array)` |
 | `f:write(...)` | `f.write(text)` / `f.writeLine(text)` (one string per call) |
 | `f:seek(whence, offset)` | `f.seek(offset, whence)` — **argument order is swapped**, and the offset is required |

@@ -77,9 +77,14 @@ struct HSFSFileTests {
 
     @Suite("hs.fs file handle API structure")
     struct StructureTests {
-        @Test("module-level file functions exist", arguments: ["open", "tempFile", "withFile", "chmod", "touch"])
+        @Test("module-level file functions exist", arguments: ["open", "tempFile", "withFile", "chmod", "touch", "eachLine"])
         func moduleFunctions(name: String) {
             #expect(makeHarness().evalTypeOf("hs.fs.\(name)") == "function")
+        }
+
+        @Test("hs.fs.readLines has been renamed to hs.fs.eachLine")
+        func readLinesRenamed() {
+            #expect(makeHarness().evalTypeOf("hs.fs.readLines") == "undefined")
         }
 
         @Test("hs.fs.lastError is null before any failure")

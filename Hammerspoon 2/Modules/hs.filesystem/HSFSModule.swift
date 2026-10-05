@@ -27,9 +27,9 @@ import UniformTypeIdentifiers
 /// const contents = hs.fs.read("/etc/hosts");           // entire file
 /// const chunk    = hs.fs.read("/etc/hosts", 100, 50);  // 50 bytes from offset 100
 ///
-/// hs.fs.readLines("/etc/hosts", function(line) {
+/// hs.fs.eachLine("/etc/hosts", function(line) {
 ///     console.log(line);
-///     return true; // return false to stop early
+///     // return false to stop early
 /// });
 ///
 /// hs.fs.write("/tmp/hello.txt", "Hello, world!\n");
@@ -190,23 +190,25 @@ import UniformTypeIdentifiers
     /// ```
     @objc func read(_ path: String, _ offset: Int, _ length: Int) -> String?
 
-    /// Read a file line-by-line, invoking a callback for each line.
+    /// Call a function for each line of a file.
     ///
-    /// Lines are delivered with newline characters stripped. Both `\n` and `\r\n` line endings are handled.
+    /// This behaves exactly like opening the file and calling `HSFile.eachLine()`: line endings (`\n` or
+    /// `\r\n`) are stripped; the callback may return `false` (and only `false`) to stop early; if the
+    /// callback throws, iteration stops and the exception propagates to you; and invalid UTF-8 stops
+    /// iteration with `hs.fs.lastError.code === "EILSEQ"`.
     ///
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
-    ///   - callback: {(line: string) => boolean} Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.
-    /// - Returns: `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.
+    ///   - callback: {(line: string) => boolean | void} Called once per line. Return `false` to stop.
+    /// - Returns: `true` if iteration completed or was stopped by the callback returning `false`; `false` if the file could not be opened or read (see `hs.fs.lastError`), or if the callback threw.
     /// - Example:
     /// ```js
-    /// hs.fs.readLines("/etc/hosts", (line) => {
-    ///     if (line.startsWith("#")) return true
+    /// hs.fs.eachLine("/etc/hosts", (line) => {
+    ///     if (line.startsWith("#")) return
     ///     console.log(line)
-    ///     return true
     /// })
     /// ```
-    @objc func readLines(_ path: String, _ callback: JSFunction) -> Bool
+    @objc func eachLine(_ path: String, _ callback: JSFunction) -> Bool
 
     /// Write a UTF-8 string to a file, creating it or overwriting any existing content.
     ///
@@ -1024,50 +1026,15 @@ import UniformTypeIdentifiers
         return result
     }
 
-    @objc func readLines(_ path: String, _ callback: JSFunction) -> Bool {
-        guard let handle = FileHandle(forReadingAtPath: expand(path)) else {
-            fail("hs.fs.readLines", errno: errno, path: path)
-            return false
+    @objc func eachLine(_ path: String, _ callback: JSFunction) -> Bool {
+        // Delegate to HSFile so the module and handle forms behave identically.
+        guard let file = openFile(path, "r", permissions: nil) else { return false }
+        defer { _ = file.close() }
+        let completed = file.eachLine(callback)
+        if !completed, let error = file.lastErrorInfo {
+            lastErrorInfo = error
         }
-        defer { handle.closeFile() }
-
-        var pending = Data()
-        let bufferSize = 65_536
-
-        while true {
-            let chunk = handle.readData(ofLength: bufferSize)
-            let isEOF = chunk.isEmpty
-            if !isEOF { pending.append(chunk) }
-
-            // Flush all complete lines from the pending buffer.
-            while let nlIdx = pending.firstIndex(of: 0x0A) {
-                // Strip a preceding \r for Windows-style line endings.
-                let lineEnd = nlIdx > 0 && pending[nlIdx - 1] == 0x0D ? nlIdx - 1 : nlIdx
-                let line = String(data: pending[..<lineEnd], encoding: .utf8) ?? ""
-
-                let result = callback.call(withArguments: [line])
-                var keepGoing = true
-
-                if let result = result {
-                    if !result.isUndefined && !result.isNull {
-                        keepGoing = result.toBool()
-                    }
-                }
-
-                pending = Data(pending[(nlIdx + 1)...])
-                if !keepGoing { return true }
-            }
-
-            if isEOF { break }
-        }
-
-        // Deliver any final line that has no trailing newline.
-        if !pending.isEmpty {
-            let line = String(data: pending, encoding: .utf8) ?? ""
-            _ = callback.call(withArguments: [line])
-        }
-
-        return true
+        return completed
     }
 
     @objc func write(_ path: String, _ content: String, _ inPlace: Bool = false) -> Bool {
