@@ -77,7 +77,7 @@ struct HSFSFileTests {
 
     @Suite("hs.fs file handle API structure")
     struct StructureTests {
-        @Test("module-level file functions exist", arguments: ["open", "tempFile", "withFile", "chmod", "touch", "eachLine"])
+        @Test("module-level file functions exist", arguments: ["open", "tempFile", "withFile", "setPermissions", "touch", "eachLine"])
         func moduleFunctions(name: String) {
             #expect(makeHarness().evalTypeOf("hs.fs.\(name)") == "function")
         }
@@ -85,6 +85,11 @@ struct HSFSFileTests {
         @Test("hs.fs.readLines has been renamed to hs.fs.eachLine")
         func readLinesRenamed() {
             #expect(makeHarness().evalTypeOf("hs.fs.readLines") == "undefined")
+        }
+
+        @Test("hs.fs.chmod has been renamed to hs.fs.setPermissions")
+        func chmodRenamed() {
+            #expect(makeHarness().evalTypeOf("hs.fs.chmod") == "undefined")
         }
 
         @Test("hs.fs.lastError is null before any failure")
@@ -948,16 +953,16 @@ struct HSFSFileTests {
 
     // MARK: - Module-level additions
 
-    @Suite("hs.fs chmod, touch, and lastError")
+    @Suite("hs.fs setPermissions, touch, and lastError")
     struct ModuleTests {
-        @Test("chmod and setPermissions reject missing or out-of-range permissions",
+        @Test("hs.fs.setPermissions and HSFile.setPermissions reject missing or out-of-range permissions",
               arguments: ["", ", -1", ", 0o10000", ", 1.5", ", NaN", ", 'abc'"])
         func invalidPermissionArguments(argument: String) throws {
             let dir = try FileTestDir()
             let file = try dir.makeFile("a.txt", "x")
             try FileManager.default.setAttributes([.posixPermissions: 0o640], ofItemAtPath: file)
             let harness = makeHarness()
-            #expect(harness.evalBool("hs.fs.chmod('\(file)'\(argument))") == false)
+            #expect(harness.evalBool("hs.fs.setPermissions('\(file)'\(argument))") == false)
             #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
             harness.eval("var f = hs.fs.open('\(file)')")
             #expect(harness.evalBool("f.setPermissions(\(argument.dropFirst(2)))") == false)
@@ -967,14 +972,14 @@ struct HSFSFileTests {
             #expect((attrs[.posixPermissions] as? Int) == 0o640, "mode must be unchanged")
         }
 
-        @Test("chmod sets permissions")
-        func chmod() throws {
+        @Test("hs.fs.setPermissions sets permissions")
+        func setPermissions() throws {
             let dir = try FileTestDir()
             let file = try dir.makeFile("a.sh", "#!/bin/sh\n")
             let harness = makeHarness()
-            #expect(harness.evalBool("hs.fs.chmod('\(file)', 0o755)") == true)
+            #expect(harness.evalBool("hs.fs.setPermissions('\(file)', 0o755)") == true)
             #expect(harness.evalInt("hs.fs.attributes('\(file)').permissions") == 0o755)
-            #expect(harness.evalBool("hs.fs.chmod('\(dir.child("missing"))', 0o755)") == false)
+            #expect(harness.evalBool("hs.fs.setPermissions('\(dir.child("missing"))', 0o755)") == false)
             #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
         }
 

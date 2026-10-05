@@ -531,9 +531,9 @@ import UniformTypeIdentifiers
     /// - Returns: `true` on success, `false` on failure (including `EINVAL` if `permissions` is missing or out of range).
     /// - Example:
     /// ```js
-    /// hs.fs.chmod("~/bin/myscript.sh", 0o755)
+    /// hs.fs.setPermissions("~/bin/myscript.sh", 0o755)
     /// ```
-    @objc func chmod(_ path: String, _ permissions: Double) -> Bool
+    @objc func setPermissions(_ path: String, _ permissions: Double) -> Bool
 
     // MARK: - Links
 
@@ -1278,13 +1278,13 @@ import UniformTypeIdentifiers
         return true
     }
 
-    @objc func chmod(_ path: String, _ permissions: Double) -> Bool {
-        guard let bits = HSFSSupport.permissionBits(permissions, function: "hs.fs.chmod") else {
-            fail("hs.fs.chmod", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
+    @objc func setPermissions(_ path: String, _ permissions: Double) -> Bool {
+        guard let bits = HSFSSupport.permissionBits(permissions, function: "hs.fs.setPermissions") else {
+            fail("hs.fs.setPermissions", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
             return false
         }
         guard unsafe Darwin.chmod(expand(path), bits) == 0 else {
-            fail("hs.fs.chmod", errno: errno, path: path)
+            fail("hs.fs.setPermissions", errno: errno, path: path)
             return false
         }
         return true

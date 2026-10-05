@@ -445,7 +445,7 @@ returns an `HSFile` object with the same `fopen()` modes (`"r"`, `"w+"`, `"a"`, 
 | `os.rename(a, b)` / `os.remove(p)` | `hs.fs.move(a, b)` / `hs.fs.deletePath(p)`, or `f.rename(b)` / `f.remove()` on an open file |
 | `hs.fs.lock(f)` / `hs.fs.unlock(f)` | `f.lock()` / `f.unlock()` |
 | `hs.fs.touch(path, atime, mtime)` | `hs.fs.touch(path, atime, mtime)` (same order); times are seconds since the epoch. Also `f.touch(atime, mtime)` |
-| `hs.fs.chmod`-style shell-outs | `hs.fs.chmod(path, 0o755)` / `f.setPermissions(0o600)` |
+| `chmod` shell-outs (e.g. via `os.execute`) | `hs.fs.setPermissions(path, 0o755)` / `f.setPermissions(0o600)` |
 | `io.popen(cmd)` | `hs.task` |
 
 End of file works as in Lua: `f.readLine()`, `f.read(n)` and `f.readBytes(n)` return `null`
