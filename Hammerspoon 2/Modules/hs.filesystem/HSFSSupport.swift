@@ -131,22 +131,28 @@ enum HSFSSupport {
     // MARK: - Timestamps
 
     /// Convert a JS timestamp (seconds since the Unix epoch) to a `timespec` for
-    /// `utimensat`/`futimens`. Omitted JS numbers arrive as `NaN` (or `0`), which map to
-    /// `UTIME_NOW`.
-    static func timespec(fromSeconds seconds: Double) -> Darwin.timespec {
-        guard seconds.isFinite, seconds != 0 else {
+    /// `utimensat`/`futimens`. An omitted JS number arrives as `NaN`, which maps to `UTIME_NOW`;
+    /// `0` is a genuine timestamp (the epoch).
+    ///
+    /// - Returns: The `timespec`, or `nil` if `seconds` is infinite or outside the range of `time_t`.
+    static func timespec(fromSeconds seconds: Double) -> Darwin.timespec? {
+        if seconds.isNaN {
             return Darwin.timespec(tv_sec: 0, tv_nsec: Int(UTIME_NOW))
         }
         let whole = seconds.rounded(.down)
-        return Darwin.timespec(tv_sec: Int(whole), tv_nsec: Int((seconds - whole) * 1_000_000_000))
+        guard seconds.isFinite, let wholeSeconds = Int(exactly: whole) else { return nil }
+        let nanoseconds = min(Int((seconds - whole) * 1_000_000_000), 999_999_999)
+        return Darwin.timespec(tv_sec: wholeSeconds, tv_nsec: nanoseconds)
     }
 
     /// Build the `[accessTime, modificationTime]` pair for `utimensat`/`futimens`.
-    /// The access time defaults to the modification time, matching LuaFileSystem's `touch`.
-    static func touchTimes(modificationDate: Double, accessDate: Double) -> [Darwin.timespec] {
-        let modification = timespec(fromSeconds: modificationDate)
-        let hasAccess = accessDate.isFinite && accessDate != 0
-        let access = hasAccess ? timespec(fromSeconds: accessDate) : modification
+    /// An omitted (`NaN`) access time defaults to the modification time, matching LuaFileSystem's `touch`.
+    ///
+    /// - Returns: The pair, or `nil` if either timestamp is invalid.
+    static func touchTimes(modificationDate: Double, accessDate: Double) -> [Darwin.timespec]? {
+        guard let modification = timespec(fromSeconds: modificationDate) else { return nil }
+        if accessDate.isNaN { return [modification, modification] }
+        guard let access = timespec(fromSeconds: accessDate) else { return nil }
         return [access, modification]
     }
 }

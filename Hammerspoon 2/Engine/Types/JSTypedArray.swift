@@ -65,8 +65,11 @@ extension JSValue {
             offset = 0
             length = unsafe JSObjectGetArrayBufferByteLength(ctx, object, &exception)
         } else {
-            // JSObjectGetTypedArrayBytesPtr returns the start of the *underlying buffer*, so
-            // the view's byte offset must be applied to honour views like `buf.subarray(2)`.
+            // JSObjectGetTypedArrayBytesPtr returns the start of the view's *underlying buffer*,
+            // not the view's first byte, so the view's byte offset must be added. This is
+            // verified by the `subarray()` and end-of-buffer view cases in
+            // HSFSFileIntegrationTests ("writeBytes writes typed arrays, views, and ArrayBuffers"),
+            // which would copy the wrong bytes if the pointer were already offset.
             unsafe base = unsafe JSObjectGetTypedArrayBytesPtr(ctx, object, &exception)
             offset = unsafe JSObjectGetTypedArrayByteOffset(ctx, object, &exception)
             length = unsafe JSObjectGetTypedArrayByteLength(ctx, object, &exception)

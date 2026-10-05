@@ -123,7 +123,7 @@ import UniformTypeIdentifiers
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - mode?: The open mode. Defaults to `"r"`.
-    ///   - permissions?: POSIX permission bits applied if the file is created, e.g. `0o600`. Defaults to `0o644` (before the process umask is applied).
+    ///   - permissions?: POSIX permission bits applied if the file is created, e.g. `0o600` (`0` creates a file with no permissions). Defaults to `0o644`. The process umask is applied in either case.
     /// - Returns: An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
     /// - Example:
     /// ```js
@@ -133,7 +133,7 @@ import UniformTypeIdentifiers
     ///     f.close()
     /// }
     /// ```
-    @objc func open(_ path: String, _ mode: String, _ permissions: Int) -> HSFile?
+    @objc func open(_ path: String, _ mode: String, _ permissions: Double) -> HSFile?
 
     /// Create and open a new, uniquely named temporary file.
     ///
@@ -504,9 +504,9 @@ import UniformTypeIdentifiers
     ///
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
-    ///   - modificationDate?: Seconds since the Unix epoch. Defaults to now.
-    ///   - accessDate?: Seconds since the Unix epoch. Defaults to `modificationDate`.
-    /// - Returns: `true` on success, `false` on failure.
+    ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
+    ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `modificationDate`.
+    /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a non-finite or out-of-range timestamp).
     /// - Example:
     /// ```js
     /// hs.fs.touch("/tmp/marker.txt")                             // now
@@ -869,6 +869,17 @@ import UniformTypeIdentifiers
         AKError("\(function): \(path.map { "\($0): " } ?? "")\(message)")
     }
 
+    /// Record a POSIX errno in `lastError` without logging, for functions whose `null` result is an
+    /// expected outcome (e.g. `pathToAbsolute` on a path that doesn't exist).
+    private func record(errno code: Int32) {
+        lastError = HSFSSupport.errorInfo(errno: code)
+    }
+
+    /// Record an error with an explicit code in `lastError` without logging.
+    private func record(code: String, message: String) {
+        lastError = HSFSSupport.errorInfo(code: code, message: message)
+    }
+
     /// Record an error with an explicit code in `lastError` and log it.
     private func fail(_ function: String, code: String, message: String) {
         lastError = HSFSSupport.errorInfo(code: code, message: message)
@@ -913,14 +924,23 @@ import UniformTypeIdentifiers
 
     // MARK: - Open files
 
-    @objc func open(_ path: String, _ mode: String = "r", _ permissions: Int = 0) -> HSFile? {
+    // `permissions` is a Double so an omitted argument (NaN) can be told apart from an explicit 0.
+    @objc func open(_ path: String, _ mode: String = "r", _ permissions: Double = .nan) -> HSFile? {
         let fileMode = isOmitted(mode) ? "r" : mode
         guard let flags = HSFile.openFlags(forMode: fileMode) else {
             fail("hs.fs.open", code: "EINVAL", message: "invalid mode \"\(mode)\"")
             return nil
         }
+        let createMode: mode_t
+        if permissions.isNaN {
+            createMode = 0o644
+        } else if let bits = Int(exactly: permissions), (0...0o7777).contains(bits) {
+            createMode = mode_t(bits)
+        } else {
+            fail("hs.fs.open", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
+            return nil
+        }
         let expandedPath = expand(path)
-        let createMode = mode_t(permissions > 0 ? permissions & 0o7777 : 0o644)
         let fd = unsafe Darwin.open(expandedPath, flags, createMode)
         guard fd >= 0 else {
             fail("hs.fs.open", errno: errno, path: path)
@@ -960,7 +980,7 @@ import UniformTypeIdentifiers
 
     @objc func withFile(_ path: String, _ mode: String, _ callback: JSFunction) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
-        guard let file = open(path, mode, 0) else { return nil }
+        guard let file = open(path, mode, .nan) else { return nil }
         defer { _ = file.close() }
         // callCapturingException ensures a throw inside the callback reaches the JS caller.
         return context.callCapturingException { callback.call(withArguments: [file]) }
@@ -1174,7 +1194,11 @@ import UniformTypeIdentifiers
     }
 
     @objc func chdir(_ path: String) -> Bool {
-        fm.changeCurrentDirectoryPath(expand(path))
+        guard unsafe Darwin.chdir(expand(path)) == 0 else {
+            fail("hs.fs.chdir", errno: errno, path: path)
+            return false
+        }
+        return true
     }
 
     // MARK: - Path Utilities
@@ -1184,7 +1208,10 @@ import UniformTypeIdentifiers
 
         // realpath() allocates memory for us when we pass it a nil second parameter.
         // We must free() that memory later.
-        guard let resolved = unsafe realpath(expandedPath, nil) else { return nil }
+        guard let resolved = unsafe realpath(expandedPath, nil) else {
+            record(errno: errno)
+            return nil
+        }
         defer { unsafe free(resolved) }
 
         return unsafe String(validatingCString: resolved)
@@ -1192,7 +1219,10 @@ import UniformTypeIdentifiers
 
     @objc func displayName(_ path: String) -> String? {
         let expandedPath = expand(path)
-        guard fm.fileExists(atPath: expandedPath) else { return nil }
+        guard fm.fileExists(atPath: expandedPath) else {
+            record(errno: ENOENT)
+            return nil
+        }
         return fm.displayName(atPath: expandedPath)
     }
 
@@ -1221,6 +1251,11 @@ import UniformTypeIdentifiers
     }
 
     @objc func touch(_ path: String, _ modificationDate: Double = .nan, _ accessDate: Double = .nan) -> Bool {
+        // Validate before creating anything, so a bad timestamp doesn't leave a new empty file behind.
+        guard let times = HSFSSupport.touchTimes(modificationDate: modificationDate, accessDate: accessDate) else {
+            fail("hs.fs.touch", code: "EINVAL", message: "timestamps must be finite numbers of seconds since the Unix epoch")
+            return false
+        }
         let expandedPath = expand(path)
         // O_CREAT without O_TRUNC: creates a missing file but leaves an existing one's contents alone.
         let fd = unsafe Darwin.open(expandedPath, O_WRONLY | O_CREAT | O_CLOEXEC, 0o644)
@@ -1230,7 +1265,6 @@ import UniformTypeIdentifiers
             fail("hs.fs.touch", errno: errno, path: path)
             return false
         }
-        let times = HSFSSupport.touchTimes(modificationDate: modificationDate, accessDate: accessDate)
         guard unsafe utimensat(AT_FDCWD, expandedPath, times, 0) == 0 else {
             fail("hs.fs.touch", errno: errno, path: path)
             return false
@@ -1323,9 +1357,17 @@ import UniformTypeIdentifiers
 
     @objc func fileUTI(_ path: String) -> String? {
         let url = NSURL(fileURLWithPath: expand(path))
-        let values = try? url.resourceValues(forKeys: [.contentTypeKey])
-        let utType = values?[.contentTypeKey] as? UTType
-        return utType?.identifier
+        do {
+            let values = try url.resourceValues(forKeys: [.contentTypeKey])
+            guard let utType = values[.contentTypeKey] as? UTType else {
+                record(code: "UNKNOWN", message: "No type identifier is available for \(path)")
+                return nil
+            }
+            return utType.identifier
+        } catch {
+            lastError = HSFSSupport.errorInfo(from: error)
+            return nil
+        }
     }
 
     // MARK: - Bookmarks
@@ -1443,7 +1485,10 @@ import UniformTypeIdentifiers
 
         let size = unsafe Darwin.getxattr(p, attribute, nil, 0, pos, flags)
         if size < 0 {
-            if errno != ENOATTR {
+            if errno == ENOATTR {
+                // A missing attribute is an expected outcome, so record it without logging.
+                record(errno: ENOATTR)
+            } else {
                 fail("hs.fs.xattrGet", errno: errno)
             }
             return nil

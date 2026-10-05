@@ -39,7 +39,7 @@ import Darwin
 
     // MARK: - Properties
 
-    /// The absolute path of the file. Updated by `rename()`.
+    /// The absolute path of the file, with symbolic links resolved. Updated by `rename()`.
     /// - Example:
     /// ```js
     /// console.log(f.path)
@@ -131,8 +131,12 @@ import Darwin
     /// immediately after the last line delivered. If the callback throws, iteration stops and the
     /// exception propagates to the caller.
     ///
+    /// The callback may use this file: if it moves the position or changes the file's contents, iteration
+    /// continues from the current position with the file as it now is. If it closes the file, iteration
+    /// stops and `eachLine` returns `false` with `lastError.code === "EBADF"`.
+    ///
     /// - Parameter callback: {(line: string) => boolean | void} Called once per line. Return `false` to stop.
-    /// - Returns: `true` if iteration completed or was stopped by the callback, `false` on error.
+    /// - Returns: `true` if iteration completed or was stopped by the callback returning `false`; `false` on error, if the callback threw, or if the file was closed during iteration.
     /// - Example:
     /// ```js
     /// f.eachLine(line => {
@@ -255,6 +259,9 @@ import Darwin
     /// Rename (move) the file on disk. The file stays open and `path` is updated.
     ///
     /// Both paths must be on the same volume. By default this fails if `newPath` already exists.
+    /// While the file is open, this fails with `"ESTALE"` if `path` no longer refers to it (for example
+    /// because another process moved it and put something else in its place), rather than acting on
+    /// the wrong file. Once the file is closed, it acts on whatever is at `path`.
     ///
     /// - Parameters:
     ///   - newPath: The new path. `~` is expanded.
@@ -273,7 +280,8 @@ import Darwin
 
     /// Copy the file on disk to a new path, including its metadata. The original stays open.
     ///
-    /// Fails if `destination` already exists, or if the file has been removed.
+    /// Fails if `destination` already exists, if the file has been removed, or (while the file is open)
+    /// with `"ESTALE"` if `path` no longer refers to it.
     ///
     /// - Parameter destination: The path for the copy. `~` is expanded.
     /// - Returns: `true` on success, `false` on failure.
@@ -286,6 +294,8 @@ import Darwin
     /// Remove the file from disk.
     ///
     /// The file stays open: you can keep reading and writing it until `close()`, after which its storage is freed.
+    /// While the file is open, this fails with `"ESTALE"` if `path` no longer refers to it, so a file that
+    /// has since replaced it is never removed by mistake.
     ///
     /// - Returns: `true` on success, `false` on failure.
     /// - Example:
@@ -321,9 +331,9 @@ import Darwin
     /// Set the modification and access times of the file.
     ///
     /// - Parameters:
-    ///   - modificationDate?: Seconds since the Unix epoch. Defaults to now.
-    ///   - accessDate?: Seconds since the Unix epoch. Defaults to `modificationDate`.
-    /// - Returns: `true` on success, `false` on failure.
+    ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
+    ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `modificationDate`.
+    /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a non-finite or out-of-range timestamp).
     /// - Example:
     /// ```js
     /// f.touch()                          // now
@@ -383,12 +393,18 @@ import Darwin
     /// The open file descriptor, or -1 once closed.
     private var fd: Int32
 
+    /// Incremented by every write or truncate through this handle, so `eachLine` can tell that a
+    /// callback changed the file even if its size and modification time happen not to.
+    private var writeGeneration = 0
+
     /// Size of each chunk read while scanning for line endings or reading to end of file.
     private static let chunkSize = 65_536
 
     init(fd: Int32, path: String, mode: String) {
         self.fd = fd
-        self.path = path
+        // Prefer the kernel's view of the path: it is absolute and has symlinks resolved, so it keeps
+        // naming this file even if the process's working directory changes.
+        self.path = Self.kernelPath(of: fd) ?? path
         self.mode = mode
         super.init()
         AKGarbage("Init of \(typeName): \(path)")
@@ -480,6 +496,38 @@ import Darwin
         return false
     }
 
+    // MARK: - Path identity
+
+    /// The path the kernel currently has for an open file descriptor (absolute, symlinks resolved).
+    private static func kernelPath(of fd: Int32) -> String? {
+        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        let result = buffer.withUnsafeMutableBytes { unsafe fcntl(fd, F_GETPATH, $0.baseAddress!) }
+        guard result != -1 else { return nil }
+        return buffer.withUnsafeBufferPointer { unsafe String(validatingCString: $0.baseAddress!) }
+    }
+
+    /// While the file is open, check that `path` still names this file (same device and inode) before
+    /// a path-based operation, so a file that has replaced it at that path is never acted on by mistake.
+    /// Closed files skip the check: their path operations act on whatever is at `path`.
+    private func requirePathIdentity(_ function: String) -> Bool {
+        guard fd >= 0 else { return true }
+        var open = Darwin.stat()
+        var onDisk = Darwin.stat()
+        guard unsafe fstat(fd, &open) == 0 else {
+            fail(errno: errno, function)
+            return false
+        }
+        guard unsafe lstat(path, &onDisk) == 0 else {
+            fail(errno: errno, function)
+            return false
+        }
+        guard open.st_dev == onDisk.st_dev, open.st_ino == onDisk.st_ino else {
+            fail(code: "ESTALE", message: "Path no longer refers to this open file", function)
+            return false
+        }
+        return true
+    }
+
     // MARK: - Low-level I/O
 
     /// Read up to `count` bytes from the current position (or to end of file if `count` is `nil`).
@@ -517,6 +565,7 @@ import Darwin
 
     private func writeRaw(_ bytes: [UInt8], _ function: String) -> Bool {
         guard requireOpen(function) else { return false }
+        writeGeneration += 1
         var written = 0
         while written < bytes.count {
             let n = bytes.withUnsafeBytes { buffer in
@@ -550,71 +599,107 @@ import Darwin
         return nil
     }
 
-    private func decodeUTF8(_ bytes: some Collection<UInt8>, restoringTo offset: Int, _ function: String) -> String? {
+    /// Decode UTF-8, recording an `EILSEQ` error if the bytes are invalid. Callers are responsible
+    /// for restoring the file position on failure.
+    private func decodeUTF8(_ bytes: some Collection<UInt8>, _ function: String) -> String? {
         if let text = String(validating: bytes, as: UTF8.self) {
             return text
         }
-        moveTo(offset)
         fail(code: "EILSEQ", message: "Data is not valid UTF-8 text", function)
         return nil
     }
 
+    /// A snapshot used to detect an `eachLine` callback changing the file's contents.
+    private struct ContentStamp: Equatable {
+        var generation: Int
+        var size: off_t
+        var modifiedSeconds: Int
+        var modifiedNanoseconds: Int
+    }
+
+    private func contentStamp() -> ContentStamp? {
+        var st = Darwin.stat()
+        guard fd >= 0, unsafe fstat(fd, &st) == 0 else { return nil }
+        return ContentStamp(generation: writeGeneration, size: st.st_size,
+                            modifiedSeconds: st.st_mtimespec.tv_sec,
+                            modifiedNanoseconds: st.st_mtimespec.tv_nsec)
+    }
+
     /// Scan lines from the current position, calling `handler` with each line's bytes (including its
-    /// `\n`, if any). Before each call the file position is set to just after that line, so the handler
-    /// can safely use other methods on this file; if it moves the position, scanning resumes from there.
-    /// Returns `false` on a read error.
-    private func scanLines(_ function: String, _ handler: (ArraySlice<UInt8>) -> Bool) -> Bool {
+    /// `\n`, if any) until it returns `false` or the end of the file is reached. Read-ahead uses `pread`,
+    /// so the file position is only ever moved to a line boundary.
+    ///
+    /// When `runsUserCode` is `true` (for `eachLine`), the handler may use this file: the position is set
+    /// to just after each line before the handler runs, and afterwards any read-ahead is discarded if the
+    /// handler moved the position or changed the file's contents. If the handler closes the file, the scan
+    /// fails with `EBADF`. When `false`, the position is only updated once the scan finishes.
+    ///
+    /// When the handler returns `false`, the position is left just after the line it was given (callers
+    /// may move it afterwards). Returns `false` on a read error or if the file was closed by the handler.
+    private func scanLines(_ function: String, runsUserCode: Bool,
+                           _ handler: (ArraySlice<UInt8>) -> Bool) -> Bool {
         var base = position     // file offset of buffer[0]
         var buffer: [UInt8] = []
         var start = 0           // index of the first unconsumed byte in buffer
         var searchFrom = 0      // index from which to look for the next newline
         var reachedEOF = false
+        var stamp = runsUserCode ? contentStamp() : nil
 
         while true {
-            if let newline = buffer[searchFrom...].firstIndex(of: 0x0A) {
-                let line = buffer[start...newline]
-                start = newline + 1
-                searchFrom = start
-                let expected = base + start
-                moveTo(expected)
-                guard handler(line) else { return true }
-                guard fd >= 0 else { return true }
-                let now = position
-                if now != expected {
-                    base = now
-                    buffer = []
-                    start = 0
-                    searchFrom = 0
-                    reachedEOF = false
+            let newline = buffer[searchFrom...].firstIndex(of: 0x0A)
+            if newline == nil && !reachedEOF {
+                // Discard consumed bytes, then read the next chunk without moving the file position.
+                buffer.removeFirst(start)
+                base += start
+                start = 0
+                searchFrom = buffer.count
+                guard let chunk = preadRaw(Self.chunkSize, at: base + buffer.count, function) else {
+                    moveTo(base)
+                    return false
+                }
+                if chunk.isEmpty {
+                    reachedEOF = true
+                } else {
+                    buffer.append(contentsOf: chunk)
                 }
                 continue
             }
 
-            if reachedEOF {
-                if start < buffer.count {
-                    let line = buffer[start...]
-                    start = buffer.count
-                    moveTo(base + start)
-                    _ = handler(line)
-                } else {
-                    moveTo(base + start)
-                }
+            // Either a complete line, or the unterminated remainder of the file.
+            let end = newline.map { $0 + 1 } ?? buffer.count
+            guard start < end else {
+                moveTo(base + start)
                 return true
             }
+            let line = buffer[start..<end]
+            start = end
+            searchFrom = end
+            let consumed = base + start
 
-            // Discard consumed bytes, then read the next chunk without moving the file position.
-            buffer.removeFirst(start)
-            base += start
-            start = 0
-            searchFrom = buffer.count
-            guard let chunk = preadRaw(Self.chunkSize, at: base + buffer.count, function) else {
-                moveTo(base)
+            guard runsUserCode else {
+                guard handler(line) else {
+                    moveTo(consumed)
+                    return true
+                }
+                continue
+            }
+
+            moveTo(consumed)
+            guard handler(line) else { return true }
+            guard fd >= 0 else {
+                fail(code: "EBADF", message: "File was closed during \(function)", function)
                 return false
             }
-            if chunk.isEmpty {
-                reachedEOF = true
-            } else {
-                buffer.append(contentsOf: chunk)
+            let now = position
+            let newStamp = contentStamp()
+            if now != consumed || newStamp != stamp {
+                // The handler moved the position or changed the file, so the read-ahead may be stale.
+                base = now
+                buffer = []
+                start = 0
+                searchFrom = 0
+                reachedEOF = false
+                stamp = newStamp
             }
         }
     }
@@ -661,7 +746,11 @@ import Darwin
                 bytes.append(contentsOf: rest)
             }
         }
-        return decodeUTF8(bytes, restoringTo: start, "read")
+        guard let text = decodeUTF8(bytes, "read") else {
+            moveTo(start)
+            return nil
+        }
+        return text
     }
 
     @objc func readLine(_ keepNewline: Bool = false) -> JSValue? {
@@ -672,11 +761,13 @@ import Darwin
         guard requireOpen("readLine") else { return nil }
         let start = position
         var result: String?
-        let ok = scanLines("readLine") { line in
-            let content = keepNewline ? line : Self.strippingNewline(line)
-            result = decodeUTF8(content, restoringTo: start, "readLine")
+        var decoded = true
+        let ok = scanLines("readLine", runsUserCode: false) { line in
+            result = decodeUTF8(keepNewline ? line : Self.strippingNewline(line), "readLine")
+            decoded = result != nil
             return false
         }
+        if !decoded { moveTo(start) }
         return ok ? result : nil
     }
 
@@ -684,9 +775,10 @@ import Darwin
         guard requireOpen("eachLine") else { return false }
         guard let context = JSContext.current() else { return false }
         var succeeded = true
-        let ok = scanLines("eachLine") { line in
-            guard let text = decodeUTF8(Self.strippingNewline(line),
-                                        restoringTo: position - line.count, "eachLine") else {
+        let ok = scanLines("eachLine", runsUserCode: true) { line in
+            guard let text = decodeUTF8(Self.strippingNewline(line), "eachLine") else {
+                // Leave the position at the start of the undecodable line.
+                moveTo(position - line.count)
                 succeeded = false
                 return false
             }
@@ -707,8 +799,8 @@ import Darwin
         let start = position
         var lines: [String] = []
         var succeeded = true
-        let ok = scanLines("readLines") { line in
-            guard let text = decodeUTF8(Self.strippingNewline(line), restoringTo: start, "readLines") else {
+        let ok = scanLines("readLines", runsUserCode: false) { line in
+            guard let text = decodeUTF8(Self.strippingNewline(line), "readLines") else {
                 succeeded = false
                 return false
             }
@@ -768,6 +860,7 @@ import Darwin
             fail(code: "EINVAL", message: "Length must not be negative", "truncate")
             return false
         }
+        writeGeneration += 1
         guard ftruncate(fd, off_t(length)) == 0 else {
             fail(errno: errno, "truncate")
             return false
@@ -803,17 +896,19 @@ import Darwin
     // MARK: - Path operations
 
     @objc func rename(_ newPath: String, _ overwrite: Bool = false) -> Bool {
+        guard requirePathIdentity("rename") else { return false }
         let destination = (newPath as NSString).expandingTildeInPath
         let flags: UInt32 = overwrite ? 0 : UInt32(RENAME_EXCL)
         guard unsafe renamex_np(path, destination, flags) == 0 else {
             fail(errno: errno, "rename")
             return false
         }
-        path = destination
+        path = (fd >= 0 ? Self.kernelPath(of: fd) : nil) ?? destination
         return true
     }
 
     @objc func duplicate(_ destination: String) -> Bool {
+        guard requirePathIdentity("duplicate") else { return false }
         let target = (destination as NSString).expandingTildeInPath
         guard unsafe copyfile(path, target, nil, copyfile_flags_t(COPYFILE_ALL | COPYFILE_EXCL)) == 0 else {
             fail(errno: errno, "duplicate")
@@ -823,6 +918,7 @@ import Darwin
     }
 
     @objc func remove() -> Bool {
+        guard requirePathIdentity("remove") else { return false }
         guard unsafe unlink(path) == 0 else {
             fail(errno: errno, "remove")
             return false
@@ -851,7 +947,10 @@ import Darwin
 
     @objc func touch(_ modificationDate: Double = .nan, _ accessDate: Double = .nan) -> Bool {
         guard requireOpen("touch") else { return false }
-        let times = HSFSSupport.touchTimes(modificationDate: modificationDate, accessDate: accessDate)
+        guard let times = HSFSSupport.touchTimes(modificationDate: modificationDate, accessDate: accessDate) else {
+            fail(code: "EINVAL", message: "Timestamps must be finite numbers of seconds since the Unix epoch", "touch")
+            return false
+        }
         guard unsafe futimens(fd, times) == 0 else {
             fail(errno: errno, "touch")
             return false

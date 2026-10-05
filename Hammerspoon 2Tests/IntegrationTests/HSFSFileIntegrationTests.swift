@@ -10,14 +10,24 @@ import JavaScriptCore
 
 // MARK: - Helpers
 
+/// `realpath()` for test path comparisons.
+private func resolvedPath(_ path: String) -> String {
+    guard let resolved = unsafe realpath(path, nil) else { return path }
+    defer { unsafe free(resolved) }
+    return unsafe String(cString: resolved)
+}
+
 /// A unique temporary directory for one test, deleted when the object is deallocated.
 private final class FileTestDir {
     let path: String
 
     init() throws {
-        path = (NSTemporaryDirectory() as NSString)
+        let created = (NSTemporaryDirectory() as NSString)
             .appendingPathComponent("hs.fs-file-tests-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(atPath: created, withIntermediateDirectories: true)
+        // HSFile.path reports the kernel's resolved path (e.g. /private/var/... rather than
+        // /var/...), so resolve ours the same way to compare paths directly.
+        path = resolvedPath(created)
     }
 
     deinit {
@@ -218,6 +228,37 @@ struct HSFSFileTests {
             #expect((attrs[.posixPermissions] as? Int) == 0o600)
         }
 
+        @Test("an explicit permissions value of 0 is honoured, not replaced by the default")
+        func zeroPermissions() throws {
+            let dir = try FileTestDir()
+            let harness = makeHarness()
+            harness.eval("hs.fs.open('\(dir.child("none"))', 'w', 0).close()")
+            let attrs = try FileManager.default.attributesOfItem(atPath: dir.child("none"))
+            #expect((attrs[.posixPermissions] as? Int) == 0)
+        }
+
+        @Test("invalid permissions are rejected with EINVAL", arguments: ["-1", "0o10000", "1.5", "Infinity"])
+        func invalidPermissions(value: String) throws {
+            let dir = try FileTestDir()
+            let harness = makeHarness()
+            harness.expectTrue("hs.fs.open('\(dir.child("x"))', 'w', \(value)) == null")
+            #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
+            #expect(!FileManager.default.fileExists(atPath: dir.child("x")))
+        }
+
+        @Test("path is absolute even when opened with a relative path")
+        func relativePath() throws {
+            let dir = try FileTestDir()
+            try dir.makeFile("rel.txt", "x")
+            let harness = makeHarness()
+            let saved = FileManager.default.currentDirectoryPath
+            defer { FileManager.default.changeCurrentDirectoryPath(saved) }
+            FileManager.default.changeCurrentDirectoryPath(dir.path)
+            harness.eval("var f = hs.fs.open('rel.txt')")
+            #expect(harness.evalString("f.path") == dir.child("rel.txt"))
+            harness.eval("f.close()")
+        }
+
         @Test("~ is expanded and path is absolute")
         func tildeExpansion() {
             let harness = makeHarness()
@@ -403,6 +444,53 @@ struct HSFSFileTests {
         }
     }
 
+    @Suite("HSFile eachLine callbacks that modify the file", .serialized)
+    struct EachLineMutationTests {
+        @Test("truncating the file in a callback stops delivering stale lines")
+        func truncateDuringEachLine() throws {
+            let dir = try FileTestDir()
+            let file = try dir.makeFile("a.txt", "a\nb\nc\n")
+            let harness = makeHarness()
+            harness.eval("""
+                var f = hs.fs.open('\(file)', 'r+'), seen = [];
+                var ok = f.eachLine(line => { seen.push(line); if (line === 'a') f.truncate(2); });
+                f.close();
+            """)
+            #expect(harness.evalBool("ok") == true)
+            #expect(harness.evalString("seen.join(',')") == "a")
+        }
+
+        @Test("overwriting later lines in a callback delivers the new contents")
+        func overwriteDuringEachLine() throws {
+            let dir = try FileTestDir()
+            let file = try dir.makeFile("a.txt", "a\nb\nc\n")
+            let harness = makeHarness()
+            harness.eval("""
+                var f = hs.fs.open('\(file)', 'r+'), seen = [];
+                f.eachLine(line => {
+                    seen.push(line);
+                    if (line === 'a') { var p = f.position; f.write('X\\nY\\n'); f.seek(p); }
+                });
+                f.close();
+            """)
+            #expect(harness.evalString("seen.join(',')") == "a,X,Y")
+        }
+
+        @Test("closing the file in a callback makes eachLine return false with EBADF")
+        func closeDuringEachLine() throws {
+            let dir = try FileTestDir()
+            let file = try dir.makeFile("a.txt", "a\nb\nc\n")
+            let harness = makeHarness()
+            harness.eval("""
+                var f = hs.fs.open('\(file)'), seen = [];
+                var ok = f.eachLine(line => { seen.push(line); f.close(); });
+            """)
+            #expect(harness.evalBool("ok") == false)
+            #expect(harness.evalString("seen.join(',')") == "a")
+            #expect(harness.evalString("f.lastError.code") == "EBADF")
+        }
+    }
+
     // MARK: - Binary data
 
     @Suite("HSFile binary data")
@@ -430,10 +518,11 @@ struct HSFSFileTests {
                 var r2 = f.writeBytes(new Uint8Array([9, 9, 4, 5, 9]).subarray(2, 4));
                 var r3 = f.writeBytes(new Uint8Array([6, 7]).buffer);
                 var r4 = f.writeBytes(new Uint16Array([0x0908]));
+                var r5 = f.writeBytes(new Uint8Array(new Uint8Array([0, 0, 0, 0, 0, 0, 10, 11]).buffer, 6, 2));
                 f.close();
             """)
-            #expect(harness.evalBool("r1 && r2 && r3 && r4") == true)
-            #expect(dir.contents("bin") == [1, 2, 3, 4, 5, 6, 7, 0x08, 0x09])
+            #expect(harness.evalBool("r1 && r2 && r3 && r4 && r5") == true)
+            #expect(dir.contents("bin") == [1, 2, 3, 4, 5, 6, 7, 0x08, 0x09, 10, 11])
         }
 
         @Test("writeBytes rejects non-binary values with EINVAL", arguments: ["'text'", "[1, 2]", "null", "42", "new DataView(new ArrayBuffer(2))"])
@@ -593,6 +682,29 @@ struct HSFSFileTests {
             harness.eval("f.close()")
         }
 
+        @Test("path operations refuse to act on a file that has replaced the open one")
+        func replacedPath() throws {
+            let dir = try FileTestDir()
+            let file = try dir.makeFile("a.txt", "original")
+            let harness = makeHarness()
+            harness.eval("var f = hs.fs.open('\(file)')")
+            // Another process moves the file away and puts a different file at the same path.
+            try FileManager.default.moveItem(atPath: file, toPath: dir.child("moved.txt"))
+            try dir.makeFile("a.txt", "impostor")
+
+            #expect(harness.evalBool("f.remove()") == false)
+            #expect(harness.evalString("f.lastError.code") == "ESTALE")
+            #expect(harness.evalBool("f.rename('\(dir.child("b.txt"))')") == false)
+            #expect(harness.evalString("f.lastError.code") == "ESTALE")
+            #expect(harness.evalBool("f.duplicate('\(dir.child("c.txt"))')") == false)
+            #expect(harness.evalString("f.lastError.code") == "ESTALE")
+            #expect(dir.text("a.txt") == "impostor")
+            #expect(!FileManager.default.fileExists(atPath: dir.child("b.txt")))
+            #expect(!FileManager.default.fileExists(atPath: dir.child("c.txt")))
+            #expect(harness.evalString("f.read()") == "original")
+            harness.eval("f.close()")
+        }
+
         @Test("attributes, setPermissions, and touch act on the open file")
         func metadata() throws {
             let dir = try FileTestDir()
@@ -605,6 +717,11 @@ struct HSFSFileTests {
             #expect(harness.evalInt("f.attributes().permissions") == 0o640)
             #expect(harness.evalBool("f.touch(1000000000)") == true)
             #expect(harness.evalDouble("f.attributes().modificationDate") == 1_000_000_000)
+            #expect(harness.evalBool("f.touch(0)") == true)
+            #expect(harness.evalDouble("f.attributes().modificationDate") == 0)
+            #expect(harness.evalBool("f.touch(1e100)") == false)
+            #expect(harness.evalString("f.lastError.code") == "EINVAL")
+            #expect(harness.evalBool("f.touch(Infinity)") == false)
             #expect(harness.evalBool("f.touch()") == true)
             harness.expectTrue("Math.abs(f.attributes().modificationDate - Date.now() / 1000) < 60")
             harness.eval("f.close()")
@@ -666,7 +783,7 @@ struct HSFSFileTests {
             harness.expectTrue("a.path !== b.path")
             let path = try #require(harness.evalString("a.path"))
             #expect((path as NSString).lastPathComponent.hasPrefix("myspoon."))
-            #expect(path.hasPrefix(NSTemporaryDirectory()))
+            #expect(path.hasPrefix(resolvedPath(NSTemporaryDirectory())))
             let attrs = try FileManager.default.attributesOfItem(atPath: path)
             #expect((attrs[.posixPermissions] as? Int) == 0o600)
             harness.eval("a.remove(); a.close(); b.remove(); b.close()")
@@ -770,6 +887,18 @@ struct HSFSFileTests {
             #expect(st.st_atimespec.tv_sec == 1_100_000_000)
         }
 
+        @Test("touch treats 0 as the epoch and rejects out-of-range timestamps without creating the file")
+        func touchEdgeCases() throws {
+            let dir = try FileTestDir()
+            let harness = makeHarness()
+            #expect(harness.evalBool("hs.fs.touch('\(dir.child("epoch"))', 0)") == true)
+            #expect(harness.evalDouble("hs.fs.attributes('\(dir.child("epoch"))').modificationDate") == 0)
+            #expect(harness.evalBool("hs.fs.touch('\(dir.child("huge"))', 1e100)") == false)
+            #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
+            #expect(harness.evalBool("hs.fs.touch('\(dir.child("huge"))', 1000, -Infinity)") == false)
+            #expect(!FileManager.default.fileExists(atPath: dir.child("huge")))
+        }
+
         @Test("touch does not truncate an existing file and works on directories")
         func touchExisting() throws {
             let dir = try FileTestDir()
@@ -792,6 +921,20 @@ struct HSFSFileTests {
             #expect(harness.evalString("hs.fs.lastError.code") == "EEXIST")
             #expect(harness.evalBool("hs.fs.rmdir('\(dir.path)')") == false)
             #expect(harness.evalString("hs.fs.lastError.code") == "ENOTEMPTY")
+
+            let saved = FileManager.default.currentDirectoryPath
+            defer { FileManager.default.changeCurrentDirectoryPath(saved) }
+            #expect(harness.evalBool("hs.fs.chdir('\(dir.child("missing"))')") == false)
+            #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
+            #expect(harness.evalBool("hs.fs.chdir('\(dir.child("x"))')") == false)
+            #expect(harness.evalString("hs.fs.lastError.code") == "ENOTDIR")
+            harness.expectTrue("hs.fs.pathToAbsolute('\(dir.child("missing2"))') == null")
+            #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
+            harness.expectTrue("hs.fs.displayName('\(dir.child("x"))') != null")
+            harness.expectTrue("hs.fs.displayName('\(dir.child("missing3"))') == null")
+            #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
+            harness.expectTrue("hs.fs.xattrGet('\(dir.child("x"))', 'com.example.absent') == null")
+            #expect(harness.evalString("hs.fs.lastError.code") == "ENOATTR")
         }
 
         @Test("errno values map to their symbolic names")
