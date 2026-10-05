@@ -892,6 +892,23 @@ struct HSFSFileTests {
 
     @Suite("hs.fs chmod, touch, and lastError")
     struct ModuleTests {
+        @Test("chmod and setPermissions reject missing or out-of-range permissions",
+              arguments: ["", ", -1", ", 0o10000", ", 1.5", ", NaN", ", 'abc'"])
+        func invalidPermissionArguments(argument: String) throws {
+            let dir = try FileTestDir()
+            let file = try dir.makeFile("a.txt", "x")
+            try FileManager.default.setAttributes([.posixPermissions: 0o640], ofItemAtPath: file)
+            let harness = makeHarness()
+            #expect(harness.evalBool("hs.fs.chmod('\(file)'\(argument))") == false)
+            #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
+            harness.eval("var f = hs.fs.open('\(file)')")
+            #expect(harness.evalBool("f.setPermissions(\(argument.dropFirst(2)))") == false)
+            #expect(harness.evalString("f.lastError.code") == "EINVAL")
+            harness.eval("f.close()")
+            let attrs = try FileManager.default.attributesOfItem(atPath: file)
+            #expect((attrs[.posixPermissions] as? Int) == 0o640, "mode must be unchanged")
+        }
+
         @Test("chmod sets permissions")
         func chmod() throws {
             let dir = try FileTestDir()

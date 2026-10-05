@@ -320,13 +320,13 @@ import Darwin
 
     /// Set the POSIX permission bits of the file.
     ///
-    /// - Parameter permissions: The permission bits, e.g. `0o600`.
-    /// - Returns: `true` on success, `false` on failure.
+    /// - Parameter permissions: The permission bits, as an integer between `0` and `0o7777`, e.g. `0o600`. Use an octal literal: decimal `600` is a different (and unusual) mode.
+    /// - Returns: `true` on success, `false` on failure (including `EINVAL` if `permissions` is missing or out of range).
     /// - Example:
     /// ```js
     /// f.setPermissions(0o600)
     /// ```
-    @objc func setPermissions(_ permissions: Int) -> Bool
+    @objc func setPermissions(_ permissions: Double) -> Bool
 
     /// Set the modification and access times of the file.
     ///
@@ -936,9 +936,13 @@ import Darwin
         return HSFSSupport.attributes(from: st)
     }
 
-    @objc func setPermissions(_ permissions: Int) -> Bool {
+    @objc func setPermissions(_ permissions: Double) -> Bool {
         guard requireOpen("setPermissions") else { return false }
-        guard fchmod(fd, mode_t(permissions & 0o7777)) == 0 else {
+        guard let bits = HSFSSupport.permissionBits(permissions, function: "HSFile.setPermissions") else {
+            fail(code: "EINVAL", message: "Permissions must be an integer between 0 and 0o7777", "setPermissions")
+            return false
+        }
+        guard fchmod(fd, bits) == 0 else {
             fail(errno: errno, "setPermissions")
             return false
         }

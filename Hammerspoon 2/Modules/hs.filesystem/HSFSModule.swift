@@ -520,13 +520,13 @@ import UniformTypeIdentifiers
     ///
     /// - Parameters:
     ///   - path: Path to the file or directory. `~` is expanded.
-    ///   - permissions: The permission bits, e.g. `0o644`.
-    /// - Returns: `true` on success, `false` on failure.
+    ///   - permissions: The permission bits, as an integer between `0` and `0o7777`, e.g. `0o644`. Use an octal literal: decimal `755` is a different (and unusual) mode.
+    /// - Returns: `true` on success, `false` on failure (including `EINVAL` if `permissions` is missing or out of range).
     /// - Example:
     /// ```js
     /// hs.fs.chmod("~/bin/myscript.sh", 0o755)
     /// ```
-    @objc func chmod(_ path: String, _ permissions: Int) -> Bool
+    @objc func chmod(_ path: String, _ permissions: Double) -> Bool
 
     // MARK: - Links
 
@@ -940,11 +940,11 @@ import UniformTypeIdentifiers
         }
         let createMode: mode_t
         if let permissions {
-            guard let bits = Int(exactly: permissions), (0...0o7777).contains(bits) else {
+            guard let bits = HSFSSupport.permissionBits(permissions, function: "hs.fs.open") else {
                 fail("hs.fs.open", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
                 return nil
             }
-            createMode = mode_t(bits)
+            createMode = bits
         } else {
             createMode = 0o644
         }
@@ -1283,8 +1283,12 @@ import UniformTypeIdentifiers
         return true
     }
 
-    @objc func chmod(_ path: String, _ permissions: Int) -> Bool {
-        guard unsafe Darwin.chmod(expand(path), mode_t(permissions & 0o7777)) == 0 else {
+    @objc func chmod(_ path: String, _ permissions: Double) -> Bool {
+        guard let bits = HSFSSupport.permissionBits(permissions, function: "hs.fs.chmod") else {
+            fail("hs.fs.chmod", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
+            return false
+        }
+        guard unsafe Darwin.chmod(expand(path), bits) == 0 else {
             fail("hs.fs.chmod", errno: errno, path: path)
             return false
         }

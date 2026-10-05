@@ -175,4 +175,24 @@ enum HSFSSupport {
         }
         return value.isNaN ? nil : value
     }
+
+    // MARK: - Permissions
+
+    /// Validate a JS permissions argument: it must be an integer between `0` and `0o7777`.
+    ///
+    /// `Double` parameters are used for permissions so that an omitted argument (which arrives as
+    /// `NaN`) is rejected rather than silently becoming mode `0`.
+    ///
+    /// Logs a warning for values that look like an octal literal typed in decimal (e.g. `755`
+    /// instead of `0o755`), since those silently set the setuid/setgid/sticky bits.
+    ///
+    /// - Returns: The permission bits, or `nil` if `value` is not a valid permissions value.
+    static func permissionBits(_ value: Double, function: String) -> mode_t? {
+        guard let bits = Int(exactly: value), (0...0o7777).contains(bits) else { return nil }
+        let decimal = String(bits)
+        if bits > 0o777, decimal.count == 3, decimal.allSatisfy({ "01234567".contains($0) }) {
+            AKWarning("\(function): permissions \(decimal) set special mode bits (0o\(String(bits, radix: 8))); did you mean 0o\(decimal)?")
+        }
+        return mode_t(bits)
+    }
 }
