@@ -167,6 +167,10 @@ import AppKit
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSKeycodesEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.keycodes.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -181,6 +185,11 @@ import AppKit
 }
 
 // MARK: - Module implementation
+
+/// Events emitted by hs.keycodes's watcher
+nonisolated enum HSKeycodesEvent: String, HSEventName {
+    case change
+}
 
 @_documentation(visibility: private)
 @MainActor
@@ -197,6 +206,7 @@ import AppKit
 
     // MARK: - Watcher
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSKeycodesEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -416,7 +426,7 @@ import AppKit
 
     private func inputSourceDidChange() {
         _cachedMap = buildKeyMap()
-        _ = watcherCallback?.call(withArguments: [])
+        _ = watcherCallback?.call(withArguments: [HSKeycodesEvent.change.rawValue])
     }
 
     private func tisStringProperty(of source: TISInputSource, key: CFString) -> String? {

@@ -17,7 +17,7 @@ hs.audiodevice._watcherEmitter = new LazyWatcherEmitter("hs.audiodevice", functi
     }
 }, function() {
     hs.audiodevice._removeWatcher();
-});
+}, hs.audiodevice._eventNames);
 
 /// Register a listener for a named system-level audio configuration event.
 /// Parameters:
@@ -74,5 +74,5 @@ hs.audiodevice._makeDeviceEmitter = function(device) {
         }
     }, function() {
         device._removeWatcher();
-    });
+    }, device._eventNames);
 };

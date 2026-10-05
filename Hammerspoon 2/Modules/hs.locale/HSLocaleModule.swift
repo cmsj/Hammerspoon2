@@ -185,6 +185,10 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSLocaleEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.locale.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -200,6 +204,11 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
 
 // MARK: - Module implementation
 
+/// Events emitted by hs.locale's watcher
+nonisolated enum HSLocaleEvent: String, HSEventName {
+    case change
+}
+
 @_documentation(visibility: private)
 @MainActor
 @objc class HSLocaleModule: NSObject, HSModuleAPI, HSLocaleModuleAPI {
@@ -208,6 +217,7 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
 
     // MARK: - Watcher
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSLocaleEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -316,6 +326,6 @@ private func localeDetails(_ locale: Locale) -> [String: Any] {
     }
 
     private func localeDidChange() {
-        _ = watcherCallback?.call(withArguments: [])
+        _ = watcherCallback?.call(withArguments: [HSLocaleEvent.change.rawValue])
     }
 }

@@ -296,6 +296,33 @@ struct HSAudioDeviceTests {
         """)
         }
 
+        // MARK: - Per-device watcher event names
+
+        @Test("per-device on() with an unknown event throws and starts nothing")
+        func testDeviceOnRejectsUnknownEvent() {
+            // Does not assert !harness.hasException, for the same reason as
+            // testDeviceOnThrowsWhenNativeStartFails below: device on() is a native method that
+            // invokeMethods into the JS emitter, so the context's exceptionHandler fires even
+            // though this test's own try/catch catches the error.
+            let harness = makeHarness()
+            harness.eval("""
+                var d = hs.audiodevice.all()[0];
+                var names = d._eventNames;
+                var message = null;
+                try {
+                    d.on('vmOut', function() {});
+                } catch (err) {
+                    message = err.message;
+                }
+                var listenerCount = d._watcherEmitter ? d._watcherEmitter._listenerCount : 0;
+                // Drop the never-started emitter so no JSValue from this context lingers on the device
+                d._removeWatcher();
+            """)
+            #expect(harness.evalValue("names")?.toArray() as? [String] == ["vmout", "vmin", "mout", "min", "rate", "dsout", "dsin"])
+            #expect(harness.evalString("message") == "hs.audiodevice device.on(): unknown event 'vmOut'. Known events: vmout, vmin, mout, min, rate, dsout, dsin")
+            #expect(harness.evalInt("listenerCount") == 0)
+        }
+
         // MARK: - Module-level watcher
 
         @Test("module on() and off() cycle is safe")

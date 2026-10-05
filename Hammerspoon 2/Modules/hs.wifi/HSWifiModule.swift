@@ -285,6 +285,10 @@ private enum HSWifiError: LocalizedError {
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSWifiEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.wifi.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -310,6 +314,7 @@ private enum HSWifiError: LocalizedError {
     private var watcherCallbacks: [String: JSFunction] = [:]
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSWifiEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -439,7 +444,7 @@ private enum HSWifiError: LocalizedError {
     /// KeyedLazyWatcherEmitter in Engine/engine.js, which calls this only on a 0->1 listener
     /// transition for `event`, so no ref-counting is needed here.
     @objc(_addWatcher::) func _addWatcher(_ event: String, _ listener: JSFunction) -> Bool {
-        guard let type = wifiEventTypeMap[event] else {
+        guard let type = HSWifiEvent(rawValue: event)?.cwEventType else {
             AKWarning("hs.wifi.on(): unrecognized event name '\(event)'")
             return false
         }
@@ -467,7 +472,7 @@ private enum HSWifiError: LocalizedError {
     /// Stops native CoreWLAN monitoring for one event type. Called only on a 1->0 listener
     /// transition for `event` - see `_addWatcher` above.
     @objc func _removeWatcher(_ event: String) {
-        guard let type = wifiEventTypeMap[event], watcherCallbacks[event] != nil else { return }
+        guard let type = HSWifiEvent(rawValue: event)?.cwEventType, watcherCallbacks[event] != nil else { return }
         do {
             try client.stopMonitoringEvent(with: type)
         } catch {
@@ -511,9 +516,9 @@ private enum HSWifiError: LocalizedError {
     // method is nonisolated and hops via Task { @MainActor in ... } rather than
     // MainActor.assumeIsolated, which would crash if invoked off the main thread.
 
-    nonisolated private func fireEvent(_ name: String, interfaceName: String, rssi: Int? = nil, transmitRate: Double? = nil) {
+    nonisolated private func fireEvent(_ event: HSWifiEvent, interfaceName: String, rssi: Int? = nil, transmitRate: Double? = nil) {
         Task { @MainActor in
-            guard let callback = self.watcherCallbacks[name] else { return }
+            guard let callback = self.watcherCallbacks[event.rawValue] else { return }
             var info: [String: Any] = ["interface": interfaceName]
             if let rssi { info["rssi"] = rssi }
             if let transmitRate { info["transmitRate"] = transmitRate }
@@ -522,35 +527,35 @@ private enum HSWifiError: LocalizedError {
     }
 
     nonisolated func powerStateDidChangeForWiFiInterface(withName interfaceName: String) {
-        fireEvent("powerChange", interfaceName: interfaceName)
+        fireEvent(.powerChange, interfaceName: interfaceName)
     }
 
     nonisolated func ssidDidChangeForWiFiInterface(withName interfaceName: String) {
-        fireEvent("ssidChange", interfaceName: interfaceName)
+        fireEvent(.ssidChange, interfaceName: interfaceName)
     }
 
     nonisolated func bssidDidChangeForWiFiInterface(withName interfaceName: String) {
-        fireEvent("bssidChange", interfaceName: interfaceName)
+        fireEvent(.bssidChange, interfaceName: interfaceName)
     }
 
     nonisolated func countryCodeDidChangeForWiFiInterface(withName interfaceName: String) {
-        fireEvent("countryCodeChange", interfaceName: interfaceName)
+        fireEvent(.countryCodeChange, interfaceName: interfaceName)
     }
 
     nonisolated func linkDidChangeForWiFiInterface(withName interfaceName: String) {
-        fireEvent("linkChange", interfaceName: interfaceName)
+        fireEvent(.linkChange, interfaceName: interfaceName)
     }
 
     nonisolated func linkQualityDidChangeForWiFiInterface(withName interfaceName: String, rssi: Int, transmitRate: Double) {
-        fireEvent("linkQualityChange", interfaceName: interfaceName, rssi: rssi, transmitRate: transmitRate)
+        fireEvent(.linkQualityChange, interfaceName: interfaceName, rssi: rssi, transmitRate: transmitRate)
     }
 
     nonisolated func modeDidChangeForWiFiInterface(withName interfaceName: String) {
-        fireEvent("modeChange", interfaceName: interfaceName)
+        fireEvent(.modeChange, interfaceName: interfaceName)
     }
 
     nonisolated func scanCacheUpdatedForWiFiInterface(withName interfaceName: String) {
-        fireEvent("scanCacheUpdated", interfaceName: interfaceName)
+        fireEvent(.scanCacheUpdated, interfaceName: interfaceName)
     }
 
     nonisolated func clientConnectionInterrupted() {
@@ -566,13 +571,21 @@ private enum HSWifiError: LocalizedError {
     }
 }
 
-private let wifiEventTypeMap: [String: CWEventType] = [
-    "powerChange": CWEventType(rawValue: 1)!,
-    "ssidChange": CWEventType(rawValue: 2)!,
-    "bssidChange": CWEventType(rawValue: 3)!,
-    "countryCodeChange": CWEventType(rawValue: 4)!,
-    "linkChange": CWEventType(rawValue: 5)!,
-    "linkQualityChange": CWEventType(rawValue: 6)!,
-    "modeChange": CWEventType(rawValue: 7)!,
-    "scanCacheUpdated": CWEventType(rawValue: 8)!
-]
+/// Events emitted by hs.wifi's watchers, each backed by its own CoreWLAN event type
+nonisolated enum HSWifiEvent: String, HSEventName {
+    case powerChange, ssidChange, bssidChange, countryCodeChange, linkChange, linkQualityChange
+    case modeChange, scanCacheUpdated
+
+    var cwEventType: CWEventType {
+        switch self {
+        case .powerChange: CWEventType(rawValue: 1)!
+        case .ssidChange: CWEventType(rawValue: 2)!
+        case .bssidChange: CWEventType(rawValue: 3)!
+        case .countryCodeChange: CWEventType(rawValue: 4)!
+        case .linkChange: CWEventType(rawValue: 5)!
+        case .linkQualityChange: CWEventType(rawValue: 6)!
+        case .modeChange: CWEventType(rawValue: 7)!
+        case .scanCacheUpdated: CWEventType(rawValue: 8)!
+        }
+    }
+}

@@ -9,7 +9,7 @@ hs.camera._watcherEmitter = new LazyWatcherEmitter("hs.camera", function() {
     });
 }, function() {
     hs.camera._removeWatcher();
-});
+}, hs.camera._eventNames);
 
 /// Register a listener for camera device connect/disconnect events.
 /// Parameters:

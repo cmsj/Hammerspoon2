@@ -9,6 +9,11 @@
 // Engine/engine.js): the "event" family shares ONE native notification stream across all 12
 // named power/session events below, while "change" (battery state) is a second, completely
 // independent native IOPS watcher. on/off/once dispatch to whichever emitter owns the event name.
+//
+// hs.power._eventNames (from the Swift HSPowerEvent enum) covers both families, and on()/once()
+// check it BEFORE routing: anything unrecognised would otherwise fall through to the event
+// emitter, starting the wrong native watcher for a name that can never fire (#253). Each
+// emitter also gets just its own family's names, so neither can be fed the other's events.
 
 const POWER_BATTERY_EVENTS = new Set(['change']);
 
@@ -18,18 +23,18 @@ hs.power._eventWatcherEmitter = new LazyWatcherEmitter("hs.power", function() {
     });
 }, function() {
     hs.power._removeEventWatcher();
-});
+}, hs.power._eventNames.filter((event) => !POWER_BATTERY_EVENTS.has(event)));
 
 hs.power._batteryWatcherEmitter = new LazyWatcherEmitter("hs.power", function() {
-    const started = hs.power._addBatteryWatcher(() => {
-        hs.power._batteryWatcherEmitter.emit('change');
+    const started = hs.power._addBatteryWatcher((event) => {
+        hs.power._batteryWatcherEmitter.emit(event);
     });
     if (!started) {
         throw new Error("hs.power.on(): Failed to start battery watcher");
     }
 }, function() {
     hs.power._removeBatteryWatcher();
-});
+}, hs.power._eventNames.filter((event) => POWER_BATTERY_EVENTS.has(event)));
 
 function hsPowerEmitterFor(event) {
     return POWER_BATTERY_EVENTS.has(event) ? hs.power._batteryWatcherEmitter : hs.power._eventWatcherEmitter;
@@ -45,6 +50,7 @@ function hsPowerEmitterFor(event) {
 /// hs.power.on('change', () => console.log("Battery now: " + hs.power.batteryInfo().percentage + "%"))
 /// ```
 hs.power.on = function(event, listener) {
+    assertKnownEvent("hs.power.on()", event, hs.power._eventNames);
     hsPowerEmitterFor(event).on(event, listener);
 };
 
@@ -72,5 +78,6 @@ hs.power.off = function(event, listener) {
 /// hs.power.once('systemDidWake', () => console.log("Welcome back"))
 /// ```
 hs.power.once = function(event, listener) {
+    assertKnownEvent("hs.power.once()", event, hs.power._eventNames);
     hsPowerEmitterFor(event).once(event, listener);
 };

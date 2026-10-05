@@ -10,12 +10,12 @@
 // hs.keycodes only ever emits one kind of event ("change"), but on/off/once still take an
 // explicit event name for consistency with every other hs.* module-level watcher.
 hs.keycodes._watcherEmitter = new LazyWatcherEmitter("hs.keycodes", function() {
-    hs.keycodes._addWatcher(() => {
-        hs.keycodes._watcherEmitter.emit('change');
+    hs.keycodes._addWatcher((event) => {
+        hs.keycodes._watcherEmitter.emit(event);
     });
 }, function() {
     hs.keycodes._removeWatcher();
-});
+}, hs.keycodes._eventNames);
 
 /// Register a listener that fires whenever the keyboard input source changes.
 /// Read `currentLayout()`, `currentSourceID()`, or `map` inside the listener to inspect the new

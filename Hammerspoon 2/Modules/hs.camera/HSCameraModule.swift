@@ -90,6 +90,10 @@ import AVFoundation
     /// SKIP_DOCS
     @objc var _makeCameraEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSCameraEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.camera.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -104,6 +108,12 @@ import AVFoundation
 }
 
 // MARK: - Implementation
+
+/// Events emitted by hs.camera's module-level watcher. (A single camera's own on/off/once take
+/// no event name - it only has one kind of event - so there is no per-camera equivalent.)
+nonisolated enum HSCameraEvent: String, HSEventName {
+    case connected, disconnected
+}
 
 @_documentation(visibility: private)
 @MainActor
@@ -182,6 +192,7 @@ import AVFoundation
 
     @objc var _watcherEmitter: JSFunction? = nil
     @objc var _makeCameraEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSCameraEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -212,7 +223,7 @@ import AVFoundation
             MainActor.assumeIsolated {
                 guard let connectedDevice = AVCaptureDevice(uniqueID: deviceUID) else { return }
                 let cam = self.camera(for: connectedDevice)
-                _ = self.moduleCallback?.call(withArguments: ["connected", cam])
+                _ = self.moduleCallback?.call(withArguments: [HSCameraEvent.connected.rawValue, cam])
             }
         }
 
@@ -228,7 +239,7 @@ import AVFoundation
             MainActor.assumeIsolated {
                 // Cache was primed in _addWatcher, so removeValue should always find the camera.
                 if let cam = self.cameraCache.removeValue(forKey: uid) {
-                    _ = self.moduleCallback?.call(withArguments: ["disconnected", cam])
+                    _ = self.moduleCallback?.call(withArguments: [HSCameraEvent.disconnected.rawValue, cam])
                 }
             }
         }

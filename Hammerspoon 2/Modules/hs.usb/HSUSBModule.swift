@@ -74,6 +74,10 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSValue? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSUSBEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.usb.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -89,6 +93,11 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
 // MARK: - Implementation
 
+/// Events emitted by hs.usb's watcher
+nonisolated enum HSUSBEvent: String, HSEventName {
+    case added, removed
+}
+
 @safe @MainActor
 @_documentation(visibility: private)
 @objc class HSUSBModule: NSObject, HSModuleAPI, HSUSBModuleAPI {
@@ -96,6 +105,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
     let engineID: UUID
 
     @objc var _watcherEmitter: JSValue? = nil
+    @objc var _eventNames: [String] { HSUSBEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -184,7 +194,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
                 guard let refCon = unsafe refCon else { return }
                 let infos = drainUSBIterator(iterator)
                 let module: HSUSBModule = unsafe Unmanaged<HSUSBModule>.fromOpaque(refCon).takeUnretainedValue()
-                MainActor.assumeIsolated { module.fireWatcherEvent("added", infos: infos) }
+                MainActor.assumeIsolated { module.fireWatcherEvent(.added, infos: infos) }
             },
             refCon, &addedIterator
         )
@@ -203,7 +213,7 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
                 guard let refCon = unsafe refCon else { return }
                 let infos = drainUSBIterator(iterator)
                 let module: HSUSBModule = unsafe Unmanaged<HSUSBModule>.fromOpaque(refCon).takeUnretainedValue()
-                MainActor.assumeIsolated { module.fireWatcherEvent("removed", infos: infos) }
+                MainActor.assumeIsolated { module.fireWatcherEvent(.removed, infos: infos) }
             },
             refCon, &removedIterator
         )
@@ -249,9 +259,9 @@ private func drainUSBIterator(_ iterator: io_iterator_t) -> [[String: Any]] {
 
     // MARK: - Private
 
-    private func fireWatcherEvent(_ eventType: String, infos: [[String: Any]]) {
+    private func fireWatcherEvent(_ event: HSUSBEvent, infos: [[String: Any]]) {
         for info in infos {
-            _ = listener?.call(withArguments: [eventType, info])
+            _ = listener?.call(withArguments: [event.rawValue, info])
         }
     }
 }

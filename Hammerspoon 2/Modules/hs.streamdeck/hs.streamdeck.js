@@ -9,7 +9,7 @@ hs.streamdeck._watcherEmitter = new LazyWatcherEmitter("hs.streamdeck", function
     });
 }, function() {
     hs.streamdeck._removeWatcher();
-});
+}, hs.streamdeck._eventNames);
 
 /// Register a listener for Stream Deck connect/disconnect events.
 /// Parameters:

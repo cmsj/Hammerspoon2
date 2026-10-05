@@ -16,7 +16,7 @@ hs.wifi._watcherEmitter = new KeyedLazyWatcherEmitter("hs.wifi", function(event)
     });
 }, function(event) {
     hs.wifi._removeWatcher(event);
-});
+}, hs.wifi._eventNames);
 
 /// Register a listener for a Wi-Fi interface event.
 /// Info keys by event:

@@ -215,6 +215,10 @@ import IOKit.pwr_mgt
     /// SKIP_DOCS
     @objc var _batteryWatcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept, across both watcher families - see HSPowerEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.power.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -230,6 +234,16 @@ import IOKit.pwr_mgt
 
 // MARK: - Module implementation
 
+/// Events emitted by hs.power's two watchers: `change` comes from the battery watcher, every
+/// other case from the system power/session event watcher.
+nonisolated enum HSPowerEvent: String, HSEventName {
+    case screensDidSleep, screensDidWake, screensDidLock, screensDidUnlock
+    case screensaverDidStart, screensaverDidStop, screensaverWillStop
+    case systemWillSleep, systemDidWake, systemWillPowerOff
+    case sessionDidBecomeActive, sessionDidResignActive
+    case change
+}
+
 @safe @_documentation(visibility: private)
 @MainActor
 @objc class HSPowerModule: NSObject, HSModuleAPI, HSPowerModuleAPI {
@@ -239,6 +253,7 @@ import IOKit.pwr_mgt
     private var sleepAssertions: [String: IOPMAssertionID] = [:]
 
     @objc var _eventWatcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSPowerEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -251,22 +266,22 @@ import IOKit.pwr_mgt
     private var batteryRunLoopSource: CFRunLoopSource?
     private var batteryContextPointer: UnsafeMutableRawPointer?
 
-    private static let workspaceEvents: [(NSNotification.Name, String)] = [
-        (NSWorkspace.screensDidSleepNotification,        "screensDidSleep"),
-        (NSWorkspace.screensDidWakeNotification,         "screensDidWake"),
-        (NSWorkspace.willSleepNotification,              "systemWillSleep"),
-        (NSWorkspace.didWakeNotification,                "systemDidWake"),
-        (NSWorkspace.willPowerOffNotification,           "systemWillPowerOff"),
-        (NSWorkspace.sessionDidBecomeActiveNotification, "sessionDidBecomeActive"),
-        (NSWorkspace.sessionDidResignActiveNotification, "sessionDidResignActive"),
+    private static let workspaceEvents: [(NSNotification.Name, HSPowerEvent)] = [
+        (NSWorkspace.screensDidSleepNotification,        .screensDidSleep),
+        (NSWorkspace.screensDidWakeNotification,         .screensDidWake),
+        (NSWorkspace.willSleepNotification,              .systemWillSleep),
+        (NSWorkspace.didWakeNotification,                .systemDidWake),
+        (NSWorkspace.willPowerOffNotification,           .systemWillPowerOff),
+        (NSWorkspace.sessionDidBecomeActiveNotification, .sessionDidBecomeActive),
+        (NSWorkspace.sessionDidResignActiveNotification, .sessionDidResignActive),
     ]
 
-    private static let distributedEvents: [(String, String)] = [
-        ("com.apple.screensaver.didstart", "screensaverDidStart"),
-        ("com.apple.screensaver.didstop",  "screensaverDidStop"),
-        ("com.apple.screensaver.willstop", "screensaverWillStop"),
-        ("com.apple.screenIsLocked",       "screensDidLock"),
-        ("com.apple.screenIsUnlocked",     "screensDidUnlock"),
+    private static let distributedEvents: [(String, HSPowerEvent)] = [
+        ("com.apple.screensaver.didstart", .screensaverDidStart),
+        ("com.apple.screensaver.didstop",  .screensaverDidStop),
+        ("com.apple.screensaver.willstop", .screensaverWillStop),
+        ("com.apple.screenIsLocked",       .screensDidLock),
+        ("com.apple.screenIsUnlocked",     .screensDidUnlock),
     ]
 
     required init(engineID: UUID) {
@@ -583,7 +598,7 @@ import IOKit.pwr_mgt
             guard let ctx = unsafe context else { return }
             let module = unsafe Unmanaged<HSPowerModule>.fromOpaque(ctx).takeUnretainedValue()
             MainActor.assumeIsolated {
-                _ = module.batteryWatcherCallback?.call(withArguments: [])
+                _ = module.batteryWatcherCallback?.call(withArguments: [HSPowerEvent.change.rawValue])
             }
         }
         let source = unsafe IOPSNotificationCreateRunLoopSource(callback, ptr)?.takeRetainedValue()
@@ -651,7 +666,7 @@ import IOKit.pwr_mgt
         }
     }
 
-    private func fireEvent(_ event: String) {
-        _ = eventWatcherCallback?.call(withArguments: [event])
+    private func fireEvent(_ event: HSPowerEvent) {
+        _ = eventWatcherCallback?.call(withArguments: [event.rawValue])
     }
 }

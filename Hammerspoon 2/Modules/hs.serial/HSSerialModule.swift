@@ -171,6 +171,10 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSSerialEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.serial.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -186,6 +190,11 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
 
 // MARK: - Implementation
 
+/// Events emitted by hs.serial's watcher
+nonisolated enum HSSerialEvent: String, HSEventName {
+    case added, removed
+}
+
 @safe @MainActor
 @_documentation(visibility: private)
 @objc class HSSerialModule: NSObject, HSModuleAPI, HSSerialModuleAPI {
@@ -194,6 +203,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
     private var ports = HSWeakObjectSet<HSSerialPort>()
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSSerialEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -323,7 +333,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
                 guard let refCon = unsafe refCon else { return }
                 let infos = drainSerialDeviceInfos(iterator)
                 let module: HSSerialModule = unsafe Unmanaged<HSSerialModule>.fromOpaque(refCon).takeUnretainedValue()
-                MainActor.assumeIsolated { module.fireWatcherEvent("added", infos: infos) }
+                MainActor.assumeIsolated { module.fireWatcherEvent(.added, infos: infos) }
             },
             refCon, &addedIterator
         )
@@ -341,7 +351,7 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
                 guard let refCon = unsafe refCon else { return }
                 let infos = drainSerialDeviceInfos(iterator)
                 let module: HSSerialModule = unsafe Unmanaged<HSSerialModule>.fromOpaque(refCon).takeUnretainedValue()
-                MainActor.assumeIsolated { module.fireWatcherEvent("removed", infos: infos) }
+                MainActor.assumeIsolated { module.fireWatcherEvent(.removed, infos: infos) }
             },
             refCon, &removedIterator
         )
@@ -387,9 +397,9 @@ private func currentSerialIdentities() -> [SerialDeviceIdentity] {
 
     // MARK: - Private
 
-    private func fireWatcherEvent(_ eventType: String, infos: [[String: Any]]) {
+    private func fireWatcherEvent(_ event: HSSerialEvent, infos: [[String: Any]]) {
         for info in infos {
-            _ = listener?.call(withArguments: [eventType, info])
+            _ = listener?.call(withArguments: [event.rawValue, info])
         }
     }
 }

@@ -10,12 +10,12 @@
 // hs.screen only ever emits one kind of event ("change"), but on/off/once still take an explicit
 // event name for consistency with every other hs.* module-level watcher.
 hs.screen._watcherEmitter = new LazyWatcherEmitter("hs.screen", function() {
-    hs.screen._addWatcher(() => {
-        hs.screen._watcherEmitter.emit('change');
+    hs.screen._addWatcher((event) => {
+        hs.screen._watcherEmitter.emit(event);
     });
 }, function() {
     hs.screen._removeWatcher();
-});
+}, hs.screen._eventNames);
 
 /// Register a listener that fires whenever the display configuration changes — monitors
 /// connected/disconnected displays, resolution or arrangement changes, or the menu bar moving

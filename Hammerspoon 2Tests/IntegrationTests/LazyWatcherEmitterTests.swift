@@ -160,4 +160,106 @@ struct LazyWatcherEmitterTests {
         // The valid listener registered via on() must still have received the event.
         harness.expectEqual("received", "hello")
     }
+
+    // MARK: - knownEvents (#253)
+
+    @Test("an unknown event name throws before start() is called or anything is recorded")
+    func testUnknownEventRejected() {
+        let harness = makeHarness()
+        harness.eval("""
+            var startCalls = 0;
+            var e = new LazyWatcherEmitter("test", function() { startCalls++; }, function() {}, ['alpha', 'beta']);
+            var message = null;
+            try {
+                e.on('alpah', function() {});
+            } catch (err) {
+                message = err.message;
+            }
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalString("message") == "test.on(): unknown event 'alpah'. Known events: alpha, beta")
+        #expect(harness.evalInt("startCalls") == 0)
+        #expect(harness.evalInt("e._listenerCount") == 0)
+        harness.expectFalse("'alpah' in e.events")
+    }
+
+    @Test("a known event name is accepted and starts the watcher")
+    func testKnownEventAccepted() {
+        let harness = makeHarness()
+        harness.eval("""
+            var startCalls = 0, received = null;
+            var e = new LazyWatcherEmitter("test", function() { startCalls++; }, function() {}, ['alpha', 'beta']);
+            e.on('beta', function(value) { received = value; });
+            e.emit('beta', 'hello');
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalInt("startCalls") == 1)
+        #expect(harness.evalString("received") == "hello")
+    }
+
+    @Test("once() is validated too, since it routes through on()")
+    func testOnceUnknownEventRejected() {
+        let harness = makeHarness()
+        harness.eval("""
+            var startCalls = 0, threw = false;
+            var e = new LazyWatcherEmitter("test", function() { startCalls++; }, function() {}, ['alpha']);
+            try {
+                e.once('beta', function() {});
+            } catch (err) {
+                threw = true;
+            }
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalBool("threw") == true)
+        #expect(harness.evalInt("startCalls") == 0)
+    }
+
+    @Test("an inherited Object.prototype name is not mistaken for a known event")
+    func testPrototypeNameIsNotKnownEvent() {
+        let harness = makeHarness()
+        harness.eval("""
+            var threw = false;
+            var e = new LazyWatcherEmitter("test", function() {}, function() {}, ['alpha']);
+            try {
+                e.on('toString', function() {});
+            } catch (err) {
+                threw = true;
+            }
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalBool("threw") == true)
+    }
+
+    @Test("an emitter with no knownEvents list accepts any event name")
+    func testNoKnownEventsAcceptsAnything() {
+        let harness = makeHarness()
+        harness.eval("""
+            var e = new LazyWatcherEmitter("test", function() {}, function() {});
+            e.on('anything at all', function() {});
+            var k = new KeyedLazyWatcherEmitter("test", function() { return true; }, function() {});
+            k.on('also anything', function() {});
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalInt("e._listenerCount") == 1)
+        harness.expectTrue("Array.isArray(k.events['also anything'])")
+    }
+
+    @Test("KeyedLazyWatcherEmitter rejects an unknown event name before calling start()")
+    func testKeyedUnknownEventRejected() {
+        let harness = makeHarness()
+        harness.eval("""
+            var started = [];
+            var e = new KeyedLazyWatcherEmitter("test", function(event) { started.push(event); return true; }, function() {}, ['alpha']);
+            var message = null;
+            try {
+                e.on('beta', function() {});
+            } catch (err) {
+                message = err.message;
+            }
+            e.on('alpha', function() {});
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalString("message") == "test.on(): unknown event 'beta'. Known events: alpha")
+        #expect(harness.evalString("started.join(',')") == "alpha")
+    }
 }

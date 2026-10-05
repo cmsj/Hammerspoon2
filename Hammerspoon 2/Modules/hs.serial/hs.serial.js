@@ -17,7 +17,7 @@ hs.serial._watcherEmitter = new LazyWatcherEmitter("hs.serial", function() {
     }
 }, function() {
     hs.serial._removeWatcher();
-});
+}, hs.serial._eventNames);
 
 /// Register a listener for serial port connection and disconnection events.
 /// Parameters:

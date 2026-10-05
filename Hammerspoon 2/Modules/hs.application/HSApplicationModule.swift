@@ -129,6 +129,10 @@ import UniformTypeIdentifiers
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSApplicationEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.application.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -144,17 +148,22 @@ import UniformTypeIdentifiers
 
 // MARK: - Implementations
 
+/// Events emitted by hs.application's watcher
+nonisolated enum HSApplicationEvent: String, HSEventName {
+    case willLaunch, didLaunch, didTerminate, didHide, didUnhide, didActivate, didDeactivate
+}
+
 class HSApplicationWatcherObject {
     let callback: JSFunction
 
-    static let notificationToEventName: [NSNotification.Name: String] = [
-        NSWorkspace.willLaunchApplicationNotification: "willLaunch",
-        NSWorkspace.didLaunchApplicationNotification: "didLaunch",
-        NSWorkspace.didTerminateApplicationNotification: "didTerminate",
-        NSWorkspace.didHideApplicationNotification: "didHide",
-        NSWorkspace.didUnhideApplicationNotification: "didUnhide",
-        NSWorkspace.didActivateApplicationNotification: "didActivate",
-        NSWorkspace.didDeactivateApplicationNotification: "didDeactivate",
+    static let notificationToEventName: [NSNotification.Name: HSApplicationEvent] = [
+        NSWorkspace.willLaunchApplicationNotification: .willLaunch,
+        NSWorkspace.didLaunchApplicationNotification: .didLaunch,
+        NSWorkspace.didTerminateApplicationNotification: .didTerminate,
+        NSWorkspace.didHideApplicationNotification: .didHide,
+        NSWorkspace.didUnhideApplicationNotification: .didUnhide,
+        NSWorkspace.didActivateApplicationNotification: .didActivate,
+        NSWorkspace.didDeactivateApplicationNotification: .didDeactivate,
     ]
 
     init(callback: JSFunction) {
@@ -167,7 +176,7 @@ class HSApplicationWatcherObject {
             return
         }
         let eventApp = (notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.asHSApplication()
-        callback.call(withArguments: [eventName, eventApp as Any])
+        callback.call(withArguments: [eventName.rawValue, eventApp as Any])
     }
 }
 
@@ -180,6 +189,7 @@ class HSApplicationWatcherObject {
 
     // Swift-retained storage for the JS-defined watcher emitter instance
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSApplicationEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
