@@ -237,13 +237,34 @@ struct HSFSFileTests {
             #expect((attrs[.posixPermissions] as? Int) == 0)
         }
 
-        @Test("invalid permissions are rejected with EINVAL", arguments: ["-1", "0o10000", "1.5", "Infinity"])
+        @Test("invalid permissions are rejected with EINVAL", arguments: ["-1", "0o10000", "1.5", "Infinity", "NaN", "0 / 0"])
         func invalidPermissions(value: String) throws {
             let dir = try FileTestDir()
             let harness = makeHarness()
             harness.expectTrue("hs.fs.open('\(dir.child("x"))', 'w', \(value)) == null")
             #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
             #expect(!FileManager.default.fileExists(atPath: dir.child("x")))
+        }
+
+        @Test("an omitted or undefined permissions argument uses the 0o644 default")
+        func defaultPermissions() throws {
+            let dir = try FileTestDir()
+            let harness = makeHarness()
+            // Read the umask (there is no getter, so set and immediately restore it) to compute
+            // the mode the default 0o644 actually produces.
+            let mask = Int(umask(0o022))
+            umask(mode_t(mask))
+            let expected = 0o644 & ~mask
+            harness.eval("""
+                hs.fs.open('\(dir.child("omitted"))', 'w').close();
+                hs.fs.open('\(dir.child("undef"))', 'w', undefined).close();
+                hs.fs.withFile('\(dir.child("withfile"))', 'w', f => {});
+            """)
+            #expect(!harness.hasException)
+            for name in ["omitted", "undef", "withfile"] {
+                let attrs = try FileManager.default.attributesOfItem(atPath: dir.child(name))
+                #expect((attrs[.posixPermissions] as? Int) == expected, "\(name)")
+            }
         }
 
         @Test("path is absolute even when opened with a relative path")
@@ -722,6 +743,10 @@ struct HSFSFileTests {
             #expect(harness.evalBool("f.touch(1e100)") == false)
             #expect(harness.evalString("f.lastError.code") == "EINVAL")
             #expect(harness.evalBool("f.touch(Infinity)") == false)
+            #expect(harness.evalBool("f.touch(NaN)") == false)
+            #expect(harness.evalString("f.lastError.code") == "EINVAL")
+            #expect(harness.evalBool("f.touch(1000, NaN)") == false)
+            #expect(harness.evalBool("f.touch(undefined)") == true)
             #expect(harness.evalBool("f.touch()") == true)
             harness.expectTrue("Math.abs(f.attributes().modificationDate - Date.now() / 1000) < 60")
             harness.eval("f.close()")
@@ -896,6 +921,8 @@ struct HSFSFileTests {
             #expect(harness.evalBool("hs.fs.touch('\(dir.child("huge"))', 1e100)") == false)
             #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
             #expect(harness.evalBool("hs.fs.touch('\(dir.child("huge"))', 1000, -Infinity)") == false)
+            #expect(harness.evalBool("hs.fs.touch('\(dir.child("huge"))', NaN)") == false)
+            #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
             #expect(!FileManager.default.fileExists(atPath: dir.child("huge")))
         }
 

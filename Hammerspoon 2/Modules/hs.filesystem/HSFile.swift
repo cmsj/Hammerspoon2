@@ -333,7 +333,7 @@ import Darwin
     /// - Parameters:
     ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
     ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `modificationDate`.
-    /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a non-finite or out-of-range timestamp).
+    /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a `NaN`, infinite, or out-of-range timestamp).
     /// - Example:
     /// ```js
     /// f.touch()                          // now
@@ -947,7 +947,10 @@ import Darwin
 
     @objc func touch(_ modificationDate: Double = .nan, _ accessDate: Double = .nan) -> Bool {
         guard requireOpen("touch") else { return false }
-        guard let times = HSFSSupport.touchTimes(modificationDate: modificationDate, accessDate: accessDate) else {
+        guard let times = HSFSSupport.touchTimes(
+            modificationDate: HSFSSupport.optionalNumberArgument(modificationDate, at: 0),
+            accessDate: HSFSSupport.optionalNumberArgument(accessDate, at: 1)
+        ) else {
             fail(code: "EINVAL", message: "Timestamps must be finite numbers of seconds since the Unix epoch", "touch")
             return false
         }

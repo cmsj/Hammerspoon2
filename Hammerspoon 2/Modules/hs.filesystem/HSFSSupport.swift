@@ -5,6 +5,7 @@
 
 import Foundation
 import Darwin
+import JavaScriptCore
 
 /// Helpers shared by `HSFSModule` and `HSFile`.
 @_documentation(visibility: private)
@@ -131,12 +132,12 @@ enum HSFSSupport {
     // MARK: - Timestamps
 
     /// Convert a JS timestamp (seconds since the Unix epoch) to a `timespec` for
-    /// `utimensat`/`futimens`. An omitted JS number arrives as `NaN`, which maps to `UTIME_NOW`;
-    /// `0` is a genuine timestamp (the epoch).
+    /// `utimensat`/`futimens`. `nil` (an omitted argument) maps to `UTIME_NOW`; `0` is a genuine
+    /// timestamp (the epoch).
     ///
-    /// - Returns: The `timespec`, or `nil` if `seconds` is infinite or outside the range of `time_t`.
-    static func timespec(fromSeconds seconds: Double) -> Darwin.timespec? {
-        if seconds.isNaN {
+    /// - Returns: The `timespec`, or `nil` if `seconds` is `NaN`, infinite, or outside the range of `time_t`.
+    static func timespec(fromSeconds seconds: Double?) -> Darwin.timespec? {
+        guard let seconds else {
             return Darwin.timespec(tv_sec: 0, tv_nsec: Int(UTIME_NOW))
         }
         let whole = seconds.rounded(.down)
@@ -145,14 +146,33 @@ enum HSFSSupport {
         return Darwin.timespec(tv_sec: wholeSeconds, tv_nsec: nanoseconds)
     }
 
-    /// Build the `[accessTime, modificationTime]` pair for `utimensat`/`futimens`.
-    /// An omitted (`NaN`) access time defaults to the modification time, matching LuaFileSystem's `touch`.
+    /// Build the `[accessTime, modificationTime]` pair for `utimensat`/`futimens`. Pass `nil` for an
+    /// omitted argument. An omitted access time defaults to the modification time, matching
+    /// LuaFileSystem's `touch`.
     ///
     /// - Returns: The pair, or `nil` if either timestamp is invalid.
-    static func touchTimes(modificationDate: Double, accessDate: Double) -> [Darwin.timespec]? {
+    static func touchTimes(modificationDate: Double?, accessDate: Double?) -> [Darwin.timespec]? {
         guard let modification = timespec(fromSeconds: modificationDate) else { return nil }
-        if accessDate.isNaN { return [modification, modification] }
+        guard let accessDate else { return [modification, modification] }
         guard let access = timespec(fromSeconds: accessDate) else { return nil }
         return [access, modification]
+    }
+
+    // MARK: - Arguments
+
+    /// Resolve an optional numeric argument of a JSExport method, distinguishing an omitted argument
+    /// (or explicit `undefined`) from an explicit value. Both arrive in Swift as `NaN`, but an explicit
+    /// `NaN` is an invalid value that must not silently select a default (e.g. permissive file modes).
+    ///
+    /// - Parameters:
+    ///   - value: The bridged argument value.
+    ///   - index: The argument's position in the JS call.
+    /// - Returns: `nil` if the argument was omitted, otherwise `value` (which may be `NaN`). When called
+    ///   from Swift rather than JS, `NaN` (the Swift default) counts as omitted.
+    static func optionalNumberArgument(_ value: Double, at index: Int) -> Double? {
+        if let arguments = JSContext.currentArguments() as? [JSValue] {
+            return index < arguments.count && !arguments[index].isUndefined ? value : nil
+        }
+        return value.isNaN ? nil : value
     }
 }

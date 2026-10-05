@@ -123,7 +123,7 @@ import UniformTypeIdentifiers
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - mode?: The open mode. Defaults to `"r"`.
-    ///   - permissions?: POSIX permission bits applied if the file is created, e.g. `0o600` (`0` creates a file with no permissions). Defaults to `0o644`. The process umask is applied in either case.
+    ///   - permissions?: POSIX permission bits applied if the file is created, e.g. `0o600` (`0` creates a file with no permissions). Defaults to `0o644` when omitted; any other non-integer value, including `NaN`, fails with `EINVAL`. The process umask is applied in either case.
     /// - Returns: An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
     /// - Example:
     /// ```js
@@ -506,7 +506,7 @@ import UniformTypeIdentifiers
     ///   - path: Path to the file. `~` is expanded.
     ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
     ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `modificationDate`.
-    /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a non-finite or out-of-range timestamp).
+    /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a `NaN`, infinite, or out-of-range timestamp).
     /// - Example:
     /// ```js
     /// hs.fs.touch("/tmp/marker.txt")                             // now
@@ -924,21 +924,29 @@ import UniformTypeIdentifiers
 
     // MARK: - Open files
 
-    // `permissions` is a Double so an omitted argument (NaN) can be told apart from an explicit 0.
+    // `permissions` is a Double so that an explicit 0 is distinguishable from an omitted argument.
     @objc func open(_ path: String, _ mode: String = "r", _ permissions: Double = .nan) -> HSFile? {
+        // Only a genuinely omitted (or undefined) argument selects the default. An explicit NaN is
+        // rejected rather than silently creating a file with the more permissive 0o644.
+        openFile(path, mode, permissions: HSFSSupport.optionalNumberArgument(permissions, at: 2))
+    }
+
+    /// Open a file. `permissions` is `nil` to use the default `0o644` for newly created files.
+    private func openFile(_ path: String, _ mode: String, permissions: Double?) -> HSFile? {
         let fileMode = isOmitted(mode) ? "r" : mode
         guard let flags = HSFile.openFlags(forMode: fileMode) else {
             fail("hs.fs.open", code: "EINVAL", message: "invalid mode \"\(mode)\"")
             return nil
         }
         let createMode: mode_t
-        if permissions.isNaN {
-            createMode = 0o644
-        } else if let bits = Int(exactly: permissions), (0...0o7777).contains(bits) {
+        if let permissions {
+            guard let bits = Int(exactly: permissions), (0...0o7777).contains(bits) else {
+                fail("hs.fs.open", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
+                return nil
+            }
             createMode = mode_t(bits)
         } else {
-            fail("hs.fs.open", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
-            return nil
+            createMode = 0o644
         }
         let expandedPath = expand(path)
         let fd = unsafe Darwin.open(expandedPath, flags, createMode)
@@ -980,7 +988,7 @@ import UniformTypeIdentifiers
 
     @objc func withFile(_ path: String, _ mode: String, _ callback: JSFunction) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
-        guard let file = open(path, mode, .nan) else { return nil }
+        guard let file = openFile(path, mode, permissions: nil) else { return nil }
         defer { _ = file.close() }
         // callCapturingException ensures a throw inside the callback reaches the JS caller.
         return context.callCapturingException { callback.call(withArguments: [file]) }
@@ -1252,7 +1260,10 @@ import UniformTypeIdentifiers
 
     @objc func touch(_ path: String, _ modificationDate: Double = .nan, _ accessDate: Double = .nan) -> Bool {
         // Validate before creating anything, so a bad timestamp doesn't leave a new empty file behind.
-        guard let times = HSFSSupport.touchTimes(modificationDate: modificationDate, accessDate: accessDate) else {
+        guard let times = HSFSSupport.touchTimes(
+            modificationDate: HSFSSupport.optionalNumberArgument(modificationDate, at: 1),
+            accessDate: HSFSSupport.optionalNumberArgument(accessDate, at: 2)
+        ) else {
             fail("hs.fs.touch", code: "EINVAL", message: "timestamps must be finite numbers of seconds since the Unix epoch")
             return false
         }
