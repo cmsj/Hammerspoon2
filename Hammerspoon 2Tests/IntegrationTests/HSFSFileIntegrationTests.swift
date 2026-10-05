@@ -250,11 +250,14 @@ struct HSFSFileTests {
         func defaultPermissions() throws {
             let dir = try FileTestDir()
             let harness = makeHarness()
-            // Read the umask (there is no getter, so set and immediately restore it) to compute
-            // the mode the default 0o644 actually produces.
-            let mask = Int(umask(0o022))
-            umask(mode_t(mask))
-            let expected = 0o644 & ~mask
+            // Create a reference file with 0o644 to learn what the process umask turns that into,
+            // without touching process-wide state (there is no side-effect-free umask getter).
+            let reference = dir.child("reference")
+            let fd = unsafe open(reference, O_WRONLY | O_CREAT | O_EXCL, 0o644)
+            try #require(fd >= 0)
+            close(fd)
+            let expected = try #require(
+                try FileManager.default.attributesOfItem(atPath: reference)[.posixPermissions] as? Int)
             harness.eval("""
                 hs.fs.open('\(dir.child("omitted"))', 'w').close();
                 hs.fs.open('\(dir.child("undef"))', 'w', undefined).close();
@@ -272,10 +275,13 @@ struct HSFSFileTests {
             let dir = try FileTestDir()
             try dir.makeFile("rel.txt", "x")
             let harness = makeHarness()
-            let saved = FileManager.default.currentDirectoryPath
-            defer { FileManager.default.changeCurrentDirectoryPath(saved) }
-            FileManager.default.changeCurrentDirectoryPath(dir.path)
-            harness.eval("var f = hs.fs.open('rel.txt')")
+            // Build a path relative to the current working directory rather than changing it,
+            // since the working directory is process-wide state shared with parallel tests.
+            let cwdDepth = resolvedPath(FileManager.default.currentDirectoryPath)
+                .split(separator: "/").count
+            let relative = String(repeating: "../", count: cwdDepth) + dir.child("rel.txt").dropFirst()
+            #expect(!relative.hasPrefix("/"))
+            harness.eval("var f = hs.fs.open('\(relative)')")
             #expect(harness.evalString("f.path") == dir.child("rel.txt"))
             harness.eval("f.close()")
         }
@@ -949,8 +955,7 @@ struct HSFSFileTests {
             #expect(harness.evalBool("hs.fs.rmdir('\(dir.path)')") == false)
             #expect(harness.evalString("hs.fs.lastError.code") == "ENOTEMPTY")
 
-            let saved = FileManager.default.currentDirectoryPath
-            defer { FileManager.default.changeCurrentDirectoryPath(saved) }
+            // Both chdir calls are expected to fail, so the process-wide working directory is unchanged.
             #expect(harness.evalBool("hs.fs.chdir('\(dir.child("missing"))')") == false)
             #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
             #expect(harness.evalBool("hs.fs.chdir('\(dir.child("x"))')") == false)
