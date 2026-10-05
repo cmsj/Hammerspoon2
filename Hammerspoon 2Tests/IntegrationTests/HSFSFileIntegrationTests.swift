@@ -85,7 +85,7 @@ struct HSFSFileTests {
         @Test("hs.fs.lastError is null before any failure")
         func lastErrorInitiallyNull() {
             let harness = makeHarness()
-            harness.expectTrue("hs.fs.lastError == null")
+            harness.expectTrue("hs.fs.lastError === null")
         }
 
         @Test("HSFile exposes its methods", arguments: [
@@ -111,7 +111,7 @@ struct HSFSFileTests {
             #expect(harness.evalInt("f.position") == 0)
             #expect(harness.evalInt("f.size") == 0)
             #expect(harness.evalBool("f.atEnd") == true)
-            harness.expectTrue("f.lastError == null")
+            harness.expectTrue("f.lastError === null")
             #expect(harness.evalString("f.typeName") == "HSFile")
             harness.eval("f.remove(); f.close()")
             #expect(!harness.hasException)
@@ -135,10 +135,22 @@ struct HSFSFileTests {
             harness.eval("f.close()")
         }
 
+        @Test("failures in the new API return null, never undefined")
+        func failuresAreNull() throws {
+            let harness = makeHarness()
+            harness.eval("var f = hs.fs.tempFile(); f.remove()")
+            for expr in ["hs.fs.lastError", "f.lastError", "hs.fs.open('/nonexistent/x')",
+                         "hs.fs.tempFile('a/b')", "hs.fs.withFile('/nonexistent/x', 'r', g => 1)",
+                         "f.seek()", "(f.close(), f.readLines())", "f.attributes()", "f.read()",
+                         "f.readLine()", "f.readBytes()"] {
+                #expect(harness.evalString("String(\(expr))") == "null", "\(expr)")
+            }
+        }
+
         @Test("missing file returns null and sets lastError to ENOENT")
         func missingFile() {
             let harness = makeHarness()
-            harness.expectTrue("hs.fs.open('/nonexistent/\(UUID().uuidString)') == null")
+            harness.expectTrue("hs.fs.open('/nonexistent/\(UUID().uuidString)') === null")
             #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
             #expect(harness.evalTypeOf("hs.fs.lastError.message") == "string")
         }
@@ -150,10 +162,10 @@ struct HSFSFileTests {
             let harness = makeHarness()
             // "" is treated as an omitted mode (i.e. "r"), so it should succeed.
             if mode.isEmpty {
-                harness.expectTrue("hs.fs.open('\(file)', '') != null")
+                harness.expectTrue("hs.fs.open('\(file)', '') !== null")
                 return
             }
-            harness.expectTrue("hs.fs.open('\(file)', '\(mode)') == null")
+            harness.expectTrue("hs.fs.open('\(file)', '\(mode)') === null")
             #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
         }
 
@@ -164,9 +176,9 @@ struct HSFSFileTests {
             harness.eval("var f = hs.fs.open('\(dir.child("new.txt"))', '\(mode)')")
             if mode.hasPrefix("r") {
                 // r modes need an existing file
-                harness.expectTrue("f == null")
+                harness.expectTrue("f === null")
             } else {
-                harness.expectTrue("f != null")
+                harness.expectTrue("f !== null")
                 harness.eval("f.close()")
             }
         }
@@ -175,7 +187,7 @@ struct HSFSFileTests {
         func directory() throws {
             let dir = try FileTestDir()
             let harness = makeHarness()
-            harness.expectTrue("hs.fs.open('\(dir.path)') == null")
+            harness.expectTrue("hs.fs.open('\(dir.path)') === null")
             #expect(harness.evalString("hs.fs.lastError.code") == "EISDIR")
         }
 
@@ -184,7 +196,7 @@ struct HSFSFileTests {
             let dir = try FileTestDir()
             let file = try dir.makeFile("a.txt", "old contents")
             let harness = makeHarness()
-            harness.expectTrue("hs.fs.open('\(file)', 'wx') == null")
+            harness.expectTrue("hs.fs.open('\(file)', 'wx') === null")
             #expect(harness.evalString("hs.fs.lastError.code") == "EEXIST")
             harness.eval("var f = hs.fs.open('\(file)', 'w'); f.write('new'); f.close()")
             #expect(dir.text("a.txt") == "new")
@@ -241,7 +253,7 @@ struct HSFSFileTests {
         func invalidPermissions(value: String) throws {
             let dir = try FileTestDir()
             let harness = makeHarness()
-            harness.expectTrue("hs.fs.open('\(dir.child("x"))', 'w', \(value)) == null")
+            harness.expectTrue("hs.fs.open('\(dir.child("x"))', 'w', \(value)) === null")
             #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
             #expect(!FileManager.default.fileExists(atPath: dir.child("x")))
         }
@@ -293,7 +305,7 @@ struct HSFSFileTests {
             harness.expectTrue("f.path.startsWith('/')")
             harness.eval("f.remove(); f.close()")
             // Opening ~ itself fails because it is a directory — proving it was expanded.
-            harness.expectTrue("hs.fs.open('~') == null")
+            harness.expectTrue("hs.fs.open('~') === null")
             #expect(harness.evalString("hs.fs.lastError.code") == "EISDIR")
         }
     }
@@ -311,7 +323,9 @@ struct HSFSFileTests {
             #expect(harness.evalString("f.read(7)") == "Hello, ")
             #expect(harness.evalInt("f.position") == 7)
             #expect(harness.evalString("f.read()") == "world!")
-            harness.expectTrue("f.read() === null")
+            // Reading the rest of the file at its end gives "" (like Lua's read("a")); counted reads give null.
+            #expect(harness.evalString("f.read()") == "")
+            harness.expectTrue("f.read() === ''")
             harness.expectTrue("f.read(5) === null")
             #expect(harness.evalBool("f.atEnd") == true)
             harness.eval("f.close()")
@@ -379,6 +393,16 @@ struct HSFSFileTests {
             #expect(harness.evalString("lines.join(',')") == "a,b")
             #expect(harness.evalInt("chunks") == 4)
             #expect(harness.evalInt("byteChunks") == 4)
+        }
+
+        @Test("read() of an empty file returns an empty string, so ported string handling works")
+        func readEmptyFile() throws {
+            let dir = try FileTestDir()
+            let file = try dir.makeFile("empty.txt", "")
+            let harness = makeHarness()
+            harness.eval("var f = hs.fs.open('\(file)'); var parts = f.read().split('\\n'); f.close()")
+            #expect(!harness.hasException)
+            #expect(harness.evalInt("parts.length") == 1)
         }
 
         @Test("readLine(true) keeps line endings")
@@ -531,7 +555,8 @@ struct HSFSFileTests {
             harness.expectTrue("b instanceof Uint8Array")
             #expect(harness.evalString("Array.from(b).join(',')") == "137,80,78,71")
             #expect(harness.evalString("Array.from(f.readBytes()).join(',')") == "0,255")
-            harness.expectTrue("f.readBytes() === null")
+            harness.expectTrue("f.readBytes() instanceof Uint8Array && f.readBytes().length === 0")
+            harness.expectTrue("f.readBytes(1) === null")
             harness.eval("f.close()")
         }
 
@@ -608,14 +633,14 @@ struct HSFSFileTests {
             #expect(harness.evalInt("f.seek(2, 'cur')") == 5)
             #expect(harness.evalInt("f.seek(-1, 'end')") == 9)
             #expect(harness.evalString("f.read()") == "9")
-            harness.expectTrue("f.seek(0, 'sideways') == null")
+            harness.expectTrue("f.seek(0, 'sideways') === null")
             #expect(harness.evalString("f.lastError.code") == "EINVAL")
-            harness.expectTrue("f.seek(-100) == null")
+            harness.expectTrue("f.seek(-100) === null")
             #expect(harness.evalString("f.lastError.code") == "EINVAL")
             // Lua idioms for reading the position / size must not silently rewind.
             harness.eval("f.seek(4)")
             for call in ["f.seek()", "f.seek('end')", "f.seek(undefined, 'end')", "f.seek(1.5)", "f.seek(NaN)"] {
-                harness.expectTrue("\(call) == null")
+                harness.expectTrue("\(call) === null")
                 #expect(harness.evalString("f.lastError.code") == "EINVAL", "\(call)")
                 #expect(harness.evalInt("f.position") == 4, "\(call) must not move the position")
             }
@@ -809,7 +834,7 @@ struct HSFSFileTests {
             harness.expectTrue("f.read() === null")
             #expect(harness.evalString("f.lastError.code") == "EBADF")
             #expect(harness.evalBool("f.write('x')") == false)
-            harness.expectTrue("f.attributes() == null")
+            harness.expectTrue("f.attributes() === null")
             harness.expectTrue(#"String(f).endsWith(", w+, closed>")"#)
             #expect(!harness.hasException)
         }
@@ -825,7 +850,7 @@ struct HSFSFileTests {
             let attrs = try FileManager.default.attributesOfItem(atPath: path)
             #expect((attrs[.posixPermissions] as? Int) == 0o600)
             harness.eval("a.remove(); a.close(); b.remove(); b.close()")
-            harness.expectTrue("hs.fs.tempFile('a/b') == null")
+            harness.expectTrue("hs.fs.tempFile('a/b') === null")
             #expect(harness.evalString("hs.fs.lastError.code") == "EINVAL")
         }
 
@@ -858,14 +883,14 @@ struct HSFSFileTests {
         func withFileMissing() {
             let harness = makeHarness()
             harness.eval("var called = false; var r = hs.fs.withFile('/nonexistent/\(UUID().uuidString)', 'r', f => { called = true })")
-            harness.expectTrue("r == null && called === false")
+            harness.expectTrue("r === null && called === false")
             #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
         }
 
         @Test("module shutdown closes open files")
         func shutdownClosesFiles() throws {
             let module = HSFSModule(engineID: UUID())
-            let file = try #require(module.tempFile("shutdown"))
+            let file = try #require(module.makeTempFile("shutdown"))
             _ = file.remove()
             #expect(file.isOpen)
             module.shutdown()

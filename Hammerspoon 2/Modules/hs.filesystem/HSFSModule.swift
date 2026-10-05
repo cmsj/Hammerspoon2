@@ -86,7 +86,7 @@ import UniformTypeIdentifiers
 
     // MARK: - Errors
 
-    /// The error from the most recent failed `hs.fs` function, or `null` if none has failed.
+    /// {{code: string, message: string} | null} The error from the most recent failed `hs.fs` function, or `null` if none has failed.
     ///
     /// The object has a `code` (a POSIX error name such as `"ENOENT"`, `"EEXIST"`, or `"EACCES"`, or
     /// `"EINVAL"` for invalid arguments) and a human-readable `message`. Like C's `errno`, it is not
@@ -97,7 +97,7 @@ import UniformTypeIdentifiers
     /// const f = hs.fs.open("/does/not/exist")
     /// if (!f) console.log("Open failed: " + hs.fs.lastError.code)
     /// ```
-    @objc var lastError: [String: Any]? { get }
+    @objc var lastError: JSValue? { get }
 
     // MARK: - Open files
 
@@ -124,7 +124,7 @@ import UniformTypeIdentifiers
     ///   - path: Path to the file. `~` is expanded.
     ///   - mode?: The open mode. Defaults to `"r"`.
     ///   - permissions?: POSIX permission bits applied if the file is created, e.g. `0o600` (`0` creates a file with no permissions). Defaults to `0o644` when omitted; any other non-integer value, including `NaN`, fails with `EINVAL`. The process umask is applied in either case.
-    /// - Returns: An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
+    /// - Returns: {HSFile | null} An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
     /// - Example:
     /// ```js
     /// const f = hs.fs.open("~/notes.txt", "a")
@@ -133,7 +133,7 @@ import UniformTypeIdentifiers
     ///     f.close()
     /// }
     /// ```
-    @objc func open(_ path: String, _ mode: String, _ permissions: Double) -> HSFile?
+    @objc func open(_ path: String, _ mode: String, _ permissions: Double) -> JSValue?
 
     /// Create and open a new, uniquely named temporary file.
     ///
@@ -141,14 +141,14 @@ import UniformTypeIdentifiers
     /// It is not deleted automatically; call `remove()` on it when you no longer need it on disk.
     ///
     /// - Parameter prefix?: A prefix for the file name. Must not contain `/`. Defaults to `"hs"`.
-    /// - Returns: An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
+    /// - Returns: {HSFile | null} An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
     /// - Example:
     /// ```js
     /// const tmp = hs.fs.tempFile("myspoon")
     /// tmp.write("scratch data")
     /// console.log("Wrote " + tmp.path)
     /// ```
-    @objc func tempFile(_ prefix: String) -> HSFile?
+    @objc func tempFile(_ prefix: String) -> JSValue?
 
     /// Open a file, pass it to a function, and close it again afterwards.
     ///
@@ -825,7 +825,11 @@ import UniformTypeIdentifiers
     private var pathWatchers = HSWeakObjectSet<HSPathWatcher>()
     private var openFiles = HSWeakObjectSet<HSFile>()
 
-    @objc private(set) var lastError: [String: Any]?
+    /// The `{code, message}` of the most recent failure, exposed to JS as `lastError`.
+    private(set) var lastErrorInfo: [String: Any]?
+
+    // A JSValue so that "no error" is a real JS null (JSExport bridges nil to undefined).
+    @objc var lastError: JSValue? { HSFSSupport.jsValueOrNull(lastErrorInfo) }
 
     func shutdown() {
         for watcher in volumeWatchers.allObjects { watcher.destroy() }
@@ -857,14 +861,14 @@ import UniformTypeIdentifiers
 
     /// Record a Foundation error in `lastError` and log it.
     private func fail(_ function: String, _ error: Error) {
-        lastError = HSFSSupport.errorInfo(from: error)
+        lastErrorInfo = HSFSSupport.errorInfo(from: error)
         AKError("\(function): \(error.localizedDescription)")
     }
 
     /// Record a POSIX errno in `lastError` and log it, optionally naming the path involved.
     private func fail(_ function: String, errno code: Int32, path: String? = nil) {
         let info = HSFSSupport.errorInfo(errno: code)
-        lastError = info
+        lastErrorInfo = info
         let message = info["message"] as? String ?? ""
         AKError("\(function): \(path.map { "\($0): " } ?? "")\(message)")
     }
@@ -872,17 +876,17 @@ import UniformTypeIdentifiers
     /// Record a POSIX errno in `lastError` without logging, for functions whose `null` result is an
     /// expected outcome (e.g. `pathToAbsolute` on a path that doesn't exist).
     private func record(errno code: Int32) {
-        lastError = HSFSSupport.errorInfo(errno: code)
+        lastErrorInfo = HSFSSupport.errorInfo(errno: code)
     }
 
     /// Record an error with an explicit code in `lastError` without logging.
     private func record(code: String, message: String) {
-        lastError = HSFSSupport.errorInfo(code: code, message: message)
+        lastErrorInfo = HSFSSupport.errorInfo(code: code, message: message)
     }
 
     /// Record an error with an explicit code in `lastError` and log it.
     private func fail(_ function: String, code: String, message: String) {
-        lastError = HSFSSupport.errorInfo(code: code, message: message)
+        lastErrorInfo = HSFSSupport.errorInfo(code: code, message: message)
         AKError("\(function): \(message)")
     }
 
@@ -925,14 +929,16 @@ import UniformTypeIdentifiers
     // MARK: - Open files
 
     // `permissions` is a Double so that an explicit 0 is distinguishable from an omitted argument.
-    @objc func open(_ path: String, _ mode: String = "r", _ permissions: Double = .nan) -> HSFile? {
+    // Returns a JSValue so failure is a real JS null rather than undefined.
+    @objc func open(_ path: String, _ mode: String = "r", _ permissions: Double = .nan) -> JSValue? {
         // Only a genuinely omitted (or undefined) argument selects the default. An explicit NaN is
         // rejected rather than silently creating a file with the more permissive 0o644.
-        openFile(path, mode, permissions: HSFSSupport.optionalNumberArgument(permissions, at: 2))
+        HSFSSupport.jsValueOrNull(
+            openFile(path, mode, permissions: HSFSSupport.optionalNumberArgument(permissions, at: 2)))
     }
 
     /// Open a file. `permissions` is `nil` to use the default `0o644` for newly created files.
-    private func openFile(_ path: String, _ mode: String, permissions: Double?) -> HSFile? {
+    func openFile(_ path: String, _ mode: String, permissions: Double?) -> HSFile? {
         let fileMode = isOmitted(mode) ? "r" : mode
         guard let flags = HSFile.openFlags(forMode: fileMode) else {
             fail("hs.fs.open", code: "EINVAL", message: "invalid mode \"\(mode)\"")
@@ -967,7 +973,12 @@ import UniformTypeIdentifiers
         return file
     }
 
-    @objc func tempFile(_ prefix: String = "hs") -> HSFile? {
+    @objc func tempFile(_ prefix: String = "hs") -> JSValue? {
+        HSFSSupport.jsValueOrNull(makeTempFile(prefix))
+    }
+
+    /// Create and open a unique temporary file (see `tempFile`).
+    func makeTempFile(_ prefix: String) -> HSFile? {
         let namePrefix = isOmitted(prefix) ? "hs" : prefix
         guard !namePrefix.contains("/") else {
             fail("hs.fs.tempFile", code: "EINVAL", message: "prefix must not contain \"/\"")
@@ -988,7 +999,7 @@ import UniformTypeIdentifiers
 
     @objc func withFile(_ path: String, _ mode: String, _ callback: JSFunction) -> JSValue? {
         guard let context = JSContext.current() else { return nil }
-        guard let file = openFile(path, mode, permissions: nil) else { return nil }
+        guard let file = openFile(path, mode, permissions: nil) else { return JSValue(nullIn: context) }
         defer { _ = file.close() }
         // callCapturingException ensures a throw inside the callback reaches the JS caller.
         return context.callCapturingException { callback.call(withArguments: [file]) }
@@ -1380,7 +1391,7 @@ import UniformTypeIdentifiers
             }
             return utType.identifier
         } catch {
-            lastError = HSFSSupport.errorInfo(from: error)
+            lastErrorInfo = HSFSSupport.errorInfo(from: error)
             return nil
         }
     }

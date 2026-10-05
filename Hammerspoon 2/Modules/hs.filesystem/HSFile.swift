@@ -81,7 +81,7 @@ import Darwin
     /// ```
     @objc var atEnd: Bool { get }
 
-    /// The error from the most recent failed operation on this file, or `null` if no operation has failed.
+    /// {{code: string, message: string} | null} The error from the most recent failed operation on this file, or `null` if no operation has failed.
     ///
     /// The object has a `code` (a POSIX error name such as `"ENOENT"`, `"EACCES"`, `"EAGAIN"`, or `"EILSEQ"`
     /// for invalid UTF-8) and a human-readable `message`. It is not cleared by successful operations.
@@ -89,7 +89,7 @@ import Darwin
     /// ```js
     /// if (!f.lock()) console.log("Lock failed: " + f.lastError.code)
     /// ```
-    @objc var lastError: [String: Any]? { get }
+    @objc var lastError: JSValue? { get }
 
     // MARK: - Reading
 
@@ -101,8 +101,11 @@ import Darwin
     /// If the data is not valid UTF-8, `null` is returned, the position is left unchanged, and
     /// `lastError.code` is `"EILSEQ"`. Use `readBytes()` for binary data.
     ///
+    /// Like Lua's `f:read("a")`, reading to the end of the file never signals end of file: at the end it
+    /// returns `""`. Only a read with a `byteCount` returns `null` at end of file, so loop on `read(n)`.
+    ///
     /// - Parameter byteCount?: Maximum number of bytes to read. Omit (or pass `0`) to read to the end of the file.
-    /// - Returns: {string | null} The text read, or `null` at end of file or on error.
+    /// - Returns: {string | null} The text read; `""` when reading to the end of the file from its end; `null` for a `byteCount` read at end of file, or on error.
     /// - Example:
     /// ```js
     /// const everything = f.read()
@@ -150,18 +153,21 @@ import Darwin
     ///
     /// Line endings are stripped. On error the position is left unchanged.
     ///
-    /// - Returns: An array of lines (empty at end of file), or `null` on error.
+    /// - Returns: {string[] | null} An array of lines (empty at end of file), or `null` on error.
     /// - Example:
     /// ```js
     /// const lines = f.readLines()
     /// console.log(lines.length + " lines")
     /// ```
-    @objc func readLines() -> [String]?
+    @objc func readLines() -> JSValue?
 
     /// Read raw bytes from the current position.
     ///
+    /// As with `read()`, reading to the end of the file returns an empty `Uint8Array` at the end, while a
+    /// read with a `byteCount` returns `null` at end of file.
+    ///
     /// - Parameter byteCount?: Maximum number of bytes to read. Omit (or pass `0`) to read to the end of the file.
-    /// - Returns: {Uint8Array | null} The bytes read, or `null` at end of file or on error.
+    /// - Returns: {Uint8Array | null} The bytes read; empty when reading to the end of the file from its end; `null` for a `byteCount` read at end of file, or on error.
     /// - Example:
     /// ```js
     /// const magic = f.readBytes(8)
@@ -237,14 +243,14 @@ import Darwin
     /// - Parameters:
     ///   - offset: The byte offset (an integer), relative to `whence`. May be negative for `"cur"` and `"end"`.
     ///   - whence?: {"set" | "cur" | "end"} `"set"` (from the start of the file), `"cur"` (from the current position), or `"end"` (from the end of the file). Defaults to `"set"`.
-    /// - Returns: The new position, or `null` on failure (including `EINVAL` if `offset` is missing or not an integer).
+    /// - Returns: {number | null} The new position, or `null` on failure (including `EINVAL` if `offset` is missing or not an integer).
     /// - Example:
     /// ```js
     /// f.seek(0, "end")       // jump to the end
     /// f.seek(-10, "cur")     // back 10 bytes
     /// const pos = f.seek(0, "cur")
     /// ```
-    @objc func seek(_ offset: Double, _ whence: String) -> NSNumber?
+    @objc func seek(_ offset: Double, _ whence: String) -> JSValue?
 
     /// Move the current position back to the start of the file.
     ///
@@ -314,12 +320,12 @@ import Darwin
     /// Returns the same object as `hs.fs.attributes()`, but reads it from the open file itself, so it
     /// remains accurate after the file has been renamed or removed.
     ///
-    /// - Returns: Attributes object, or `null` on failure.
+    /// - Returns: {Record<string, any> | null} Attributes object, or `null` on failure.
     /// - Example:
     /// ```js
     /// console.log(f.attributes().modificationDate)
     /// ```
-    @objc func attributes() -> [String: Any]?
+    @objc func attributes() -> JSValue?
 
     /// Set the POSIX permission bits of the file.
     ///
@@ -391,7 +397,11 @@ import Darwin
     @objc var typeName = "HSFile"
     @objc private(set) var path: String
     @objc let mode: String
-    @objc private(set) var lastError: [String: Any]?
+    /// The `{code, message}` of the most recent failure, exposed to JS as `lastError`.
+    private(set) var lastErrorInfo: [String: Any]?
+
+    // A JSValue so that "no error" is a real JS null (JSExport bridges nil to undefined).
+    @objc var lastError: JSValue? { HSFSSupport.jsValueOrNull(lastErrorInfo) }
 
     /// The open file descriptor, or -1 once closed.
     private var fd: Int32
@@ -483,12 +493,12 @@ import Darwin
     // MARK: - Error helpers
 
     private func fail(errno code: Int32, _ function: String) {
-        lastError = HSFSSupport.errorInfo(errno: code)
-        AKError("HSFile.\(function): \(path): \(lastError?["message"] ?? "")")
+        lastErrorInfo = HSFSSupport.errorInfo(errno: code)
+        AKError("HSFile.\(function): \(path): \(lastErrorInfo?["message"] ?? "")")
     }
 
     private func fail(code: String, message: String, _ function: String) {
-        lastError = HSFSSupport.errorInfo(code: code, message: message)
+        lastErrorInfo = HSFSSupport.errorInfo(code: code, message: message)
         AKError("HSFile.\(function): \(path): \(message)")
     }
 
@@ -719,17 +729,12 @@ import Darwin
 
     // MARK: - Reading
 
-    // The end-of-file reads return an explicit JS `null` rather than Swift `nil`, because JSExport
-    // bridges `nil` to `undefined` — which would make the natural loop
+    // Methods documented as returning `null` return a JSValue built by HSFSSupport.jsValueOrNull,
+    // because JSExport bridges `nil` to `undefined` — which would, for example, make the natural loop
     // `while ((line = f.readLine()) !== null)` spin forever at end of file.
-    private func jsStringOrNull(_ text: String?) -> JSValue? {
-        guard let context = JSContext.current() else { return nil }
-        guard let text else { return JSValue(nullIn: context) }
-        return JSValue(object: text, in: context)
-    }
 
     @objc func read(_ byteCount: Int = 0) -> JSValue? {
-        jsStringOrNull(readText(byteCount))
+        HSFSSupport.jsValueOrNull(readText(byteCount))
     }
 
     private func readText(_ byteCount: Int) -> String? {
@@ -737,7 +742,8 @@ import Darwin
         let start = position
         let limit = byteCount > 0 ? byteCount : nil
         guard var bytes = readRaw(limit, "read") else { return nil }
-        if bytes.isEmpty { return nil }
+        // Reading the rest of the file never signals end of file (like Lua's read("a")).
+        if bytes.isEmpty { return limit == nil ? "" : nil }
 
         if limit != nil, let tail = Self.incompleteUTF8Tail(bytes) {
             if tail.present < bytes.count {
@@ -757,7 +763,7 @@ import Darwin
     }
 
     @objc func readLine(_ keepNewline: Bool = false) -> JSValue? {
-        jsStringOrNull(readLineText(keepNewline))
+        HSFSSupport.jsValueOrNull(readLineText(keepNewline))
     }
 
     private func readLineText(_ keepNewline: Bool) -> String? {
@@ -797,7 +803,11 @@ import Darwin
         return ok && succeeded
     }
 
-    @objc func readLines() -> [String]? {
+    @objc func readLines() -> JSValue? {
+        HSFSSupport.jsValueOrNull(readAllLines())
+    }
+
+    private func readAllLines() -> [String]? {
         guard requireOpen("readLines") else { return nil }
         let start = position
         var lines: [String] = []
@@ -822,7 +832,7 @@ import Darwin
         let null = JSValue(nullIn: context)
         guard requireOpen("readBytes") else { return null }
         guard let bytes = readRaw(byteCount > 0 ? byteCount : nil, "readBytes") else { return null }
-        if bytes.isEmpty { return null }
+        if bytes.isEmpty && byteCount > 0 { return null }
         guard let array = context.makeUint8Array(bytes) else {
             fail(code: "ENOMEM", message: "Could not allocate a Uint8Array", "readBytes")
             return null
@@ -875,16 +885,16 @@ import Darwin
 
     // `offset` is a Double so that an omitted offset (NaN) is rejected rather than becoming 0. Lua's
     // `f:seek()` and `f:seek("end")` report the position/size; silently rewinding would break ports.
-    @objc func seek(_ offset: Double, _ whence: String = "set") -> NSNumber? {
-        guard requireOpen("seek") else { return nil }
+    @objc func seek(_ offset: Double, _ whence: String = "set") -> JSValue? {
+        guard requireOpen("seek") else { return HSFSSupport.jsValueOrNull(nil) }
         guard let requested = HSFSSupport.optionalNumberArgument(offset, at: 0),
               let byteOffset = Int(exactly: requested) else {
             fail(code: "EINVAL",
                  message: "seek() requires an integer offset; use the position and size properties to read them",
                  "seek")
-            return nil
+            return HSFSSupport.jsValueOrNull(nil)
         }
-        return seek(to: byteOffset, whence: whence)
+        return HSFSSupport.jsValueOrNull(seek(to: byteOffset, whence: whence))
     }
 
     private func seek(to offset: Int, whence: String) -> NSNumber? {
@@ -943,7 +953,11 @@ import Darwin
         return true
     }
 
-    @objc func attributes() -> [String: Any]? {
+    @objc func attributes() -> JSValue? {
+        HSFSSupport.jsValueOrNull(fileAttributes())
+    }
+
+    private func fileAttributes() -> [String: Any]? {
         guard requireOpen("attributes") else { return nil }
         var st = Darwin.stat()
         guard unsafe fstat(fd, &st) == 0 else {
@@ -991,7 +1005,7 @@ import Darwin
             if errno == EINTR { continue }
             if errno == EWOULDBLOCK {
                 // Lock contention is an expected outcome, not an error worth logging.
-                lastError = HSFSSupport.errorInfo(errno: errno)
+                lastErrorInfo = HSFSSupport.errorInfo(errno: errno)
                 AKDebug("HSFile.lock: \(path) is locked by another process")
             } else {
                 fail(errno: errno, "lock")

@@ -448,9 +448,11 @@ returns an `HSFile` object with the same `fopen()` modes (`"r"`, `"w+"`, `"a"`, 
 | `hs.fs.chmod`-style shell-outs | `hs.fs.chmod(path, 0o755)` / `f.setPermissions(0o600)` |
 | `io.popen(cmd)` | `hs.task` |
 
-Lua's `f:read()` returning `nil` at end of file maps directly: `f.read()`/`f.readLine()`/
-`f.readBytes()` return `null` at end of file, so `while ((line = f.readLine()) !== null)` is
-the JS equivalent of a `while true do ... end` read loop. `hs.fs.withFile(path, mode, fn)`
+End of file works as in Lua: `f.readLine()`, `f.read(n)` and `f.readBytes(n)` return `null`
+at end of file, so `while ((line = f.readLine()) !== null)` is the JS equivalent of a
+`while true do ... end` read loop. As with Lua's `f:read("a")`, reading the rest of the file
+with `f.read()` (or `f.readBytes()`) never returns `null` for end of file; at the end you get
+`""` (or an empty `Uint8Array`). Functions in `hs.fs`'s file API that fail return a real `null`. `hs.fs.withFile(path, mode, fn)`
 opens a file, passes it to `fn`, and always closes it afterwards, even if `fn` throws.
 Errors don't come back as Lua's second `nil, err` return value. Check `hs.fs.lastError`, or the
 file's own `f.lastError`, instead. Each holds `{code, message}`, where `code` is a POSIX name

@@ -176,6 +176,20 @@ enum HSFSSupport {
         return value.isNaN ? nil : value
     }
 
+    // MARK: - JS values
+
+    /// Bridge a value to JS, mapping `nil` to an explicit JS `null`.
+    ///
+    /// JSExport bridges a Swift `nil` return to `undefined`, so APIs documented as returning `null`
+    /// (and checked with `=== null`, as the TypeScript types encourage) must return a `JSValue`.
+    ///
+    /// - Returns: The bridged value, or `nil` (undefined) only if there is no current JS context.
+    static func jsValueOrNull(_ value: Any?) -> JSValue? {
+        guard let context = JSContext.current() else { return nil }
+        guard let value else { return JSValue(nullIn: context) }
+        return JSValue(object: value, in: context)
+    }
+
     // MARK: - Permissions
 
     /// Validate a JS permissions argument: it must be an integer between `0` and `0o7777`.
