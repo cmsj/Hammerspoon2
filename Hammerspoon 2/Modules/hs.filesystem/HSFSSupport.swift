@@ -147,14 +147,14 @@ enum HSFSSupport {
     }
 
     /// Build the `[accessTime, modificationTime]` pair for `utimensat`/`futimens`. Pass `nil` for an
-    /// omitted argument. An omitted access time defaults to the modification time, matching
-    /// LuaFileSystem's `touch`.
+    /// omitted argument. Matching LuaFileSystem's `touch(path, atime, mtime)`, an omitted access time
+    /// means now, and an omitted modification time defaults to the access time.
     ///
     /// - Returns: The pair, or `nil` if either timestamp is invalid.
-    static func touchTimes(modificationDate: Double?, accessDate: Double?) -> [Darwin.timespec]? {
-        guard let modification = timespec(fromSeconds: modificationDate) else { return nil }
-        guard let accessDate else { return [modification, modification] }
+    static func touchTimes(accessDate: Double?, modificationDate: Double?) -> [Darwin.timespec]? {
         guard let access = timespec(fromSeconds: accessDate) else { return nil }
+        guard let modificationDate else { return [access, access] }
+        guard let modification = timespec(fromSeconds: modificationDate) else { return nil }
         return [access, modification]
     }
 

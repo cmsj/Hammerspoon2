@@ -444,7 +444,7 @@ returns an `HSFile` object with the same `fopen()` modes (`"r"`, `"w+"`, `"a"`, 
 | `io.tmpfile()` / `os.tmpname()` | `hs.fs.tempFile(prefix)` |
 | `os.rename(a, b)` / `os.remove(p)` | `hs.fs.move(a, b)` / `hs.fs.deletePath(p)`, or `f.rename(b)` / `f.remove()` on an open file |
 | `hs.fs.lock(f)` / `hs.fs.unlock(f)` | `f.lock()` / `f.unlock()` |
-| `hs.fs.touch(path, atime, mtime)` | `hs.fs.touch(path, mtime, atime)` — **argument order is swapped**; times are seconds since the epoch |
+| `hs.fs.touch(path, atime, mtime)` | `hs.fs.touch(path, atime, mtime)` (same order); times are seconds since the epoch. Also `f.touch(atime, mtime)` |
 | `hs.fs.chmod`-style shell-outs | `hs.fs.chmod(path, 0o755)` / `f.setPermissions(0o600)` |
 | `io.popen(cmd)` | `hs.task` |
 

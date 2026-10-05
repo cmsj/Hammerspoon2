@@ -957,19 +957,27 @@ struct HSFSFileTests {
             #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
         }
 
-        @Test("touch accepts explicit modification and access dates")
+        @Test("touch takes access then modification time, like v1 and Node")
         func touchDates() throws {
             let dir = try FileTestDir()
             let file = dir.child("t.txt")
             let harness = makeHarness()
+            // One timestamp sets both times.
             #expect(harness.evalBool("hs.fs.touch('\(file)', 1000000000)") == true)
-            #expect(harness.evalDouble("hs.fs.attributes('\(file)').modificationDate") == 1_000_000_000)
-            #expect(harness.evalBool("hs.fs.touch('\(file)', 1000000000, 1100000000)") == true)
-            let attrs = try FileManager.default.attributesOfItem(atPath: file)
-            #expect((attrs[.modificationDate] as? Date)?.timeIntervalSince1970 == 1_000_000_000)
             var st = stat()
             #expect(unsafe stat(file, &st) == 0)
+            #expect(st.st_atimespec.tv_sec == 1_000_000_000)
+            #expect(st.st_mtimespec.tv_sec == 1_000_000_000)
+
+            #expect(harness.evalBool("hs.fs.touch('\(file)', 1100000000, 1000000000)") == true)
+            #expect(unsafe stat(file, &st) == 0)
             #expect(st.st_atimespec.tv_sec == 1_100_000_000)
+            #expect(st.st_mtimespec.tv_sec == 1_000_000_000)
+
+            harness.eval("var f = hs.fs.open('\(file)'); f.touch(1200000000, 1300000000); f.close()")
+            #expect(unsafe stat(file, &st) == 0)
+            #expect(st.st_atimespec.tv_sec == 1_200_000_000)
+            #expect(st.st_mtimespec.tv_sec == 1_300_000_000)
         }
 
         @Test("touch treats 0 as the epoch and rejects out-of-range timestamps without creating the file")

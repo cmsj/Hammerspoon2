@@ -337,18 +337,20 @@ import Darwin
     /// ```
     @objc func setPermissions(_ permissions: Double) -> Bool
 
-    /// Set the modification and access times of the file.
+    /// Set the access and modification times of the file.
+    ///
+    /// The argument order matches `hs.fs.touch()` and Hammerspoon v1: access time first.
     ///
     /// - Parameters:
-    ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
-    ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `modificationDate`.
+    ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
+    ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `accessDate`.
     /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a `NaN`, infinite, or out-of-range timestamp).
     /// - Example:
     /// ```js
     /// f.touch()                          // now
-    /// f.touch(Date.now() / 1000 - 3600)  // one hour ago
+    /// f.touch(Date.now() / 1000 - 3600)  // both times one hour ago
     /// ```
-    @objc func touch(_ modificationDate: Double, _ accessDate: Double) -> Bool
+    @objc func touch(_ accessDate: Double, _ modificationDate: Double) -> Bool
 
     // MARK: - Locking
 
@@ -980,11 +982,11 @@ import Darwin
         return true
     }
 
-    @objc func touch(_ modificationDate: Double = .nan, _ accessDate: Double = .nan) -> Bool {
+    @objc func touch(_ accessDate: Double = .nan, _ modificationDate: Double = .nan) -> Bool {
         guard requireOpen("touch") else { return false }
         guard let times = HSFSSupport.touchTimes(
-            modificationDate: HSFSSupport.optionalNumberArgument(modificationDate, at: 0),
-            accessDate: HSFSSupport.optionalNumberArgument(accessDate, at: 1)
+            accessDate: HSFSSupport.optionalNumberArgument(accessDate, at: 0),
+            modificationDate: HSFSSupport.optionalNumberArgument(modificationDate, at: 1)
         ) else {
             fail(code: "EINVAL", message: "Timestamps must be finite numbers of seconds since the Unix epoch", "touch")
             return false

@@ -501,20 +501,22 @@ import UniformTypeIdentifiers
     /// ```
     @objc func attributes(_ path: String) -> [String: Any]?
 
-    /// Set the modification and access times of a file, creating it if it does not exist
+    /// Set the access and modification times of a file, creating it if it does not exist
     /// (equivalent to the POSIX `touch` command).
+    ///
+    /// The argument order matches Hammerspoon v1 (LuaFileSystem) and Node's `fs.utimes`: access time first.
     ///
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
-    ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
-    ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `modificationDate`.
+    ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
+    ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `accessDate`.
     /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a `NaN`, infinite, or out-of-range timestamp).
     /// - Example:
     /// ```js
     /// hs.fs.touch("/tmp/marker.txt")                             // now
-    /// hs.fs.touch("/tmp/marker.txt", Date.now() / 1000 - 86400)  // one day ago
+    /// hs.fs.touch("/tmp/marker.txt", Date.now() / 1000 - 86400)  // both times one day ago
     /// ```
-    @objc func touch(_ path: String, _ modificationDate: Double, _ accessDate: Double) -> Bool
+    @objc func touch(_ path: String, _ accessDate: Double, _ modificationDate: Double) -> Bool
 
     /// Set the POSIX permission bits of a file or directory.
     ///
@@ -1236,11 +1238,11 @@ import UniformTypeIdentifiers
         return HSFSSupport.attributes(from: st)
     }
 
-    @objc func touch(_ path: String, _ modificationDate: Double = .nan, _ accessDate: Double = .nan) -> Bool {
+    @objc func touch(_ path: String, _ accessDate: Double = .nan, _ modificationDate: Double = .nan) -> Bool {
         // Validate before creating anything, so a bad timestamp doesn't leave a new empty file behind.
         guard let times = HSFSSupport.touchTimes(
-            modificationDate: HSFSSupport.optionalNumberArgument(modificationDate, at: 1),
-            accessDate: HSFSSupport.optionalNumberArgument(accessDate, at: 2)
+            accessDate: HSFSSupport.optionalNumberArgument(accessDate, at: 1),
+            modificationDate: HSFSSupport.optionalNumberArgument(modificationDate, at: 2)
         ) else {
             fail("hs.fs.touch", code: "EINVAL", message: "timestamps must be finite numbers of seconds since the Unix epoch")
             return false
