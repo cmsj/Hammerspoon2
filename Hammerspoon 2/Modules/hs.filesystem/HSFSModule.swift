@@ -36,6 +36,27 @@ import UniformTypeIdentifiers
 /// hs.fs.append("/tmp/hello.txt", "More content\n");
 /// ```
 ///
+/// ## Working with open files
+///
+/// For incremental, positioned, binary, or locked access, open the file to get an
+/// `HSFile` object (the equivalent of a Lua `io` file handle):
+///
+/// ```javascript
+/// const f = hs.fs.open("~/notes.txt", "r+");
+/// const firstLine = f.readLine();
+/// f.seek(0, "end");
+/// f.writeLine("appended");
+/// f.close();
+///
+/// // Or let hs.fs.withFile() close it for you:
+/// const header = hs.fs.withFile("~/image.png", "r", f => f.readBytes(8));
+/// ```
+///
+/// ## Errors
+///
+/// Functions that fail return `null` or `false`, log the failure to the Console, and set
+/// `hs.fs.lastError` to an object like `{code: "ENOENT", message: "No such file or directory"}`.
+///
 /// ## Directory operations
 ///
 /// ```javascript
@@ -62,6 +83,96 @@ import UniformTypeIdentifiers
 /// //   creationDate: 1700000000.0, modificationDate: 1700001000.0 }
 /// ```
 @objc protocol HSFSModuleAPI: JSExport {
+
+    // MARK: - Errors
+
+    /// The error from the most recent failed `hs.fs` function, or `null` if none has failed.
+    ///
+    /// The object has a `code` (a POSIX error name such as `"ENOENT"`, `"EEXIST"`, or `"EACCES"`, or
+    /// `"EINVAL"` for invalid arguments) and a human-readable `message`. Like C's `errno`, it is not
+    /// cleared by successful calls, so only consult it after a function has reported failure.
+    /// Errors from methods on an open file are recorded on that file's own `lastError` instead.
+    /// - Example:
+    /// ```js
+    /// const f = hs.fs.open("/does/not/exist")
+    /// if (!f) console.log("Open failed: " + hs.fs.lastError.code)
+    /// ```
+    @objc var lastError: [String: Any]? { get }
+
+    // MARK: - Open files
+
+    /// Open a file, returning an `HSFile` object for reading and/or writing it.
+    ///
+    /// Modes follow C's `fopen()` (and Lua's `io.open()`):
+    ///
+    /// | Mode | Read | Write | Creates | Truncates | Notes |
+    /// |------|------|-------|---------|-----------|-------|
+    /// | `"r"`  | ✓ | | | | The default |
+    /// | `"r+"` | ✓ | ✓ | | | |
+    /// | `"w"`  | | ✓ | ✓ | ✓ | |
+    /// | `"w+"` | ✓ | ✓ | ✓ | ✓ | |
+    /// | `"a"`  | | ✓ | ✓ | | Every write goes to the end of the file |
+    /// | `"a+"` | ✓ | ✓ | ✓ | | Reads start at the beginning; every write goes to the end |
+    ///
+    /// Add `x` to a `w` mode (`"wx"`, `"w+x"`) to fail if the file already exists. A `b` is accepted and
+    /// ignored, since all files can be read as text or bytes.
+    ///
+    /// Directories cannot be opened. Close the file with `close()` when you are finished with it;
+    /// any files still open are closed automatically when your configuration is reloaded.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file. `~` is expanded.
+    ///   - mode?: The open mode. Defaults to `"r"`.
+    ///   - permissions?: POSIX permission bits applied if the file is created, e.g. `0o600`. Defaults to `0o644` (before the process umask is applied).
+    /// - Returns: An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
+    /// - Example:
+    /// ```js
+    /// const f = hs.fs.open("~/notes.txt", "a")
+    /// if (f) {
+    ///     f.writeLine("Another note")
+    ///     f.close()
+    /// }
+    /// ```
+    @objc func open(_ path: String, _ mode: String, _ permissions: Int) -> HSFile?
+
+    /// Create and open a new, uniquely named temporary file.
+    ///
+    /// The file is created in `hs.fs.temporaryDirectory()` with permissions `0o600` and opened in `"w+"` mode.
+    /// It is not deleted automatically; call `remove()` on it when you no longer need it on disk.
+    ///
+    /// - Parameter prefix?: A prefix for the file name. Must not contain `/`. Defaults to `"hs"`.
+    /// - Returns: An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
+    /// - Example:
+    /// ```js
+    /// const tmp = hs.fs.tempFile("myspoon")
+    /// tmp.write("scratch data")
+    /// console.log("Wrote " + tmp.path)
+    /// ```
+    @objc func tempFile(_ prefix: String) -> HSFile?
+
+    /// Open a file, pass it to a function, and close it again afterwards.
+    ///
+    /// The file is closed when the function returns, even if it throws (in which case the exception
+    /// propagates to you). The function must do all its work synchronously: an `async` function would
+    /// find the file already closed after its first `await`.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file. `~` is expanded.
+    ///   - mode: The open mode, as for `hs.fs.open()`.
+    ///   - callback: {(file: HSFile) => any} Called with the open file.
+    /// - Returns: {any} Whatever `callback` returns, or `null` if the file could not be opened (see `hs.fs.lastError`).
+    /// - Example:
+    /// ```js
+    /// const header = hs.fs.withFile("/etc/hosts", "r", f => f.readLine())
+    ///
+    /// hs.fs.withFile("~/counter.txt", "w+", f => {
+    ///     const n = parseInt(f.read() ?? "0") + 1
+    ///     f.truncate()
+    ///     f.rewind()
+    ///     f.write(String(n))
+    /// })
+    /// ```
+    @objc func withFile(_ path: String, _ mode: String, _ callback: JSFunction) -> JSValue?
 
     // MARK: - File I/O
 
@@ -388,17 +499,34 @@ import UniformTypeIdentifiers
     /// ```
     @objc func attributes(_ path: String) -> [String: Any]?
 
-    /// Update the modification timestamp of a file to the current time.
+    /// Set the modification and access times of a file, creating it if it does not exist
+    /// (equivalent to the POSIX `touch` command).
     ///
-    /// Creates the file if it does not exist (equivalent to the POSIX `touch` command).
-    ///
-    /// - Parameter path: Path to the file. `~` is expanded.
+    /// - Parameters:
+    ///   - path: Path to the file. `~` is expanded.
+    ///   - modificationDate?: Seconds since the Unix epoch. Defaults to now.
+    ///   - accessDate?: Seconds since the Unix epoch. Defaults to `modificationDate`.
     /// - Returns: `true` on success, `false` on failure.
     /// - Example:
     /// ```js
-    /// hs.fs.touch("/tmp/marker.txt")
+    /// hs.fs.touch("/tmp/marker.txt")                             // now
+    /// hs.fs.touch("/tmp/marker.txt", Date.now() / 1000 - 86400)  // one day ago
     /// ```
-    @objc func touch(_ path: String) -> Bool
+    @objc func touch(_ path: String, _ modificationDate: Double, _ accessDate: Double) -> Bool
+
+    /// Set the POSIX permission bits of a file or directory.
+    ///
+    /// Follows symbolic links.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file or directory. `~` is expanded.
+    ///   - permissions: The permission bits, e.g. `0o644`.
+    /// - Returns: `true` on success, `false` on failure.
+    /// - Example:
+    /// ```js
+    /// hs.fs.chmod("~/bin/myscript.sh", 0o755)
+    /// ```
+    @objc func chmod(_ path: String, _ permissions: Int) -> Bool
 
     // MARK: - Links
 
@@ -695,12 +823,17 @@ import UniformTypeIdentifiers
 
     private var volumeWatchers = HSWeakObjectSet<HSVolumeWatcher>()
     private var pathWatchers = HSWeakObjectSet<HSPathWatcher>()
+    private var openFiles = HSWeakObjectSet<HSFile>()
+
+    @objc private(set) var lastError: [String: Any]?
 
     func shutdown() {
         for watcher in volumeWatchers.allObjects { watcher.destroy() }
         volumeWatchers.removeAllObjects()
         for watcher in pathWatchers.allObjects { watcher.destroy() }
         pathWatchers.removeAllObjects()
+        for file in openFiles.allObjects { file.destroy() }
+        openFiles.removeAllObjects()
     }
 
     isolated deinit {
@@ -710,7 +843,8 @@ import UniformTypeIdentifiers
     @objc func toString() -> String {
         let v = volumeWatchers.allObjects.count
         let p = pathWatchers.allObjects.count
-        return "<\(moduleName): \(v) volume watcher\(v == 1 ? "" : "s"), \(p) path watcher\(p == 1 ? "" : "s")>"
+        let f = openFiles.allObjects.filter(\.isOpen).count
+        return "<\(moduleName): \(v) volume watcher\(v == 1 ? "" : "s"), \(p) path watcher\(p == 1 ? "" : "s"), \(f) open file\(f == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {
@@ -720,6 +854,31 @@ import UniformTypeIdentifiers
     // MARK: - Private helpers
 
     private let fm = FileManager.default
+
+    /// Record a Foundation error in `lastError` and log it.
+    private func fail(_ function: String, _ error: Error) {
+        lastError = HSFSSupport.errorInfo(from: error)
+        AKError("\(function): \(error.localizedDescription)")
+    }
+
+    /// Record a POSIX errno in `lastError` and log it, optionally naming the path involved.
+    private func fail(_ function: String, errno code: Int32, path: String? = nil) {
+        let info = HSFSSupport.errorInfo(errno: code)
+        lastError = info
+        let message = info["message"] as? String ?? ""
+        AKError("\(function): \(path.map { "\($0): " } ?? "")\(message)")
+    }
+
+    /// Record an error with an explicit code in `lastError` and log it.
+    private func fail(_ function: String, code: String, message: String) {
+        lastError = HSFSSupport.errorInfo(code: code, message: message)
+        AKError("\(function): \(message)")
+    }
+
+    /// JSExport passes omitted string arguments as the literal string "undefined".
+    private func isOmitted(_ argument: String) -> Bool {
+        argument.isEmpty || argument == "undefined"
+    }
 
     /// Expand `~` and return the expanded path string.
     private func expand(_ path: String) -> String {
@@ -731,18 +890,6 @@ import UniformTypeIdentifiers
         var st = Darwin.stat()
         guard unsafe Darwin.lstat(expand(path), &st) == 0 else { return nil }
         return st.st_mode
-    }
-
-    private func modeToType(_ mode: mode_t) -> String {
-        switch mode & S_IFMT {
-        case S_IFREG:  return "file"
-        case S_IFDIR:  return "directory"
-        case S_IFLNK:  return "symlink"
-        case S_IFSOCK: return "socket"
-        case S_IFCHR:  return "characterSpecial"
-        case S_IFBLK:  return "blockSpecial"
-        default:       return "unknown"
-        }
     }
 
     private func parseXattrOptions(_ options: NSArray?) -> Int32? {
@@ -757,18 +904,73 @@ import UniformTypeIdentifiers
             case "noSecurity":     flags |= XATTR_NOSECURITY
             case "noDefault":      flags |= XATTR_NODEFAULT
             default:
-                AKError("hs.fs xattr: unrecognized option '\(opt)'")
+                fail("hs.fs xattr", code: "EINVAL", message: "unrecognized option '\(opt)'")
                 return nil
             }
         }
         return flags
     }
 
+    // MARK: - Open files
+
+    @objc func open(_ path: String, _ mode: String = "r", _ permissions: Int = 0) -> HSFile? {
+        let fileMode = isOmitted(mode) ? "r" : mode
+        guard let flags = HSFile.openFlags(forMode: fileMode) else {
+            fail("hs.fs.open", code: "EINVAL", message: "invalid mode \"\(mode)\"")
+            return nil
+        }
+        let expandedPath = expand(path)
+        let createMode = mode_t(permissions > 0 ? permissions & 0o7777 : 0o644)
+        let fd = unsafe Darwin.open(expandedPath, flags, createMode)
+        guard fd >= 0 else {
+            fail("hs.fs.open", errno: errno, path: path)
+            return nil
+        }
+
+        var st = Darwin.stat()
+        if unsafe fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFDIR {
+            Darwin.close(fd)
+            fail("hs.fs.open", errno: EISDIR, path: path)
+            return nil
+        }
+
+        let file = HSFile(fd: fd, path: expandedPath, mode: fileMode)
+        openFiles.add(file)
+        return file
+    }
+
+    @objc func tempFile(_ prefix: String = "hs") -> HSFile? {
+        let namePrefix = isOmitted(prefix) ? "hs" : prefix
+        guard !namePrefix.contains("/") else {
+            fail("hs.fs.tempFile", code: "EINVAL", message: "prefix must not contain \"/\"")
+            return nil
+        }
+        var template = Array(((NSTemporaryDirectory() as NSString)
+            .appendingPathComponent("\(namePrefix).XXXXXX")).utf8CString)
+        let fd = template.withUnsafeMutableBufferPointer { unsafe mkostemp($0.baseAddress, O_CLOEXEC) }
+        guard fd >= 0 else {
+            fail("hs.fs.tempFile", errno: errno)
+            return nil
+        }
+        let path = template.withUnsafeBufferPointer { unsafe String(cString: $0.baseAddress!) }
+        let file = HSFile(fd: fd, path: path, mode: "w+")
+        openFiles.add(file)
+        return file
+    }
+
+    @objc func withFile(_ path: String, _ mode: String, _ callback: JSFunction) -> JSValue? {
+        guard let context = JSContext.current() else { return nil }
+        guard let file = open(path, mode, 0) else { return nil }
+        defer { _ = file.close() }
+        // callCapturingException ensures a throw inside the callback reaches the JS caller.
+        return context.callCapturingException { callback.call(withArguments: [file]) }
+    }
+
     // MARK: - File I/O
 
     @objc func read(_ path: String, _ offset: Int = 0, _ length: Int = 0) -> String? {
         guard let handle = FileHandle(forReadingAtPath: expand(path)) else {
-            AKError("hs.fs.read: could not open \(path)")
+            fail("hs.fs.read", errno: errno, path: path)
             return nil
         }
         defer { handle.closeFile() }
@@ -777,7 +979,7 @@ import UniformTypeIdentifiers
         let data = length > 0 ? handle.readData(ofLength: length) : handle.readDataToEndOfFile()
 
         guard let result = String(data: data, encoding: .utf8) else {
-            AKError("hs.fs.read: \(path) is not valid UTF-8")
+            fail("hs.fs.read", code: "EILSEQ", message: "\(path) is not valid UTF-8")
             return nil
         }
         return result
@@ -785,7 +987,7 @@ import UniformTypeIdentifiers
 
     @objc func readLines(_ path: String, _ callback: JSFunction) -> Bool {
         guard let handle = FileHandle(forReadingAtPath: expand(path)) else {
-            AKError("hs.fs.readLines: could not open \(path)")
+            fail("hs.fs.readLines", errno: errno, path: path)
             return false
         }
         defer { handle.closeFile() }
@@ -834,14 +1036,14 @@ import UniformTypeIdentifiers
             try content.write(toFile: expand(path), atomically: !inPlace, encoding: .utf8)
             return true
         } catch {
-            AKError("hs.fs.write: \(error.localizedDescription)")
+            fail("hs.fs.write", error)
             return false
         }
     }
 
     @objc func append(_ path: String, _ content: String) -> Bool {
         guard let data = content.data(using: .utf8) else {
-            AKError("hs.fs.append: could not encode content as UTF-8")
+            fail("hs.fs.append", code: "EILSEQ", message: "could not encode content as UTF-8")
             return false
         }
         let expandedPath = expand(path)
@@ -857,7 +1059,7 @@ import UniformTypeIdentifiers
             }
             return true
         } catch {
-            AKError("hs.fs.append: \(error.localizedDescription)")
+            fail("hs.fs.append", error)
             return false
         }
     }
@@ -898,7 +1100,7 @@ import UniformTypeIdentifiers
             try fm.copyItem(atPath: expand(source), toPath: expand(destination))
             return true
         } catch {
-            AKError("hs.fs.copy: \(error.localizedDescription)")
+            fail("hs.fs.copy", error)
             return false
         }
     }
@@ -908,7 +1110,7 @@ import UniformTypeIdentifiers
             try fm.moveItem(atPath: expand(source), toPath: expand(destination))
             return true
         } catch {
-            AKError("hs.fs.move: \(error.localizedDescription)")
+            fail("hs.fs.move", error)
             return false
         }
     }
@@ -918,7 +1120,7 @@ import UniformTypeIdentifiers
             try fm.removeItem(atPath: expand(path))
             return true
         } catch {
-            AKError("hs.fs.deletePath: \(error.localizedDescription)")
+            fail("hs.fs.deletePath", error)
             return false
         }
     }
@@ -929,7 +1131,7 @@ import UniformTypeIdentifiers
         do {
             return try fm.contentsOfDirectory(atPath: expand(path)).sorted()
         } catch {
-            AKError("hs.fs.list: \(error.localizedDescription)")
+            fail("hs.fs.list", error)
             return nil
         }
     }
@@ -938,7 +1140,7 @@ import UniformTypeIdentifiers
         do {
             return try fm.subpathsOfDirectory(atPath: expand(path)).sorted()
         } catch {
-            AKError("hs.fs.listRecursive: \(error.localizedDescription)")
+            fail("hs.fs.listRecursive", error)
             return nil
         }
     }
@@ -950,7 +1152,7 @@ import UniformTypeIdentifiers
                                    attributes: nil)
             return true
         } catch {
-            AKError("hs.fs.mkdir: \(error.localizedDescription)")
+            fail("hs.fs.mkdir", error)
             return false
         }
     }
@@ -959,7 +1161,7 @@ import UniformTypeIdentifiers
         // Use POSIX rmdir() so it correctly rejects non-empty directories.
         let expandedPath = expand(path)
         guard unsafe Darwin.rmdir(expandedPath) == 0 else {
-            AKError(unsafe "hs.fs.rmdir: \(String(cString: strerror(errno)))")
+            fail("hs.fs.rmdir", errno: errno)
             return false
         }
         return true
@@ -1009,44 +1211,39 @@ import UniformTypeIdentifiers
     // MARK: - File Attributes
 
     @objc func attributes(_ path: String) -> [String: Any]? {
-        let expandedPath = expand(path)
         var st = Darwin.stat()
         // Use lstat so the type field correctly reports symlinks.
-        guard unsafe Darwin.lstat(expandedPath, &st) == 0 else {
-            AKError(unsafe "hs.fs.attributes: \(String(cString: strerror(errno)))")
+        guard unsafe Darwin.lstat(expand(path), &st) == 0 else {
+            fail("hs.fs.attributes", errno: errno)
             return nil
         }
-
-        let creationDate = Double(st.st_birthtimespec.tv_sec)
-                         + Double(st.st_birthtimespec.tv_nsec) / 1_000_000_000
-        let modDate = Double(st.st_mtimespec.tv_sec)
-                    + Double(st.st_mtimespec.tv_nsec) / 1_000_000_000
-
-        return [
-            "size":             Int(st.st_size),
-            "type":             modeToType(st.st_mode),
-            "permissions":      Int(st.st_mode & 0o7777),
-            "ownerID":          Int(st.st_uid),
-            "groupID":          Int(st.st_gid),
-            "inode":            Int(st.st_ino),
-            "creationDate":     creationDate,
-            "modificationDate": modDate,
-        ]
+        return HSFSSupport.attributes(from: st)
     }
 
-    @objc func touch(_ path: String) -> Bool {
+    @objc func touch(_ path: String, _ modificationDate: Double = .nan, _ accessDate: Double = .nan) -> Bool {
         let expandedPath = expand(path)
-        if fm.fileExists(atPath: expandedPath) {
-            do {
-                try fm.setAttributes([.modificationDate: Date()], ofItemAtPath: expandedPath)
-                return true
-            } catch {
-                AKError("hs.fs.touch: \(error.localizedDescription)")
-                return false
-            }
-        } else {
-            return fm.createFile(atPath: expandedPath, contents: nil)
+        // O_CREAT without O_TRUNC: creates a missing file but leaves an existing one's contents alone.
+        let fd = unsafe Darwin.open(expandedPath, O_WRONLY | O_CREAT | O_CLOEXEC, 0o644)
+        if fd >= 0 {
+            Darwin.close(fd)
+        } else if errno != EISDIR {
+            fail("hs.fs.touch", errno: errno, path: path)
+            return false
         }
+        let times = HSFSSupport.touchTimes(modificationDate: modificationDate, accessDate: accessDate)
+        guard unsafe utimensat(AT_FDCWD, expandedPath, times, 0) == 0 else {
+            fail("hs.fs.touch", errno: errno, path: path)
+            return false
+        }
+        return true
+    }
+
+    @objc func chmod(_ path: String, _ permissions: Int) -> Bool {
+        guard unsafe Darwin.chmod(expand(path), mode_t(permissions & 0o7777)) == 0 else {
+            fail("hs.fs.chmod", errno: errno, path: path)
+            return false
+        }
+        return true
     }
 
     // MARK: - Links
@@ -1056,7 +1253,7 @@ import UniformTypeIdentifiers
             try fm.linkItem(atPath: expand(source), toPath: expand(destination))
             return true
         } catch {
-            AKError("hs.fs.link: \(error.localizedDescription)")
+            fail("hs.fs.link", error)
             return false
         }
     }
@@ -1067,7 +1264,7 @@ import UniformTypeIdentifiers
                                       withDestinationPath: expand(source))
             return true
         } catch {
-            AKError("hs.fs.symlink: \(error.localizedDescription)")
+            fail("hs.fs.symlink", error)
             return false
         }
     }
@@ -1076,7 +1273,7 @@ import UniformTypeIdentifiers
         do {
             return try fm.destinationOfSymbolicLink(atPath: expand(path))
         } catch {
-            AKError("hs.fs.readlink: \(error.localizedDescription)")
+            fail("hs.fs.readlink", error)
             return nil
         }
     }
@@ -1090,7 +1287,7 @@ import UniformTypeIdentifiers
             guard let tagNames = values.tagNames, !tagNames.isEmpty else { return nil }
             return tagNames
         } catch {
-            AKError("hs.fs.tags: \(error.localizedDescription)")
+            fail("hs.fs.tags", error)
             return nil
         }
     }
@@ -1105,7 +1302,7 @@ import UniformTypeIdentifiers
             try fileURL.setResourceValues(values)
             return true
         } catch {
-            AKError("hs.fs.setTags: \(error.localizedDescription)")
+            fail("hs.fs.setTags", error)
             return false
         }
     }
@@ -1139,14 +1336,14 @@ import UniformTypeIdentifiers
                 .bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil)
             return data.base64EncodedString()
         } catch {
-            AKError("hs.fs.pathToBookmark: \(error.localizedDescription)")
+            fail("hs.fs.pathToBookmark", error)
             return nil
         }
     }
 
     @objc func pathFromBookmark(_ data: String) -> String? {
         guard let bookmarkData = Data(base64Encoded: data) else {
-            AKError("hs.fs.pathFromBookmark: invalid base64 data")
+            fail("hs.fs.pathFromBookmark", code: "EINVAL", message: "invalid base64 data")
             return nil
         }
         do {
@@ -1158,7 +1355,7 @@ import UniformTypeIdentifiers
             if isStale { AKDebug("hs.fs.pathFromBookmark: bookmark data is stale") }
             return resolved.path
         } catch {
-            AKError("hs.fs.pathFromBookmark: \(error.localizedDescription)")
+            fail("hs.fs.pathFromBookmark", error)
             return nil
         }
     }
@@ -1184,7 +1381,7 @@ import UniformTypeIdentifiers
 
         guard let urls = fm.mountedVolumeURLs(includingResourceValuesForKeys: Array(keys),
                                               options: options) else {
-            AKError("hs.fs.volumes: could not enumerate mounted volumes")
+            fail("hs.fs.volumes", code: "UNKNOWN", message: "could not enumerate mounted volumes")
             return nil
         }
 
@@ -1213,7 +1410,7 @@ import UniformTypeIdentifiers
             try NSWorkspace.shared.unmountAndEjectDevice(at: URL(fileURLWithPath: expand(path)))
             return true
         } catch {
-            AKError("hs.fs.ejectVolume: \(error.localizedDescription)")
+            fail("hs.fs.ejectVolume", error)
             return false
         }
     }
@@ -1247,7 +1444,7 @@ import UniformTypeIdentifiers
         let size = unsafe Darwin.getxattr(p, attribute, nil, 0, pos, flags)
         if size < 0 {
             if errno != ENOATTR {
-                AKError(unsafe "hs.fs.xattrGet: \(String(cString: strerror(errno)))")
+                fail("hs.fs.xattrGet", errno: errno)
             }
             return nil
         }
@@ -1258,7 +1455,7 @@ import UniformTypeIdentifiers
             unsafe Darwin.getxattr(p, attribute, ptr.baseAddress, size, pos, flags)
         }
         if read < 0 {
-            AKError(unsafe "hs.fs.xattrGet: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrGet", errno: errno)
             return nil
         }
         return String(bytes: buffer[..<read], encoding: .isoLatin1)
@@ -1270,7 +1467,7 @@ import UniformTypeIdentifiers
 
         let size = unsafe Darwin.listxattr(p, nil, 0, flags)
         if size < 0 {
-            AKError(unsafe "hs.fs.xattrList: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrList", errno: errno)
             return nil
         }
         guard size > 0 else { return [] }
@@ -1281,7 +1478,7 @@ import UniformTypeIdentifiers
             return unsafe Darwin.listxattr(p, cBuf, size, flags)
         }
         if read < 0 {
-            AKError(unsafe "hs.fs.xattrList: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrList", errno: errno)
             return nil
         }
 
@@ -1304,14 +1501,14 @@ import UniformTypeIdentifiers
         let pos = UInt32(max(0, position))
 
         guard let data = value.data(using: .isoLatin1) else {
-            AKError("hs.fs.xattrSet: value contains characters outside the Latin-1 range")
+            fail("hs.fs.xattrSet", code: "EINVAL", message: "value contains characters outside the Latin-1 range")
             return false
         }
         let result = unsafe data.withUnsafeBytes { ptr in
             unsafe Darwin.setxattr(p, attribute, ptr.baseAddress, data.count, pos, flags)
         }
         if result < 0 {
-            AKError(unsafe "hs.fs.xattrSet: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrSet", errno: errno)
             return false
         }
         return true
@@ -1321,7 +1518,7 @@ import UniformTypeIdentifiers
         let p = expand(path)
         guard let flags = parseXattrOptions(options) else { return false }
         if unsafe Darwin.removexattr(p, attribute, flags) < 0 {
-            AKError(unsafe "hs.fs.xattrRemove: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrRemove", errno: errno)
             return false
         }
         return true
