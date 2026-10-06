@@ -11,7 +11,8 @@ jobs:
   test:
     name: Run Tests
     runs-on: xcode-27
-    timeout-minutes: 30
+    # Tests take ~13 min on macos-26; leave headroom for the new runner and slow days.
+    timeout-minutes: 50
     permissions:
       contents: read
       pull-requests: write
@@ -75,6 +76,9 @@ jobs:
 
       - name: Report test results
         if: always()
+        # Only a PR summary; a slow or broken report must not fail an otherwise green run.
+        timeout-minutes: 5
+        continue-on-error: true
         env:
           # Only same-repo PRs get a token that can comment; fork PRs still get the job summary.
           GITHUB_TOKEN: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.token || '' }}
@@ -86,3 +90,24 @@ jobs:
         with:
           path: xcodebuild.log
           retention-days: 30
+
+      # When the test host crashes, xcodebuild.log only says "Restarting after unexpected exit"
+      # and blames whichever test happened to be running. The .ips crash report has the backtrace.
+      - name: Collect crash reports
+        if: failure()
+        run: |
+          mkdir -p crash-reports
+          find ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports \
+            -name 'Hammerspoon 2*.ips' -mmin -60 -exec cp {} crash-reports/ \; 2>/dev/null || true
+          ls -la crash-reports
+
+      - name: Upload crash reports and result bundle
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-failure-diagnostics
+          path: |
+            crash-reports/
+            TestResults.xcresult
+          if-no-files-found: ignore
+          retention-days: 14
