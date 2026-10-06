@@ -10,12 +10,12 @@
 // only ever emits one kind of event ("change"), but on/off/once still take an explicit event
 // name for consistency with every other hs.* module-level watcher.
 hs.locale._watcherEmitter = new LazyWatcherEmitter("hs.locale", function() {
-    hs.locale._addWatcher(() => {
-        hs.locale._watcherEmitter.emit('change');
+    hs.locale._addWatcher((event) => {
+        hs.locale._watcherEmitter.emit(event);
     });
 }, function() {
     hs.locale._removeWatcher();
-});
+}, hs.locale._eventNames);
 
 /// Register a listener that fires whenever any of the user's locale settings change.
 /// Read `current()` or `details()` inside the listener to inspect the new state.

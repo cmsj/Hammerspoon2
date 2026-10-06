@@ -16,7 +16,7 @@ hs.application._watcherEmitter = new LazyWatcherEmitter("hs.application", functi
     });
 }, function() {
     hs.application._removeWatcher();
-});
+}, hs.application._eventNames);
 
 /// Register a listener for application events.
 /// Parameters:

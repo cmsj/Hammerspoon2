@@ -84,6 +84,17 @@ EventEmitter.prototype.once = function (event, listener) {
     return this;
 };
 
+// MARK: - assertKnownEvent
+//
+// Throws if `event` isn't one of `knownEvents`, naming them all in the message: for modules like
+// hs.audiodevice ('dev+', 'dSErr', ...) the right name can't be guessed from the wrong one.
+// `includes` rather than a Set/object lookup so an inherited name like "toString" can't match.
+function assertKnownEvent(caller, event, knownEvents) {
+    if (!knownEvents.includes(event)) {
+        throw new Error(caller + ": unknown event '" + event + "'. Known events: " + knownEvents.join(", "));
+    }
+}
+
 // MARK: - LazyWatcherEmitter
 //
 // One-to-many emitter for "watcher" modules (hs.usb, hs.application, etc.): a single underlying
@@ -96,18 +107,28 @@ EventEmitter.prototype.once = function (event, listener) {
 // exception propagates straight out of `on()`/`once()`, and (precisely because nothing is
 // recorded until after `start` returns without throwing) a later call, even with the exact same
 // listener, retries `start` cleanly instead of silently never attempting it again.
+//
+// `knownEvents` is the list of event names the native side can emit (each module's Swift
+// `_eventNames`, see Engine/HSEventName.swift). When given, on()/once() throw for any other
+// name - otherwise a typo would register fine, start the native watcher, and never fire (#253).
+// Omitting it accepts any name.
 class LazyWatcherEmitter extends EventEmitter {
-    constructor(label, start, stop) {
+    constructor(label, start, stop, knownEvents) {
         super();
         this._label = label;
         this._start = start;
         this._stop = stop;
         this._listenerCount = 0;
+        this._knownEvents = knownEvents ? Array.from(knownEvents) : null;
     }
 
     on(event, listener) {
         if (typeof listener !== 'function') {
             throw new Error(this._label + ".on(): listener must be a function");
+        }
+        // Checked before anything is started or recorded, for the same reason as the listener.
+        if (this._knownEvents) {
+            assertKnownEvent(this._label + ".on()", event, this._knownEvents);
         }
         if (Array.isArray(this.events[event]) && this.events[event].includes(listener)) {
             console.error(this._label + ".on(): listener for '" + event + "' is already registered.");
@@ -151,17 +172,24 @@ class LazyWatcherEmitter extends EventEmitter {
 // native registration failed, and the listener is not recorded (mirrors how a failed
 // registration must not leave a phantom bucket behind). `stop(event)` is called when that
 // event's listener count goes 1->0.
+//
+// `knownEvents` works as for LazyWatcherEmitter. hs.userdefaults omits it, since its event names
+// are arbitrary user-chosen preference keys.
 class KeyedLazyWatcherEmitter extends EventEmitter {
-    constructor(label, start, stop) {
+    constructor(label, start, stop, knownEvents) {
         super();
         this._label = label;
         this._start = start;
         this._stop = stop;
+        this._knownEvents = knownEvents ? Array.from(knownEvents) : null;
     }
 
     on(event, listener) {
         if (typeof listener !== 'function') {
             throw new Error(this._label + ".on(): listener must be a function");
+        }
+        if (this._knownEvents) {
+            assertKnownEvent(this._label + ".on()", event, this._knownEvents);
         }
         const existing = Array.isArray(this.events[event]) ? this.events[event] : [];
         if (existing.includes(listener)) {

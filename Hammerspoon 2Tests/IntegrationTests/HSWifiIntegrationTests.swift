@@ -172,14 +172,20 @@ struct HSWifiTests {
             #expect(!harness.hasException)
         }
 
-        @Test("on with an unrecognized event name does not throw, and does not register")
-        func testUnrecognizedEventNameIsSilentlyRefused() {
+        @Test("on with an unrecognized event name throws, and does not register")
+        func testUnrecognizedEventNameIsRefused() {
             let harness = makeHarness()
             harness.eval("""
                 var fn = function(info) {};
-                hs.wifi.on('bogusEvent', fn);
+                var threw = false;
+                try {
+                    hs.wifi.on('bogusEvent', fn);
+                } catch (err) {
+                    threw = true;
+                }
             """)
             #expect(!harness.hasException)
+            #expect(harness.evalBool("threw") == true)
             harness.expectFalse("Array.isArray(hs.wifi._watcherEmitter.events['bogusEvent'])")
         }
 

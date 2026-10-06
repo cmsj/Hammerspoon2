@@ -73,6 +73,10 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSStreamDeckEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.streamdeck.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -87,6 +91,11 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 }
 
 // MARK: - Implementation
+
+/// Events emitted by hs.streamdeck's module-level watcher
+nonisolated enum HSStreamDeckEvent: String, HSEventName {
+    case connected, disconnected
+}
 
 @safe @_documentation(visibility: private)
 @MainActor
@@ -225,7 +234,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
 
     private func deviceConnected(_ device: IOHIDDevice) {
         guard let deck = existingOrNewDevice(for: device) else { return }
-        fireWatcherEvent("connected", device: deck)
+        fireWatcherEvent(.connected, device: deck)
     }
 
     private func deviceDisconnected(_ device: IOHIDDevice) {
@@ -235,12 +244,13 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
         }
         deck.destroy()
         AKDebug("hs.streamdeck: disconnected \(deck.deckType)")
-        fireWatcherEvent("disconnected", device: deck)
+        fireWatcherEvent(.disconnected, device: deck)
     }
 
     // MARK: - Module-level watcher
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSStreamDeckEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -261,7 +271,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
         AKDebug("hs.streamdeck._removeWatcher(): Stopped")
     }
 
-    private func fireWatcherEvent(_ eventType: String, device: HSStreamDeckDevice) {
-        _ = moduleCallback?.call(withArguments: [eventType, device])
+    private func fireWatcherEvent(_ event: HSStreamDeckEvent, device: HSStreamDeckDevice) {
+        _ = moduleCallback?.call(withArguments: [event.rawValue, device])
     }
 }

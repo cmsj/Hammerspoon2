@@ -43,6 +43,11 @@ echo "✓ JSON documentation generated"
 MODULE_COUNT=$(cat docs/json/index.json | grep -c '"name":' || echo "0")
 echo "  Found $MODULE_COUNT modules in index"
 
+# Check documented on/off/once event names match the Swift HSEventName enums
+echo
+echo "Checking watcher event names..."
+node scripts/check-event-names.js
+
 # Run HTML generation
 echo
 echo "Running HTML documentation generation..."

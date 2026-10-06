@@ -9,12 +9,12 @@
 // for consistency with every other hs.* module-level watcher.
 hs.pasteboard._watcherEmitter = new LazyWatcherEmitter("hs.pasteboard", function() {
     // Start the Swift polling timer using the currently configured interval.
-    hs.pasteboard._startWatcher(hs.pasteboard.watcherInterval, (changeCount) => {
-        hs.pasteboard._watcherEmitter.emit('change', changeCount);
+    hs.pasteboard._startWatcher(hs.pasteboard.watcherInterval, (event, changeCount) => {
+        hs.pasteboard._watcherEmitter.emit(event, changeCount);
     });
 }, function() {
     hs.pasteboard._stopWatcher();
-});
+}, hs.pasteboard._eventNames);
 
 /// Register a listener that fires whenever the pasteboard contents change.
 /// Because macOS provides no pasteboard change notification API, this is implemented by

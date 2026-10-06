@@ -117,6 +117,10 @@ import JavaScriptCore
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSAudioDeviceEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     /// Swift-retained storage for the JS per-device emitter factory. Storing it here (rather
     /// than as a bare JS expando) keeps it alive across garbage collection of the module wrapper.
     /// SKIP_DOCS
@@ -136,6 +140,16 @@ import JavaScriptCore
 }
 
 // MARK: - Implementation
+
+/// System-level events emitted by hs.audiodevice's watcher. The raw values are the historical
+/// CoreAudio-selector-style names, kept for compatibility with Hammerspoon v1.
+nonisolated enum HSAudioDeviceEvent: String, HSEventName {
+    case defaultOutputChanged = "dOut"
+    case defaultInputChanged = "dIn"
+    case defaultSystemOutputChanged = "dSErr"
+    case deviceAdded = "dev+"
+    case deviceRemoved = "dev-"
+}
 
 @safe @_documentation(visibility: private)
 @MainActor
@@ -208,6 +222,7 @@ import JavaScriptCore
 
     @objc var _watcherEmitter: JSFunction? = nil
     @objc var _makeDeviceEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSAudioDeviceEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -220,12 +235,13 @@ import JavaScriptCore
         moduleCallback = listener
         let sysObjID = AudioObjectID(kAudioObjectSystemObject)
 
-        let propertyEvents: [(String, AudioObjectPropertySelector)] = [
-            ("dOut",  kAudioHardwarePropertyDefaultOutputDevice),
-            ("dIn",   kAudioHardwarePropertyDefaultInputDevice),
-            ("dSErr", kAudioHardwarePropertyDefaultSystemOutputDevice),
+        let propertyEvents: [(HSAudioDeviceEvent, AudioObjectPropertySelector)] = [
+            (.defaultOutputChanged,       kAudioHardwarePropertyDefaultOutputDevice),
+            (.defaultInputChanged,        kAudioHardwarePropertyDefaultInputDevice),
+            (.defaultSystemOutputChanged, kAudioHardwarePropertyDefaultSystemOutputDevice),
         ]
-        for (eventName, selector) in propertyEvents {
+        for (event, selector) in propertyEvents {
+            let eventName = event.rawValue
             var a = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
             let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
                 self?.moduleCallback?.call(withArguments: [eventName])
@@ -240,8 +256,8 @@ import JavaScriptCore
         let devBlock: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
             guard let self else { return }
             let current = Set(self.allDeviceIDs())
-            for _ in current.subtracting(self.previousDeviceIDs) { self.moduleCallback?.call(withArguments: ["dev+"]) }
-            for _ in self.previousDeviceIDs.subtracting(current) { self.moduleCallback?.call(withArguments: ["dev-"]) }
+            for _ in current.subtracting(self.previousDeviceIDs) { self.moduleCallback?.call(withArguments: [HSAudioDeviceEvent.deviceAdded.rawValue]) }
+            for _ in self.previousDeviceIDs.subtracting(current) { self.moduleCallback?.call(withArguments: [HSAudioDeviceEvent.deviceRemoved.rawValue]) }
             self.previousDeviceIDs = current
         }
         if unsafe AudioObjectAddPropertyListenerBlock(sysObjID, &devAddr, .main, devBlock) == noErr {

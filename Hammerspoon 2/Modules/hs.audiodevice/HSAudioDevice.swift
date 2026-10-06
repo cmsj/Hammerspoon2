@@ -478,9 +478,24 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// Swift-retained storage for the JS watcher emitter instance
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
+
+    /// The event names `on()`/`once()` accept - see HSAudioDevicePropertyEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
 }
 
 // MARK: - Implementation
+
+/// Per-device property-change events emitted by an HSAudioDevice's watcher
+nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
+    case outputVolume = "vmout"
+    case inputVolume = "vmin"
+    case outputMute = "mout"
+    case inputMute = "min"
+    case sampleRate = "rate"
+    case outputDataSource = "dsout"
+    case inputDataSource = "dsin"
+}
 
 @safe @_documentation(visibility: private)
 @objc class HSAudioDevice: NSObject, HSAudioDeviceAPI {
@@ -707,6 +722,7 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     // MARK: - Per-device watcher
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSAudioDevicePropertyEvent.allNames }
     // Registrations keyed by event name: each value holds the CoreAudio address and
     // the heap-allocated ObjC block (stored to guarantee pointer equality on removal).
     private var deviceRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:]
@@ -745,17 +761,18 @@ private func caDataSourceName(_ objectID: AudioObjectID,
         guard unsafe deviceRegistrations.isEmpty else { return false }
         selfRetain = self
 
-        let candidates: [(AudioObjectPropertySelector, AudioObjectPropertyScope, String)] = [
-            (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, "vmout"),
-            (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeInput,  "vmin"),
-            (kAudioDevicePropertyMute,         kAudioDevicePropertyScopeOutput, "mout"),
-            (kAudioDevicePropertyMute,         kAudioDevicePropertyScopeInput,  "min"),
-            (kAudioDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal, "rate"),
-            (kAudioDevicePropertyDataSource,   kAudioDevicePropertyScopeOutput, "dsout"),
-            (kAudioDevicePropertyDataSource,   kAudioDevicePropertyScopeInput,  "dsin"),
+        let candidates: [(AudioObjectPropertySelector, AudioObjectPropertyScope, HSAudioDevicePropertyEvent)] = [
+            (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, .outputVolume),
+            (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeInput,  .inputVolume),
+            (kAudioDevicePropertyMute,         kAudioDevicePropertyScopeOutput, .outputMute),
+            (kAudioDevicePropertyMute,         kAudioDevicePropertyScopeInput,  .inputMute),
+            (kAudioDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal, .sampleRate),
+            (kAudioDevicePropertyDataSource,   kAudioDevicePropertyScopeOutput, .outputDataSource),
+            (kAudioDevicePropertyDataSource,   kAudioDevicePropertyScopeInput,  .inputDataSource),
         ]
 
-        for (selector, scope, eventName) in candidates {
+        for (selector, scope, event) in candidates {
+            let eventName = event.rawValue
             guard caHasProperty(objectID, selector, scope) else { continue }
             var a = caAddr(selector, scope)
             let block: AudioObjectPropertyListenerBlock = { _, _ in

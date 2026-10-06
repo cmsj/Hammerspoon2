@@ -17,7 +17,7 @@ hs.usb._watcherEmitter = new LazyWatcherEmitter("hs.usb", function() {
     }
 }, function() {
     hs.usb._removeWatcher();
-});
+}, hs.usb._eventNames);
 
 /// Register a listener for USB device connection and disconnection events.
 /// Parameters:

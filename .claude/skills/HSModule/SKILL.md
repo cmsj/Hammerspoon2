@@ -497,6 +497,18 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   - Duplicate listener registration is silently rejected with console.error (not thrown).
   - The module's shutdown() method MUST remove all watchers and set properties like _watcherEmitter to nil
 
+  Event names (issue #253):
+  - Declare the event names as a Swift enum: `nonisolated enum HSXxxEvent: String, HSEventName { case ... }`
+    (see Engine/HSEventName.swift). Emit ONLY via `HSXxxEvent.foo.rawValue`, never a string literal, so
+    the compiler guarantees every emitted name is in the list.
+  - Expose it as `/// SKIP_DOCS @objc var _eventNames: [String] { get }`, implemented as
+    `HSXxxEvent.allNames`, and pass `hs.xxx._eventNames` as the 4th argument to `LazyWatcherEmitter` /
+    `KeyedLazyWatcherEmitter`. on()/once() then throw for any other name instead of registering a
+    listener that can never fire.
+  - The on/off/once docstring unions must list exactly the enum's raw values; `npm run docs:test`
+    (scripts/check-event-names.js) fails otherwise, and also fails if an emitter is given no list.
+    Only emitters whose names are genuinely arbitrary (hs.userdefaults) are exempted in that script.
+
   ---
   Pattern B — Object-level watcher (hs.ax, hs.location)
 

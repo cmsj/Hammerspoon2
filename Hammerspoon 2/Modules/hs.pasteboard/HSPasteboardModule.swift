@@ -300,6 +300,10 @@ import AppKit
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSPasteboardEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.pasteboard.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -315,6 +319,11 @@ import AppKit
 
 // MARK: - Implementation
 
+/// Events emitted by hs.pasteboard's watcher
+nonisolated enum HSPasteboardEvent: String, HSEventName {
+    case change
+}
+
 @_documentation(visibility: private)
 @MainActor
 @objc class HSPasteboardModule: NSObject, HSModuleAPI, HSPasteboardModuleAPI {
@@ -323,6 +332,7 @@ import AppKit
 
     @objc var watcherInterval: Double = 0.5
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSPasteboardEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -483,7 +493,7 @@ import AppKit
                 let current = NSPasteboard.general.changeCount
                 if current != self.lastChangeCount {
                     self.lastChangeCount = current
-                    self.watcherCallback?.call(withArguments: [current])
+                    self.watcherCallback?.call(withArguments: [HSPasteboardEvent.change.rawValue, current])
                 }
             }
         }

@@ -91,6 +91,10 @@ import JavaScriptCore
     /// SKIP_DOCS
     @objc var _watcherEmitter: JSFunction? { get set }
 
+    /// The event names `on()`/`once()` accept - see HSScreenEvent
+    /// SKIP_DOCS
+    @objc var _eventNames: [String] { get }
+
     // MARK: - Swift-retained storage for JS-defined enhancements
     // These are set by hs.screen.js. They must be real, pre-declared properties (not
     // dynamically-added JS properties) or JavaScriptCore silently drops them the first time
@@ -106,6 +110,11 @@ import JavaScriptCore
 
 // MARK: - Implementation
 
+/// Events emitted by hs.screen's watcher
+nonisolated enum HSScreenEvent: String, HSEventName {
+    case change
+}
+
 @_documentation(visibility: private)
 @MainActor
 @objc class HSScreenModule: NSObject, HSModuleAPI, HSScreenModuleAPI {
@@ -113,6 +122,7 @@ import JavaScriptCore
     let engineID: UUID
 
     @objc var _watcherEmitter: JSFunction? = nil
+    @objc var _eventNames: [String] { HSScreenEvent.allNames }
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
@@ -194,6 +204,6 @@ import JavaScriptCore
     }
 
     private func fireWatcherEvent() {
-        _ = watcherCallback?.call(withArguments: [])
+        _ = watcherCallback?.call(withArguments: [HSScreenEvent.change.rawValue])
     }
 }

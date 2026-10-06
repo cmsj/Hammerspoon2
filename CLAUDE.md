@@ -21,14 +21,16 @@ xcodebuild test -target "Hammerspoon 2" -scheme "Development" -destination 'plat
 **Run a single test suite:**
 ```bash
 xcodebuild test -target "Hammerspoon 2" -scheme "Development" -destination 'platform=macOS' \
-    -only-testing:Hammerspoon_2Tests/HSHashIntegrationTests
+    "-only-testing:Hammerspoon 2Tests/HSHashIntegrationTests"
 ```
 
 **Run a single test:**
 ```bash
 xcodebuild test -target "Hammerspoon 2" -scheme "Development" -destination 'platform=macOS' \
-    -only-testing:Hammerspoon_2Tests/HSHashIntegrationTests/testMD5FromJS
+    "-only-testing:Hammerspoon 2Tests/HSHashIntegrationTests/testMD5FromJS()"
 ```
+
+The test target is `Hammerspoon 2Tests` (with a space, so the argument must be quoted), not the `Hammerspoon_2Tests` module name. The suite component is the top-level Swift Testing struct name (e.g. `HSAudioDeviceTests`, not a nested suite inside it), and a single test needs its trailing `()` — without it nothing matches, zero tests run, and xcodebuild still reports `TEST SUCCEEDED`.
 
 **Documentation:**
 ```bash
