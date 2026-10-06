@@ -134,7 +134,6 @@ private struct ChooserBackgroundModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: viewModel.cornerRadius, style: .continuous)
-        let usesGlassEffect = viewModel.backgroundColor == nil
 
         // clipShape is required here: .background(_, in:) only clips the background fill
         // itself, not `content` on top of it, so a selected row's square highlight in the
@@ -152,10 +151,5 @@ private struct ChooserBackgroundModifier: ViewModifier {
                 shape.strokeBorder(borderColor, lineWidth: viewModel.borderWidth)
             }
         }
-        .shadow(
-            color: .black.opacity(usesGlassEffect ? 0.15 : 0.25),
-            radius: usesGlassEffect ? 24 : 20,
-            y: usesGlassEffect ? 12 : 8
-        )
     }
 }
