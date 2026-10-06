@@ -12,6 +12,15 @@ import JavaScriptCore
 // JavaScriptCore C API directly. Type checks are done natively (JSValueGetTypedArrayType)
 // rather than via JS globals like `instanceof Uint8Array`, which user code could replace.
 
+/// Deallocator for buffers handed to `JSObjectMakeTypedArrayWithBytesNoCopy`.
+///
+/// This must be `nonisolated`: JavaScriptCore may call it from its heap collector thread, and
+/// with the module's default MainActor isolation a closure literal here would get a MainActor
+/// executor check that traps (EXC_BREAKPOINT) whenever the buffer is freed off the main thread.
+nonisolated private func freeTypedArrayBytes(_ bytes: UnsafeMutableRawPointer?, _ context: UnsafeMutableRawPointer?) {
+    unsafe free(bytes)
+}
+
 extension JSContext {
     /// Create a new `Uint8Array` in this context holding a copy of `bytes`.
     ///
@@ -32,7 +41,7 @@ extension JSContext {
             kJSTypedArrayTypeUint8Array,
             buffer,
             count,
-            { bytes, _ in unsafe free(bytes) },
+            freeTypedArrayBytes,
             nil,
             &exception
         ), unsafe exception == nil else {
