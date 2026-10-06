@@ -8,10 +8,11 @@
  * list on()/once() validate against; in the docs, each on()/off()/once() docstring repeats the
  * names as a literal union for the TypeScript definitions. This checks the two agree:
  *
- *  1. Every on/off/once `event` union in a module with HSEventName enums matches one of them.
+ *  1. Every on/off/once `event` union in a module with HSEventName enums matches one of them,
+ *     and none of an object's on/off/once has lost its union while its siblings kept theirs.
  *  2. Every HSEventName enum is matched by at least one documented union.
- *  3. Every LazyWatcherEmitter/KeyedLazyWatcherEmitter in a module's JS is given a known-events
- *     list, unless it's explicitly exempted below.
+ *  3. Every LazyWatcherEmitter/KeyedLazyWatcherEmitter in a module's JS is given a module's
+ *     `_eventNames` as its known-events list, unless it's explicitly exempted below.
  *
  * Reads the extracted docs JSON, so run `npm run docs:extract` first (test-docs.sh does).
  */
@@ -68,29 +69,46 @@ function parseSwiftEventEnums(source) {
     return enums;
 }
 
-/** Collect every documented on/off/once `event` union in a module's docs JSON. */
+/**
+ * Collect every documented on/off/once `event` union in a module's docs JSON, as { unions, missing }.
+ *
+ * An object (the module, or one of its types) whose on/off/once take an event name must document
+ * a union on EVERY one of them: otherwise a single method losing its union would be skipped here
+ * while its siblings still satisfied rule 2, and its generated declaration would silently degrade
+ * to a plain string. Those methods are returned in `missing`. Objects whose on/off/once take no
+ * event name at all (e.g. HSCamera, which has a single implicit event) are left alone.
+ */
 function collectDocumentedUnions(moduleJSON) {
     const unions = [];
+    const missing = [];
     const visit = (owner, methods) => {
-        for (const method of methods ?? []) {
-            if (!EVENT_METHODS.has(method.name)) continue;
+        const eventMethods = (methods ?? []).filter((m) => EVENT_METHODS.has(m.name));
+        const takesEventName = (m) => (m.params ?? []).some((p) => p.name === 'event');
+        if (!eventMethods.some(takesEventName)) return;
+        for (const method of eventMethods) {
+            const where = owner + '.' + method.name + '()';
             const param = (method.params ?? []).find((p) => p.name === 'event');
-            if (!param || typeof param.tsType !== 'string') continue;
-            const literals = [...param.tsType.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]);
-            if (literals.length === 0) continue;
-            unions.push({ where: owner + '.' + method.name + '()', values: new Set(literals) });
+            const literals = param && typeof param.tsType === 'string'
+                ? [...param.tsType.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1])
+                : [];
+            if (literals.length === 0) {
+                missing.push(where);
+                continue;
+            }
+            unions.push({ where, values: new Set(literals) });
         }
     };
     visit(moduleJSON.name, moduleJSON.methods);
     for (const type of moduleJSON.types ?? []) {
         visit(type.name, type.methods);
     }
-    return unions;
+    return { unions, missing };
 }
 
 /**
  * Find every `new LazyWatcherEmitter(...)`/`new KeyedLazyWatcherEmitter(...)` in a JS source and
- * return { label, argCount } for each, counting top-level arguments by bracket matching.
+ * return { label, args } for each, where `args` is the source text of each top-level argument
+ * (split by bracket matching, skipping string contents).
  */
 function findEmitterConstructions(source) {
     const results = [];
@@ -99,7 +117,8 @@ function findEmitterConstructions(source) {
     while ((match = pattern.exec(source)) !== null) {
         let depth = 1;
         let i = pattern.lastIndex;
-        let argCount = 1;
+        let argStart = i;
+        const args = [];
         let quote = null;
         while (i < source.length && depth > 0) {
             const ch = source[i];
@@ -112,16 +131,23 @@ function findEmitterConstructions(source) {
                 depth++;
             } else if (')]}'.includes(ch)) {
                 depth--;
+                if (depth === 0) args.push(source.slice(argStart, i).trim());
             } else if (ch === ',' && depth === 1) {
-                argCount++;
+                args.push(source.slice(argStart, i).trim());
+                argStart = i + 1;
             }
             i++;
         }
         const labelMatch = source.slice(pattern.lastIndex).match(/^\s*(["'])(.*?)\1/);
-        results.push({ label: labelMatch ? labelMatch[2] : '<unknown>', argCount });
+        results.push({ label: labelMatch ? labelMatch[2] : '<unknown>', args: args.filter((a) => a.length > 0) });
     }
     return results;
 }
+
+// The known-events argument must be derived from a Swift-backed `_eventNames` list (e.g.
+// `hs.usb._eventNames`, `device._eventNames`, or a `.filter(...)` of one) - merely passing a 4th
+// argument isn't enough, since `undefined`/`null` there silently disables validation again.
+const KNOWN_EVENTS_ARG = /^[\w$.]+\._eventNames\b/;
 
 function formatSet(values) {
     return [...values].map((v) => '"' + v + '"').join(', ');
@@ -148,9 +174,11 @@ function main() {
         // Rule 3: every watcher emitter must be given a known-events list.
         for (const file of files.filter((f) => f.endsWith('.js'))) {
             const source = fs.readFileSync(path.join(moduleDir, file), 'utf8');
-            for (const { label, argCount } of findEmitterConstructions(source)) {
-                if (argCount < 4 && !UNVALIDATED_EMITTERS.has(label)) {
-                    errors.push(`${moduleDirName}/${file}: emitter '${label}' is not given a known-events list ` +
+            for (const { label, args } of findEmitterConstructions(source)) {
+                if (UNVALIDATED_EMITTERS.has(label)) continue;
+                if (args.length < 4 || !KNOWN_EVENTS_ARG.test(args[3])) {
+                    const got = args.length < 4 ? 'no 4th argument' : `4th argument is \`${args[3]}\``;
+                    errors.push(`${moduleDirName}/${file}: emitter '${label}' is not given a known-events list - ${got} ` +
                                 `(pass the module's _eventNames as the 4th argument, or exempt it in scripts/check-event-names.js)`);
                 }
             }
@@ -167,7 +195,11 @@ function main() {
             continue;
         }
         checkedModules++;
-        const unions = collectDocumentedUnions(JSON.parse(fs.readFileSync(jsonFile, 'utf8')));
+        const { unions, missing } = collectDocumentedUnions(JSON.parse(fs.readFileSync(jsonFile, 'utf8')));
+        for (const where of missing) {
+            errors.push(`${where}: takes an event name but documents no event union ` +
+                        `(its siblings do - list the names as {"a" | "b"} in the event parameter)`);
+        }
         const matchedEnums = new Set();
 
         // Rule 1: each documented union matches one of the module's enums.
