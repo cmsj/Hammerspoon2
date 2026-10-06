@@ -10,11 +10,10 @@ on:
 jobs:
   test:
     name: Run Tests
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 30
     permissions:
       contents: read
-      checks: write
       pull-requests: write
 
     steps:
@@ -74,13 +73,12 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | tee xcodebuild.log
 
-      - name: Publish test results to PR
-        uses: slidoapp/xcresulttool@v3.1.1
-        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          path: TestResults.xcresult
-          show-passed-tests: false
-          show-code-coverage: false
+      - name: Report test results
+        if: always()
+        env:
+          # Only same-repo PRs get a token that can comment; fork PRs still get the job summary.
+          GITHUB_TOKEN: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.token || '' }}
+        run: node scripts/xcresult-report.js TestResults.xcresult
 
       - name: Upload test results
         if: always()
