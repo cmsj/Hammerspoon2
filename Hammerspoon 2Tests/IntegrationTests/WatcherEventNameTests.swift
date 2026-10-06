@@ -13,8 +13,12 @@ import JavaScriptCore
 @testable import Hammerspoon_2
 
 /// One watcher module's expected event names, plus a plausible typo of one of them.
+///
+/// This deliberately holds no module metatype: under default MainActor isolation the
+/// `HSFooModule: HSModuleAPI` conformances are MainActor-isolated, and Swift 6.2 rejects
+/// using them in the nonisolated `cases` initializer. `WatcherEventNameTests.moduleTypes`
+/// maps `module` back to its type on the MainActor instead.
 nonisolated struct WatcherEventNameCase: CustomTestStringConvertible, Sendable {
-    let moduleType: any HSModuleAPI.Type
     let module: String
     let expectedNames: [String]
     let typo: String
@@ -23,8 +27,7 @@ nonisolated struct WatcherEventNameCase: CustomTestStringConvertible, Sendable {
 
     var testDescription: String { "hs." + module }
 
-    init(_ moduleType: any HSModuleAPI.Type, _ module: String, _ expectedNames: [String], typo: String, nothingStarted: String? = nil) {
-        self.moduleType = moduleType
+    init(_ module: String, _ expectedNames: [String], typo: String, nothingStarted: String? = nil) {
         self.module = module
         self.expectedNames = expectedNames
         self.typo = typo
@@ -36,48 +39,64 @@ nonisolated struct WatcherEventNameCase: CustomTestStringConvertible, Sendable {
 struct WatcherEventNameTests {
 
     nonisolated static let cases: [WatcherEventNameCase] = [
-        .init(HSApplicationModule.self, "application",
+        .init("application",
               ["willLaunch", "didLaunch", "didTerminate", "didHide", "didUnhide", "didActivate", "didDeactivate"],
               typo: "didlaunch"),
-        .init(HSAudioDeviceModule.self, "audiodevice", ["dOut", "dIn", "dSErr", "dev+", "dev-"], typo: "dev-added"),
-        .init(HSCameraModule.self, "camera", ["connected", "disconnected"], typo: "connect"),
-        .init(HSStreamDeckModule.self, "streamdeck", ["connected", "disconnected"], typo: "disconnect"),
-        .init(HSSerialModule.self, "serial", ["added", "removed"], typo: "add"),
-        .init(HSUSBModule.self, "usb", ["added", "removed"], typo: "remove"),
-        .init(HSKeycodesModule.self, "keycodes", ["change"], typo: "changed"),
-        .init(HSLocaleModule.self, "locale", ["change"], typo: "changed"),
-        .init(HSPasteboardModule.self, "pasteboard", ["change"], typo: "changed"),
-        .init(HSScreenModule.self, "screen", ["change"], typo: "changed"),
-        .init(HSPowerModule.self, "power",
+        .init("audiodevice", ["dOut", "dIn", "dSErr", "dev+", "dev-"], typo: "dev-added"),
+        .init("camera", ["connected", "disconnected"], typo: "connect"),
+        .init("streamdeck", ["connected", "disconnected"], typo: "disconnect"),
+        .init("serial", ["added", "removed"], typo: "add"),
+        .init("usb", ["added", "removed"], typo: "remove"),
+        .init("keycodes", ["change"], typo: "changed"),
+        .init("locale", ["change"], typo: "changed"),
+        .init("pasteboard", ["change"], typo: "changed"),
+        .init("screen", ["change"], typo: "changed"),
+        .init("power",
               ["screensDidSleep", "screensDidWake", "screensDidLock", "screensDidUnlock",
                "screensaverDidStart", "screensaverDidStop", "screensaverWillStop",
                "systemWillSleep", "systemDidWake", "systemWillPowerOff",
                "sessionDidBecomeActive", "sessionDidResignActive", "change"],
               typo: "chnage",
               nothingStarted: "hs.power._eventWatcherEmitter._listenerCount === 0 && hs.power._batteryWatcherEmitter._listenerCount === 0"),
-        .init(HSWifiModule.self, "wifi",
+        .init("wifi",
               ["powerChange", "ssidChange", "bssidChange", "countryCodeChange", "linkChange",
                "linkQualityChange", "modeChange", "scanCacheUpdated"],
               typo: "ssidChanged",
               nothingStarted: "Object.keys(hs.wifi._watcherEmitter.events).length === 0"),
     ]
 
-    private func makeHarness(_ testCase: WatcherEventNameCase) -> JSTestHarness {
+    private static let moduleTypes: [String: any HSModuleAPI.Type] = [
+        "application": HSApplicationModule.self,
+        "audiodevice": HSAudioDeviceModule.self,
+        "camera": HSCameraModule.self,
+        "streamdeck": HSStreamDeckModule.self,
+        "serial": HSSerialModule.self,
+        "usb": HSUSBModule.self,
+        "keycodes": HSKeycodesModule.self,
+        "locale": HSLocaleModule.self,
+        "pasteboard": HSPasteboardModule.self,
+        "screen": HSScreenModule.self,
+        "power": HSPowerModule.self,
+        "wifi": HSWifiModule.self,
+    ]
+
+    private func makeHarness(_ testCase: WatcherEventNameCase) throws -> JSTestHarness {
         let harness = JSTestHarness()
-        harness.loadModule(testCase.moduleType, as: testCase.module)
+        let moduleType = try #require(Self.moduleTypes[testCase.module], "no module type for hs.\(testCase.module)")
+        harness.loadModule(moduleType, as: testCase.module)
         return harness
     }
 
     @Test("_eventNames lists exactly the events the module emits", arguments: cases)
-    func testEventNames(_ testCase: WatcherEventNameCase) {
-        let harness = makeHarness(testCase)
+    func testEventNames(_ testCase: WatcherEventNameCase) throws {
+        let harness = try makeHarness(testCase)
         let names = harness.evalValue("hs.\(testCase.module)._eventNames")?.toArray() as? [String]
         #expect(names == testCase.expectedNames)
     }
 
     @Test("on() with an unknown event throws, lists the known events, and starts nothing", arguments: cases)
-    func testOnRejectsUnknownEvent(_ testCase: WatcherEventNameCase) {
-        let harness = makeHarness(testCase)
+    func testOnRejectsUnknownEvent(_ testCase: WatcherEventNameCase) throws {
+        let harness = try makeHarness(testCase)
         harness.eval("""
             var fn = function() {};
             var message = null;
@@ -95,8 +114,8 @@ struct WatcherEventNameTests {
     }
 
     @Test("once() with an unknown event throws and starts nothing", arguments: cases)
-    func testOnceRejectsUnknownEvent(_ testCase: WatcherEventNameCase) {
-        let harness = makeHarness(testCase)
+    func testOnceRejectsUnknownEvent(_ testCase: WatcherEventNameCase) throws {
+        let harness = try makeHarness(testCase)
         harness.eval("""
             var threw = false;
             try {
