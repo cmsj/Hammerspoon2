@@ -67,7 +67,7 @@ private func hsStreamDeckRegistryEntryID(for device: IOHIDDevice) -> UInt64? {
     @objc func findBySerialNumber(_ serialNumber: String) -> HSStreamDeckDevice?
 
     /// SKIP_DOCS
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction)
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _removeWatcher()
     /// SKIP_DOCS
@@ -256,13 +256,14 @@ nonisolated enum HSStreamDeckEvent: String, HSEventName {
     @objc var once: JSFunction? = nil
     private var moduleCallback: JSFunction? = nil
 
-    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) {
+    @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
         guard moduleCallback == nil else {
             AKWarning("hs.streamdeck._addWatcher(): Already watching. Refusing to create a second.")
-            return
+            return false
         }
         moduleCallback = listener
         AKDebug("hs.streamdeck._addWatcher(): Started")
+        return true
     }
 
     @objc func _removeWatcher() {

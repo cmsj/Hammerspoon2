@@ -1048,10 +1048,14 @@ struct HSPowerTests {
         func testAddRemoveEventWatcherDirectly() {
             let harness = makeHarness()
             harness.eval("""
-            hs.power._addEventWatcher(function(e) {});
+            var first = hs.power._addEventWatcher(function(e) {});
+            var second = hs.power._addEventWatcher(function(e) {});
             hs.power._removeEventWatcher();
         """)
             #expect(!harness.hasException)
+            #expect(harness.evalBool("first") == true)
+            // A second subscription is refused, and reported as such rather than silently ignored.
+            #expect(harness.evalBool("second") == false)
         }
 
         @Test("_removeEventWatcher is safe to call when not watching")

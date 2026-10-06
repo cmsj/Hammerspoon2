@@ -104,17 +104,23 @@ import AXSwift
     ///   - element: An HSAXElement to watch. Passing an application's element causes matching notifications to bubble up from anywhere in that application's hierarchy (e.g. AXWindowCreated for any window in the app, not just one); passing a specific descendant element scopes the notification to just that element
     ///   - notification: {string | string[]} An event name, or an array of event names, to watch for with the same listener
     ///   - listener: {(notification: string, element: HSAXElement) => void} A function called with the notification name and the accessibility element it applies to
+    /// - Throws: true
+    /// - Note: When `notification` is an array, registration is all-or-nothing: if any one of them fails, none are left registered.
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// hs.ax.on(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
-    ///     console.log("New window:", element.title)
-    /// })
+    /// try {
+    ///     hs.ax.on(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
+    ///         console.log("New window:", element.title)
+    ///     })
     ///
-    /// // Watch for several notifications with the same handler
-    /// hs.ax.on(app.axElement(), [hs.ax.notificationTypes.windowCreated, hs.ax.notificationTypes.windowMoved], (notification, element) => {
-    ///     console.log(notification, element.title)
-    /// })
+    ///     // Watch for several notifications with the same handler
+    ///     hs.ax.on(app.axElement(), [hs.ax.notificationTypes.windowCreated, hs.ax.notificationTypes.windowMoved], (notification, element) => {
+    ///         console.log(notification, element.title)
+    ///     })
+    /// } catch (err) {
+    ///     console.error(err.message)
+    /// }
     /// ```
     @objc func on(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction)
 
@@ -135,12 +141,17 @@ import AXSwift
     ///   - element: An HSAXElement to watch - see `on` for the application-vs-descendant bubbling behavior
     ///   - notification: {string | string[]} An event name, or an array of event names, to watch for with the same listener
     ///   - listener: {(notification: string, element: HSAXElement) => void} Called once (per registered notification name), then automatically removed
+    /// - Throws: true
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// hs.ax.once(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
-    ///     console.log("First new window:", element.title)
-    /// })
+    /// try {
+    ///     hs.ax.once(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, element) => {
+    ///         console.log("First new window:", element.title)
+    ///     })
+    /// } catch (err) {
+    ///     console.error(err.message)
+    /// }
     /// ```
     @objc func once(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction)
 
@@ -420,17 +431,20 @@ import AXSwift
     // MARK: - Watcher Management
 
     @objc func on(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction) {
-        guard let notifications = Self.notificationStrings(from: notification) else {
-            AKError("hs.ax.on(): notification must be a string or an array of strings")
+        guard let ctx = JSContext.current() else { return }
+        guard let notifications = Self.notificationStrings(from: notification), !notifications.isEmpty else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.on(): notification must be a string or a non-empty array of strings", in: ctx)
             return
         }
-        guard let ctx = JSContext.current() else { return }
-        for notif in notifications {
-            // callCapturingException, not plain invokeMethod: a throw from inside the emitter's
-            // on() (e.g. an invalid listener) must reach this call's own JS caller - see
-            // callCapturingException's doc comment for why invokeMethod alone can't.
-            _ = ctx.callCapturingException { _watcherEmitter?.invokeMethod("on", withArguments: [element, notif, listener]) }
+        guard let emitter = _watcherEmitter else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.on(): watcher emitter is unavailable", in: ctx)
+            return
         }
+        // callCapturingException, not plain invokeMethod: a throw from inside the emitter (e.g.
+        // an invalid listener, or native registration failing) must reach this call's own JS
+        // caller - see callCapturingException's doc comment for why invokeMethod alone can't.
+        // onEach rolls back any notifications it already registered before rethrowing.
+        _ = ctx.callCapturingException { emitter.invokeMethod("onEach", withArguments: [element, notifications, listener]) }
     }
 
     @objc func off(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction) {
@@ -444,14 +458,16 @@ import AXSwift
     }
 
     @objc func once(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction) {
-        guard let notifications = Self.notificationStrings(from: notification) else {
-            AKError("hs.ax.once(): notification must be a string or an array of strings")
+        guard let ctx = JSContext.current() else { return }
+        guard let notifications = Self.notificationStrings(from: notification), !notifications.isEmpty else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.once(): notification must be a string or a non-empty array of strings", in: ctx)
             return
         }
-        guard let ctx = JSContext.current() else { return }
-        for notif in notifications {
-            _ = ctx.callCapturingException { _watcherEmitter?.invokeMethod("once", withArguments: [element, notif, listener]) }
+        guard let emitter = _watcherEmitter else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.once(): watcher emitter is unavailable", in: ctx)
+            return
         }
+        _ = ctx.callCapturingException { emitter.invokeMethod("onceEach", withArguments: [element, notifications, listener]) }
     }
 
     /// Accepts either a single notification name string, or an array of them

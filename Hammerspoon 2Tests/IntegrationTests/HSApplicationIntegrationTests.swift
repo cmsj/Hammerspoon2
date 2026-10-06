@@ -453,6 +453,19 @@ struct HSApplicationTests {
             return harness
         }
 
+        @Test("_addWatcher reports success, then refuses a second subscription by returning false")
+        func testAddWatcherReportsRefusal() {
+            let harness = makeHarness()
+            harness.eval("""
+            var first = hs.application._addWatcher(function() {});
+            var second = hs.application._addWatcher(function() {});
+            hs.application._removeWatcher();
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalBool("first") == true)
+            #expect(harness.evalBool("second") == false)
+        }
+
         @Test("on is a function")
         func testOnIsFunction() {
             let harness = makeHarness()

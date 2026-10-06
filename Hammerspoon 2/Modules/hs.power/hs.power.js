@@ -18,7 +18,7 @@
 const POWER_BATTERY_EVENTS = new Set(['change']);
 
 hs.power._eventWatcherEmitter = new LazyWatcherEmitter("hs.power", function() {
-    hs.power._addEventWatcher((event) => {
+    return hs.power._addEventWatcher((event) => {
         hs.power._eventWatcherEmitter.emit(event);
     });
 }, function() {
@@ -26,12 +26,9 @@ hs.power._eventWatcherEmitter = new LazyWatcherEmitter("hs.power", function() {
 }, hs.power._eventNames.filter((event) => !POWER_BATTERY_EVENTS.has(event)));
 
 hs.power._batteryWatcherEmitter = new LazyWatcherEmitter("hs.power", function() {
-    const started = hs.power._addBatteryWatcher((event) => {
+    return hs.power._addBatteryWatcher((event) => {
         hs.power._batteryWatcherEmitter.emit(event);
     });
-    if (!started) {
-        throw new Error("hs.power.on(): Failed to start battery watcher");
-    }
 }, function() {
     hs.power._removeBatteryWatcher();
 }, hs.power._eventNames.filter((event) => POWER_BATTERY_EVENTS.has(event)));
@@ -44,10 +41,15 @@ function hsPowerEmitterFor(event) {
 /// Parameters:
 ///  - event: {"screensDidSleep" | "screensDidWake" | "screensDidLock" | "screensDidUnlock" | "screensaverDidStart" | "screensaverDidStop" | "screensaverWillStop" | "systemWillSleep" | "systemDidWake" | "systemWillPowerOff" | "sessionDidBecomeActive" | "sessionDidResignActive" | "change"} The event to listen for. `"change"` fires whenever battery state changes; the rest are system power/session events.
 ///  - listener: {() => void} Called with no arguments when the event occurs; call batteryInfo() inside a "change" listener to inspect the new battery state
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.power.on('systemWillSleep', () => console.log("Going to sleep"))
-/// hs.power.on('change', () => console.log("Battery now: " + hs.power.batteryInfo().percentage + "%"))
+/// try {
+///     hs.power.on('systemWillSleep', () => console.log("Going to sleep"))
+///     hs.power.on('change', () => console.log("Battery now: " + hs.power.batteryInfo().percentage + "%"))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.power.on = function(event, listener) {
     assertKnownEvent("hs.power.on()", event, hs.power._eventNames);
@@ -73,9 +75,14 @@ hs.power.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"screensDidSleep" | "screensDidWake" | "screensDidLock" | "screensDidUnlock" | "screensaverDidStart" | "screensaverDidStop" | "screensaverWillStop" | "systemWillSleep" | "systemDidWake" | "systemWillPowerOff" | "sessionDidBecomeActive" | "sessionDidResignActive" | "change"} The event to listen for
 ///  - listener: {() => void} Called once, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.power.once('systemDidWake', () => console.log("Welcome back"))
+/// try {
+///     hs.power.once('systemDidWake', () => console.log("Welcome back"))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.power.once = function(event, listener) {
     assertKnownEvent("hs.power.once()", event, hs.power._eventNames);

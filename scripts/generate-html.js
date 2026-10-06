@@ -13,6 +13,7 @@ const path = require('path');
 const nunjucks = require('nunjucks');
 const { marked, Renderer } = require('marked');
 const hljs = require('highlight.js');
+const { THROWS_DESCRIPTION } = require('./docs-strings');
 
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_DIR = path.join(__dirname, '..', 'docs', 'js', 'html');
@@ -84,6 +85,8 @@ const env = nunjucks.configure(TEMPLATES_DIR, {
 env.addFilter('formatType', function(swiftType, promiseType) {
     return formatType(swiftType, promiseType);
 });
+
+env.addGlobal('THROWS_DESCRIPTION', THROWS_DESCRIPTION);
 
 env.addFilter('formatReturnType', function(returns) {
     if (!returns) return 'void';

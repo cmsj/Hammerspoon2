@@ -289,6 +289,36 @@ struct HSUserDefaultsTests {
             return harness
         }
 
+        @Test("_addWatcher reports success, then refuses a second subscription by returning false")
+        func testAddWatcherReportsRefusal() {
+            let harness = makeHarness()
+            harness.eval("""
+            var first = hs.userdefaults._addWatcher('hs2RefusalTestKey', function() {});
+            var second = hs.userdefaults._addWatcher('hs2RefusalTestKey', function() {});
+            hs.userdefaults._removeWatcher('hs2RefusalTestKey');
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalBool("first") == true)
+            #expect(harness.evalBool("second") == false)
+        }
+
+        @Test("on() throws and records nothing when the native watcher fails to start")
+        func testOnThrowsWhenNativeStartFails() {
+            let harness = makeHarness()
+            harness.eval("""
+            hs.userdefaults._addWatcher = function(key, fn) { return false; };
+            var threw = false;
+            try {
+                hs.userdefaults.on('hs2ThrowTestKey', function() {});
+            } catch (err) {
+                threw = true;
+            }
+            """)
+            #expect(!harness.hasException)
+            harness.expectTrue("threw")
+            harness.expectFalse("hs.userdefaults._watcherEmitter.events['hs2ThrowTestKey'] && hs.userdefaults._watcherEmitter.events['hs2ThrowTestKey'].length > 0")
+        }
+
         private func testKey() -> String {
             "hs_userdefaults_test_\(UUID().uuidString)"
         }

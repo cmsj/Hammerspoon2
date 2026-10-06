@@ -11,7 +11,7 @@
 // event) and stops it once the last listener (across all events) is removed. See
 // Engine/engine.js for LazyWatcherEmitter itself.
 hs.application._watcherEmitter = new LazyWatcherEmitter("hs.application", function() {
-    hs.application._addWatcher((event, appObject) => {
+    return hs.application._addWatcher((event, appObject) => {
         hs.application._watcherEmitter.emit(event, appObject);
     });
 }, function() {
@@ -22,10 +22,15 @@ hs.application._watcherEmitter = new LazyWatcherEmitter("hs.application", functi
 /// Parameters:
 ///  - event: {"willLaunch" | "didLaunch" | "didTerminate" | "didHide" | "didUnhide" | "didActivate" | "didDeactivate"} The event to listen for
 ///  - listener: {(app: HSApplication | null) => void} Called when a matching application event occurs
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.application.on('didLaunch', app => console.log("launched: " + app.title))
-/// hs.application.on('didTerminate', app => console.log("terminated: " + (app && app.title)))
+/// try {
+///     hs.application.on('didLaunch', app => console.log("launched: " + app.title))
+///     hs.application.on('didTerminate', app => console.log("terminated: " + (app && app.title)))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.application.on = function(event, listener) {
     hs.application._watcherEmitter.on(event, listener);
@@ -50,9 +55,14 @@ hs.application.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"willLaunch" | "didLaunch" | "didTerminate" | "didHide" | "didUnhide" | "didActivate" | "didDeactivate"} The event to listen for
 ///  - listener: {(app: HSApplication | null) => void} Called the next time a matching event occurs, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.application.once('didLaunch', app => console.log("First launch seen: " + app.title))
+/// try {
+///     hs.application.once('didLaunch', app => console.log("First launch seen: " + app.title))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.application.once = function(event, listener) {
     hs.application._watcherEmitter.once(event, listener);

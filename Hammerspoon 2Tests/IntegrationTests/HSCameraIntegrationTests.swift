@@ -39,6 +39,19 @@ struct HSCameraTests {
             return harness
         }
 
+        @Test("_addWatcher reports success, then refuses a second subscription by returning false")
+        func testAddWatcherReportsRefusal() {
+            let harness = makeHarness()
+            harness.eval("""
+            var first = hs.camera._addWatcher(function() {});
+            var second = hs.camera._addWatcher(function() {});
+            hs.camera._removeWatcher();
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalBool("first") == true)
+            #expect(harness.evalBool("second") == false)
+        }
+
         @Test("hs.camera object exists")
         func testModuleExists() {
             let harness = makeHarness()
@@ -401,12 +414,9 @@ struct HSCameraTests {
             // native failure by swapping in a stub that returns false, since the real CMIO
             // lookup can't be forced to fail from a test.
             //
-            // Does not assert !harness.hasException: on()/once() are native Swift methods that
-            // invokeMethod into the JS emitter, and the context's exceptionHandler legitimately
-            // fires for any exception crossing that call boundary - even one this test's own
-            // try/catch goes on to catch correctly (see callCapturingException's doc comment).
-            // testOnThrowsOnNonFunction above exercises the same call shape and likewise only
-            // checks that the throw was caught, not hasException.
+            // on()/once() are native Swift methods that invokeMethod into the JS emitter; an
+            // exception the caller catches must not also reach the context's exceptionHandler
+            // (which logs it as an error), hence the !hasException check.
             let harness = makeHarness()
             harness.eval("""
                 var _failCam = hs.camera.all()[0];
@@ -418,6 +428,7 @@ struct HSCameraTests {
                     threw = true;
                 }
             """)
+            #expect(!harness.hasException)
             harness.expectTrue("threw")
         }
 

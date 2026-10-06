@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { THROWS_DESCRIPTION } = require('./docs-strings');
 
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_FILE = path.join(__dirname, '..', 'docs', 'hammerspoon.d.ts');
@@ -180,6 +181,9 @@ function generateModuleDefinitions(moduleData) {
         if (method.returns && method.returns.description) {
             output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
         }
+        if (method.throws) {
+            output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
+        }
         output += `     */\n`;
 
         // Method signature — p.optional maps to TypeScript's optional parameter (name?: type),
@@ -258,6 +262,9 @@ function generateJSClassDefinition(cls) {
         if (method.returns && method.returns.description) {
             output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
         }
+        if (method.throws) {
+            output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
+        }
         output += `     */\n`;
 
         const params = (method.params || []).map(p => {
@@ -327,6 +334,9 @@ function generateTypeDefinition(protocol) {
             }
             if (method.returns && method.returns.description) {
                 output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
+            }
+            if (method.throws) {
+                output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
             }
             output += `     */\n`;
 
@@ -412,6 +422,9 @@ function generateTypeDefinition(protocol) {
             }
             if (method.returns && method.returns.description) {
                 output += `     * @returns ${escapeDocComment(method.returns.description)}\n`;
+            }
+            if (method.throws) {
+                output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
             }
             output += `     */\n`;
 

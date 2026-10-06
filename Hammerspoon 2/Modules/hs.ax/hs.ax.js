@@ -32,8 +32,16 @@ class AXModuleWatcherEmitter {
     }
 
     on(element, notification, listener) {
+        return this.#add("on", element, notification, listener);
+    }
+
+    // Shared by on() and once(); `method` names the one the caller used, for error messages.
+    // Returns true if `listener` was newly added, false if it was already registered. Throws if
+    // the native watcher couldn't be registered, recording nothing.
+    #add(method, element, notification, listener) {
+        const caller = "hs.ax." + method + "()";
         if (typeof listener !== 'function') {
-            throw new Error("hs.ax.on(): listener must be a function");
+            throw new Error(caller + ": listener must be a function");
         }
 
         var bucket = this.#findBucket(element, notification);
@@ -50,19 +58,19 @@ class AXModuleWatcherEmitter {
                 // notification). Don't retain a bucket for a watcher that doesn't actually
                 // exist - otherwise a later on() call would see the bucket, skip
                 // _addWatcher entirely, and the listener would silently never fire.
-                console.error("hs.ax.on(): Failed to register watcher for '" + notification + "'.");
-                return;
+                throw failedToStart(caller, notification);
             }
 
             this.#buckets.push(bucket);
         }
 
         if (bucket.listeners.includes(listener)) {
-            console.error("hs.ax.on(): The provided listener for '" + notification + "' is already registered.");
-            return;
+            console.error(caller + ": listener for '" + notification + "' is already registered.");
+            return false;
         }
 
         bucket.listeners.push(listener);
+        return true;
     }
 
     off(element, notification, listener) {
@@ -85,13 +93,57 @@ class AXModuleWatcherEmitter {
         }
     }
 
+    // Returns the wrapper function actually registered, so onceEach() can roll it back.
     once(element, notification, listener) {
+        if (typeof listener !== 'function') {
+            throw new Error("hs.ax.once(): listener must be a function");
+        }
         const self = this;
         function wrapped(notif, elem) {
             self.off(element, notification, wrapped);
             listener.apply(null, [notif, elem]);
         }
-        this.on(element, notification, wrapped);
+        this.#add("once", element, notification, wrapped);
+        return wrapped;
+    }
+
+    // hs.ax.on()/once() accept an array of notification names; these register the listener for
+    // each of them all-or-nothing. If any registration throws, those this call already added are
+    // removed again before rethrowing, so a throwing hs.ax.on() never leaves a partial
+    // registration behind (issue #254).
+    onEach(element, notifications, listener) {
+        this.#registerAll(element, notifications, (notification) => {
+            return this.on(element, notification, listener) ? listener : null;
+        });
+    }
+
+    onceEach(element, notifications, listener) {
+        this.#registerAll(element, notifications, (notification) => {
+            return this.once(element, notification, listener);
+        });
+    }
+
+    #registerAll(element, notifications, register) {
+        const added = [];
+        try {
+            for (const notification of notifications) {
+                const registered = register(notification);
+                if (registered) {
+                    added.push([notification, registered]);
+                }
+            }
+        } catch (err) {
+            // Keep rolling back even if one removal fails, and rethrow the original error - the
+            // one the caller needs to see - rather than a rollback failure.
+            for (const [notification, registered] of added) {
+                try {
+                    this.off(element, notification, registered);
+                } catch (rollbackErr) {
+                    console.error("hs.ax: failed to roll back watcher for '" + notification + "': " + rollbackErr);
+                }
+            }
+            throw err;
+        }
     }
 }
 

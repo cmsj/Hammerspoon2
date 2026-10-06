@@ -89,6 +89,11 @@
         <div class="return-desc" style="color: var(--text-muted);">None</div>
         {% endif %}
 
+        {% if method.throws %}
+        <div class="card-section-label">Throws</div>
+        <div class="return-desc">{{ THROWS_DESCRIPTION }}</div>
+        {% endif %}
+
         {% if method.notes and method.notes.length > 0 %}
         <div class="card-section-label">Notes</div>
         {% for note in method.notes %}

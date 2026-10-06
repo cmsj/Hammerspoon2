@@ -9,7 +9,7 @@
 // for consistency with every other hs.* module-level watcher.
 hs.pasteboard._watcherEmitter = new LazyWatcherEmitter("hs.pasteboard", function() {
     // Start the Swift polling timer using the currently configured interval.
-    hs.pasteboard._startWatcher(hs.pasteboard.watcherInterval, (event, changeCount) => {
+    return hs.pasteboard._startWatcher(hs.pasteboard.watcherInterval, (event, changeCount) => {
         hs.pasteboard._watcherEmitter.emit(event, changeCount);
     });
 }, function() {
@@ -22,9 +22,14 @@ hs.pasteboard._watcherEmitter = new LazyWatcherEmitter("hs.pasteboard", function
 /// Parameters:
 ///  - event: {"change"} The event to listen for (the only event this module emits)
 ///  - listener: {(changeCount: number) => void} Called with the new changeCount whenever the pasteboard changes
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.pasteboard.on('change', count => console.log("Pasteboard changed:", count))
+/// try {
+///     hs.pasteboard.on('change', count => console.log("Pasteboard changed:", count))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.pasteboard.on = function(event, listener) {
     hs.pasteboard._watcherEmitter.on(event, listener);
@@ -49,9 +54,14 @@ hs.pasteboard.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"change"} The event to listen for
 ///  - listener: {(changeCount: number) => void} Called once, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.pasteboard.once('change', count => console.log("First change:", count))
+/// try {
+///     hs.pasteboard.once('change', count => console.log("First change:", count))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.pasteboard.once = function(event, listener) {
     hs.pasteboard._watcherEmitter.once(event, listener);

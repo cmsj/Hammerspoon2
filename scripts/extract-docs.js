@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { THROWS_DESCRIPTION } = require('./docs-strings');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const MODULES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Modules');
@@ -322,6 +323,7 @@ function parseSwiftFile(filePath, repoRoot) {
                             description: formatDocCToJSDoc(rawDoc),
                             params,
                             returns: extractReturns(fullSignature, currentDoc),
+                            throws: extractThrows(currentDoc),
                             notes: extractNotes(currentDoc),
                             examples: extractExamples(currentDoc),
                             source: 'swift',
@@ -635,6 +637,16 @@ function extractNotes(docLines) {
 }
 
 /**
+ * Detect a `Throws: true` (or `- Throws: true`) marker in /// doc lines, declaring that the
+ * function can throw a JS exception the caller is expected to handle with try/catch. JS has no
+ * way to express this in a signature (and neither does a TypeScript declaration), so it has to
+ * be stated in the docs.
+ */
+function extractThrows(docLines) {
+    return docLines.some(line => /^-?\s*Throws:\s*true\s*$/i.test(line.trim()));
+}
+
+/**
  * Extract fenced code-block examples from Swift /// doc lines.
  * Looks for "- Example:" (or "- Example") followed by one or more ```lang ... ``` blocks.
  * Returns an array of { lang, code } objects.
@@ -763,6 +775,7 @@ function parseJavaScriptFile(filePath, moduleName = null, repoRoot = REPO_ROOT) 
                     description: formatDocCToJSDoc(docText),
                     params: parsed.params,
                     returns: parsed.returns,
+                    throws: extractThrows(docLines),
                     examples: extractExamples(docLines),
                     source: 'javascript',
                     filePath: relativePath,
@@ -1340,6 +1353,11 @@ function formatDocCToJSDoc(documentation) {
             continue;
         }
 
+        // Throws: is rendered as its own section, not as part of the description
+        if (/^-?\s*Throws:/.test(trimmed)) {
+            continue;
+        }
+
         // Keep the main description line
         if (!trimmed.startsWith('-') && trimmed && !trimmed.endsWith(':')) {
             result.push(trimmed);
@@ -1405,6 +1423,9 @@ function generateCombinedJSDoc(moduleData) {
             const desc = method.returns.description ? ' ' + method.returns.description : '';
             output += ` * @returns {${returnType}}${desc}\n`;
         }
+        if (method.throws) {
+            output += ` * @throws {Error} ${THROWS_DESCRIPTION}\n`;
+        }
         if (method.notes && method.notes.length > 0) {
             for (const note of method.notes) {
                 output += ` * @note ${note}\n`;
@@ -1465,6 +1486,9 @@ function generateTypesJSDoc(typesData) {
                 if (method.returns) {
                     const returnDesc = method.returns.description || '';
                     output += ` * @returns {${swiftTypeToJSDoc(method.returns.type)}}${returnDesc ? ' ' + returnDesc : ''}\n`;
+                }
+                if (method.throws) {
+                    output += ` * @throws {Error} ${THROWS_DESCRIPTION}\n`;
                 }
                 output += ` */\n`;
                 output += `${typeName}.${escapedName} = function(${(method.params || []).map(p => p.name).join(', ')}) {};\n\n`;
@@ -1533,6 +1557,9 @@ function generateTypesJSDoc(typesData) {
                 if (method.returns) {
                     const returnDesc = method.returns.description || '';
                     output += `     * @returns {${swiftTypeToJSDoc(method.returns.type)}}${returnDesc ? ' ' + returnDesc : ''}\n`;
+                }
+                if (method.throws) {
+                    output += `     * @throws {Error} ${THROWS_DESCRIPTION}\n`;
                 }
                 output += `     */\n`;
                 output += `    ${escapedName}(${(method.params || []).map(p => p.name).join(', ')}) {}\n\n`;

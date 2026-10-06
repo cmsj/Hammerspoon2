@@ -294,7 +294,7 @@ import AppKit
 
     // NOTE: Private API consumed only by hs.pasteboard.js
     /// SKIP_DOCS
-    @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ listener: JSFunction)
+    @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ listener: JSFunction) -> Bool
     /// SKIP_DOCS
     @objc func _stopWatcher()
     /// SKIP_DOCS
@@ -483,7 +483,7 @@ nonisolated enum HSPasteboardEvent: String, HSEventName {
 
     // MARK: - Watcher
 
-    @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ listener: JSFunction) {
+    @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ listener: JSFunction) -> Bool {
         _stopWatcher()
         lastChangeCount = NSPasteboard.general.changeCount
         watcherCallback = listener
@@ -498,6 +498,7 @@ nonisolated enum HSPasteboardEvent: String, HSEventName {
             }
         }
         AKDebug("hs.pasteboard._startWatcher(): Polling started at \(interval)s interval")
+        return true
     }
 
     @objc func _stopWatcher() {

@@ -21,9 +21,15 @@ var EventEmitter = function () {
     this.events = Object.create(null);
 };
 
-EventEmitter.prototype.on = function (event, listener) {
+// on() and once() both register through `_addListener`, passing the name of the public method
+// the caller actually used, so errors can name it. Subclasses that need to do more on
+// registration (e.g. LazyWatcherEmitter below) override `_addListener`, not `on`/`once`.
+// `_label` names the emitter in those errors; subclasses set it to their module's name.
+EventEmitter.prototype._label = "EventEmitter";
+
+EventEmitter.prototype._addListener = function (method, event, listener) {
     if (typeof listener !== 'function') {
-        throw new Error("EventEmitter.on(): listener must be a function");
+        throw new Error(this._label + "." + method + "(): listener must be a function");
     }
 
     if (typeof this.events[event] !== 'object') {
@@ -31,6 +37,10 @@ EventEmitter.prototype.on = function (event, listener) {
     }
 
     this.events[event].push(listener);
+};
+
+EventEmitter.prototype.on = function (event, listener) {
+    return this._addListener("on", event, listener);
 };
 
 EventEmitter.prototype.removeListener = function (event, listener) {
@@ -65,24 +75,34 @@ EventEmitter.prototype.off = function (event, listener) {
     return this.removeListener(event, listener);
 };
 
-// Calls through `this.on`/`this.removeListener` for the same reason as `off` above. Validates
-// `listener` itself here, before wrapping it: `this.on(event, wrapped)` below always passes a
-// real function (`wrapped`), so `on()`'s own type-check can never see - and therefore can never
-// reject - an invalid `listener` smuggled in through once(). Left unchecked, a bad listener would
-// register successfully and only throw when `wrapped` is invoked from inside `emit()`, aborting
-// delivery to every listener still left in that emit() call.
+// Calls through `this._addListener`/`this.removeListener` for the same reason as `off` above.
+// Validates `listener` itself here, before wrapping it: `wrapped` below is always a real function,
+// so `_addListener`'s own type-check can never see - and therefore can never reject - an invalid
+// `listener` smuggled in through once(). Left unchecked, a bad listener would register
+// successfully and only throw when `wrapped` is invoked from inside `emit()`, aborting delivery to
+// every listener still left in that emit() call.
 EventEmitter.prototype.once = function (event, listener) {
     if (typeof listener !== 'function') {
-        throw new Error("EventEmitter.once(): listener must be a function");
+        throw new Error(this._label + ".once(): listener must be a function");
     }
     var emitter = this;
     function wrapped() {
         emitter.removeListener(event, wrapped);
         listener.apply(this, arguments);
     }
-    this.on(event, wrapped);
+    this._addListener("once", event, wrapped);
     return this;
 };
+
+// MARK: - failedToStart
+//
+// The error every watcher emitter throws for a native watcher that couldn't be started. It isn't
+// logged here: every native `_addWatcher` already logs its specific cause (missing permission,
+// already watching, ...) before returning false, which also keeps the failure visible when
+// on()/once() is called from a promise callback, where the throw becomes an unhandled rejection.
+function failedToStart(caller, event) {
+    return new Error(caller + ": failed to start watcher for '" + event + "'");
+}
 
 // MARK: - assertKnownEvent
 //
@@ -103,10 +123,12 @@ function assertKnownEvent(caller, event, knownEvents) {
 // exact lifecycle every watcher module used to reimplement individually - see issue #234.
 //
 // `start`/`stop` are called with no arguments; native events are fed back in via
-// `emitter.emit(name, ...)`. `start` MUST throw if it fails to start the native watcher - that
-// exception propagates straight out of `on()`/`once()`, and (precisely because nothing is
-// recorded until after `start` returns without throwing) a later call, even with the exact same
-// listener, retries `start` cleanly instead of silently never attempting it again.
+// `emitter.emit(name, ...)`. `start` reports failure to start the native watcher by returning
+// `false` (typically just passing through a native `_addWatcher(...) -> Bool`), which makes
+// `on()`/`once()` throw. This is the contract every watcher module shares (issue #254): if
+// `on()` returns, the listener is registered AND the native watcher is running. Because nothing
+// is recorded until after `start` succeeds, a later call, even with the exact same listener,
+// retries `start` cleanly instead of silently never attempting it again.
 //
 // `knownEvents` is the list of event names the native side can emit (each module's Swift
 // `_eventNames`, see Engine/HSEventName.swift). When given, on()/once() throw for any other
@@ -122,26 +144,27 @@ class LazyWatcherEmitter extends EventEmitter {
         this._knownEvents = knownEvents ? Array.from(knownEvents) : null;
     }
 
-    on(event, listener) {
+    _addListener(method, event, listener) {
+        const caller = this._label + "." + method + "()";
         if (typeof listener !== 'function') {
-            throw new Error(this._label + ".on(): listener must be a function");
+            throw new Error(caller + ": listener must be a function");
         }
         // Checked before anything is started or recorded, for the same reason as the listener.
         if (this._knownEvents) {
-            assertKnownEvent(this._label + ".on()", event, this._knownEvents);
+            assertKnownEvent(caller, event, this._knownEvents);
         }
         if (Array.isArray(this.events[event]) && this.events[event].includes(listener)) {
-            console.error(this._label + ".on(): listener for '" + event + "' is already registered.");
+            console.error(caller + ": listener for '" + event + "' is already registered.");
             return this;
         }
 
-        // Start before recording anything: if `_start` throws, nothing here has been mutated,
+        // Start before recording anything: if `_start` fails, nothing here has been mutated,
         // so the next on() call - even for the same listener - sees _listenerCount still at 0
         // and retries start() instead of treating the never-started watcher as already running.
-        if (this._listenerCount === 0) {
-            this._start();
+        if (this._listenerCount === 0 && this._start() === false) {
+            throw failedToStart(caller, event);
         }
-        super.on(event, listener);
+        super._addListener(method, event, listener);
         this._listenerCount++;
         return this;
     }
@@ -169,9 +192,9 @@ class LazyWatcherEmitter extends EventEmitter {
 // LazyWatcherEmitter case, e.g. hs.usb's single IOKit watcher covering both 'added'/'removed').
 //
 // `start(event)` is called when that event's listener count goes 0->1; returning `false` means
-// native registration failed, and the listener is not recorded (mirrors how a failed
-// registration must not leave a phantom bucket behind). `stop(event)` is called when that
-// event's listener count goes 1->0.
+// native registration failed, in which case `on()`/`once()` throw and the listener is not
+// recorded (same contract as LazyWatcherEmitter). `stop(event)` is called when that event's
+// listener count goes 1->0.
 //
 // `knownEvents` works as for LazyWatcherEmitter. hs.userdefaults omits it, since its event names
 // are arbitrary user-chosen preference keys.
@@ -184,25 +207,24 @@ class KeyedLazyWatcherEmitter extends EventEmitter {
         this._knownEvents = knownEvents ? Array.from(knownEvents) : null;
     }
 
-    on(event, listener) {
+    _addListener(method, event, listener) {
+        const caller = this._label + "." + method + "()";
         if (typeof listener !== 'function') {
-            throw new Error(this._label + ".on(): listener must be a function");
+            throw new Error(caller + ": listener must be a function");
         }
         if (this._knownEvents) {
-            assertKnownEvent(this._label + ".on()", event, this._knownEvents);
+            assertKnownEvent(caller, event, this._knownEvents);
         }
         const existing = Array.isArray(this.events[event]) ? this.events[event] : [];
         if (existing.includes(listener)) {
-            console.error(this._label + ".on(): listener for '" + event + "' is already registered.");
+            console.error(caller + ": listener for '" + event + "' is already registered.");
             return this;
         }
 
-        if (existing.length === 0) {
-            if (this._start(event) === false) {
-                return this;
-            }
+        if (existing.length === 0 && this._start(event) === false) {
+            throw failedToStart(caller, event);
         }
-        super.on(event, listener);
+        super._addListener(method, event, listener);
         return this;
     }
 

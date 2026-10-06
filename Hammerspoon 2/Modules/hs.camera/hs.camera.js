@@ -4,7 +4,7 @@
 // either event) and stops it once the last listener (across both events) is removed. See
 // Engine/engine.js for LazyWatcherEmitter itself.
 hs.camera._watcherEmitter = new LazyWatcherEmitter("hs.camera", function() {
-    hs.camera._addWatcher((event, camera) => {
+    return hs.camera._addWatcher((event, camera) => {
         hs.camera._watcherEmitter.emit(event, camera);
     });
 }, function() {
@@ -15,10 +15,15 @@ hs.camera._watcherEmitter = new LazyWatcherEmitter("hs.camera", function() {
 /// Parameters:
 ///  - event: {"connected" | "disconnected"} The event to listen for
 ///  - listener: {(camera: HSCamera) => void} Called with the affected camera when a matching event occurs
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.camera.on('connected', camera => console.log("connected: " + camera.name))
-/// hs.camera.on('disconnected', camera => console.log("disconnected: " + camera.name))
+/// try {
+///     hs.camera.on('connected', camera => console.log("connected: " + camera.name))
+///     hs.camera.on('disconnected', camera => console.log("disconnected: " + camera.name))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.camera.on = function(event, listener) {
     hs.camera._watcherEmitter.on(event, listener);
@@ -43,9 +48,14 @@ hs.camera.off = function(event, listener) {
 /// Parameters:
 ///  - event: {"connected" | "disconnected"} The event to listen for
 ///  - listener: {(camera: HSCamera) => void} Called the next time a matching event occurs, then automatically removed
+/// Throws: true
 /// Example:
 /// ```js
-/// hs.camera.once('connected', camera => console.log("First camera connected: " + camera.name))
+/// try {
+///     hs.camera.once('connected', camera => console.log("First camera connected: " + camera.name))
+/// } catch (err) {
+///     console.error(err.message)
+/// }
 /// ```
 hs.camera.once = function(event, listener) {
     hs.camera._watcherEmitter.once(event, listener);
@@ -58,12 +68,9 @@ hs.camera.once = function(event, listener) {
 /// SKIP_DOCS
 hs.camera._makeCameraEmitter = function(camera) {
     return new LazyWatcherEmitter("hs.camera device", function() {
-        const started = camera._addWatcher((isInUse) => {
+        return camera._addWatcher((isInUse) => {
             camera._watcherEmitter.emit("change", isInUse);
         });
-        if (!started) {
-            throw new Error("hs.camera device.on(): Failed to start watcher");
-        }
     }, function() {
         camera._removeWatcher();
     });

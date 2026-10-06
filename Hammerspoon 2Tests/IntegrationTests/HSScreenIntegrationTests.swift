@@ -607,10 +607,14 @@ struct HSScreenIntegrationTests {
         harness.loadModule(HSScreenModule.self, as: "screen")
 
         harness.eval("""
-        hs.screen._addWatcher(function() {});
+        var first = hs.screen._addWatcher(function() {});
+        var second = hs.screen._addWatcher(function() {});
         hs.screen._removeWatcher();
         """)
         #expect(!harness.hasException)
+        #expect(harness.evalBool("first") == true)
+        // A second subscription is refused, and reported as such rather than silently ignored.
+        #expect(harness.evalBool("second") == false)
     }
 
     @Test("_removeWatcher is safe to call when not watching")

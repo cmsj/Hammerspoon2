@@ -19,17 +19,30 @@ extension JSContext {
     /// empirically, not documented behavior. Temporarily wrapping the handler to capture the
     /// exception ourselves, then setting `context.exception` to it fresh right before
     /// returning, propagates it to our own caller.
+    ///
+    /// When called from inside a JS->native call (`JSContext.current()` is non-nil, as for every
+    /// @objc method JS invokes), the captured exception is deliberately NOT forwarded to the
+    /// previous handler: it is being rethrown into the calling JS, which may well catch it (e.g.
+    /// `try { hs.ax.on(...) }`), and the app's handler logs every exception it sees as an error.
+    /// If the caller doesn't catch it, it reaches that handler anyway, once, when it escapes the
+    /// top-level evaluation. With no JS caller (e.g. native code running on a timer or
+    /// notification) there is nothing to rethrow into, so it goes straight to the previous
+    /// handler instead, and `self.exception` is left clear.
     func callCapturingException(_ body: () -> JSValue?) -> JSValue? {
         let previousHandler = exceptionHandler
+        let hasJSCaller = JSContext.current() != nil
         var caught: JSValue?
-        exceptionHandler = { context, exception in
+        exceptionHandler = { _, exception in
             caught = exception
-            previousHandler?(context, exception)
         }
         let result = body()
         exceptionHandler = previousHandler
         if let caught {
-            exception = caught
+            if hasJSCaller {
+                exception = caught
+            } else {
+                previousHandler?(self, caught)
+            }
         }
         return result
     }
