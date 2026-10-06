@@ -514,19 +514,25 @@ struct HSCanvasEnterExitTransitionTests {
     }
 }
 
-/// Tests for `HSCanvasRenderView.pressButton(forModifiers:)`, which decides whether a
-/// primary-button press is delivered as a left click or (Ctrl-click) a right click.
+/// Tests for `HSCanvasPressState.button(for:modifiers:)`, which decides whether a press is
+/// delivered as a left click or a right click (right button, or Ctrl-click).
 @Suite("hs.canvas press button tests")
 struct HSCanvasPressButtonTests {
-    @Test("A plain primary-button press is reported as the left button")
-    func plainPressIsPrimary() {
-        #expect(HSCanvasRenderView.pressButton(forModifiers: []) == .primary)
-        #expect(HSCanvasRenderView.pressButton(forModifiers: [.shift, .option, .command]) == .primary)
+    @Test("A plain left-button press is reported as the left button")
+    func plainLeftPressIsPrimary() {
+        #expect(HSCanvasPressState.button(for: .leftMouseDown, modifiers: []) == .primary)
+        #expect(HSCanvasPressState.button(for: .leftMouseDown, modifiers: [.shift, .option, .command]) == .primary)
+    }
+
+    @Test("A right-button press is reported as the right button, with or without modifiers")
+    func rightPressIsSecondary() {
+        #expect(HSCanvasPressState.button(for: .rightMouseDown, modifiers: []) == .secondary)
+        #expect(HSCanvasPressState.button(for: .rightMouseDown, modifiers: .option) == .secondary)
     }
 
     @Test("Ctrl-click is reported as the right button")
     func controlClickIsSecondary() {
-        #expect(HSCanvasRenderView.pressButton(forModifiers: .control) == .secondary)
-        #expect(HSCanvasRenderView.pressButton(forModifiers: [.control, .shift]) == .secondary)
+        #expect(HSCanvasPressState.button(for: .leftMouseDown, modifiers: .control) == .secondary)
+        #expect(HSCanvasPressState.button(for: .leftMouseDown, modifiers: [.control, .shift]) == .secondary)
     }
 }

@@ -450,7 +450,7 @@ import SwiftUI
             if !isClickActivating {
                 styleMask.insert(.nonactivatingPanel)
             }
-            let window = NSWindow(
+            let window = HSCanvasWindow(
                 contentRect: canvasFrame,
                 styleMask: styleMask,
                 backing: .buffered,

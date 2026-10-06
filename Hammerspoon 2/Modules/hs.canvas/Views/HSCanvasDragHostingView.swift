@@ -9,13 +9,21 @@ import SwiftUI
 /// `NSHostingView` subclass that adds `NSDraggingDestination` support, so `HSCanvas` can
 /// expose a `draggingCallback` -- SwiftUI has no drag-and-drop *destination* API of its
 /// own for arbitrary file/string drops onto a window, so this drops to AppKit directly.
+///
+/// It also owns the root view's `pressState`, which `HSCanvasWindow` fills in from each
+/// mouse-down so the root view's `DragGesture` can tell a right-click or Ctrl-click from
+/// a left click.
 @MainActor
 final class HSCanvasDragHostingView: NSHostingView<HSCanvasRenderView> {
     /// Called with the dropped file paths (or the dropped string, as a single-element
     /// array) when a drag operation completes over this view.
     var onDrop: (([String]) -> Void)?
 
+    let pressState = HSCanvasPressState()
+
     required init(rootView: HSCanvasRenderView) {
+        var rootView = rootView
+        rootView.pressState = pressState
         super.init(rootView: rootView)
         registerForDraggedTypes([.fileURL, .string])
     }

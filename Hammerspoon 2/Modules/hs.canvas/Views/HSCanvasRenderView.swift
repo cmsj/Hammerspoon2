@@ -3,7 +3,6 @@
 //  Hammerspoon 2
 //
 
-import AppKit
 import SwiftUI
 
 /// SwiftUI `Canvas` that replays the element list on every redraw, plus mouse-tracking
@@ -13,15 +12,19 @@ import SwiftUI
 /// already uses that name for hs.ui's unrelated root view, and reusing it here
 /// would conflate two different "canvas" concepts in the codebase.
 ///
-/// Mouse delivery is SwiftUI-native (`.onContinuousHover`/`DragGesture`, plus
-/// `HSCanvasSecondaryClickGesture` for the right button, which `DragGesture` never
-/// sees; Ctrl-clicks arrive via `DragGesture` and are re-routed as right clicks) rather than a separate `NSTrackingArea`-based overlay: per-element hit-testing walks a cached
+/// Mouse delivery is SwiftUI-native (`.onContinuousHover`/`DragGesture`; `DragGesture`
+/// fires for both buttons, and `pressState` says which one -- or a Ctrl-click -- began
+/// the press) rather than a separate `NSTrackingArea`-based overlay: per-element hit-testing walks a cached
 /// `Path` list (`CanvasElementDrawing.trackedElements`/`topmostHit`, built fresh from
 /// the current element list on each event) in reverse z-order, exactly mirroring v1's
 /// single-`mouseCallback`-with-topmost-element-wins model.
 struct HSCanvasRenderView: View {
     var store: CanvasElementStore
     var onMouseEvent: ((_ message: String, _ id: Any, _ x: Double, _ y: Double) -> Void)? = nil
+    /// Set by `HSCanvasDragHostingView`; `HSCanvasWindow` fills it in from each mouse-down.
+    /// `nil` when rendered without a hosting view (`imageFromCanvas()`), where every
+    /// press is treated as primary.
+    var pressState: HSCanvasPressState? = nil
 
     /// Sentinel id passed to `onMouseEvent` for whole-canvas tracking (`canvasMouseEvents`)
     /// when no individual element was hit.
@@ -37,11 +40,7 @@ struct HSCanvasRenderView: View {
     /// Which button the in-progress `DragGesture` press is being reported as, or `nil` when
     /// no press is active. Fixed at mouse-down so a Ctrl-click still ends as `rightMouseUp`
     /// if Ctrl is released before the button.
-    @State private var activePress: PressButton?
-
-    enum PressButton {
-        case primary, secondary
-    }
+    @State private var activePress: HSCanvasPressState.Button?
 
     var body: some View {
         GeometryReader { geometry in
@@ -59,8 +58,7 @@ struct HSCanvasRenderView: View {
                 DragGesture(minimumDistance: 0, coordinateSpace: .local)
                     .onChanged { value in
                         guard activePress == nil else { return }
-                        let modifiers = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
-                        let button = Self.pressButton(forModifiers: modifiers)
+                        let button = pressState?.button ?? .primary
                         activePress = button
                         switch button {
                         case .primary:
@@ -80,24 +78,7 @@ struct HSCanvasRenderView: View {
                         }
                     }
             )
-            .gesture(
-                HSCanvasSecondaryClickGesture { phase, location in
-                    switch phase {
-                    case .down:
-                        handleRightMouseDown(at: location, size: geometry.size)
-                    case .up:
-                        handleRightMouseUp(at: location, size: geometry.size)
-                    }
-                }
-            )
         }
-    }
-
-    /// Maps the modifiers held at a primary-button mouse-down to the button it's reported
-    /// as: Ctrl-click is the standard macOS secondary click, so it's delivered as
-    /// `rightMouseDown`/`rightMouseUp` rather than `mouseDown`/`mouseUp`.
-    static func pressButton(forModifiers modifiers: NSEvent.ModifierFlags) -> PressButton {
-        modifiers.contains(.control) ? .secondary : .primary
     }
 
     private func handleHover(_ phase: HoverPhase, size: CGSize) {
