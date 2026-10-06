@@ -151,95 +151,96 @@ struct HSFSIntegrationTests {
         #expect(result == "world")
     }
 
-    @Test("readLines delivers all lines to the callback")
-    func readLinesAll() throws {
-        let sut = HSFSModule(engineID: UUID())
+    // eachLine runs a JS callback, so these tests go through a JS context.
+    private func makeHarness() -> JSTestHarness {
+        let harness = JSTestHarness()
+        harness.loadModule(HSFSModule.self, as: "fs")
+        return harness
+    }
+
+    @Test("eachLine delivers all lines to the callback")
+    func eachLineAll() throws {
         let tmp = try TempDir()
         let file = tmp.child("lines.txt")
-        _ = sut.write(file, "alpha\nbeta\ngamma\n")
-
-        let ctx = JSContext()!
-        var collected: [String] = []
-        let block: @convention(block) (String) -> Bool = { line in
-            collected.append(line)
-            return true
-        }
-        let callback = JSValue(object: block, in: ctx)!
-
-        let ok = sut.readLines(file, callback)
-        #expect(ok)
-        #expect(collected == ["alpha", "beta", "gamma"])
+        try "alpha\nbeta\ngamma\n".write(toFile: file, atomically: true, encoding: .utf8)
+        let harness = makeHarness()
+        harness.eval("var seen = []; var ok = hs.fs.eachLine('\(file)', line => { seen.push(line) })")
+        #expect(harness.evalBool("ok") == true)
+        #expect(harness.evalString("seen.join(',')") == "alpha,beta,gamma")
     }
 
-    @Test("readLines handles a file with no trailing newline")
-    func readLinesNoTrailingNewline() throws {
-        let sut = HSFSModule(engineID: UUID())
+    @Test("eachLine handles a file with no trailing newline")
+    func eachLineNoTrailingNewline() throws {
         let tmp = try TempDir()
         let file = tmp.child("notrail.txt")
-        _ = sut.write(file, "first\nsecond")  // no trailing \n
-
-        let ctx = JSContext()!
-        var collected: [String] = []
-        let block: @convention(block) (String) -> Bool = { line in
-            collected.append(line)
-            return true
-        }
-        let callback = JSValue(object: block, in: ctx)!
-
-        _ = sut.readLines(file, callback)
-        #expect(collected == ["first", "second"])
+        try "first\nsecond".write(toFile: file, atomically: true, encoding: .utf8)
+        let harness = makeHarness()
+        harness.eval("var seen = []; hs.fs.eachLine('\(file)', line => { seen.push(line) })")
+        #expect(harness.evalString("seen.join(',')") == "first,second")
     }
 
-    @Test("readLines stops early when callback returns false")
-    func readLinesEarlyStop() throws {
-        let sut = HSFSModule(engineID: UUID())
+    @Test("eachLine stops early only when the callback returns false")
+    func eachLineEarlyStop() throws {
         let tmp = try TempDir()
         let file = tmp.child("stop.txt")
-        _ = sut.write(file, "line1\nline2\nline3\n")
-
-        let ctx = JSContext()!
-        var collected: [String] = []
-        let block: @convention(block) (String) -> Bool = { line in
-            collected.append(line)
-            return line != "line1"  // stop after the first line
-        }
-        let callback = JSValue(object: block, in: ctx)!
-
-        let ok = sut.readLines(file, callback)
-        #expect(ok, "readLines should return true even on early stop")
-        #expect(collected == ["line1"])
+        try "line1\nline2\nline3\nline4\n".write(toFile: file, atomically: true, encoding: .utf8)
+        let harness = makeHarness()
+        // Falsy values other than false (0, "", null) do not stop iteration.
+        harness.eval("""
+            var seen = [];
+            var ok = hs.fs.eachLine('\(file)', line => {
+                seen.push(line);
+                if (line === 'line1') return 0;
+                if (line === 'line2') return '';
+                if (line === 'line3') return false;
+            });
+        """)
+        #expect(harness.evalBool("ok") == true, "eachLine should return true on an early stop")
+        #expect(harness.evalString("seen.join(',')") == "line1,line2,line3")
     }
 
-    @Test("readLines strips Windows-style CRLF line endings")
-    func readLinesCRLF() throws {
-        let sut = HSFSModule(engineID: UUID())
+    @Test("eachLine strips Windows-style CRLF line endings")
+    func eachLineCRLF() throws {
         let tmp = try TempDir()
         let file = tmp.child("crlf.txt")
-        // Write raw bytes with \r\n endings.
-        let data = "alpha\r\nbeta\r\ngamma\r\n".data(using: .utf8)!
-        try data.write(to: URL(fileURLWithPath: file))
-
-        let ctx = JSContext()!
-        var collected: [String] = []
-        let block: @convention(block) (String) -> Bool = { line in
-            collected.append(line)
-            return true
-        }
-        let callback = JSValue(object: block, in: ctx)!
-
-        _ = sut.readLines(file, callback)
-        #expect(collected == ["alpha", "beta", "gamma"])
+        try "alpha\r\nbeta\r\ngamma\r\n".write(toFile: file, atomically: true, encoding: .utf8)
+        let harness = makeHarness()
+        harness.eval("var seen = []; hs.fs.eachLine('\(file)', line => { seen.push(line) })")
+        #expect(harness.evalString("seen.join(',')") == "alpha,beta,gamma")
     }
 
-    @Test("readLines returns false for a non-existent file")
-    func readLinesMissing() throws {
-        let sut = HSFSModule(engineID: UUID())
-        let ctx = JSContext()!
-        let block: @convention(block) (String) -> Bool = { _ in true }
-        let callback = JSValue(object: block, in: ctx)!
+    @Test("eachLine propagates exceptions thrown by the callback")
+    func eachLineThrows() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("throw.txt")
+        try "a\nb\n".write(toFile: file, atomically: true, encoding: .utf8)
+        let harness = makeHarness()
+        harness.eval("""
+            var seen = [], caught = null;
+            try { hs.fs.eachLine('\(file)', line => { seen.push(line); throw new Error('stop ' + line) }) }
+            catch (e) { caught = e.message }
+        """)
+        #expect(harness.evalString("caught") == "stop a")
+        #expect(harness.evalString("seen.join(',')") == "a")
+    }
 
-        let ok = sut.readLines("/nonexistent/\(UUID().uuidString)", callback)
-        #expect(ok == false)
+    @Test("eachLine stops with EILSEQ on invalid UTF-8")
+    func eachLineInvalidUTF8() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("bad.txt")
+        try Data([0x6F, 0x6B, 0x0A, 0xFF, 0xFE, 0x0A, 0x7A, 0x0A]).write(to: URL(fileURLWithPath: file))
+        let harness = makeHarness()
+        harness.eval("var seen = []; var ok = hs.fs.eachLine('\(file)', line => { seen.push(line) })")
+        #expect(harness.evalBool("ok") == false)
+        #expect(harness.evalString("seen.join(',')") == "ok")
+        #expect(harness.evalString("hs.fs.lastError.code") == "EILSEQ")
+    }
+
+    @Test("eachLine returns false for a non-existent file")
+    func eachLineMissing() throws {
+        let harness = makeHarness()
+        #expect(harness.evalBool("hs.fs.eachLine('/nonexistent/\(UUID().uuidString)', line => {})") == false)
+        #expect(harness.evalString("hs.fs.lastError.code") == "ENOENT")
     }
 
     // MARK: - Existence and Type Checks
@@ -511,12 +512,13 @@ struct HSFSIntegrationTests {
         #expect(abs == target, "resolved path should point to the real file")
     }
 
-    @Test("temporaryDirectory returns a non-empty path")
-    func temporaryDirectoryNonEmpty() {
+    @Test("tempDirectory returns an existing, symlink-resolved directory ending in /")
+    func tempDirectoryResolved() {
         let sut = HSFSModule(engineID: UUID())
-        let tmp = sut.temporaryDirectory()
-        #expect(tmp.isEmpty == false)
+        let tmp = sut.tempDirectory()
+        #expect(tmp.hasSuffix("/"))
         #expect(sut.isDirectory(tmp))
+        #expect(sut.pathToAbsolute(tmp).map { $0 + "/" } == tmp)
     }
 
     @Test("homeDirectory returns the current user's home directory")

@@ -27,14 +27,36 @@ import UniformTypeIdentifiers
 /// const contents = hs.fs.read("/etc/hosts");           // entire file
 /// const chunk    = hs.fs.read("/etc/hosts", 100, 50);  // 50 bytes from offset 100
 ///
-/// hs.fs.readLines("/etc/hosts", function(line) {
+/// hs.fs.eachLine("/etc/hosts", function(line) {
 ///     console.log(line);
-///     return true; // return false to stop early
+///     // return false to stop early
 /// });
 ///
 /// hs.fs.write("/tmp/hello.txt", "Hello, world!\n");
 /// hs.fs.append("/tmp/hello.txt", "More content\n");
 /// ```
+///
+/// ## Working with open files
+///
+/// For incremental, positioned, binary, or locked access, open the file to get an
+/// `HSFile` object (the equivalent of a Lua `io` file handle):
+///
+/// ```javascript
+/// const f = hs.fs.open("~/notes.txt", "r+");
+/// const firstLine = f.readLine();
+/// f.seek(0, "end");
+/// f.writeLine("appended");
+/// f.close();
+///
+/// // Or let hs.fs.withFile() close it for you:
+/// const header = hs.fs.withFile("~/image.png", "r", f => f.readBytes(8));
+/// ```
+///
+/// ## Errors
+///
+/// Functions that fail return `null` or `false` and set `hs.fs.lastError` to an object like
+/// `{code: "ENOENT", message: "No such file or directory"}`. Most failures are also logged to the
+/// Console; failures that are often expected (such as `hs.fs.open()` on a missing file) are not.
 ///
 /// ## Directory operations
 ///
@@ -49,7 +71,7 @@ import UniformTypeIdentifiers
 ///
 /// ```javascript
 /// const abs  = hs.fs.pathToAbsolute("~/Library");
-/// const tmp  = hs.fs.temporaryDirectory();
+/// const tmp  = hs.fs.tempDirectory();
 /// const home = hs.fs.homeDirectory();
 /// ```
 ///
@@ -62,6 +84,104 @@ import UniformTypeIdentifiers
 /// //   creationDate: 1700000000.0, modificationDate: 1700001000.0 }
 /// ```
 @objc protocol HSFSModuleAPI: JSExport {
+
+    // MARK: - Errors
+
+    /// {{code: string, message: string} | null} The error from the most recent failed `hs.fs` function, or `null` if none has failed.
+    ///
+    /// The object has a `code` (a POSIX error name such as `"ENOENT"`, `"EEXIST"`, or `"EACCES"`, or
+    /// `"EINVAL"` for invalid arguments) and a human-readable `message`. Like C's `errno`, it is not
+    /// cleared by successful calls, so only consult it after a function has reported failure.
+    /// Errors from methods on an open file are recorded on that file's own `lastError` instead.
+    /// - Example:
+    /// ```js
+    /// const f = hs.fs.open("/does/not/exist")
+    /// if (!f) console.log("Open failed: " + hs.fs.lastError.code)
+    /// ```
+    @objc var lastError: JSValue? { get }
+
+    // MARK: - Open files
+
+    /// Open a file, returning an `HSFile` object for reading and/or writing it.
+    ///
+    /// Modes follow C's `fopen()` (and Lua's `io.open()`):
+    ///
+    /// | Mode | Read | Write | Creates | Truncates | Notes |
+    /// |------|------|-------|---------|-----------|-------|
+    /// | `"r"`  | ✓ | | | | The default |
+    /// | `"r+"` | ✓ | ✓ | | | |
+    /// | `"w"`  | | ✓ | ✓ | ✓ | |
+    /// | `"w+"` | ✓ | ✓ | ✓ | ✓ | |
+    /// | `"a"`  | | ✓ | ✓ | | Every write goes to the end of the file |
+    /// | `"a+"` | ✓ | ✓ | ✓ | | Reads start at the beginning; every write goes to the end |
+    ///
+    /// Add `x` to a `w` mode (`"wx"`, `"w+x"`) to fail if the file already exists. A `b` is accepted and
+    /// ignored, since all files can be read as text or bytes.
+    ///
+    /// Directories cannot be opened. A file that can't be opened (for example because it doesn't exist) is
+    /// not logged to the Console, since that is often an expected outcome; check `hs.fs.lastError` instead.
+    /// Invalid arguments, such as an unknown mode, are logged.
+    ///
+    /// Close the file with `close()` when you are finished with it; any files still open are closed
+    /// automatically when your configuration is reloaded.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file. `~` is expanded.
+    ///   - mode?: The open mode. Defaults to `"r"`.
+    ///   - permissions?: POSIX permission bits applied if the file is created, e.g. `0o600` (`0` creates a file with no permissions). Defaults to `0o644` when omitted; any other non-integer value, including `NaN`, fails with `EINVAL`. The process umask is applied in either case.
+    /// - Returns: {HSFile | null} An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
+    /// - Example:
+    /// ```js
+    /// const f = hs.fs.open("~/notes.txt", "a")
+    /// if (f) {
+    ///     f.writeLine("Another note")
+    ///     f.close()
+    /// }
+    /// ```
+    @objc func open(_ path: String, _ mode: String, _ permissions: Double) -> JSValue?
+
+    /// Create and open a new, uniquely named temporary file.
+    ///
+    /// The file is created in `hs.fs.tempDirectory()` with permissions `0o600` and opened in `"w+"` mode, so its
+    /// `path` always starts with `hs.fs.tempDirectory()`.
+    /// It is not deleted automatically; call `remove()` on it when you no longer need it on disk.
+    ///
+    /// - Parameter prefix?: A prefix for the file name. Must not contain `/`. Defaults to `"hs"`.
+    /// - Returns: {HSFile | null} An `HSFile`, or `null` on failure (see `hs.fs.lastError`).
+    /// - Example:
+    /// ```js
+    /// const tmp = hs.fs.tempFile("myspoon")
+    /// tmp.write("scratch data")
+    /// console.log("Wrote " + tmp.path)
+    /// ```
+    @objc func tempFile(_ prefix: String) -> JSValue?
+
+    /// Open a file, pass it to a function, and close it again afterwards.
+    ///
+    /// The file is closed when the function returns, even if it throws (in which case the exception
+    /// propagates to you). The function must do all its work synchronously: an `async` function would
+    /// find the file already closed after its first `await`.
+    ///
+    /// The mode may be omitted, in which case the file is opened for reading (`"r"`):
+    /// `hs.fs.withFile(path, f => ...)`.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file. `~` is expanded.
+    ///   - mode?: {string | ((file: HSFile) => any)} The open mode, as for `hs.fs.open()`. Defaults to `"r"`; if you omit it, pass the callback in its place.
+    ///   - callback?: {(file: HSFile) => any} Called with the open file. Required unless it was passed in place of `mode`.
+    /// - Returns: {any} Whatever `callback` returns, or `null` if the file could not be opened or no callback was given (see `hs.fs.lastError`).
+    /// - Example:
+    /// ```js
+    /// const header = hs.fs.withFile("/etc/hosts", f => f.readLine())
+    ///
+    /// hs.fs.withFile("~/counter.txt", "r+", f => {
+    ///     const n = (parseInt(f.read()) || 0) + 1
+    ///     f.truncate()
+    ///     f.rewind()
+    ///     f.write(String(n))
+    /// })
+    /// ```
+    @objc func withFile(_ path: String, _ mode: String, _ callback: JSFunction) -> JSValue?
 
     // MARK: - File I/O
 
@@ -79,23 +199,25 @@ import UniformTypeIdentifiers
     /// ```
     @objc func read(_ path: String, _ offset: Int, _ length: Int) -> String?
 
-    /// Read a file line-by-line, invoking a callback for each line.
+    /// Call a function for each line of a file.
     ///
-    /// Lines are delivered with newline characters stripped. Both `\n` and `\r\n` line endings are handled.
+    /// This behaves exactly like opening the file and calling `HSFile.eachLine()`: line endings (`\n` or
+    /// `\r\n`) are stripped; the callback may return `false` (and only `false`) to stop early; if the
+    /// callback throws, iteration stops and the exception propagates to you; and invalid UTF-8 stops
+    /// iteration with `hs.fs.lastError.code === "EILSEQ"`.
     ///
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
-    ///   - callback: {(line: string) => boolean} Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.
-    /// - Returns: `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.
+    ///   - callback: {(line: string) => boolean | void} Called once per line. Return `false` to stop.
+    /// - Returns: `true` if iteration completed or was stopped by the callback returning `false`; `false` if the file could not be opened or read (see `hs.fs.lastError`), or if the callback threw.
     /// - Example:
     /// ```js
-    /// hs.fs.readLines("/etc/hosts", (line) => {
-    ///     if (line.startsWith("#")) return true
+    /// hs.fs.eachLine("/etc/hosts", (line) => {
+    ///     if (line.startsWith("#")) return
     ///     console.log(line)
-    ///     return true
     /// })
     /// ```
-    @objc func readLines(_ path: String, _ callback: JSFunction) -> Bool
+    @objc func eachLine(_ path: String, _ callback: JSFunction) -> Bool
 
     /// Write a UTF-8 string to a file, creating it or overwriting any existing content.
     ///
@@ -336,12 +458,15 @@ import UniformTypeIdentifiers
 
     /// Returns the temporary directory for the current user.
     ///
-    /// - Returns: Temporary directory path (always ends with `/`).
+    /// The path is fully resolved (e.g. `/private/var/folders/...` rather than the `/var/folders/...`
+    /// symlink), so it matches the `path` of files created by `hs.fs.tempFile()`.
+    ///
+    /// - Returns: Absolute temporary directory path, with symlinks resolved (always ends with `/`).
     /// - Example:
     /// ```js
-    /// console.log(hs.fs.temporaryDirectory())
+    /// console.log(hs.fs.tempDirectory())
     /// ```
-    @objc func temporaryDirectory() -> String
+    @objc func tempDirectory() -> String
 
     /// Returns the home directory for the current user.
     ///
@@ -388,17 +513,36 @@ import UniformTypeIdentifiers
     /// ```
     @objc func attributes(_ path: String) -> [String: Any]?
 
-    /// Update the modification timestamp of a file to the current time.
+    /// Set the access and modification times of a file, creating it if it does not exist
+    /// (equivalent to the POSIX `touch` command).
     ///
-    /// Creates the file if it does not exist (equivalent to the POSIX `touch` command).
+    /// The argument order matches Hammerspoon v1 (LuaFileSystem) and Node's `fs.utimes`: access time first.
     ///
-    /// - Parameter path: Path to the file. `~` is expanded.
-    /// - Returns: `true` on success, `false` on failure.
+    /// - Parameters:
+    ///   - path: Path to the file. `~` is expanded.
+    ///   - accessDate?: Seconds since the Unix epoch (fractions allowed). Defaults to now.
+    ///   - modificationDate?: Seconds since the Unix epoch (fractions allowed). Defaults to `accessDate`.
+    /// - Returns: `true` on success, `false` on failure (including `EINVAL` for a `NaN`, infinite, or out-of-range timestamp).
     /// - Example:
     /// ```js
-    /// hs.fs.touch("/tmp/marker.txt")
+    /// hs.fs.touch("/tmp/marker.txt")                             // now
+    /// hs.fs.touch("/tmp/marker.txt", Date.now() / 1000 - 86400)  // both times one day ago
     /// ```
-    @objc func touch(_ path: String) -> Bool
+    @objc func touch(_ path: String, _ accessDate: Double, _ modificationDate: Double) -> Bool
+
+    /// Set the POSIX permission bits of a file or directory.
+    ///
+    /// Follows symbolic links.
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file or directory. `~` is expanded.
+    ///   - permissions: The permission bits, as an integer between `0` and `0o7777`, e.g. `0o644`. Use an octal literal: decimal `755` is a different (and unusual) mode.
+    /// - Returns: `true` on success, `false` on failure (including `EINVAL` if `permissions` is missing or out of range).
+    /// - Example:
+    /// ```js
+    /// hs.fs.setPermissions("~/bin/myscript.sh", 0o755)
+    /// ```
+    @objc func setPermissions(_ path: String, _ permissions: Double) -> Bool
 
     // MARK: - Links
 
@@ -695,12 +839,21 @@ import UniformTypeIdentifiers
 
     private var volumeWatchers = HSWeakObjectSet<HSVolumeWatcher>()
     private var pathWatchers = HSWeakObjectSet<HSPathWatcher>()
+    private var openFiles = HSWeakObjectSet<HSFile>()
+
+    /// The `{code, message}` of the most recent failure, exposed to JS as `lastError`.
+    private(set) var lastErrorInfo: [String: Any]?
+
+    // A JSValue so that "no error" is a real JS null (JSExport bridges nil to undefined).
+    @objc var lastError: JSValue? { HSFSSupport.jsValueOrNull(lastErrorInfo) }
 
     func shutdown() {
         for watcher in volumeWatchers.allObjects { watcher.destroy() }
         volumeWatchers.removeAllObjects()
         for watcher in pathWatchers.allObjects { watcher.destroy() }
         pathWatchers.removeAllObjects()
+        for file in openFiles.allObjects { file.destroy() }
+        openFiles.removeAllObjects()
     }
 
     isolated deinit {
@@ -710,7 +863,8 @@ import UniformTypeIdentifiers
     @objc func toString() -> String {
         let v = volumeWatchers.allObjects.count
         let p = pathWatchers.allObjects.count
-        return "<\(moduleName): \(v) volume watcher\(v == 1 ? "" : "s"), \(p) path watcher\(p == 1 ? "" : "s")>"
+        let f = openFiles.allObjects.filter(\.isOpen).count
+        return "<\(moduleName): \(v) volume watcher\(v == 1 ? "" : "s"), \(p) path watcher\(p == 1 ? "" : "s"), \(f) open file\(f == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {
@@ -720,6 +874,42 @@ import UniformTypeIdentifiers
     // MARK: - Private helpers
 
     private let fm = FileManager.default
+
+    /// Record a Foundation error in `lastError` and log it.
+    private func fail(_ function: String, _ error: Error) {
+        lastErrorInfo = HSFSSupport.errorInfo(from: error)
+        AKError("\(function): \(error.localizedDescription)")
+    }
+
+    /// Record a POSIX errno in `lastError` and log it, optionally naming the path involved.
+    private func fail(_ function: String, errno code: Int32, path: String? = nil) {
+        let info = HSFSSupport.errorInfo(errno: code)
+        lastErrorInfo = info
+        let message = info["message"] as? String ?? ""
+        AKError("\(function): \(path.map { "\($0): " } ?? "")\(message)")
+    }
+
+    /// Record a POSIX errno in `lastError` without logging, for functions whose `null` result is an
+    /// expected outcome (e.g. `pathToAbsolute` on a path that doesn't exist).
+    private func record(errno code: Int32) {
+        lastErrorInfo = HSFSSupport.errorInfo(errno: code)
+    }
+
+    /// Record an error with an explicit code in `lastError` without logging.
+    private func record(code: String, message: String) {
+        lastErrorInfo = HSFSSupport.errorInfo(code: code, message: message)
+    }
+
+    /// Record an error with an explicit code in `lastError` and log it.
+    private func fail(_ function: String, code: String, message: String) {
+        lastErrorInfo = HSFSSupport.errorInfo(code: code, message: message)
+        AKError("\(function): \(message)")
+    }
+
+    /// JSExport passes omitted string arguments as the literal string "undefined".
+    private func isOmitted(_ argument: String) -> Bool {
+        argument.isEmpty || argument == "undefined"
+    }
 
     /// Expand `~` and return the expanded path string.
     private func expand(_ path: String) -> String {
@@ -731,18 +921,6 @@ import UniformTypeIdentifiers
         var st = Darwin.stat()
         guard unsafe Darwin.lstat(expand(path), &st) == 0 else { return nil }
         return st.st_mode
-    }
-
-    private func modeToType(_ mode: mode_t) -> String {
-        switch mode & S_IFMT {
-        case S_IFREG:  return "file"
-        case S_IFDIR:  return "directory"
-        case S_IFLNK:  return "symlink"
-        case S_IFSOCK: return "socket"
-        case S_IFCHR:  return "characterSpecial"
-        case S_IFBLK:  return "blockSpecial"
-        default:       return "unknown"
-        }
     }
 
     private func parseXattrOptions(_ options: NSArray?) -> Int32? {
@@ -757,18 +935,111 @@ import UniformTypeIdentifiers
             case "noSecurity":     flags |= XATTR_NOSECURITY
             case "noDefault":      flags |= XATTR_NODEFAULT
             default:
-                AKError("hs.fs xattr: unrecognized option '\(opt)'")
+                fail("hs.fs xattr", code: "EINVAL", message: "unrecognized option '\(opt)'")
                 return nil
             }
         }
         return flags
     }
 
+    // MARK: - Open files
+
+    // `permissions` is a Double so that an explicit 0 is distinguishable from an omitted argument.
+    // Returns a JSValue so failure is a real JS null rather than undefined.
+    @objc func open(_ path: String, _ mode: String = "r", _ permissions: Double = .nan) -> JSValue? {
+        // Only a genuinely omitted (or undefined) argument selects the default. An explicit NaN is
+        // rejected rather than silently creating a file with the more permissive 0o644.
+        HSFSSupport.jsValueOrNull(
+            openFile(path, mode, permissions: HSFSSupport.optionalNumberArgument(permissions, at: 2)))
+    }
+
+    /// Open a file. `permissions` is `nil` to use the default `0o644` for newly created files.
+    func openFile(_ path: String, _ mode: String, permissions: Double?) -> HSFile? {
+        let fileMode = isOmitted(mode) ? "r" : mode
+        guard let flags = HSFile.openFlags(forMode: fileMode) else {
+            fail("hs.fs.open", code: "EINVAL", message: "invalid mode \"\(mode)\"")
+            return nil
+        }
+        let createMode: mode_t
+        if let permissions {
+            guard let bits = HSFSSupport.permissionBits(permissions, function: "hs.fs.open") else {
+                fail("hs.fs.open", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
+                return nil
+            }
+            createMode = bits
+        } else {
+            createMode = 0o644
+        }
+        let expandedPath = expand(path)
+        let fd = unsafe Darwin.open(expandedPath, flags, createMode)
+        guard fd >= 0 else {
+            // Not logged: "try to open, fall back if it's missing" is a normal pattern, and the
+            // caller gets null plus lastError. Invalid arguments (above) are still logged.
+            record(errno: errno)
+            return nil
+        }
+
+        var st = Darwin.stat()
+        if unsafe fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFDIR {
+            Darwin.close(fd)
+            record(errno: EISDIR)
+            return nil
+        }
+
+        let file = HSFile(fd: fd, path: expandedPath, mode: fileMode)
+        openFiles.add(file)
+        return file
+    }
+
+    @objc func tempFile(_ prefix: String = "hs") -> JSValue? {
+        HSFSSupport.jsValueOrNull(makeTempFile(prefix))
+    }
+
+    /// Create and open a unique temporary file (see `tempFile`).
+    func makeTempFile(_ prefix: String) -> HSFile? {
+        let namePrefix = isOmitted(prefix) ? "hs" : prefix
+        guard !namePrefix.contains("/") else {
+            fail("hs.fs.tempFile", code: "EINVAL", message: "prefix must not contain \"/\"")
+            return nil
+        }
+        var template = Array(((tempDirectory() as NSString)
+            .appendingPathComponent("\(namePrefix).XXXXXX")).utf8CString)
+        let fd = template.withUnsafeMutableBufferPointer { unsafe mkostemp($0.baseAddress, O_CLOEXEC) }
+        guard fd >= 0 else {
+            fail("hs.fs.tempFile", errno: errno)
+            return nil
+        }
+        let path = template.withUnsafeBufferPointer { unsafe String(cString: $0.baseAddress!) }
+        let file = HSFile(fd: fd, path: path, mode: "w+")
+        openFiles.add(file)
+        return file
+    }
+
+    @objc func withFile(_ path: String, _ mode: String, _ callback: JSFunction) -> JSValue? {
+        guard let context = JSContext.current() else { return nil }
+        // Support withFile(path, fn): the mode was omitted and the callback is the second argument.
+        var fileMode = mode
+        var function = callback
+        if let arguments = JSContext.currentArguments() as? [JSValue], arguments.count >= 2,
+           HSFSSupport.isFunction(arguments[1]) {
+            fileMode = "r"
+            function = arguments[1]
+        }
+        guard HSFSSupport.isFunction(function) else {
+            fail("hs.fs.withFile", code: "EINVAL", message: "a callback function is required")
+            return JSValue(nullIn: context)
+        }
+        guard let file = openFile(path, fileMode, permissions: nil) else { return JSValue(nullIn: context) }
+        defer { _ = file.close() }
+        // callCapturingException ensures a throw inside the callback reaches the JS caller.
+        return context.callCapturingException { function.call(withArguments: [file]) }
+    }
+
     // MARK: - File I/O
 
     @objc func read(_ path: String, _ offset: Int = 0, _ length: Int = 0) -> String? {
         guard let handle = FileHandle(forReadingAtPath: expand(path)) else {
-            AKError("hs.fs.read: could not open \(path)")
+            fail("hs.fs.read", errno: errno, path: path)
             return nil
         }
         defer { handle.closeFile() }
@@ -777,56 +1048,21 @@ import UniformTypeIdentifiers
         let data = length > 0 ? handle.readData(ofLength: length) : handle.readDataToEndOfFile()
 
         guard let result = String(data: data, encoding: .utf8) else {
-            AKError("hs.fs.read: \(path) is not valid UTF-8")
+            fail("hs.fs.read", code: "EILSEQ", message: "\(path) is not valid UTF-8")
             return nil
         }
         return result
     }
 
-    @objc func readLines(_ path: String, _ callback: JSFunction) -> Bool {
-        guard let handle = FileHandle(forReadingAtPath: expand(path)) else {
-            AKError("hs.fs.readLines: could not open \(path)")
-            return false
+    @objc func eachLine(_ path: String, _ callback: JSFunction) -> Bool {
+        // Delegate to HSFile so the module and handle forms behave identically.
+        guard let file = openFile(path, "r", permissions: nil) else { return false }
+        defer { _ = file.close() }
+        let completed = file.eachLine(callback)
+        if !completed, let error = file.lastErrorInfo {
+            lastErrorInfo = error
         }
-        defer { handle.closeFile() }
-
-        var pending = Data()
-        let bufferSize = 65_536
-
-        while true {
-            let chunk = handle.readData(ofLength: bufferSize)
-            let isEOF = chunk.isEmpty
-            if !isEOF { pending.append(chunk) }
-
-            // Flush all complete lines from the pending buffer.
-            while let nlIdx = pending.firstIndex(of: 0x0A) {
-                // Strip a preceding \r for Windows-style line endings.
-                let lineEnd = nlIdx > 0 && pending[nlIdx - 1] == 0x0D ? nlIdx - 1 : nlIdx
-                let line = String(data: pending[..<lineEnd], encoding: .utf8) ?? ""
-
-                let result = callback.call(withArguments: [line])
-                var keepGoing = true
-
-                if let result = result {
-                    if !result.isUndefined && !result.isNull {
-                        keepGoing = result.toBool()
-                    }
-                }
-
-                pending = Data(pending[(nlIdx + 1)...])
-                if !keepGoing { return true }
-            }
-
-            if isEOF { break }
-        }
-
-        // Deliver any final line that has no trailing newline.
-        if !pending.isEmpty {
-            let line = String(data: pending, encoding: .utf8) ?? ""
-            _ = callback.call(withArguments: [line])
-        }
-
-        return true
+        return completed
     }
 
     @objc func write(_ path: String, _ content: String, _ inPlace: Bool = false) -> Bool {
@@ -834,14 +1070,14 @@ import UniformTypeIdentifiers
             try content.write(toFile: expand(path), atomically: !inPlace, encoding: .utf8)
             return true
         } catch {
-            AKError("hs.fs.write: \(error.localizedDescription)")
+            fail("hs.fs.write", error)
             return false
         }
     }
 
     @objc func append(_ path: String, _ content: String) -> Bool {
         guard let data = content.data(using: .utf8) else {
-            AKError("hs.fs.append: could not encode content as UTF-8")
+            fail("hs.fs.append", code: "EILSEQ", message: "could not encode content as UTF-8")
             return false
         }
         let expandedPath = expand(path)
@@ -857,7 +1093,7 @@ import UniformTypeIdentifiers
             }
             return true
         } catch {
-            AKError("hs.fs.append: \(error.localizedDescription)")
+            fail("hs.fs.append", error)
             return false
         }
     }
@@ -898,7 +1134,7 @@ import UniformTypeIdentifiers
             try fm.copyItem(atPath: expand(source), toPath: expand(destination))
             return true
         } catch {
-            AKError("hs.fs.copy: \(error.localizedDescription)")
+            fail("hs.fs.copy", error)
             return false
         }
     }
@@ -908,7 +1144,7 @@ import UniformTypeIdentifiers
             try fm.moveItem(atPath: expand(source), toPath: expand(destination))
             return true
         } catch {
-            AKError("hs.fs.move: \(error.localizedDescription)")
+            fail("hs.fs.move", error)
             return false
         }
     }
@@ -918,7 +1154,7 @@ import UniformTypeIdentifiers
             try fm.removeItem(atPath: expand(path))
             return true
         } catch {
-            AKError("hs.fs.deletePath: \(error.localizedDescription)")
+            fail("hs.fs.deletePath", error)
             return false
         }
     }
@@ -929,7 +1165,7 @@ import UniformTypeIdentifiers
         do {
             return try fm.contentsOfDirectory(atPath: expand(path)).sorted()
         } catch {
-            AKError("hs.fs.list: \(error.localizedDescription)")
+            fail("hs.fs.list", error)
             return nil
         }
     }
@@ -938,7 +1174,7 @@ import UniformTypeIdentifiers
         do {
             return try fm.subpathsOfDirectory(atPath: expand(path)).sorted()
         } catch {
-            AKError("hs.fs.listRecursive: \(error.localizedDescription)")
+            fail("hs.fs.listRecursive", error)
             return nil
         }
     }
@@ -950,7 +1186,7 @@ import UniformTypeIdentifiers
                                    attributes: nil)
             return true
         } catch {
-            AKError("hs.fs.mkdir: \(error.localizedDescription)")
+            fail("hs.fs.mkdir", error)
             return false
         }
     }
@@ -959,7 +1195,7 @@ import UniformTypeIdentifiers
         // Use POSIX rmdir() so it correctly rejects non-empty directories.
         let expandedPath = expand(path)
         guard unsafe Darwin.rmdir(expandedPath) == 0 else {
-            AKError(unsafe "hs.fs.rmdir: \(String(cString: strerror(errno)))")
+            fail("hs.fs.rmdir", errno: errno)
             return false
         }
         return true
@@ -972,7 +1208,11 @@ import UniformTypeIdentifiers
     }
 
     @objc func chdir(_ path: String) -> Bool {
-        fm.changeCurrentDirectoryPath(expand(path))
+        guard unsafe Darwin.chdir(expand(path)) == 0 else {
+            fail("hs.fs.chdir", errno: errno, path: path)
+            return false
+        }
+        return true
     }
 
     // MARK: - Path Utilities
@@ -982,7 +1222,10 @@ import UniformTypeIdentifiers
 
         // realpath() allocates memory for us when we pass it a nil second parameter.
         // We must free() that memory later.
-        guard let resolved = unsafe realpath(expandedPath, nil) else { return nil }
+        guard let resolved = unsafe realpath(expandedPath, nil) else {
+            record(errno: errno)
+            return nil
+        }
         defer { unsafe free(resolved) }
 
         return unsafe String(validatingCString: resolved)
@@ -990,12 +1233,20 @@ import UniformTypeIdentifiers
 
     @objc func displayName(_ path: String) -> String? {
         let expandedPath = expand(path)
-        guard fm.fileExists(atPath: expandedPath) else { return nil }
+        guard fm.fileExists(atPath: expandedPath) else {
+            record(errno: ENOENT)
+            return nil
+        }
         return fm.displayName(atPath: expandedPath)
     }
 
-    @objc func temporaryDirectory() -> String {
-        NSTemporaryDirectory()
+    @objc func tempDirectory() -> String {
+        // Resolve symlinks so this matches HSFile.path, which comes from the kernel (F_GETPATH).
+        let directory = NSTemporaryDirectory()
+        guard let resolved = unsafe realpath(directory, nil) else { return directory }
+        defer { unsafe free(resolved) }
+        let path = unsafe String(cString: resolved)
+        return path.hasSuffix("/") ? path : path + "/"
     }
 
     @objc func homeDirectory() -> String {
@@ -1009,44 +1260,50 @@ import UniformTypeIdentifiers
     // MARK: - File Attributes
 
     @objc func attributes(_ path: String) -> [String: Any]? {
-        let expandedPath = expand(path)
         var st = Darwin.stat()
         // Use lstat so the type field correctly reports symlinks.
-        guard unsafe Darwin.lstat(expandedPath, &st) == 0 else {
-            AKError(unsafe "hs.fs.attributes: \(String(cString: strerror(errno)))")
+        guard unsafe Darwin.lstat(expand(path), &st) == 0 else {
+            fail("hs.fs.attributes", errno: errno)
             return nil
         }
-
-        let creationDate = Double(st.st_birthtimespec.tv_sec)
-                         + Double(st.st_birthtimespec.tv_nsec) / 1_000_000_000
-        let modDate = Double(st.st_mtimespec.tv_sec)
-                    + Double(st.st_mtimespec.tv_nsec) / 1_000_000_000
-
-        return [
-            "size":             Int(st.st_size),
-            "type":             modeToType(st.st_mode),
-            "permissions":      Int(st.st_mode & 0o7777),
-            "ownerID":          Int(st.st_uid),
-            "groupID":          Int(st.st_gid),
-            "inode":            Int(st.st_ino),
-            "creationDate":     creationDate,
-            "modificationDate": modDate,
-        ]
+        return HSFSSupport.attributes(from: st)
     }
 
-    @objc func touch(_ path: String) -> Bool {
-        let expandedPath = expand(path)
-        if fm.fileExists(atPath: expandedPath) {
-            do {
-                try fm.setAttributes([.modificationDate: Date()], ofItemAtPath: expandedPath)
-                return true
-            } catch {
-                AKError("hs.fs.touch: \(error.localizedDescription)")
-                return false
-            }
-        } else {
-            return fm.createFile(atPath: expandedPath, contents: nil)
+    @objc func touch(_ path: String, _ accessDate: Double = .nan, _ modificationDate: Double = .nan) -> Bool {
+        // Validate before creating anything, so a bad timestamp doesn't leave a new empty file behind.
+        guard let times = HSFSSupport.touchTimes(
+            accessDate: HSFSSupport.optionalNumberArgument(accessDate, at: 1),
+            modificationDate: HSFSSupport.optionalNumberArgument(modificationDate, at: 2)
+        ) else {
+            fail("hs.fs.touch", code: "EINVAL", message: "timestamps must be finite numbers of seconds since the Unix epoch")
+            return false
         }
+        let expandedPath = expand(path)
+        // O_CREAT without O_TRUNC: creates a missing file but leaves an existing one's contents alone.
+        let fd = unsafe Darwin.open(expandedPath, O_WRONLY | O_CREAT | O_CLOEXEC, 0o644)
+        if fd >= 0 {
+            Darwin.close(fd)
+        } else if errno != EISDIR {
+            fail("hs.fs.touch", errno: errno, path: path)
+            return false
+        }
+        guard unsafe utimensat(AT_FDCWD, expandedPath, times, 0) == 0 else {
+            fail("hs.fs.touch", errno: errno, path: path)
+            return false
+        }
+        return true
+    }
+
+    @objc func setPermissions(_ path: String, _ permissions: Double) -> Bool {
+        guard let bits = HSFSSupport.permissionBits(permissions, function: "hs.fs.setPermissions") else {
+            fail("hs.fs.setPermissions", code: "EINVAL", message: "permissions must be an integer between 0 and 0o7777")
+            return false
+        }
+        guard unsafe Darwin.chmod(expand(path), bits) == 0 else {
+            fail("hs.fs.setPermissions", errno: errno, path: path)
+            return false
+        }
+        return true
     }
 
     // MARK: - Links
@@ -1056,7 +1313,7 @@ import UniformTypeIdentifiers
             try fm.linkItem(atPath: expand(source), toPath: expand(destination))
             return true
         } catch {
-            AKError("hs.fs.link: \(error.localizedDescription)")
+            fail("hs.fs.link", error)
             return false
         }
     }
@@ -1067,7 +1324,7 @@ import UniformTypeIdentifiers
                                       withDestinationPath: expand(source))
             return true
         } catch {
-            AKError("hs.fs.symlink: \(error.localizedDescription)")
+            fail("hs.fs.symlink", error)
             return false
         }
     }
@@ -1076,7 +1333,7 @@ import UniformTypeIdentifiers
         do {
             return try fm.destinationOfSymbolicLink(atPath: expand(path))
         } catch {
-            AKError("hs.fs.readlink: \(error.localizedDescription)")
+            fail("hs.fs.readlink", error)
             return nil
         }
     }
@@ -1090,7 +1347,7 @@ import UniformTypeIdentifiers
             guard let tagNames = values.tagNames, !tagNames.isEmpty else { return nil }
             return tagNames
         } catch {
-            AKError("hs.fs.tags: \(error.localizedDescription)")
+            fail("hs.fs.tags", error)
             return nil
         }
     }
@@ -1105,7 +1362,7 @@ import UniformTypeIdentifiers
             try fileURL.setResourceValues(values)
             return true
         } catch {
-            AKError("hs.fs.setTags: \(error.localizedDescription)")
+            fail("hs.fs.setTags", error)
             return false
         }
     }
@@ -1126,9 +1383,17 @@ import UniformTypeIdentifiers
 
     @objc func fileUTI(_ path: String) -> String? {
         let url = NSURL(fileURLWithPath: expand(path))
-        let values = try? url.resourceValues(forKeys: [.contentTypeKey])
-        let utType = values?[.contentTypeKey] as? UTType
-        return utType?.identifier
+        do {
+            let values = try url.resourceValues(forKeys: [.contentTypeKey])
+            guard let utType = values[.contentTypeKey] as? UTType else {
+                record(code: "UNKNOWN", message: "No type identifier is available for \(path)")
+                return nil
+            }
+            return utType.identifier
+        } catch {
+            lastErrorInfo = HSFSSupport.errorInfo(from: error)
+            return nil
+        }
     }
 
     // MARK: - Bookmarks
@@ -1139,14 +1404,14 @@ import UniformTypeIdentifiers
                 .bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil)
             return data.base64EncodedString()
         } catch {
-            AKError("hs.fs.pathToBookmark: \(error.localizedDescription)")
+            fail("hs.fs.pathToBookmark", error)
             return nil
         }
     }
 
     @objc func pathFromBookmark(_ data: String) -> String? {
         guard let bookmarkData = Data(base64Encoded: data) else {
-            AKError("hs.fs.pathFromBookmark: invalid base64 data")
+            fail("hs.fs.pathFromBookmark", code: "EINVAL", message: "invalid base64 data")
             return nil
         }
         do {
@@ -1158,7 +1423,7 @@ import UniformTypeIdentifiers
             if isStale { AKDebug("hs.fs.pathFromBookmark: bookmark data is stale") }
             return resolved.path
         } catch {
-            AKError("hs.fs.pathFromBookmark: \(error.localizedDescription)")
+            fail("hs.fs.pathFromBookmark", error)
             return nil
         }
     }
@@ -1184,7 +1449,7 @@ import UniformTypeIdentifiers
 
         guard let urls = fm.mountedVolumeURLs(includingResourceValuesForKeys: Array(keys),
                                               options: options) else {
-            AKError("hs.fs.volumes: could not enumerate mounted volumes")
+            fail("hs.fs.volumes", code: "UNKNOWN", message: "could not enumerate mounted volumes")
             return nil
         }
 
@@ -1213,7 +1478,7 @@ import UniformTypeIdentifiers
             try NSWorkspace.shared.unmountAndEjectDevice(at: URL(fileURLWithPath: expand(path)))
             return true
         } catch {
-            AKError("hs.fs.ejectVolume: \(error.localizedDescription)")
+            fail("hs.fs.ejectVolume", error)
             return false
         }
     }
@@ -1246,8 +1511,11 @@ import UniformTypeIdentifiers
 
         let size = unsafe Darwin.getxattr(p, attribute, nil, 0, pos, flags)
         if size < 0 {
-            if errno != ENOATTR {
-                AKError(unsafe "hs.fs.xattrGet: \(String(cString: strerror(errno)))")
+            if errno == ENOATTR {
+                // A missing attribute is an expected outcome, so record it without logging.
+                record(errno: ENOATTR)
+            } else {
+                fail("hs.fs.xattrGet", errno: errno)
             }
             return nil
         }
@@ -1258,7 +1526,7 @@ import UniformTypeIdentifiers
             unsafe Darwin.getxattr(p, attribute, ptr.baseAddress, size, pos, flags)
         }
         if read < 0 {
-            AKError(unsafe "hs.fs.xattrGet: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrGet", errno: errno)
             return nil
         }
         return String(bytes: buffer[..<read], encoding: .isoLatin1)
@@ -1270,7 +1538,7 @@ import UniformTypeIdentifiers
 
         let size = unsafe Darwin.listxattr(p, nil, 0, flags)
         if size < 0 {
-            AKError(unsafe "hs.fs.xattrList: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrList", errno: errno)
             return nil
         }
         guard size > 0 else { return [] }
@@ -1281,7 +1549,7 @@ import UniformTypeIdentifiers
             return unsafe Darwin.listxattr(p, cBuf, size, flags)
         }
         if read < 0 {
-            AKError(unsafe "hs.fs.xattrList: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrList", errno: errno)
             return nil
         }
 
@@ -1304,14 +1572,14 @@ import UniformTypeIdentifiers
         let pos = UInt32(max(0, position))
 
         guard let data = value.data(using: .isoLatin1) else {
-            AKError("hs.fs.xattrSet: value contains characters outside the Latin-1 range")
+            fail("hs.fs.xattrSet", code: "EINVAL", message: "value contains characters outside the Latin-1 range")
             return false
         }
         let result = unsafe data.withUnsafeBytes { ptr in
             unsafe Darwin.setxattr(p, attribute, ptr.baseAddress, data.count, pos, flags)
         }
         if result < 0 {
-            AKError(unsafe "hs.fs.xattrSet: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrSet", errno: errno)
             return false
         }
         return true
@@ -1321,7 +1589,7 @@ import UniformTypeIdentifiers
         let p = expand(path)
         guard let flags = parseXattrOptions(options) else { return false }
         if unsafe Darwin.removexattr(p, attribute, flags) < 0 {
-            AKError(unsafe "hs.fs.xattrRemove: \(String(cString: strerror(errno)))")
+            fail("hs.fs.xattrRemove", errno: errno)
             return false
         }
         return true

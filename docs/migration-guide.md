@@ -419,14 +419,44 @@ flattened onto the parent module with longer method names instead of dotted subm
 ### hs.fs
 
 `hs.fs.volume`, `hs.fs.xattr`, and `hs.pathwatcher` all fold into one comprehensive
-**`hs.fs`** module (42 methods) — a genuine superset of what the four v1 pieces did.
+**`hs.fs`** module (46 methods) — a genuine superset of what the four v1 pieces did.
 Volumes are `hs.fs.volumes()`/`ejectVolume()`/`addVolumeWatcher()`; extended attributes are
 `xattrGet`/`xattrList`/`xattrSet`/`xattrRemove`; **`hs.pathwatcher` is not gone** — it's
 `hs.fs.createPathWatcher(path)`, returning a watcher object you call `.setCallback()` and
 `.start()` on (events batch with ~1 second latency, worth checking if your v1 code assumed
-near-instant delivery). `hs.fs` also now covers what Lua's built-in `io`/file functions did in
-v1 configs, since JS has no built-in filesystem API — raw file I/O needs to move to
-`hs.fs.read`/`write`/`append`.
+near-instant delivery).
+
+`hs.fs` also covers what Lua's built-in `io`/`os` file functions did in v1 configs, since JS
+has no built-in filesystem API. For whole-file reads and writes, `hs.fs.read`/`write`/`append`/
+`eachLine` are the quickest route. For anything that used a Lua file handle, `hs.fs.open()`
+returns an `HSFile` object with the same `fopen()` modes (`"r"`, `"w+"`, `"a"`, ...):
+
+| v1 (Lua) | v2 |
+|---|---|
+| `io.open(path, mode)` | `hs.fs.open(path, mode)` — returns `null` on failure, with the reason in `hs.fs.lastError` |
+| `f:read("a")` / `f:read("l")` / `f:read("L")` / `f:read(n)` | `f.read()` / `f.readLine()` / `f.readLine(true)` / `f.read(n)` |
+| `for line in f:lines()` / `io.lines(path)` | `f.eachLine(fn)` or `f.readLines()` / `hs.fs.eachLine(path, fn)` |
+| binary reads/writes (Lua strings) | `f.readBytes(n)` / `f.writeBytes(uint8Array)` |
+| `f:write(...)` | `f.write(text)` / `f.writeLine(text)` (one string per call) |
+| `f:seek(whence, offset)` | `f.seek(offset, whence)` — **argument order is swapped**, and the offset is required |
+| `f:seek()` / `f:seek("end")` (to read the position / size) | `f.position` / `f.size` — `f.seek()` without an offset fails rather than reporting |
+| `f:flush()` / `f:close()` | `f.flush()` / `f.close()` |
+| `io.tmpfile()` / `os.tmpname()` | `hs.fs.tempFile(prefix)` |
+| `os.rename(a, b)` / `os.remove(p)` | `hs.fs.move(a, b)` / `hs.fs.deletePath(p)`, or `f.rename(b)` / `f.remove()` on an open file |
+| `hs.fs.lock(f)` / `hs.fs.unlock(f)` | `f.lock()` / `f.unlock()` |
+| `hs.fs.touch(path, atime, mtime)` | `hs.fs.touch(path, atime, mtime)` (same order); times are seconds since the epoch. Also `f.touch(atime, mtime)` |
+| `chmod` shell-outs (e.g. via `os.execute`) | `hs.fs.setPermissions(path, 0o755)` / `f.setPermissions(0o600)` |
+| `io.popen(cmd)` | `hs.task` |
+
+End of file works as in Lua: `f.readLine()`, `f.read(n)` and `f.readBytes(n)` return `null`
+at end of file, so `while ((line = f.readLine()) !== null)` is the JS equivalent of a
+`while true do ... end` read loop. As with Lua's `f:read("a")`, reading the rest of the file
+with `f.read()` (or `f.readBytes()`) never returns `null` for end of file; at the end you get
+`""` (or an empty `Uint8Array`). Functions in `hs.fs`'s file API that fail return a real `null`. `hs.fs.withFile(path, mode, fn)`
+opens a file, passes it to `fn`, and always closes it afterwards, even if `fn` throws.
+Errors don't come back as Lua's second `nil, err` return value. Check `hs.fs.lastError`, or the
+file's own `f.lastError`, instead. Each holds `{code, message}`, where `code` is a POSIX name
+such as `"ENOENT"`.
 
 ### hs.sound
 
