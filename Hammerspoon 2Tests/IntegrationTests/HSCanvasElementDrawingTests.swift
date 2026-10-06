@@ -514,25 +514,25 @@ struct HSCanvasEnterExitTransitionTests {
     }
 }
 
-/// Tests for `HSCanvasPressState.button(for:modifiers:)`, which decides whether a press is
-/// delivered as a left click or a right click (right button, or Ctrl-click).
-@Suite("hs.canvas press button tests")
-struct HSCanvasPressButtonTests {
-    @Test("A plain left-button press is reported as the left button")
-    func plainLeftPressIsPrimary() {
-        #expect(HSCanvasPressState.button(for: .leftMouseDown, modifiers: []) == .primary)
-        #expect(HSCanvasPressState.button(for: .leftMouseDown, modifiers: [.shift, .option, .command]) == .primary)
+/// Tests for `HSCanvasPressState.source(for:modifiers:)`, which classifies what began a
+/// press: a plain left click, a Ctrl-click, or a real right-button press.
+@Suite("hs.canvas press source tests")
+struct HSCanvasPressSourceTests {
+    @Test("A plain left-button press is a left click, whatever other modifiers are held")
+    func plainLeftPress() {
+        #expect(HSCanvasPressState.source(for: .leftMouseDown, modifiers: []) == .leftButton)
+        #expect(HSCanvasPressState.source(for: .leftMouseDown, modifiers: [.shift, .option, .command]) == .leftButton)
     }
 
-    @Test("A right-button press is reported as the right button, with or without modifiers")
-    func rightPressIsSecondary() {
-        #expect(HSCanvasPressState.button(for: .rightMouseDown, modifiers: []) == .secondary)
-        #expect(HSCanvasPressState.button(for: .rightMouseDown, modifiers: .option) == .secondary)
+    @Test("A left-button press with Ctrl held is a Ctrl-click")
+    func controlClick() {
+        #expect(HSCanvasPressState.source(for: .leftMouseDown, modifiers: .control) == .controlClick)
+        #expect(HSCanvasPressState.source(for: .leftMouseDown, modifiers: [.control, .shift]) == .controlClick)
     }
 
-    @Test("Ctrl-click is reported as the right button")
-    func controlClickIsSecondary() {
-        #expect(HSCanvasPressState.button(for: .leftMouseDown, modifiers: .control) == .secondary)
-        #expect(HSCanvasPressState.button(for: .leftMouseDown, modifiers: [.control, .shift]) == .secondary)
+    @Test("A right-button press is the right button, with or without modifiers")
+    func rightButton() {
+        #expect(HSCanvasPressState.source(for: .rightMouseDown, modifiers: []) == .rightButton)
+        #expect(HSCanvasPressState.source(for: .rightMouseDown, modifiers: .control) == .rightButton)
     }
 }

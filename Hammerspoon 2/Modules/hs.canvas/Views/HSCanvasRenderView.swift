@@ -12,9 +12,10 @@ import SwiftUI
 /// already uses that name for hs.ui's unrelated root view, and reusing it here
 /// would conflate two different "canvas" concepts in the codebase.
 ///
-/// Mouse delivery is SwiftUI-native (`.onContinuousHover`/`DragGesture`; `DragGesture`
-/// fires for both buttons, and `pressState` says which one -- or a Ctrl-click -- began
-/// the press) rather than a separate `NSTrackingArea`-based overlay: per-element hit-testing walks a cached
+/// Mouse delivery is SwiftUI-native (`.onContinuousHover`/`DragGesture`, with
+/// `pressState` saying whether a press was a Ctrl-click) except for the right button,
+/// which `DragGesture` never sees and `HSCanvasDragHostingView` delivers from AppKit via
+/// `handleRightMouseDown`/`handleRightMouseUp`. Either way, rather than a separate `NSTrackingArea`-based overlay: per-element hit-testing walks a cached
 /// `Path` list (`CanvasElementDrawing.trackedElements`/`topmostHit`, built fresh from
 /// the current element list on each event) in reverse z-order, exactly mirroring v1's
 /// single-`mouseCallback`-with-topmost-element-wins model.
@@ -40,7 +41,7 @@ struct HSCanvasRenderView: View {
     /// Which button the in-progress `DragGesture` press is being reported as, or `nil` when
     /// no press is active. Fixed at mouse-down so a Ctrl-click still ends as `rightMouseUp`
     /// if Ctrl is released before the button.
-    @State private var activePress: HSCanvasPressState.Button?
+    @State private var activePress: HSCanvasPressState.Source?
 
     var body: some View {
         GeometryReader { geometry in
@@ -58,23 +59,27 @@ struct HSCanvasRenderView: View {
                 DragGesture(minimumDistance: 0, coordinateSpace: .local)
                     .onChanged { value in
                         guard activePress == nil else { return }
-                        let button = pressState?.button ?? .primary
-                        activePress = button
-                        switch button {
-                        case .primary:
+                        let source = pressState?.source ?? .leftButton
+                        activePress = source
+                        switch source {
+                        case .leftButton:
                             handleMouseDown(at: value.location, size: geometry.size)
-                        case .secondary:
+                        case .controlClick:
                             handleRightMouseDown(at: value.location, size: geometry.size)
+                        case .rightButton:
+                            break  // delivered by HSCanvasDragHostingView
                         }
                     }
                     .onEnded { value in
-                        let button = activePress ?? .primary
+                        let source = activePress ?? .leftButton
                         activePress = nil
-                        switch button {
-                        case .primary:
+                        switch source {
+                        case .leftButton:
                             handleMouseUp(at: value.location, size: geometry.size)
-                        case .secondary:
+                        case .controlClick:
                             handleRightMouseUp(at: value.location, size: geometry.size)
+                        case .rightButton:
+                            break  // delivered by HSCanvasDragHostingView
                         }
                     }
             )
@@ -153,11 +158,15 @@ struct HSCanvasRenderView: View {
         deliverButtonEvent("mouseUp", kind: .up, canvasTracks: store.canvasTrackMouseUp, at: location, size: size)
     }
 
-    private func handleRightMouseDown(at location: CGPoint, size: CGSize) {
+    /// Delivers `rightMouseDown`. Called for Ctrl-clicks from the `DragGesture`, and for
+    /// real right-button presses by `HSCanvasDragHostingView`, with `location` in this
+    /// view's (top-left origin) coordinate space.
+    func handleRightMouseDown(at location: CGPoint, size: CGSize) {
         deliverButtonEvent("rightMouseDown", kind: .rightDown, canvasTracks: store.canvasTrackRightMouseDown, at: location, size: size)
     }
 
-    private func handleRightMouseUp(at location: CGPoint, size: CGSize) {
+    /// Delivers `rightMouseUp`; see `handleRightMouseDown(at:size:)`.
+    func handleRightMouseUp(at location: CGPoint, size: CGSize) {
         deliverButtonEvent("rightMouseUp", kind: .rightUp, canvasTracks: store.canvasTrackRightMouseUp, at: location, size: size)
     }
 

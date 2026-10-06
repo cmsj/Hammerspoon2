@@ -10,9 +10,9 @@ import SwiftUI
 /// expose a `draggingCallback` -- SwiftUI has no drag-and-drop *destination* API of its
 /// own for arbitrary file/string drops onto a window, so this drops to AppKit directly.
 ///
-/// It also owns the root view's `pressState`, which `HSCanvasWindow` fills in from each
-/// mouse-down so the root view's `DragGesture` can tell a right-click or Ctrl-click from
-/// a left click.
+/// It also handles the right mouse button, which the root view's `DragGesture` never
+/// fires for, and owns the root view's `pressState`, which `HSCanvasWindow` fills in from
+/// each mouse-down so the `DragGesture` can tell a Ctrl-click from a left click.
 @MainActor
 final class HSCanvasDragHostingView: NSHostingView<HSCanvasRenderView> {
     /// Called with the dropped file paths (or the dropped string, as a single-element
@@ -31,6 +31,18 @@ final class HSCanvasDragHostingView: NSHostingView<HSCanvasRenderView> {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("HSCanvasDragHostingView does not support NSCoding")
+    }
+
+    // `isFlipped` is true for NSHostingView, so converted locations are already in the
+    // root view's top-left-origin coordinate space.
+    override func rightMouseDown(with event: NSEvent) {
+        rootView.handleRightMouseDown(at: convert(event.locationInWindow, from: nil), size: bounds.size)
+        super.rightMouseDown(with: event)
+    }
+
+    override func rightMouseUp(with event: NSEvent) {
+        rootView.handleRightMouseUp(at: convert(event.locationInWindow, from: nil), size: bounds.size)
+        super.rightMouseUp(with: event)
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
