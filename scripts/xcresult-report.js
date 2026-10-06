@@ -11,7 +11,9 @@
  *  2. Emits an `::error` workflow annotation for each failing test.
  *  3. On pull requests, when GITHUB_TOKEN is set, posts the report as a PR comment. The comment
  *     is created when tests fail and then updated in place on later runs (including once they
- *     pass), so a PR carries at most one of them and green PRs get no comment at all.
+ *     pass), so a PR carries at most one of them and green PRs get no comment at all. Runs for a
+ *     commit that's no longer the PR's head leave the comment alone, and the comment is trimmed
+ *     to fit GitHub's size limit (the job summary always has every failure).
  *
  * Reporting problems are logged as warnings and never fail the job; the test step does that.
  *
@@ -22,6 +24,11 @@ const fs = require('fs');
 const { execFileSync } = require('child_process');
 
 const COMMENT_MARKER = '<!-- xcresult-report -->';
+// Comments posted with the workflow's GITHUB_TOKEN are authored by this bot account.
+const COMMENT_AUTHOR = 'github-actions[bot]';
+// GitHub rejects comments over 65536 characters; leave room for the marker and footer.
+const MAX_COMMENT_REPORT_LENGTH = 60000;
+const MAX_COMMENT_FAILURE_TEXT_LENGTH = 4000;
 
 function readSummary(bundlePath) {
     if (!fs.existsSync(bundlePath)) {
@@ -56,7 +63,11 @@ function hasFailures(summary) {
     return !summary || summary.result === 'Failed' || summary.failedTests > 0;
 }
 
-function renderReport(summary) {
+/**
+ * Renders the Markdown report. With `maxLength`, failure messages are shortened and failures
+ * that don't fit are left out, with a pointer to `detailsURL` for the rest.
+ */
+function renderReport(summary, { maxLength = Infinity, detailsURL } = {}) {
     if (!summary) {
         return [
             '## :x: Test Results',
@@ -86,13 +97,27 @@ function renderReport(summary) {
     const failures = summary.testFailures || [];
     if (failures.length) {
         lines.push('', '### Failures');
-        for (const failure of failures) {
-            lines.push(
+        // Reserve room for the "more failures" line, should it be needed.
+        let length = lines.join('\n').length + 200;
+        for (const [index, failure] of failures.entries()) {
+            let text = failure.failureText || '(no failure message)';
+            if (Number.isFinite(maxLength) && text.length > MAX_COMMENT_FAILURE_TEXT_LENGTH) {
+                text = `${text.slice(0, MAX_COMMENT_FAILURE_TEXT_LENGTH)}\n… (truncated)`;
+            }
+            const entry = [
                 '',
                 `**${failure.targetName} › ${failure.testIdentifierString || failure.testName}**`,
                 '',
-                codeBlock(failure.failureText || '(no failure message)')
-            );
+                codeBlock(text),
+            ].join('\n');
+            if (length + entry.length > maxLength) {
+                const remaining = failures.length - index;
+                const where = detailsURL ? `[the job summary](${detailsURL})` : 'the job summary';
+                lines.push('', `…and ${remaining} more failure${remaining === 1 ? '' : 's'}; see ${where}.`);
+                break;
+            }
+            lines.push(entry);
+            length += entry.length + 1;
         }
     }
 
@@ -134,30 +159,40 @@ async function github(method, path, body) {
 async function findReportComment(repo, prNumber) {
     for (let page = 1; ; page++) {
         const comments = await github('GET', `/repos/${repo}/issues/${prNumber}/comments?per_page=100&page=${page}`);
-        const existing = comments.find(comment => comment.body && comment.body.startsWith(COMMENT_MARKER));
+        // Check the author too, so a pasted copy of the marker can't redirect the report.
+        const existing = comments.find(
+            comment =>
+                comment.user && comment.user.login === COMMENT_AUTHOR &&
+                comment.body && comment.body.startsWith(COMMENT_MARKER)
+        );
         if (existing || comments.length < 100) {
             return existing;
         }
     }
 }
 
-async function upsertPRComment(report, failed) {
-    const repo = process.env.GITHUB_REPOSITORY;
-    const event = process.env.GITHUB_EVENT_PATH && JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
-    const prNumber = event && event.pull_request && event.pull_request.number;
-    if (!process.env.GITHUB_TOKEN || !repo || !prNumber) {
-        return;
-    }
-
-    const runURL = `${process.env.GITHUB_SERVER_URL}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-    const body = `${COMMENT_MARKER}\n${report}\n\n<sub>From [this run](${runURL}) of ${event.pull_request.head.sha}.</sub>`;
+async function upsertPRComment({ summary, repo, prNumber, headSha, runURL }) {
+    const report = renderReport(summary, { maxLength: MAX_COMMENT_REPORT_LENGTH, detailsURL: runURL });
+    const body = `${COMMENT_MARKER}\n${report}\n\n<sub>From [this run](${runURL}) of ${headSha}.</sub>`;
 
     const existing = await findReportComment(repo, prNumber);
+    if (!existing && !hasFailures(summary)) {
+        return 'skipped';
+    }
+
+    // A run for an older commit can finish after a newer one; don't let it overwrite that report.
+    const pr = await github('GET', `/repos/${repo}/pulls/${prNumber}`);
+    if (pr.head.sha !== headSha) {
+        console.log(`Not updating the PR comment: ${headSha} is no longer the head of #${prNumber}.`);
+        return 'outdated';
+    }
+
     if (existing) {
         await github('PATCH', `/repos/${repo}/issues/comments/${existing.id}`, { body });
-    } else if (failed) {
-        await github('POST', `/repos/${repo}/issues/${prNumber}/comments`, { body });
+        return 'updated';
     }
+    await github('POST', `/repos/${repo}/issues/${prNumber}/comments`, { body });
+    return 'created';
 }
 
 async function main() {
@@ -183,11 +218,27 @@ async function main() {
     }
     annotateFailures(summary);
 
+    const repo = process.env.GITHUB_REPOSITORY;
+    const event = process.env.GITHUB_EVENT_PATH && JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+    const pullRequest = event && event.pull_request;
+    if (!process.env.GITHUB_TOKEN || !repo || !pullRequest) {
+        return;
+    }
     try {
-        await upsertPRComment(report, hasFailures(summary));
+        await upsertPRComment({
+            summary,
+            repo,
+            prNumber: pullRequest.number,
+            headSha: pullRequest.head.sha,
+            runURL: `${process.env.GITHUB_SERVER_URL}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID}`,
+        });
     } catch (error) {
         console.log(`::warning::Couldn't post the test report to the pull request: ${escapeData(error.message)}`);
     }
 }
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = { renderReport, hasFailures, annotateFailures, upsertPRComment, COMMENT_MARKER, COMMENT_AUTHOR };

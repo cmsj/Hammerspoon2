@@ -38,6 +38,9 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Test CI scripts
+        run: npm run test:scripts
+
       - name: Run documentation linter
         run: ./scripts/test-docs.sh
 
