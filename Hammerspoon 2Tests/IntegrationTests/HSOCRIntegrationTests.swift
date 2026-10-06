@@ -6,6 +6,7 @@
 import Testing
 import JavaScriptCore
 import AppKit
+import Vision
 @testable import Hammerspoon_2
 
 // MARK: - Helpers
@@ -60,6 +61,42 @@ private func makePNG(text: String, fontSize: CGFloat = 72) throws -> String {
     try pngData.write(to: URL(fileURLWithPath: tmpPath))
     return tmpPath
 }
+
+/// Whether Vision's accurate text recognizer can run here. GitHub's macOS VM runners have no
+/// Neural Engine and their OS images lack the CPU fallback models, so every accurate-mode
+/// request fails to load its model there (fast mode is unaffected). Probing, rather than
+/// checking for CI, lets these tests run again on any machine where recognition works.
+/// Draws with Core Graphics/Core Text rather than `makePNG` because trait conditions can be
+/// evaluated off the main thread.
+nonisolated private let accurateTextRecognitionAvailable: Bool = {
+    let size = CGSize(width: 400, height: 120)
+    guard let context = CGContext(
+        data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8,
+        bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else { return false }
+    context.setFillColor(CGColor(gray: 0, alpha: 1))
+    context.fill(CGRect(origin: .zero, size: size))
+    let line = CTLineCreateWithAttributedString(NSAttributedString(string: "Probe", attributes: [
+        .font: CTFontCreateWithName("Helvetica-Bold" as CFString, 72, nil),
+        .foregroundColor: CGColor(gray: 1, alpha: 1)
+    ]))
+    context.textPosition = CGPoint(x: 20, y: 30)
+    CTLineDraw(line, context)
+    guard let image = context.makeImage() else { return false }
+
+    let request = VNRecognizeTextRequest()
+    request.recognitionLevel = .accurate
+    do {
+        try VNImageRequestHandler(cgImage: image).perform([request])
+        return true
+    } catch {
+        return false
+    }
+}()
+
+nonisolated private let accurateTextRecognitionUnavailable: Comment =
+    "Vision's accurate text recognizer can't load its models on this machine"
 
 @Suite("hs.ocr tests")
 struct HSOCRTests {
@@ -184,7 +221,7 @@ struct HSOCRTests {
             return harness
         }
 
-        @Test("recognizeText resolves with a result object")
+        @Test("recognizeText resolves with a result object", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testResolvesWithResult() async throws {
             let imagePath = try makePNG(text: "Hello")
@@ -205,7 +242,7 @@ struct HSOCRTests {
             #expect(harness.evalString("_ocrResult") != "error")
         }
 
-        @Test("result has typeName HSOCRResult")
+        @Test("result has typeName HSOCRResult", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testResultTypeName() async throws {
             let imagePath = try makePNG(text: "Hello")
@@ -226,7 +263,7 @@ struct HSOCRTests {
             harness.expectEqual("_ocrR2.typeName", "HSOCRResult")
         }
 
-        @Test("result.text is a string")
+        @Test("result.text is a string", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testResultTextIsString() async throws {
             let imagePath = try makePNG(text: "Hello")
@@ -247,7 +284,7 @@ struct HSOCRTests {
             #expect(harness.evalTypeOf("_ocrR3.text") == "string")
         }
 
-        @Test("result.observations is an array")
+        @Test("result.observations is an array", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testResultObservationsIsArray() async throws {
             let imagePath = try makePNG(text: "Hello")
@@ -268,7 +305,7 @@ struct HSOCRTests {
             harness.expectTrue("Array.isArray(_ocrR4.observations)")
         }
 
-        @Test("observations contain valid HSOCRObservation objects")
+        @Test("observations contain valid HSOCRObservation objects", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testObservationShape() async throws {
             let imagePath = try makePNG(text: "Hello World")
@@ -301,7 +338,7 @@ struct HSOCRTests {
         """)
         }
 
-        @Test("observation typeName is HSOCRObservation")
+        @Test("observation typeName is HSOCRObservation", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testObservationTypeName() async throws {
             let imagePath = try makePNG(text: "Hello")
@@ -323,7 +360,7 @@ struct HSOCRTests {
             harness.expectEqual("_ocrR6.observations[0].typeName", "HSOCRObservation")
         }
 
-        @Test("observation confidence is in 0..1 range")
+        @Test("observation confidence is in 0..1 range", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testObservationConfidenceRange() async throws {
             let imagePath = try makePNG(text: "Hello")
@@ -349,7 +386,7 @@ struct HSOCRTests {
         """)
         }
 
-        @Test("observation bounds values are in 0..1 range")
+        @Test("observation bounds values are in 0..1 range", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testObservationBoundsRange() async throws {
             let imagePath = try makePNG(text: "Hello")
@@ -379,7 +416,7 @@ struct HSOCRTests {
         """)
         }
 
-        @Test("result.text equals observations joined by newlines")
+        @Test("result.text equals observations joined by newlines", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testResultTextMatchesObservations() async throws {
             let imagePath = try makePNG(text: "Hello")
@@ -405,7 +442,7 @@ struct HSOCRTests {
         """)
         }
 
-        @Test("minimumConfidence 0.9999 does not increase observation count")
+        @Test("minimumConfidence 0.9999 does not increase observation count", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testMinimumConfidenceFilter() async throws {
             let imagePath = try makePNG(text: "Hello World")
@@ -433,7 +470,7 @@ struct HSOCRTests {
             harness.expectTrue("_ocrFiltered <= _ocrUnfiltered")
         }
 
-        @Test("result.text contains the text rendered into the image")
+        @Test("result.text contains the text rendered into the image", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testRecognizedTextMatchesRenderedText() async throws {
             // Use a simple, unambiguous uppercase word. Vision is highly accurate on
@@ -457,7 +494,7 @@ struct HSOCRTests {
             harness.expectTrue("_ocrText.toLowerCase().includes('vision')")
         }
 
-        @Test("each observation's text appears in result.text")
+        @Test("each observation's text appears in result.text", .enabled(if: accurateTextRecognitionAvailable, accurateTextRecognitionUnavailable))
         @MainActor
         func testObservationTextsAppearInResultText() async throws {
             let imagePath = try makePNG(text: "HELLO")
