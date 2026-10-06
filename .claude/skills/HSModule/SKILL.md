@@ -398,7 +398,7 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
 
   // Private API consumed only by the companion JS file — not exposed in docs
   /// SKIP_DOCS
-  @objc(_addWatcher:) func _addWatcher(_ callback: JSValue)
+  @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) -> Bool
   /// SKIP_DOCS
   @objc func _removeWatcher()
   /// SKIP_DOCS
@@ -417,14 +417,16 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
       _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
   }
 
-  @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) {
+  @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) -> Bool {
       guard watcherCallback == nil else {
           AKWarning("hs.xxx._addWatcher(): Already watching. Refusing to create a second.")
-          return
+          return false
       }
+      // ... register with the OS API here, returning false if it fails BEFORE setting any state;
+      // call callback(...) when an event fires ...
       watcherCallback = callback
-      // ... register with the OS API here; call callback(...) when an event fires ...
       AKDebug("hs.xxx._addWatcher(): Started")
+      return true
   }
 
   @objc func _removeWatcher() {
@@ -440,6 +442,7 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
 
   Key rules:
   - _addWatcher MUST guard against double-registration and warn with AKWarning.
+  - _addWatcher MUST return Bool: false for any failure (including that refusal), true on success.
   - Always use [weak self] in any closure passed to the OS listener to avoid retain cycles.
   - When the OS callback arrives off-@MainActor, use MainActor.assumeIsolated { } to enter
   actor isolation (CoreLocation, CoreAudio, etc. guarantee main-thread delivery).
@@ -508,6 +511,18 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   - The on/off/once docstring unions must list exactly the enum's raw values; `npm run docs:test`
     (scripts/check-event-names.js) fails otherwise, and also fails if an emitter is given no list.
     Only emitters whose names are genuinely arbitrary (hs.userdefaults) are exempted in that script.
+
+  Registration failure (issue #254):
+  - The contract for every watcher on()/once(): if it returns, the listener is registered AND the
+    native watcher is running; otherwise it throws and records nothing. Never just log and return.
+  - The emitter's start function just returns the native result:
+    `function() { return hs.xxx._addWatcher(...); }`. `LazyWatcherEmitter` /
+    `KeyedLazyWatcherEmitter` throw a standard error when it returns `false`; don't hand-write
+    `if (!started) throw ...`.
+  - A native on()/once() that calls into the JS emitter (per-instance objects, hs.ax) MUST wrap
+    the call in `ctx.callCapturingException { ... }`, or the throw never reaches the JS caller.
+  - Mark on()/once() docstrings with `Throws: true` (JS) / `- Throws: true` (Swift), and wrap
+    their examples in `try { ... } catch (err) { console.error(err.message) }`.
 
   ---
   Pattern B — Object-level watcher (hs.ax, hs.location)
