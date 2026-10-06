@@ -10,12 +10,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { THROWS_DESCRIPTION } = require('./docs-strings');
 
 const JSON_DIR = path.join(__dirname, '..', 'docs', 'json');
 const OUTPUT_FILE = path.join(__dirname, '..', 'docs', 'hammerspoon.d.ts');
-
-// Rendered for any method whose docs carry a `Throws: true` marker (see extract-docs.js).
-const THROWS_DESCRIPTION = 'Throws an Error on failure; wrap calls in try/catch to handle it.';
 
 // Words TypeScript reserves even as `declare namespace { function <name>() }` identifiers
 // (unlike plain JS, where e.g. `new`/`delete` are valid property names called as

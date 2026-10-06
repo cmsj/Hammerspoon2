@@ -300,10 +300,6 @@ struct HSAudioDeviceTests {
 
         @Test("per-device on() with an unknown event throws and starts nothing")
         func testDeviceOnRejectsUnknownEvent() {
-            // Does not assert !harness.hasException, for the same reason as
-            // testDeviceOnThrowsWhenNativeStartFails below: device on() is a native method that
-            // invokeMethods into the JS emitter, so the context's exceptionHandler fires even
-            // though this test's own try/catch catches the error.
             let harness = makeHarness()
             harness.eval("""
                 var d = hs.audiodevice.all()[0];
@@ -319,6 +315,9 @@ struct HSAudioDeviceTests {
                 d._removeWatcher();
             """)
             #expect(harness.evalValue("names")?.toArray() as? [String] == ["vmout", "vmin", "mout", "min", "rate", "dsout", "dsin"])
+            // device on() is a native method that invokeMethods into the JS emitter; a caught
+            // error must not also reach the context's exceptionHandler.
+            #expect(!harness.hasException)
             #expect(harness.evalString("message") == "hs.audiodevice device.on(): unknown event 'vmOut'. Known events: vmout, vmin, mout, min, rate, dsout, dsin")
             #expect(harness.evalInt("listenerCount") == 0)
         }
@@ -447,6 +446,23 @@ struct HSAudioDeviceTests {
             """)
             #expect(!harness.hasException)
             harness.expectTrue("threw")
+        }
+
+        @Test("device on() throws, instead of silently returning, if the emitter factory is unavailable")
+        func testDeviceOnThrowsWithoutEmitterFactory() {
+            let harness = makeHarness()
+            harness.eval("""
+                var _noFactoryDev = hs.audiodevice.all()[0];
+                hs.audiodevice._makeDeviceEmitter = null;
+                var message = null;
+                try {
+                    _noFactoryDev.on('vmout', function() {});
+                } catch (err) {
+                    message = err.message;
+                }
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalString("message") == "hs.audiodevice device: device watcher emitter factory is unavailable")
         }
 
         @Test("device watcher fires vmout event when output volume changes")

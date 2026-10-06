@@ -432,15 +432,19 @@ import AXSwift
 
     @objc func on(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction) {
         guard let ctx = JSContext.current() else { return }
-        guard let notifications = Self.notificationStrings(from: notification) else {
-            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.on(): notification must be a string or an array of strings", in: ctx)
+        guard let notifications = Self.notificationStrings(from: notification), !notifications.isEmpty else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.on(): notification must be a string or a non-empty array of strings", in: ctx)
+            return
+        }
+        guard let emitter = _watcherEmitter else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.on(): watcher emitter is unavailable", in: ctx)
             return
         }
         // callCapturingException, not plain invokeMethod: a throw from inside the emitter (e.g.
         // an invalid listener, or native registration failing) must reach this call's own JS
         // caller - see callCapturingException's doc comment for why invokeMethod alone can't.
         // onEach rolls back any notifications it already registered before rethrowing.
-        _ = ctx.callCapturingException { _watcherEmitter?.invokeMethod("onEach", withArguments: [element, notifications, listener]) }
+        _ = ctx.callCapturingException { emitter.invokeMethod("onEach", withArguments: [element, notifications, listener]) }
     }
 
     @objc func off(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction) {
@@ -455,11 +459,15 @@ import AXSwift
 
     @objc func once(_ element: HSAXElement, _ notification: JSValue, _ listener: JSFunction) {
         guard let ctx = JSContext.current() else { return }
-        guard let notifications = Self.notificationStrings(from: notification) else {
-            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.once(): notification must be a string or an array of strings", in: ctx)
+        guard let notifications = Self.notificationStrings(from: notification), !notifications.isEmpty else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.once(): notification must be a string or a non-empty array of strings", in: ctx)
             return
         }
-        _ = ctx.callCapturingException { _watcherEmitter?.invokeMethod("onceEach", withArguments: [element, notifications, listener]) }
+        guard let emitter = _watcherEmitter else {
+            ctx.exception = JSValue(newErrorFromMessage: "hs.ax.once(): watcher emitter is unavailable", in: ctx)
+            return
+        }
+        _ = ctx.callCapturingException { emitter.invokeMethod("onceEach", withArguments: [element, notifications, listener]) }
     }
 
     /// Accepts either a single notification name string, or an array of them

@@ -91,7 +91,7 @@
 
         {% if method.throws %}
         <div class="card-section-label">Throws</div>
-        <div class="return-desc">Can throw an <code>Error</code> on failure; wrap calls in <code>try</code>/<code>catch</code> to handle it.</div>
+        <div class="return-desc">{{ THROWS_DESCRIPTION }}</div>
         {% endif %}
 
         {% if method.notes and method.notes.length > 0 %}

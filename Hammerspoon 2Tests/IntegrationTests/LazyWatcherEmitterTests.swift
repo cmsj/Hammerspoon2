@@ -52,10 +52,14 @@ struct LazyWatcherEmitterTests {
         #expect(!harness.hasException)
     }
 
-    @Test("a start() returning false makes on() throw, records nothing, and allows a retry")
+    @Test("a start() returning false makes on() log and throw, records nothing, and allows a retry")
     func testStartReturningFalseThrows() {
         let harness = makeHarness()
         harness.eval("""
+            // The failure is logged as well as thrown, so it's still seen when on() is called
+            // from a promise callback, where the throw would become an unhandled rejection.
+            var logged = [];
+            console.error = function(msg) { logged.push(msg); };
             var startCalls = 0;
             var shouldFail = true;
             var e = new LazyWatcherEmitter("hs.test", function() {
@@ -72,7 +76,8 @@ struct LazyWatcherEmitterTests {
             }
         """)
         #expect(!harness.hasException)
-        #expect(harness.evalString("message") == "hs.test.on(): failed to start watcher")
+        #expect(harness.evalString("message") == "hs.test.on(): failed to start watcher for 'x'")
+        #expect(harness.evalString("logged.join('|')") == "hs.test.on(): failed to start watcher for 'x'")
         harness.expectFalse("e.events['x'] && e.events['x'].includes(fn)")
 
         harness.eval("""
@@ -84,21 +89,35 @@ struct LazyWatcherEmitterTests {
         harness.expectTrue("e.events['x'].includes(fn)")
     }
 
-    @Test("a start() returning false makes once() throw too")
+    @Test("a start() returning false makes once() throw too, naming once() in the error")
     func testStartReturningFalseThrowsFromOnce() {
         let harness = makeHarness()
         harness.eval("""
             var e = new LazyWatcherEmitter("hs.test", function() { return false; }, function() {});
-            var threw = false;
+            var message = null;
             try {
                 e.once('x', function() {});
             } catch (err) {
-                threw = true;
+                message = err.message;
             }
         """)
         #expect(!harness.hasException)
-        harness.expectTrue("threw")
+        #expect(harness.evalString("message") == "hs.test.once(): failed to start watcher for 'x'")
         harness.expectFalse("e.events['x'] && e.events['x'].length > 0")
+    }
+
+    @Test("once() errors name once() and the emitter's label", arguments: ["LazyWatcherEmitter", "KeyedLazyWatcherEmitter"])
+    func testOnceErrorsNameOnce(emitterClass: String) {
+        let harness = makeHarness()
+        harness.eval("""
+            var e = new \(emitterClass)("hs.test", function() {}, function() {}, ['x']);
+            var badListener = null, unknownEvent = null;
+            try { e.once('x', 42); } catch (err) { badListener = err.message; }
+            try { e.once('y', function() {}); } catch (err) { unknownEvent = err.message; }
+        """)
+        #expect(!harness.hasException)
+        #expect(harness.evalString("badListener") == "hs.test.once(): listener must be a function")
+        #expect(harness.evalString("unknownEvent") == "hs.test.once(): unknown event 'y'. Known events: x")
     }
 
     @Test("a keyed start() returning false makes on() throw, records nothing, and allows a retry")

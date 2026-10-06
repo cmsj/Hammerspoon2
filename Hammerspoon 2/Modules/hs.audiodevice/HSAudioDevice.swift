@@ -6,6 +6,7 @@
 import Foundation
 import CoreAudio
 import JavaScriptCore
+import JavaScriptCoreExtras
 
 // MARK: - CoreAudio Helpers
 
@@ -740,18 +741,37 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
     private var selfRetain: HSAudioDevice? = nil
 
     /// Lazily creates this device's JS watcher emitter (via the module's `_makeDeviceEmitter`
-    /// factory) if one doesn't already exist.
-    private func ensureWatcherEmitter() -> JSValue? {
+    /// factory) if one doesn't already exist. Returns nil (having already set `ctx.exception`)
+    /// on failure, so on()/once() never return without registering - same as HSCamera's.
+    private func ensureWatcherEmitter(_ ctx: JSContext) -> JSValue? {
         if _watcherEmitter == nil {
-            guard let ctx = JSContext.current() else { return nil }
-            let audiodevice = ctx.objectForKeyedSubscript("hs")?.objectForKeyedSubscript("audiodevice")
-            _watcherEmitter = audiodevice?.invokeMethod("_makeDeviceEmitter", withArguments: [self])
+            guard let emitterFactory = ctx.objectForKeyedSubscript("hs")?
+                    .objectForKeyedSubscript("audiodevice")?
+                    .objectForKeyedSubscript("_makeDeviceEmitter"),
+                  emitterFactory.isFunction else {
+                ctx.exception = JSValue(
+                    newErrorFromMessage: "hs.audiodevice device: device watcher emitter factory is unavailable",
+                    in: ctx
+                )
+                return nil
+            }
+            let emitter = ctx.callCapturingException { emitterFactory.call(withArguments: [self]) }
+            guard ctx.exception == nil, let emitter, emitter.isObject else {
+                if ctx.exception == nil {
+                    ctx.exception = JSValue(
+                        newErrorFromMessage: "hs.audiodevice device: failed to create device watcher emitter",
+                        in: ctx
+                    )
+                }
+                return nil
+            }
+            _watcherEmitter = emitter
         }
         return _watcherEmitter
     }
 
     @objc func on(_ event: String, _ listener: JSFunction) {
-        guard let ctx = JSContext.current(), let emitter = ensureWatcherEmitter() else { return }
+        guard let ctx = JSContext.current(), let emitter = ensureWatcherEmitter(ctx) else { return }
         // callCapturingException, not plain invokeMethod: a throw from inside the emitter's
         // on() (e.g. the native watcher failing to start) must reach this call's own JS
         // caller - see callCapturingException's doc comment for why invokeMethod alone can't.
@@ -763,7 +783,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
     }
 
     @objc func once(_ event: String, _ listener: JSFunction) {
-        guard let ctx = JSContext.current(), let emitter = ensureWatcherEmitter() else { return }
+        guard let ctx = JSContext.current(), let emitter = ensureWatcherEmitter(ctx) else { return }
         _ = ctx.callCapturingException { emitter.invokeMethod("once", withArguments: [event, listener]) }
     }
 

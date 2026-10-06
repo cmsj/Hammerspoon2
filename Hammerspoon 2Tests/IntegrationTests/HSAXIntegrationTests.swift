@@ -978,25 +978,27 @@ struct HSAXTests {
         }
     }
 
-    // MARK: - Suite 4a: Watcher registration failures (requires accessibility permissions)
+    // MARK: - Suite 4a: Watcher registration failures (no accessibility permissions required)
 
     /// on()/once() must throw when native registration fails, recording nothing (issue #254).
     /// Native registration is simulated by stubbing `_addWatcher`/`_removeWatcher`, so these
-    /// never register real AX observers - accessibility is only needed for systemWideElement()
-    /// to return a real element rather than null.
-    @Suite("hs.ax watcher registration failure tests", .disabled(if: !isAccessibilityEnabled(), "Accessibility permissions not available"))
+    /// never register real AX observers. The element is built directly in Swift rather than via
+    /// hs.ax.systemWideElement(), which returns null without accessibility permissions - so this
+    /// suite runs in CI too.
+    @Suite("hs.ax watcher registration failure tests")
     struct HSAXWatcherFailureTests {
 
         private func makeHarness() -> JSTestHarness {
             let harness = JSTestHarness()
             harness.loadModule(HSAXModule.self, as: "ax")
+            let element = HSAXElement(element: SystemWideElement(AXUIElementCreateSystemWide()))
+            harness.context.setObject(element, forKeyedSubscript: "sys" as NSString)
             // `failing` lists the notification names whose native registration should fail;
             // `added`/`removed` record which notifications reached the native layer.
             harness.eval("""
             var failing = [];
             var added = [];
             var removed = [];
-            var sys = hs.ax.systemWideElement();
             Object.defineProperty(hs.ax, '_addWatcher', {
                 value: function(element, notification, callback) {
                     added.push(notification);
@@ -1097,6 +1099,57 @@ struct HSAXTests {
         func testOnInvalidNotificationTypeThrows() {
             let harness = makeHarness()
             harness.eval("hs.ax.on(sys, 42, function() {})")
+            #expect(harness.hasException)
+            #expect(harness.evalInt("added.length") == 0)
+        }
+
+        @Test("a once() failure names once() in its error, not on()")
+        func testOnceFailureNamesOnce() {
+            let harness = makeHarness()
+            harness.eval("""
+            failing = ['AXValueChanged'];
+            var message = null;
+            try { hs.ax.once(sys, 'AXValueChanged', function() {}); } catch (e) { message = e.message; }
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalString("message") == "hs.ax.once(): failed to start watcher for 'AXValueChanged'")
+        }
+
+        @Test("on()/once() with an empty notification array throws without registering", arguments: ["on", "once"])
+        func testEmptyNotificationArrayThrows(method: String) {
+            let harness = makeHarness()
+            harness.eval("hs.ax.\(method)(sys, [], 'not a function')")
+            #expect(harness.hasException)
+            #expect(harness.evalInt("added.length") == 0)
+        }
+
+        @Test("a failing removal during rollback doesn't stop the rest, and the original error is rethrown")
+        func testRollbackContinuesPastFailingRemoval() {
+            let harness = makeHarness()
+            harness.eval("""
+            Object.defineProperty(hs.ax, '_removeWatcher', {
+                value: function(element, notification) {
+                    removed.push(notification);
+                    if (notification === 'AXWindowCreated') { throw new Error('removal failed'); }
+                },
+                writable: true, configurable: true
+            });
+            failing = ['AXWindowResized'];
+            var message = null;
+            try {
+                hs.ax.on(sys, ['AXWindowCreated', 'AXWindowMoved', 'AXWindowResized'], function() {});
+            } catch (e) { message = e.message; }
+            """)
+            #expect(!harness.hasException)
+            #expect(harness.evalString("removed.join(',')") == "AXWindowCreated,AXWindowMoved")
+            #expect(harness.evalString("message") == "hs.ax.on(): failed to start watcher for 'AXWindowResized'")
+        }
+
+        @Test("on() throws if the watcher emitter is unavailable")
+        func testOnThrowsWithoutEmitter() {
+            let harness = makeHarness()
+            harness.eval("hs.ax._watcherEmitter = null")
+            harness.eval("hs.ax.on(sys, 'AXValueChanged', function() {})")
             #expect(harness.hasException)
             #expect(harness.evalInt("added.length") == 0)
         }
@@ -1215,20 +1268,6 @@ struct HSAXTests {
             hs.ax.off(_lc11Elem, 'AXWindowMiniaturized', _lc11Fn);
         """)
             #expect(!harness.hasException)
-        }
-
-        @Test("on with an invalid notification type throws")
-        func testAddWatcherInvalidNotificationTypeThrows() {
-            let harness = makeHarness()
-            harness.eval("""
-            var _lc12Finder = hs.application.matchingBundleID('com.apple.finder');
-            var _lc12Elem = hs.ax.applicationElement(_lc12Finder);
-            var _lc12Threw = 0;
-            try { hs.ax.on(_lc12Elem, 42, function() {}); } catch (e) { _lc12Threw++; }
-            try { hs.ax.on(_lc12Elem, { not: 'valid' }, function() {}); } catch (e) { _lc12Threw++; }
-        """)
-            #expect(!harness.hasException)
-            #expect(harness.evalInt("_lc12Threw") == 2)
         }
 
         @Test("_addWatcher returns false when native registration fails")

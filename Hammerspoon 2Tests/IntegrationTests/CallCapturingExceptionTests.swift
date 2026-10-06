@@ -22,17 +22,17 @@ struct CallCapturingExceptionTests {
     }
 
     /// A bare context with a counting exceptionHandler, and a global `nativeCall(fn)` that
-    /// calls `fn` through callCapturingException - the same shape as a native on() invoking
-    /// its JS emitter.
+    /// calls `fn` through callCapturingException and returns its result - the same shape as a
+    /// native on() invoking its JS emitter.
     private func makeContext() -> (JSContext, ExceptionLog) {
         let context = JSContext(virtualMachine: JSVirtualMachine())!
         let log = ExceptionLog()
         context.exceptionHandler = { _, exception in
             log.messages.append(exception?.toString() ?? "unknown")
         }
-        let nativeCall: @convention(block) (JSValue) -> Void = { fn in
-            guard let ctx = JSContext.current() else { return }
-            _ = ctx.callCapturingException { fn.call(withArguments: []) }
+        let nativeCall: @convention(block) (JSValue) -> JSValue? = { fn in
+            guard let ctx = JSContext.current() else { return nil }
+            return ctx.callCapturingException { fn.call(withArguments: []) }
         }
         context.setObject(nativeCall, forKeyedSubscript: "nativeCall" as NSString)
         return (context, log)
@@ -72,10 +72,21 @@ struct CallCapturingExceptionTests {
     }
 
     @Test("no exception leaves the exceptionHandler untouched and returns the result")
-    func testNoExceptionIsNotLogged() {
+    func testNoExceptionReturnsResult() {
         let (context, log) = makeContext()
-        context.evaluateScript("var ran = false; nativeCall(function() { ran = true; })")
+        context.evaluateScript("var result = nativeCall(function() { return 42; })")
         #expect(log.messages.isEmpty)
-        #expect(context.objectForKeyedSubscript("ran")?.toBool() == true)
+        #expect(context.objectForKeyedSubscript("result")?.toInt32() == 42)
+    }
+
+    @Test("with no JS caller, an exception goes straight to the exceptionHandler, once")
+    func testExceptionWithoutJSCallerIsLoggedOnce() throws {
+        // As when native code runs on a timer or notification: there's no calling JS to rethrow
+        // into, so the exception must be logged directly rather than left in context.exception.
+        let (context, log) = makeContext()
+        let thrower = try #require(context.evaluateScript("(function() { throw new Error('boom'); })"))
+        _ = context.callCapturingException { thrower.call(withArguments: []) }
+        #expect(log.messages == ["Error: boom"])
+        #expect(context.exception == nil)
     }
 }

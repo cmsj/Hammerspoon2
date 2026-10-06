@@ -154,15 +154,15 @@ hs.ax.on(app.axElement(), hs.ax.notificationTypes.windowCreated, (notification, 
 Every one of these `on()`/`once()` functions follows the same rule: if the call returns, your
 listener is registered *and* the underlying system watcher is running. If the watcher can't be
 started (missing hardware, missing Accessibility permission, an element whose app has quit,
-and so on), the call throws an `Error` instead, and nothing is registered, so it's safe to
-simply try again later. If your config needs to keep going when a watcher can't be started,
-wrap the call in `try`/`catch`:
+and so on), the call throws an `Error` instead (and logs it to the Console), and nothing is registered,
+so it's safe to simply try again later. If your config needs to keep going when a watcher
+can't be started, wrap the call in `try`/`catch`:
 
 ```js
 try {
     hs.usb.on('added', device => console.log(`connected: ${device.productName}`))
 } catch (err) {
-    console.error(err.message)  // e.g. "hs.usb.on(): failed to start watcher"
+    console.error(err.message)  // e.g. "hs.usb.on(): failed to start watcher for 'added'"
 }
 ```
 

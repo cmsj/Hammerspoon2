@@ -370,62 +370,69 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   Hammerspoon 2 has two established watcher patterns. Choose the right one based on whether
   the underlying OS API is singleton/global or per-object.
 
-  ### Pattern A — Module-level watcher (hs.application, hs.audiodevice, hs.pasteboard)
+  ### Pattern A — Module-level watcher (hs.screen, hs.usb, hs.application, hs.pasteboard)
 
   Use this when there is a single global OS subscription (NSWorkspace notification, CoreAudio
-  listener, a polling timer, etc.) that serves all JS callers.
+  listener, IOKit notification, a polling timer, etc.) that serves all JS callers. hs.screen is
+  the smallest complete example to copy.
 
-  The architecture is always two layers: a private Swift subscription that feeds a single
+  The architecture is always two layers: a private Swift subscription (`_addWatcher` /
+  `_removeWatcher`) that feeds a shared JS `LazyWatcherEmitter` (Engine/engine.js), which owns
+  the listeners and starts/stops the Swift subscription lazily. The public `on`/`off`/`once` are
+  defined in the companion JS file, not in Swift.
+
+  The contract (issue #254): if `on()`/`once()` returns, the listener is registered AND the
+  native watcher is running; otherwise it throws and records nothing, so a retry works. Never
+  just log and return.
 
   #### Swift protocol (in the `@objc protocol HSXxxModuleAPI: JSExport` block)
 
   ```swift
-  /// Register a listener for Xxx events.
-  /// - Parameter listener: A JavaScript function receiving (eventName, ...)
-  /// - Example:
-  /// ```js
-  /// hs.xxx.addWatcher((event, data) => console.log(event, data))
-  /// ```
-  @objc func addWatcher(_ listener: JSValue)
-
-  /// Remove a previously registered listener.
-  /// - Parameter listener: The function originally passed to `addWatcher`
-  /// - Example:
-  /// ```js
-  /// hs.xxx.removeWatcher(myHandler)
-  /// ```
-  @objc func removeWatcher(_ listener: JSValue)
-
-  // Private API consumed only by the companion JS file — not exposed in docs
+  // NOTE: Private API consumed only by hs.xxx.js
   /// SKIP_DOCS
-  @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) -> Bool
+  @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool
   /// SKIP_DOCS
   @objc func _removeWatcher()
   /// SKIP_DOCS
-  @objc var _watcherEmitter: JSValue? { get set }
+  @objc var _watcherEmitter: JSFunction? { get set }
 
-  Swift implementation (in the @objc class HSXxxModule body)
+  /// The event names `on()`/`once()` accept - see HSXxxEvent
+  /// SKIP_DOCS
+  @objc var _eventNames: [String] { get }
 
-  @objc var _watcherEmitter: JSValue? = nil
-  private var watcherCallback: JSValue? = nil   // or whatever state the OS listener needs
+  // Set by hs.xxx.js. Must be pre-declared properties, or JSC drops them on GC (issue #185).
+  /// SKIP_DOCS
+  @objc var on: JSFunction? { get set }
+  /// SKIP_DOCS
+  @objc var off: JSFunction? { get set }
+  /// SKIP_DOCS
+  @objc var once: JSFunction? { get set }
+  ```
 
-  @objc func addWatcher(_ listener: JSValue) {
-      _watcherEmitter?.invokeMethod("on", withArguments: [listener])
+  #### Swift implementation
+
+  ```swift
+  /// Events emitted by hs.xxx's watcher
+  nonisolated enum HSXxxEvent: String, HSEventName {
+      case change
   }
 
-  @objc func removeWatcher(_ listener: JSValue) {
-      _watcherEmitter?.invokeMethod("removeListener", withArguments: [listener])
-  }
+  @objc var _watcherEmitter: JSFunction? = nil
+  @objc var _eventNames: [String] { HSXxxEvent.allNames }
+  @objc var on: JSFunction? = nil
+  @objc var off: JSFunction? = nil
+  @objc var once: JSFunction? = nil
+  private var watcherCallback: JSFunction?
 
-  @objc(_addWatcher:) func _addWatcher(_ callback: JSValue) -> Bool {
+  @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool {
       guard watcherCallback == nil else {
-          AKWarning("hs.xxx._addWatcher(): Already watching. Refusing to create a second.")
+          AKWarning("hs.xxx._addWatcher: already watching — refusing second subscription")
           return false
       }
-      // ... register with the OS API here, returning false if it fails BEFORE setting any state;
-      // call callback(...) when an event fires ...
+      // ... register with the OS API here. If that can fail, check it and return false
+      // BEFORE setting any state, so a failed attempt leaves nothing to clean up ...
       watcherCallback = callback
-      AKDebug("hs.xxx._addWatcher(): Started")
+      AKDebug("hs.xxx._addWatcher: started")
       return true
   }
 
@@ -433,72 +440,87 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
       guard watcherCallback != nil else { return }
       // ... unregister from the OS API ...
       watcherCallback = nil
-      AKDebug("hs.xxx._removeWatcher(): Stopped")
+      AKDebug("hs.xxx._removeWatcher: stopped")
+  }
+
+  private func fireWatcherEvent() {
+      _ = watcherCallback?.call(withArguments: [HSXxxEvent.change.rawValue])
   }
 
   func shutdown() {
       _removeWatcher()
+      _watcherEmitter = nil
+      on = nil
+      off = nil
+      once = nil
   }
+  ```
 
   Key rules:
-  - _addWatcher MUST guard against double-registration and warn with AKWarning.
-  - _addWatcher MUST return Bool: false for any failure (including that refusal), true on success.
+  - `_addWatcher` MUST return Bool: false for any failure, including refusing a second
+    subscription (warned with AKWarning); true on success.
+  - Emit ONLY via `HSXxxEvent.foo.rawValue`, never a string literal (see Event names below).
   - Always use [weak self] in any closure passed to the OS listener to avoid retain cycles.
   - When the OS callback arrives off-@MainActor, use MainActor.assumeIsolated { } to enter
-  actor isolation (CoreLocation, CoreAudio, etc. guarantee main-thread delivery).
-  - shutdown() MUST call _removeWatcher().
+    actor isolation (CoreLocation, CoreAudio, etc. guarantee main-thread delivery).
+  - shutdown() MUST call _removeWatcher() and nil `_watcherEmitter` and the on/off/once slots.
 
-  Companion JS file (hs.xxx.js)
+  #### Companion JS file (hs.xxx.js)
 
+  ```js
   "use strict";
 
-  class XxxModuleWatcherEmitter {
-      #listeners = []
+  // Lazily starts the native watcher on the first listener and stops it once the last
+  // listener is removed. See Engine/engine.js for LazyWatcherEmitter itself.
+  hs.xxx._watcherEmitter = new LazyWatcherEmitter("hs.xxx", function() {
+      return hs.xxx._addWatcher((event) => {
+          hs.xxx._watcherEmitter.emit(event);
+      });
+  }, function() {
+      hs.xxx._removeWatcher();
+  }, hs.xxx._eventNames);
 
-      #handleEvent(/* ...event args... */) {
-          var listeners = this.#listeners.slice();
-          const length = listeners.length;
-          for (var i = 0; i < length; i++) {
-              listeners[i].apply(null, [/* ...event args... */]);
-          }
-      }
+  /// Register a listener for Xxx events.
+  /// Parameters:
+  ///  - event: {"change"} The event to listen for
+  ///  - listener: {() => void} Called when the event occurs
+  /// Throws: true
+  /// Example:
+  /// ```js
+  /// try {
+  ///     hs.xxx.on('change', () => console.log("changed"))
+  /// } catch (err) {
+  ///     console.error(err.message)
+  /// }
+  /// ```
+  hs.xxx.on = function(event, listener) {
+      hs.xxx._watcherEmitter.on(event, listener);
+  };
 
-      on(listener) {
-          if (typeof listener !== 'function') {
-              throw new Error("hs.xxx.addWatcher(): The provided handler must be a function");
-          }
-          if (this.#listeners.includes(listener)) {
-              console.error("hs.xxx.addWatcher(): The provided handler is already registered.");
-              return;
-          }
-          if (this.#listeners.length === 0) {
-              hs.xxx._addWatcher((/* ...event args... */) => {
-                  this.#handleEvent(/* ...event args... */);
-              });
-          }
-          this.#listeners.push(listener);
-      }
-
-      removeListener(listener) {
-          const idx = this.#listeners.indexOf(listener);
-          if (idx > -1) {
-              this.#listeners.splice(idx, 1);
-          }
-          if (this.#listeners.length === 0) {
-              hs.xxx._removeWatcher();
-          }
-      }
-  }
-
-  // Store in a Swift-retained property so the emitter is not garbage collected.
-  hs.xxx._watcherEmitter = new XxxModuleWatcherEmitter();
+  // hs.xxx.off and hs.xxx.once follow the same shape; once() also gets `Throws: true` and a
+  // try/catch example, off() gets neither.
+  ```
 
   Key rules:
-  - The emitter class MUST be stored in hs.xxx._watcherEmitter — this is what keeps it alive.
-  - The underlying _addWatcher call MUST be lazy (only on first on() call).
-  - _removeWatcher MUST be called automatically when the last listener is removed.
-  - Duplicate listener registration is silently rejected with console.error (not thrown).
-  - The module's shutdown() method MUST remove all watchers and set properties like _watcherEmitter to nil
+  - The emitter MUST be stored in hs.xxx._watcherEmitter — this is what keeps it alive.
+  - The start function MUST `return` the native `_addWatcher(...)` result. LazyWatcherEmitter
+    logs and throws a standard "hs.xxx.on(): failed to start watcher for '<event>'" error when
+    it returns false; don't hand-write `if (!started) throw ...`.
+  - Use KeyedLazyWatcherEmitter instead when each event name has its own independent native
+    resource (hs.wifi, hs.userdefaults); its start/stop functions receive the event name.
+  - Duplicate listener registration is rejected with console.error (not thrown) — the listener
+    is already registered, so the contract still holds.
+  - Mark on()/once() docstrings with `Throws: true` (JS) / `- Throws: true` (Swift), and wrap
+    their examples in `try { ... } catch (err) { console.error(err.message) }`. The docs
+    pipeline renders that as a Throws section and `@throws {Error}`.
+
+  Per-instance watchers (HSCamera, HSAudioDevice): on()/once() are native Swift methods, since a
+  per-instance object has no enhancement script to hang them on. They get the emitter from a
+  module-level JS factory (e.g. `hs.camera._makeCameraEmitter`). They MUST:
+  - set `ctx.exception` and return if the factory is missing or fails to produce an emitter
+    (see HSCamera.ensureWatcherEmitter), rather than silently returning;
+  - call the emitter through `ctx.callCapturingException { emitter.invokeMethod(...) }`.
+    Plain invokeMethod never delivers the emitter's throw to the JS caller's try/catch.
 
   Event names (issue #253):
   - Declare the event names as a Swift enum: `nonisolated enum HSXxxEvent: String, HSEventName { case ... }`
@@ -511,18 +533,6 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   - The on/off/once docstring unions must list exactly the enum's raw values; `npm run docs:test`
     (scripts/check-event-names.js) fails otherwise, and also fails if an emitter is given no list.
     Only emitters whose names are genuinely arbitrary (hs.userdefaults) are exempted in that script.
-
-  Registration failure (issue #254):
-  - The contract for every watcher on()/once(): if it returns, the listener is registered AND the
-    native watcher is running; otherwise it throws and records nothing. Never just log and return.
-  - The emitter's start function just returns the native result:
-    `function() { return hs.xxx._addWatcher(...); }`. `LazyWatcherEmitter` /
-    `KeyedLazyWatcherEmitter` throw a standard error when it returns `false`; don't hand-write
-    `if (!started) throw ...`.
-  - A native on()/once() that calls into the JS emitter (per-instance objects, hs.ax) MUST wrap
-    the call in `ctx.callCapturingException { ... }`, or the throw never reaches the JS caller.
-  - Mark on()/once() docstrings with `Throws: true` (JS) / `- Throws: true` (Swift), and wrap
-    their examples in `try { ... } catch (err) { console.error(err.message) }`.
 
   ---
   Pattern B — Object-level watcher (hs.ax, hs.location)

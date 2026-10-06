@@ -31,11 +31,17 @@ class AXModuleWatcherEmitter {
         }
     }
 
+    on(element, notification, listener) {
+        return this.#add("on", element, notification, listener);
+    }
+
+    // Shared by on() and once(); `method` names the one the caller used, for error messages.
     // Returns true if `listener` was newly added, false if it was already registered. Throws if
     // the native watcher couldn't be registered, recording nothing.
-    on(element, notification, listener) {
+    #add(method, element, notification, listener) {
+        const caller = "hs.ax." + method + "()";
         if (typeof listener !== 'function') {
-            throw new Error("hs.ax.on(): listener must be a function");
+            throw new Error(caller + ": listener must be a function");
         }
 
         var bucket = this.#findBucket(element, notification);
@@ -52,14 +58,14 @@ class AXModuleWatcherEmitter {
                 // notification). Don't retain a bucket for a watcher that doesn't actually
                 // exist - otherwise a later on() call would see the bucket, skip
                 // _addWatcher entirely, and the listener would silently never fire.
-                throw new Error("hs.ax.on(): failed to register watcher for '" + notification + "'");
+                throw failedToStart(caller, notification);
             }
 
             this.#buckets.push(bucket);
         }
 
         if (bucket.listeners.includes(listener)) {
-            console.error("hs.ax.on(): The provided listener for '" + notification + "' is already registered.");
+            console.error(caller + ": listener for '" + notification + "' is already registered.");
             return false;
         }
 
@@ -97,7 +103,7 @@ class AXModuleWatcherEmitter {
             self.off(element, notification, wrapped);
             listener.apply(null, [notif, elem]);
         }
-        this.on(element, notification, wrapped);
+        this.#add("once", element, notification, wrapped);
         return wrapped;
     }
 
@@ -127,8 +133,14 @@ class AXModuleWatcherEmitter {
                 }
             }
         } catch (err) {
+            // Keep rolling back even if one removal fails, and rethrow the original error - the
+            // one the caller needs to see - rather than a rollback failure.
             for (const [notification, registered] of added) {
-                this.off(element, notification, registered);
+                try {
+                    this.off(element, notification, registered);
+                } catch (rollbackErr) {
+                    console.error("hs.ax: failed to roll back watcher for '" + notification + "': " + rollbackErr);
+                }
             }
             throw err;
         }

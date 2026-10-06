@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { THROWS_DESCRIPTION } = require('./docs-strings');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const MODULES_DIR = path.join(__dirname, '..', 'Hammerspoon 2', 'Modules');
@@ -641,8 +642,6 @@ function extractNotes(docLines) {
  * way to express this in a signature (and neither does a TypeScript declaration), so it has to
  * be stated in the docs.
  */
-const THROWS_DESCRIPTION = 'Throws an Error on failure; wrap calls in try/catch to handle it.';
-
 function extractThrows(docLines) {
     return docLines.some(line => /^-?\s*Throws:\s*true\s*$/i.test(line.trim()));
 }
