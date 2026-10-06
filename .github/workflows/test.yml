@@ -11,7 +11,8 @@ jobs:
   test:
     name: Run Tests
     runs-on: macos-26
-    timeout-minutes: 30
+    # Tests take ~13 min and the PR results summary can take ~10 more, so 30 was too tight.
+    timeout-minutes: 50
     permissions:
       contents: read
       checks: write
@@ -77,6 +78,9 @@ jobs:
       - name: Publish test results to PR
         uses: slidoapp/xcresulttool@v3.1.1
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        # Only a PR summary; a slow or broken publish must not fail an otherwise green run.
+        timeout-minutes: 15
+        continue-on-error: true
         with:
           path: TestResults.xcresult
           show-passed-tests: false
