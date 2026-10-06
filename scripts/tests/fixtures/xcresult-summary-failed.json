@@ -1,0 +1,54 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "00000000-0000000000000000",
+        "deviceName": "CI Mac",
+        "modelName": "Mac mini",
+        "osBuildNumber": "26A434",
+        "osVersion": "27.0.1",
+        "platform": "macOS"
+      },
+      "expectedFailures": 0,
+      "failedTests": 2,
+      "passedTests": 2,
+      "skippedTests": 1,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "FailPkg \u00b7 Built with macOS 27.0.1",
+  "expectedFailures": 0,
+  "failedTests": 2,
+  "finishTime": 1791297206.64,
+  "passedTests": 2,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 1,
+  "startTime": 1791297195.357,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "Expectation failed: 1 == 2: one is not two",
+      "targetName": "FailPkgTests",
+      "testIdentifier": 5,
+      "testIdentifierString": "fails()",
+      "testIdentifierURL": "test://com.apple.xcode/FailPkg/FailPkgTests/fails()",
+      "testName": "fails()"
+    },
+    {
+      "failureText": "XCTAssertEqual failed: (\"a\") is not equal to (\"b\")",
+      "targetName": "FailPkgTests",
+      "testIdentifier": 2,
+      "testIdentifierString": "LegacyTests/testXCTFail()",
+      "testIdentifierURL": "test://com.apple.xcode/FailPkg/FailPkgTests/LegacyTests/testXCTFail",
+      "testName": "testXCTFail()"
+    }
+  ],
+  "title": "Test - FailPkg",
+  "topInsights": [],
+  "totalTestCount": 5
+}
