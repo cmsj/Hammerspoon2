@@ -1028,6 +1028,11 @@ import JavaScriptCore
         let success = await harness.waitForAsync(timeout: 2.0) { outputLines >= 3 }
         #expect(success, "Should monitor background task output")
         #expect(outputLines >= 3, "Should capture all output lines")
+
+        // The script is still in its final sleep when the third line arrives. Let it exit before the
+        // harness is torn down, otherwise teardown races the process's exit and pipe EOF handlers.
+        let tasksCompleted = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(tasksCompleted, "Monitored task should exit and be cleaned up")
     }
 
     @Test("Error handling pattern with retries works")
