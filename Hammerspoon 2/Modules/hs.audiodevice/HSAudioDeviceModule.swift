@@ -231,7 +231,10 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
     private var previousDeviceIDs: Set<AudioObjectID> = []
 
     @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
-        guard unsafe moduleRegistrations.isEmpty else { return false }
+        guard unsafe moduleRegistrations.isEmpty else {
+            AKWarning("hs.audiodevice._addWatcher(): Already watching. Refusing to create a second.")
+            return false
+        }
         moduleCallback = listener
         let sysObjID = AudioObjectID(kAudioObjectSystemObject)
 

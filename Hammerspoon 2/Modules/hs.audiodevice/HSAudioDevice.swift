@@ -788,7 +788,10 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
     }
 
     @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
-        guard unsafe deviceRegistrations.isEmpty else { return false }
+        guard unsafe deviceRegistrations.isEmpty else {
+            AKWarning(unsafe "HSAudioDevice id=\(objectID): Already watching. Refusing to create a second.")
+            return false
+        }
         selfRetain = self
 
         let candidates: [(AudioObjectPropertySelector, AudioObjectPropertyScope, HSAudioDevicePropertyEvent)] = [

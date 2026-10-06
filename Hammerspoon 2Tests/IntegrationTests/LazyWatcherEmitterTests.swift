@@ -52,14 +52,10 @@ struct LazyWatcherEmitterTests {
         #expect(!harness.hasException)
     }
 
-    @Test("a start() returning false makes on() log and throw, records nothing, and allows a retry")
+    @Test("a start() returning false makes on() throw, records nothing, and allows a retry")
     func testStartReturningFalseThrows() {
         let harness = makeHarness()
         harness.eval("""
-            // The failure is logged as well as thrown, so it's still seen when on() is called
-            // from a promise callback, where the throw would become an unhandled rejection.
-            var logged = [];
-            console.error = function(msg) { logged.push(msg); };
             var startCalls = 0;
             var shouldFail = true;
             var e = new LazyWatcherEmitter("hs.test", function() {
@@ -77,7 +73,6 @@ struct LazyWatcherEmitterTests {
         """)
         #expect(!harness.hasException)
         #expect(harness.evalString("message") == "hs.test.on(): failed to start watcher for 'x'")
-        #expect(harness.evalString("logged.join('|')") == "hs.test.on(): failed to start watcher for 'x'")
         harness.expectFalse("e.events['x'] && e.events['x'].includes(fn)")
 
         harness.eval("""

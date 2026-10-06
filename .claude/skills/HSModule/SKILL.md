@@ -458,7 +458,10 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
 
   Key rules:
   - `_addWatcher` MUST return Bool: false for any failure, including refusing a second
-    subscription (warned with AKWarning); true on success.
+    subscription; true on success. Every false path MUST log its specific cause (AKError, or
+    AKWarning for the refusal) - the JS emitter's error is deliberately generic and not logged,
+    so the native log is what shows the reason, including when on() is called from a promise
+    callback and the throw becomes an unhandled rejection.
   - Emit ONLY via `HSXxxEvent.foo.rawValue`, never a string literal (see Event names below).
   - Always use [weak self] in any closure passed to the OS listener to avoid retain cycles.
   - When the OS callback arrives off-@MainActor, use MainActor.assumeIsolated { } to enter
@@ -504,8 +507,8 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   Key rules:
   - The emitter MUST be stored in hs.xxx._watcherEmitter — this is what keeps it alive.
   - The start function MUST `return` the native `_addWatcher(...)` result. LazyWatcherEmitter
-    logs and throws a standard "hs.xxx.on(): failed to start watcher for '<event>'" error when
-    it returns false; don't hand-write `if (!started) throw ...`.
+    throws a standard "hs.xxx.on(): failed to start watcher for '<event>'" error when it returns
+    false; don't hand-write `if (!started) throw ...`.
   - Use KeyedLazyWatcherEmitter instead when each event name has its own independent native
     resource (hs.wifi, hs.userdefaults); its start/stop functions receive the event name.
   - Duplicate listener registration is rejected with console.error (not thrown) — the listener

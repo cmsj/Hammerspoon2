@@ -96,13 +96,12 @@ EventEmitter.prototype.once = function (event, listener) {
 
 // MARK: - failedToStart
 //
-// Shared by every watcher emitter for a native watcher that couldn't be started. The failure is
-// logged as well as thrown: on()/once() called from a promise callback or async function would
-// otherwise turn it into an unhandled rejection, which nothing reports.
+// The error every watcher emitter throws for a native watcher that couldn't be started. It isn't
+// logged here: every native `_addWatcher` already logs its specific cause (missing permission,
+// already watching, ...) before returning false, which also keeps the failure visible when
+// on()/once() is called from a promise callback, where the throw becomes an unhandled rejection.
 function failedToStart(caller, event) {
-    const message = caller + ": failed to start watcher for '" + event + "'";
-    console.error(message);
-    return new Error(message);
+    return new Error(caller + ": failed to start watcher for '" + event + "'");
 }
 
 // MARK: - assertKnownEvent
