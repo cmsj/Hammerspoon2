@@ -99,13 +99,18 @@ import JavaScriptCore
     init(text: String, confidence: Float, boundingBox: CGRect) {
         self.text = text
         self.confidence = Double(confidence)
+        // Vision can return boxes that overhang the image slightly (macOS 27's accurate
+        // recognizer reports x ≈ -0.004 for text near the left edge), so clip to the image
+        // to keep the documented 0–1 range.
+        let clipped = boundingBox.intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+        let box = clipped.isNull ? .zero : clipped
         // Vision uses normalized coordinates with origin at the bottom-left of the image.
         // Convert to top-left origin: flip Y so (0,0) becomes the image's top-left corner.
         self.bounds = HSRect(
-            x: Double(boundingBox.minX),
-            y: Double(1.0 - boundingBox.maxY),
-            w: Double(boundingBox.width),
-            h: Double(boundingBox.height)
+            x: Double(box.minX),
+            y: Double(1.0 - box.maxY),
+            w: Double(box.width),
+            h: Double(box.height)
         )
         super.init()
     }
