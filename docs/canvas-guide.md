@@ -76,7 +76,7 @@ shares a few properties regardless of its `type`:
 | `action` | string | every element except `resetClip` | `"fill"`, `"stroke"`, `"strokeAndFill"` (default), `"build"`, `"clip"`, or `"skip"` — see [below](#the-action-pipeline-fill-stroke-build-clip-skip-resetclip) |
 | `compositeRule` | string | every element except `resetClip` | a blend mode name for this element only — see [Blend modes](#blend-modes-compositerule) |
 | `id` | any | every element | not read by rendering at all — your own bookkeeping value, delivered back by mouse-tracking callbacks and readable via `canvasElements()` |
-| `trackMouseDown`, `trackMouseUp`, `trackMouseEnterExit`, `trackMouseMove` | boolean | every element | opts this element into mouse tracking — see [`HSCanvas.mouseCallback()`](HSCanvas.html) |
+| `trackMouseDown`, `trackMouseUp`, `trackRightMouseDown`, `trackRightMouseUp`, `trackMouseEnterExit`, `trackMouseMove` | boolean | every element | opts this element into mouse tracking (`trackMouseDown`/`trackMouseUp` are the left button only; Ctrl-click counts as a right click) — see [`HSCanvas.mouseCallback()`](HSCanvas.html) |
 | `rotation` + `rotationPoint` | number (degrees) + `{x, y}` | every element | rotate about `rotationPoint`, or the element's own bounding-box center if omitted |
 | `transformation` | `{m11, m12, m21, m22, tX, tY}` | every element | a raw affine matrix; takes precedence over `rotation` if both are set |
 | `windingRule` | string | `rectangle`, `circle`, `oval`, `arc`, `ellipticalArc`, `segments`, `points` | `"nonZero"` (default) or `"evenOdd"` — only matters once `build` is combining more than one shape's path together, see below |

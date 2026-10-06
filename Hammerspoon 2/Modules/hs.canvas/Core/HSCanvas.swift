@@ -277,14 +277,24 @@ import SwiftUI
     /// Set the callback fired for tracked mouse events
     ///
     /// Fires for elements with `trackMouseDown`/`trackMouseUp`/`trackMouseEnterExit`/
-    /// `trackMouseMove` set to `true` in their element dictionary, and for whole-canvas
-    /// regions enabled via `canvasMouseEvents()` (delivered with id `"_canvas"`).
-    /// - Parameter callback: {(canvas: HSCanvas, message: string, id: any, x: number, y: number) => void} A JavaScript function called with the canvas, the event name (`"mouseDown"`/`"mouseUp"`/`"mouseEnter"`/`"mouseExit"`/`"mouseMove"`), the tracked element's id, and the event's x/y coordinates
+    /// `trackMouseMove`/`trackRightMouseDown`/`trackRightMouseUp` set to `true` in their
+    /// element dictionary, and for whole-canvas regions enabled via `canvasMouseEvents()`
+    /// (delivered with id `"_canvas"`). `mouseDown`/`mouseUp` are the left button only;
+    /// the right button (or a Ctrl-click, the standard macOS secondary click) is reported
+    /// separately as `rightMouseDown`/`rightMouseUp`.
+    /// - Parameter callback: {(canvas: HSCanvas, message: string, id: any, x: number, y: number) => void} A JavaScript function called with the canvas, the event name (`"mouseDown"`/`"mouseUp"`/`"rightMouseDown"`/`"rightMouseUp"`/`"mouseEnter"`/`"mouseExit"`/`"mouseMove"`), the tracked element's id, and the event's x/y coordinates
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js
     /// c.appendElements([{ type: "circle", action: "fill", trackMouseDown: true, id: "dot" }])
     /// c.mouseCallback((canvas, message, id, x, y) => console.log(message, id, x, y))
+    ///
+    /// // Offer a secondary action on right-click
+    /// c.appendElements([{ type: "rectangle", action: "fill", id: "button",
+    ///                     trackMouseUp: true, trackRightMouseDown: true }])
+    /// c.mouseCallback((canvas, message, id) => {
+    ///     if (message === "rightMouseDown") console.log("context menu for", id)
+    /// })
     /// ```
     @objc func mouseCallback(_ callback: JSFunction) -> HSCanvas
 
@@ -295,8 +305,15 @@ import SwiftUI
     ///   - up: Track mouse-up events
     ///   - enterExit: Track mouse enter/exit events
     ///   - move: Track mouse-move events
+    ///   - rightDown?: Track right mouse-down events (defaults to `false`)
+    ///   - rightUp?: Track right mouse-up events (defaults to `false`)
     /// - Returns: Self for chaining
-    @objc func canvasMouseEvents(_ down: Bool, _ up: Bool, _ enterExit: Bool, _ move: Bool) -> HSCanvas
+    /// - Example:
+    /// ```js
+    /// // Left and right clicks anywhere on the canvas
+    /// c.canvasMouseEvents(true, false, false, false, true, false)
+    /// ```
+    @objc func canvasMouseEvents(_ down: Bool, _ up: Bool, _ enterExit: Bool, _ move: Bool, _ rightDown: Bool, _ rightUp: Bool) -> HSCanvas
 
     // MARK: Element and canvas transforms
 
@@ -734,9 +751,11 @@ import SwiftUI
         return self
     }
 
-    @objc func canvasMouseEvents(_ down: Bool, _ up: Bool, _ enterExit: Bool, _ move: Bool) -> HSCanvas {
+    @objc func canvasMouseEvents(_ down: Bool, _ up: Bool, _ enterExit: Bool, _ move: Bool, _ rightDown: Bool, _ rightUp: Bool) -> HSCanvas {
         elementStore.canvasTrackMouseDown = down
         elementStore.canvasTrackMouseUp = up
+        elementStore.canvasTrackRightMouseDown = rightDown
+        elementStore.canvasTrackRightMouseUp = rightUp
         elementStore.canvasTrackMouseEnterExit = enterExit
         elementStore.canvasTrackMouseMove = move
         return self

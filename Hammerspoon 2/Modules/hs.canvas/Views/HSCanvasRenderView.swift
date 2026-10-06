@@ -3,6 +3,7 @@
 //  Hammerspoon 2
 //
 
+import AppKit
 import SwiftUI
 
 /// SwiftUI `Canvas` that replays the element list on every redraw, plus mouse-tracking
@@ -12,8 +13,9 @@ import SwiftUI
 /// already uses that name for hs.ui's unrelated root view, and reusing it here
 /// would conflate two different "canvas" concepts in the codebase.
 ///
-/// Mouse delivery is SwiftUI-native (`.onContinuousHover`/`DragGesture`) rather than a
-/// separate `NSTrackingArea`-based overlay: per-element hit-testing walks a cached
+/// Mouse delivery is SwiftUI-native (`.onContinuousHover`/`DragGesture`, plus
+/// `HSCanvasSecondaryClickGesture` for the right button, which `DragGesture` never
+/// sees; Ctrl-clicks arrive via `DragGesture` and are re-routed as right clicks) rather than a separate `NSTrackingArea`-based overlay: per-element hit-testing walks a cached
 /// `Path` list (`CanvasElementDrawing.trackedElements`/`topmostHit`, built fresh from
 /// the current element list on each event) in reverse z-order, exactly mirroring v1's
 /// single-`mouseCallback`-with-topmost-element-wins model.
@@ -32,7 +34,14 @@ struct HSCanvasRenderView: View {
     /// typed `mouseExit` for it without needing to re-run `trackedElements()` after the
     /// pointer has already left the view.
     @State private var hoveredID: Any?
-    @State private var isPressed = false
+    /// Which button the in-progress `DragGesture` press is being reported as, or `nil` when
+    /// no press is active. Fixed at mouse-down so a Ctrl-click still ends as `rightMouseUp`
+    /// if Ctrl is released before the button.
+    @State private var activePress: PressButton?
+
+    enum PressButton {
+        case primary, secondary
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -49,16 +58,46 @@ struct HSCanvasRenderView: View {
             .gesture(
                 DragGesture(minimumDistance: 0, coordinateSpace: .local)
                     .onChanged { value in
-                        guard !isPressed else { return }
-                        isPressed = true
-                        handleMouseDown(at: value.location, size: geometry.size)
+                        guard activePress == nil else { return }
+                        let modifiers = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
+                        let button = Self.pressButton(forModifiers: modifiers)
+                        activePress = button
+                        switch button {
+                        case .primary:
+                            handleMouseDown(at: value.location, size: geometry.size)
+                        case .secondary:
+                            handleRightMouseDown(at: value.location, size: geometry.size)
+                        }
                     }
                     .onEnded { value in
-                        isPressed = false
-                        handleMouseUp(at: value.location, size: geometry.size)
+                        let button = activePress ?? .primary
+                        activePress = nil
+                        switch button {
+                        case .primary:
+                            handleMouseUp(at: value.location, size: geometry.size)
+                        case .secondary:
+                            handleRightMouseUp(at: value.location, size: geometry.size)
+                        }
                     }
             )
+            .gesture(
+                HSCanvasSecondaryClickGesture { phase, location in
+                    switch phase {
+                    case .down:
+                        handleRightMouseDown(at: location, size: geometry.size)
+                    case .up:
+                        handleRightMouseUp(at: location, size: geometry.size)
+                    }
+                }
+            )
         }
+    }
+
+    /// Maps the modifiers held at a primary-button mouse-down to the button it's reported
+    /// as: Ctrl-click is the standard macOS secondary click, so it's delivered as
+    /// `rightMouseDown`/`rightMouseUp` rather than `mouseDown`/`mouseUp`.
+    static func pressButton(forModifiers modifiers: NSEvent.ModifierFlags) -> PressButton {
+        modifiers.contains(.control) ? .secondary : .primary
     }
 
     private func handleHover(_ phase: HoverPhase, size: CGSize) {
@@ -126,20 +165,29 @@ struct HSCanvasRenderView: View {
     }
 
     private func handleMouseDown(at location: CGPoint, size: CGSize) {
-        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
-        if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .down) {
-            onMouseEvent?("mouseDown", hit.id, location.x, location.y)
-        } else if store.canvasTrackMouseDown {
-            onMouseEvent?("mouseDown", Self.canvasSentinelID, location.x, location.y)
-        }
+        deliverButtonEvent("mouseDown", kind: .down, canvasTracks: store.canvasTrackMouseDown, at: location, size: size)
     }
 
     private func handleMouseUp(at location: CGPoint, size: CGSize) {
+        deliverButtonEvent("mouseUp", kind: .up, canvasTracks: store.canvasTrackMouseUp, at: location, size: size)
+    }
+
+    private func handleRightMouseDown(at location: CGPoint, size: CGSize) {
+        deliverButtonEvent("rightMouseDown", kind: .rightDown, canvasTracks: store.canvasTrackRightMouseDown, at: location, size: size)
+    }
+
+    private func handleRightMouseUp(at location: CGPoint, size: CGSize) {
+        deliverButtonEvent("rightMouseUp", kind: .rightUp, canvasTracks: store.canvasTrackRightMouseUp, at: location, size: size)
+    }
+
+    /// Delivers a button event to the topmost element tracking `kind`, falling back to the
+    /// whole-canvas sentinel when `canvasTracks` is enabled and no element was hit.
+    private func deliverButtonEvent(_ message: String, kind: CanvasElementDrawing.MouseTrackingKind, canvasTracks: Bool, at location: CGPoint, size: CGSize) {
         let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
-        if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .up) {
-            onMouseEvent?("mouseUp", hit.id, location.x, location.y)
-        } else if store.canvasTrackMouseUp {
-            onMouseEvent?("mouseUp", Self.canvasSentinelID, location.x, location.y)
+        if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: kind) {
+            onMouseEvent?(message, hit.id, location.x, location.y)
+        } else if canvasTracks {
+            onMouseEvent?(message, Self.canvasSentinelID, location.x, location.y)
         }
     }
 }

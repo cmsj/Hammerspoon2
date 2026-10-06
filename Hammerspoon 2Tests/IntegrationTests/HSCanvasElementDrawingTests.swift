@@ -382,6 +382,33 @@ struct HSCanvasElementDrawingTests {
         #expect((moveHit?.id as? String) == "moveOnly")
     }
 
+    @Test("trackedElements includes elements that only track the right mouse button")
+    func trackedElementsIncludesRightButtonOnly() {
+        let elements: [[String: Any]] = [
+            ["type": "rectangle", "frame": ["x": 0, "y": 0, "w": 10, "h": 10], "trackRightMouseDown": true],
+            ["type": "rectangle", "frame": ["x": 20, "y": 20, "w": 10, "h": 10], "trackRightMouseUp": true],
+        ]
+        let tracked = CanvasElementDrawing.trackedElements(elements: elements, containerSize: CGSize(width: 100, height: 100))
+        #expect(tracked.count == 2)
+    }
+
+    @Test("topmostHit keeps left- and right-button tracking separate")
+    func topmostHitSeparatesButtons() {
+        // A right-click must not reach an element that only asked for left clicks (and
+        // vice versa), and the topmost element tracking the right button wins even when a
+        // left-only element is drawn above it.
+        let elements: [[String: Any]] = [
+            ["type": "rectangle", "frame": ["x": 0, "y": 0, "w": 50, "h": 50], "trackRightMouseDown": true, "trackRightMouseUp": true, "id": "right"],
+            ["type": "rectangle", "frame": ["x": 0, "y": 0, "w": 50, "h": 50], "trackMouseDown": true, "trackMouseUp": true, "id": "left"],
+        ]
+        let tracked = CanvasElementDrawing.trackedElements(elements: elements, containerSize: CGSize(width: 100, height: 100))
+        let point = CGPoint(x: 25, y: 25)
+        #expect((CanvasElementDrawing.topmostHit(at: point, in: tracked, for: .down)?.id as? String) == "left")
+        #expect((CanvasElementDrawing.topmostHit(at: point, in: tracked, for: .up)?.id as? String) == "left")
+        #expect((CanvasElementDrawing.topmostHit(at: point, in: tracked, for: .rightDown)?.id as? String) == "right")
+        #expect((CanvasElementDrawing.topmostHit(at: point, in: tracked, for: .rightUp)?.id as? String) == "right")
+    }
+
     @Test("topmostHit returns nil when the point is outside every tracked path")
     func topmostHitOutsideAllPaths() {
         let elements: [[String: Any]] = [
@@ -484,5 +511,22 @@ struct HSCanvasEnterExitTransitionTests {
         #expect(result.exitID as? String == "dot")
         #expect(result.enterID == nil)
         #expect(result.newTargetID == nil)
+    }
+}
+
+/// Tests for `HSCanvasRenderView.pressButton(forModifiers:)`, which decides whether a
+/// primary-button press is delivered as a left click or (Ctrl-click) a right click.
+@Suite("hs.canvas press button tests")
+struct HSCanvasPressButtonTests {
+    @Test("A plain primary-button press is reported as the left button")
+    func plainPressIsPrimary() {
+        #expect(HSCanvasRenderView.pressButton(forModifiers: []) == .primary)
+        #expect(HSCanvasRenderView.pressButton(forModifiers: [.shift, .option, .command]) == .primary)
+    }
+
+    @Test("Ctrl-click is reported as the right button")
+    func controlClickIsSecondary() {
+        #expect(HSCanvasRenderView.pressButton(forModifiers: .control) == .secondary)
+        #expect(HSCanvasRenderView.pressButton(forModifiers: [.control, .shift]) == .secondary)
     }
 }

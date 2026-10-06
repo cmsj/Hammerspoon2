@@ -465,6 +465,23 @@ struct HSCanvasTests {
             #expect(harness.evalTypeOf("result") == "object")
         }
 
+        @Test("canvasMouseEvents() accepts right-button flags, and still accepts the original four")
+        @MainActor
+        func canvasMouseEventsRightButton() {
+            let harness = makeHarness()
+            harness.eval("""
+                var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50})
+                c.appendElements([{ type: "circle", action: "fill", trackRightMouseDown: true, trackRightMouseUp: true, id: "dot" }])
+                var withRight = c.canvasMouseEvents(true, true, true, true, true, true)
+                var withoutRight = c.canvasMouseEvents(true, false, false, false)
+                var stored = c.elementAttribute(0, "trackRightMouseDown")
+                """)
+            #expect(!harness.hasException)
+            #expect(harness.evalTypeOf("withRight") == "object")
+            #expect(harness.evalTypeOf("withoutRight") == "object")
+            harness.expectTrue("stored === true")
+        }
+
         @Test("rotateElement() stores a rotation attribute readable via elementAttribute")
         func rotateElementStoresAttribute() {
             let harness = makeHarness()
