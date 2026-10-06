@@ -375,12 +375,18 @@ import SwiftUI
 
     @objc var backgroundColor: HSColor? {
         get { viewModel.backgroundColor.map { HSColor(color: $0) } }
-        set { viewModel.backgroundColor = newValue?.color }
+        set {
+            viewModel.backgroundColor = newValue?.color
+            window?.refreshShadow()
+        }
     }
 
     @objc var cornerRadius: Double {
         get { Double(viewModel.cornerRadius) }
-        set { viewModel.cornerRadius = CGFloat(newValue) }
+        set {
+            viewModel.cornerRadius = CGFloat(newValue)
+            window?.refreshShadow()
+        }
     }
 
     @objc var borderColor: HSColor? {
@@ -597,6 +603,7 @@ import SwiftUI
         startKeyMonitor()
         startResignKeyObserver()
         window?.makeKeyAndOrderFront(nil)
+        window?.refreshShadow()
         _ = _onShow?.call(withArguments: [])
         AKGarbage("hs.chooser.show(): \(identifier)")
         return self

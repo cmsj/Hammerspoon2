@@ -32,7 +32,10 @@ final class ChooserPanel: NSPanel {
 
         self.backgroundColor = .clear
         self.isOpaque = false
-        self.hasShadow = false
+        // Let the window server draw the shadow from the panel's rendered alpha, so it
+        // follows the rounded corners. A SwiftUI .shadow() can't extend past the
+        // window's edges and gets clipped into visible squares at the corners (#259).
+        self.hasShadow = true
         self.isFloatingPanel = true
         self.level = .floating
         self.hidesOnDeactivate = false
@@ -73,5 +76,17 @@ final class ChooserPanel: NSPanel {
         frame.origin.y += deltaY
         frame.size.height = height
         setFrame(frame, display: true, animate: animated)
+        refreshShadow()
+    }
+
+    /// Recompute the window shadow after the panel's shape has changed.
+    ///
+    /// The window server caches the shadow it derives from the window's alpha, and
+    /// SwiftUI only commits its new rendering at the end of the current run loop
+    /// pass, so wait until then before asking for the shadow to be recomputed.
+    func refreshShadow() {
+        Task { @MainActor [weak self] in
+            self?.invalidateShadow()
+        }
     }
 }
