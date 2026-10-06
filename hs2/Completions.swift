@@ -161,8 +161,9 @@ nonisolated struct CompletionTable: Sendable {
 
 /// Locates api.json from the running executable path.
 /// Resolves symlinks so the production symlink in `/usr/local/bin` points back into the app bundle.
+/// Uses the executable's real path: `CommandLine.arguments[0]` is just `"hs2"` when run via `$PATH`.
 nonisolated func findAPIJSON() -> URL? {
-    let execURL = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
+    guard let execURL = Bundle.main.executableURL?.resolvingSymlinksInPath() else { return nil }
     let execDir = execURL.deletingLastPathComponent()
 
     // App bundle: …/Contents/MacOS/hs2 → …/Contents/Resources/api.json
