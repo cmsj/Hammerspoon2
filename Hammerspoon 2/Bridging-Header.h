@@ -36,3 +36,23 @@ hs_IOHIDSetAccelerationWithKey(io_connect_t handle, CFStringRef key, double acce
 #pragma clang diagnostic pop
 }
 
+// SetFrontProcessWithOptions is still the only API that activates another application while
+// bringing forward only its front window (kSetFrontProcessFrontWindowOnly).
+// NSRunningApplication.activate can only raise all windows or none, and since macOS 14 it is
+// refused outright unless the caller is the active application, which Hammerspoon usually is
+// not. Hammerspoon 1 relies on the same call (HSuicore.m setFrontmost:). It was deprecated in
+// macOS 10.9, which makes it unavailable in Swift (not just deprecated, which @diagnose could
+// silence), so it has to be called from here.
+#import <ApplicationServices/ApplicationServices.h>
+
+static inline bool
+hs_SetFrontProcess(pid_t pid, bool allWindows) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    ProcessSerialNumber psn;
+    if (GetProcessForPID(pid, &psn) != noErr) {
+        return false;
+    }
+    return SetFrontProcessWithOptions(&psn, allWindows ? 0 : kSetFrontProcessFrontWindowOnly) == noErr;
+#pragma clang diagnostic pop
+}
