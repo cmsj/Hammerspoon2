@@ -12,14 +12,22 @@ import SwiftUI
 /// already uses that name for hs.ui's unrelated root view, and reusing it here
 /// would conflate two different "canvas" concepts in the codebase.
 ///
-/// Mouse delivery is SwiftUI-native (`.onContinuousHover`/`DragGesture`) rather than a
-/// separate `NSTrackingArea`-based overlay: per-element hit-testing walks a cached
-/// `Path` list (`CanvasElementDrawing.trackedElements`/`topmostHit`, built fresh from
-/// the current element list on each event) in reverse z-order, exactly mirroring v1's
-/// single-`mouseCallback`-with-topmost-element-wins model.
+/// Hover and left clicks (including Ctrl-clicks) are delivered by SwiftUI's
+/// `.onContinuousHover` and `DragGesture`, with `pressState` deciding what each press
+/// reports. Right clicks never reach `DragGesture`, so `HSCanvasDragHostingView`
+/// delivers them from AppKit via `handleRightMouseDown`/`handleRightMouseUp`.
+///
+/// Every event is hit-tested here rather than by a separate `NSTrackingArea`-based
+/// overlay: a `Path` list (`CanvasElementDrawing.trackedElements`/`topmostHit`, built
+/// fresh from the current element list on each event) is walked in reverse z-order,
+/// mirroring v1's single-`mouseCallback`-with-topmost-element-wins model.
 struct HSCanvasRenderView: View {
     var store: CanvasElementStore
     var onMouseEvent: ((_ message: String, _ id: Any, _ x: Double, _ y: Double) -> Void)? = nil
+    /// Set by `HSCanvasDragHostingView`, and fed each left mouse-down by `HSCanvasWindow`.
+    /// `nil` when rendered without a hosting view (`imageFromCanvas()`), where there are
+    /// no clicks to deliver.
+    var pressState: HSCanvasPressState? = nil
 
     /// Sentinel id passed to `onMouseEvent` for whole-canvas tracking (`canvasMouseEvents`)
     /// when no individual element was hit.
@@ -32,7 +40,6 @@ struct HSCanvasRenderView: View {
     /// typed `mouseExit` for it without needing to re-run `trackedElements()` after the
     /// pointer has already left the view.
     @State private var hoveredID: Any?
-    @State private var isPressed = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -49,13 +56,24 @@ struct HSCanvasRenderView: View {
             .gesture(
                 DragGesture(minimumDistance: 0, coordinateSpace: .local)
                     .onChanged { value in
-                        guard !isPressed else { return }
-                        isPressed = true
-                        handleMouseDown(at: value.location, size: geometry.size)
+                        switch pressState?.gestureChanged() {
+                        case .left:
+                            handleMouseDown(at: value.location, size: geometry.size)
+                        case .controlClick:
+                            handleRightMouseDown(at: value.location, size: geometry.size)
+                        case nil:
+                            break
+                        }
                     }
                     .onEnded { value in
-                        isPressed = false
-                        handleMouseUp(at: value.location, size: geometry.size)
+                        switch pressState?.gestureEnded() {
+                        case .left:
+                            handleMouseUp(at: value.location, size: geometry.size)
+                        case .controlClick:
+                            handleRightMouseUp(at: value.location, size: geometry.size)
+                        case nil:
+                            break
+                        }
                     }
             )
         }
@@ -126,20 +144,33 @@ struct HSCanvasRenderView: View {
     }
 
     private func handleMouseDown(at location: CGPoint, size: CGSize) {
-        let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
-        if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .down) {
-            onMouseEvent?("mouseDown", hit.id, location.x, location.y)
-        } else if store.canvasTrackMouseDown {
-            onMouseEvent?("mouseDown", Self.canvasSentinelID, location.x, location.y)
-        }
+        deliverButtonEvent("mouseDown", kind: .down, canvasTracks: store.canvasTrackMouseDown, at: location, size: size)
     }
 
     private func handleMouseUp(at location: CGPoint, size: CGSize) {
+        deliverButtonEvent("mouseUp", kind: .up, canvasTracks: store.canvasTrackMouseUp, at: location, size: size)
+    }
+
+    /// Delivers `rightMouseDown`. Called for Ctrl-clicks from the `DragGesture`, and for
+    /// real right-button presses by `HSCanvasDragHostingView`, with `location` in this
+    /// view's (top-left origin) coordinate space.
+    func handleRightMouseDown(at location: CGPoint, size: CGSize) {
+        deliverButtonEvent("rightMouseDown", kind: .rightDown, canvasTracks: store.canvasTrackRightMouseDown, at: location, size: size)
+    }
+
+    /// Delivers `rightMouseUp`; see `handleRightMouseDown(at:size:)`.
+    func handleRightMouseUp(at location: CGPoint, size: CGSize) {
+        deliverButtonEvent("rightMouseUp", kind: .rightUp, canvasTracks: store.canvasTrackRightMouseUp, at: location, size: size)
+    }
+
+    /// Delivers a button event to the topmost element tracking `kind`, falling back to the
+    /// whole-canvas sentinel when `canvasTracks` is enabled and no element was hit.
+    private func deliverButtonEvent(_ message: String, kind: CanvasElementDrawing.MouseTrackingKind, canvasTracks: Bool, at location: CGPoint, size: CGSize) {
         let tracked = CanvasElementDrawing.trackedElements(elements: store.elements, containerSize: size, canvasTransform: store.canvasTransform)
-        if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: .up) {
-            onMouseEvent?("mouseUp", hit.id, location.x, location.y)
-        } else if store.canvasTrackMouseUp {
-            onMouseEvent?("mouseUp", Self.canvasSentinelID, location.x, location.y)
+        if let hit = CanvasElementDrawing.topmostHit(at: location, in: tracked, for: kind) {
+            onMouseEvent?(message, hit.id, location.x, location.y)
+        } else if canvasTracks {
+            onMouseEvent?(message, Self.canvasSentinelID, location.x, location.y)
         }
     }
 }

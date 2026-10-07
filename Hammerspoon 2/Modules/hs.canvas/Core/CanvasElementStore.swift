@@ -21,6 +21,8 @@ final class CanvasElementStore {
     // handlers on each event, so changes after `show()` take effect immediately.
     var canvasTrackMouseDown = false
     var canvasTrackMouseUp = false
+    var canvasTrackRightMouseDown = false
+    var canvasTrackRightMouseUp = false
     var canvasTrackMouseEnterExit = false
     var canvasTrackMouseMove = false
 

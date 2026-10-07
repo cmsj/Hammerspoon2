@@ -382,6 +382,33 @@ struct HSCanvasElementDrawingTests {
         #expect((moveHit?.id as? String) == "moveOnly")
     }
 
+    @Test("trackedElements includes elements that only track the right mouse button")
+    func trackedElementsIncludesRightButtonOnly() {
+        let elements: [[String: Any]] = [
+            ["type": "rectangle", "frame": ["x": 0, "y": 0, "w": 10, "h": 10], "trackRightMouseDown": true],
+            ["type": "rectangle", "frame": ["x": 20, "y": 20, "w": 10, "h": 10], "trackRightMouseUp": true],
+        ]
+        let tracked = CanvasElementDrawing.trackedElements(elements: elements, containerSize: CGSize(width: 100, height: 100))
+        #expect(tracked.count == 2)
+    }
+
+    @Test("topmostHit keeps left- and right-button tracking separate")
+    func topmostHitSeparatesButtons() {
+        // A right-click must not reach an element that only asked for left clicks (and
+        // vice versa), and the topmost element tracking the right button wins even when a
+        // left-only element is drawn above it.
+        let elements: [[String: Any]] = [
+            ["type": "rectangle", "frame": ["x": 0, "y": 0, "w": 50, "h": 50], "trackRightMouseDown": true, "trackRightMouseUp": true, "id": "right"],
+            ["type": "rectangle", "frame": ["x": 0, "y": 0, "w": 50, "h": 50], "trackMouseDown": true, "trackMouseUp": true, "id": "left"],
+        ]
+        let tracked = CanvasElementDrawing.trackedElements(elements: elements, containerSize: CGSize(width: 100, height: 100))
+        let point = CGPoint(x: 25, y: 25)
+        #expect((CanvasElementDrawing.topmostHit(at: point, in: tracked, for: .down)?.id as? String) == "left")
+        #expect((CanvasElementDrawing.topmostHit(at: point, in: tracked, for: .up)?.id as? String) == "left")
+        #expect((CanvasElementDrawing.topmostHit(at: point, in: tracked, for: .rightDown)?.id as? String) == "right")
+        #expect((CanvasElementDrawing.topmostHit(at: point, in: tracked, for: .rightUp)?.id as? String) == "right")
+    }
+
     @Test("topmostHit returns nil when the point is outside every tracked path")
     func topmostHitOutsideAllPaths() {
         let elements: [[String: Any]] = [
@@ -484,5 +511,53 @@ struct HSCanvasEnterExitTransitionTests {
         #expect(result.exitID as? String == "dot")
         #expect(result.enterID == nil)
         #expect(result.newTargetID == nil)
+    }
+}
+
+/// Tests for `HSCanvasPressState`, which decides what each left-button press reports from
+/// the presses `HSCanvasWindow` records and the `DragGesture` callbacks that follow.
+@Suite("hs.canvas press state tests")
+@MainActor
+struct HSCanvasPressStateTests {
+    @Test("A plain press reports left down then left up, once each")
+    func plainPress() {
+        let state = HSCanvasPressState()
+        state.pressBegan(modifiers: [.shift, .option, .command])
+        #expect(state.gestureChanged() == .left)
+        #expect(state.gestureChanged() == nil)
+        #expect(state.gestureEnded() == .left)
+        #expect(state.gestureEnded() == nil)
+    }
+
+    @Test("A press with Ctrl held is a Ctrl-click")
+    func controlClick() {
+        let state = HSCanvasPressState()
+        state.pressBegan(modifiers: [.control, .shift])
+        #expect(state.gestureChanged() == .controlClick)
+        #expect(state.gestureEnded() == .controlClick)
+    }
+
+    @Test("A gesture with no recorded press behind it reports nothing")
+    func gestureWithoutPress() {
+        // Covers a right-button press, should SwiftUI ever start delivering those to
+        // DragGesture: the window only records left presses, so nothing is reported twice.
+        let state = HSCanvasPressState()
+        #expect(state.gestureChanged() == nil)
+        state.pressBegan(modifiers: [])
+        _ = state.gestureChanged()
+        _ = state.gestureEnded()
+        #expect(state.gestureChanged() == nil)
+        #expect(state.gestureEnded() == nil)
+    }
+
+    @Test("A press whose gesture was cancelled doesn't leak into the next press")
+    func cancelledPressIsAbandoned() {
+        let state = HSCanvasPressState()
+        state.pressBegan(modifiers: .control)
+        #expect(state.gestureChanged() == .controlClick)
+        // No gestureEnded(): SwiftUI cancelled the gesture.
+        state.pressBegan(modifiers: [])
+        #expect(state.gestureChanged() == .left)
+        #expect(state.gestureEnded() == .left)
     }
 }

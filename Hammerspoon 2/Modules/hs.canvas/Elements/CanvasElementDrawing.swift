@@ -687,7 +687,7 @@ enum CanvasElementDrawing {
     // MARK: - Mouse-tracking hit-testing
 
     /// A single element eligible for mouse-tracking hit-testing (has at least one
-    /// `trackMouse*` flag set to `true`).
+    /// `trackMouse*`/`trackRightMouse*` flag set to `true`).
     struct TrackedElement {
         let id: Any
         let path: Path
@@ -695,6 +695,8 @@ enum CanvasElementDrawing {
         let trackMouseUp: Bool
         let trackMouseEnterExit: Bool
         let trackMouseMove: Bool
+        var trackRightMouseDown = false
+        var trackRightMouseUp = false
 
         func tracks(_ kind: MouseTrackingKind) -> Bool {
             switch kind {
@@ -702,12 +704,14 @@ enum CanvasElementDrawing {
             case .up: return trackMouseUp
             case .enterExit: return trackMouseEnterExit
             case .move: return trackMouseMove
+            case .rightDown: return trackRightMouseDown
+            case .rightUp: return trackRightMouseUp
             }
         }
     }
 
     enum MouseTrackingKind {
-        case down, up, enterExit, move
+        case down, up, enterExit, move, rightDown, rightUp
     }
 
     /// Builds the list of elements with tracking enabled, each resolved to a current
@@ -726,7 +730,9 @@ enum CanvasElementDrawing {
             let trackUp = (element["trackMouseUp"] as? Bool) ?? false
             let trackEnterExit = (element["trackMouseEnterExit"] as? Bool) ?? false
             let trackMove = (element["trackMouseMove"] as? Bool) ?? false
-            guard trackDown || trackUp || trackEnterExit || trackMove else { continue }
+            let trackRightDown = (element["trackRightMouseDown"] as? Bool) ?? false
+            let trackRightUp = (element["trackRightMouseUp"] as? Bool) ?? false
+            guard trackDown || trackUp || trackEnterExit || trackMove || trackRightDown || trackRightUp else { continue }
             guard var path = pathFor(element: element, containerSize: containerSize) else { continue }
             if let canvasTransform {
                 path = path.applying(canvasTransform)
@@ -735,7 +741,8 @@ enum CanvasElementDrawing {
             result.append(TrackedElement(
                 id: id, path: path,
                 trackMouseDown: trackDown, trackMouseUp: trackUp,
-                trackMouseEnterExit: trackEnterExit, trackMouseMove: trackMove
+                trackMouseEnterExit: trackEnterExit, trackMouseMove: trackMove,
+                trackRightMouseDown: trackRightDown, trackRightMouseUp: trackRightUp
             ))
         }
         return result
