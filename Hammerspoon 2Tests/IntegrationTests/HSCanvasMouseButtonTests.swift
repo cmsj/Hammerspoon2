@@ -52,22 +52,25 @@ struct HSCanvasMouseButtonTests {
     /// window is (30, 30) in the canvas's top-left-origin coordinates.
     private let location = NSPoint(x: 30, y: 70)
 
-    private func click(_ window: HSCanvasWindow, down: NSEvent.EventType, up: NSEvent.EventType, modifiers: NSEvent.ModifierFlags = []) async throws {
-        for type in [down, up] {
-            var event = try #require(NSEvent.mouseEvent(
-                with: type, location: location, modifierFlags: modifiers,
-                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
-                context: nil, eventNumber: 0, clickCount: 1, pressure: 1
-            ))
-            if type == .rightMouseDown || type == .rightMouseUp {
-                // Match a real right click, which carries button number 1.
-                let cgEvent = try #require(event.cgEvent)
-                cgEvent.setIntegerValueField(.mouseEventButtonNumber, value: 1)
-                event = try #require(NSEvent(cgEvent: cgEvent))
-            }
-            window.sendEvent(event)
-            try await Task.sleep(for: .milliseconds(50))
+    private func send(_ type: NSEvent.EventType, to window: HSCanvasWindow, modifiers: NSEvent.ModifierFlags = []) async throws {
+        var event = try #require(NSEvent.mouseEvent(
+            with: type, location: location, modifierFlags: modifiers,
+            timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+            context: nil, eventNumber: 0, clickCount: 1, pressure: 1
+        ))
+        if type == .rightMouseDown || type == .rightMouseUp {
+            // Match a real right click, which carries button number 1.
+            let cgEvent = try #require(event.cgEvent)
+            cgEvent.setIntegerValueField(.mouseEventButtonNumber, value: 1)
+            event = try #require(NSEvent(cgEvent: cgEvent))
         }
+        window.sendEvent(event)
+        try await Task.sleep(for: .milliseconds(50))
+    }
+
+    private func click(_ window: HSCanvasWindow, down: NSEvent.EventType, up: NSEvent.EventType, modifiers: NSEvent.ModifierFlags = []) async throws {
+        try await send(down, to: window, modifiers: modifiers)
+        try await send(up, to: window, modifiers: modifiers)
     }
 
     @Test("Left, right and Ctrl-clicks are each reported as the correct button")
@@ -94,5 +97,45 @@ struct HSCanvasMouseButtonTests {
         // Right clicks are delivered from AppKit rather than SwiftUI, so check they report
         // the same (flipped, top-left-origin) coordinates as every other event.
         #expect(recorder.locations.allSatisfy { $0 == CGPoint(x: 30, y: 30) })
+    }
+
+    // The next two tests cover a press whose DragGesture is cancelled, so its onEnded never
+    // runs. That press must not leak into the next one: the next click still has to report
+    // both its down and its up, as the left button.
+
+    @Test("Tapping the right button while the left is held doesn't break the next left click")
+    func rightTapDuringLeftPress() async throws {
+        let recorder = Recorder()
+        let window = makeWindow(recorder: recorder)
+        defer { window.close() }
+        try await Task.sleep(for: .milliseconds(300))
+
+        try await send(.leftMouseDown, to: window)
+        try await click(window, down: .rightMouseDown, up: .rightMouseUp)
+        try await send(.leftMouseUp, to: window)
+        #expect(recorder.messages.starts(with: ["mouseDown", "rightMouseDown", "rightMouseUp"]))
+
+        let before = recorder.messages.count
+        try await click(window, down: .leftMouseDown, up: .leftMouseUp)
+        #expect(Array(recorder.messages[before...]) == ["mouseDown", "mouseUp"])
+    }
+
+    @Test("A Ctrl-click whose release is lost isn't reused for the next click")
+    func lostControlClickRelease() async throws {
+        let recorder = Recorder()
+        let window = makeWindow(recorder: recorder)
+        defer { window.close() }
+        try await Task.sleep(for: .milliseconds(300))
+
+        // Hiding the window mid-press cancels the gesture, as hide() would, or a context
+        // menu opened from the rightMouseDown callback swallowing the release.
+        try await send(.leftMouseDown, to: window, modifiers: .control)
+        window.orderOut(nil)
+        window.orderFrontRegardless()
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(recorder.messages == ["rightMouseDown"])
+
+        try await click(window, down: .leftMouseDown, up: .leftMouseUp)
+        #expect(Array(recorder.messages.dropFirst()) == ["mouseDown", "mouseUp"])
     }
 }

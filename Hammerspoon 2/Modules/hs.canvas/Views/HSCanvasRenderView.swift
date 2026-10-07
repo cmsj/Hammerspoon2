@@ -12,19 +12,21 @@ import SwiftUI
 /// already uses that name for hs.ui's unrelated root view, and reusing it here
 /// would conflate two different "canvas" concepts in the codebase.
 ///
-/// Mouse delivery is SwiftUI-native (`.onContinuousHover`/`DragGesture`, with
-/// `pressState` saying whether a press was a Ctrl-click) except for the right button,
-/// which `DragGesture` never sees and `HSCanvasDragHostingView` delivers from AppKit via
-/// `handleRightMouseDown`/`handleRightMouseUp`. Either way, rather than a separate `NSTrackingArea`-based overlay: per-element hit-testing walks a cached
-/// `Path` list (`CanvasElementDrawing.trackedElements`/`topmostHit`, built fresh from
-/// the current element list on each event) in reverse z-order, exactly mirroring v1's
-/// single-`mouseCallback`-with-topmost-element-wins model.
+/// Hover and left clicks (including Ctrl-clicks) are delivered by SwiftUI's
+/// `.onContinuousHover` and `DragGesture`, with `pressState` deciding what each press
+/// reports. Right clicks never reach `DragGesture`, so `HSCanvasDragHostingView`
+/// delivers them from AppKit via `handleRightMouseDown`/`handleRightMouseUp`.
+///
+/// Every event is hit-tested here rather than by a separate `NSTrackingArea`-based
+/// overlay: a `Path` list (`CanvasElementDrawing.trackedElements`/`topmostHit`, built
+/// fresh from the current element list on each event) is walked in reverse z-order,
+/// mirroring v1's single-`mouseCallback`-with-topmost-element-wins model.
 struct HSCanvasRenderView: View {
     var store: CanvasElementStore
     var onMouseEvent: ((_ message: String, _ id: Any, _ x: Double, _ y: Double) -> Void)? = nil
-    /// Set by `HSCanvasDragHostingView`; `HSCanvasWindow` fills it in from each mouse-down.
-    /// `nil` when rendered without a hosting view (`imageFromCanvas()`), where every
-    /// press is treated as primary.
+    /// Set by `HSCanvasDragHostingView`, and fed each left mouse-down by `HSCanvasWindow`.
+    /// `nil` when rendered without a hosting view (`imageFromCanvas()`), where there are
+    /// no clicks to deliver.
     var pressState: HSCanvasPressState? = nil
 
     /// Sentinel id passed to `onMouseEvent` for whole-canvas tracking (`canvasMouseEvents`)
@@ -38,10 +40,6 @@ struct HSCanvasRenderView: View {
     /// typed `mouseExit` for it without needing to re-run `trackedElements()` after the
     /// pointer has already left the view.
     @State private var hoveredID: Any?
-    /// Which button the in-progress `DragGesture` press is being reported as, or `nil` when
-    /// no press is active. Fixed at mouse-down so a Ctrl-click still ends as `rightMouseUp`
-    /// if Ctrl is released before the button.
-    @State private var activePress: HSCanvasPressState.Source?
 
     var body: some View {
         GeometryReader { geometry in
@@ -58,28 +56,23 @@ struct HSCanvasRenderView: View {
             .gesture(
                 DragGesture(minimumDistance: 0, coordinateSpace: .local)
                     .onChanged { value in
-                        guard activePress == nil else { return }
-                        let source = pressState?.source ?? .leftButton
-                        activePress = source
-                        switch source {
-                        case .leftButton:
+                        switch pressState?.gestureChanged() {
+                        case .left:
                             handleMouseDown(at: value.location, size: geometry.size)
                         case .controlClick:
                             handleRightMouseDown(at: value.location, size: geometry.size)
-                        case .rightButton:
-                            break  // delivered by HSCanvasDragHostingView
+                        case nil:
+                            break
                         }
                     }
                     .onEnded { value in
-                        let source = activePress ?? .leftButton
-                        activePress = nil
-                        switch source {
-                        case .leftButton:
+                        switch pressState?.gestureEnded() {
+                        case .left:
                             handleMouseUp(at: value.location, size: geometry.size)
                         case .controlClick:
                             handleRightMouseUp(at: value.location, size: geometry.size)
-                        case .rightButton:
-                            break  // delivered by HSCanvasDragHostingView
+                        case nil:
+                            break
                         }
                     }
             )

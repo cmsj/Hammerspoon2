@@ -305,8 +305,10 @@ import SwiftUI
     ///   - up: Track mouse-up events
     ///   - enterExit: Track mouse enter/exit events
     ///   - move: Track mouse-move events
-    ///   - rightDown?: Track right mouse-down events (defaults to `false`)
-    ///   - rightUp?: Track right mouse-up events (defaults to `false`)
+    ///   - rightDown?: Track right mouse-down events (defaults to `false`). Every call sets
+    ///     all six flags, so omitting this turns right mouse-down tracking off
+    ///   - rightUp?: Track right mouse-up events (defaults to `false`). Every call sets all
+    ///     six flags, so omitting this turns right mouse-up tracking off
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js

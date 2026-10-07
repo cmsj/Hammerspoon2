@@ -514,25 +514,50 @@ struct HSCanvasEnterExitTransitionTests {
     }
 }
 
-/// Tests for `HSCanvasPressState.source(for:modifiers:)`, which classifies what began a
-/// press: a plain left click, a Ctrl-click, or a real right-button press.
-@Suite("hs.canvas press source tests")
-struct HSCanvasPressSourceTests {
-    @Test("A plain left-button press is a left click, whatever other modifiers are held")
-    func plainLeftPress() {
-        #expect(HSCanvasPressState.source(for: .leftMouseDown, modifiers: []) == .leftButton)
-        #expect(HSCanvasPressState.source(for: .leftMouseDown, modifiers: [.shift, .option, .command]) == .leftButton)
+/// Tests for `HSCanvasPressState`, which decides what each left-button press reports from
+/// the presses `HSCanvasWindow` records and the `DragGesture` callbacks that follow.
+@Suite("hs.canvas press state tests")
+@MainActor
+struct HSCanvasPressStateTests {
+    @Test("A plain press reports left down then left up, once each")
+    func plainPress() {
+        let state = HSCanvasPressState()
+        state.pressBegan(modifiers: [.shift, .option, .command])
+        #expect(state.gestureChanged() == .left)
+        #expect(state.gestureChanged() == nil)
+        #expect(state.gestureEnded() == .left)
+        #expect(state.gestureEnded() == nil)
     }
 
-    @Test("A left-button press with Ctrl held is a Ctrl-click")
+    @Test("A press with Ctrl held is a Ctrl-click")
     func controlClick() {
-        #expect(HSCanvasPressState.source(for: .leftMouseDown, modifiers: .control) == .controlClick)
-        #expect(HSCanvasPressState.source(for: .leftMouseDown, modifiers: [.control, .shift]) == .controlClick)
+        let state = HSCanvasPressState()
+        state.pressBegan(modifiers: [.control, .shift])
+        #expect(state.gestureChanged() == .controlClick)
+        #expect(state.gestureEnded() == .controlClick)
     }
 
-    @Test("A right-button press is the right button, with or without modifiers")
-    func rightButton() {
-        #expect(HSCanvasPressState.source(for: .rightMouseDown, modifiers: []) == .rightButton)
-        #expect(HSCanvasPressState.source(for: .rightMouseDown, modifiers: .control) == .rightButton)
+    @Test("A gesture with no recorded press behind it reports nothing")
+    func gestureWithoutPress() {
+        // Covers a right-button press, should SwiftUI ever start delivering those to
+        // DragGesture: the window only records left presses, so nothing is reported twice.
+        let state = HSCanvasPressState()
+        #expect(state.gestureChanged() == nil)
+        state.pressBegan(modifiers: [])
+        _ = state.gestureChanged()
+        _ = state.gestureEnded()
+        #expect(state.gestureChanged() == nil)
+        #expect(state.gestureEnded() == nil)
+    }
+
+    @Test("A press whose gesture was cancelled doesn't leak into the next press")
+    func cancelledPressIsAbandoned() {
+        let state = HSCanvasPressState()
+        state.pressBegan(modifiers: .control)
+        #expect(state.gestureChanged() == .controlClick)
+        // No gestureEnded(): SwiftUI cancelled the gesture.
+        state.pressBegan(modifiers: [])
+        #expect(state.gestureChanged() == .left)
+        #expect(state.gestureEnded() == .left)
     }
 }
