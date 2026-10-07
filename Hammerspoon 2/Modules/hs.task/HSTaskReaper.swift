@@ -33,6 +33,18 @@ nonisolated final class HSTaskReaper: Sendable {
         var deadline: ContinuousClock.Instant
     }
 
+    /// The result of checking a pending process with `settle(_:at:forceKillAfter:)`.
+    private enum Outcome {
+        /// Still running and within its grace period, so it remains pending.
+        case pending
+        /// Exited, or was already resolved elsewhere. No longer pending.
+        case exited
+        /// Sent SIGKILL. No longer pending.
+        case killed(pid_t)
+        /// Sending SIGKILL failed. No longer pending, since retrying won't help.
+        case killFailed(pid_t, error: String)
+    }
+
     private let pending = Mutex<[ObjectIdentifier: Entry]>([:])
 
     /// The number of processes currently awaiting exit or SIGKILL.
@@ -70,11 +82,18 @@ nonisolated final class HSTaskReaper: Sendable {
         Task.detached(name: "hs.task reaper (\(process.processIdentifier))") { [self] in
             while true {
                 try? await Task.sleep(for: Self.pollInterval)
-                guard let message = settle(key, at: .now) else { continue }
-                if let message {
-                    await AKWarning(message)
+                switch settle(key, at: .now) {
+                case .pending:
+                    continue
+                case .exited:
+                    return
+                case .killed(let pid):
+                    await AKWarning(Self.killedMessage(pid))
+                    return
+                case .killFailed(let pid, let error):
+                    await AKError(Self.killFailedMessage(pid, error))
+                    return
                 }
-                return
             }
         }
     }
@@ -85,7 +104,7 @@ nonisolated final class HSTaskReaper: Sendable {
     /// started by `reap(_:gracePeriod:)` may never get to run. Each process is still given until its
     /// own deadline, but anything left running when `timeout` expires is sent SIGKILL regardless.
     /// - Parameter timeout: The maximum time to block for
-    /// - Returns: The number of processes that were sent SIGKILL
+    /// - Returns: The number of processes that were successfully sent SIGKILL
     @MainActor
     @discardableResult
     func drain(timeout: Duration = defaultGracePeriod) -> Int {
@@ -98,11 +117,14 @@ nonisolated final class HSTaskReaper: Sendable {
             if keys.isEmpty { break }
 
             for key in keys {
-                // A nil result means the process is still within its grace period.
-                guard let message = settle(key, at: now, forceKillAfter: drainDeadline) else { continue }
-                if let message {
+                switch settle(key, at: now, forceKillAfter: drainDeadline) {
+                case .pending, .exited:
+                    break
+                case .killed(let pid):
                     killed += 1
-                    AKWarning(message)
+                    AKWarning(Self.killedMessage(pid))
+                case .killFailed(let pid, let error):
+                    AKError(Self.killFailedMessage(pid, error))
                 }
             }
 
@@ -112,37 +134,38 @@ nonisolated final class HSTaskReaper: Sendable {
         return killed
     }
 
-    /// Check a pending process and resolve it if possible.
-    ///
-    /// The returned value is doubly optional:
-    /// - `nil`: the process is still running and within its grace period, so it remains pending.
-    /// - `.some(nil)`: the process exited, or was already resolved elsewhere. It is no longer pending.
-    /// - `.some(message)`: the process was sent SIGKILL, and `message` describes what happened.
-    ///   It is no longer pending.
+    /// Check a pending process, and SIGKILL it if it has passed its deadline.
     private func settle(_ key: ObjectIdentifier,
                         at now: ContinuousClock.Instant,
-                        forceKillAfter forcedDeadline: ContinuousClock.Instant? = nil) -> String?? {
+                        forceKillAfter forcedDeadline: ContinuousClock.Instant? = nil) -> Outcome {
         pending.withLock { pending in
-            guard let entry = pending[key] else { return .some(nil) }
+            guard let entry = pending[key] else { return .exited }
 
             // Foundation reaps the child itself, after which its PID may be reused. Checking
             // isRunning immediately before kill() means we only signal a PID we still own.
             guard entry.process.isRunning else {
                 pending[key] = nil
-                return .some(nil)
+                return .exited
             }
 
             let deadline = forcedDeadline.map { min($0, entry.deadline) } ?? entry.deadline
-            guard now >= deadline else { return nil }
+            guard now >= deadline else { return .pending }
 
             pending[key] = nil
             let pid = entry.process.processIdentifier
             if kill(pid, SIGKILL) == 0 {
-                return "hs.task: Process \(pid) did not exit after SIGTERM, sent SIGKILL"
+                return .killed(pid)
             }
-            let error = String(cString: strerror(errno))
-            return "hs.task: Process \(pid) did not exit after SIGTERM, and SIGKILL failed: \(error)"
+            return .killFailed(pid, error: unsafe String(cString: strerror(errno)))
         }
+    }
+
+    private static func killedMessage(_ pid: pid_t) -> String {
+        "hs.task: Process \(pid) did not exit after SIGTERM, sent SIGKILL"
+    }
+
+    private static func killFailedMessage(_ pid: pid_t, _ error: String) -> String {
+        "hs.task: Process \(pid) did not exit after SIGTERM, and SIGKILL failed: \(error)"
     }
 }
 
