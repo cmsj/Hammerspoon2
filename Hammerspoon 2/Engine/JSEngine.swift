@@ -173,6 +173,7 @@ extension JSEngine: JSEngineProtocol {
     }
 
     func shutdown() {
+        guard hasContext() else { return }
         deleteContext()
     }
 

@@ -1141,6 +1141,44 @@ import JavaScriptCore
         #expect(success, "Timeout should fire and terminate task")
     }
 
+    // MARK: - Shutdown Tests
+
+    @Test("A task that ignores SIGTERM is killed when the app terminates")
+    func testShutdownKillsStubbornTaskOnTermination() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var ready = false
+        harness.registerCallback("onReady") {
+            ready = true
+        }
+
+        // The trap must be installed before shutdown() sends SIGTERM, so the task reports when
+        // it's ready. exec keeps the PID the same, and ignored signals stay ignored across exec.
+        harness.eval("""
+        var t = hs.task.create('/bin/sh', ['-c', "trap '' TERM; echo ready; exec /bin/sleep 30"],
+                               null, null, (stream, data) => __test_callback('onReady'));
+        t.start();
+        """)
+        #expect(!harness.hasException)
+
+        let started = await harness.waitForAsync(timeout: 2.0) { ready }
+        #expect(started, "Task should have started")
+        let pid = pid_t(harness.evalInt("t.pid") ?? -1)
+        #expect(pid > 0)
+
+        // shutdown() sends SIGTERM, which is ignored, and hands the process to the reaper with
+        // the default grace period. drain() is what applicationWillTerminate uses; a short
+        // timeout makes it SIGKILL the process without waiting out that grace period.
+        harness.shutdownForLeakTest()
+        #expect(kill(pid, 0) == 0, "Task should have survived SIGTERM")
+
+        HSTaskReaper.shared.drain(timeout: .milliseconds(200))
+
+        let exited = await harness.waitForAsync(timeout: 2.0) { kill(pid, 0) != 0 }
+        #expect(exited, "Task should have been killed by the reaper")
+    }
+
     // MARK: - Memory Leak Tests
 
     @Test("Running HSTask is released after shutdown")

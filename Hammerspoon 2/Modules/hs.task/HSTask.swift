@@ -238,21 +238,13 @@ import JavaScriptCoreExtras
         onOutput?.detach(from: self)
         onOutput = nil
 
-        // This is called when HS is restarting/exiting, to clean up this HSTask.
-        // We will send it a SIGTERM, then attempt to wait a few seconds and send a SIGKILL.
-        // FIXME: When HS is exiting, the SIGKILL tasks likely won't ever get called.
+        // This is called when HS is reloading/exiting, or when this HSTask is garbage collected.
+        // Send the process SIGTERM, and hand it to the reaper, which will SIGKILL it if it
+        // hasn't exited after a grace period. If the app is quitting, it blocks on the reaper
+        // so that happens before Hammerspoon exits.
         guard let process, process.isRunning else { return }
-        let pid = process.processIdentifier
-
-        terminate()
-
-        Task.detached {
-            try? await Task.sleep(for: .seconds(5))
-
-            let result = kill(pid, SIGKILL)
-            let errorMsg = unsafe String(validatingCString: strerror(result)) ?? "NONE"
-            print ("hs.task SIGKILL result: \(pid) (\(errorMsg))")
-        }
+        process.terminate()
+        HSTaskReaper.shared.reap(process)
     }
 
     @objc func start() -> HSTask {
