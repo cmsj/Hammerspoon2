@@ -468,8 +468,14 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
             Self.finderFocusWorkaround = Task {
                 try? await Task.sleep(for: .milliseconds(300))
                 guard !Task.isCancelled else { return }
-                _ = self.becomeMain()
                 Self.finderFocusWorkaround = nil
+                // The desktop isn't an AX window, so a different main window means the user (or
+                // another script) has chosen another Finder window since; don't undo that.
+                if let current = HSApplication(runningApplication: self.app).mainWindow,
+                   current.id > 0, current.id != self.id {
+                    return
+                }
+                _ = self.becomeMain()
             }
             _ = becomeMain()
         }
