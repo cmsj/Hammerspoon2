@@ -11,8 +11,8 @@ import SwiftUI
 /// own for arbitrary file/string drops onto a window, so this drops to AppKit directly.
 ///
 /// It also handles the right mouse button, which the root view's `DragGesture` never
-/// fires for, and owns the root view's `pressState`, which `HSCanvasWindow` feeds each
-/// left mouse-down.
+/// fires for, and owns the root view's `pressState`, which `HSCanvas.show()` also hands to
+/// the `HSCanvasWindow` so it can feed it each left mouse-down.
 @MainActor
 final class HSCanvasDragHostingView: NSHostingView<HSCanvasRenderView> {
     /// Called with the dropped file paths (or the dropped string, as a single-element

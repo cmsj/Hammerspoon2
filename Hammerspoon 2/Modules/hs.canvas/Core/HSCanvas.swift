@@ -448,25 +448,6 @@ import SwiftUI
 
     @objc func show() -> HSCanvas {
         if nsWindow == nil {
-            var styleMask: NSWindow.StyleMask = [.borderless]
-            if !isClickActivating {
-                styleMask.insert(.nonactivatingPanel)
-            }
-            let window = HSCanvasWindow(
-                contentRect: canvasFrame,
-                styleMask: styleMask,
-                backing: .buffered,
-                defer: false
-            )
-            window.isOpaque = false
-            window.backgroundColor = .clear
-            window.hasShadow = false
-            window.isReleasedWhenClosed = false
-            window.ignoresMouseEvents = ignoresMouseEventsFlag
-            window.acceptsMouseMovedEvents = true
-            window.level = resolvedLevel()
-            window.collectionBehavior = windowBehaviorRaw
-
             let content = HSCanvasRenderView(store: elementStore) { [weak self] message, id, x, y in
                 guard let self else { return }
                 _ = self.mouseCallbackRef?.call(withArguments: [self, message, id, x, y])
@@ -478,6 +459,26 @@ import SwiftUI
             if let subrole = accessibilitySubroleValue {
                 hostingView.setAccessibilitySubrole(NSAccessibility.Subrole(rawValue: subrole))
             }
+
+            var styleMask: NSWindow.StyleMask = [.borderless]
+            if !isClickActivating {
+                styleMask.insert(.nonactivatingPanel)
+            }
+            let window = HSCanvasWindow(
+                contentRect: canvasFrame,
+                styleMask: styleMask,
+                backing: .buffered,
+                defer: false,
+                pressState: hostingView.pressState
+            )
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.hasShadow = false
+            window.isReleasedWhenClosed = false
+            window.ignoresMouseEvents = ignoresMouseEventsFlag
+            window.acceptsMouseMovedEvents = true
+            window.level = resolvedLevel()
+            window.collectionBehavior = windowBehaviorRaw
             window.contentView = hostingView
 
             self.nsWindow = window

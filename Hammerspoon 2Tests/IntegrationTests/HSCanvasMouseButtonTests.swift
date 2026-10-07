@@ -36,14 +36,16 @@ struct HSCanvasMouseButtonTests {
             recorder.messages.append(message)
             recorder.locations.append(CGPoint(x: x, y: y))
         }
+        let hostingView = HSCanvasDragHostingView(rootView: view)
         let window = HSCanvasWindow(
             contentRect: NSRect(x: 200, y: 200, width: 100, height: 100),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
-            defer: false
+            defer: false,
+            pressState: hostingView.pressState
         )
         window.isReleasedWhenClosed = false
-        window.contentView = HSCanvasDragHostingView(rootView: view)
+        window.contentView = hostingView
         window.orderFrontRegardless()
         return window
     }
