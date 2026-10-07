@@ -149,8 +149,7 @@ import AppKit
         return wrap(service)
     }
 
-    // FIXME: Remove this when our GitHub Actions workflows are using Xcode27
-    //    @diagnose(DeprecatedDeclaration, as: ignored, reason: "No suitable replacement exists")
+    @diagnose(DeprecatedDeclaration, as: ignored, reason: "No suitable replacement exists")
     @objc func servicesFor(_ items: [Any]) -> [HSSharingService] {
         let coerced = HSSharingService.coerceItems(items)
         return NSSharingService.sharingServices(forItems: coerced).map { wrap($0) }
