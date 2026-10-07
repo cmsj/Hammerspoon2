@@ -120,14 +120,34 @@ import AXSwift
     @objc func axElement() -> HSAXElement?
 
     /// Bring this application to the foreground
+    ///
+    /// If the application has a focused window, that window is made the main window and only it is
+    /// brought forward (unless `allWindows` is true). This works even when Hammerspoon is not the
+    /// active application, e.g. from a hotkey callback.
     /// - Parameter allWindows?: Pass true to raise all application windows. Defaults to false.
+    /// - Returns: true if the application was activated, false if macOS refused
     /// - Example:
     /// ```js
     /// const app = hs.application.matchingName("Safari")
     /// app.activate()
     /// app.activate(true)
     /// ```
-    @objc func activate(_ allWindows: Bool)
+    @objc func activate(_ allWindows: Bool) -> Bool
+
+    /// Make this application the frontmost application
+    ///
+    /// Unlike `activate()`, this does not change which of the application's windows is the main
+    /// window; whichever window is currently the application's main window is the one that comes forward.
+    /// - Parameter allWindows?: Pass true to raise all application windows, rather than just the main window. Defaults to false.
+    /// - Returns: true if the application was made frontmost, false if macOS refused
+    /// - Example:
+    /// ```js
+    /// const app = hs.application.matchingName("Safari")
+    /// if (!app.setFrontmost()) {
+    ///     console.log("Unable to bring Safari to the front")
+    /// }
+    /// ```
+    @objc func setFrontmost(_ allWindows: Bool) -> Bool
 
     /// Hide this application and all its windows
     /// - Example:
@@ -316,9 +336,22 @@ import AXSwift
 
     // MARK: - Focus and visibility
 
-    @objc func activate(_ allWindows: Bool) {
+    @objc func activate(_ allWindows: Bool) -> Bool {
+        // Mirrors Hammerspoon 1: making the focused window main first means it is the one
+        // setFrontmost brings forward.
+        if let window = focusedWindow {
+            _ = window.becomeMain()
+            return setFrontmost(allWindows)
+        }
+
+        // No window to bring forward. NSRunningApplication.activate is cooperative, so this
+        // may be refused when Hammerspoon is not the active application.
         let options: NSApplication.ActivationOptions = allWindows ? [.activateAllWindows] : []
-        runningApplication.activate(options: options)
+        return runningApplication.activate(options: options)
+    }
+
+    @objc func setFrontmost(_ allWindows: Bool) -> Bool {
+        return runningApplication.setFrontmost(allWindows: allWindows)
     }
 
     @objc func hide() {
@@ -480,5 +513,21 @@ import AXSwift
             dict["items"] = submenuItems.compactMap { menuItemToDict($0) }
         }
         return dict
+    }
+}
+
+extension NSRunningApplication {
+    /// Makes this application frontmost, bringing forward either all of its windows or only its main window.
+    ///
+    /// Unlike `activate(options:)`, this is not cooperative, so it works when Hammerspoon is not the
+    /// active application.
+    /// - Parameter allWindows: Whether to raise all of the application's windows.
+    /// - Returns: true if the application was made frontmost.
+    func setFrontmost(allWindows: Bool) -> Bool {
+        guard hs_SetFrontProcess(processIdentifier, allWindows) else {
+            AKError("Failed to make \(localizedName ?? "pid \(processIdentifier)") frontmost")
+            return false
+        }
+        return true
     }
 }
