@@ -25,6 +25,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        AKGarbage("applicationWillTerminate: Shutting down shared manager")
+        ManagerManager.shared.prepareForTermination()
+    }
+
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
             if url.isFileURL, url.pathExtension.lowercased() == "spoon2" {

@@ -88,9 +88,17 @@ class ManagerManager {
         try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
     }
 
+    /// Quit the app. Teardown happens in `prepareForTermination()`, which the app delegate calls
+    /// for every quit path (menu items, Cmd-Q, relaunch, logout).
     func shutdown() {
-        engine.shutdown()
         NSApp.terminate(self)
+    }
+
+    /// Tear down the JS engine and make sure any processes started by hs.task have exited.
+    /// This blocks until those processes exit or are sent SIGKILL, for at most a few seconds.
+    func prepareForTermination() {
+        engine.shutdown()
+        HSTaskReaper.shared.drain()
     }
 
     /// Finishes first-run onboarding: creates the chosen config directory if
