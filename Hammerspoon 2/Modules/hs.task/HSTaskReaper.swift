@@ -142,7 +142,12 @@ nonisolated final class HSTaskReaper: Sendable {
             guard let entry = pending[key] else { return .exited }
 
             // Foundation reaps the child itself, after which its PID may be reused. Checking
-            // isRunning immediately before kill() means we only signal a PID we still own.
+            // isRunning immediately before kill() keeps us from signalling a PID we no longer own,
+            // except in the few microseconds between the check and kill(). Closing that gap
+            // entirely would need an identity-preserving signal API (like Linux's pidfd), which
+            // macOS doesn't offer publicly, or replacing Process so we reap the child ourselves.
+            // PIDs are allocated sequentially, so reuse within that window would require the
+            // PID space to wrap all the way around, which isn't a practical concern.
             guard entry.process.isRunning else {
                 pending[key] = nil
                 return .exited
