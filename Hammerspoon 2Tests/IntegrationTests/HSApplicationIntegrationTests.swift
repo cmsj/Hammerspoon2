@@ -871,9 +871,11 @@ struct HSApplicationTests {
 
             let harness = makeHarness()
             harness.eval("""
+            // Only count Chess: other apps launch and quit system-wide while this runs,
+            // including from tests in other suites.
             var _cfLaunchCount = 0, _cfTerminateCount = 0;
-            var _cfLaunchFn = function(app) { _cfLaunchCount++; };
-            var _cfTerminateFn = function(app) { _cfTerminateCount++; };
+            var _cfLaunchFn = function(app) { if (app.bundleID === 'com.apple.Chess') _cfLaunchCount++; };
+            var _cfTerminateFn = function(app) { if (app.bundleID === 'com.apple.Chess') _cfTerminateCount++; };
             hs.application.on('didLaunch', _cfLaunchFn);
             hs.application.on('didTerminate', _cfTerminateFn);
         """)
