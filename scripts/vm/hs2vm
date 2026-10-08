@@ -1,0 +1,200 @@
+#!/bin/bash
+#
+# hs2vm — run Hammerspoon 2 tests and builds inside headless Tart macOS VMs, so they
+# don't take over the host's screen, keyboard and mouse.
+#
+# Usage: scripts/vm/hs2vm <command> [args]
+#
+#   provision            Build the golden image (hs2-golden) from the Cirrus Labs base image
+#   test [--keep] [xcodebuild args...]
+#                        Build for testing on the host, run the tests in a throwaway clone of
+#                        hs2-golden, and collect results into build/vm/runs/<timestamp>/.
+#                        e.g. test "-only-testing:Hammerspoon 2Tests/HSHashIntegrationTests"
+#   start <vm>           Boot a VM headless (VNC only) and wait for the guest agent
+#   stop <vm>            Shut a VM down
+#   exec <vm> <cmd...>   Run a command in the guest (as the logged-in admin user)
+#   screenshot <vm> <png>
+#                        Capture the guest display over VNC
+#   status               List hs2-* VMs
+#
+# Requires tart (https://tart.run). VM state (logs, VNC URL, shared folder) lives in
+# build/vm/vms/<vm>/; the shared folder appears in the guest at "/Volumes/My Shared Files/run".
+#
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+VM_ROOT="$REPO_ROOT/build/vm"
+BASE_IMAGE="${HS2VM_BASE_IMAGE:-ghcr.io/cirruslabs/macos-golden-gate-base:latest}"
+GOLDEN="hs2-golden"
+XCODE_APP="${HS2VM_XCODE:-$(dirname "$(dirname "$(xcode-select -p)")")}"
+VM_CPUS="${HS2VM_CPUS:-6}"
+VM_MEMORY_MB="${HS2VM_MEMORY_MB:-16384}"
+VM_DISK_GB="${HS2VM_DISK_GB:-100}"
+
+die() { echo "hs2vm: $*" >&2; exit 1; }
+log() { echo "hs2vm: $*" >&2; }
+
+vm_dir() { echo "$VM_ROOT/vms/$1"; }
+
+vm_exists() { tart list --quiet 2>/dev/null | grep -qx "$1"; }
+
+vm_running() { tart list 2>/dev/null | awk -v n="$1" '$2 == n && $NF == "running" { found = 1 } END { exit !found }'; }
+
+hs2vnc() {
+    local bin="$VM_ROOT/hs2vnc" src="$REPO_ROOT/scripts/vm/hs2vnc.swift"
+    if [[ ! -x "$bin" || "$src" -nt "$bin" ]]; then
+        mkdir -p "$VM_ROOT"
+        swiftc -O "$src" -o "$bin" >&2
+    fi
+    "$bin" "$@"
+}
+
+# start <vm> [extra tart run args...]
+cmd_start() {
+    local vm="$1"; shift
+    vm_exists "$vm" || die "no such VM: $vm"
+    vm_running "$vm" && { log "$vm already running"; return; }
+    local dir; dir="$(vm_dir "$vm")"
+    mkdir -p "$dir/run"
+    nohup tart run "$vm" --no-graphics --vnc-experimental --no-audio --no-clipboard \
+        --dir="run:$dir/run" "$@" >"$dir/tart-run.log" 2>&1 &
+    local pid=$!
+    disown
+    # Don't call `tart list` while the VM is starting: it races Virtualization.framework's
+    # startup and makes it fail with "Internal Virtualization error". Watch the PID instead.
+    local start=$SECONDS
+    until tart exec "$vm" true >/dev/null 2>&1; do
+        kill -0 "$pid" 2>/dev/null || die "$vm exited during boot: $(tail -1 "$dir/tart-run.log")"
+        (( SECONDS - start > 180 )) && die "$vm: guest agent not reachable after 180s (see $dir/tart-run.log)"
+        sleep 1
+    done
+    log "$vm ready after $(( SECONDS - start ))s"
+}
+
+cmd_stop() {
+    local vm="$1"
+    vm_running "$vm" || return 0
+    tart stop "$vm" --timeout 60 >/dev/null
+}
+
+cmd_exec() {
+    local vm="$1"; shift
+    tart exec "$vm" "$@"
+}
+
+cmd_screenshot() {
+    local vm="$1" out="$2" url
+    url="$(grep -o 'vnc://[^ ]*' "$(vm_dir "$vm")/tart-run.log" 2>/dev/null)" || die "$vm: no VNC URL (is it running?)"
+    hs2vnc "$url" screenshot "$out"
+}
+
+# test [--keep] [xcodebuild args...]
+cmd_test() {
+    local keep=0
+    if [[ "${1:-}" == "--keep" ]]; then keep=1; shift; fi
+    vm_exists "$GOLDEN" || die "no golden image; run: hs2vm provision"
+
+    local id vm out products rc
+    id="$(date +%Y%m%d-%H%M%S)"
+    vm="hs2-run-$id"
+    out="$VM_ROOT/runs/$id"
+    products="$VM_ROOT/DerivedData/Build/Products"
+    mkdir -p "$out"
+    log "results: $out"
+
+    # Build on the host: it needs no UI, and keeps incremental builds fast. A separate
+    # DerivedData avoids fighting with the developer's own Xcode builds.
+    log "building for testing"
+    if ! xcodebuild build-for-testing \
+            -scheme Development -destination 'platform=macOS' \
+            -derivedDataPath "$VM_ROOT/DerivedData" \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            >"$out/build.log" 2>&1; then
+        grep -E 'error:|BUILD FAILED' "$out/build.log" | tail -20 >&2
+        die "build failed (see $out/build.log)"
+    fi
+
+    tart clone "$GOLDEN" "$vm"
+    if (( keep )); then
+        log "keeping $vm afterwards (hs2vm stop $vm; tart delete $vm)"
+    else
+        trap "cmd_stop '$vm'; tart delete '$vm' >/dev/null 2>&1; rm -rf '$(vm_dir "$vm")'" EXIT
+    fi
+    cmd_start "$vm"
+
+    # Stream rather than use the virtiofs share: copying bundles out of a share hits ELOOP on symlinks.
+    log "copying build products into the guest"
+    tar -C "$products" -cf - . \
+        | tart exec -i "$vm" sh -c 'rm -rf ~/hs2-run && mkdir -p ~/hs2-run/Products && tar -C ~/hs2-run/Products -xpf -'
+    cp "$REPO_ROOT/scripts/vm/guest/run-tests.sh" "$(vm_dir "$vm")/run/"
+
+    log "running tests (log: $out/xcodebuild.log)"
+    set +e
+    tart exec "$vm" bash "/Volumes/My Shared Files/run/run-tests.sh" "$@" >"$out/xcodebuild.log" 2>&1
+    rc=$?
+    set -e
+
+    log "collecting results"
+    cmd_screenshot "$vm" "$out/final.png" >/dev/null 2>&1 || true
+    tart exec "$vm" sh -c 'cd ~/hs2-run && tar -cf - TestResults.xcresult 2>/dev/null' | tar -C "$out" -xf - || true
+    tart exec "$vm" sh -c 'mkdir -p /tmp/crash-reports
+        find ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports -name "Hammerspoon 2*.ips" \
+            -exec cp {} /tmp/crash-reports/ \; 2>/dev/null
+        tar -C /tmp -cf - crash-reports' | tar -C "$out" -xf - || true
+    if [[ -d "$out/TestResults.xcresult" ]] && command -v node >/dev/null; then
+        node "$REPO_ROOT/scripts/xcresult-report.js" "$out/TestResults.xcresult" >"$out/summary.md" 2>/dev/null || true
+    fi
+
+    grep -E '^(\*\* TEST|Test run with|✘ Test run)' "$out/xcodebuild.log" | tail -3 >&2 || true
+    local crashes; crashes="$(ls "$out/crash-reports" 2>/dev/null | wc -l | tr -d ' ')"
+    (( crashes > 0 )) && log "$crashes crash report(s) in $out/crash-reports"
+    log "exit $rc; results in $out"
+    return "$rc"
+}
+
+cmd_status() {
+    tart list | awk 'NR == 1 || $2 ~ /^hs2-/'
+}
+
+cmd_provision() {
+    local work="$GOLDEN-provisioning"
+    [[ -d "$XCODE_APP" ]] || die "Xcode not found at $XCODE_APP"
+    log "base image: $BASE_IMAGE"
+    log "Xcode: $XCODE_APP ($(xcodebuild -version | tr '\n' ' '))"
+
+    cmd_stop "$work"
+    vm_exists "$work" && tart delete "$work"
+    tart clone "$BASE_IMAGE" "$work"
+    tart set "$work" --cpu "$VM_CPUS" --memory "$VM_MEMORY_MB" --disk-size "$VM_DISK_GB"
+
+    local dir; dir="$(vm_dir "$work")"
+    rm -rf "$dir"; mkdir -p "$dir/run"
+    cp "$REPO_ROOT/scripts/vm/guest/provision.sh" "$dir/run/"
+    cmd_start "$work"
+
+    log "copying $(basename "$XCODE_APP") into the guest as /Applications/Xcode.app"
+    tar -C "$(dirname "$XCODE_APP")" -s ",^$(basename "$XCODE_APP"),Xcode.app," -cf - "$(basename "$XCODE_APP")" \
+        | tart exec -i "$work" sudo tar -C /Applications -xpf -
+    tart exec "$work" bash "/Volumes/My Shared Files/run/provision.sh" 2>&1 | tee "$dir/provision.log"
+    cmd_screenshot "$work" "$dir/provisioned.png" >/dev/null || true
+    cmd_stop "$work"
+
+    cmd_stop "$GOLDEN"
+    vm_exists "$GOLDEN" && tart delete "$GOLDEN"
+    tart rename "$work" "$GOLDEN"
+    rm -rf "$(vm_dir "$GOLDEN")"; mv "$dir" "$(vm_dir "$GOLDEN")"
+    log "golden image ready: $GOLDEN"
+}
+
+[[ $# -ge 1 ]] || { awk 'NR > 2 && /^#/ { sub(/^# ?/, ""); print; next } NR > 2 { exit }' "$0"; exit 1; }
+command="$1"; shift
+case "$command" in
+    provision)  cmd_provision "$@" ;;
+    start)      [[ $# -ge 1 ]] || die "usage: start <vm>"; cmd_start "$@" ;;
+    stop)       [[ $# -eq 1 ]] || die "usage: stop <vm>"; cmd_stop "$1" ;;
+    exec)       [[ $# -ge 2 ]] || die "usage: exec <vm> <cmd...>"; cmd_exec "$@" ;;
+    screenshot) [[ $# -eq 2 ]] || die "usage: screenshot <vm> <out.png>"; cmd_screenshot "$@" ;;
+    test)       cmd_test "$@" ;;
+    status)     cmd_status ;;
+    *)          die "unknown command: $command" ;;
+esac
