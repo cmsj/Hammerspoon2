@@ -235,9 +235,10 @@ doesn't reject — check `status` rather than relying on `.catch()`. Gained `ope
 for WebSocket clients (no dedicated WebSocket story existed in v1's `hs.http`).
 
 **`hs.ipc`** — same purpose (the `hs2` CLI talking to the running app), but the transport is
-now XPC over a named Mach service rather than a bare process pipe, and you must call
-`hs.ipc.start()` explicitly — it doesn't auto-start the way v1's did. In release builds,
-connections are restricted to binaries signed with the same Team ID.
+now XPC rather than a bare process pipe, relayed through a small broker process that ships in
+the app bundle and is registered with launchd as a background item the first time you call
+`hs.ipc.start()`. You must call `hs.ipc.start()` explicitly — it doesn't auto-start the way
+v1's did. In release builds, connections are restricted to binaries signed with the same Team ID.
 
 **`hs.pasteboard`** — `hs.pasteboard.watcher` is gone as a separate submodule; it's
 `hs.pasteboard.on('change', handler)`/`off('change', handler)` directly on the main module, and
