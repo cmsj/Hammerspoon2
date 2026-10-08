@@ -90,7 +90,7 @@ nonisolated final class HSIPCBroker: Sendable {
         let id: ObjectIdentifier
 
         func handleIncomingRequest(_ message: XPCReceivedMessage) -> (any Encodable)? {
-            broker.handleHostMessage(message)
+            broker.handleHostMessage(message, from: id)
         }
 
         func handleCancellation(error: XPCRichError) {
@@ -145,7 +145,7 @@ nonisolated final class HSIPCBroker: Sendable {
         scheduleIdleExitIfNeeded()
     }
 
-    private func handleHostMessage(_ message: XPCReceivedMessage) -> (any Encodable)? {
+    private func handleHostMessage(_ message: XPCReceivedMessage, from id: ObjectIdentifier) -> (any Encodable)? {
         guard let decoded = try? message.decode(as: HSIPCHostToBroker.self) else {
             HSIPCBroker.logger.error("Unable to decode message from Hammerspoon 2")
             return nil
@@ -162,8 +162,11 @@ nonisolated final class HSIPCBroker: Sendable {
             }
 
         case .log(let level, let text):
-            let recipients = state.withLock { state in
-                state.clients.values.filter { level >= $0.minLogLevel }.map(\.session)
+            // A replaced host stays connected until it acknowledges being replaced, so ignore
+            // its logs rather than mixing them in with the current host's.
+            let recipients = state.withLock { state -> [XPCSession] in
+                guard let host = state.host, ObjectIdentifier(host) == id else { return [] }
+                return state.clients.values.filter { level >= $0.minLogLevel }.map(\.session)
             }
             for session in recipients {
                 try? session.send(HSIPCBrokerToClient.log(level: level, message: text))
