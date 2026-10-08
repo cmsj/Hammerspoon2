@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>net.tenshu.Hammerspoon-2.HammerspoonIPCBroker</string>
+	<key>BundleProgram</key>
+	<string>Contents/MacOS/HammerspoonIPCBroker</string>
+	<key>AssociatedBundleIdentifiers</key>
+	<array>
+		<string>net.tenshu.Hammerspoon-2</string>
+	</array>
+	<key>MachServices</key>
+	<dict>
+		<key>net.tenshu.Hammerspoon-2.ipc</key>
+		<true/>
+		<key>net.tenshu.Hammerspoon-2.ipc.host</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

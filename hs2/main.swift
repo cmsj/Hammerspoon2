@@ -2,15 +2,18 @@
 //  main.swift
 //  hs2 — Hammerspoon 2 interactive REPL
 //
-//  Connects to Hammerspoon 2 via XPC (service name: net.tenshu.Hammerspoon-2.ipc),
-//  evaluates JavaScript, and optionally streams log messages with colour-coded levels.
+//  Connects to Hammerspoon 2 via XPC, through the HammerspoonIPCBroker launch agent
+//  (service name: net.tenshu.Hammerspoon-2.ipc), evaluates JavaScript, and optionally
+//  streams log messages with colour-coded levels.
 //
-//  Security: in release builds the XPC connection is rejected by Hammerspoon 2 unless
-//  both sides are signed with the same Team ID.
+//  Security: in release builds the broker rejects hs2 unless both are signed with the
+//  same Team ID, and hs2 likewise only talks to a broker signed by that team.
 //
 
 import Foundation
 import CommandLineKit
+import Synchronization
+import XPC
 
 // MARK: - Log levels (must match HammerspoonLogType raw values)
 
@@ -60,96 +63,89 @@ private nonisolated func writeStderr(_ s: String) {
     }
 }
 
-// MARK: - Log delegate (receives pushed log entries from Hammerspoon 2)
-
-// nonisolated so NSXPCConnection can call logEntry from its internal queue.
-private nonisolated final class HSIPCLogDelegate: NSObject, HSIPCClientProtocol {
-    nonisolated func logEntry(level: String, message: String) {
-        guard let logLevel = HammerspoonLogType(string: level) else { return }
-        // '\n' before the message keeps output clean even when a readline prompt is showing.
-        print("\n\(logLevel.textProperties.apply(to: "[\(logLevel.label)]")) \(message)")
-    }
-}
-
-// Returns a code-signing requirement string that matches any binary signed with
-// the same Team ID as this process. Used with setConnectionCodeSigningRequirement.
-private nonisolated func peerSigningRequirement() -> String? {
-    var selfCode: SecCode?
-    guard unsafe SecCodeCopySelf([], &selfCode) == errSecSuccess, let selfCode else { return nil }
-
-    var selfStatic: SecStaticCode?
-    guard unsafe SecCodeCopyStaticCode(selfCode, [], &selfStatic) == errSecSuccess,
-          let selfStatic else { return nil }
-
-    var info: CFDictionary?
-    guard unsafe SecCodeCopySigningInformation(selfStatic, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
-          let teamID = (info as? [String: Any])?[kSecCodeInfoTeamIdentifier as String] as? String,
-          !teamID.isEmpty else { return nil }
-
-    return "anchor apple generic and certificate leaf[subject.OU] = \"\(teamID)\""
-}
-
-// MARK: - IPC client actor
+// MARK: - IPC client
 //
-// Wraps NSXPCConnection in an actor so the connection is always accessed from the
-// actor's isolated context. Actors are Sendable, so the client can be captured in
-// @Sendable closures (e.g. the tab-completion syncEval callback).
+// hs2 talks to Hammerspoon 2 through the HammerspoonIPCBroker launch agent (see HSIPCShared.swift).
+// XPCSession is Sendable, so the client can be captured in @Sendable closures (e.g. the
+// tab-completion syncEval callback).
 
-private actor HSIPCClient {
-    private let connection: NSXPCConnection
+private nonisolated func printLogEntry(level: Int, message: String) {
+    guard let logLevel = HammerspoonLogType(rawValue: level) else { return }
+    // '\n' before the message keeps output clean even when a readline prompt is showing.
+    print("\n\(logLevel.textProperties.apply(to: "[\(logLevel.label)]")) \(message)")
+}
 
-    init() {
-        let c = NSXPCConnection(machServiceName: "net.tenshu.Hammerspoon-2.ipc")
-        c.remoteObjectInterface = NSXPCInterface(with: HSIPCServerProtocol.self)
-        c.exportedInterface = NSXPCInterface(with: HSIPCClientProtocol.self)
-        c.exportedObject = HSIPCLogDelegate()
-#if !DEBUG
-        guard let requirement = peerSigningRequirement() else {
-            writeStderr("Error: Unable to establish peer requirement\n")
-            exit(1)
-        }
-        c.setCodeSigningRequirement(requirement)
+private nonisolated func handleBrokerMessage(_ message: HSIPCBrokerToClient) -> (any Encodable)? {
+    switch message {
+    case .log(let level, let text):
+        printLogEntry(level: level, message: text)
+    case .hostStatus(let connected):
+        let text = connected ? "Hammerspoon 2 connected" : "Hammerspoon 2 disconnected"
+        print("\n" + TextProperties(.blue, nil).apply(to: text))
+    }
+    return nil
+}
+
+private nonisolated final class HSIPCClient: Sendable {
+    private let session: XPCSession
+    // Set before a deliberate disconnect, so it isn't reported as a lost connection.
+    private let isClosing = Atomic(false)
+
+    init() throws {
+#if DEBUG
+        session = try XPCSession(machService: HSIPC.clientServiceName,
+                                 options: .inactive,
+                                 incomingMessageHandler: handleBrokerMessage)
+#else
+        session = try XPCSession(machService: HSIPC.clientServiceName,
+                                 options: .inactive,
+                                 requirement: HSIPC.brokerRequirement,
+                                 incomingMessageHandler: handleBrokerMessage)
 #endif
-        c.invalidationHandler = {
-            writeStderr("Error: Connection to Hammerspoon 2 was lost.\n")
+        session.setCancellationHandler { [weak self] error in
+            guard let self, !self.isClosing.load(ordering: .acquiring) else { return }
+            writeStderr("Error: Connection to the Hammerspoon 2 IPC broker was lost: \(error)\n")
             exit(1)
         }
-        c.resume()
-        connection = c
+        try session.activate()
     }
 
-    // Send hello and wait for the "connected" reply.
-    func connect(minLogLevel: Int) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            let proxy = connection.remoteObjectProxyWithErrorHandler { error in
+    // Send hello and wait for the broker's reply.
+    func connect(minLogLevel: Int) async throws -> HSIPCHelloReply {
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try session.send(HSIPCClientToBroker.hello(protocolVersion: HSIPC.protocolVersion, minLogLevel: minLogLevel)) {
+                    (result: Result<HSIPCHelloReply, any Error>) in
+                    continuation.resume(with: result)
+                }
+            } catch {
                 continuation.resume(throwing: error)
-            } as? HSIPCServerProtocol
-            guard let proxy else {
-                continuation.resume(throwing: NSError(domain: "HSIPCClient", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Failed to obtain XPC proxy"]))
-                return
             }
-            proxy.hello(minLogLevel: minLogLevel) { _ in continuation.resume() }
         }
     }
 
     // Evaluate JS and return (result, isError).
     func eval(code: String) async -> (String, Bool) {
-        await withCheckedContinuation { (continuation: CheckedContinuation<(String, Bool), Never>) in
-            let proxy = connection.remoteObjectProxyWithErrorHandler { error in
-                continuation.resume(returning: ("XPC error: \(error.localizedDescription)", true))
-            } as? HSIPCServerProtocol
-            guard let proxy else {
-                continuation.resume(returning: ("XPC proxy unavailable", true))
-                return
-            }
-            proxy.evaluate(id: UUID().uuidString, code: code) { result, isError in
-                continuation.resume(returning: (result, isError))
+        await withCheckedContinuation { continuation in
+            do {
+                try session.send(HSIPCClientToBroker.evaluate(code: code)) { (result: Result<HSIPCEvaluationReply, any Error>) in
+                    switch result {
+                    case .success(let reply):
+                        continuation.resume(returning: (reply.result, reply.isError))
+                    case .failure(let error):
+                        continuation.resume(returning: ("XPC error: \(error)", true))
+                    }
+                }
+            } catch {
+                continuation.resume(returning: ("XPC error: \(error)", true))
             }
         }
     }
 
-    func invalidate() { connection.invalidate() }
+    func invalidate() {
+        isClosing.store(true, ordering: .releasing)
+        session.cancel(reason: "hs2 exiting")
+    }
 }
 
 // MARK: - Argument parsing
@@ -200,21 +196,42 @@ private final class ResultBox<T: Sendable>: @unchecked Sendable {
 // MARK: - Entry point
 //
 // Top-level `await` makes the program entry point async (@MainActor by default isolation).
-// HSIPCClient is an actor so it runs on the Swift cooperative pool independently of the
-// main thread, preventing NWConnection-style blocking conflicts.
+// XPC delivers replies on its own queues, so they resolve independently of the main thread.
 
-private let client = HSIPCClient()
+private let notConnectedHelp = """
+    Make sure Hammerspoon 2 is running and IPC is enabled:
+      hs.ipc.start()
+
+    """
+
+private let client: HSIPCClient
+do {
+    client = try HSIPCClient()
+} catch {
+    writeStderr("Error: Cannot connect to the Hammerspoon 2 IPC broker: \(error)\n")
+    writeStderr(notConnectedHelp)
+    exit(1)
+}
 
 // Parse api.json concurrently with the XPC connection so completions are ready
 // by the time the first prompt appears.
 async let completionLoad = loadCompletions()
 
 do {
-    try await client.connect(minLogLevel: minLogLevel)
+    let hello = try await client.connect(minLogLevel: minLogLevel)
+    guard hello.protocolVersion == HSIPC.protocolVersion else {
+        writeStderr("Error: This hs2 speaks IPC protocol version \(HSIPC.protocolVersion), but the running broker (\(hello.brokerPath)) speaks \(hello.protocolVersion).\n")
+        writeStderr("Make sure hs2 belongs to the copy of Hammerspoon 2 that is running.\n")
+        exit(1)
+    }
+    guard hello.hostConnected else {
+        writeStderr("Error: Hammerspoon 2 is not connected to the IPC broker.\n")
+        writeStderr(notConnectedHelp)
+        exit(1)
+    }
 } catch {
-    writeStderr("Error: Cannot connect to Hammerspoon 2.\n")
-    writeStderr("Make sure Hammerspoon 2 is running and IPC is enabled:\n")
-    writeStderr("  hs.ipc.start()\n")
+    writeStderr("Error: Cannot connect to Hammerspoon 2: \(error)\n")
+    writeStderr(notConnectedHelp)
     exit(1)
 }
 
@@ -231,9 +248,8 @@ if let lr = lineReader, let table = completionTable {
     // Synchronous IPC round-trip for live JS reflection (tab-completion only).
     //
     // Task.detached dispatches the eval on the cooperative pool while DispatchSemaphore
-    // holds the main OS thread. HSIPCClient is a plain actor (not @MainActor), so its
-    // continuations resolve on the cooperative pool — the blocked main thread doesn't
-    // create a deadlock. Timeout: 300 ms (a local XPC call should never take this long).
+    // holds the main OS thread. HSIPCClient is not @MainActor and XPC replies arrive on
+    // XPC's own queues, so the blocked main thread doesn't create a deadlock. Timeout: 300 ms (a local XPC call should never take this long).
     let syncEval: @Sendable (String) -> String? = { [client] code in
         let sem = DispatchSemaphore(value: 0)
         let box = ResultBox<String>()
@@ -276,7 +292,7 @@ while true {
     }
 
     guard let line = rawLine else {
-        await client.invalidate()
+        client.invalidate()
         break
     }
 

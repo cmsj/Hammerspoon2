@@ -8,9 +8,16 @@ import JavaScriptCore
 
 /// Module for enabling CLI access to Hammerspoon 2 via the `hs2` command-line tool.
 ///
-/// The IPC server must be explicitly started from your configuration — it does not run by default.
-/// Once started, the `hs2` command-line tool connects via XPC and evaluates JavaScript
-/// interactively, with optional live log streaming.
+/// IPC must be explicitly started from your configuration — it does not run by default.
+/// Once started, the `hs2` command-line tool can evaluate JavaScript interactively, with
+/// optional live log streaming.
+///
+/// `hs2` and Hammerspoon 2 talk to each other via XPC, through a small broker process
+/// (`HammerspoonIPCBroker`) that ships inside the app bundle. The first call to `start()`
+/// registers the broker with launchd as a background item, which macOS will tell you about
+/// in a notification. If the broker is disabled in System Settings → General →
+/// Login Items & Extensions, IPC will not work until it is re-enabled. launchd starts the
+/// broker on demand, and it exits by itself when nothing has been connected for a while.
 ///
 /// Communication is secured with a same-team code-signing requirement in release builds,
 /// so only binaries signed with the same Team ID can connect.
@@ -42,7 +49,9 @@ import JavaScriptCore
 /// ```
 @objc protocol HSIPCModuleAPI: JSExport {
 
-    /// Whether the IPC server is currently accepting connections.
+    /// Whether Hammerspoon 2 is currently connected to the IPC broker, and so can receive commands from `hs2`.
+    ///
+    /// Connecting happens in the background, so this becomes `true` shortly after `start()` is called.
     ///
     /// - Example:
     /// ```js
@@ -52,11 +61,12 @@ import JavaScriptCore
     /// ```
     @objc var isListening: Bool { get }
 
-    /// Start the IPC server.
+    /// Start accepting commands from `hs2`.
     ///
-    /// The server listens on a named XPC Mach service (`net.tenshu.Hammerspoon-2.ipc`).
+    /// Registers the IPC broker with launchd (if it isn't already registered) and connects to it.
     /// In release builds, only processes signed with the same Team ID can connect.
     /// Calling `start()` when already running logs a warning and does nothing.
+    /// Problems, such as the broker having been disabled in System Settings, are logged to the console.
     ///
     /// - Example:
     /// ```js
@@ -64,7 +74,10 @@ import JavaScriptCore
     /// ```
     @objc func start()
 
-    /// Stop the IPC server and disconnect all connected clients.
+    /// Stop accepting commands from `hs2`.
+    ///
+    /// Disconnects from the IPC broker. Any running `hs2` sessions stay open, and will
+    /// work again if `start()` is called.
     ///
     /// - Example:
     /// ```js
@@ -126,7 +139,7 @@ import JavaScriptCore
     var moduleName = "hs.ipc"
     let engineID: UUID
 
-    private var server: HSIPCServer?
+    private var connection: HSIPCBrokerConnection?
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -135,8 +148,8 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        server?.stop()
-        server = nil
+        connection?.stop()
+        connection = nil
     }
 
     isolated deinit {
@@ -154,18 +167,18 @@ import JavaScriptCore
 
     // MARK: - HSIPCModuleAPI
 
-    @objc var isListening: Bool { server?.isListening ?? false }
+    @objc var isListening: Bool { connection?.isConnected ?? false }
 
     @objc func start() {
-        if server == nil {
-            server = HSIPCServer()
+        if connection == nil {
+            connection = HSIPCBrokerConnection()
         }
-        server?.start()
+        connection?.start()
     }
 
     @objc func stop() {
-        server?.stop()
-        server = nil
+        connection?.stop()
+        connection = nil
     }
 
     @objc func installBinary(_ directoryVal: JSValue) -> Bool {
