@@ -26,6 +26,10 @@ final class HSIPCBrokerConnection {
 
     /// The lowest log level any connected hs2 wants, as told to us by the broker.
     private var minLogLevel = HSIPC.noLogging
+    /// Whether the broker has pushed a log level on the current session. Pushes are always at
+    /// least as recent as the level in the hello reply, which is applied later (via a Task), so
+    /// once a push has arrived the hello reply's level must not overwrite it.
+    private var hasReceivedLogLevelUpdate = false
     /// Sequence number of the newest log entry we've already considered for forwarding.
     private var lastForwardedSequence: UInt64 = 0
     private var observationTask: Task<Void, Never>?
@@ -99,6 +103,8 @@ final class HSIPCBrokerConnection {
             }
         }
 
+        hasReceivedLogLevelUpdate = false
+
         let session: XPCSession
         do {
 #if DEBUG
@@ -159,7 +165,9 @@ final class HSIPCBrokerConnection {
             }
             isConnected = true
             reconnectAttempts = 0
-            setMinLogLevel(reply.minLogLevel)
+            if !hasReceivedLogLevelUpdate {
+                setMinLogLevel(reply.minLogLevel)
+            }
             AKInfo("hs.ipc: Connected to the IPC broker")
         }
     }
@@ -202,6 +210,7 @@ final class HSIPCBrokerConnection {
             let (result, isError) = Self.evalJS(code)
             return HSIPCEvaluationReply(result: result, isError: isError)
         case .setMinimumLogLevel(let level):
+            hasReceivedLogLevelUpdate = true
             setMinLogLevel(level)
             return nil
         case .replaced:
