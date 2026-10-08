@@ -24,6 +24,12 @@ import ApplicationServices
 ///                                                  AXPress switches to it, AXRemoveDesktop removes it
 ///       mc.spaces.add                              the "add desktop" button
 /// ```
+///
+/// The Accessibility tree alone doesn't say when Mission Control is really open or closed: on
+/// macOS 27 it can appear a few milliseconds before Mission Control's windows do, and it vanishes
+/// 150-450ms before they finish animating away. Toggling Mission Control in those gaps can leave
+/// a display black until the user next switches space, so open/closed is judged from both, and
+/// Mission Control is only ever toggled once it has settled one way or the other.
 @_documentation(visibility: private)
 enum HSMissionControl {
     struct Failure: LocalizedError {
@@ -33,33 +39,60 @@ enum HSMissionControl {
 
     private static let appURL = URL(fileURLWithPath: "/System/Applications/Mission Control.app")
     private static let ownerBundleIDs = ["com.apple.WindowManager", "com.apple.dock"]
+    private static let ownerNames: Set<String> = ["WindowManager", "Dock"]
+
+    /// The window layers of Mission Control's "Spaces Bar" (14) and "ExposeShieldWindow" (19),
+    /// which are only on screen while Mission Control is showing. Matched by layer rather than by
+    /// title, since other apps' window titles are hidden without Screen Recording permission. The
+    /// Dock's own window, which is always on screen, is on layer 20.
+    private static let windowLayers: Set<Int> = [14, 19]
 
     /// How long to wait for Mission Control or SkyLight to catch up with a request
     static let timeout: Duration = .seconds(3)
-    private static let pollInterval: Duration = .milliseconds(50)
+    private static let pollInterval: Duration = .milliseconds(20)
 
     private static let pressAction = kAXPressAction as String
     static let removeDesktopAction = "AXRemoveDesktop"
 
     // MARK: - Opening and closing
 
-    /// Whether Mission Control is currently showing
+    /// Whether Mission Control is showing, with both its windows and its Accessibility UI ready
     static var isOpen: Bool {
-        !displayGroups().isEmpty
+        hasWindowsOnScreen && !displayGroups().isEmpty
     }
 
-    /// Shows Mission Control, waiting until its UI is available
+    /// Whether Mission Control has completely gone, windows and all
+    static var isClosed: Bool {
+        !hasWindowsOnScreen && displayGroups().isEmpty
+    }
+
+    private static var hasWindowsOnScreen: Bool {
+        let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] ?? []
+        return windows.contains { window in
+            ownerNames.contains(window[kCGWindowOwnerName as String] as? String ?? "")
+                && windowLayers.contains(window[kCGWindowLayer as String] as? Int ?? 0)
+        }
+    }
+
+    /// Shows Mission Control, waiting until it's fully open
     static func open() async throws {
-        guard !isOpen else { return }
+        try await waitUntilSettled()
+        guard isClosed else { return }
         toggle()
         try await waitUntil("Mission Control did not open") { isOpen }
     }
 
-    /// Hides Mission Control, waiting until it has gone
+    /// Hides Mission Control, waiting until it has fully gone
     static func close() async throws {
+        try await waitUntilSettled()
         guard isOpen else { return }
         toggle()
-        try await waitUntil("Mission Control did not close") { !isOpen }
+        try await waitUntil("Mission Control did not close") { isClosed }
+    }
+
+    /// Waits for Mission Control to finish any opening or closing animation
+    static func waitUntilSettled() async throws {
+        try await waitUntil("Mission Control did not finish opening or closing") { isOpen || isClosed }
     }
 
     /// Launching Mission Control.app toggles Mission Control, exactly like its keyboard shortcut
@@ -127,6 +160,14 @@ enum HSMissionControl {
         guard result == .success else {
             throw Failure("Mission Control refused \(action) (AXError \(result.rawValue))")
         }
+    }
+
+    /// The number a desktop's button title ends with ("Desktop 3" → 3), if it ends with one. The
+    /// word itself is localized, so only the number is useful.
+    static func desktopNumber(of button: AXUIElement) -> Int? {
+        guard let title = attribute(button, kAXTitleAttribute) as? String,
+              let number = title.split(separator: " ").last.flatMap({ Int($0) }) else { return nil }
+        return number
     }
 
     static func actions(of element: AXUIElement) -> [String] {
