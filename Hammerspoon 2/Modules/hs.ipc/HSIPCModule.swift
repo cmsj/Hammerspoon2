@@ -68,6 +68,9 @@ import JavaScriptCore
     /// Calling `start()` when already running logs a warning and does nothing.
     /// Problems, such as the broker having been disabled in System Settings, are logged to the console.
     ///
+    /// Only one running copy of Hammerspoon 2 can receive commands from `hs2` at a time. If another
+    /// copy calls `start()`, it takes over, and this copy stops (with a warning in the console).
+    ///
     /// - Example:
     /// ```js
     /// hs.ipc.start()

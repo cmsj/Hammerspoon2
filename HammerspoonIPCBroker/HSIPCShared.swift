@@ -71,6 +71,9 @@ nonisolated enum HSIPCBrokerToHost: Codable {
     case evaluate(code: String)
     /// No reply. The lowest log level any connected hs2 wants, or `HSIPC.noLogging`.
     case setMinimumLogLevel(Int)
+    /// Expects a reply: `HSIPCAcknowledgement`. Another Hammerspoon 2 connection has taken over,
+    /// so this one must not reconnect. The broker cancels the session once acknowledged.
+    case replaced
 }
 
 // MARK: - Replies
@@ -85,6 +88,8 @@ nonisolated struct HSIPCHelloReply: Codable {
     /// launchd is running from a different copy of the app.
     let brokerPath: String
 }
+
+nonisolated struct HSIPCAcknowledgement: Codable {}
 
 nonisolated struct HSIPCEvaluationReply: Codable {
     let result: String

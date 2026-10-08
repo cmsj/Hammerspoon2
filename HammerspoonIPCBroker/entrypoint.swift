@@ -100,8 +100,10 @@ nonisolated final class HSIPCBroker: Sendable {
 
     private func acceptHost(_ request: XPCListener.IncomingSessionRequest) -> XPCListener.IncomingSessionRequest.Decision {
         request.accept { session in
-            // The newest host wins. A reloading Hammerspoon 2 may connect again before
-            // the broker has seen its previous session go away.
+            // The newest host wins, since a reloading Hammerspoon 2 may connect again before
+            // the broker has seen its previous session go away. The previous host is told it
+            // was replaced, so that (e.g. if it's another running copy of the app) it doesn't
+            // just reconnect and take over again.
             let previous = state.withLock { state in
                 defer {
                     state.host = session
@@ -109,10 +111,24 @@ nonisolated final class HSIPCBroker: Sendable {
                 }
                 return state.host
             }
-            previous?.cancel(reason: "Replaced by a newer Hammerspoon 2 connection")
+            if let previous {
+                retire(previous)
+            }
             HSIPCBroker.logger.info("Hammerspoon 2 connected")
             broadcast(.hostStatus(connected: true))
             return HostPeer(broker: self, id: ObjectIdentifier(session))
+        }
+    }
+
+    private func retire(_ host: XPCSession) {
+        let reason = "Replaced by a newer Hammerspoon 2 connection"
+        do {
+            // Capturing `host` keeps it alive until it has acknowledged, or failed to.
+            try host.send(HSIPCBrokerToHost.replaced) { (_: Result<HSIPCAcknowledgement, any Error>) in
+                host.cancel(reason: reason)
+            }
+        } catch {
+            host.cancel(reason: reason)
         }
     }
 
