@@ -90,7 +90,7 @@ final class HSIPCBrokerConnection {
         let messageHandler: @Sendable (XPCReceivedMessage) -> (any Encodable)? = { [weak self] message in
             let decoded = try? message.decode(as: HSIPCBrokerToHost.self)
             let expectsReply = message.expectsReply
-            return MainActor.assumeIsolated { () -> HSIPCEvaluationReply? in
+            return MainActor.assumeIsolated { () -> (any Encodable & Sendable)? in
                 guard let decoded else {
                     AKError("hs.ipc: Unable to decode message from the IPC broker")
                     return expectsReply ? HSIPCEvaluationReply(result: "Malformed request", isError: true) : nil
@@ -196,7 +196,7 @@ final class HSIPCBrokerConnection {
 
     // MARK: - Messages from the broker
 
-    private func handle(_ message: HSIPCBrokerToHost) -> HSIPCEvaluationReply? {
+    private func handle(_ message: HSIPCBrokerToHost) -> (any Encodable & Sendable)? {
         switch message {
         case .evaluate(let code):
             let (result, isError) = Self.evalJS(code)
@@ -204,6 +204,15 @@ final class HSIPCBrokerConnection {
         case .setMinimumLogLevel(let level):
             setMinLogLevel(level)
             return nil
+        case .replaced:
+            // Most likely another running copy of Hammerspoon 2 called hs.ipc.start(). Reconnecting
+            // would just take over from it again, so stop. The broker cancels our session once we've
+            // acknowledged, and sessionCancelled() won't reconnect because we're no longer wanted.
+            if isWanted {
+                isWanted = false
+                AKWarning("hs.ipc: Another Hammerspoon 2 connection has taken over IPC, so hs.ipc has stopped. Call hs.ipc.start() to take it back.")
+            }
+            return HSIPCAcknowledgement()
         }
     }
 
