@@ -465,8 +465,11 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
             let bar = try await self.openSpacesBar(for: display)
             try HSMissionControl.press(bar.spaceButtons[display.spaces.firstIndex(of: space)!])
 
+            // Clicking a space closes Mission Control. Wait for it to finish animating away too, so
+            // nothing toggles Mission Control again mid-animation.
             try await HSMissionControl.waitUntil("macOS did not switch to space \(spaceID)") {
                 skyLight.managedDisplays().first { $0.identifier == display.identifier }?.currentSpace == space
+                    && HSMissionControl.isClosed
             }
             return nil
         }
@@ -503,6 +506,12 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
 
             let bar = try await self.openSpacesBar(for: display)
             let button = bar.spaceButtons[display.spaces.firstIndex(of: space)!]
+            // Removing is destructive, so double check this really is the right button: Mission
+            // Control numbers desktops (but not fullscreen spaces) from 1 in its titles
+            let expectedNumber = userSpaces.firstIndex(of: space)! + 1
+            if let number = HSMissionControl.desktopNumber(of: button), number != expectedNumber {
+                throw HSMissionControl.Failure("Mission Control's desktop \(number) doesn't look like space \(spaceID) (desktop \(expectedNumber)); not removing it")
+            }
             guard HSMissionControl.actions(of: button).contains(HSMissionControl.removeDesktopAction) else {
                 throw HSMissionControl.Failure("Mission Control won't remove space \(spaceID)")
             }
@@ -537,10 +546,13 @@ nonisolated enum HSSpacesEvent: String, HSEventName {
                 await previous?.value
                 defer { self?.missionControlTasks[id] = nil }
 
-                let wasOpen = HSMissionControl.isOpen
                 let result: Result<Any?, any Error>
+                var wasOpen = false
                 do {
                     try Task.checkCancellation()
+                    // Let any opening/closing animation finish first, or it's unclear which it'll end up as
+                    try await HSMissionControl.waitUntilSettled()
+                    wasOpen = HSMissionControl.isOpen
                     result = .success(try await operation())
                 } catch {
                     result = .failure(error)
