@@ -13,6 +13,8 @@ Hammerspoon 2 is a macOS app written in Swift, that bridges various macOS system
 xcodebuild build -target "Hammerspoon 2" -scheme "Development" -destination 'platform=macOS'
 ```
 
+**Prefer running tests in a VM:** `xcodebuild test` on the host takes over the developer's screen, keyboard and mouse. `scripts/vm/hs2vm test [xcodebuild args]` runs the same tests in a headless Tart macOS VM instead — use the `/HSVMTest` skill, which also covers installing and driving a build in a VM. The commands below run tests on the host.
+
 **Run all tests:**
 ```bash
 xcodebuild test -target "Hammerspoon 2" -scheme "Development" -destination 'platform=macOS'

@@ -10,14 +10,25 @@
 #                        Build for testing on the host, run the tests in a throwaway clone of
 #                        hs2-golden, and collect results into build/vm/runs/<timestamp>/.
 #                        e.g. test "-only-testing:Hammerspoon 2Tests/HSHashIntegrationTests"
-#   start <vm>           Boot a VM headless (VNC only) and wait for the guest agent
+#   build                Build the app and tests on the host (build-for-testing)
+#   up <vm>              Clone hs2-golden as <vm> (name must start hs2-) and boot it
+#   down <vm>            Stop and delete <vm>
+#   install <vm> [--app <path>] [--config <init.js>]
+#                        Install a build (default: the latest `build`) and launch it with
+#                        the eval endpoint used by `hs`, plus the given config
+#   hs <vm> [js]         Evaluate JavaScript (argument or stdin) in the guest's running app
+#   click|doubleclick|rightclick|move <vm> <x> <y>
+#   drag <vm> <x1> <y1> <x2> <y2>
+#   key <vm> <chord...>  e.g. key hs2-dev cmd+space return
+#   type <vm> <text>     Synthesized mouse/keyboard input; coordinates are screenshot pixels
+#   start <vm>           Boot a VM headless and wait for the guest agent
 #   stop <vm>            Shut a VM down
 #   exec <vm> <cmd...>   Run a command in the guest (as the logged-in admin user)
 #   screenshot <vm> <png>
-#                        Capture the guest display over VNC
+#                        Capture the guest display
 #   status               List hs2-* VMs
 #
-# Requires tart (https://tart.run). VM state (logs, VNC URL, shared folder) lives in
+# Requires tart (https://tart.run). VM state (logs, shared folder) lives in
 # build/vm/vms/<vm>/; the shared folder appears in the guest at "/Volumes/My Shared Files/run".
 #
 set -euo pipefail
@@ -30,6 +41,8 @@ XCODE_APP="${HS2VM_XCODE:-$(dirname "$(dirname "$(xcode-select -p)")")}"
 VM_CPUS="${HS2VM_CPUS:-6}"
 VM_MEMORY_MB="${HS2VM_MEMORY_MB:-16384}"
 VM_DISK_GB="${HS2VM_DISK_GB:-100}"
+PRODUCTS="$VM_ROOT/DerivedData/Build/Products"
+GUEST_APP="/Applications/Hammerspoon 2.app"
 
 die() { echo "hs2vm: $*" >&2; exit 1; }
 log() { echo "hs2vm: $*" >&2; }
@@ -40,14 +53,10 @@ vm_exists() { tart list --quiet 2>/dev/null | grep -qx "$1"; }
 
 vm_running() { tart list 2>/dev/null | awk -v n="$1" '$2 == n && $NF == "running" { found = 1 } END { exit !found }'; }
 
-hs2vnc() {
-    local bin="$VM_ROOT/hs2vnc" src="$REPO_ROOT/scripts/vm/hs2vnc.swift"
-    if [[ ! -x "$bin" || "$src" -nt "$bin" ]]; then
-        mkdir -p "$VM_ROOT"
-        swiftc -O "$src" -o "$bin" >&2
-    fi
-    "$bin" "$@"
-}
+# There's deliberately no VNC: Virtualization.framework's VNC server (`tart run --vnc*`) asserts
+# while setting up some client connections, killing the whole VM. Screenshots and input are done
+# from inside the guest instead (screencapture, and the hs2vm-guest tool posting CGEvents).
+GUEST_TOOL="/usr/local/bin/hs2vm-guest"
 
 # start <vm> [extra tart run args...]
 cmd_start() {
@@ -56,8 +65,11 @@ cmd_start() {
     vm_running "$vm" && { log "$vm already running"; return; }
     local dir; dir="$(vm_dir "$vm")"
     mkdir -p "$dir/run"
-    nohup tart run "$vm" --no-graphics --vnc-experimental --no-audio --no-clipboard \
-        --dir="run:$dir/run" "$@" >"$dir/tart-run.log" 2>&1 &
+    # Run tart in its own session so the VM outlives whatever started it: process-group cleanup
+    # by the calling shell or tool (e.g. an agent harness) otherwise kills it minutes later.
+    nohup perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec: $!"' -- \
+        tart run "$vm" --no-graphics --no-audio --no-clipboard \
+        --dir="run:$dir/run" "$@" </dev/null >"$dir/tart-run.log" 2>&1 &
     local pid=$!
     disown
     # Don't call `tart list` while the VM is starting: it races Virtualization.framework's
@@ -68,6 +80,9 @@ cmd_start() {
         (( SECONDS - start > 180 )) && die "$vm: guest agent not reachable after 180s (see $dir/tart-run.log)"
         sleep 1
     done
+    # The Cirrus Labs image posts a persistent "App Background Activity" banner at every boot;
+    # wait (briefly) for it and close it so it doesn't sit over windows under test.
+    tart exec "$vm" "$GUEST_TOOL" dismiss-notifications 15 >/dev/null || true
     log "$vm ready after $(( SECONDS - start ))s"
 }
 
@@ -83,9 +98,94 @@ cmd_exec() {
 }
 
 cmd_screenshot() {
-    local vm="$1" out="$2" url
-    url="$(grep -o 'vnc://[^ ]*' "$(vm_dir "$vm")/tart-run.log" 2>/dev/null)" || die "$vm: no VNC URL (is it running?)"
-    hs2vnc "$url" screenshot "$out"
+    local vm="$1" out="$2"
+    tart exec "$vm" sh -c 'f=$(mktemp -t hs2vm).png && screencapture -x "$f" && cat "$f" && rm -f "$f"' >"$out"
+    [[ -s "$out" ]] || die "$vm: screenshot failed"
+    echo "$out ($(sips -g pixelWidth -g pixelHeight "$out" | awk '/pixel/ { printf "%s%s", sep, $2; sep = "x" }'))"
+}
+
+# <input command> <vm> <args...>: click, doubleclick, rightclick, move, drag, key, type
+cmd_input() {
+    local command="$1" vm="$2"; shift 2
+    tart exec "$vm" "$GUEST_TOOL" "$command" "$@"
+}
+
+# up <vm>: clone the golden image (if needed) and boot it, for interactive work.
+cmd_up() {
+    local vm="$1"
+    [[ "$vm" == hs2-* ]] || die "VM names must start with hs2-"
+    vm_exists "$vm" || { vm_exists "$GOLDEN" || die "no golden image; run: hs2vm provision"; tart clone "$GOLDEN" "$vm"; }
+    cmd_start "$vm"
+}
+
+# down <vm>: stop and delete a VM created by `up`.
+cmd_down() {
+    local vm="$1"
+    [[ "$vm" != "$GOLDEN" ]] || die "refusing to delete the golden image"
+    cmd_stop "$vm"
+    vm_exists "$vm" && tart delete "$vm"
+    rm -rf "$(vm_dir "$vm")"
+}
+
+# install <vm> [--app <path>] [--config <init.js>]
+cmd_install() {
+    local vm="$1"; shift
+    local app="$PRODUCTS/Debug/Hammerspoon 2.app" config=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --app) app="$2"; shift 2 ;;
+            --config) config="$2"; shift 2 ;;
+            *) die "usage: install <vm> [--app <path>] [--config <init.js>]" ;;
+        esac
+    done
+    [[ -d "$app" ]] || host_build "$VM_ROOT/build.log"
+    [[ -d "$app" ]] || die "no app at $app"
+
+    tart exec "$vm" pkill -x "Hammerspoon 2" >/dev/null 2>&1 || true
+    log "installing $(basename "$app") as $GUEST_APP"
+    tar -C "$(dirname "$app")" -s ",^$(basename "$app"),Hammerspoon 2.app," -cf - "$(basename "$app")" \
+        | tart exec -i "$vm" sh -c 'rm -rf "/Applications/Hammerspoon 2.app" && tar -C /Applications -xpf -'
+
+    # The eval endpoint used by `hs2vm hs` always leads the config.
+    { cat "$REPO_ROOT/scripts/vm/guest/eval-server.js"; if [[ -n "$config" ]]; then cat "$config"; fi; } \
+        | tart exec -i "$vm" sh -c 'mkdir -p ~/.config/Hammerspoon2 && cat > ~/.config/Hammerspoon2/init.js'
+
+    # Skip the first-launch Welcome window, which holds off loading the config until clicked.
+    tart exec "$vm" defaults write net.tenshu.Hammerspoon-2 hasCompletedOnboarding -bool true
+    tart exec "$vm" open "$GUEST_APP"
+    local start=$SECONDS
+    until [[ "$(cmd_hs "$vm" '1+1' 2>/dev/null)" == "2" ]]; do
+        (( SECONDS - start > 60 )) && die "app didn't answer within 60s (first launch shows a Welcome window until clicked; see: hs2vm screenshot $vm out.png)"
+        sleep 1
+    done
+    log "Hammerspoon 2 running in $vm (ready after $(( SECONDS - start ))s)"
+}
+
+# hs <vm> [js]: evaluate JavaScript (argument, or stdin) in the guest's running app, via the
+# loopback eval endpoint that `install` adds to init.js (see guest/eval-server.js).
+cmd_hs() {
+    local vm="$1" code
+    if [[ $# -ge 2 ]]; then code="$2"; else code="$(cat)"; fi
+    local rc=0
+    printf '%s' "$code" | tart exec -i "$vm" curl -sS --fail-with-body --data-binary @- http://localhost:7999/ || rc=$?
+    echo
+    return "$rc"
+}
+
+# Builds the app and test bundle on the host: it needs no UI, and keeps incremental builds
+# fast. A separate DerivedData avoids fighting with the developer's own Xcode builds.
+host_build() {
+    local build_log="$1"
+    mkdir -p "$(dirname "$build_log")"
+    log "building for testing (log: $build_log)"
+    if ! xcodebuild build-for-testing \
+            -scheme Development -destination 'platform=macOS' \
+            -derivedDataPath "$VM_ROOT/DerivedData" \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            >"$build_log" 2>&1; then
+        grep -E 'error:|BUILD FAILED' "$build_log" | tail -20 >&2
+        die "build failed (see $build_log)"
+    fi
 }
 
 # test [--keep] [xcodebuild args...]
@@ -94,25 +194,14 @@ cmd_test() {
     if [[ "${1:-}" == "--keep" ]]; then keep=1; shift; fi
     vm_exists "$GOLDEN" || die "no golden image; run: hs2vm provision"
 
-    local id vm out products rc
+    local id vm out rc
     id="$(date +%Y%m%d-%H%M%S)"
     vm="hs2-run-$id"
     out="$VM_ROOT/runs/$id"
-    products="$VM_ROOT/DerivedData/Build/Products"
     mkdir -p "$out"
     log "results: $out"
 
-    # Build on the host: it needs no UI, and keeps incremental builds fast. A separate
-    # DerivedData avoids fighting with the developer's own Xcode builds.
-    log "building for testing"
-    if ! xcodebuild build-for-testing \
-            -scheme Development -destination 'platform=macOS' \
-            -derivedDataPath "$VM_ROOT/DerivedData" \
-            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
-            >"$out/build.log" 2>&1; then
-        grep -E 'error:|BUILD FAILED' "$out/build.log" | tail -20 >&2
-        die "build failed (see $out/build.log)"
-    fi
+    host_build "$out/build.log"
 
     tart clone "$GOLDEN" "$vm"
     if (( keep )); then
@@ -124,7 +213,7 @@ cmd_test() {
 
     # Stream rather than use the virtiofs share: copying bundles out of a share hits ELOOP on symlinks.
     log "copying build products into the guest"
-    tar -C "$products" -cf - . \
+    tar -C "$PRODUCTS" -cf - . \
         | tart exec -i "$vm" sh -c 'rm -rf ~/hs2-run && mkdir -p ~/hs2-run/Products && tar -C ~/hs2-run/Products -xpf -'
     cp "$REPO_ROOT/scripts/vm/guest/run-tests.sh" "$(vm_dir "$vm")/run/"
 
@@ -172,6 +261,11 @@ cmd_provision() {
     cp "$REPO_ROOT/scripts/vm/guest/provision.sh" "$dir/run/"
     cmd_start "$work"
 
+    log "installing $GUEST_TOOL"
+    swiftc -O "$REPO_ROOT/scripts/vm/guest/hs2vm-guest.swift" -o "$VM_ROOT/hs2vm-guest"
+    tart exec -i "$work" sudo sh -c "mkdir -p /usr/local/bin && cat > $GUEST_TOOL && chmod 755 $GUEST_TOOL" \
+        <"$VM_ROOT/hs2vm-guest"
+
     log "copying $(basename "$XCODE_APP") into the guest as /Applications/Xcode.app"
     tar -C "$(dirname "$XCODE_APP")" -s ",^$(basename "$XCODE_APP"),Xcode.app," -cf - "$(basename "$XCODE_APP")" \
         | tart exec -i "$work" sudo tar -C /Applications -xpf -
@@ -195,6 +289,13 @@ case "$command" in
     exec)       [[ $# -ge 2 ]] || die "usage: exec <vm> <cmd...>"; cmd_exec "$@" ;;
     screenshot) [[ $# -eq 2 ]] || die "usage: screenshot <vm> <out.png>"; cmd_screenshot "$@" ;;
     test)       cmd_test "$@" ;;
+    build)      host_build "$VM_ROOT/build.log" ;;
+    up)         [[ $# -eq 1 ]] || die "usage: up <vm>"; cmd_up "$1" ;;
+    down)       [[ $# -eq 1 ]] || die "usage: down <vm>"; cmd_down "$1" ;;
+    install)    [[ $# -ge 1 ]] || die "usage: install <vm> [--app <path>] [--config <init.js>]"; cmd_install "$@" ;;
+    hs)         [[ $# -ge 1 ]] || die "usage: hs <vm> [js]"; cmd_hs "$@" ;;
+    click|doubleclick|rightclick|move|drag|key|type)
+                [[ $# -ge 2 ]] || die "usage: $command <vm> <args...>"; cmd_input "$command" "$@" ;;
     status)     cmd_status ;;
     *)          die "unknown command: $command" ;;
 esac

@@ -76,27 +76,38 @@ done
 for service in kTCCServiceCamera kTCCServiceMicrophone; do
     grant "$USER_TCC" "$service" "$APP_ID"
 done
+# Let osascript run via `tart exec` (whose responsible process is the guest agent) drive System
+# Events and Finder without an Automation prompt. Path clients use client_type 1.
+AGENT="$(readlink -f /opt/homebrew/bin/tart-guest-agent)"
+for target in com.apple.finder com.apple.systemevents; do
+    sudo sqlite3 "$USER_TCC" "insert or replace into access
+        (service, client, client_type, auth_value, auth_reason, auth_version, csreq, flags, indirect_object_identifier)
+        values ('kTCCServiceAppleEvents', '$AGENT', 1, 2, 4, 1, NULL, 0, '$target');"
+done
 echo "system:"; sudo sqlite3 "$SYSTEM_TCC" "select service, client from access where client like 'net.tenshu.%';"
-echo "user:";   sudo sqlite3 "$USER_TCC"   "select service, client, indirect_object_identifier from access where client like 'net.tenshu.%';"
+echo "user:";   sudo sqlite3 "$USER_TCC"   "select service, client, indirect_object_identifier from access where client like 'net.tenshu.%' or client like '%tart-guest-agent';"
 
 step "Screen capture approval"
 # Separately from TCC, ScreenCaptureKit shows a "bypass the system private window picker" alert
 # unless replayd has a recent approval for the client; seed one that never expires.
-/usr/bin/python3 - "$APP_ID" <<'EOF'
+# Seed the app (bundle ID) and the guest agent (path; `hs2vm screenshot` runs screencapture
+# through it).
+/usr/bin/python3 - "$APP_ID" "$(readlink -f /opt/homebrew/bin/tart-guest-agent)" <<'EOF'
 import datetime, os, plistlib, sys
 path = os.path.expanduser("~/Library/Group Containers/group.com.apple.replayd/ScreenCaptureApprovals.plist")
 approvals = plistlib.load(open(path, "rb")) if os.path.exists(path) else {}
 now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
-approvals[sys.argv[1]] = {
-    "kScreenCaptureAlertableUsageCount": 1,
-    "kScreenCaptureApprovalLastAlerted": now,
-    "kScreenCaptureApprovalLastUsed": now,
-    "kScreenCapturePrivacyHintDate": datetime.datetime(2100, 1, 1),
-    "kScreenCapturePrivacyHintPolicy": 2592000,
-}
+for client in sys.argv[1:]:
+    approvals[client] = {
+        "kScreenCaptureAlertableUsageCount": 1,
+        "kScreenCaptureApprovalLastAlerted": now,
+        "kScreenCaptureApprovalLastUsed": now,
+        "kScreenCapturePrivacyHintDate": datetime.datetime(2100, 1, 1),
+        "kScreenCapturePrivacyHintPolicy": 2592000,
+    }
 os.makedirs(os.path.dirname(path), exist_ok=True)
 plistlib.dump(approvals, open(path, "wb"))
-print("seeded", sys.argv[1])
+print("seeded", ", ".join(sys.argv[1:]))
 EOF
 
 step "Stamp"
