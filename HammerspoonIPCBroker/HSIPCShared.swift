@@ -94,4 +94,22 @@ nonisolated struct HSIPCAcknowledgement: Codable {}
 nonisolated struct HSIPCEvaluationReply: Codable {
     let result: String
     let isError: Bool
+    /// False when the code never ran in Hammerspoon 2's JavaScript engine (it isn't connected,
+    /// didn't reply, or couldn't decode the request), in which case `isError` reports that
+    /// failure rather than a JavaScript error.
+    let wasEvaluated: Bool
+
+    init(result: String, isError: Bool, wasEvaluated: Bool = true) {
+        self.result = result
+        self.isError = isError
+        self.wasEvaluated = wasEvaluated
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        result = try container.decode(String.self, forKey: .result)
+        isError = try container.decode(Bool.self, forKey: .isError)
+        // Replies from a broker or host that predates this field only ever came from evaluating.
+        wasEvaluated = try container.decodeIfPresent(Bool.self, forKey: .wasEvaluated) ?? true
+    }
 }

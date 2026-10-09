@@ -97,7 +97,7 @@ final class HSIPCBrokerConnection {
             return MainActor.assumeIsolated { () -> (any Encodable & Sendable)? in
                 guard let decoded else {
                     AKError("hs.ipc: Unable to decode message from the IPC broker")
-                    return expectsReply ? HSIPCEvaluationReply(result: "Malformed request", isError: true) : nil
+                    return expectsReply ? HSIPCEvaluationReply(result: "Malformed request", isError: true, wasEvaluated: false) : nil
                 }
                 return self?.handle(decoded)
             }
