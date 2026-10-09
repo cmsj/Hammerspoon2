@@ -349,7 +349,10 @@ import JavaScriptCore
             clearMenuHandlers()
         } else if menuOrFn.isArray {
             clearMenuHandlers()
-            statusItem?.menu = buildMenu(from: menuOrFn, handlers: &menuItemHandlers)
+            var handlers: [MenuItemHandler] = []
+            let menu = buildMenu(from: menuOrFn, handlers: &handlers)
+            guard store(handlers, in: &menuItemHandlers) else { return }
+            statusItem?.menu = menu
         } else if menuOrFn.isObject {
             _menuCallback = JSCallback(value: menuOrFn, owner: self)
             let menu = NSMenu()
@@ -364,12 +367,7 @@ import JavaScriptCore
     }
 
     @objc func popUpMenu(_ entries: JSValue) {
-        guard entries.isArray else {
-            AKError("hs.menubar.popUpMenu: Expected an array of menu items")
-            return
-        }
-        detach(&popUpMenuHandlers)
-        let menu = buildMenu(from: entries, handlers: &popUpMenuHandlers)
+        guard let menu = makePopUpMenu(from: entries) else { return }
 
         guard let button = statusItem?.button,
               let window = button.window,
@@ -384,6 +382,23 @@ import JavaScriptCore
         menu.popUp(positioning: nil, at: NSPoint(x: origin.x, y: origin.y), in: nil)
         button.highlight(false)
     }
+
+    /// Builds the menu popUpMenu() opens, or returns nil if it can't. Separate from opening it, which is modal,
+    /// so tests can check it.
+    func makePopUpMenu(from entries: JSValue) -> NSMenu? {
+        guard entries.isArray else {
+            AKError("hs.menubar.popUpMenu: Expected an array of menu items")
+            return nil
+        }
+        detach(&popUpMenuHandlers)
+        var handlers: [MenuItemHandler] = []
+        let menu = buildMenu(from: entries, handlers: &handlers)
+        guard store(handlers, in: &popUpMenuHandlers) else { return nil }
+        return menu
+    }
+
+    /// The menu set with setMenu(), if any. Exposed for tests.
+    var attachedMenu: NSMenu? { statusItem?.menu }
 
     @objc func hide() {
         statusItem?.isVisible = false
@@ -425,7 +440,10 @@ import JavaScriptCore
             return
         }
 
-        for item in buildNSMenuItems(from: result, handlers: &menuItemHandlers) {
+        var handlers: [MenuItemHandler] = []
+        let items = buildNSMenuItems(from: result, handlers: &handlers)
+        guard store(handlers, in: &menuItemHandlers) else { return }
+        for item in items {
             menu.addItem(item)
         }
     }
@@ -455,6 +473,21 @@ import JavaScriptCore
 
     private func clearMenuHandlers() {
         detach(&menuItemHandlers)
+    }
+
+    /// Stores the handlers for a menu built from JS entries in `list`, returning false if the menu shouldn't be
+    /// used. The handlers have to be built into a separate array and stored afterwards, because reading the
+    /// entries runs JS, which can destroy this item or set another menu (writing to `list`) meanwhile. Anything
+    /// stored in `list` since is detached, and if the item was destroyed, so are the new handlers.
+    private func store(_ handlers: [MenuItemHandler], in list: inout [MenuItemHandler]) -> Bool {
+        detach(&list)
+        guard statusItem != nil else {
+            var orphaned = handlers
+            detach(&orphaned)
+            return false
+        }
+        list = handlers
+        return true
     }
 
     private func detach(_ handlers: inout [MenuItemHandler]) {
