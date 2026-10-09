@@ -38,10 +38,9 @@ function screenFrameFor(win) {
     return screen ? screen.frame : null;
 }
 
-// Move and resize a window. HSWindow has no setFrame() method; its frame is a settable property.
+// Move and resize a window, returning whether it succeeded.
 function setWindowFrame(win, x, y, w, h) {
-    win.frame = new HSRect(x, y, w, h);
-    return true;
+    return win.moveAndResize(new HSRect(x, y, w, h));
 }
 
 /// Move a window to left half of screen

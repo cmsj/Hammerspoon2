@@ -92,8 +92,9 @@ struct HSWindowIntegrationTests {
 
     // MARK: - Issue #269: layout helpers must set the window's frame
 
-    /// The helpers only read `win.screen.frame` and assign `win.frame`, so a plain object standing in
-    /// for an HSWindow shows where they would put a real window, without needing Accessibility.
+    /// The helpers only read `win.screen.frame` and call `win.moveAndResize()`, so a plain object
+    /// standing in for an HSWindow shows where they would put a real window, without needing
+    /// Accessibility.
     @Suite("hs.window layout helper tests")
     struct HSWindowLayoutHelperTests {
         private func makeHarness() -> JSTestHarness {
@@ -106,11 +107,30 @@ struct HSWindowIntegrationTests {
         /// frame it was given as [x, y, w, h].
         private func frameAfter(_ call: String) -> [Double]? {
             let harness = makeHarness()
-            harness.eval("var fakeWin = { screen: { frame: { x: 0, y: 25, w: 1000, h: 800 } }, frame: null }")
+            harness.eval("""
+                var fakeWin = {
+                    screen: { frame: { x: 0, y: 25, w: 1000, h: 800 } },
+                    frame: null,
+                    moveAndResize: function(rect) { this.frame = rect; return true; }
+                }
+                """)
             let result = harness.evalBool(call)
             #expect(!harness.hasException, "\(call) threw")
             #expect(result == true, "\(call) did not return true")
             return harness.eval("var f = fakeWin.frame; f ? [f.x, f.y, f.w, f.h] : null") as? [Double]
+        }
+
+        @Test("layout helpers report a window that refuses to move")
+        func testLayoutHelperReportsFailure() {
+            let harness = makeHarness()
+            harness.eval("""
+                var stuckWin = {
+                    screen: { frame: { x: 0, y: 25, w: 1000, h: 800 } },
+                    moveAndResize: function(rect) { return false; }
+                }
+                """)
+            #expect(harness.evalBool("hs.window.maximize(stuckWin)") == false)
+            #expect(!harness.hasException)
         }
 
         @Test("layout helpers assign the expected frame", arguments: [
@@ -189,10 +209,11 @@ struct HSWindowIntegrationTests {
             // application lets this be set (TextEdit refuses on some macOS versions), in which case
             // only the frame change itself is checked.
             let appElement = UIElement(AXUIElementCreateApplication(app.processIdentifier))
+            let originalEnhancedUI: Bool? = try? appElement.attribute(.enhancedUserInterface)
             let enhancedUIWasSet = (try? appElement.setAttribute(.enhancedUserInterface, value: true)) != nil
             defer {
                 if enhancedUIWasSet {
-                    try? appElement.setAttribute(.enhancedUserInterface, value: false)
+                    try? appElement.setAttribute(.enhancedUserInterface, value: originalEnhancedUI ?? false)
                 }
             }
 

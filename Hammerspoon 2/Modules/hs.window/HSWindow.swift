@@ -159,6 +159,21 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// ```
     @objc var frame: HSRect? { get set }
 
+    /// Move and resize the window, reporting whether it succeeded
+    ///
+    /// The same as setting `frame`, except that the result tells you whether the window accepted
+    /// the change.
+    /// - Parameter frame: The window's new frame
+    /// - Returns: true if the window was moved and resized, otherwise false
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.focusedWindow()
+    /// if (!win.moveAndResize(new HSRect(0, 0, 1024, 768))) {
+    ///     console.log("The window refused to move")
+    /// }
+    /// ```
+    @objc func moveAndResize(_ frame: HSRect) -> Bool
+
     /// The screen that contains the largest portion of this window.
     /// - Example:
     /// ```js
@@ -425,14 +440,20 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
                 return
             }
 
-            do {
-                try withEnhancedUserInterfaceDisabled {
-                    try element.setAttribute(.position, value: newValue.origin.point)
-                    try element.setAttribute(.size, value: newValue.size.size)
-                }
-            } catch {
-                AKError("Failed to set frame: \(error.localizedDescription)")
+            _ = moveAndResize(newValue)
+        }
+    }
+
+    @objc func moveAndResize(_ frame: HSRect) -> Bool {
+        do {
+            try withEnhancedUserInterfaceDisabled {
+                try element.setAttribute(.position, value: frame.origin.point)
+                try element.setAttribute(.size, value: frame.size.size)
             }
+            return true
+        } catch {
+            AKError("Failed to set frame: \(error.localizedDescription)")
+            return false
         }
     }
 
@@ -452,7 +473,11 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
         }
         defer {
             if wasEnhanced {
-                try? appElement.setAttribute(.enhancedUserInterface, value: true)
+                do {
+                    try appElement.setAttribute(.enhancedUserInterface, value: true)
+                } catch {
+                    AKError("Failed to restore AXEnhancedUserInterface for \(app.localizedName ?? "pid \(app.processIdentifier)"): \(error.localizedDescription)")
+                }
             }
         }
 
