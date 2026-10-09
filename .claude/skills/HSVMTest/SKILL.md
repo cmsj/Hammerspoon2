@@ -67,7 +67,9 @@ scripts/vm/hs2vm build                           # host build (skip if `test` ju
 scripts/vm/hs2vm install hs2-dev [--config my-init.js] [--app path/to/Hammerspoon 2.app]
 scripts/vm/hs2vm hs hs2-dev 'hs.application.frontmost().title'
 scripts/vm/hs2vm hs hs2-dev < script.js          # multi-line; the last expression's value is printed;
-                                                 # Promises are awaited; errors exit non-zero
+                                                 # Promises are awaited; exit status is hs2's:
+                                                 # 65 = the JavaScript threw (or its Promise
+                                                 # rejected), 1 = couldn't reach the app
 scripts/vm/hs2vm screenshot hs2-dev /tmp/shot.png   # then Read the PNG
 scripts/vm/hs2vm down hs2-dev                    # stop and delete it when done
 ```
@@ -78,8 +80,8 @@ skips the first-launch Welcome window, launches the app and waits until it answe
 `hs` runs the app's own `hs2` CLI in the guest, so it exercises the real hs.ipc path (hs2 →
 HammerspoonIPCBroker launch agent → app). The broker is registered with `SMAppService`, which
 refuses bundles without a sealed signature, so `hs2vm build` ad-hoc signs the app after building;
-Debug builds skip hs.ipc's same-team checks. A JavaScript error is reported as `err.toString()`
-(no stack).
+Debug builds skip hs.ipc's same-team checks. A JavaScript error is printed to stderr as
+`err.toString()` (no stack).
 
 ### Mouse and keyboard
 
