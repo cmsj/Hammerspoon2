@@ -17,7 +17,7 @@
 #                        Install a build (default: the latest `build`) and launch it with
 #                        hs.ipc started (for `hs`), plus the given config
 #   hs <vm> [js]         Evaluate JavaScript (argument or stdin) in the guest's running app,
-#                        via hs.ipc and hs2
+#                        via hs.ipc and hs2; exits 65 if it threw, 1 if the app is unreachable
 #   click|doubleclick|rightclick|move <vm> <x> <y>
 #   drag <vm> <x1> <y1> <x2> <y2>
 #   key <vm> <chord...>  e.g. key hs2-dev cmd+space return
@@ -165,32 +165,32 @@ cmd_install() {
 }
 
 # hs <vm> [js]: evaluate JavaScript (argument, or stdin) in the guest's running app through
-# hs.ipc, using the app's own hs2 CLI.
+# hs.ipc, using the app's own hs2 CLI. Exits with hs2's status: 65 if the JavaScript threw (or a
+# Promise it returned rejected), 1 if hs2 couldn't reach the app.
 cmd_hs() {
-    local vm="$1" code json out
+    local vm="$1" code json out rc=0
     if [[ $# -ge 2 ]]; then code="$2"; else code="$(cat)"; fi
     # hs2 evaluates one line at a time, so send the script as one indirect eval of a JSON string:
     # multi-line code works, runs in global scope, and yields its last value. hs2 doesn't await
-    # Promises, so a Promise result is parked in a global and polled for below. hs2 also exits 0
-    # and prints errors like any other value, so they come back with an __HS2VM_ERROR__ prefix.
+    # Promises, so a Promise result is parked in a global and polled for; a rejection is rethrown
+    # by the poll so that hs2 reports it like any other error.
     json="$(printf '%s' "$code" | python3 -c 'import json, sys; print(json.dumps(sys.stdin.read()))')"
-    out="$(hs2_eval "$vm" "(() => { try { const v = (0, eval)($json); if (v && typeof v.then === 'function') { globalThis.__hs2vmPending = undefined; v.then(r => { globalThis.__hs2vmPending = { value: r } }, e => { globalThis.__hs2vmPending = { error: e } }); return '__HS2VM_PENDING__' } return v } catch (e) { return '__HS2VM_ERROR__' + e } })()")" \
-        || { printf '%s\n' "$out" >&2; return 1; }
+    out="$(hs2_eval "$vm" "(() => { const v = (0, eval)($json); if (v && typeof v.then === 'function') { globalThis.__hs2vmPending = undefined; v.then(r => { globalThis.__hs2vmPending = { value: r } }, e => { globalThis.__hs2vmPending = { error: e } }); return '__HS2VM_PENDING__' } return v })()")" || rc=$?
     local start=$SECONDS
-    while [[ "$out" == "__HS2VM_PENDING__" ]]; do
+    while (( rc == 0 )) && [[ "$out" == "__HS2VM_PENDING__" ]]; do
         (( SECONDS - start > 120 )) && { echo "hs2vm: Promise still pending after 120s" >&2; return 1; }
         sleep 0.2
-        out="$(hs2_eval "$vm" "(() => { const p = globalThis.__hs2vmPending; if (!p) return '__HS2VM_PENDING__'; if ('error' in p) return '__HS2VM_ERROR__' + p.error; return p.value })()")" \
-            || { printf '%s\n' "$out" >&2; return 1; }
+        out="$(hs2_eval "$vm" "(() => { const p = globalThis.__hs2vmPending; if (!p) return '__HS2VM_PENDING__'; if ('error' in p) throw p.error; return p.value })()")" || rc=$?
     done
-    if [[ "$out" == __HS2VM_ERROR__* ]]; then
-        printf '%s\n' "${out#__HS2VM_ERROR__}" >&2
-        return 1
+    if (( rc != 0 )); then
+        printf '%s\n' "$out" >&2
+        return "$rc"
     fi
     printf '%s\n' "$out"
 }
 
-# hs2_eval <vm> <one line of JS>: prints the result; fails if hs2 can't connect.
+# hs2_eval <vm> <one line of JS>: prints hs2's output (minus its banner and colours) and returns
+# its exit status.
 hs2_eval() {
     local raw rc=0
     raw="$(printf '%s\n' "$2" | tart exec -i "$1" "$GUEST_APP/Contents/MacOS/hs2" --no-prompt 2>&1)" || rc=$?
