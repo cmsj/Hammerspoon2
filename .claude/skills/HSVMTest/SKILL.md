@@ -110,7 +110,7 @@ the GUI session; `sudo` needs no password), `hs2vm status`. VM names must start 
 
 - At most **two** macOS VMs can run at once (Apple's licence, enforced by Virtualization.framework).
 - `build`, `test` and `install` share one DerivedData (`build/vm/DerivedData`) and take turns
-  on a lock (`build/vm/products.lock`) while building and copying products into a guest, so
+  on a lock (`build/vm/products-lock`) while building and copying products into a guest, so
   simultaneous runs are safe; a second one logs that it's waiting. A lock left by a dead
   process is reclaimed automatically.
 - Call `tart exec` (and `hs2vm`) as standalone commands, not chained with `&&`/`;`, so the
