@@ -80,7 +80,7 @@ let keyCodes: [String: CGKeyCode] = [
     "f10": 109, "f11": 103, "f12": 111,
 ]
 
-let modifiers: [String: (code: CGKeyCode, flag: CGEventFlags)] = [
+let modifierKeys: [String: (code: CGKeyCode, flag: CGEventFlags)] = [
     "cmd": (55, .maskCommand), "command": (55, .maskCommand),
     "shift": (56, .maskShift),
     "alt": (58, .maskAlternate), "opt": (58, .maskAlternate), "option": (58, .maskAlternate),
@@ -88,29 +88,45 @@ let modifiers: [String: (code: CGKeyCode, flag: CGEventFlags)] = [
     "fn": (63, .maskSecondaryFn),
 ]
 
-func key(_ code: CGKeyCode, down: Bool, flags: CGEventFlags) {
+func postKey(_ code: CGKeyCode, down: Bool, flags: CGEventFlags) {
     let event = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: down)
     event?.flags = flags
     post(event)
 }
 
-/// Presses e.g. "cmd+shift+4": modifiers down in order, the key, then modifiers up in reverse.
-func chord(_ spec: String) throws {
-    let parts = spec.lowercased().split(separator: "+").map(String.init)
-    guard let last = parts.last, let code = keyCodes[last] else { throw UsageError(description: "unknown key in '\(spec)'") }
-    var held: [(code: CGKeyCode, flag: CGEventFlags)] = []
-    var flags: CGEventFlags = []
-    for name in parts.dropLast() {
-        guard let modifier = modifiers[name] else { throw UsageError(description: "unknown modifier '\(name)' in '\(spec)'") }
-        flags.insert(modifier.flag)
-        key(modifier.code, down: true, flags: flags)
-        held.append(modifier)
+/// A parsed key chord such as "cmd+shift+4".
+struct Chord {
+    let modifiers: [(code: CGKeyCode, flag: CGEventFlags)]
+    let key: CGKeyCode
+
+    /// Parses the whole chord up front, so a typo can't leave earlier modifiers held down.
+    init(_ spec: String) throws {
+        let parts = spec.lowercased().split(separator: "+").map(String.init)
+        guard let last = parts.last, let key = keyCodes[last] else {
+            throw UsageError(description: "unknown key in '\(spec)'")
+        }
+        modifiers = try parts.dropLast().map { name in
+            guard let modifier = modifierKeys[name] else {
+                throw UsageError(description: "unknown modifier '\(name)' in '\(spec)'")
+            }
+            return modifier
+        }
+        self.key = key
     }
-    key(code, down: true, flags: flags)
-    key(code, down: false, flags: flags)
-    for modifier in held.reversed() {
-        flags.remove(modifier.flag)
-        key(modifier.code, down: false, flags: flags)
+
+    /// Modifiers down in order, the key, then modifiers up in reverse.
+    func press() {
+        var flags: CGEventFlags = []
+        for modifier in modifiers {
+            flags.insert(modifier.flag)
+            postKey(modifier.code, down: true, flags: flags)
+        }
+        postKey(key, down: true, flags: flags)
+        postKey(key, down: false, flags: flags)
+        for modifier in modifiers.reversed() {
+            flags.remove(modifier.flag)
+            postKey(modifier.code, down: false, flags: flags)
+        }
     }
 }
 
@@ -192,8 +208,10 @@ func run() throws {
         drag(from: try point(rest[0], rest[1]), to: try point(rest[2], rest[3]))
     case "key":
         guard !rest.isEmpty else { throw UsageError(description: "usage: key <chord> [chord...]") }
-        for spec in rest {
-            try chord(spec)
+        // Parse every chord before pressing any, so a bad one doesn't leave the rest half done.
+        let chords = try rest.map(Chord.init)
+        for chord in chords {
+            chord.press()
             usleep(50_000)
         }
     case "type":
