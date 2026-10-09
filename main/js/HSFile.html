@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSFile - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="typescript-guide.html" class="">TypeScript</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSFile</span>
+</nav>
+<div class="page-header">
+    <h1>HSFile</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>An open file, created by <code>hs.fs.open()</code> or <code>hs.fs.tempFile()</code>.</p>
+<p><code>HSFile</code> is the equivalent of a Lua <code>io</code> file handle in Hammerspoon v1. It supports
+reading and writing text (UTF-8) or binary data (<code>Uint8Array</code>), seeking, truncating,
+advisory locking, and operating on the underlying path (rename, duplicate, remove).</p>
+<p>All reads and writes go straight to the file descriptor with no user-space buffering,
+so <code>position</code> is always exact and data written is immediately visible to other
+processes. Use <code>flush()</code> if you also need it forced to stable storage.</p>
+<p>Operations that fail return <code>null</code> or <code>false</code> and set <code>lastError</code> to an object of the
+form <code>{code: &quot;ENOENT&quot;, message: &quot;No such file or directory&quot;}</code>. <code>lastError</code> is not cleared
+by successful calls, so only consult it after a call has reported failure.</p>
+<p>Always <code>close()</code> files when you are finished with them, or use <code>hs.fs.withFile()</code>, which
+closes the file for you. Any files still open are closed when your configuration is reloaded.</p>
+<p>Example:</p>
+<pre><code class="language-js">const f = hs.fs.open(&quot;~/notes.txt&quot;, &quot;a+&quot;)
+f.writeLine(&quot;Remember the milk&quot;)
+f.rewind()
+let line
+while ((line = f.readLine()) !== null) console.log(line)
+f.close()
+</code></pre>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="path">
+        <h3><a href="#path">path</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The absolute path of the file, with symbolic links resolved. Updated by `rename()`.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L47" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:47</a>
+        </div>
+    </div>
+    <div class="property" id="mode">
+        <h3><a href="#mode">mode</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The mode the file was opened with (e.g. `&quot;r&quot;`, `&quot;w+&quot;`).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L54" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:54</a>
+        </div>
+    </div>
+    <div class="property" id="isOpen">
+        <h3><a href="#isOpen">isOpen</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the file is still open.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L61" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:61</a>
+        </div>
+    </div>
+    <div class="property" id="position">
+        <h3><a href="#position">position</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The current byte offset within the file. `0` if the file is closed.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L68" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:68</a>
+        </div>
+    </div>
+    <div class="property" id="size">
+        <h3><a href="#size">size</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The current size of the file in bytes. `0` if the file is closed.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L75" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:75</a>
+        </div>
+    </div>
+    <div class="property" id="atEnd">
+        <h3><a href="#atEnd">atEnd</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the current position is at (or beyond) the end of the file.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L82" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:82</a>
+        </div>
+    </div>
+    <div class="property" id="lastError">
+        <h3><a href="#lastError">lastError</a></h3>
+        <div class="prop-type">JSValue</div>
+        <div class="description">The error from the most recent failed operation on this file, or `null` if no operation has failed.
+The object has a `code` (a POSIX error name such as `&quot;ENOENT&quot;`, `&quot;EACCES&quot;`, `&quot;EAGAIN&quot;`, or `&quot;EILSEQ&quot;`
+for invalid UTF-8) and a human-readable `message`. It is not cleared by successful operations.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L92" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:92</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="read">
+        <h3>
+<a href="#read">read(byteCount) -> string | null</a>
+        </h3>
+
+        <div class="description">Read UTF-8 text from the current position.
+When `byteCount` is given, at most that many bytes are read. If that would split a multi-byte
+UTF-8 character, reading stops before the character so it is returned whole by the next read.
+If the data is not valid UTF-8, `null` is returned, the position is left unchanged, and
+`lastError.code` is `&quot;EILSEQ&quot;`. Use `readBytes()` for binary data.
+Like Lua&#39;s `f:read(&quot;a&quot;)`, reading to the end of the file never signals end of file: at the end it
+returns `&quot;&quot;`. Only a read with a `byteCount` returns `null` at end of file, so loop on `read(n)`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">read(byteCount) -> string | null</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">byteCount</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Maximum number of bytes to read. Omit (or pass `0`) to read to the end of the file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string | null</div>
+        <div class="return-desc">The text read; `&quot;&quot;` when reading to the end of the file from its end; `null` for a `byteCount` read at end of file, or on error.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const everything = f.read()
+const first100 = f.read(100)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L114" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:114</a>
+        </div>
+    </div>
+    <div class="method" id="readLine">
+        <h3>
+<a href="#readLine">readLine(keepNewline) -> string | null</a>
+        </h3>
+
+        <div class="description">Read the next line of UTF-8 text.
+Both `&#92;n` and `&#92;r&#92;n` line endings are recognised. A final line with no trailing newline is still returned.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readLine(keepNewline) -> string | null</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">keepNewline</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` to keep the line ending in the returned string. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string | null</div>
+        <div class="return-desc">The line, or `null` at end of file or on error.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">let line
+while ((line = f.readLine()) !== null) {
+    console.log(line)
+}</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L129" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:129</a>
+        </div>
+    </div>
+    <div class="method" id="eachLine">
+        <h3>
+<a href="#eachLine">eachLine(callback) -> boolean</a>
+        </h3>
+
+        <div class="description">Call a function for each remaining line of the file.
+Line endings are stripped. The callback may return `false` to stop early, leaving the position
+immediately after the last line delivered. If the callback throws, iteration stops and the
+exception propagates to the caller.
+The callback may use this file: if it moves the position or changes the file&#39;s contents, iteration
+continues from the current position with the file as it now is. If it closes the file, iteration
+stops and `eachLine` returns `false` with `lastError.code === &quot;EBADF&quot;`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">eachLine(callback) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function</td>
+                    <td class="param-desc">Called once per line. Return `false` to stop.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if iteration completed or was stopped by the callback returning `false`; `false` on error, if the callback threw, or if the file was closed during iteration.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.eachLine(line =&gt; {
+    if (line.startsWith(&quot;#&quot;)) return
+    console.log(line)
+})</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L150" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:150</a>
+        </div>
+    </div>
+    <div class="method" id="readLines">
+        <h3>
+<a href="#readLines">readLines() -> string[] | null</a>
+        </h3>
+
+        <div class="description">Read all remaining lines of the file into an array.
+Line endings are stripped. On error the position is left unchanged.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readLines() -> string[] | null</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">string[] | null</div>
+        <div class="return-desc">An array of lines (empty at end of file), or `null` on error.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const lines = f.readLines()
+console.log(lines.length + &quot; lines&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L162" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:162</a>
+        </div>
+    </div>
+    <div class="method" id="readBytes">
+        <h3>
+<a href="#readBytes">readBytes(byteCount) -> Uint8Array | null</a>
+        </h3>
+
+        <div class="description">Read raw bytes from the current position.
+As with `read()`, reading to the end of the file returns an empty `Uint8Array` at the end, while a
+read with a `byteCount` returns `null` at end of file.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">readBytes(byteCount) -> Uint8Array | null</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">byteCount</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Maximum number of bytes to read. Omit (or pass `0`) to read to the end of the file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Uint8Array | null</div>
+        <div class="return-desc">The bytes read; empty when reading to the end of the file from its end; `null` for a `byteCount` read at end of file, or on error.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const magic = f.readBytes(8)
+if (magic &amp;&amp; magic[0] === 0x89 &amp;&amp; magic[1] === 0x50) console.log(&quot;PNG file&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L176" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:176</a>
+        </div>
+    </div>
+    <div class="method" id="write">
+        <h3>
+<a href="#write">write(text) -> boolean</a>
+        </h3>
+
+        <div class="description">Write a string to the file as UTF-8 at the current position (or at the end, for files opened in `&quot;a&quot;`/`&quot;a+&quot;` mode).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">write(text) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">text</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The text to write.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.write(&quot;Hello, &quot;)
+f.write(&quot;world!&#92;n&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L189" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:189</a>
+        </div>
+    </div>
+    <div class="method" id="writeLine">
+        <h3>
+<a href="#writeLine">writeLine(text) -> boolean</a>
+        </h3>
+
+        <div class="description">Write a string followed by a newline (`&#92;n`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">writeLine(text) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">text</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The text to write.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.writeLine(&quot;one&quot;)
+f.writeLine(&quot;two&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L200" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:200</a>
+        </div>
+    </div>
+    <div class="method" id="writeBytes">
+        <h3>
+<a href="#writeBytes">writeBytes(bytes) -> boolean</a>
+        </h3>
+
+        <div class="description">Write raw bytes to the file.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">writeBytes(bytes) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">bytes</td>
+                    <td class="param-type">JSValue</td>
+                    <td class="param-desc">The bytes to write. Any typed array is accepted; its underlying bytes are written as-is.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure (including if `bytes` is not a typed array or `ArrayBuffer`).</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.writeBytes(new Uint8Array([0xDE, 0xAD, 0xBE, 0xEF]))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L210" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:210</a>
+        </div>
+    </div>
+    <div class="method" id="flush">
+        <h3>
+<a href="#flush">flush() -> boolean</a>
+        </h3>
+
+        <div class="description">Force any written data out to stable storage (`fsync`).
+Writes are not buffered by `HSFile`, so other processes see them immediately; `flush()` additionally
+guarantees they survive a crash or power loss.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">flush() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.write(importantData)
+f.flush()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L223" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:223</a>
+        </div>
+    </div>
+    <div class="method" id="truncate">
+        <h3>
+<a href="#truncate">truncate(length) -> boolean</a>
+        </h3>
+
+        <div class="description">Truncate (or extend with zero bytes) the file to the given length. The position is not changed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">truncate(length) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">length</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The new length in bytes. Omit (or pass `0`) to empty the file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.truncate()        // empty the file
+f.truncate(1024)    // make it exactly 1KB</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L234" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:234</a>
+        </div>
+    </div>
+    <div class="method" id="seek">
+        <h3>
+<a href="#seek">seek(offset, whence) -> number | null</a>
+        </h3>
+
+        <div class="description">Move the current position.
+Unlike Lua&#39;s `f:seek()`, the offset is required: to find the current position or the size of the
+file without moving, use the `position` and `size` properties.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">seek(offset, whence) -> number | null</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">offset</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The byte offset (an integer), relative to `whence`. May be negative for `&quot;cur&quot;` and `&quot;end&quot;`.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">whence</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">`&quot;set&quot;` (from the start of the file), `&quot;cur&quot;` (from the current position), or `&quot;end&quot;` (from the end of the file). Defaults to `&quot;set&quot;`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">number | null</div>
+        <div class="return-desc">The new position, or `null` on failure (including `EINVAL` if `offset` is missing or not an integer).</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.seek(0, &quot;end&quot;)       // jump to the end
+f.seek(-10, &quot;cur&quot;)     // back 10 bytes
+const pos = f.seek(0, &quot;cur&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L253" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:253</a>
+        </div>
+    </div>
+    <div class="method" id="rewind">
+        <h3>
+<a href="#rewind">rewind() -> boolean</a>
+        </h3>
+
+        <div class="description">Move the current position back to the start of the file.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">rewind() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.write(&quot;data&quot;)
+f.rewind()
+console.log(f.read())</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L264" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:264</a>
+        </div>
+    </div>
+    <div class="method" id="rename">
+        <h3>
+<a href="#rename">rename(newPath, overwrite) -> boolean</a>
+        </h3>
+
+        <div class="description">Rename (move) the file on disk. The file stays open and `path` is updated.
+Both paths must be on the same volume. By default this fails if `newPath` already exists.
+While the file is open, this fails with `&quot;ESTALE&quot;` if `path` no longer refers to it (for example
+because another process moved it and put something else in its place), rather than acting on
+the wrong file. Once the file is closed, it acts on whatever is at `path`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">rename(newPath, overwrite) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">newPath</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The new path. `~` is expanded.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">overwrite</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` to atomically replace any existing file at `newPath`. Defaults to `false`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">// Atomically replace a file with new contents
+const tmp = hs.fs.tempFile()
+tmp.write(newContents)
+tmp.flush()
+tmp.rename(&quot;~/.myconfig&quot;, true)
+tmp.close()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L288" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:288</a>
+        </div>
+    </div>
+    <div class="method" id="duplicate">
+        <h3>
+<a href="#duplicate">duplicate(destination) -> boolean</a>
+        </h3>
+
+        <div class="description">Copy the file on disk to a new path, including its metadata. The original stays open.
+Fails if `destination` already exists, if the file has been removed, or (while the file is open)
+with `&quot;ESTALE&quot;` if `path` no longer refers to it.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">duplicate(destination) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">destination</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The path for the copy. `~` is expanded.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.duplicate(&quot;~/notes-backup.txt&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L301" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:301</a>
+        </div>
+    </div>
+    <div class="method" id="remove">
+        <h3>
+<a href="#remove">remove() -> boolean</a>
+        </h3>
+
+        <div class="description">Remove the file from disk.
+The file stays open: you can keep reading and writing it until `close()`, after which its storage is freed.
+While the file is open, this fails with `&quot;ESTALE&quot;` if `path` no longer refers to it, so a file that
+has since replaced it is never removed by mistake.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">remove() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const scratch = hs.fs.tempFile()
+scratch.remove()   // invisible to other processes from now on
+scratch.write(&quot;private data&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L316" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:316</a>
+        </div>
+    </div>
+    <div class="method" id="attributes">
+        <h3>
+<a href="#attributes">attributes() -> Record<string, any> | null</a>
+        </h3>
+
+        <div class="description">Get metadata for the open file.
+Returns the same object as `hs.fs.attributes()`, but reads it from the open file itself, so it
+remains accurate after the file has been renamed or removed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">attributes() -> Record<string, any> | null</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">Record<string, any> | null</div>
+        <div class="return-desc">Attributes object, or `null` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">console.log(f.attributes().modificationDate)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L328" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:328</a>
+        </div>
+    </div>
+    <div class="method" id="setPermissions">
+        <h3>
+<a href="#setPermissions">setPermissions(permissions) -> boolean</a>
+        </h3>
+
+        <div class="description">Set the POSIX permission bits of the file.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setPermissions(permissions) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">permissions</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">The permission bits, as an integer between `0` and `0o7777`, e.g. `0o600`. Use an octal literal: decimal `600` is a different (and unusual) mode.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure (including `EINVAL` if `permissions` is missing or out of range).</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.setPermissions(0o600)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L338" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:338</a>
+        </div>
+    </div>
+    <div class="method" id="touch">
+        <h3>
+<a href="#touch">touch(accessDate, modificationDate) -> boolean</a>
+        </h3>
+
+        <div class="description">Set the access and modification times of the file.
+The argument order matches `hs.fs.touch()` and Hammerspoon v1: access time first.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">touch(accessDate, modificationDate) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">accessDate</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Seconds since the Unix epoch (fractions allowed). Defaults to now.</td>
+                </tr>
+                <tr>
+                    <td class="param-name">modificationDate</td>
+                    <td class="param-type">number</td>
+                    <td class="param-desc">Seconds since the Unix epoch (fractions allowed). Defaults to `accessDate`.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure (including `EINVAL` for a `NaN`, infinite, or out-of-range timestamp).</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.touch()                          // now
+f.touch(Date.now() / 1000 - 3600)  // both times one hour ago</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L353" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:353</a>
+        </div>
+    </div>
+    <div class="method" id="lock">
+        <h3>
+<a href="#lock">lock(shared, wait) -> boolean</a>
+        </h3>
+
+        <div class="description">Take an advisory lock on the file (`flock`).
+Advisory locks only affect other processes that also use locking; they do not prevent reads or writes.
+Locks are released by `unlock()` or when the file is closed.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">lock(shared, wait) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">shared</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` for a shared (read) lock, which several processes may hold at once. Defaults to `false` (an exclusive lock).</td>
+                </tr>
+                <tr>
+                    <td class="param-name">wait</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass `true` to wait until the lock is available. **This blocks Hammerspoon until the lock is acquired.** Defaults to `false`, which fails immediately with `lastError.code === &quot;EAGAIN&quot;` if the lock is held elsewhere.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` if the lock was acquired, `false` otherwise.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const lockFile = hs.fs.open(&quot;~/.myscript.lock&quot;, &quot;w&quot;)
+if (!lockFile.lock()) console.log(&quot;Another instance is running&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L371" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:371</a>
+        </div>
+    </div>
+    <div class="method" id="unlock">
+        <h3>
+<a href="#unlock">unlock() -> boolean</a>
+        </h3>
+
+        <div class="description">Release a lock taken with `lock()`.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">unlock() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success, `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.unlock()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L380" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:380</a>
+        </div>
+    </div>
+    <div class="method" id="close">
+        <h3>
+<a href="#close">close() -> boolean</a>
+        </h3>
+
+        <div class="description">Close the file. Calling `close()` on a file that is already closed does nothing.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">close() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">`true` on success (or if the file was already closed), `false` on failure.</div>
+
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">f.close()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.filesystem/HSFile.swift#L391" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.filesystem/HSFile.swift:391</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSFile');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

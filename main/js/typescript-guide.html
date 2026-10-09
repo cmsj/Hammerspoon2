@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="guides-section">
+                <div class="nav-section-label">GUIDES</div>
+                <div class="nav-guides">
+                    <a href="getting-started.html" class="">Getting Started</a>
+                    <a href="spoons-guide.html" class="">Spoons</a>
+                    <a href="canvas-guide.html" class="">hs.canvas</a>
+                    <a href="typescript-guide.html" class="active">TypeScript</a>
+                    <a href="migration-guide.html" class="">Migrating from v1</a>
+                </div>
+            </div>
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">TypeScript</span>
+</nav>
+<div class="page-header">
+    <h1>TypeScript</h1>
+    <span class="page-badge">Guide</span>
+</div>
+
+<div class="guide-content"><p>Hammerspoon 2 configs are plain JavaScript, but nothing stops you writing them in TypeScript
+instead and compiling down to the <code>.js</code> file Hammerspoon actually loads. The project ships a
+<code>hammerspoon.d.ts</code> file with every module, type, and method from the
+<a href="index.html">API reference</a> declared as ambient globals, so <code>hs</code>, <code>console</code>, <code>HSRect</code>, and the
+rest are all typed without any <code>import</code> statements — the same way they&#39;re available at global
+scope when Hammerspoon runs your <code>init.js</code>. If you haven&#39;t written a Hammerspoon 2 config at
+all yet, start with the <a href="getting-started.html">Getting Started guide</a> instead; this guide
+assumes you already know the runtime (object lifecycle, <code>require()</code>, hotkeys, <code>hs.ui</code>) and
+just want type checking on top of it.</p>
+<h2 id="why-bother">Why bother?</h2>
+<ul>
+<li><strong>Autocomplete</strong> for every module and type, in any TypeScript-aware editor.</li>
+<li><strong>Compile-time errors</strong> for typos (<code>hs.windw</code>) and wrong argument types/counts, instead of
+finding out when the callback fires.</li>
+<li><strong>Inline documentation</strong> — the same <code>- Parameter:</code>/<code>- Returns:</code> text from the API reference
+shows up as hover tooltips, without switching to a browser.</li>
+</ul>
+<p>None of this changes what runs at the other end: Hammerspoon&#39;s JavaScriptCore engine has no
+idea TypeScript exists. You compile <code>.ts</code> to <code>.js</code> yourself, and only the compiled output is
+ever loaded.</p>
+<h2 id="setup">Setup</h2>
+<h3 id="1-install-typescript">1. Install TypeScript</h3>
+<p>In your config directory (<code>hs.appinfo.configDir</code>, typically <code>~/.config/Hammerspoon2/</code>):</p>
+<pre><code class="language-bash">cd ~/.config/Hammerspoon2
+npm init -y
+npm install --save-dev typescript
+</code></pre>
+<h3 id="2-get-the-type-definitions-and-a-tsconfig">2. Get the type definitions and a tsconfig</h3>
+<p>Every published version of these docs carries the exact <code>hammerspoon.d.ts</code> and
+<code>tsconfig.example.json</code> that match it, one directory up from this page, so the links below
+always point at files for the version you&#39;re reading right now:</p>
+<ul>
+<li><a href="../hammerspoon.d.ts">hammerspoon.d.ts</a> — the ambient type declarations</li>
+<li><a href="../tsconfig.example.json">tsconfig.example.json</a> — a ready-to-use <code>tsconfig.json</code></li>
+</ul>
+<p>Save the first as <code>hammerspoon.d.ts</code> and the second as <code>tsconfig.json</code>, both directly in your
+config directory. Re-download <code>hammerspoon.d.ts</code> whenever you update Hammerspoon 2, since
+module APIs can gain methods or change shape between versions — <code>hs.docs.show()</code> in the
+running app&#39;s console always matches your installed version exactly, if you&#39;d rather not
+guess which docs version that corresponds to on this site.</p>
+<p>Everything <code>hammerspoon.d.ts</code> declares is also browsable as rendered documentation, in actual
+TypeScript syntax rather than the API reference&#39;s JS-flavored view — useful for seeing the
+real overload signatures and member types at a glance: <a href="../../ts/index.html">the TypeScript API reference</a>.
+To read the TS docs using the in-app viewer, call <code>hs.docs.show(null, true)</code>.</p>
+<p>The example tsconfig&#39;s important choices: <code>module: &quot;commonjs&quot;</code> (matching how Hammerspoon&#39;s
+own <code>require()</code> works), an <code>outDir</code> of <code>./compiled</code> so compiled output stays out of the way,
+and <code>strict</code> mode on. Point its <code>include</code> at wherever your <code>.ts</code> files actually live:</p>
+<pre><code class="language-json">{
+  &quot;include&quot;: [&quot;*.ts&quot;, &quot;src/**/*.ts&quot;]
+}
+</code></pre>
+<h3 id="3-write-your-config-in-typescript">3. Write your config in TypeScript</h3>
+<p>Create <code>config.ts</code>:</p>
+<pre><code class="language-typescript">// Show an alert when Hammerspoon loads
+hs.ui.alert(&quot;Hammerspoon loaded!&quot;)
+
+// Bind a hotkey with type checking
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;r&quot;, () =&gt; {
+    console.log(&quot;Reloading config...&quot;)
+    hs.reload()
+}, null, null)
+
+// Work with windows with autocomplete
+const win = hs.window.focusedWindow()
+if (win) {
+    const frame = win.frame
+    console.log(`Window size: ${frame.w} x ${frame.h}`)
+}
+</code></pre>
+<p>Nothing here differs from the plain-JS version in the <a href="getting-started.html">Getting Started guide</a>
+— the same <a href="getting-started.html#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time">object lifecycle rule</a>
+applies, hotkeys and timers still need a kept reference, and <code>hs.ui</code> is built the same chained
+way. TypeScript only adds the type layer on top; it doesn&#39;t change how any of these APIs
+behave.</p>
+<h3 id="4-compile-and-load-it">4. Compile and load it</h3>
+<pre><code class="language-bash">npx tsc
+</code></pre>
+<p>This produces <code>compiled/config.js</code>. In your <code>init.js</code> — which always stays plain JavaScript,
+since it&#39;s what Hammerspoon loads directly — require the compiled output:</p>
+<pre><code class="language-javascript">require(&quot;./compiled/config.js&quot;)
+</code></pre>
+<p>Remember <code>require()</code>&#39;s own rule from the Getting Started guide: the leading <code>./</code> is mandatory
+for local files, and <code>init.js</code> is the one file whose top level runs at true global scope — so
+if <code>config.ts</code> sets up hotkeys or timers, requiring it from <code>init.js</code> is what keeps them alive
+long enough to matter, exactly as if that code had been written directly in <code>init.js</code>.</p>
+<h2 id="development-workflow">Development workflow</h2>
+<h3 id="watch-mode">Watch mode</h3>
+<pre><code class="language-bash">npx tsc --watch
+</code></pre>
+<p>Recompiles <code>config.js</code> every time you save <code>config.ts</code>. It won&#39;t reload Hammerspoon itself —
+pair this with a reload hotkey (<code>hs.reload()</code>) or the menu bar&#39;s &quot;Reload Config&quot; so you can
+pick up each recompiled build.</p>
+<h3 id="npm-scripts">npm scripts</h3>
+<pre><code class="language-json">{
+  &quot;scripts&quot;: {
+    &quot;build&quot;: &quot;tsc&quot;,
+    &quot;watch&quot;: &quot;tsc --watch&quot;,
+    &quot;clean&quot;: &quot;rm -rf compiled&quot;
+  }
+}
+</code></pre>
+<h2 id="splitting-a-typescript-config-across-multiple-files">Splitting a TypeScript config across multiple files</h2>
+<p>This works exactly like the plain-JS version covered in
+<a href="getting-started.html#splitting-a-growing-config-into-multiple-files">Splitting a growing config into multiple files</a>
+— <code>require()</code> doesn&#39;t know or care whether the file it&#39;s loading started out as <code>.ts</code>, only
+that the compiled <code>.js</code> exists on disk. A common structure:</p>
+<pre><code>config/
+  src/
+    window-management.ts
+    hotkeys.ts
+  compiled/
+    window-management.js
+    hotkeys.js
+  init.js
+</code></pre>
+<pre><code class="language-typescript">// src/window-management.ts
+export function centerFocused(): void {
+    const win = hs.window.focusedWindow()
+    if (win) win.centerOnScreen()
+}
+</code></pre>
+<pre><code class="language-javascript">// init.js
+const { centerFocused } = require(&quot;./compiled/window-management.js&quot;)
+hs.hotkey.bind([&quot;cmd&quot;, &quot;alt&quot;], &quot;c&quot;, centerFocused, null, null)
+</code></pre>
+<p>Note the plain <code>export</code>/no-<code>import</code> mix here: <code>window-management.ts</code> uses TypeScript&#39;s own
+<code>export</code> syntax (compiled by <code>tsc</code>, with <code>module: &quot;commonjs&quot;</code>, into the same <code>module.exports</code>
+shape <code>require()</code> expects), while anything reaching into <code>hs</code> itself needs no import at all —
+<code>hammerspoon.d.ts</code> declares those as ambient globals, available everywhere once it&#39;s on your
+TypeScript <code>include</code>/<code>files</code> list.</p>
+<h2 id="editor-setup">Editor setup</h2>
+<h3 id="vs-code">VS Code</h3>
+<p>Works automatically — just open your config directory and start editing <code>.ts</code> files.
+Recommended extensions: ESLint, Prettier.</p>
+<h3 id="webstorm--intellij">WebStorm / IntelliJ</h3>
+<p>TypeScript support is built in; open the folder and go.</p>
+<h3 id="vim--neovim">Vim / Neovim</h3>
+<p>Use a TypeScript language server plugin — <code>coc.nvim</code> with <code>coc-tsserver</code>, ALE with TypeScript
+support, or <code>vim-lsp</code> with <code>typescript-language-server</code>.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="cannot-find-name-hs">"Cannot find name 'hs'"</h3>
+<p><code>hammerspoon.d.ts</code> needs to be visible to the compiler. If it&#39;s sitting in your config
+directory alongside <code>tsconfig.json</code>, TypeScript&#39;s default <code>include</code> picks it up automatically
+as long as its extension (<code>.d.ts</code>) is included by the <code>include</code> glob you&#39;re using, or list it
+explicitly:</p>
+<pre><code class="language-json">{
+  &quot;files&quot;: [&quot;hammerspoon.d.ts&quot;],
+  &quot;include&quot;: [&quot;*.ts&quot;]
+}
+</code></pre>
+<h3 id="cannot-find-module-after-compiling">"Cannot find module" after compiling</h3>
+<p>This is almost always the same <code>require()</code> path rule from the Getting Started guide, not a
+TypeScript problem: <code>require(&quot;./compiled/config.js&quot;)</code>, not <code>require(&quot;compiled/config.js&quot;)</code> — a
+bare specifier without <code>./</code>/<code>../</code> is treated as a lookup for a named package, not a sibling
+file.</p>
+<h3 id="compilation-errors-from-third-party-code">Compilation errors from third-party code</h3>
+<p>If strict mode is fighting code you don&#39;t control (a vendored file, a generated file), relax
+it for just that corner rather than globally — either exclude the file from <code>include</code>, or wrap
+the offending lines with an <code>// @ts-expect-error</code> comment, rather than turning <code>strict</code> off in
+<code>tsconfig.json</code>.</p>
+<h2 id="benefits-in-action">Benefits in action</h2>
+<pre><code class="language-javascript">// Plain JS: no autocomplete, no type checking
+hs.windw.focusedWindow() // Typo! Only fails at runtime, inside the callback that uses it.
+</code></pre>
+<pre><code class="language-typescript">// TypeScript catches the typo at compile time, before you ever reload Hammerspoon:
+hs.windw.focusedWindow()
+//    ~~~~~ Error: Property &#39;windw&#39; does not exist on type...
+//          Did you mean &#39;window&#39;?
+
+hs.window.focusedWindow() // Correct — and autocompleted for you.
+</code></pre>
+<h2 id="learn-more">Learn more</h2>
+<ul>
+<li><a href="https://www.typescriptlang.org/docs/handbook/intro.html">TypeScript Handbook</a></li>
+<li><a href="https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html">TypeScript in 5 Minutes</a></li>
+<li>The <a href="index.html">API reference</a> — every module and type <code>hammerspoon.d.ts</code> declares, with
+full method documentation</li>
+<li>The <a href="../ts/index.html">TypeScript API reference</a> — the same declarations, rendered from
+<code>hammerspoon.d.ts</code> itself in TS syntax (or <code>hs.docs.show(null, true)</code> from inside the app)</li>
+<li><a href="getting-started.html">Getting Started</a> and the <a href="migration-guide.html">migration guide</a>, if
+you haven&#39;t read either yet</li>
+</ul>
+<p>If you hit an issue with the type definitions themselves (a missing method, a wrong type),
+please open an issue on the <a href="https://github.com/cmsj/Hammerspoon2/issues">Hammerspoon 2 repository</a>
+— they&#39;re generated directly from the Swift source, so a gap there usually means a doc-comment
+gap in the module itself.</p>
+</div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('typescript-guide');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
