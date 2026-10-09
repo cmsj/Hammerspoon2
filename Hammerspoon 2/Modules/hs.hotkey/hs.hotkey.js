@@ -7,7 +7,7 @@
 /// Parameters:
 ///  - spec: An object with the following fields:
 ///    - mods: {string[]} Modifier keys (e.g. ["cmd", "shift"])
-///    - key: {string} Key name or character (e.g. "h")
+///    - key: {string | number} Key name or character (e.g. "h"), or a numeric key code
 ///    - message: {string} [optional] A description shown as a toast when the hotkey fires
 ///    - pressed: {(() => void) | null} [optional] Called when the hotkey is pressed
 ///    - released: {(() => void) | null} [optional] Called when the hotkey is released
@@ -47,7 +47,7 @@ class HSHotkeyModal {
     /**
      * Bind a hotkey to this modal. The hotkey is only enabled while the modal is active.
      * @param {string[]} mods - Modifier keys for the hotkey (e.g. ["cmd", "shift"])
-     * @param {string} key - Key name for the hotkey (e.g. "h")
+     * @param {string | number} key - Key name or numeric key code for the hotkey (e.g. "h")
      * @param {Function|null} onPressed - Called when the hotkey is pressed, or null
      * @param {Function|null} [onReleased] - Called when the hotkey is released, or null/omitted
      * @param {Function|null} [onRepeat] - Called repeatedly while the hotkey is held down, or null/omitted
@@ -110,7 +110,7 @@ class HSHotkeyModal {
 /// Create a new modal hotkey group, optionally entered via a trigger key combination
 /// Parameters:
 ///  - mods: Modifier keys for the trigger hotkey (e.g. ["cmd", "shift"]), or an empty array for no trigger
-///  - key: Key name for the trigger hotkey (e.g. "h"), or an empty string for no trigger
+///  - key: {string | number} Key name or numeric key code for the trigger hotkey (e.g. "h"), or an empty string for no trigger
 /// Returns: {HSHotkeyModal} A modal object with bind(), enter(), exit(), destroy() methods, isActive property, and onEnter/onExit callbacks
 /// Example:
 /// ```js
@@ -135,7 +135,7 @@ hs.hotkey.createModal = function(mods, key) {
 /// enabled hotkeys (and their messages, if any) as an on-screen toast.
 /// Parameters:
 ///  - mods: Modifier keys for the trigger hotkey (e.g. ["cmd", "shift"])
-///  - key: Key name for the trigger hotkey (e.g. "/")
+///  - key: {string | number} Key name or numeric key code for the trigger hotkey (e.g. "/")
 /// Returns: A hotkey object
 /// Example:
 /// ```js

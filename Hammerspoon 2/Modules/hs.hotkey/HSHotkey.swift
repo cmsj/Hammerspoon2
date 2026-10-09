@@ -20,13 +20,22 @@ import Carbon
     /// ```
     @objc var mods: [String] { get }
 
-    /// {string} The key this hotkey was bound with, as originally passed to bind()/create()
+    /// {string | number} The key this hotkey was bound with, as originally passed to bind()/create()
     /// - Example:
     /// ```js
     /// const hk = hs.hotkey.bind(["cmd"], "h", () => {})
     /// console.log(hk.key)
     /// ```
-    @objc var key: String { get }
+    @objc var key: Any { get }
+
+    /// {number} The virtual key code this hotkey is currently registered on. For a hotkey bound by
+    /// key name this follows the keyboard layout (see `hs.hotkey.followsKeyboardLayout`).
+    /// - Example:
+    /// ```js
+    /// const hk = hs.hotkey.bind(["cmd"], "w", () => {})
+    /// console.log(hk.keyCode)  // 13 on US, 43 on Dvorak
+    /// ```
+    @objc var keyCode: Int { get }
 
     /// {string | null} An optional description of what this hotkey does, or null if none was set.
     /// When set, it is shown as an on-screen toast via `hs.ui.alert()` (duration controlled by
@@ -107,16 +116,18 @@ import Carbon
     @objc var typeName = "HSHotkey"
 
     @objc func toString() -> String {
-        return "<\(typeName): keyCode \(keyCode), modifiers \(modifiers)>"
+        return "<\(typeName): keyCode \(carbonKeyCode), modifiers \(modifiers)>"
     }
 
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
-    private let keyCode: UInt32
+    private var carbonKeyCode: UInt32
     private let modifiers: UInt32
     @objc let mods: [String]
-    @objc let key: String
+    let keyArgument: KeyArgument
+    @objc var key: Any { keyArgument.jsValue }
+    @objc var keyCode: Int { Int(carbonKeyCode) }
     @objc var message: String?
     private var _onPressed: JSCallback?
     private var _onReleased: JSCallback?
@@ -150,13 +161,13 @@ import Carbon
     private var repeatDelayTimer: Timer?
     private var repeatIntervalTimer: Timer?
 
-    init(keyCode: UInt32, modifiers: UInt32, mods: [String], key: String,
+    init(keyCode: UInt32, modifiers: UInt32, mods: [String], key: KeyArgument,
          onPressed: JSFunction? = nil, onReleased: JSFunction? = nil,
          onRepeat: JSFunction? = nil) {
-        self.keyCode = keyCode
+        self.carbonKeyCode = keyCode
         self.modifiers = modifiers
         self.mods = mods
-        self.key = key
+        self.keyArgument = key
         self.hotkeyID = HotkeyManager.shared.nextID
         super.init()
 
@@ -172,7 +183,14 @@ import Carbon
 
     /// Returns true if this hotkey was bound with the given key code and modifier flags.
     func matches(keyCode: UInt32, modifiers: UInt32) -> Bool {
-        self.keyCode == keyCode && self.modifiers == modifiers
+        carbonKeyCode == keyCode && self.modifiers == modifiers
+    }
+
+    /// Changes the key code this hotkey registers on. Must only be called while it's disabled;
+    /// the caller re-enables it afterwards (see HSHotkeyModule.moveHotkeysToCurrentLayout).
+    func changeKeyCode(_ newKeyCode: UInt32) {
+        precondition(!enabled, "hs.hotkey: key code changed while the hotkey is registered")
+        carbonKeyCode = newKeyCode
     }
 
     @objc func destroy() {
@@ -193,7 +211,7 @@ import Carbon
             id: hotkeyID
         )
         let status = unsafe RegisterEventHotKey(
-            keyCode, modifiers, hotKeyID,
+            carbonKeyCode, modifiers, hotKeyID,
             GetEventDispatcherTarget(), 0, &carbonHotKeyRef
         )
 

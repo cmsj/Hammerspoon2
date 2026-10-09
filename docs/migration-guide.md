@@ -283,6 +283,16 @@ ports, but their watchers moved to `on()`/`off()`/`once()` on the main module in
 and `hs.serial` both carry a doc-comment warning that they haven't seen much real-world hardware
 testing yet — treat as lower-confidence if you're driving real devices.
 
+Key names in `hs.hotkey`, `hs.eventtap` and `hs.keycodes` follow the active keyboard layout, as
+in v1, but a few details changed. `hs.keycodes.map` now only maps names to key codes; for key
+code → name, use the new `hs.keycodes.names` (v1's single table relied on Lua keeping `t[1]` and
+`t["1"]` apart, which JavaScript can't). To pass a raw key code, use a number
+(`hs.hotkey.bind(["cmd"], 13, fn)`) instead of v1's `"#13"` string; a string like `"1"` is always
+the character. Hotkeys bound by name now move to the right key when you switch layouts; set
+`hs.hotkey.followsKeyboardLayout = false` (or `hs.eventtap.followsKeyboardLayout = false` for
+`hs.eventtap.bindHotkey()` hotkeys) for v1's behaviour of staying on the key the name resolved to
+at bind time.
+
 ## Partially recreated — read this if something's missing
 
 These are the "spread across several modules" cases — worth checking closely, since what

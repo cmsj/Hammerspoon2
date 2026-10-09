@@ -21,6 +21,11 @@ struct HSKeycodesTests {
             return harness
         }
 
+        @Test("names is an object")
+        func testNamesIsObject() {
+            makeHarness().expectTrue("typeof hs.keycodes.names === 'object' && hs.keycodes.names !== null")
+        }
+
         @Test("map is an object")
         func testMapIsObject() {
             makeHarness().expectTrue("typeof hs.keycodes.map === 'object' && hs.keycodes.map !== null")
@@ -177,14 +182,40 @@ struct HSKeycodesTests {
             #expect(!harness.hasException)
         }
 
-        @Test("map is bidirectional for named keys")
-        func testMapIsBidirectional() {
+        @Test("names maps key codes back to named keys")
+        func testNamesForNamedKeys() {
             let harness = makeHarness()
-            // return → 36, so map["36"] should be "return"
-            #expect(harness.evalString("hs.keycodes.map['36']") == "return")
-            #expect(harness.evalString("hs.keycodes.map['48']") == "tab")
-            #expect(harness.evalString("hs.keycodes.map['122']") == "f1")
-            #expect(harness.evalString("hs.keycodes.map['55']") == "cmd")
+            #expect(harness.evalString("hs.keycodes.names[36]") == "return")
+            #expect(harness.evalString("hs.keycodes.names['48']") == "tab")
+            #expect(harness.evalString("hs.keycodes.names[122]") == "f1")
+            #expect(harness.evalString("hs.keycodes.names[55]") == "cmd")
+            #expect(!harness.hasException)
+        }
+
+        @Test("map only maps names to key codes")
+        func testMapValuesAreNumbers() {
+            let harness = makeHarness()
+            harness.expectTrue("Object.values(hs.keycodes.map).every(v => typeof v === 'number')")
+            harness.expectTrue("Object.values(hs.keycodes.names).every(v => typeof v === 'string')")
+            #expect(!harness.hasException)
+        }
+
+        @Test("digit characters map to the keys that type them, not to key codes 0-9 (issue #270)")
+        func testDigitsInMap() {
+            let harness = makeHarness()
+            let keyCodes = KeyboardLayout.shared.keyCodes
+            for digit in 0...9 {
+                #expect(harness.evalInt("hs.keycodes.map['\(digit)']") == keyCodes.keyCode(forName: String(digit)))
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("map and names follow the current layout")
+        func testMapMatchesCurrentLayout() {
+            let harness = makeHarness()
+            let keyCodes = KeyboardLayout.shared.keyCodes
+            #expect(harness.evalInt("hs.keycodes.map['w']") == keyCodes.keyCode(forName: "w"))
+            #expect(harness.evalString("hs.keycodes.names[13]") == keyCodes.name(forKeyCode: 13))
             #expect(!harness.hasException)
         }
 
@@ -316,60 +347,6 @@ struct HSKeycodesTests {
                 })()
             """)
             #expect(!harness.hasException)
-        }
-    }
-
-    // MARK: - Static key table consistency
-
-    @Suite("hs.keycodes static table tests")
-    struct HSKeycodesStaticTableTests {
-
-        @Test("namedKeys has no duplicate names")
-        func testNoduplicateNames() {
-            let names = HSKeycodesModule.namedKeys.map { $0.0 }
-            let uniqueNames = Set(names)
-            #expect(names.count == uniqueNames.count, "Duplicate names found in namedKeys")
-        }
-
-        @Test("namedKeys has no duplicate keycodes")
-        func testNoDuplicateKeycodes() {
-            let codes = HSKeycodesModule.namedKeys.map { $0.1 }
-            let uniqueCodes = Set(codes)
-            #expect(codes.count == uniqueCodes.count, "Duplicate keycodes found in namedKeys")
-        }
-
-        @Test("ansiUSCharacterMap has no duplicate names")
-        func testAnsiNoduplicateNames() {
-            let names = HSKeycodesModule.ansiUSCharacterMap.map { $0.0 }
-            let uniqueNames = Set(names)
-            #expect(names.count == uniqueNames.count, "Duplicate names found in ansiUSCharacterMap")
-        }
-
-        @Test("ansiUSCharacterMap has no duplicate keycodes")
-        func testAnsiNoDuplicateCodes() {
-            let codes = HSKeycodesModule.ansiUSCharacterMap.map { $0.1 }
-            let uniqueCodes = Set(codes)
-            #expect(codes.count == uniqueCodes.count, "Duplicate codes found in ansiUSCharacterMap")
-        }
-
-        @Test("buildKeyMap produces bidirectional entries for all named keys")
-        func testBuildKeyMapBidirectional() {
-            let module = HSKeycodesModule(engineID: UUID())
-            let keyMap = module.buildKeyMap()
-
-            for (name, code) in HSKeycodesModule.namedKeys {
-                #expect(keyMap[name] as? Int == code,
-                        "Expected map[\"\(name)\"] == \(code)")
-                #expect(keyMap[String(code)] as? String == name,
-                        "Expected map[\"\(code)\"] == \"\(name)\"")
-            }
-        }
-
-        @Test("buildKeyMap produces a non-empty map")
-        func testBuildKeyMapNonEmpty() {
-            let module = HSKeycodesModule(engineID: UUID())
-            let keyMap = module.buildKeyMap()
-            #expect(keyMap.count > 100, "Key map should contain more than 100 entries")
         }
     }
 

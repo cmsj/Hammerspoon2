@@ -718,6 +718,9 @@ import SwiftUI
     private func interceptKeyCode(_ keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
         // Only intercept while our panel is the key window.
         guard let panel = window, panel.isKeyWindow else { return false }
+        // Ctrl-N/Ctrl-P follow the keyboard layout, like Emacs-style bindings elsewhere in macOS.
+        // Cmd-0...9 below deliberately stay on the number row keys, whatever characters they type.
+        let keyCodes = KeyboardLayout.shared.keyCodes
 
         switch keyCode {
         case 125: // kVK_DownArrow
@@ -730,12 +733,12 @@ import SwiftUI
                 viewModel.selectedIndex -= 1
             }
             return true
-        case 45 where modifierFlags == .control: // kVK_ANSI_N, Ctrl-N: next row
+        case _ where modifierFlags == .control && Int(keyCode) == keyCodes.keyCode(forName: "n"): // Ctrl-N: next row
             if viewModel.selectedIndex < viewModel.filteredChoices.count - 1 {
                 viewModel.selectedIndex += 1
             }
             return true
-        case 35 where modifierFlags == .control: // kVK_ANSI_P, Ctrl-P: previous row
+        case _ where modifierFlags == .control && Int(keyCode) == keyCodes.keyCode(forName: "p"): // Ctrl-P: previous row
             if viewModel.selectedIndex > 0 {
                 viewModel.selectedIndex -= 1
             }

@@ -6,6 +6,7 @@
 import Testing
 import JavaScriptCore
 import ApplicationServices
+import Carbon
 @testable import Hammerspoon_2
 
 @Suite("hs.eventtap tests")
@@ -375,6 +376,39 @@ struct HSEventTapTests {
             let keyCode1 = try #require(harness.evalInt("evt1.keyCode"))
             let keyCode2 = try #require(harness.evalInt("evt2.keyCode"))
             #expect(keyCode1 == keyCode2)
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeKeyEvent accepts a numeric key code, including 0-9 (issue #270)")
+        func testMakeKeyEventNumericKeyCode() {
+            let harness = makeHarness()
+            harness.eval("var evt0 = hs.eventtap.makeKeyEvent(0, true); var evt13 = hs.eventtap.makeKeyEvent(13, true)")
+            #expect(harness.evalInt("evt0.keyCode") == 0)
+            #expect(harness.evalInt("evt13.keyCode") == 13)
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeKeyEvent treats a digit string as a character, not a key code")
+        func testMakeKeyEventDigitString() {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeKeyEvent('0', true)")
+            #expect(harness.evalInt("evt.keyCode") == KeyboardLayout.shared.keyCodes.keyCode(forName: "0"))
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeKeyEvent resolves characters through the current layout")
+        func testMakeKeyEventFollowsLayout() {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeKeyEvent('w', true)")
+            #expect(harness.evalInt("evt.keyCode") == KeyboardLayout.shared.keyCodes.keyCode(forName: "w"))
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeKeyEvent returns null for a key that is neither a name nor a key code")
+        func testMakeKeyEventRejectsBoolean() {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeKeyEvent(true, true)")
+            harness.expectTrue("evt === null || evt === undefined")
             #expect(!harness.hasException)
         }
 
@@ -882,6 +916,194 @@ struct HSEventTapTests {
             event.flags = .maskCommand
 
             #expect(!hotkey.matches(event: event, type: .keyDown))
+        }
+    }
+
+    // MARK: - bindHotkey and keyboard layouts (issue #270)
+
+    /// These replace the process-wide key code table to simulate a layout switch, so they're
+    /// serialized and synchronous (nothing else on the main actor can run mid-test), and always
+    /// restore the real table afterwards.
+    @Suite("hs.eventtap.bindHotkey keyboard layout tests", .serialized)
+    struct HSEventTapBindHotkeyLayoutTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSEventTapModule.self, as: "eventtap")
+            return harness
+        }
+
+        private func layoutTable(_ sourceID: String) throws -> KeyCodeTable {
+            try #require(KeyCodeTable.forInputSource(id: sourceID), "\(sourceID) should be installed")
+        }
+
+        /// Runs `body` with `table` as the current layout, then restores the real one.
+        private func withLayout(_ table: KeyCodeTable, _ body: () throws -> Void) rethrows {
+            let original = KeyboardLayout.shared.keyCodes
+            KeyboardLayout.shared.replace(with: table)
+            defer { KeyboardLayout.shared.replace(with: original) }
+            try body()
+        }
+
+        @Test("followsKeyboardLayout defaults to true")
+        func testFollowsKeyboardLayoutDefault() {
+            #expect(makeHarness().evalBool("hs.eventtap.followsKeyboardLayout") == true)
+        }
+
+        @Test("bindHotkey reports the key it was bound with and its key code")
+        func testKeyAndKeyCode() {
+            let harness = makeHarness()
+            harness.eval("""
+                var named = hs.eventtap.bindHotkey(['cmd','alt','ctrl','shift'], 'f1', () => {}, null)
+                var coded = hs.eventtap.bindHotkey(['cmd','alt','ctrl','shift'], 13, () => {}, null)
+            """)
+            #expect(harness.evalString("named.key") == "f1")
+            #expect(harness.evalInt("named.keyCode") == 122)
+            #expect(harness.evalTypeOf("coded.key") == "number")
+            #expect(harness.evalInt("coded.keyCode") == 13)
+            harness.eval("hs.eventtap.removeHotkey(named); hs.eventtap.removeHotkey(coded)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a layout change moves hotkeys bound by name, but not by key code")
+        func testLayoutChangeMovesNamedHotkeys() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            withLayout(us) {
+                harness.eval("""
+                    var named = hs.eventtap.bindHotkey(['cmd','alt','ctrl','shift'], 'w', () => {}, null)
+                    var coded = hs.eventtap.bindHotkey(['cmd','alt','ctrl','shift'], 13, () => {}, null)
+                """)
+                #expect(harness.evalInt("named.keyCode") == 13)
+
+                KeyboardLayout.shared.replace(with: dvorak)
+                #expect(harness.evalInt("named.keyCode") == 43)
+                #expect(harness.evalBool("named.isEnabled()") == true)
+                #expect(harness.evalInt("coded.keyCode") == 13)
+
+                harness.eval("hs.eventtap.removeHotkey(named); hs.eventtap.removeHotkey(coded)")
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("a moved hotkey matches events from its new key")
+        func testMovedHotkeyMatchesNewKey() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            try withLayout(us) {
+                harness.eval("var hk = hs.eventtap.bindHotkey(['cmd'], 'w', () => {}, null)")
+                KeyboardLayout.shared.replace(with: dvorak)
+                let hotkey = try #require(harness.evalValue("hk")?.toObjectOf(HSEventTapHotkey.self) as? HSEventTapHotkey)
+
+                let source = CGEventSource(stateID: .privateState)
+                let oldKey = try #require(CGEvent(keyboardEventSource: source, virtualKey: 13, keyDown: true))
+                let newKey = try #require(CGEvent(keyboardEventSource: source, virtualKey: 43, keyDown: true))
+                oldKey.flags = .maskCommand
+                newKey.flags = .maskCommand
+                #expect(!hotkey.matches(event: oldKey, type: .keyDown))
+                #expect(hotkey.matches(event: newKey, type: .keyDown))
+
+                harness.eval("hs.eventtap.removeHotkey(hk)")
+            }
+            #expect(!harness.hasException)
+        }
+
+        /// Sends a synthetic key event through the module's hotkey dispatcher, returning true if
+        /// a hotkey consumed it.
+        private func dispatch(_ module: HSEventTapModule, _ type: CGEventType, keyCode: CGKeyCode,
+                              flags: CGEventFlags) throws -> Bool {
+            let source = CGEventSource(stateID: .privateState)
+            let event = try #require(CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: type == .keyDown))
+            event.flags = flags
+            return module.dispatchKeyEvent(type: type, event: event) == nil
+        }
+
+        @Test("a hotkey that moves while its key is held still gets that key's release")
+        func testReleaseAfterMoveWhileHeld() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            try withLayout(us) { () throws in
+                // "," moves onto the key "w" leaves (code 13), so it must not get w's release
+                harness.eval("""
+                    var wPressed = 0, wReleased = 0, commaReleased = 0
+                    var w = hs.eventtap.bindHotkey(['cmd'], 'w', () => wPressed++, () => wReleased++)
+                    var comma = hs.eventtap.bindHotkey(['cmd'], ',', null, () => commaReleased++)
+                """)
+
+                #expect(try dispatch(module, .keyDown, keyCode: 13, flags: .maskCommand))
+                KeyboardLayout.shared.replace(with: dvorak)
+                #expect(try dispatch(module, .keyUp, keyCode: 13, flags: .maskCommand))
+
+                #expect(harness.evalInt("wPressed") == 1)
+                #expect(harness.evalInt("wReleased") == 1)
+                #expect(harness.evalInt("commaReleased") == 0)
+
+                harness.eval("hs.eventtap.removeHotkey(w); hs.eventtap.removeHotkey(comma)")
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("a held hotkey gets its release even if a modifier was let go first")
+        func testReleaseAfterModifierLetGo() throws {
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            harness.eval("""
+                var released = 0
+                var hk = hs.eventtap.bindHotkey(['cmd'], 'f13', null, () => released++)
+            """)
+
+            #expect(try dispatch(module, .keyDown, keyCode: CGKeyCode(kVK_F13), flags: .maskCommand))
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_F13), flags: []))
+            #expect(harness.evalInt("released") == 1)
+
+            // Once released, the same key-up no longer belongs to the hotkey
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_F13), flags: []) == false)
+
+            harness.eval("hs.eventtap.removeHotkey(hk)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a hotkey disabled while its key is held lets the release through")
+        func testReleaseAfterDisableWhileHeld() throws {
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            harness.eval("""
+                var released = 0
+                var hk = hs.eventtap.bindHotkey(['cmd'], 'f13', null, () => released++)
+            """)
+
+            #expect(try dispatch(module, .keyDown, keyCode: CGKeyCode(kVK_F13), flags: .maskCommand))
+            harness.eval("hk.disable()")
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_F13), flags: .maskCommand) == false)
+            #expect(harness.evalInt("released") == 0)
+
+            harness.eval("hs.eventtap.removeHotkey(hk)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("followsKeyboardLayout = false keeps hotkeys in place until it's turned back on")
+        func testFollowsKeyboardLayoutFalse() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            withLayout(us) {
+                harness.eval("""
+                    hs.eventtap.followsKeyboardLayout = false
+                    var hk = hs.eventtap.bindHotkey(['cmd','alt','ctrl','shift'], 'w', () => {}, null)
+                """)
+                KeyboardLayout.shared.replace(with: dvorak)
+                #expect(harness.evalInt("hk.keyCode") == 13)
+
+                harness.eval("hs.eventtap.followsKeyboardLayout = true")
+                #expect(harness.evalInt("hk.keyCode") == 43)
+
+                harness.eval("hs.eventtap.removeHotkey(hk)")
+            }
+            #expect(!harness.hasException)
         }
     }
 
