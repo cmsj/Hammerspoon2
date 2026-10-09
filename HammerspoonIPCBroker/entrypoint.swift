@@ -215,7 +215,7 @@ nonisolated final class HSIPCBroker: Sendable {
     private func handleClientMessage(_ message: XPCReceivedMessage, from id: ObjectIdentifier) -> (any Encodable)? {
         guard let decoded = try? message.decode(as: HSIPCClientToBroker.self) else {
             HSIPCBroker.logger.error("Unable to decode message from hs2")
-            return message.expectsReply ? HSIPCEvaluationReply(result: "Malformed request", isError: true) : nil
+            return message.expectsReply ? HSIPCEvaluationReply(result: "Malformed request", isError: true, wasEvaluated: false) : nil
         }
 
         switch decoded {
@@ -231,7 +231,7 @@ nonisolated final class HSIPCBroker: Sendable {
         case .evaluate(let code):
             guard let host = state.withLock({ $0.host }) else {
                 return HSIPCEvaluationReply(result: "Hammerspoon 2 is not connected. Make sure it is running and has called hs.ipc.start()",
-                                            isError: true)
+                                            isError: true, wasEvaluated: false)
             }
             let pending = PendingReply(message)
             do {
@@ -241,11 +241,12 @@ nonisolated final class HSIPCBroker: Sendable {
                         pending.reply(reply)
                     case .failure(let error):
                         pending.reply(HSIPCEvaluationReply(result: "Hammerspoon 2 did not reply: \(error)",
-                                                           isError: true))
+                                                           isError: true, wasEvaluated: false))
                     }
                 }
             } catch {
-                return HSIPCEvaluationReply(result: "Unable to send to Hammerspoon 2: \(error)", isError: true)
+                return HSIPCEvaluationReply(result: "Unable to send to Hammerspoon 2: \(error)", isError: true,
+                                            wasEvaluated: false)
             }
             // The reply is sent later, by the closure above.
             return nil

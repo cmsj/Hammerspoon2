@@ -138,6 +138,9 @@ private nonisolated final class HSIPCClient: Sendable {
             do {
                 try session.send(HSIPCClientToBroker.evaluate(code: code)) { (result: Result<HSIPCEvaluationReply, any Error>) in
                     switch result {
+                    case .success(let reply) where !reply.wasEvaluated:
+                        // isError is set too, but the failure was reaching Hammerspoon 2, not the JavaScript.
+                        continuation.resume(returning: .transportError(reply.result))
                     case .success(let reply):
                         continuation.resume(returning: reply.isError ? .javaScriptError(reply.result) : .value(reply.result))
                     case .failure(let error):
