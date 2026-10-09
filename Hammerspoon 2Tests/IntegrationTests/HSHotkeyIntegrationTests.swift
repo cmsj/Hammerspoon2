@@ -472,6 +472,173 @@ struct HSHotkeyTests {
         }
     }
 
+    // MARK: - Keyboard layouts (issue #270)
+
+    /// These replace the process-wide key code table to simulate a layout switch, so they're
+    /// serialized and synchronous (nothing else on the main actor can run mid-test), and always
+    /// restore the real table afterwards.
+    @Suite("hs.hotkey keyboard layout tests", .serialized)
+    struct HSHotkeyLayoutTests {
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSHotkeyModule.self, as: "hotkey")
+            return harness
+        }
+
+        private func layoutTable(_ sourceID: String) throws -> KeyCodeTable {
+            try #require(KeyCodeTable.forInputSource(id: sourceID), "\(sourceID) should be installed")
+        }
+
+        /// Runs `body` with `table` as the current layout, then restores the real one.
+        private func withLayout(_ table: KeyCodeTable, _ body: () throws -> Void) rethrows {
+            let original = KeyboardLayout.shared.keyCodes
+            KeyboardLayout.shared.replace(with: table)
+            defer { KeyboardLayout.shared.replace(with: original) }
+            try body()
+        }
+
+        @Test("followsKeyboardLayout defaults to true")
+        func testFollowsKeyboardLayoutDefault() {
+            #expect(makeHarness().evalBool("hs.hotkey.followsKeyboardLayout") == true)
+        }
+
+        @Test("bind accepts a numeric key code")
+        func testBindNumericKeyCode() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['cmd','alt','ctrl','shift'], 13, () => {})")
+            #expect(harness.evalInt("hk.keyCode") == 13)
+            #expect(harness.evalTypeOf("hk.key") == "number")
+            #expect(harness.evalInt("hk.key") == 13)
+            harness.eval("hk.destroy()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a numeric string is a character, not a key code")
+        func testBindDigitString() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['cmd','alt','ctrl','shift'], '0', () => {})")
+            #expect(harness.evalInt("hk.keyCode") == KeyboardLayout.shared.keyCodes.keyCode(forName: "0"))
+            #expect(harness.evalString("hk.key") == "0")
+            harness.eval("hk.destroy()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bind rejects a key that is neither a name nor a key code")
+        func testBindRejectsBoolean() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['cmd','alt','ctrl','shift'], true, () => {})")
+            harness.expectTrue("hk === null || hk === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("getHotkeys reports each hotkey's current key code")
+        func testGetHotkeysIncludesKeyCode() {
+            let harness = makeHarness()
+            harness.eval("var hk = hs.hotkey.bind(['cmd','alt','ctrl','shift'], 13, () => {})")
+            harness.expectTrue("hs.hotkey.getHotkeys().some(h => h.key === 13 && h.keyCode === 13)")
+            harness.eval("hk.destroy()")
+            #expect(!harness.hasException)
+        }
+
+        @Test("bind resolves names through the current layout")
+        func testBindUsesCurrentLayout() throws {
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            withLayout(dvorak) {
+                harness.eval("var hk = hs.hotkey.bind(['cmd','alt','ctrl','shift'], 'w', () => {})")
+                #expect(harness.evalInt("hk.keyCode") == kVK_ANSI_Comma)
+                #expect(harness.evalInt("hs.hotkey.getKeyCodeMap()['w']") == kVK_ANSI_Comma)
+                harness.eval("hk.destroy()")
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("a layout change moves hotkeys bound by name, but not by key code")
+        func testLayoutChangeMovesNamedHotkeys() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            withLayout(us) {
+                harness.eval("""
+                    var named = hs.hotkey.bind(['cmd','alt','ctrl','shift'], 'w', () => {})
+                    var coded = hs.hotkey.bind(['cmd','alt','ctrl','shift'], 7, () => {})
+                    var disabled = hs.hotkey.create(['cmd','alt','ctrl','shift'], 's', () => {})
+                """)
+                #expect(harness.evalInt("named.keyCode") == kVK_ANSI_W)
+
+                KeyboardLayout.shared.replace(with: dvorak)
+                #expect(harness.evalInt("named.keyCode") == kVK_ANSI_Comma)
+                #expect(harness.evalBool("named.isEnabled()") == true)
+                #expect(harness.evalInt("coded.keyCode") == kVK_ANSI_X)
+                #expect(harness.evalBool("coded.isEnabled()") == true)
+                // Disabled hotkeys move too, so enabling one later uses the current layout
+                #expect(harness.evalInt("disabled.keyCode") == kVK_ANSI_Semicolon)
+                #expect(harness.evalBool("disabled.isEnabled()") == false)
+
+                harness.eval("named.destroy(); coded.destroy(); disabled.destroy()")
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("hotkeys that swap keys on a layout change both stay enabled")
+        func testLayoutChangeSwappingHotkeys() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            withLayout(us) {
+                // US → Dvorak: "w" moves onto the "," key and "," moves onto the "w" key
+                harness.eval("""
+                    var w = hs.hotkey.bind(['cmd','alt','ctrl','shift'], 'w', () => {})
+                    var comma = hs.hotkey.bind(['cmd','alt','ctrl','shift'], ',', () => {})
+                """)
+                KeyboardLayout.shared.replace(with: dvorak)
+                #expect(harness.evalInt("w.keyCode") == kVK_ANSI_Comma)
+                #expect(harness.evalInt("comma.keyCode") == kVK_ANSI_W)
+                #expect(harness.evalBool("w.isEnabled()") == true)
+                #expect(harness.evalBool("comma.isEnabled()") == true)
+                harness.eval("w.destroy(); comma.destroy()")
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("followsKeyboardLayout = false keeps hotkeys in place until it's turned back on")
+        func testFollowsKeyboardLayoutFalse() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            withLayout(us) {
+                harness.eval("""
+                    hs.hotkey.followsKeyboardLayout = false
+                    var hk = hs.hotkey.bind(['cmd','alt','ctrl','shift'], 'w', () => {})
+                """)
+                KeyboardLayout.shared.replace(with: dvorak)
+                #expect(harness.evalInt("hk.keyCode") == kVK_ANSI_W)
+
+                harness.eval("hs.hotkey.followsKeyboardLayout = true")
+                #expect(harness.evalInt("hk.keyCode") == kVK_ANSI_Comma)
+                #expect(harness.evalBool("hk.isEnabled()") == true)
+
+                harness.eval("hk.destroy()")
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("disableAll finds hotkeys by name in the current layout")
+        func testDisableAllUsesCurrentLayout() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            withLayout(us) {
+                harness.eval("var hk = hs.hotkey.bind(['cmd','alt','ctrl','shift'], 'w', () => {})")
+                KeyboardLayout.shared.replace(with: dvorak)
+                harness.eval("hs.hotkey.disableAll(['cmd','alt','ctrl','shift'], 'w')")
+                #expect(harness.evalBool("hk.isEnabled()") == false)
+                harness.eval("hk.destroy()")
+            }
+            #expect(!harness.hasException)
+        }
+    }
+
     // MARK: - Key matching (Swift-level tests)
 
     @Suite("hs.hotkey Swift matching tests")

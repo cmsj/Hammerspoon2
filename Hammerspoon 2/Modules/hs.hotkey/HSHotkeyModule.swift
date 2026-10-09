@@ -16,7 +16,9 @@ import Carbon
     /// - Parameters:
     ///   - mods: An array of modifier key strings (e.g., `["cmd", "shift"]`). Supported names:
     ///     `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.
-    ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
+    ///   - key: {string | number} The key: a name or character (e.g. "a", "space", "return", "f1"), resolved
+    ///     through the current keyboard layout (see `hs.keycodes.map`), or a numeric virtual key code, which
+    ///     always means the same physical key
     ///   - onPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
     ///   - onReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback
     ///   - onRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
@@ -27,15 +29,15 @@ import Carbon
     ///     console.log("Hello!")
     /// }, null, () => console.log("still held"))
     /// ```
-    @objc func bind(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey?
+    @objc func bind(_ mods: [String], _ key: Any?, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey?
 
-    /// Get the system-wide mapping of key names to key codes
-    /// - Returns: A dictionary mapping key names to numeric key codes
+    /// Get the mapping of key names to key codes that hotkeys use, following the current keyboard layout
+    /// - Returns: A dictionary mapping key names to numeric key codes (the same as `hs.keycodes.map`)
     /// - Example:
     /// ```js
-    /// console.log(hs.hotkey.getKeyCodeMap())
+    /// console.log(hs.hotkey.getKeyCodeMap()["w"])  // 13 on US, 43 on Dvorak
     /// ```
-    @objc func getKeyCodeMap() -> [String: UInt32]
+    @objc func getKeyCodeMap() -> [String: Int]
 
     /// Get the mapping of modifier names to modifier flags
     /// - Returns: A dictionary mapping modifier names to their numeric values
@@ -49,7 +51,9 @@ import Carbon
     /// - Parameters:
     ///   - mods: An array of modifier key strings (e.g., `["cmd", "shift"]`). Supported names:
     ///     `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.
-    ///   - key: The key name or character (e.g., "a", "space", "return", "f1")
+    ///   - key: {string | number} The key: a name or character (e.g. "a", "space", "return", "f1"), resolved
+    ///     through the current keyboard layout (see `hs.keycodes.map`), or a numeric virtual key code, which
+    ///     always means the same physical key
     ///   - onPressed: {(() => void) | null} A JavaScript function to call when the hotkey is pressed, or null for no callback
     ///   - onReleased?: {(() => void) | null} A JavaScript function to call when the hotkey is released, or null/omitted for no callback
     ///   - onRepeat?: {(() => void) | null} A JavaScript function to call repeatedly while the hotkey is held down, or null/omitted for no repeat
@@ -61,10 +65,10 @@ import Carbon
     /// })
     /// hk.enable()
     /// ```
-    @objc func create(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey?
+    @objc func create(_ mods: [String], _ key: Any?, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey?
 
     /// Get a list of all currently-enabled hotkeys
-    /// - Returns: An array of objects, each with `mods`, `key`, `message` and `enabled` fields
+    /// - Returns: An array of objects, each with `mods`, `key`, `keyCode`, `message` and `enabled` fields
     /// - Example:
     /// ```js
     /// console.log(hs.hotkey.getHotkeys())
@@ -74,44 +78,44 @@ import Carbon
     /// Check whether macOS itself has already claimed a key combination (e.g. for Spotlight, screenshots, etc.)
     /// - Parameters:
     ///   - mods: An array of modifier key strings
-    ///   - key: The key name or character
+    ///   - key: {string | number} A key name or character, or a numeric virtual key code
     /// - Returns: An object with `keyCode`, `mods` and `enabled` fields if the combination is system-assigned, otherwise null
     /// - Example:
     /// ```js
     /// console.log(hs.hotkey.systemAssigned(["cmd","space"], "space"))
     /// ```
-    @objc func systemAssigned(_ mods: [String], _ key: String) -> [String: Any]?
+    @objc func systemAssigned(_ mods: [String], _ key: Any?) -> [String: Any]?
 
     /// Check whether a key combination is available to be bound (i.e. not already claimed by macOS)
     /// - Parameters:
     ///   - mods: An array of modifier key strings
-    ///   - key: The key name or character
+    ///   - key: {string | number} A key name or character, or a numeric virtual key code
     /// - Returns: True if the combination can be bound, otherwise False
     /// - Example:
     /// ```js
     /// console.log(hs.hotkey.assignable(["cmd","shift"], "h"))
     /// ```
-    @objc func assignable(_ mods: [String], _ key: String) -> Bool
+    @objc func assignable(_ mods: [String], _ key: Any?) -> Bool
 
     /// Disable and remove every hotkey currently bound to a key combination
     /// - Parameters:
     ///   - mods: An array of modifier key strings
-    ///   - key: The key name or character
+    ///   - key: {string | number} A key name or character, or a numeric virtual key code
     /// - Example:
     /// ```js
     /// hs.hotkey.deleteAll(["cmd","shift"], "h")
     /// ```
-    @objc func deleteAll(_ mods: [String], _ key: String)
+    @objc func deleteAll(_ mods: [String], _ key: Any?)
 
     /// Disable every hotkey currently bound to a key combination, without removing them
     /// - Parameters:
     ///   - mods: An array of modifier key strings
-    ///   - key: The key name or character
+    ///   - key: {string | number} A key name or character, or a numeric virtual key code
     /// - Example:
     /// ```js
     /// hs.hotkey.disableAll(["cmd","shift"], "h")
     /// ```
-    @objc func disableAll(_ mods: [String], _ key: String)
+    @objc func disableAll(_ mods: [String], _ key: Any?)
 
     /// {number} Duration in seconds for the on-screen toast shown when a hotkey with a
     /// `message` set fires. Default is 1.
@@ -120,6 +124,24 @@ import Carbon
     /// hs.hotkey.alertDuration = 3
     /// ```
     @objc var alertDuration: Double { get set }
+
+    /// {boolean} Whether hotkeys bound with a key name move to a different key when the keyboard
+    /// layout changes, so that they stay on the key that types that character. Default is true.
+    ///
+    /// For example, a hotkey bound to `"w"` is on the key US-ANSI calls `W` while a US layout is
+    /// active, and moves to the key US-ANSI calls `,` when you switch to Dvorak, since that's where
+    /// Dvorak types `w`. Hotkeys bound with a numeric key code never move.
+    ///
+    /// When false, a hotkey stays on whichever key its name resolved to when it was created, as in
+    /// Hammerspoon v1. Setting this back to true moves existing hotkeys to the current layout.
+    /// If the new layout doesn't type a hotkey's character and the character has no US-ANSI
+    /// position either, the hotkey stays where it is and a warning is logged.
+    /// - Example:
+    /// ```js
+    /// // Keep hotkeys on fixed physical keys, whatever layout is active
+    /// hs.hotkey.followsKeyboardLayout = false
+    /// ```
+    @objc var followsKeyboardLayout: Bool { get set }
 
     /// SKIP_DOCS
     @objc var createModal: JSFunction? { get set }
@@ -149,16 +171,41 @@ import Carbon
 
     @objc var alertDuration: Double = 1.0
 
+    @objc var followsKeyboardLayout: Bool = true {
+        didSet {
+            if followsKeyboardLayout && !oldValue {
+                moveHotkeysToCurrentLayout()
+            }
+        }
+    }
+
+    private var layoutChangeObserver: NSObjectProtocol?
+
     // MARK: - Module lifecycle
 
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
         self.alertDuration = 1.0
+        layoutChangeObserver = NotificationCenter.default.addObserver(
+            forName: KeyboardLayout.didChangeNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            // Posted on the main thread by KeyboardLayout
+            MainActor.assumeIsolated {
+                guard let self, self.followsKeyboardLayout else { return }
+                self.moveHotkeysToCurrentLayout()
+            }
+        }
         AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
+        if let layoutChangeObserver {
+            NotificationCenter.default.removeObserver(layoutChangeObserver)
+            self.layoutChangeObserver = nil
+        }
         createModal = nil
         bindSpec = nil
         showHotkeys = nil
@@ -184,7 +231,7 @@ import Carbon
 
     // MARK: - Hotkey binding
 
-    @objc func bind(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey? {
+    @objc func bind(_ mods: [String], _ key: Any?, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey? {
         // bind() enables the hotkey immediately, so a hotkey with no callbacks at all would
         // silently claim the key combination and do nothing. Require at least one callback.
         // (create() stays permissive so callers can build a hotkey and assign callbacks later.)
@@ -196,7 +243,7 @@ import Carbon
         guard let hotkey = create(mods, key, onPressed, onReleased, onRepeat) else { return nil }
 
         guard hotkey.enable() else {
-            AKError("hs.hotkey.bind(): failed to enable hotkey: " + mods.joined(separator: ",") + ", " + key)
+            AKError("hs.hotkey.bind(): failed to enable hotkey: " + mods.joined(separator: ",") + ", " + (KeyArgument(key)?.logDescription ?? "?"))
             hotkey.destroy()
             activeHotkeys.remove(hotkey)
             return nil
@@ -207,13 +254,17 @@ import Carbon
 
     // MARK: - Hotkey creation (without enabling)
 
-    @objc func create(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey? {
+    @objc func create(_ mods: [String], _ key: Any?, _ onPressed: JSFunction, _ onReleased: JSFunction, _ onRepeat: JSFunction) -> HSHotkey? {
         guard let modifierFlags = parseModifiers(mods) else {
             AKError("hs.hotkey.create: Invalid modifiers")
             return nil
         }
-        guard let keyCode = keyNameToKeyCode(key) else {
-            AKError("hs.hotkey.create: Unknown key '\(key)'")
+        guard let keyArgument = KeyArgument(key) else {
+            AKError("hs.hotkey.create: key must be a key name or a numeric key code")
+            return nil
+        }
+        guard let keyCode = keyCode(for: keyArgument) else {
+            AKError("hs.hotkey.create: Unknown key \(keyArgument.logDescription)")
             return nil
         }
         guard onPressed.isFunction || onPressed.isNull else {
@@ -233,7 +284,7 @@ import Carbon
             keyCode: keyCode,
             modifiers: modifierFlags,
             mods: mods,
-            key: key,
+            key: keyArgument,
             onPressed: onPressed.isFunction ? onPressed : nil,
             onReleased: onReleased.isFunction ? onReleased : nil,
             onRepeat: onRepeat.isFunction ? onRepeat : nil
@@ -252,19 +303,20 @@ import Carbon
                 [
                     "mods": hotkey.mods,
                     "key": hotkey.key,
+                    "keyCode": hotkey.keyCode,
                     "message": hotkey.message ?? NSNull(),
                     "enabled": hotkey.isEnabled(),
                 ]
             }
     }
 
-    @objc func systemAssigned(_ mods: [String], _ key: String) -> [String: Any]? {
+    @objc func systemAssigned(_ mods: [String], _ key: Any?) -> [String: Any]? {
         guard let modifierFlags = parseModifiers(mods) else {
             AKError("hs.hotkey.systemAssigned: Invalid modifiers")
             return nil
         }
-        guard let keyCode = keyNameToKeyCode(key) else {
-            AKError("hs.hotkey.systemAssigned: Unknown key '\(key)'")
+        guard let keyCode = keyCode(forArgument: key) else {
+            AKError("hs.hotkey.systemAssigned: Unknown key")
             return nil
         }
 
@@ -291,13 +343,13 @@ import Carbon
         return nil
     }
 
-    @objc func assignable(_ mods: [String], _ key: String) -> Bool {
+    @objc func assignable(_ mods: [String], _ key: Any?) -> Bool {
         guard let modifierFlags = parseModifiers(mods) else {
             AKError("hs.hotkey.assignable: Invalid modifiers")
             return false
         }
-        guard let keyCode = keyNameToKeyCode(key) else {
-            AKError("hs.hotkey.assignable: Unknown key '\(key)'")
+        guard let keyCode = keyCode(forArgument: key) else {
+            AKError("hs.hotkey.assignable: Unknown key")
             return false
         }
 
@@ -311,16 +363,16 @@ import Carbon
         return true
     }
 
-    @objc func deleteAll(_ mods: [String], _ key: String) {
+    @objc func deleteAll(_ mods: [String], _ key: Any?) {
         forEachMatchingHotkey(mods, key) { $0.destroy() }
     }
 
-    @objc func disableAll(_ mods: [String], _ key: String) {
+    @objc func disableAll(_ mods: [String], _ key: Any?) {
         forEachMatchingHotkey(mods, key) { $0.disable() }
     }
 
-    private func forEachMatchingHotkey(_ mods: [String], _ key: String, _ body: (HSHotkey) -> Void) {
-        guard let modifierFlags = parseModifiers(mods), let keyCode = keyNameToKeyCode(key) else {
+    private func forEachMatchingHotkey(_ mods: [String], _ key: Any?, _ body: (HSHotkey) -> Void) {
+        guard let modifierFlags = parseModifiers(mods), let keyCode = keyCode(forArgument: key) else {
             AKError("hs.hotkey: Invalid mods or key")
             return
         }
@@ -331,8 +383,8 @@ import Carbon
 
     // MARK: - Helper methods
 
-    @objc func getKeyCodeMap() -> [String: UInt32] {
-        return KeyCodeMapper.keyMap
+    @objc func getKeyCodeMap() -> [String: Int] {
+        return KeyboardLayout.shared.keyCodes.codesByName
     }
 
     @objc func getModifierMap() -> [String: UInt32] {
@@ -351,10 +403,43 @@ import Carbon
         return flags
     }
 
-    private func keyNameToKeyCode(_ key: String) -> UInt32? {
-        let lower = key.lowercased()
-        if let code = KeyCodeMapper.keyMap[lower] { return code }
-        return nil
+    private func keyCode(for key: KeyArgument) -> UInt32? {
+        key.resolve(in: KeyboardLayout.shared.keyCodes).map(UInt32.init)
+    }
+
+    private func keyCode(forArgument key: Any?) -> UInt32? {
+        KeyArgument(key).flatMap(keyCode(for:))
+    }
+
+    // MARK: - Keyboard layout changes
+
+    /// Moves every hotkey bound by key name onto the key that types its character in the current layout.
+    private func moveHotkeysToCurrentLayout() {
+        let keyCodes = KeyboardLayout.shared.keyCodes
+        var moved: [(hotkey: HSHotkey, wasEnabled: Bool)] = []
+
+        // Unregister everything that moves before registering anything on its new key: two
+        // hotkeys can swap keys (e.g. "w" and "," between US and Dvorak), and Carbon refuses to
+        // register a combination that's still held by the other one.
+        for hotkey in activeHotkeys.allObjects {
+            guard case .name(let name) = hotkey.keyArgument else { continue }
+            guard let newCode = keyCodes.keyCode(forName: name) else {
+                AKWarning("hs.hotkey: layout '\(keyCodes.layoutName)' has no key for '\(name)'; leaving that hotkey on key code \(hotkey.keyCode)")
+                continue
+            }
+            guard newCode != hotkey.keyCode else { continue }
+            let wasEnabled = hotkey.isEnabled()
+            hotkey.disable()
+            hotkey.changeKeyCode(UInt32(newCode))
+            moved.append((hotkey, wasEnabled))
+            AKDebug("hs.hotkey: moved '\(name)' to key code \(newCode) for layout '\(keyCodes.layoutName)'")
+        }
+
+        for (hotkey, wasEnabled) in moved where wasEnabled {
+            if !hotkey.enable() {
+                AKError("hs.hotkey: \(hotkey.keyArgument.logDescription) is now disabled: it couldn't be registered on key code \(hotkey.keyCode) after the keyboard layout changed")
+            }
+        }
     }
 }
 
@@ -383,73 +468,5 @@ private struct ModifierMapper {
         "⌥":       UInt32(optionKey),
         "shift":   UInt32(shiftKey),
         "⇧":       UInt32(shiftKey),
-    ]
-}
-
-// MARK: - Key Code Mapping
-
-private struct KeyCodeMapper {
-    static let keyMap: [String: UInt32] = [
-        // Letters
-        "a": 0x00, "b": 0x0B, "c": 0x08, "d": 0x02,
-        "e": 0x0E, "f": 0x03, "g": 0x05, "h": 0x04,
-        "i": 0x22, "j": 0x26, "k": 0x28, "l": 0x25,
-        "m": 0x2E, "n": 0x2D, "o": 0x1F, "p": 0x23,
-        "q": 0x0C, "r": 0x0F, "s": 0x01, "t": 0x11,
-        "u": 0x20, "v": 0x09, "w": 0x0D, "x": 0x07,
-        "y": 0x10, "z": 0x06,
-
-        // Numbers
-        "0": 0x1D, "1": 0x12, "2": 0x13, "3": 0x14,
-        "4": 0x15, "5": 0x17, "6": 0x16, "7": 0x1A,
-        "8": 0x1C, "9": 0x19,
-
-        // Function keys
-        "f1": 0x7A, "f2": 0x78, "f3": 0x63, "f4": 0x76,
-        "f5": 0x60, "f6": 0x61, "f7": 0x62, "f8": 0x64,
-        "f9": 0x65, "f10": 0x6D, "f11": 0x67, "f12": 0x6F,
-        "f13": 0x69, "f14": 0x6B, "f15": 0x71, "f16": 0x6A,
-        "f17": 0x40, "f18": 0x4F, "f19": 0x50, "f20": 0x5A,
-
-        // Special keys
-        "space": 0x31,
-        "return": 0x24,
-        "tab": 0x30,
-        "delete": 0x33,
-        "forwarddelete": 0x75,
-        "escape": 0x35,
-        "help": 0x72,
-        "home": 0x73,
-        "end": 0x77,
-        "pageup": 0x74,
-        "pagedown": 0x79,
-        "§": 0x0A,
-
-        // Arrow keys
-        "left": 0x7B,
-        "right": 0x7C,
-        "down": 0x7D,
-        "up": 0x7E,
-
-        // Symbols and punctuation
-        "minus": 0x1B, "-": 0x1B,
-        "equal": 0x18, "=": 0x18,
-        "leftbracket": 0x21, "[": 0x21,
-        "rightbracket": 0x1E, "]": 0x1E,
-        "backslash": 0x2A, "\\": 0x2A,
-        "semicolon": 0x29, ";": 0x29,
-        "quote": 0x27, "'": 0x27,
-        "comma": 0x2B, ",": 0x2B,
-        "period": 0x2F, ".": 0x2F,
-        "slash": 0x2C, "/": 0x2C,
-        "grave": 0x32, "`": 0x32,
-
-        // Keypad
-        "pad0": 0x52, "pad1": 0x53, "pad2": 0x54, "pad3": 0x55,
-        "pad4": 0x56, "pad5": 0x57, "pad6": 0x58, "pad7": 0x59,
-        "pad8": 0x5B, "pad9": 0x5C,
-        "pad*": 0x43, "pad+": 0x45, "pad/": 0x4B, "pad-": 0x4E,
-        "pad=": 0x51, "pad.": 0x41,
-        "padclear": 0x47, "padenter": 0x4C,
     ]
 }

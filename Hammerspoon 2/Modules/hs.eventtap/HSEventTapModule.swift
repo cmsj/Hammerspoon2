@@ -145,7 +145,8 @@ import AppKit
 
     /// Create a keyboard event
     /// - Parameters:
-    ///   - key: A key name (e.g. "a", "space", "return", "f1") or numeric key code string
+    ///   - key: {string | number} A key name or character (e.g. "a", "space", "return", "f1"), resolved
+    ///     through the current keyboard layout (see `hs.keycodes.map`), or a numeric virtual key code
     ///   - isDown: true for key down, false for key up
     /// - Returns: An HSEventTapEvent, or null if the key name is unknown
     /// - Example:
@@ -154,7 +155,7 @@ import AppKit
     /// evt.rawFlags = hs.eventtap.modifierFlags.cmd
     /// evt.post()
     /// ```
-    @objc func makeKeyEvent(_ key: String, _ isDown: Bool) -> HSEventTapEvent?
+    @objc func makeKeyEvent(_ key: Any?, _ isDown: Bool) -> HSEventTapEvent?
 
     /// Create a keyboard event using a raw key code
     /// - Parameters:
@@ -216,13 +217,16 @@ import AppKit
     ///
     /// - Parameters:
     ///   - mods: An array of modifier names (e.g. ["cmd", "shift"])
-    ///   - key: A key name or single character (e.g. "a", "space", "return")
+    ///   - key: {string | number} A key name or character (e.g. "a", "space", "return"), resolved
+    ///     through the current keyboard layout (see `hs.keycodes.map`), or a numeric virtual key code,
+    ///     which always presses the same physical key
     /// - Example:
     /// ```js
     /// hs.eventtap.keyStroke(["cmd"], "c")      // Copy
     /// hs.eventtap.keyStroke(["cmd", "shift"], "4")  // Screenshot selection
+    /// hs.eventtap.keyStroke(["ctrl"], 0)       // Ctrl + the key US-ANSI calls A, on any layout
     /// ```
-    @objc func keyStroke(_ mods: [String], _ key: String)
+    @objc func keyStroke(_ mods: [String], _ key: Any?)
 
     /// Type a string of characters as individual key events.
     ///
@@ -389,7 +393,9 @@ import AppKit
     ///   - mods: An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,
     ///     `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
     ///     `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
-    ///   - key: The key name or character (e.g., "a", "space", "f1")
+    ///   - key: {string | number} A key name or character (e.g., "a", "space", "f1"), resolved through the
+    ///     current keyboard layout (see `hs.eventtap.followsKeyboardLayout`), or a numeric virtual key code,
+    ///     which always means the same physical key
     ///   - onPressed: {(() => void) | null} Called when the key combination is pressed, or null
     ///   - onReleased: {(() => void) | null} Called when the key combination is released, or null
     /// - Returns: An `HSEventTapHotkey` object, or null if binding failed
@@ -405,7 +411,7 @@ import AppKit
     ///     console.log("Left Cmd+H!")
     /// }, null)
     /// ```
-    @objc func bindHotkey(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction) -> HSEventTapHotkey?
+    @objc func bindHotkey(_ mods: [String], _ key: Any?, _ onPressed: JSFunction, _ onReleased: JSFunction) -> HSEventTapHotkey?
 
     /// Remove a previously bound hotkey and stop it from firing
     /// - Parameter hotkey: The HSEventTapHotkey returned by `bindHotkey`
@@ -415,6 +421,24 @@ import AppKit
     /// hs.eventtap.removeHotkey(hk)
     /// ```
     @objc func removeHotkey(_ hotkey: HSEventTapHotkey)
+
+    /// {boolean} Whether hotkeys from `bindHotkey()` that were bound with a key name move to a
+    /// different key when the keyboard layout changes, so that they stay on the key that types
+    /// that character. Default is true.
+    ///
+    /// For example, a hotkey bound to `"w"` matches the key US-ANSI calls `W` while a US layout is
+    /// active, and the key US-ANSI calls `,` after you switch to Dvorak, since that's where Dvorak
+    /// types `w`. Hotkeys bound with a numeric key code never move.
+    ///
+    /// When false, a hotkey stays on whichever key its name resolved to when it was bound.
+    /// Setting this back to true moves existing hotkeys to the current layout. This is separate
+    /// from `hs.hotkey.followsKeyboardLayout`, which controls `hs.hotkey` hotkeys.
+    /// - Example:
+    /// ```js
+    /// // Keep event tap hotkeys on fixed physical keys, whatever layout is active
+    /// hs.eventtap.followsKeyboardLayout = false
+    /// ```
+    @objc var followsKeyboardLayout: Bool { get set }
 }
 
 // MARK: - Implementation
@@ -435,13 +459,39 @@ import AppKit
     private var enabledTapHotkeys: [HSEventTapHotkey] = []
     private var dispatchTap: HSEventTap?
 
+    @objc var followsKeyboardLayout: Bool = true {
+        didSet {
+            if followsKeyboardLayout && !oldValue {
+                moveHotkeysToCurrentLayout()
+            }
+        }
+    }
+
+    private var layoutChangeObserver: NSObjectProtocol?
+
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
+        layoutChangeObserver = NotificationCenter.default.addObserver(
+            forName: KeyboardLayout.didChangeNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            // Posted on the main thread by KeyboardLayout
+            MainActor.assumeIsolated {
+                guard let self, self.followsKeyboardLayout else { return }
+                self.moveHotkeysToCurrentLayout()
+            }
+        }
         AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
     func shutdown() {
+        if let layoutChangeObserver {
+            NotificationCenter.default.removeObserver(layoutChangeObserver)
+            self.layoutChangeObserver = nil
+        }
+
         for tap in taps { tap.destroy() }
         taps.removeAll()
 
@@ -543,11 +593,8 @@ import AppKit
 
     // MARK: - Event constructors
 
-    @objc func makeKeyEvent(_ key: String, _ isDown: Bool) -> HSEventTapEvent? {
-        guard let keyCode = KeyCodeResolver.keyCode(for: key) else {
-            AKError("hs.eventtap.makeKeyEvent: Unknown key '\(key)'")
-            return nil
-        }
+    @objc func makeKeyEvent(_ key: Any?, _ isDown: Bool) -> HSEventTapEvent? {
+        guard let keyCode = resolveKeyCode(key, caller: "makeKeyEvent") else { return nil }
         return makeKeyEventWithCode(Int(keyCode), isDown)
     }
 
@@ -601,13 +648,24 @@ import AppKit
         return HSEventTapEvent(cgEvent: event)
     }
 
+    /// Resolves a JS key argument (a name/character or a numeric key code) through the current
+    /// keyboard layout, logging an error naming the caller if it isn't a known key.
+    private func resolveKeyCode(_ key: Any?, caller: String) -> CGKeyCode? {
+        guard let keyArgument = KeyArgument(key) else {
+            AKError("hs.eventtap.\(caller): key must be a key name or a numeric key code")
+            return nil
+        }
+        guard let keyCode = keyArgument.resolve(in: KeyboardLayout.shared.keyCodes) else {
+            AKError("hs.eventtap.\(caller): Unknown key \(keyArgument.logDescription)")
+            return nil
+        }
+        return CGKeyCode(keyCode)
+    }
+
     // MARK: - Convenience senders
 
-    @objc func keyStroke(_ mods: [String], _ key: String) {
-        guard let keyCode = KeyCodeResolver.keyCode(for: key) else {
-            AKError("hs.eventtap.keyStroke: Unknown key '\(key)'")
-            return
-        }
+    @objc func keyStroke(_ mods: [String], _ key: Any?) {
+        guard let keyCode = resolveKeyCode(key, caller: "keyStroke") else { return }
         let flags = CGEventFlags.from(modifierNames: mods)
 
         // A private-state source is used (rather than .hidSystemState) so the synthesized
@@ -803,15 +861,13 @@ import AppKit
 
     // MARK: - Hotkey binding
 
-    @objc func bindHotkey(_ mods: [String], _ key: String, _ onPressed: JSFunction, _ onReleased: JSFunction) -> HSEventTapHotkey? {
+    @objc func bindHotkey(_ mods: [String], _ key: Any?, _ onPressed: JSFunction, _ onReleased: JSFunction) -> HSEventTapHotkey? {
         guard let (flags, deviceBits) = EventTapModifierMapper.parse(mods) else {
             AKError("hs.eventtap.bindHotkey: Invalid modifiers")
             return nil
         }
-        guard let keyCode = KeyCodeResolver.keyCode(for: key) else {
-            AKError("hs.eventtap.bindHotkey: Unknown key '\(key)'")
-            return nil
-        }
+        guard let keyCode = resolveKeyCode(key, caller: "bindHotkey"),
+              let keyArgument = KeyArgument(key) else { return nil }
         guard onPressed.isFunction || onPressed.isNull else {
             AKError("hs.eventtap.bindHotkey: onPressed must be a function or null")
             return nil
@@ -823,6 +879,7 @@ import AppKit
 
         let hotkey = HSEventTapHotkey(
             keyCode: keyCode,
+            key: keyArgument,
             requiredFlags: flags,
             requiredDeviceBits: deviceBits,
             coordinator: self,
@@ -842,6 +899,21 @@ import AppKit
 
     @objc func removeHotkey(_ hotkey: HSEventTapHotkey) {
         hotkey.destroy()
+    }
+
+    /// Moves every hotkey bound by key name onto the key that types its character in the current layout.
+    private func moveHotkeysToCurrentLayout() {
+        let keyCodes = KeyboardLayout.shared.keyCodes
+        for hotkey in allTapHotkeys.allObjects {
+            guard case .name(let name) = hotkey.keyArgument else { continue }
+            guard let newCode = keyCodes.keyCode(forName: name) else {
+                AKWarning("hs.eventtap: layout '\(keyCodes.layoutName)' has no key for '\(name)'; leaving that hotkey on key code \(hotkey.keyCode)")
+                continue
+            }
+            guard newCode != hotkey.keyCode else { continue }
+            hotkey.changeKeyCode(CGKeyCode(newCode))
+            AKDebug("hs.eventtap: moved '\(name)' to key code \(newCode) for layout '\(keyCodes.layoutName)'")
+        }
     }
 
     // MARK: - EventTapHotkeyCoordinator
@@ -938,32 +1010,5 @@ private enum EventTapModifierMapper {
             }
         }
         return (flags, deviceBits)
-    }
-}
-
-// MARK: - Key name → CGKeyCode mapping
-
-/// Builds a combined lookup table from HSKeycodesModule's static key tables,
-/// so the eventtap module does not duplicate the key name definitions.
-private enum KeyCodeResolver {
-    static let keyMap: [String: CGKeyCode] = {
-        var map: [String: CGKeyCode] = [:]
-        // Character map loaded first (lower priority — named keys override where names overlap)
-        for (name, code) in HSKeycodesModule.ansiUSCharacterMap {
-            map[name] = CGKeyCode(code)
-        }
-        // Named special/function/modifier keys loaded second (higher priority)
-        for (name, code) in HSKeycodesModule.namedKeys {
-            map[name] = CGKeyCode(code)
-        }
-        return map
-    }()
-
-    static func keyCode(for name: String) -> CGKeyCode? {
-        let lower = name.lowercased()
-        if let code = keyMap[lower] { return code }
-        // Allow raw numeric key codes passed as strings (e.g. "36" for Return)
-        if let code = UInt16(name) { return CGKeyCode(code) }
-        return nil
     }
 }

@@ -21,11 +21,15 @@ import AppKit
 ///
 /// ## Key code mapping
 ///
+/// Key codes identify physical keys, while characters depend on the keyboard layout. `map` and
+/// `names` follow the current layout, so on Dvorak `map["w"]` is the key code of the key that
+/// types `w` there.
+///
 /// ```js
 /// // Look up a keycode by name
 /// const code = hs.keycodes.map["a"]    // e.g. 0 on ANSI US
 /// // Look up a name by keycode
-/// const name = hs.keycodes.map["0"]   // e.g. "a"
+/// const name = hs.keycodes.names[0]    // e.g. "a"
 /// ```
 ///
 /// ## Switching layouts
@@ -45,27 +49,49 @@ import AppKit
 
     // MARK: Key Map
 
-    /// A bidirectional mapping between key names and their macOS virtual key codes.
+    /// A mapping from key names to macOS virtual key codes, following the current keyboard layout.
     ///
-    /// Entries exist for both directions: look up a name to get its integer keycode, or look
-    /// up a keycode (as a string) to get the key name. The map is rebuilt automatically
-    /// whenever the keyboard input source changes.
+    /// This is the same mapping `hs.hotkey` and `hs.eventtap` use to turn a key name into a key
+    /// code. For the reverse direction, use `names`. The map is rebuilt automatically whenever
+    /// the keyboard input source changes.
     ///
-    /// Named keys include:
-    /// - **Characters**: derived from the active keyboard layout via `UCKeyTranslate` (falls back to ANSI US)
+    /// Names include:
+    /// - **Characters**: every character the current layout types with no modifiers held. Characters
+    ///   the layout doesn't type (e.g. `1` on AZERTY) map to their US-ANSI key position.
+    /// - **Punctuation words**: `minus`, `equal`, `leftbracket`, `rightbracket`, `backslash`,
+    ///   `semicolon`, `quote`, `comma`, `period`, `slash`, `grave`. Each is the key that types that
+    ///   character in the current layout, so `comma` and `,` are always the same key.
     /// - **Function keys**: `f1`–`f20`
     /// - **Navigation**: `home`, `end`, `pageup`, `pagedown`, `left`, `right`, `up`, `down`
     /// - **Numpad**: `pad0`–`pad9`, `pad.`, `pad+`, `pad-`, `pad*`, `pad/`, `pad=`, `padenter`, `padclear`
-    /// - **Modifiers**: `cmd`, `shift`, `ctrl`, `alt`, `rightshift`, `rightalt`, `rightctrl`, `fn`, `capslock`
+    /// - **Modifiers**: `cmd`, `rightcmd`, `shift`, `ctrl`, `alt`, `rightshift`, `rightalt`, `rightctrl`, `fn`, `capslock`
     /// - **Control**: `return`, `tab`, `space`, `delete`, `forwarddelete`, `escape`, `help`
     /// - **Media**: `volup`, `voldown`, `mute`
+    /// - **JIS**: `yen`, `underscore`, `pad,`, `eisu`, `kana`
     /// - Example:
     /// ```js
     /// const code = hs.keycodes.map["return"]  // 36
-    /// const name = hs.keycodes.map["36"]      // "return"
-    /// const aCode = hs.keycodes.map["a"]      // keycode for 'a' in current layout
+    /// const wCode = hs.keycodes.map["w"]      // 13 on US, 43 on Dvorak
+    /// const one = hs.keycodes.map["1"]        // 18: the key that types 1, not key code 1
     /// ```
-    var map: [String: Any] { get }
+    var map: [String: Int] { get }
+
+    /// A mapping from macOS virtual key codes to key names, following the current keyboard layout.
+    ///
+    /// The reverse of `map`. Each key code maps to its fixed name if it has one (e.g. `return`,
+    /// `f1`), otherwise to the character the current layout types on it. Key codes with neither
+    /// are absent. JavaScript object keys are strings, so `names[36]` and `names["36"]` are the same.
+    /// - Example:
+    /// ```js
+    /// console.log(hs.keycodes.names[36])   // "return"
+    /// console.log(hs.keycodes.names[13])   // "w" on US, "," on Dvorak
+    ///
+    /// hs.eventtap.addWatcher(["keyDown"], (e) => {
+    ///     console.log("Pressed: " + hs.keycodes.names[e.keyCode])
+    ///     return false
+    /// })
+    /// ```
+    var names: [String: String] { get }
 
     // MARK: Current Source Queries
 
@@ -198,11 +224,8 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
     let engineID: UUID
 
     // MARK: - Key map
-    private var _cachedMap: [String: Any] = [:]
-
-    var map: [String: Any] {
-        return _cachedMap
-    }
+    private(set) var map: [String: Int] = [:]
+    private(set) var names: [String: String] = [:]
 
     // MARK: - Watcher
     @objc var _watcherEmitter: JSFunction? = nil
@@ -218,7 +241,7 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
     required init(engineID: UUID) {
         self.engineID = engineID
         super.init()
-        _cachedMap = buildKeyMap()
+        rebuildMaps()
         let notificationName = Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
         sourceChangeObserver = DistributedNotificationCenter.default().addObserver(
             forName: notificationName,
@@ -256,83 +279,10 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
 
     // MARK: - Key map
 
-    func buildKeyMap() -> [String: Any] {
-        var result: [String: Any] = [:]
-
-        // Add all static named keys first (these win over dynamic character mappings)
-        for (keyName, keyCode) in HSKeycodesModule.namedKeys {
-            result[keyName] = keyCode
-            result[String(keyCode)] = keyName
-        }
-
-        // Add per-layout character mappings from UCKeyTranslate
-        addLayoutCharacterMappings(to: &result)
-
-        return result
-    }
-
-    private func addLayoutCharacterMappings(to result: inout [String: Any]) {
-        guard let source = unsafe TISCopyCurrentKeyboardLayoutInputSource()?.takeRetainedValue() else {
-            applyFallbackCharacterMappings(to: &result)
-            return
-        }
-
-        guard let rawPtr = unsafe TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else {
-            applyFallbackCharacterMappings(to: &result)
-            AKWarning("hs.keycodes: No UCHR data for current layout; using ANSI US fallback for character keys")
-            return
-        }
-
-        let cfData = unsafe Unmanaged<CFData>.fromOpaque(rawPtr).takeUnretainedValue()
-        guard let bytePtr = unsafe CFDataGetBytePtr(cfData) else {
-            applyFallbackCharacterMappings(to: &result)
-            return
-        }
-
-        let layoutPtr = unsafe UnsafeRawPointer(bytePtr).assumingMemoryBound(to: UCKeyboardLayout.self)
-        let keyboardType = UInt32(LMGetKbdType())
-
-        for keyCode in UInt16(0)...UInt16(127) {
-            // This is an ugly hack to work around an unexplained change in macOS12, where keycodes 93 and 94 are now included in kTISPropertyUnicodeKeyLayoutData
-            if keyCode == 93 || keyCode == 94 { continue }
-
-            var deadKeyState: UInt32 = 0
-            var unicodeChars = [UniChar](repeating: 0, count: 4)
-            var actualLength = 0
-
-            let status = unsafe UCKeyTranslate(
-                layoutPtr,
-                keyCode,
-                UInt16(kUCKeyActionDisplay),
-                0,
-                keyboardType,
-                UInt32(kUCKeyTranslateNoDeadKeysBit),
-                &deadKeyState,
-                4,
-                &actualLength,
-                &unicodeChars
-            )
-
-            guard status == noErr, actualLength > 0, unicodeChars[0] != 0x0010 else { continue }
-
-            let charStr = String(decoding: unicodeChars.prefix(actualLength), as: UTF16.self).lowercased()
-            let keyCodeInt = Int(keyCode)
-
-            // Only add if neither direction is already covered by a named key
-            if result[charStr] == nil && result[String(keyCodeInt)] == nil {
-                result[charStr] = keyCodeInt
-                result[String(keyCodeInt)] = charStr
-            }
-        }
-    }
-
-    private func applyFallbackCharacterMappings(to result: inout [String: Any]) {
-        for (keyName, keyCode) in HSKeycodesModule.ansiUSCharacterMap {
-            if result[keyName] == nil {
-                result[keyName] = keyCode
-                result[String(keyCode)] = keyName
-            }
-        }
+    private func rebuildMaps() {
+        let keyCodes = KeyboardLayout.shared.keyCodes
+        map = keyCodes.codesByName
+        names = keyCodes.namesByCode
     }
 
     // MARK: - Current source queries
@@ -426,7 +376,9 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
     // MARK: - Private helpers
 
     private func inputSourceDidChange() {
-        _cachedMap = buildKeyMap()
+        // Refresh the shared table first: its own observer of this notification may not have run yet.
+        KeyboardLayout.shared.refresh()
+        rebuildMaps()
         _ = watcherCallback?.call(withArguments: [HSKeycodesEvent.change.rawValue])
     }
 
@@ -466,123 +418,4 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
         AKWarning("hs.keycodes: no input source found matching '\(value)'")
         return false
     }
-}
-
-// MARK: - Static key tables
-
-extension HSKeycodesModule {
-    // Named special keys: (name, Carbon keycode).
-    // These take precedence over any UCKeyTranslate-derived character mappings.
-    static let namedKeys: [(String, Int)] = [
-        // Control / editing
-        ("return",        kVK_Return),        // 36
-        ("tab",           kVK_Tab),           // 48
-        ("space",         kVK_Space),         // 49
-        ("delete",        kVK_Delete),        // 51 (backspace)
-        ("escape",        kVK_Escape),        // 53
-        ("forwarddelete", kVK_ForwardDelete), // 117
-        ("help",          kVK_Help),          // 114
-        ("capslock",      kVK_CapsLock),      // 57
-
-        // Navigation
-        ("home",     kVK_Home),       // 115
-        ("end",      kVK_End),        // 119
-        ("pageup",   kVK_PageUp),     // 116
-        ("pagedown", kVK_PageDown),   // 121
-        ("left",     kVK_LeftArrow),  // 123
-        ("right",    kVK_RightArrow), // 124
-        ("down",     kVK_DownArrow),  // 125
-        ("up",       kVK_UpArrow),    // 126
-
-        // Function keys
-        ("f1",  kVK_F1),  // 122
-        ("f2",  kVK_F2),  // 120
-        ("f3",  kVK_F3),  // 99
-        ("f4",  kVK_F4),  // 118
-        ("f5",  kVK_F5),  // 96
-        ("f6",  kVK_F6),  // 97
-        ("f7",  kVK_F7),  // 98
-        ("f8",  kVK_F8),  // 100
-        ("f9",  kVK_F9),  // 101
-        ("f10", kVK_F10), // 109
-        ("f11", kVK_F11), // 103
-        ("f12", kVK_F12), // 111
-        ("f13", kVK_F13), // 105
-        ("f14", kVK_F14), // 107
-        ("f15", kVK_F15), // 113
-        ("f16", kVK_F16), // 106
-        ("f17", kVK_F17), // 64
-        ("f18", kVK_F18), // 79
-        ("f19", kVK_F19), // 80
-        ("f20", kVK_F20), // 90
-
-        // Media / volume
-        ("volup",   kVK_VolumeUp),   // 72
-        ("voldown", kVK_VolumeDown), // 73
-        ("mute",    kVK_Mute),       // 74
-
-        // Modifier keys
-        ("cmd",        kVK_Command),      // 55
-        ("shift",      kVK_Shift),        // 56
-        ("alt",        kVK_Option),       // 58
-        ("ctrl",       kVK_Control),      // 59
-        ("rightshift", kVK_RightShift),   // 60
-        ("rightalt",   kVK_RightOption),  // 61
-        ("rightctrl",  kVK_RightControl), // 62
-        ("fn",         kVK_Function),     // 63
-
-        // Numpad
-        ("pad.",     kVK_ANSI_KeypadDecimal),  // 65
-        ("pad*",     kVK_ANSI_KeypadMultiply), // 67
-        ("pad+",     kVK_ANSI_KeypadPlus),     // 69
-        ("padclear", kVK_ANSI_KeypadClear),    // 71
-        ("pad/",     kVK_ANSI_KeypadDivide),   // 75
-        ("padenter", kVK_ANSI_KeypadEnter),    // 76
-        ("pad-",     kVK_ANSI_KeypadMinus),    // 78
-        ("pad=",     kVK_ANSI_KeypadEquals),   // 81
-        ("pad0",     kVK_ANSI_Keypad0),        // 82
-        ("pad1",     kVK_ANSI_Keypad1),        // 83
-        ("pad2",     kVK_ANSI_Keypad2),        // 84
-        ("pad3",     kVK_ANSI_Keypad3),        // 85
-        ("pad4",     kVK_ANSI_Keypad4),        // 86
-        ("pad5",     kVK_ANSI_Keypad5),        // 87
-        ("pad6",     kVK_ANSI_Keypad6),        // 88
-        ("pad7",     kVK_ANSI_Keypad7),        // 89
-        ("pad8",     kVK_ANSI_Keypad8),        // 91
-        ("pad9",     kVK_ANSI_Keypad9),        // 92
-
-        // Symbol word aliases (convenient alternatives to the character forms in ansiUSCharacterMap)
-        ("minus",        kVK_ANSI_Minus),         // same as "-"
-        ("equal",        kVK_ANSI_Equal),          // same as "="
-        ("leftbracket",  kVK_ANSI_LeftBracket),   // same as "["
-        ("rightbracket", kVK_ANSI_RightBracket),  // same as "]"
-        ("backslash",    kVK_ANSI_Backslash),      // same as "\\"
-        ("semicolon",    kVK_ANSI_Semicolon),      // same as ";"
-        ("quote",        kVK_ANSI_Quote),           // same as "'"
-        ("comma",        kVK_ANSI_Comma),           // same as ","
-        ("period",       kVK_ANSI_Period),          // same as "."
-        ("slash",        kVK_ANSI_Slash),           // same as "/"
-        ("grave",        kVK_ANSI_Grave),           // same as "`"
-    ]
-
-    // ANSI US fallback for character keys when the layout provides no UCHR data.
-    // Based on Carbon.framework Events.h for the standard ANSI US layout.
-    static let ansiUSCharacterMap: [(String, Int)] = [
-        ("a", kVK_ANSI_A), ("s", kVK_ANSI_S), ("d", kVK_ANSI_D), ("f", kVK_ANSI_F),
-        ("h", kVK_ANSI_H), ("g", kVK_ANSI_G), ("z", kVK_ANSI_Z), ("x", kVK_ANSI_X),
-        ("c", kVK_ANSI_C), ("v", kVK_ANSI_V), ("b", kVK_ANSI_B), ("q", kVK_ANSI_Q),
-        ("w", kVK_ANSI_W), ("e", kVK_ANSI_E), ("r", kVK_ANSI_R), ("y", kVK_ANSI_Y),
-        ("t", kVK_ANSI_T),
-        ("1", kVK_ANSI_1), ("2", kVK_ANSI_2), ("3", kVK_ANSI_3), ("4", kVK_ANSI_4),
-        ("6", kVK_ANSI_6), ("5", kVK_ANSI_5), ("=", kVK_ANSI_Equal),
-        ("9", kVK_ANSI_9), ("7", kVK_ANSI_7), ("-", kVK_ANSI_Minus),
-        ("8", kVK_ANSI_8), ("0", kVK_ANSI_0),
-        ("]", kVK_ANSI_RightBracket), ("o", kVK_ANSI_O), ("u", kVK_ANSI_U),
-        ("[", kVK_ANSI_LeftBracket),  ("i", kVK_ANSI_I), ("p", kVK_ANSI_P),
-        ("l", kVK_ANSI_L), ("j", kVK_ANSI_J), ("'", kVK_ANSI_Quote),
-        ("k", kVK_ANSI_K), (";", kVK_ANSI_Semicolon),
-        ("\\", kVK_ANSI_Backslash), (",", kVK_ANSI_Comma),
-        ("/", kVK_ANSI_Slash), ("n", kVK_ANSI_N), ("m", kVK_ANSI_M),
-        (".", kVK_ANSI_Period), ("`", kVK_ANSI_Grave),
-    ]
 }

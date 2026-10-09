@@ -21,6 +21,23 @@ protocol EventTapHotkeyCoordinator: AnyObject {
 /// A keyboard shortcut binding backed by an event tap. Supports fn modifier and left/right modifier
 /// key distinction. Obtain instances via `hs.eventtap.bindHotkey()` — do not instantiate directly.
 @objc protocol HSEventTapHotkeyAPI: HSTypeAPI, JSExport {
+    /// {string | number} The key this hotkey was bound with, as originally passed to bindHotkey()
+    /// - Example:
+    /// ```js
+    /// const hk = hs.eventtap.bindHotkey(["fn"], "f1", () => {}, null)
+    /// console.log(hk.key)
+    /// ```
+    @objc var key: Any { get }
+
+    /// {number} The virtual key code this hotkey currently matches. For a hotkey bound by key name
+    /// this follows the keyboard layout (see `hs.eventtap.followsKeyboardLayout`).
+    /// - Example:
+    /// ```js
+    /// const hk = hs.eventtap.bindHotkey(["fn"], "w", () => {}, null)
+    /// console.log(hk.keyCode)  // 13 on US, 43 on Dvorak
+    /// ```
+    @objc var keyCode: Int { get }
+
     /// Enable the hotkey
     /// - Returns: True if the hotkey was enabled, otherwise False
     /// - Example:
@@ -80,7 +97,9 @@ protocol EventTapHotkeyCoordinator: AnyObject {
         MainActor.assumeIsolated { toString() }
     }
 
-    let keyCode: CGKeyCode
+    let keyArgument: KeyArgument
+    @objc var key: Any { keyArgument.jsValue }
+    @objc var keyCode: Int { Int(cachedKeyCode) }
     /// Device-independent modifier flags (maskCommand, maskShift, etc.) that must be active.
     let requiredFlags: CGEventFlags
     /// Side-specific NX_DEVICE*KEYMASK bits that must be set (0 if not side-specific).
@@ -107,8 +126,9 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     private var _isEnabled = false
     weak var coordinator: (any EventTapHotkeyCoordinator)?
 
-    // Pre-cast key code stored at init time; avoids a UInt16→Int64 conversion on every event.
-    let cachedKeyCode: Int64
+    // Key code pre-cast to the type events report, to avoid a UInt16→Int64 conversion on every event.
+    // Changes only via changeKeyCode(), when the keyboard layout changes.
+    private(set) var cachedKeyCode: Int64
 
     // The flags we compare against: cmd, shift, alt, ctrl, fn. CapsLock and
     // device-specific bits are handled separately so they don't break matching.
@@ -116,13 +136,15 @@ protocol EventTapHotkeyCoordinator: AnyObject {
         .maskCommand, .maskShift, .maskAlternate, .maskControl, .maskSecondaryFn
     ]
 
+    /// - Parameter key: How the key was specified. Defaults to the fixed key code, which never moves.
     init(keyCode: CGKeyCode,
+         key: KeyArgument? = nil,
          requiredFlags: CGEventFlags,
          requiredDeviceBits: UInt64,
          coordinator: any EventTapHotkeyCoordinator,
          onPressed: JSFunction? = nil,
          onReleased: JSFunction? = nil) {
-        self.keyCode = keyCode
+        self.keyArgument = key ?? .keyCode(Int(keyCode))
         self.cachedKeyCode = Int64(keyCode)
         self.requiredFlags = requiredFlags
         self.requiredDeviceBits = requiredDeviceBits
@@ -159,6 +181,12 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     }
 
     @objc func isEnabled() -> Bool { _isEnabled }
+
+    /// Changes the key code this hotkey matches. Unlike hs.hotkey, nothing is registered with the
+    /// OS (the shared dispatch tap compares key codes itself), so this is safe while enabled.
+    func changeKeyCode(_ newKeyCode: CGKeyCode) {
+        cachedKeyCode = Int64(newKeyCode)
+    }
 
     /// Hot-path matcher called by dispatchKeyEvent with values pre-fetched once per event.
     @inline(__always)
