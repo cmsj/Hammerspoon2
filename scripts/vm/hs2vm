@@ -54,6 +54,47 @@ vm_exists() { tart list --quiet 2>/dev/null | grep -qx "$1"; }
 
 vm_running() { tart list 2>/dev/null | awk -v n="$1" '$2 == n && $NF == "running" { found = 1 } END { exit !found }'; }
 
+# Everything that builds into or reads from the shared DerivedData (build, test, install) holds
+# this lock, so concurrent hs2vm runs can't swap the products out from under each other. It's a
+# directory (mkdir is atomic) holding the owner's PID, so a lock left by a dead process is reclaimed.
+PRODUCTS_LOCK="$VM_ROOT/products.lock"
+products_locked=0
+
+lock_products() {
+    local waited=0 holder
+    mkdir -p "$VM_ROOT"
+    until mkdir "$PRODUCTS_LOCK" 2>/dev/null; do
+        holder="$(cat "$PRODUCTS_LOCK/pid" 2>/dev/null || true)"
+        if [[ -n "$holder" ]] && ! kill -0 "$holder" 2>/dev/null; then
+            rm -rf "$PRODUCTS_LOCK"
+            continue
+        fi
+        (( waited++ == 0 )) && log "waiting for another hs2vm to finish with the build products (pid ${holder:-?})"
+        sleep 1
+    done
+    echo $$ >"$PRODUCTS_LOCK/pid"
+    products_locked=1
+}
+
+unlock_products() {
+    (( products_locked )) || return 0
+    rm -rf "$PRODUCTS_LOCK"
+    products_locked=0
+}
+
+# A throwaway VM that `test` should delete on exit.
+cleanup_vm=""
+
+on_exit() {
+    unlock_products
+    if [[ -n "$cleanup_vm" ]]; then
+        cmd_stop "$cleanup_vm" || true
+        tart delete "$cleanup_vm" >/dev/null 2>&1 || true
+        rm -rf "$(vm_dir "$cleanup_vm")"
+    fi
+}
+trap on_exit EXIT
+
 # There's deliberately no VNC: Virtualization.framework's VNC server (`tart run --vnc*`) asserts
 # while setting up some client connections, killing the whole VM. Screenshots and input are done
 # from inside the guest instead (screencapture, and the hs2vm-guest tool posting CGEvents).
@@ -139,6 +180,7 @@ cmd_install() {
             *) die "usage: install <vm> [--app <path>] [--config <init.js>]" ;;
         esac
     done
+    [[ "$app" == "$PRODUCTS"/* ]] && lock_products
     [[ -d "$app" ]] || host_build "$VM_ROOT/build.log"
     [[ -d "$app" ]] || die "no app at $app"
 
@@ -146,6 +188,7 @@ cmd_install() {
     log "installing $(basename "$app") as $GUEST_APP"
     tar -C "$(dirname "$app")" -s ",^$(basename "$app"),Hammerspoon 2.app," -cf - "$(basename "$app")" \
         | tart exec -i "$vm" sh -c 'rm -rf "/Applications/Hammerspoon 2.app" && tar -C /Applications -xpf -'
+    unlock_products
 
     # `hs2vm hs` talks to the app through hs.ipc and the real hs2 CLI, so IPC always leads the config.
     { echo "hs.ipc.start();"; if [[ -n "$config" ]]; then cat "$config"; fi; } \
@@ -234,26 +277,29 @@ cmd_test() {
     vm_exists "$GOLDEN" || die "no golden image; run: hs2vm provision"
 
     local id vm out rc
-    id="$(date +%Y%m%d-%H%M%S)"
+    # The PID keeps IDs (and so VM names and results directories) unique across simultaneous runs.
+    id="$(date +%Y%m%d-%H%M%S)-$$"
     vm="hs2-run-$id"
     out="$VM_ROOT/runs/$id"
     mkdir -p "$out"
     log "results: $out"
 
-    host_build "$out/build.log"
-
     tart clone "$GOLDEN" "$vm"
     if (( keep )); then
         log "keeping $vm afterwards (hs2vm stop $vm; tart delete $vm)"
     else
-        trap "cmd_stop '$vm'; tart delete '$vm' >/dev/null 2>&1; rm -rf '$(vm_dir "$vm")'" EXIT
+        cleanup_vm="$vm"
     fi
+    # Boot before taking the products lock, so the lock only covers build, sign and copy.
     cmd_start "$vm"
 
+    lock_products
+    host_build "$out/build.log"
     # Stream rather than use the virtiofs share: copying bundles out of a share hits ELOOP on symlinks.
     log "copying build products into the guest"
     tar -C "$PRODUCTS" -cf - . \
         | tart exec -i "$vm" sh -c 'rm -rf ~/hs2-run && mkdir -p ~/hs2-run/Products && tar -C ~/hs2-run/Products -xpf -'
+    unlock_products
     cp "$REPO_ROOT/scripts/vm/guest/run-tests.sh" "$(vm_dir "$vm")/run/"
 
     log "running tests (log: $out/xcodebuild.log)"
@@ -328,7 +374,7 @@ case "$command" in
     exec)       [[ $# -ge 2 ]] || die "usage: exec <vm> <cmd...>"; cmd_exec "$@" ;;
     screenshot) [[ $# -eq 2 ]] || die "usage: screenshot <vm> <out.png>"; cmd_screenshot "$@" ;;
     test)       cmd_test "$@" ;;
-    build)      host_build "$VM_ROOT/build.log" ;;
+    build)      lock_products; host_build "$VM_ROOT/build.log" ;;
     up)         [[ $# -eq 1 ]] || die "usage: up <vm>"; cmd_up "$1" ;;
     down)       [[ $# -eq 1 ]] || die "usage: down <vm>"; cmd_down "$1" ;;
     install)    [[ $# -ge 1 ]] || die "usage: install <vm> [--app <path>] [--config <init.js>]"; cmd_install "$@" ;;
