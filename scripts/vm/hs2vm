@@ -15,8 +15,9 @@
 #   down <vm>            Stop and delete <vm>
 #   install <vm> [--app <path>] [--config <init.js>]
 #                        Install a build (default: the latest `build`) and launch it with
-#                        the eval endpoint used by `hs`, plus the given config
-#   hs <vm> [js]         Evaluate JavaScript (argument or stdin) in the guest's running app
+#                        hs.ipc started (for `hs`), plus the given config
+#   hs <vm> [js]         Evaluate JavaScript (argument or stdin) in the guest's running app,
+#                        via hs.ipc and hs2
 #   click|doubleclick|rightclick|move <vm> <x> <y>
 #   drag <vm> <x1> <y1> <x2> <y2>
 #   key <vm> <chord...>  e.g. key hs2-dev cmd+space return
@@ -146,8 +147,8 @@ cmd_install() {
     tar -C "$(dirname "$app")" -s ",^$(basename "$app"),Hammerspoon 2.app," -cf - "$(basename "$app")" \
         | tart exec -i "$vm" sh -c 'rm -rf "/Applications/Hammerspoon 2.app" && tar -C /Applications -xpf -'
 
-    # The eval endpoint used by `hs2vm hs` always leads the config.
-    { cat "$REPO_ROOT/scripts/vm/guest/eval-server.js"; if [[ -n "$config" ]]; then cat "$config"; fi; } \
+    # `hs2vm hs` talks to the app through hs.ipc and the real hs2 CLI, so IPC always leads the config.
+    { echo "hs.ipc.start();"; if [[ -n "$config" ]]; then cat "$config"; fi; } \
         | tart exec -i "$vm" sh -c 'mkdir -p ~/.config/Hammerspoon2 && cat > ~/.config/Hammerspoon2/init.js'
 
     # Skip the first-launch Welcome window, which holds off loading the config until clicked.
@@ -158,17 +159,42 @@ cmd_install() {
         (( SECONDS - start > 60 )) && die "app didn't answer within 60s (first launch shows a Welcome window until clicked; see: hs2vm screenshot $vm out.png)"
         sleep 1
     done
+    # Registering the IPC broker with SMAppService posts a "Background item added" banner.
+    tart exec "$vm" "$GUEST_TOOL" dismiss-notifications 3 >/dev/null || true
     log "Hammerspoon 2 running in $vm (ready after $(( SECONDS - start ))s)"
 }
 
-# hs <vm> [js]: evaluate JavaScript (argument, or stdin) in the guest's running app, via the
-# loopback eval endpoint that `install` adds to init.js (see guest/eval-server.js).
+# hs <vm> [js]: evaluate JavaScript (argument, or stdin) in the guest's running app through
+# hs.ipc, using the app's own hs2 CLI.
 cmd_hs() {
-    local vm="$1" code
+    local vm="$1" code json out
     if [[ $# -ge 2 ]]; then code="$2"; else code="$(cat)"; fi
-    local rc=0
-    printf '%s' "$code" | tart exec -i "$vm" curl -sS --fail-with-body --data-binary @- http://localhost:7999/ || rc=$?
-    echo
+    # hs2 evaluates one line at a time, so send the script as one indirect eval of a JSON string:
+    # multi-line code works, runs in global scope, and yields its last value. hs2 doesn't await
+    # Promises, so a Promise result is parked in a global and polled for below. hs2 also exits 0
+    # and prints errors like any other value, so they come back with an __HS2VM_ERROR__ prefix.
+    json="$(printf '%s' "$code" | python3 -c 'import json, sys; print(json.dumps(sys.stdin.read()))')"
+    out="$(hs2_eval "$vm" "(() => { try { const v = (0, eval)($json); if (v && typeof v.then === 'function') { globalThis.__hs2vmPending = undefined; v.then(r => { globalThis.__hs2vmPending = { value: r } }, e => { globalThis.__hs2vmPending = { error: e } }); return '__HS2VM_PENDING__' } return v } catch (e) { return '__HS2VM_ERROR__' + e } })()")" \
+        || { printf '%s\n' "$out" >&2; return 1; }
+    local start=$SECONDS
+    while [[ "$out" == "__HS2VM_PENDING__" ]]; do
+        (( SECONDS - start > 120 )) && { echo "hs2vm: Promise still pending after 120s" >&2; return 1; }
+        sleep 0.2
+        out="$(hs2_eval "$vm" "(() => { const p = globalThis.__hs2vmPending; if (!p) return '__HS2VM_PENDING__'; if ('error' in p) return '__HS2VM_ERROR__' + p.error; return p.value })()")" \
+            || { printf '%s\n' "$out" >&2; return 1; }
+    done
+    if [[ "$out" == __HS2VM_ERROR__* ]]; then
+        printf '%s\n' "${out#__HS2VM_ERROR__}" >&2
+        return 1
+    fi
+    printf '%s\n' "$out"
+}
+
+# hs2_eval <vm> <one line of JS>: prints the result; fails if hs2 can't connect.
+hs2_eval() {
+    local raw rc=0
+    raw="$(printf '%s\n' "$2" | tart exec -i "$1" "$GUEST_APP/Contents/MacOS/hs2" --no-prompt 2>&1)" || rc=$?
+    printf '%s' "$raw" | sed -e $'s/\e\\[[0-9;]*m//g' | grep -v '^Connected to Hammerspoon 2$' || true
     return "$rc"
 }
 
@@ -186,6 +212,11 @@ host_build() {
         grep -E 'error:|BUILD FAILED' "$build_log" | tail -20 >&2
         die "build failed (see $build_log)"
     fi
+    # With signing disabled the bundle has no sealed signature, only the linker's per-binary
+    # ad-hoc ones, and SMAppService then won't register the hs.ipc broker launch agent. A
+    # proper ad-hoc signature is enough (Debug builds skip hs.ipc's same-team checks).
+    codesign --force --deep --sign - "$PRODUCTS/Debug/Hammerspoon 2.app" >>"$build_log" 2>&1 \
+        || die "ad-hoc signing failed (see $build_log)"
 }
 
 # test [--keep] [xcodebuild args...]
