@@ -359,6 +359,21 @@ struct HSAXTests {
         """)
         }
 
+        // MARK: - Issue #269: setAttributeValue is exported under its documented name
+
+        @Test("setAttributeValue is callable by its documented name, not its selector name")
+        func testSetAttributeValueJSName() {
+            let harness = makeHarness()
+            harness.eval("""
+            var elem = hs.ax.applicationElement(hs.application.matchingBundleID('com.apple.finder'));
+            """)
+            #expect(harness.evalTypeOf("elem.setAttributeValue") == "function")
+            #expect(harness.evalTypeOf("elem.setAttributeValueValue") == "undefined")
+            // An attribute Finder doesn't have, so this changes nothing but still reaches the setter.
+            #expect(harness.evalBool("elem.setAttributeValue('AXHammerspoonNonexistent', true)") == false)
+            #expect(!harness.hasException)
+        }
+
         // MARK: - Element identity
 
         @Test("isEqualToElement is true for two lookups of the same element")

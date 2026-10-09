@@ -130,29 +130,49 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
 
     // MARK: - Geometry
 
-    /// The window's position on screen {x: Int, y: Int}
+    /// The window's position on screen, as an HSPoint
     /// - Example:
     /// ```js
     /// const win = hs.window.focusedWindow()
-    /// win.position = {x: 100, y: 100}
+    /// win.position = new HSPoint(100, 100)
     /// ```
     @objc var position: HSPoint? { get set }
 
-    /// The window's size {w: Int, h: Int}
+    /// The window's size, as an HSSize
     /// - Example:
     /// ```js
     /// const win = hs.window.focusedWindow()
-    /// win.size = {w: 800, h: 600}
+    /// win.size = new HSSize(800, 600)
     /// ```
     @objc var size: HSSize? { get set }
 
-    /// The window's frame {x: Int, y: Int, w: Int, h: Int}
+    /// The window's frame, as an HSRect
+    ///
+    /// Setting `frame`, `position` or `size` briefly turns off the owning application's
+    /// `AXEnhancedUserInterface`, and restores it afterwards. Some applications (Chromium and Electron
+    /// ones in particular) otherwise animate the change, or end up at the wrong size.
     /// - Example:
     /// ```js
     /// const win = hs.window.focusedWindow()
-    /// win.frame = {x: 0, y: 0, w: 1024, h: 768}
+    /// win.frame = new HSRect(0, 0, 1024, 768)
+    /// win.frame = win.screen.frame
     /// ```
     @objc var frame: HSRect? { get set }
+
+    /// Move and resize the window, reporting whether it succeeded
+    ///
+    /// The same as setting `frame`, except that the result tells you whether the window accepted
+    /// the change.
+    /// - Parameter frame: The window's new frame
+    /// - Returns: true if the window was moved and resized, otherwise false
+    /// - Example:
+    /// ```js
+    /// const win = hs.window.focusedWindow()
+    /// if (!win.moveAndResize(new HSRect(0, 0, 1024, 768))) {
+    ///     console.log("The window refused to move")
+    /// }
+    /// ```
+    @objc func moveAndResize(_ frame: HSRect) -> Bool
 
     /// The screen that contains the largest portion of this window.
     /// - Example:
@@ -376,7 +396,9 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
             }
 
             do {
-                try element.setAttribute(.position, value: newValue.point)
+                try withEnhancedUserInterfaceDisabled {
+                    try element.setAttribute(.position, value: newValue.point)
+                }
             } catch {
                 AKError("Failed to set position: \(error.localizedDescription)")
             }
@@ -396,7 +418,9 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
             }
 
             do {
-                try element.setAttribute(.size, value: newValue.size)
+                try withEnhancedUserInterfaceDisabled {
+                    try element.setAttribute(.size, value: newValue.size)
+                }
             } catch {
                 AKError("Failed to set size: \(error.localizedDescription)")
             }
@@ -416,13 +440,48 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
                 return
             }
 
-            do {
-                try element.setAttribute(.position, value: newValue.origin.point)
-                try element.setAttribute(.size, value: newValue.size.size)
-            } catch {
-                AKError("Failed to set frame: \(error.localizedDescription)")
+            _ = moveAndResize(newValue)
+        }
+    }
+
+    @objc func moveAndResize(_ frame: HSRect) -> Bool {
+        do {
+            try withEnhancedUserInterfaceDisabled {
+                try element.setAttribute(.position, value: frame.origin.point)
+                try element.setAttribute(.size, value: frame.size.size)
+            }
+            return true
+        } catch {
+            AKError("Failed to set frame: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    /// Runs `body` with the owning application's `AXEnhancedUserInterface` turned off, then restores it.
+    ///
+    /// Applications turn this on when an assistive client (VoiceOver, some window managers, etc.) asks
+    /// them to, and while it is on, many of them (Chromium and Electron ones in particular) animate
+    /// frame changes, apply them slowly, or end up at the wrong size. Hammerspoon 1 used the same
+    /// workaround: https://github.com/Hammerspoon/hammerspoon/issues/3224
+    private func withEnhancedUserInterfaceDisabled(_ body: () throws -> Void) rethrows {
+        let appElement = UIElement(AXUIElementCreateApplication(app.processIdentifier))
+        let enhanced: Bool? = try? appElement.attribute(.enhancedUserInterface)
+        let wasEnhanced = enhanced ?? false
+
+        if wasEnhanced {
+            try? appElement.setAttribute(.enhancedUserInterface, value: false)
+        }
+        defer {
+            if wasEnhanced {
+                do {
+                    try appElement.setAttribute(.enhancedUserInterface, value: true)
+                } catch {
+                    AKError("Failed to restore AXEnhancedUserInterface for \(app.localizedName ?? "pid \(app.processIdentifier)"): \(error.localizedDescription)")
+                }
             }
         }
+
+        try body()
     }
 
     @objc var screen: HSScreen? {

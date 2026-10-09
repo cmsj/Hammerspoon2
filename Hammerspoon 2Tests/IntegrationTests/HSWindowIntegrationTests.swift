@@ -18,8 +18,9 @@ private nonisolated func canDriveTextEditAndPreview() -> Bool {
 /// Integration tests for hs.window module
 ///
 /// Most of these cover the JS-enhancement surface added by hs.window.js. Tests that touch real
-/// windows need Accessibility permission and are skipped without it.
-@Suite("hs.window tests")
+/// windows need Accessibility permission and are skipped without it. Serialized, because several
+/// suites open and close TextEdit windows.
+@Suite("hs.window tests", .serialized)
 struct HSWindowIntegrationTests {
 
     // MARK: - Issue #185: JS enhancements must survive garbage collection
@@ -87,6 +88,159 @@ struct HSWindowIntegrationTests {
 
         let after = harness.eval("typeof __getWindow().focused") as? String
         #expect(after == "function")
+    }
+
+    // MARK: - Issue #269: layout helpers must set the window's frame
+
+    /// The helpers only read `win.screen.frame` and call `win.moveAndResize()`, so a plain object
+    /// standing in for an HSWindow shows where they would put a real window, without needing
+    /// Accessibility.
+    @Suite("hs.window layout helper tests")
+    struct HSWindowLayoutHelperTests {
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSWindowModule.self, as: "window")
+            return harness
+        }
+
+        /// Runs `call` against a stand-in window on a 1000x800 screen at (0, 25), and returns the
+        /// frame it was given as [x, y, w, h].
+        private func frameAfter(_ call: String) -> [Double]? {
+            let harness = makeHarness()
+            harness.eval("""
+                var fakeWin = {
+                    screen: { frame: { x: 0, y: 25, w: 1000, h: 800 } },
+                    frame: null,
+                    moveAndResize: function(rect) { this.frame = rect; return true; }
+                }
+                """)
+            let result = harness.evalBool(call)
+            #expect(!harness.hasException, "\(call) threw")
+            #expect(result == true, "\(call) did not return true")
+            return harness.eval("var f = fakeWin.frame; f ? [f.x, f.y, f.w, f.h] : null") as? [Double]
+        }
+
+        @Test("layout helpers report a window that refuses to move")
+        func testLayoutHelperReportsFailure() {
+            let harness = makeHarness()
+            harness.eval("""
+                var stuckWin = {
+                    screen: { frame: { x: 0, y: 25, w: 1000, h: 800 } },
+                    moveAndResize: function(rect) { return false; }
+                }
+                """)
+            #expect(harness.evalBool("hs.window.maximize(stuckWin)") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("layout helpers assign the expected frame", arguments: [
+            ("hs.window.maximize(fakeWin)", [0.0, 25, 1000, 800]),
+            ("hs.window.moveToLeftHalf(fakeWin)", [0.0, 25, 500, 800]),
+            ("hs.window.moveToRightHalf(fakeWin)", [500.0, 25, 500, 800]),
+            ("hs.window.tiling.top(fakeWin)", [0.0, 25, 1000, 400]),
+            ("hs.window.tiling.bottom(fakeWin)", [0.0, 425, 1000, 400]),
+            ("hs.window.tiling.topLeft(fakeWin)", [0.0, 25, 500, 400]),
+            ("hs.window.tiling.topRight(fakeWin)", [500.0, 25, 500, 400]),
+            ("hs.window.tiling.bottomLeft(fakeWin)", [0.0, 425, 500, 400]),
+            ("hs.window.tiling.bottomRight(fakeWin)", [500.0, 425, 500, 400]),
+            ("hs.window.grid.setGrid(fakeWin, {rows: 2, cols: 4}, {row: 1, col: 1, rowSpan: 1, colSpan: 2})",
+             [250.0, 425, 500, 400]),
+        ])
+        func testLayoutHelperFrames(call: String, expected: [Double]) {
+            #expect(frameAfter(call) == expected)
+        }
+    }
+
+    /// Moves a real TextEdit window with the layout helpers, which need Accessibility.
+    @Suite("hs.window frame-setting tests",
+           .serialized,
+           .disabled(if: !canDriveTextEditAndPreview(), "Needs Accessibility permission and TextEdit"))
+    struct HSWindowFrameTests {
+        private static let textEditID = "com.apple.TextEdit"
+
+        @Test("layout helpers move a real window, and restore AXEnhancedUserInterface afterwards")
+        func testLayoutHelpersMoveRealWindow() async throws {
+            let textEditWasRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: Self.textEditID).isEmpty
+            let prefix = "hs-frame-test-\(UUID().uuidString)"
+            let documentURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(prefix).txt")
+            try "frame".write(to: documentURL, atomically: true, encoding: .utf8)
+            defer { try? FileManager.default.removeItem(at: documentURL) }
+
+            let appURL = try #require(NSWorkspace.shared.urlForApplication(withBundleIdentifier: Self.textEditID))
+            let app = try await NSWorkspace.shared.open([documentURL], withApplicationAt: appURL,
+                                                        configuration: NSWorkspace.OpenConfiguration())
+
+            // Clean up outside a defer, so there's time to wait for TextEdit to quit.
+            var failure: (any Error)?
+            do {
+                try await checkLayoutHelpers(in: app, windowTitlePrefix: prefix)
+            } catch {
+                failure = error
+            }
+
+            if textEditWasRunning {
+                for window in HSApplication(runningApplication: app).allWindows where window.title?.hasPrefix(prefix) == true {
+                    let closeButton: UIElement? = try? window.element.attribute(.closeButton)
+                    try? closeButton?.performAction(.press)
+                }
+            } else {
+                app.terminate()
+                // Let TextEdit finish quitting, or the next test to open it can fail to launch it.
+                let deadline = Date().addingTimeInterval(5)
+                while !app.isTerminated && Date() < deadline {
+                    try? await Task.sleep(for: .milliseconds(50))
+                }
+            }
+
+            if let failure { throw failure }
+        }
+
+        private func checkLayoutHelpers(in app: NSRunningApplication, windowTitlePrefix prefix: String) async throws {
+            var window: HSWindow?
+            let deadline = Date().addingTimeInterval(5)
+            while window == nil && Date() < deadline {
+                window = HSApplication(runningApplication: app).allWindows.first { $0.title?.hasPrefix(prefix) == true }
+                if window == nil { try? await Task.sleep(for: .milliseconds(100)) }
+            }
+            let win = try #require(window, "TextEdit did not open \(prefix)")
+            let screenFrame = try #require(win.screen?.frame)
+
+            // Pretend an assistive client has turned the application's enhanced UI on. Not every
+            // application lets this be set (TextEdit refuses on some macOS versions), in which case
+            // only the frame change itself is checked.
+            let appElement = UIElement(AXUIElementCreateApplication(app.processIdentifier))
+            let originalEnhancedUI: Bool? = try? appElement.attribute(.enhancedUserInterface)
+            let enhancedUIWasSet = (try? appElement.setAttribute(.enhancedUserInterface, value: true)) != nil
+            defer {
+                if enhancedUIWasSet {
+                    try? appElement.setAttribute(.enhancedUserInterface, value: originalEnhancedUI ?? false)
+                }
+            }
+
+            let harness = JSTestHarness()
+            harness.loadModule(HSWindowModule.self, as: "window")
+            harness.context.setObject(win, forKeyedSubscript: "testWin" as NSString)
+
+            #expect(harness.evalBool("hs.window.moveToLeftHalf(testWin)") == true)
+            #expect(!harness.hasException)
+
+            let frame = try #require(win.frame)
+            #expect(frame.x == screenFrame.x)
+            #expect(frame.y == screenFrame.y)
+            #expect(frame.w == (screenFrame.w / 2).rounded(.down))
+
+            if enhancedUIWasSet {
+                let enhanced: Bool? = try? appElement.attribute(.enhancedUserInterface)
+                #expect(enhanced == true, "AXEnhancedUserInterface should be restored after the frame change")
+            }
+
+            // Setting the property directly, as its documentation shows.
+            harness.eval("testWin.frame = new HSRect(\(screenFrame.x + 10), \(screenFrame.y + 10), 400, 300)")
+            #expect(!harness.hasException)
+            let directFrame = try #require(win.frame)
+            #expect(directFrame.x == screenFrame.x + 10)
+            #expect(directFrame.w == 400)
+        }
     }
 
     // MARK: - Issue #228: focus() must raise only the requested window

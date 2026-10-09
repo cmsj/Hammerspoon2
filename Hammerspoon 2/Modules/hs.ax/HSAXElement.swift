@@ -156,7 +156,7 @@ import AXSwift
     /// const el = hs.ax.focusedElement()
     /// el.setAttributeValue("AXValue", "Hello")
     /// ```
-    @objc func setAttributeValue(_ attribute: String, value: Any) -> Bool
+    @objc func setAttributeValue(_ attribute: String, _ value: Any) -> Bool
 
     /// Check if an attribute is settable
     /// - Parameter attribute: An attribute name
@@ -381,7 +381,7 @@ import AXSwift
         return bridgeValue(rawValue)
     }
 
-    @objc func setAttributeValue(_ attribute: String, value: Any) -> Bool {
+    @objc func setAttributeValue(_ attribute: String, _ value: Any) -> Bool {
         let attr = UIElement.Attribute(rawValue: attribute)
 
         do {
