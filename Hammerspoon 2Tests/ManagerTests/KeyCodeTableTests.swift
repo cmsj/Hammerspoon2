@@ -87,6 +87,17 @@ struct KeyCodeTableTests {
             #expect(french.keyCode(forName: "a") == kVK_ANSI_Q)
         }
 
+        @Test("Dead keys resolve to the key that types their accent")
+        func testDeadKeys() throws {
+            let french = try table(frenchLayout)
+            // French's ^ and ` keys start a composition rather than typing straight away
+            #expect(french.keyCode(forName: "^") == kVK_ANSI_LeftBracket)
+            #expect(french.name(forKeyCode: kVK_ANSI_LeftBracket) == "^")
+            #expect(french.keyCode(forName: "`") == kVK_ANSI_Backslash)
+            // ...and ` must not fall back to the US-ANSI grave key, which types < on French
+            #expect(french.name(forKeyCode: kVK_ANSI_Grave) == "<")
+        }
+
         @Test("Unknown names resolve to nil")
         func testUnknownName() throws {
             #expect(try table(usLayout).keyCode(forName: "notakey") == nil)

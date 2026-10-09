@@ -148,7 +148,9 @@ extension KeyCodeTable {
             // character (e.g. `^` on French) rather than starting a composition.
             let status = unsafe UCKeyTranslate(
                 layout, UInt16(keyCode), UInt16(kUCKeyActionDown), 0, keyboardType,
-                OptionBits(kUCKeyTranslateNoDeadKeysBit), &deadKeyState,
+                // The Mask, not the Bit: the Bit is the mask's bit position (0), so passing it
+                // would request no options at all, and dead keys would type nothing.
+                OptionBits(kUCKeyTranslateNoDeadKeysMask), &deadKeyState,
                 chars.count, &length, &chars
             )
             guard status == noErr, length > 0 else { continue }
