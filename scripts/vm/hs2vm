@@ -55,30 +55,31 @@ vm_exists() { tart list --quiet 2>/dev/null | grep -qx "$1"; }
 vm_running() { tart list 2>/dev/null | awk -v n="$1" '$2 == n && $NF == "running" { found = 1 } END { exit !found }'; }
 
 # Everything that builds into or reads from the shared DerivedData (build, test, install) holds
-# this lock, so concurrent hs2vm runs can't swap the products out from under each other. It's a
-# directory (mkdir is atomic) holding the owner's PID, so a lock left by a dead process is reclaimed.
-PRODUCTS_LOCK="$VM_ROOT/products.lock"
+# this lock, so concurrent hs2vm runs can't swap the products out from under each other. The lock
+# is a symlink whose target is the owner's PID: creating it is atomic and records the owner in the
+# same step, so there's never a lock without an owner, and one left by a dead process is reclaimed.
+# (A kernel flock would be inherited by long-lived children such as Xcode's build service.)
+PRODUCTS_LOCK="$VM_ROOT/products-lock"
 products_locked=0
 
 lock_products() {
     local waited=0 holder
     mkdir -p "$VM_ROOT"
-    until mkdir "$PRODUCTS_LOCK" 2>/dev/null; do
-        holder="$(cat "$PRODUCTS_LOCK/pid" 2>/dev/null || true)"
+    until ln -s "$$" "$PRODUCTS_LOCK" 2>/dev/null; do
+        holder="$(readlink "$PRODUCTS_LOCK" 2>/dev/null || true)"
         if [[ -n "$holder" ]] && ! kill -0 "$holder" 2>/dev/null; then
-            rm -rf "$PRODUCTS_LOCK"
+            rm -f "$PRODUCTS_LOCK"
             continue
         fi
         (( waited++ == 0 )) && log "waiting for another hs2vm to finish with the build products (pid ${holder:-?})"
         sleep 1
     done
-    echo $$ >"$PRODUCTS_LOCK/pid"
     products_locked=1
 }
 
 unlock_products() {
     (( products_locked )) || return 0
-    rm -rf "$PRODUCTS_LOCK"
+    rm -f "$PRODUCTS_LOCK"
     products_locked=0
 }
 
