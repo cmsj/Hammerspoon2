@@ -222,16 +222,18 @@ cmd_hs() {
     json="$(printf '%s' "$code" | python3 -c 'import json, sys; print(json.dumps(sys.stdin.read()))')"
     local key="k$$_${RANDOM}_${SECONDS}"
     local store="(globalThis.__hs2vmPending ??= Object.create(null))"
-    out="$(hs2_eval "$vm" "(() => { const v = (0, eval)($json); if (v && typeof v.then === 'function') { const s = $store; s.$key = null; v.then(r => { if ('$key' in s) s.$key = { value: r } }, e => { if ('$key' in s) s.$key = { error: e } }); return '__HS2VM_PENDING__' } return v })()")" || rc=$?
+    # Unique to this call, so no value a script returns can be mistaken for it.
+    local pending="__HS2VM_PENDING_${key}__"
+    out="$(hs2_eval "$vm" "(() => { const v = (0, eval)($json); if (v && typeof v.then === 'function') { const s = $store; s.$key = null; v.then(r => { if ('$key' in s) s.$key = { value: r } }, e => { if ('$key' in s) s.$key = { error: e } }); return '$pending' } return v })()")" || rc=$?
     local start=$SECONDS
-    while (( rc == 0 )) && [[ "$out" == "__HS2VM_PENDING__" ]]; do
+    while (( rc == 0 )) && [[ "$out" == "$pending" ]]; do
         if (( SECONDS - start > 120 )); then
             hs2_eval "$vm" "delete $store.$key" >/dev/null || true
             echo "hs2vm: Promise still pending after 120s" >&2
             return 1
         fi
         sleep 0.2
-        out="$(hs2_eval "$vm" "(() => { const s = $store, p = s.$key; if (p === null) return '__HS2VM_PENDING__'; delete s.$key; if (p && 'error' in p) throw p.error; return p ? p.value : undefined })()")" || rc=$?
+        out="$(hs2_eval "$vm" "(() => { const s = $store, p = s.$key; if (p === null) return '$pending'; delete s.$key; if (p && 'error' in p) throw p.error; return p ? p.value : undefined })()")" || rc=$?
     done
     if (( rc != 0 )); then
         printf '%s\n' "$out" >&2
@@ -240,14 +242,25 @@ cmd_hs() {
     printf '%s\n' "$out"
 }
 
-# hs2_eval <vm> <one line of JS>: prints hs2's output (minus its banner and colours) and returns
-# its exit status.
+# hs2_eval <vm> <one line of JS>: prints hs2's output and returns its exit status. Drops hs2's
+# "Connected to Hammerspoon 2" banner (only its first line, and only if it is the banner), and
+# strips colours only from failure output, since a successful value is printed verbatim.
 hs2_eval() {
-    local raw rc=0
+    local raw rc=0 first
     raw="$(printf '%s\n' "$2" | tart exec -i "$1" "$GUEST_APP/Contents/MacOS/hs2" --no-prompt 2>&1)" || rc=$?
-    printf '%s' "$raw" | sed -e $'s/\e\\[[0-9;]*m//g' | grep -v '^Connected to Hammerspoon 2$' || true
+    first="${raw%%$'\n'*}"
+    if [[ "$(printf '%s' "$first" | strip_colours)" == "Connected to Hammerspoon 2" ]]; then
+        if [[ "$raw" == "$first" ]]; then raw=""; else raw="${raw#*$'\n'}"; fi
+    fi
+    if (( rc != 0 )); then
+        printf '%s' "$raw" | strip_colours
+    else
+        printf '%s' "$raw"
+    fi
     return "$rc"
 }
+
+strip_colours() { sed -e $'s/\e\\[[0-9;]*m//g'; }
 
 # Builds the app and test bundle on the host: it needs no UI, and keeps incremental builds
 # fast. A separate DerivedData avoids fighting with the developer's own Xcode builds.
