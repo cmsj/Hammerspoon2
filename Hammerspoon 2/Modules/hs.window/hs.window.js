@@ -38,6 +38,12 @@ function screenFrameFor(win) {
     return screen ? screen.frame : null;
 }
 
+// Move and resize a window. HSWindow has no setFrame() method; its frame is a settable property.
+function setWindowFrame(win, x, y, w, h) {
+    win.frame = new HSRect(x, y, w, h);
+    return true;
+}
+
 /// Move a window to left half of screen
 /// Parameter win: An HSWindow object
 /// Returns: {boolean} True if the operation was successful, otherwise False
@@ -52,7 +58,7 @@ hs.window.moveToLeftHalf = function(win) {
         return false;
     }
 
-    return win.setFrame(screenFrame.x, screenFrame.y, Math.floor(screenFrame.w / 2), screenFrame.h);
+    return setWindowFrame(win, screenFrame.x, screenFrame.y, Math.floor(screenFrame.w / 2), screenFrame.h);
 };
 
 /// Move a window to right half of screen
@@ -70,7 +76,7 @@ hs.window.moveToRightHalf = function(win) {
     }
 
     const halfWidth = Math.floor(screenFrame.w / 2);
-    return win.setFrame(screenFrame.x + halfWidth, screenFrame.y, halfWidth, screenFrame.h);
+    return setWindowFrame(win, screenFrame.x + halfWidth, screenFrame.y, halfWidth, screenFrame.h);
 };
 
 /// Maximize a window
@@ -87,7 +93,7 @@ hs.window.maximize = function(win) {
         return false;
     }
 
-    return win.setFrame(screenFrame.x, screenFrame.y, screenFrame.w, screenFrame.h);
+    return setWindowFrame(win, screenFrame.x, screenFrame.y, screenFrame.w, screenFrame.h);
 };
 
 // Cycle through windows
@@ -132,7 +138,7 @@ hs.window.grid = {
         const w = cell.colSpan * cellWidth;
         const h = cell.rowSpan * cellHeight;
 
-        return win.setFrame(x, y, w, h);
+        return setWindowFrame(win, x, y, w, h);
     }
 };
 
@@ -157,7 +163,7 @@ hs.window.tiling = {
             return false;
         }
 
-        return win.setFrame(screenFrame.x, screenFrame.y, screenFrame.w, Math.floor(screenFrame.h / 2));
+        return setWindowFrame(win, screenFrame.x, screenFrame.y, screenFrame.w, Math.floor(screenFrame.h / 2));
     },
 
     bottom: function(win) {
@@ -172,7 +178,7 @@ hs.window.tiling = {
         }
 
         const halfHeight = Math.floor(screenFrame.h / 2);
-        return win.setFrame(screenFrame.x, screenFrame.y + halfHeight, screenFrame.w, halfHeight);
+        return setWindowFrame(win, screenFrame.x, screenFrame.y + halfHeight, screenFrame.w, halfHeight);
     },
 
     topLeft: function(win) {
@@ -186,7 +192,7 @@ hs.window.tiling = {
             return false;
         }
 
-        return win.setFrame(screenFrame.x, screenFrame.y, Math.floor(screenFrame.w / 2), Math.floor(screenFrame.h / 2));
+        return setWindowFrame(win, screenFrame.x, screenFrame.y, Math.floor(screenFrame.w / 2), Math.floor(screenFrame.h / 2));
     },
 
     topRight: function(win) {
@@ -201,7 +207,7 @@ hs.window.tiling = {
         }
 
         const halfWidth = Math.floor(screenFrame.w / 2);
-        return win.setFrame(screenFrame.x + halfWidth, screenFrame.y, halfWidth, Math.floor(screenFrame.h / 2));
+        return setWindowFrame(win, screenFrame.x + halfWidth, screenFrame.y, halfWidth, Math.floor(screenFrame.h / 2));
     },
 
     bottomLeft: function(win) {
@@ -216,7 +222,7 @@ hs.window.tiling = {
         }
 
         const halfHeight = Math.floor(screenFrame.h / 2);
-        return win.setFrame(screenFrame.x, screenFrame.y + halfHeight, Math.floor(screenFrame.w / 2), halfHeight);
+        return setWindowFrame(win, screenFrame.x, screenFrame.y + halfHeight, Math.floor(screenFrame.w / 2), halfHeight);
     },
 
     bottomRight: function(win) {
@@ -232,6 +238,6 @@ hs.window.tiling = {
 
         const halfWidth = Math.floor(screenFrame.w / 2);
         const halfHeight = Math.floor(screenFrame.h / 2);
-        return win.setFrame(screenFrame.x + halfWidth, screenFrame.y + halfHeight, halfWidth, halfHeight);
+        return setWindowFrame(win, screenFrame.x + halfWidth, screenFrame.y + halfHeight, halfWidth, halfHeight);
     }
 };
