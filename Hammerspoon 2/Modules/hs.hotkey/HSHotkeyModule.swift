@@ -136,6 +136,11 @@ import Carbon
     /// Hammerspoon v1. Setting this back to true moves existing hotkeys to the current layout.
     /// If the new layout doesn't type a hotkey's character and the character has no US-ANSI
     /// position either, the hotkey stays where it is and a warning is logged.
+    ///
+    /// Avoid binding some hotkeys by key name and others by numeric key code with the same
+    /// modifiers if you switch layouts. A hotkey that moves onto a key code another hotkey already
+    /// holds can't be registered there, so it's disabled with an error logged, and it stays
+    /// disabled until you call its `enable()` again, even after switching back.
     /// - Example:
     /// ```js
     /// // Keep hotkeys on fixed physical keys, whatever layout is active
@@ -437,7 +442,7 @@ import Carbon
 
         for (hotkey, wasEnabled) in moved where wasEnabled {
             if !hotkey.enable() {
-                AKError("hs.hotkey: \(hotkey.keyArgument.logDescription) is now disabled: it couldn't be registered on key code \(hotkey.keyCode) after the keyboard layout changed")
+                AKError("hs.hotkey: \(hotkey.keyArgument.logDescription) is now disabled: it couldn't be registered on key code \(hotkey.keyCode) after the keyboard layout changed (is another hotkey with the same modifiers bound to that key code?)")
             }
         }
     }

@@ -433,6 +433,10 @@ import AppKit
     /// When false, a hotkey stays on whichever key its name resolved to when it was bound.
     /// Setting this back to true moves existing hotkeys to the current layout. This is separate
     /// from `hs.hotkey.followsKeyboardLayout`, which controls `hs.hotkey` hotkeys.
+    ///
+    /// Avoid binding some hotkeys by key name and others by numeric key code with the same
+    /// modifiers if you switch layouts. If a hotkey moves onto a key code another hotkey already
+    /// matches, only the one that was enabled first fires.
     /// - Example:
     /// ```js
     /// // Keep event tap hotkeys on fixed physical keys, whatever layout is active
