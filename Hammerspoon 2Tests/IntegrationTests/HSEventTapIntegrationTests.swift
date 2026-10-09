@@ -6,6 +6,7 @@
 import Testing
 import JavaScriptCore
 import ApplicationServices
+import Carbon
 @testable import Hammerspoon_2
 
 @Suite("hs.eventtap tests")
@@ -1006,6 +1007,81 @@ struct HSEventTapTests {
 
                 harness.eval("hs.eventtap.removeHotkey(hk)")
             }
+            #expect(!harness.hasException)
+        }
+
+        /// Sends a synthetic key event through the module's hotkey dispatcher, returning true if
+        /// a hotkey consumed it.
+        private func dispatch(_ module: HSEventTapModule, _ type: CGEventType, keyCode: CGKeyCode,
+                              flags: CGEventFlags) throws -> Bool {
+            let source = CGEventSource(stateID: .privateState)
+            let event = try #require(CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: type == .keyDown))
+            event.flags = flags
+            return module.dispatchKeyEvent(type: type, event: event) == nil
+        }
+
+        @Test("a hotkey that moves while its key is held still gets that key's release")
+        func testReleaseAfterMoveWhileHeld() throws {
+            let us = try layoutTable("com.apple.keylayout.US")
+            let dvorak = try layoutTable("com.apple.keylayout.Dvorak")
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            try withLayout(us) { () throws in
+                // "," moves onto the key "w" leaves (code 13), so it must not get w's release
+                harness.eval("""
+                    var wPressed = 0, wReleased = 0, commaReleased = 0
+                    var w = hs.eventtap.bindHotkey(['cmd'], 'w', () => wPressed++, () => wReleased++)
+                    var comma = hs.eventtap.bindHotkey(['cmd'], ',', null, () => commaReleased++)
+                """)
+
+                #expect(try dispatch(module, .keyDown, keyCode: 13, flags: .maskCommand))
+                KeyboardLayout.shared.replace(with: dvorak)
+                #expect(try dispatch(module, .keyUp, keyCode: 13, flags: .maskCommand))
+
+                #expect(harness.evalInt("wPressed") == 1)
+                #expect(harness.evalInt("wReleased") == 1)
+                #expect(harness.evalInt("commaReleased") == 0)
+
+                harness.eval("hs.eventtap.removeHotkey(w); hs.eventtap.removeHotkey(comma)")
+            }
+            #expect(!harness.hasException)
+        }
+
+        @Test("a held hotkey gets its release even if a modifier was let go first")
+        func testReleaseAfterModifierLetGo() throws {
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            harness.eval("""
+                var released = 0
+                var hk = hs.eventtap.bindHotkey(['cmd'], 'f13', null, () => released++)
+            """)
+
+            #expect(try dispatch(module, .keyDown, keyCode: CGKeyCode(kVK_F13), flags: .maskCommand))
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_F13), flags: []))
+            #expect(harness.evalInt("released") == 1)
+
+            // Once released, the same key-up no longer belongs to the hotkey
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_F13), flags: []) == false)
+
+            harness.eval("hs.eventtap.removeHotkey(hk)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a hotkey disabled while its key is held lets the release through")
+        func testReleaseAfterDisableWhileHeld() throws {
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            harness.eval("""
+                var released = 0
+                var hk = hs.eventtap.bindHotkey(['cmd'], 'f13', null, () => released++)
+            """)
+
+            #expect(try dispatch(module, .keyDown, keyCode: CGKeyCode(kVK_F13), flags: .maskCommand))
+            harness.eval("hk.disable()")
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_F13), flags: .maskCommand) == false)
+            #expect(harness.evalInt("released") == 0)
+
+            harness.eval("hs.eventtap.removeHotkey(hk)")
             #expect(!harness.hasException)
         }
 

@@ -457,6 +457,10 @@ import AppKit
     // enabledTapHotkeys (strong) so their weak entries here remain valid until disabled.
     private var allTapHotkeys = HSWeakObjectSet<HSEventTapHotkey>()
     private var enabledTapHotkeys: [HSEventTapHotkey] = []
+    // The hotkey that consumed each currently held key's press, keyed by the key code the event
+    // reported. The key-up goes to that hotkey even if its key code or the modifiers have changed
+    // since (e.g. the keyboard layout switched while the key was held).
+    private var heldTapHotkeys: [Int64: HSEventTapHotkey] = [:]
     private var dispatchTap: HSEventTap?
 
     @objc var followsKeyboardLayout: Bool = true {
@@ -496,6 +500,7 @@ import AppKit
         taps.removeAll()
 
         enabledTapHotkeys.removeAll()
+        heldTapHotkeys.removeAll()
         for hotkey in allTapHotkeys.allObjects { hotkey.destroy() }
         allTapHotkeys.removeAllObjects()
 
@@ -926,6 +931,7 @@ import AppKit
 
     func tapHotkeyDidDisable(_ hotkey: HSEventTapHotkey) {
         enabledTapHotkeys.removeAll { $0 === hotkey }
+        heldTapHotkeys = heldTapHotkeys.filter { $0.value !== hotkey }
         if enabledTapHotkeys.isEmpty {
             dispatchTap?.stop()
         }
@@ -957,13 +963,24 @@ import AppKit
     }
 
     /// Iterate enabled hotkeys and fire the first match, consuming the event.
-    private func dispatchKeyEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
+    /// Internal rather than private so tests can feed it synthetic events.
+    func dispatchKeyEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
         let eventKeyCode  = event.getIntegerValueField(.keyboardEventKeycode)
+
+        // A release belongs to whichever hotkey consumed the press, whatever it matches now.
+        if type == .keyUp, let hotkey = heldTapHotkeys.removeValue(forKey: eventKeyCode) {
+            hotkey.trigger(type: type)
+            return nil  // consume the event
+        }
+
         let eventFlags    = event.flags
         let maskedFlags   = eventFlags.intersection(HSEventTapHotkey.significantModifiers)
         let rawFlagsValue = eventFlags.rawValue
         for hotkey in enabledTapHotkeys {
             if hotkey.matches(keyCode: eventKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
+                if type == .keyDown {
+                    heldTapHotkeys[eventKeyCode] = hotkey
+                }
                 hotkey.trigger(type: type)
                 return nil  // consume the event
             }
