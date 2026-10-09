@@ -47,6 +47,14 @@ import JavaScriptCore
 /// ```bash
 /// hs2 --log-level info
 /// ```
+///
+/// JavaScript can also be piped or redirected into `hs2`, one statement per line. When it
+/// isn't running interactively, `hs2` exits with status 65 if any of the lines threw an
+/// error, and 1 if it couldn't reach Hammerspoon 2 at all:
+/// ```bash
+/// echo 'hs.reload()' | hs2 --no-prompt || echo "failed with status $?"
+/// hs2 --no-prompt < script.js
+/// ```
 @objc protocol HSIPCModuleAPI: JSExport {
 
     /// Whether Hammerspoon 2 is currently connected to the IPC broker, and so can receive commands from `hs2`.

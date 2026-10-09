@@ -86,6 +86,15 @@ private nonisolated func handleBrokerMessage(_ message: HSIPCBrokerToClient) -> 
     return nil
 }
 
+/// The result of evaluating one line of JavaScript in Hammerspoon 2.
+private nonisolated enum EvaluationOutcome: Sendable {
+    case value(String)
+    /// The JavaScript threw; the payload is the error's string form.
+    case javaScriptError(String)
+    /// The evaluation never got a reply from Hammerspoon 2.
+    case transportError(String)
+}
+
 private nonisolated final class HSIPCClient: Sendable {
     private let session: XPCSession
     // Set before a deliberate disconnect, so it isn't reported as a lost connection.
@@ -124,20 +133,19 @@ private nonisolated final class HSIPCClient: Sendable {
         }
     }
 
-    // Evaluate JS and return (result, isError).
-    func eval(code: String) async -> (String, Bool) {
+    func eval(code: String) async -> EvaluationOutcome {
         await withCheckedContinuation { continuation in
             do {
                 try session.send(HSIPCClientToBroker.evaluate(code: code)) { (result: Result<HSIPCEvaluationReply, any Error>) in
                     switch result {
                     case .success(let reply):
-                        continuation.resume(returning: (reply.result, reply.isError))
+                        continuation.resume(returning: reply.isError ? .javaScriptError(reply.result) : .value(reply.result))
                     case .failure(let error):
-                        continuation.resume(returning: ("XPC error: \(error)", true))
+                        continuation.resume(returning: .transportError("XPC error: \(error)"))
                     }
                 }
             } catch {
-                continuation.resume(returning: ("XPC error: \(error)", true))
+                continuation.resume(returning: .transportError("XPC error: \(error)"))
             }
         }
     }
@@ -172,11 +180,27 @@ if helpFlag.wasSet {
       From the Hammerspoon 2 JavaScript console:
         hs.ipc.installBinary()              // installs to /usr/local/bin/hs2
         hs.ipc.installBinary("/opt/homebrew/bin")
+
+    EXIT STATUS
+      0   Success. Always the case for an interactive session.
+      1   hs2 couldn't run, or couldn't reach Hammerspoon 2.
+      65  JavaScript read from a pipe or file threw an error. Every line is still
+          evaluated; the status reflects whether any of them threw.
     """)
     exit(0)
 }
 
 private let showPrompt = !noPromptFlag.wasSet
+
+/// Whether a person is typing at hs2. When JavaScript arrives on a pipe or from a redirected file
+/// instead, errors are reflected in the exit status so scripts can detect them.
+private let isInteractive = isatty(STDIN_FILENO) != 0
+
+/// Exit status when non-interactive input contained JavaScript that threw (EX_DATAERR in
+/// sysexits.h). Distinct from 1, which means hs2 couldn't run or reach Hammerspoon 2 at all.
+private let exitStatusJavaScriptError: Int32 = 65
+
+private var sawJavaScriptError = false
 
 private let minLogLevel: Int = {
     guard let str = logLevelFlag.value else { return Int.max }
@@ -254,8 +278,7 @@ if let lr = lineReader, let table = completionTable {
         let sem = DispatchSemaphore(value: 0)
         let box = ResultBox<String>()
         Task.detached {
-            let (r, isError) = await client.eval(code: code)
-            if !isError { unsafe box.value = r }
+            if case .value(let r) = await client.eval(code: code) { unsafe box.value = r }
             sem.signal()
         }
         _ = sem.wait(timeout: .now() + 0.3)
@@ -301,11 +324,23 @@ while true {
 
     lineReader?.addHistory(code)
 
-    let (result, isError) = await client.eval(code: code)
-
-    if isError {
-        print(TextProperties(.red, nil).apply(to: result))
-    } else if result != "undefined" {
-        print(result)
+    switch await client.eval(code: code) {
+    case .value(let result):
+        if result != "undefined" { print(result) }
+    case .javaScriptError(let message):
+        print(TextProperties(.red, nil).apply(to: message))
+        sawJavaScriptError = true
+    case .transportError(let message):
+        if isInteractive {
+            print(TextProperties(.red, nil).apply(to: message))
+        } else {
+            // Later lines can't be evaluated either, so stop rather than report each one.
+            writeStderr("Error: \(message)\n")
+            exit(1)
+        }
     }
+}
+
+if !isInteractive && sawJavaScriptError {
+    exit(exitStatusJavaScriptError)
 }
