@@ -172,15 +172,23 @@ cmd_hs() {
     if [[ $# -ge 2 ]]; then code="$2"; else code="$(cat)"; fi
     # hs2 evaluates one line at a time, so send the script as one indirect eval of a JSON string:
     # multi-line code works, runs in global scope, and yields its last value. hs2 doesn't await
-    # Promises, so a Promise result is parked in a global and polled for; a rejection is rethrown
-    # by the poll so that hs2 reports it like any other error.
+    # Promises, so a Promise's outcome is parked in a shared store under a key unique to this call
+    # and polled for; a rejection is rethrown by the poll so that hs2 reports it like any other
+    # error. The key is deleted once read (or on timeout), so a late outcome from an abandoned or
+    # concurrent call can never be picked up by another one.
     json="$(printf '%s' "$code" | python3 -c 'import json, sys; print(json.dumps(sys.stdin.read()))')"
-    out="$(hs2_eval "$vm" "(() => { const v = (0, eval)($json); if (v && typeof v.then === 'function') { globalThis.__hs2vmPending = undefined; v.then(r => { globalThis.__hs2vmPending = { value: r } }, e => { globalThis.__hs2vmPending = { error: e } }); return '__HS2VM_PENDING__' } return v })()")" || rc=$?
+    local key="k$$_${RANDOM}_${SECONDS}"
+    local store="(globalThis.__hs2vmPending ??= Object.create(null))"
+    out="$(hs2_eval "$vm" "(() => { const v = (0, eval)($json); if (v && typeof v.then === 'function') { const s = $store; s.$key = null; v.then(r => { if ('$key' in s) s.$key = { value: r } }, e => { if ('$key' in s) s.$key = { error: e } }); return '__HS2VM_PENDING__' } return v })()")" || rc=$?
     local start=$SECONDS
     while (( rc == 0 )) && [[ "$out" == "__HS2VM_PENDING__" ]]; do
-        (( SECONDS - start > 120 )) && { echo "hs2vm: Promise still pending after 120s" >&2; return 1; }
+        if (( SECONDS - start > 120 )); then
+            hs2_eval "$vm" "delete $store.$key" >/dev/null || true
+            echo "hs2vm: Promise still pending after 120s" >&2
+            return 1
+        fi
         sleep 0.2
-        out="$(hs2_eval "$vm" "(() => { const p = globalThis.__hs2vmPending; if (!p) return '__HS2VM_PENDING__'; if ('error' in p) throw p.error; return p.value })()")" || rc=$?
+        out="$(hs2_eval "$vm" "(() => { const s = $store, p = s.$key; if (p === null) return '__HS2VM_PENDING__'; delete s.$key; if (p && 'error' in p) throw p.error; return p ? p.value : undefined })()")" || rc=$?
     done
     if (( rc != 0 )); then
         printf '%s\n' "$out" >&2
