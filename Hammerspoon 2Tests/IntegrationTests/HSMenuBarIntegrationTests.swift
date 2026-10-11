@@ -190,7 +190,7 @@ struct HSMenuBarTests {
                 item.setMenu((modifiers) => { received = modifiers; return [{ title: 'A' }, { title: 'B' }] })
             """)
             let item = try #require(harness.evalValue("item")?.toObjectOf(HSMenuBarItem.self) as? HSMenuBarItem)
-            let menu = NSMenu()
+            let menu = try #require(item.attachedMenu)
             item.populateDynamicMenu(menu)
             #expect(menu.items.map(\.title) == ["A", "B"])
             harness.expectTrue("Array.isArray(received)")
@@ -295,7 +295,7 @@ struct HSMenuBarTests {
                 #expect(item.attachedMenu == nil)
             case "dynamic":
                 harness.eval("item.setMenu(entries)")
-                item.populateDynamicMenu(NSMenu())
+                item.populateDynamicMenu(try #require(item.attachedMenu))
             default:
                 #expect(item.makePopUpMenu(from: try #require(harness.evalValue("entries()"))) == nil)
             }
@@ -319,6 +319,30 @@ struct HSMenuBarTests {
             #expect(menu.items.map(\.title) == ["Outer"])
             choose(0, in: menu)
             #expect(harness.evalString("chosen.join(',')") == "outer")
+        }
+
+        @Test("A menu set from inside a dynamic menu function replaces it, and its functions work")
+        func testSetMenuFromDynamicMenuFunction() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var chosen = []
+                var item = hs.menubar.create(true)
+                item.setMenu(() => {
+                    item.setMenu([{ title: 'Replacement', fn: () => chosen.push('replacement') }])
+                    return [{ title: 'Old', fn: () => chosen.push('old') }]
+                })
+            """)
+            let item = try item(in: harness)
+            defer { item.destroy() }
+            let oldMenu = try #require(item.attachedMenu)
+            item.populateDynamicMenu(oldMenu)
+
+            let replacement = try #require(item.attachedMenu)
+            #expect(replacement !== oldMenu)
+            #expect(replacement.items.map(\.title) == ["Replacement"])
+            choose(0, in: replacement)
+            #expect(harness.evalString("chosen.join(',')") == "replacement")
+            #expect(!harness.hasException)
         }
     }
 
@@ -440,7 +464,9 @@ struct HSMenuBarTests {
                 var popUpEntries = [{ title: 'Pop-up leak test', fn: function() {} }]
             """)
             if let obj = harness.evalValue("item")?.toObjectOf(HSMenuBarItem.self) as? HSMenuBarItem {
-                obj.populateDynamicMenu(NSMenu())
+                if let menu = obj.attachedMenu {
+                    obj.populateDynamicMenu(menu)
+                }
                 if let entries = harness.evalValue("popUpEntries") {
                     _ = obj.makePopUpMenu(from: entries)
                 }

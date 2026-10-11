@@ -442,6 +442,13 @@ import JavaScriptCore
 
         var handlers: [MenuItemHandler] = []
         let items = buildNSMenuItems(from: result, handlers: &handlers)
+        // The menu function, or an entry's properties, may have replaced this menu with setMenu() or destroyed
+        // the item. Either way this menu is no longer attached, and menuItemHandlers belongs to whatever is.
+        guard statusItem?.menu === menu else {
+            var orphaned = handlers
+            detach(&orphaned)
+            return
+        }
         guard store(handlers, in: &menuItemHandlers) else { return }
         for item in items {
             menu.addItem(item)
