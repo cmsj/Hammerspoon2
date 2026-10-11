@@ -1013,11 +1013,63 @@ struct HSEventTapTests {
         /// Sends a synthetic key event through the module's hotkey dispatcher, returning true if
         /// a hotkey consumed it.
         private func dispatch(_ module: HSEventTapModule, _ type: CGEventType, keyCode: CGKeyCode,
-                              flags: CGEventFlags) throws -> Bool {
+                              flags: CGEventFlags, isRepeat: Bool = false) throws -> Bool {
             let source = CGEventSource(stateID: .privateState)
             let event = try #require(CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: type == .keyDown))
             event.flags = flags
+            if isRepeat {
+                event.setIntegerValueField(.keyboardEventAutorepeat, value: 1)
+            }
             return module.dispatchKeyEvent(type: type, event: event) == nil
+        }
+
+        @Test("letting go of a modifier while the key repeats releases the hotkey and hands the key to the app")
+        func testRepeatAfterModifierLetGo() throws {
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            harness.eval("""
+                var pressed = 0, released = 0
+                var hk = hs.eventtap.bindHotkey(['ctrl'], 'right', () => pressed++, () => released++)
+            """)
+            let right = CGKeyCode(kVK_RightArrow)
+
+            // Ctrl-Right pressed and repeating: all the hotkey's
+            #expect(try dispatch(module, .keyDown, keyCode: right, flags: .maskControl))
+            #expect(try dispatch(module, .keyDown, keyCode: right, flags: .maskControl, isRepeat: true))
+            #expect(harness.evalInt("pressed") == 2)
+
+            // Ctrl let go while Right keeps repeating: the hotkey is released, and the repeats and
+            // the final release all pass through, so the app sees them together
+            #expect(try dispatch(module, .keyDown, keyCode: right, flags: [], isRepeat: true) == false)
+            #expect(harness.evalInt("released") == 1)
+            #expect(try dispatch(module, .keyDown, keyCode: right, flags: [], isRepeat: true) == false)
+            #expect(try dispatch(module, .keyUp, keyCode: right, flags: []) == false)
+            #expect(harness.evalInt("pressed") == 2)
+            #expect(harness.evalInt("released") == 1)
+
+            harness.eval("hs.eventtap.removeHotkey(hk)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("a repeat can't start a hotkey, even if the combination is held again")
+        func testRepeatDoesNotStartHotkey() throws {
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            harness.eval("""
+                var pressed = 0, released = 0
+                var hk = hs.eventtap.bindHotkey(['ctrl'], 'right', () => pressed++, () => released++)
+            """)
+            let right = CGKeyCode(kVK_RightArrow)
+
+            // Right was pressed alone (the app has it), then Ctrl went down while it repeats
+            #expect(try dispatch(module, .keyDown, keyCode: right, flags: []) == false)
+            #expect(try dispatch(module, .keyDown, keyCode: right, flags: .maskControl, isRepeat: true) == false)
+            #expect(try dispatch(module, .keyUp, keyCode: right, flags: .maskControl) == false)
+            #expect(harness.evalInt("pressed") == 0)
+            #expect(harness.evalInt("released") == 0)
+
+            harness.eval("hs.eventtap.removeHotkey(hk)")
+            #expect(!harness.hasException)
         }
 
         @Test("a hotkey that moves while its key is held still gets that key's release")

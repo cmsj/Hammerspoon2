@@ -396,8 +396,11 @@ import AppKit
     ///   - key: {string | number} A key name or character (e.g., "a", "space", "f1"), resolved through the
     ///     current keyboard layout (see `hs.eventtap.followsKeyboardLayout`), or a numeric virtual key code,
     ///     which always means the same physical key
-    ///   - onPressed: {(() => void) | null} Called when the key combination is pressed, or null
-    ///   - onReleased: {(() => void) | null} Called when the key combination is released, or null
+    ///   - onPressed: {(() => void) | null} Called when the key combination is pressed, and again for
+    ///     each key repeat while the whole combination stays held, or null
+    ///   - onReleased: {(() => void) | null} Called when the key is released, or as soon as a key
+    ///     repeat shows the combination is no longer held (e.g. a modifier was let go first), or null.
+    ///     After that, the key's remaining repeats and its release pass through as normal.
     /// - Returns: An `HSEventTapHotkey` object, or null if binding failed
     /// - Example:
     /// ```js
@@ -966,27 +969,51 @@ import AppKit
         return dispatchTap.isCreated()
     }
 
-    /// Iterate enabled hotkeys and fire the first match, consuming the event.
+    /// Fires and consumes the events that belong to a hotkey; passes everything else through.
+    ///
+    /// A hotkey owns a key from the initial (non-repeat) press that matches it, until either the
+    /// key is released or the combination stops being held (e.g. a modifier is let go while the
+    /// key repeats). Each key's press, repeats and release therefore go either all to the hotkey
+    /// or all to the app, so an app never sees a press without its release, or vice versa.
+    ///
     /// Internal rather than private so tests can feed it synthetic events.
     func dispatchKeyEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
         let eventKeyCode  = event.getIntegerValueField(.keyboardEventKeycode)
-
-        // A release belongs to whichever hotkey consumed the press, whatever it matches now.
-        if type == .keyUp, let hotkey = heldTapHotkeys.removeValue(forKey: eventKeyCode) {
-            hotkey.trigger(type: type)
-            return nil  // consume the event
-        }
-
         let eventFlags    = event.flags
         let maskedFlags   = eventFlags.intersection(HSEventTapHotkey.significantModifiers)
         let rawFlagsValue = eventFlags.rawValue
+
+        if let hotkey = heldTapHotkeys[eventKeyCode] {
+            if type == .keyUp {
+                // The release belongs to the hotkey that took the press, whatever it matches now
+                // (the layout may have moved it, or a modifier may already be up).
+                heldTapHotkeys.removeValue(forKey: eventKeyCode)
+                hotkey.trigger(type: .keyUp)
+                return nil
+            }
+            // A repeat. Compare against the hotkey's own key code rather than the event's, so a
+            // layout change mid-press doesn't count as the combination being let go.
+            if hotkey.matches(keyCode: hotkey.cachedKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
+                hotkey.trigger(type: .keyDown)
+                return nil
+            }
+            // The combination is no longer held: the hotkey is released, and the rest of this
+            // key's events, including its eventual release, go to the app.
+            heldTapHotkeys.removeValue(forKey: eventKeyCode)
+            hotkey.trigger(type: .keyUp)
+            return event
+        }
+
+        // Only an initial press can start a hotkey. Repeats and releases of keys no hotkey owns
+        // belong to the app, which saw their press.
+        guard type == .keyDown, event.getIntegerValueField(.keyboardEventAutorepeat) == 0 else {
+            return event
+        }
         for hotkey in enabledTapHotkeys {
             if hotkey.matches(keyCode: eventKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
-                if type == .keyDown {
-                    heldTapHotkeys[eventKeyCode] = hotkey
-                }
-                hotkey.trigger(type: type)
-                return nil  // consume the event
+                heldTapHotkeys[eventKeyCode] = hotkey
+                hotkey.trigger(type: .keyDown)
+                return nil
             }
         }
         return event  // no match — pass through
