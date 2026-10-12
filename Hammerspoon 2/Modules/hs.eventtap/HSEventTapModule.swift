@@ -77,6 +77,20 @@ import AppKit
     /// ```
     @objc var modifierFlags: [String: Int] { get }
 
+    /// A dictionary mapping system key names to their numeric codes, for use with
+    /// `makeSystemKeyEvent()` and `systemKeyStroke()`.
+    ///
+    /// System keys are the media, volume, brightness and other special keys that macOS delivers as
+    /// `systemDefined` events rather than ordinary key events: `SOUND_UP`, `SOUND_DOWN`, `MUTE`,
+    /// `BRIGHTNESS_UP`, `BRIGHTNESS_DOWN`, `CONTRAST_UP`, `CONTRAST_DOWN`, `POWER`, `LAUNCH_PANEL`,
+    /// `VIDMIRROR`, `PLAY`, `EJECT`, `NEXT`, `PREVIOUS`, `FAST`, `REWIND`, `ILLUMINATION_UP`,
+    /// `ILLUMINATION_DOWN`, `ILLUMINATION_TOGGLE`, `CAPS_LOCK`, `HELP` and `NUM_LOCK`.
+    /// - Example:
+    /// ```js
+    /// console.log("PLAY has code " + hs.eventtap.systemKeys.PLAY)
+    /// ```
+    @objc var systemKeys: [String: Int] { get }
+
     /// Return this from an event tap callback to suppress the event (prevent other apps from receiving it).
     /// - Example:
     /// ```js
@@ -208,6 +222,24 @@ import AppKit
     /// ```
     @objc func makeScrollWheelEvent(_ deltaX: Double, _ deltaY: Double, _ x: Double, _ y: Double) -> HSEventTapEvent?
 
+    /// Create a system key event, such as a media, volume or brightness key.
+    ///
+    /// Posting these behaves like pressing the key on an Apple keyboard, so media keys are routed
+    /// to whichever app macOS considers to be playing (including audio in a browser tab).
+    /// Synthetic brightness keys are ignored by some Macs and external displays; use `hs.screen`
+    /// to set brightness directly if they have no effect.
+    ///
+    /// - Parameters:
+    ///   - key: A system key name from `hs.eventtap.systemKeys` (e.g. "PLAY", "SOUND_UP"), case-insensitive
+    ///   - isDown: true for key down, false for key up
+    /// - Returns: An HSEventTapEvent, or null if the key name is unknown
+    /// - Example:
+    /// ```js
+    /// hs.eventtap.makeSystemKeyEvent("PLAY", true).post()
+    /// hs.eventtap.makeSystemKeyEvent("PLAY", false).post()
+    /// ```
+    @objc func makeSystemKeyEvent(_ key: String, _ isDown: Bool) -> HSEventTapEvent?
+
     // MARK: Convenience senders
 
     /// Send a key down and key up event with optional modifier keys.
@@ -254,6 +286,21 @@ import AppKit
     /// console.log("Finished typing")
     /// ```
     @objc func keyStrokesAsync(_ text: String) -> JSPromise?
+
+    /// Press and release a system key, such as a media, volume or brightness key.
+    ///
+    /// A 5 ms pause is inserted between the key-down and key-up events. See
+    /// `makeSystemKeyEvent()` for details of how these keys behave.
+    ///
+    /// Be careful with `POWER` and `EJECT`, which can show a shutdown prompt or eject media.
+    ///
+    /// - Parameter key: A system key name from `hs.eventtap.systemKeys` (e.g. "PLAY", "NEXT"), case-insensitive
+    /// - Example:
+    /// ```js
+    /// hs.eventtap.systemKeyStroke("PLAY")       // Play/pause whatever is playing
+    /// hs.eventtap.systemKeyStroke("SOUND_UP")   // Raise the volume, showing the system HUD
+    /// ```
+    @objc func systemKeyStroke(_ key: String)
 
     /// Post a left mouse button click at the given position.
     ///
@@ -550,6 +597,9 @@ import AppKit
         "otherMouseDown": Int(CGEventType.otherMouseDown.rawValue),
         "otherMouseUp": Int(CGEventType.otherMouseUp.rawValue),
         "otherMouseDragged": Int(CGEventType.otherMouseDragged.rawValue),
+        // Media, volume, brightness and other special keys (see systemKeys). CGEventType has no
+        // case for this, but CGEventTaps deliver it all the same.
+        "systemDefined": Int(NSEvent.EventType.systemDefined.rawValue),
     ]
 
     // Device-independent masks (high word of CGEventFlags.rawValue)
@@ -582,6 +632,10 @@ import AppKit
 
     @objc var modifierFlags: [String: Int] {
         return _modifierFlags
+    }
+
+    @objc var systemKeys: [String: Int] {
+        return SystemKey.codes
     }
 
     @objc var consume: Bool { false }
@@ -663,6 +717,24 @@ import AppKit
         return HSEventTapEvent(cgEvent: event)
     }
 
+    @objc func makeSystemKeyEvent(_ key: String, _ isDown: Bool) -> HSEventTapEvent? {
+        guard let code = resolveSystemKeyCode(key, caller: "makeSystemKeyEvent") else { return nil }
+        guard let event = SystemKey.makeEvent(code: code, isDown: isDown) else {
+            AKError("hs.eventtap.makeSystemKeyEvent: Failed to create event for \(key)")
+            return nil
+        }
+        return HSEventTapEvent(cgEvent: event)
+    }
+
+    /// Looks up a system key name, logging an error naming the caller if it isn't a known key.
+    private func resolveSystemKeyCode(_ key: String, caller: String) -> Int? {
+        guard let code = SystemKey.code(named: key) else {
+            AKError("hs.eventtap.\(caller): Unknown system key '\(key)'")
+            return nil
+        }
+        return code
+    }
+
     /// Resolves a JS key argument (a name/character or a numeric key code) through the current
     /// keyboard layout, logging an error naming the caller if it isn't a known key.
     private func resolveKeyCode(_ key: Any?, caller: String) -> CGKeyCode? {
@@ -699,6 +771,18 @@ import AppKit
             upEvent.flags = flags
             upEvent.post(tap: .cghidEventTap)
         }
+    }
+
+    @objc func systemKeyStroke(_ key: String) {
+        guard let code = resolveSystemKeyCode(key, caller: "systemKeyStroke") else { return }
+        guard let downEvent = SystemKey.makeEvent(code: code, isDown: true),
+              let upEvent = SystemKey.makeEvent(code: code, isDown: false) else {
+            AKError("hs.eventtap.systemKeyStroke: Failed to create events for \(key)")
+            return
+        }
+        downEvent.post(tap: .cghidEventTap)
+        usleep(5000)
+        upEvent.post(tap: .cghidEventTap)
     }
 
     @objc func keyStrokes(_ text: String) {

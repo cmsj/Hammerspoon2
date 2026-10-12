@@ -219,7 +219,10 @@ per-row `contextMenu`. Check the styling-property list before assuming appearanc
 
 **`hs.eventtap`** — `hs.eventtap.event` folded directly into `hs.eventtap` (build events with
 `hs.eventtap.makeKeyEvent()` instead of `hs.eventtap.event.newKeyEvent()`; `.post()` is
-unchanged). The tap/watcher pattern also changed shape: `hs.eventtap.addWatcher(types, callback,
+unchanged). Media/volume/brightness keys likewise use `hs.eventtap.makeSystemKeyEvent(key,
+isDown)` in place of `hs.eventtap.event.newSystemKeyEvent()` (same key names, e.g. `"PLAY"`), or
+`hs.eventtap.systemKeyStroke(key)` to press and release one; v1's `event:systemKey()` is now the
+`event.systemKey` property, with `isDown`/`isRepeat` in place of `down`/`repeat`. The tap/watcher pattern also changed shape: `hs.eventtap.addWatcher(types, callback,
 listenOnly)` takes an array of event types from `hs.eventtap.eventTypes`, the callback, and an
 optional listen-only flag, returning a watcher you still need to call `.start()` on. For a
 modify tap (`listenOnly` omitted/`false`) the callback's return value does the consuming —

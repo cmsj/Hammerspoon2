@@ -213,6 +213,26 @@ struct HSEventTapTests {
             #expect(makeHarness().evalTypeOf("hs.eventtap.keyRepeatInterval") == "function")
         }
 
+        @Test("makeSystemKeyEvent is a function")
+        func testMakeSystemKeyEventIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.eventtap.makeSystemKeyEvent") == "function")
+        }
+
+        @Test("systemKeyStroke is a function")
+        func testSystemKeyStrokeIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.eventtap.systemKeyStroke") == "function")
+        }
+
+        @Test("systemKeys is an object")
+        func testSystemKeysIsObject() {
+            #expect(makeHarness().evalTypeOf("hs.eventtap.systemKeys") == "object")
+        }
+
+        @Test("eventTypes.systemDefined is the NX_SYSDEFINED type")
+        func testEventTypesSystemDefined() {
+            #expect(makeHarness().evalInt("hs.eventtap.eventTypes.systemDefined") == 14)
+        }
+
         // MARK: Event object API
 
         @Test("event.post is a function")
@@ -532,6 +552,81 @@ struct HSEventTapTests {
             let eventType = try #require(harness.evalInt("evt.type"))
             let scrollWheelType = try #require(harness.evalInt("hs.eventtap.eventTypes.scrollWheel"))
             #expect(eventType == scrollWheelType)
+            #expect(!harness.hasException)
+        }
+
+        // MARK: System keys
+        //
+        // These only build and decode events - posting them would play/pause media or change the
+        // volume on the machine running the tests.
+
+        @Test("systemKeys maps v1 key names to their NX_KEYTYPE codes")
+        func testSystemKeysCodes() {
+            let harness = makeHarness()
+            #expect(harness.evalInt("hs.eventtap.systemKeys.SOUND_UP") == 0)
+            #expect(harness.evalInt("hs.eventtap.systemKeys.MUTE") == 7)
+            #expect(harness.evalInt("hs.eventtap.systemKeys.PLAY") == 16)
+            #expect(harness.evalInt("hs.eventtap.systemKeys.NEXT") == 17)
+            #expect(harness.evalInt("hs.eventtap.systemKeys.PREVIOUS") == 18)
+            #expect(harness.evalInt("Object.keys(hs.eventtap.systemKeys).length") == 22)
+        }
+
+        @Test("makeSystemKeyEvent creates a systemDefined event", arguments: [true, false])
+        func testMakeSystemKeyEventType(isDown: Bool) {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeSystemKeyEvent('PLAY', \(isDown))")
+            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.systemDefined"))
+            #expect(!harness.hasException)
+        }
+
+        @Test("systemKey decodes every key built by makeSystemKeyEvent",
+              arguments: SystemKey.codes.keys.sorted(), [true, false])
+        func testSystemKeyRoundTrip(key: String, isDown: Bool) {
+            let harness = makeHarness()
+            harness.eval("var sk = hs.eventtap.makeSystemKeyEvent('\(key)', \(isDown)).systemKey")
+            #expect(harness.evalString("sk.key") == key)
+            #expect(harness.evalInt("sk.keyCode") == SystemKey.codes[key])
+            #expect(harness.evalBool("sk.isDown") == isDown)
+            #expect(harness.evalBool("sk.isRepeat") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeSystemKeyEvent ignores the case of the key name")
+        func testMakeSystemKeyEventCaseInsensitive() {
+            let harness = makeHarness()
+            #expect(harness.evalString("hs.eventtap.makeSystemKeyEvent('sound_down', true).systemKey.key") == "SOUND_DOWN")
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeSystemKeyEvent returns null for an unknown key")
+        func testMakeSystemKeyEventUnknownKey() {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeSystemKeyEvent('NOT_A_KEY', true)")
+            harness.expectTrue("evt === null || evt === undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("systemKeyStroke with an unknown key does nothing without throwing")
+        func testSystemKeyStrokeUnknownKey() {
+            let harness = makeHarness()
+            harness.eval("hs.eventtap.systemKeyStroke('NOT_A_KEY')")
+            #expect(!harness.hasException)
+        }
+
+        @Test("systemKey is undefined for ordinary events")
+        func testSystemKeyUndefinedForOtherEvents() {
+            let harness = makeHarness()
+            #expect(harness.evalTypeOf("hs.eventtap.makeKeyEvent('a', true).systemKey") == "undefined")
+            #expect(harness.evalTypeOf("hs.eventtap.makeScrollWheelEvent(0, 3, 500, 400).systemKey") == "undefined")
+            #expect(!harness.hasException)
+        }
+
+        @Test("duplicate preserves a system key event")
+        func testDuplicateSystemKeyEvent() {
+            let harness = makeHarness()
+            harness.eval("var copy = hs.eventtap.makeSystemKeyEvent('NEXT', false).duplicate()")
+            #expect(harness.evalString("copy.systemKey.key") == "NEXT")
+            #expect(harness.evalBool("copy.systemKey.isDown") == false)
             #expect(!harness.hasException)
         }
 

@@ -104,6 +104,25 @@ import CoreGraphics
     /// ```
     @objc var characters: String? { get }
 
+    /// For a system key event (media, volume, brightness and other special keys), an object
+    /// describing the key; for any other event, undefined.
+    ///
+    /// The object has `key` (a name from `hs.eventtap.systemKeys`, or "unknown"), `keyCode`
+    /// (the numeric system key code), `isDown` (true for key down, false for key up) and
+    /// `isRepeat` (true if the key is auto-repeating). Watch for these events with
+    /// `hs.eventtap.eventTypes.systemDefined`; other kinds of system-defined event, which don't
+    /// represent a key, also yield undefined.
+    /// - Example:
+    /// ```js
+    /// const tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.systemDefined], (event) => {
+    ///     const sysKey = event.systemKey
+    ///     if (sysKey && sysKey.key === "PLAY" && sysKey.isDown) console.log("Play pressed")
+    ///     return hs.eventtap.emit
+    /// })
+    /// tap.start()
+    /// ```
+    @objc var systemKey: [String: Any]? { get }
+
     /// Create an independent copy of this event
     /// - Returns: A new HSEventTapEvent with the same properties, or null if the copy failed
     /// - Example:
@@ -210,6 +229,10 @@ import CoreGraphics
         var buffer = [UniChar](repeating: 0, count: length)
         unsafe cgEvent.keyboardGetUnicodeString(maxStringLength: length, actualStringLength: &length, unicodeString: &buffer)
         return unsafe String(utf16CodeUnits: buffer, count: length)
+    }
+
+    @objc var systemKey: [String: Any]? {
+        return SystemKey.decode(cgEvent)
     }
 
     @objc func duplicate() -> HSEventTapEvent? {
