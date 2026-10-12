@@ -1016,7 +1016,8 @@ struct HSEventTapTests {
                               flags: CGEventFlags, isRepeat: Bool = false) throws -> Bool {
             let source = CGEventSource(stateID: .privateState)
             let event = try #require(CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: type == .keyDown))
-            event.flags = flags
+            // Keep the flags macOS gives the key itself (e.g. fn on the arrow keys)
+            event.flags.formUnion(flags)
             if isRepeat {
                 event.setIntegerValueField(.keyboardEventAutorepeat, value: 1)
             }
@@ -1048,6 +1049,37 @@ struct HSEventTapTests {
             #expect(harness.evalInt("released") == 1)
 
             harness.eval("hs.eventtap.removeHotkey(hk)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("keys that always report fn match hotkeys with or without fn")
+        func testImplicitFn() throws {
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            harness.eval("""
+                var right = 0, f1 = 0, fnA = 0
+                var hk1 = hs.eventtap.bindHotkey(['ctrl', 'alt', 'shift'], 'right', () => right++, null)
+                var hk2 = hs.eventtap.bindHotkey(['fn'], 'f1', () => f1++, null)
+                var hk3 = hs.eventtap.bindHotkey(['fn'], 'a', () => fnA++, null)
+            """)
+
+            // Arrow keys carry fn whether or not it's held
+            #expect(try dispatch(module, .keyDown, keyCode: CGKeyCode(kVK_RightArrow), flags: [.maskControl, .maskAlternate, .maskShift]))
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_RightArrow), flags: [.maskControl, .maskAlternate, .maskShift]))
+            #expect(harness.evalInt("right") == 1)
+
+            // A hotkey that asks for fn on such a key still matches
+            #expect(try dispatch(module, .keyDown, keyCode: CGKeyCode(kVK_F1), flags: .maskSecondaryFn))
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_F1), flags: .maskSecondaryFn))
+            #expect(harness.evalInt("f1") == 1)
+
+            // ...but on other keys fn has to be held
+            #expect(try dispatch(module, .keyDown, keyCode: CGKeyCode(kVK_ANSI_A), flags: []) == false)
+            #expect(try dispatch(module, .keyUp, keyCode: CGKeyCode(kVK_ANSI_A), flags: []) == false)
+            #expect(try dispatch(module, .keyDown, keyCode: CGKeyCode(kVK_ANSI_A), flags: .maskSecondaryFn))
+            #expect(harness.evalInt("fnA") == 1)
+
+            harness.eval("[hk1, hk2, hk3].forEach(h => hs.eventtap.removeHotkey(h))")
             #expect(!harness.hasException)
         }
 

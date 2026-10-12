@@ -136,6 +136,15 @@ protocol EventTapHotkeyCoordinator: AnyObject {
         .maskCommand, .maskShift, .maskAlternate, .maskControl, .maskSecondaryFn
     ]
 
+    // macOS sets the fn flag on every event for these keys, whether or not fn is held, so for
+    // them the flag says nothing about the fn key: arrows, F1-F20, help, home, end, page up/down,
+    // forward delete and keypad clear.
+    static let keyCodesWithImplicitFn: Set<Int64> = [
+        123, 124, 125, 126,
+        122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111, 105, 107, 113, 106, 64, 79, 80, 90,
+        114, 115, 119, 116, 121, 117, 71,
+    ]
+
     /// - Parameter key: How the key was specified. Defaults to the fixed key code, which never moves.
     init(keyCode: CGKeyCode,
          key: KeyArgument? = nil,
@@ -192,6 +201,12 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     @inline(__always)
     func matches(keyCode: Int64, maskedFlags: CGEventFlags, rawFlagsValue: UInt64) -> Bool {
         guard keyCode == cachedKeyCode else { return false }
+        var maskedFlags = maskedFlags
+        if maskedFlags.contains(.maskSecondaryFn),
+           !requiredFlags.contains(.maskSecondaryFn),
+           Self.keyCodesWithImplicitFn.contains(keyCode) {
+            maskedFlags.remove(.maskSecondaryFn)
+        }
         guard maskedFlags == requiredFlags else { return false }
         if requiredDeviceBits != 0 {
             return (rawFlagsValue & requiredDeviceBits) == requiredDeviceBits

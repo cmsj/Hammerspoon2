@@ -392,7 +392,10 @@ import AppKit
     /// - Parameters:
     ///   - mods: An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,
     ///     `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
-    ///     `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`).
+    ///     `leftCtrl`, `rightCtrl`, `leftShift`, `rightShift`). macOS reports `fn` as held on every
+    ///     press of the arrow keys, F-keys, help, home, end, page up/down, forward delete and keypad
+    ///     clear, so on those keys a hotkey with `fn` also fires without it (one without `fn` still
+    ///     works).
     ///   - key: {string | number} A key name or character (e.g., "a", "space", "f1"), resolved through the
     ///     current keyboard layout (see `hs.eventtap.followsKeyboardLayout`), or a numeric virtual key code,
     ///     which always means the same physical key
