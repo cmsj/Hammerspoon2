@@ -759,3 +759,28 @@ struct HSChooserTests {
         tracker.assertNoLeaks()
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSChooserTests {
+    @Test("A shown chooser the caller didn't keep survives garbage collection, and is collected once hidden")
+    func testShownChooserLifetime() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSChooserModule.self, as: "chooser")
+
+        weak var chooser: HSChooser?
+        autoreleasepool {
+            harness.eval("var c = hs.chooser.create(); c.setChoices([{text: 'One'}]); c.onSelect = function() {}; c.show(); void 0")
+            chooser = harness.evalValue("c")?.toObjectOf(HSChooser.self) as? HSChooser
+            harness.eval("c = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(chooser?.isVisible == true, "A shown chooser must not be collected")
+
+        autoreleasepool { _ = chooser?.hide() }
+        // Let AppKit release the ordered-out panel's views before collecting
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
+        harness.collectGarbage()
+        #expect(chooser == nil, "A hidden chooser nobody references must not be kept alive")
+    }
+}

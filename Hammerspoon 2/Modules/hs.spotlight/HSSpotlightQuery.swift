@@ -192,6 +192,7 @@ import JavaScriptCore
     ///
     /// The query must have a predicate set (via `setQuery()`) before calling `start()`.
     /// Calling `start()` on an already-running query is a no-op.
+    /// - Note: A started query, and its callback, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Returns: this query, for chaining
     /// - Example:
     /// ```js
@@ -275,8 +276,17 @@ import JavaScriptCore
 
     private let query = NSMetadataQuery()
     private var callback: JSCallback?
+    private weak var tracker: HSObjectTracker<HSSpotlightQuery>?
 
-    override init() {
+    // A started query is active: it stays alive with its callback until it's stopped, even if
+    // the user dropped their reference to it. A query keeps updating its results after the
+    // initial gathering finishes, so it runs until stopped.
+    private var isQuerying = false {
+        didSet { tracker?.setActive(self, isQuerying, in: JSContext.current() ?? callback?.value?.context) }
+    }
+
+    init(tracker: HSObjectTracker<HSSpotlightQuery>) {
+        self.tracker = tracker
         super.init()
         setupNotifications()
         AKGarbage("Init of HSSpotlightQuery(\(identifier))")
@@ -397,7 +407,9 @@ import JavaScriptCore
             return self
         }
         guard !isRunning else { return self }
-        if !query.start() {
+        if query.start() {
+            isQuerying = true
+        } else {
             AKError("hs.spotlight.start(): NSMetadataQuery.start() returned false — check the predicate syntax")
         }
         return self
@@ -405,6 +417,7 @@ import JavaScriptCore
 
     @objc @discardableResult func stop() -> HSSpotlightQuery {
         query.stop()
+        isQuerying = false
         return self
     }
 

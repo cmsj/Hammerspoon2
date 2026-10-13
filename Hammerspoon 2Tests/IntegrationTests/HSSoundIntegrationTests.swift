@@ -288,3 +288,30 @@ struct HSSoundTests {
         }
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSSoundTests {
+    @Test("A playing sound the caller didn't keep still finishes after garbage collection, and is then collected")
+    func testPlayingSoundLifetime() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSSoundModule.self, as: "sound")
+
+        var finished = false
+        harness.registerCallback("onDone") { finished = true }
+
+        weak var sound: HSSound?
+        autoreleasepool {
+            harness.eval("var s = hs.sound.named('Basso').setCallback(function() { __test_callback('onDone') }); s.play(); void 0")
+            sound = harness.evalValue("s")?.toObjectOf(HSSound.self) as? HSSound
+            harness.eval("s = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(sound != nil, "A playing sound must not be collected")
+
+        let ok = harness.waitFor(timeout: 3.0) { finished }
+        #expect(ok, "An unreferenced playing sound must still call back when it finishes")
+        harness.collectGarbage()
+        #expect(sound == nil, "A finished sound must not be kept alive")
+    }
+}

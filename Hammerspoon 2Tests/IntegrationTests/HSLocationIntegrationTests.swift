@@ -469,3 +469,26 @@ struct HSLocationTests {
         tracker.assertNoLeaks()
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSLocationTests {
+    @Test("A started watcher the caller didn't keep survives garbage collection, and is collected once stopped")
+    func testStartedWatcherLifetime() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSLocationModule.self, as: "location")
+
+        weak var watcher: HSLocationWatcher?
+        autoreleasepool {
+            harness.eval("var w = hs.location.addWatcher().setCallback(function() {}).start(); void 0")
+            watcher = harness.evalValue("w")?.toObjectOf(HSLocationWatcher.self) as? HSLocationWatcher
+            harness.eval("w = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(watcher != nil, "A started watcher must not be collected")
+
+        autoreleasepool { _ = watcher?.stop() }
+        harness.collectGarbage()
+        #expect(watcher == nil, "A stopped watcher must not be kept alive")
+    }
+}

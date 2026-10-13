@@ -821,3 +821,32 @@ struct HSSpotlightTests {
         tracker.assertNoLeaks()
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSSpotlightTests {
+    @Test("A started query the caller didn't keep survives garbage collection, and is collected once stopped")
+    func testStartedQueryLifetime() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSSpotlightModule.self, as: "spotlight")
+
+        weak var query: HSSpotlightQuery?
+        autoreleasepool {
+            harness.eval("""
+                var q = hs.spotlight.create()
+                    .setQuery("kMDItemFSName == 'THIS_FILE_DOES_NOT_EXIST_12345.xyz'")
+                    .setCallback(function() {})
+                    .start()
+                void 0
+            """)
+            query = harness.evalValue("q")?.toObjectOf(HSSpotlightQuery.self) as? HSSpotlightQuery
+            harness.eval("q = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(query != nil, "A started query must not be collected")
+
+        autoreleasepool { _ = query?.stop() }
+        harness.collectGarbage()
+        #expect(query == nil, "A stopped query must not be kept alive")
+    }
+}

@@ -203,7 +203,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        let n = queries.allObjects.count
+        let n = queries.activeCount
         return "<\(moduleName): \(n) active quer\(n == 1 ? "y" : "ies")>"
     }
 
@@ -220,7 +220,7 @@ import JavaScriptCore
     // MARK: - HSSpotlightModuleAPI
 
     @objc func create() -> HSSpotlightQuery {
-        let q = HSSpotlightQuery()
+        let q = HSSpotlightQuery(tracker: queries)
         queries.add(q)
         return q
     }

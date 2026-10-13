@@ -97,7 +97,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        let n = choosers.allObjects.count
+        let n = choosers.activeCount
         return "<\(moduleName): \(n) active chooser\(n == 1 ? "" : "s")>"
     }
 
@@ -114,7 +114,7 @@ import JavaScriptCore
     }
 
     @objc func create() -> HSChooser {
-        let chooser = HSChooser()
+        let chooser = HSChooser(tracker: choosers)
         choosers.add(chooser)
         AKGarbage("hs.chooser.create(): \(chooser.identifier)")
         return chooser

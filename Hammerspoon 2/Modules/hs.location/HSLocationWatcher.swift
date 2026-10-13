@@ -42,6 +42,7 @@ import CoreLocation
     @objc var identifier: String { get }
 
     /// Starts location updates. The callback must be set first.
+    /// - Note: A started watcher, and its callback, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
@@ -105,13 +106,22 @@ import CoreLocation
     private let manager = CLLocationManager()
     private var callback: JSCallback?
     private var _lastLocation: CLLocation?
+    private weak var tracker: HSObjectTracker<HSLocationWatcher>?
+
+    // A started watcher is active: it stays alive with its callback until it's stopped, even if
+    // the user dropped their reference to it. (CLLocationManager's delegate is weak, so nothing
+    // else keeps it alive.)
+    private var isUpdating = false {
+        didSet { tracker?.setActive(self, isUpdating, in: JSContext.current() ?? callback?.value?.context) }
+    }
 
     @objc var distanceFilter: Double {
         get { manager.distanceFilter }
         set { manager.distanceFilter = newValue }
     }
 
-    override init() {
+    init(tracker: HSObjectTracker<HSLocationWatcher>) {
+        self.tracker = tracker
         super.init()
         manager.delegate = self
     }
@@ -129,12 +139,14 @@ import CoreLocation
 
     @objc @discardableResult func start() -> HSLocationWatcher {
         manager.startUpdatingLocation()
+        isUpdating = true
         AKDebug("HSLocationWatcher(\(identifier)).start(): Started")
         return self
     }
 
     @objc @discardableResult func stop() -> HSLocationWatcher {
         manager.stopUpdatingLocation()
+        isUpdating = false
         AKDebug("HSLocationWatcher(\(identifier)).stop(): Stopped")
         return self
     }

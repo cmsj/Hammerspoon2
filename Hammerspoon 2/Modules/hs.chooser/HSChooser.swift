@@ -239,6 +239,7 @@ import SwiftUI
     // MARK: Lifecycle
 
     /// Show the chooser.
+    /// - Note: A shown chooser, and its callbacks, stay alive until it's hidden, even if you don't keep a reference to it
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js
@@ -358,6 +359,22 @@ import SwiftUI
 
     private let viewModel = ChooserViewModel()
     private var window: ChooserPanel?
+    private weak var tracker: HSObjectTracker<HSChooser>?
+
+    // A shown chooser is active: it stays on screen, with its callbacks, until it's hidden,
+    // even if the user dropped their reference to it. A hidden chooser nobody references can
+    // never be shown again, so it's ordinary garbage.
+    private var isShown = false {
+        didSet {
+            tracker?.setActive(self, isShown,
+                               in: JSContext.current() ?? (_onSelect ?? _choicesFunction)?.value?.context)
+        }
+    }
+
+    init(tracker: HSObjectTracker<HSChooser>) {
+        self.tracker = tracker
+        super.init()
+    }
 
     private var allChoices: [ChooserItem] = []
     private var isStaticChoices = true
@@ -600,6 +617,7 @@ import SwiftUI
         window?.setHeight(viewModel.expectedHeight())
 
         viewModel.isVisible = true
+        isShown = true
         startKeyMonitor()
         startResignKeyObserver()
         window?.makeKeyAndOrderFront(nil)
@@ -610,8 +628,13 @@ import SwiftUI
     }
 
     @objc @discardableResult func hide() -> HSChooser {
-        guard let w = window, w.isVisible else { return self }
+        guard let w = window, w.isVisible else {
+            // AppKit may have ordered the panel out already; it's still no longer shown
+            isShown = false
+            return self
+        }
         viewModel.isVisible = false
+        isShown = false
         stopKeyMonitor()
         stopResignKeyObserver()  // must be before orderOut — orderOut resigns key, which would re-fire the observer
         w.orderOut(nil)

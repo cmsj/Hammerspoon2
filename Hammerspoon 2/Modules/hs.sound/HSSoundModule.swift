@@ -87,7 +87,7 @@ import AppKit
             AKError("hs.sound.fromFile(): Failed to load audio from '\(path)'")
             return nil
         }
-        let sound = HSSound(sound: nsSound)
+        let sound = HSSound(sound: nsSound, tracker: sounds)
         sounds.add(sound)
         return sound
     }
@@ -103,7 +103,7 @@ import AppKit
             AKError("hs.sound.named(): Unable to prepare sound")
             return nil
         }
-        let sound = HSSound(sound: nssoundCopy, name: name)
+        let sound = HSSound(sound: nssoundCopy, name: name, tracker: sounds)
         sounds.add(sound)
         return sound
     }

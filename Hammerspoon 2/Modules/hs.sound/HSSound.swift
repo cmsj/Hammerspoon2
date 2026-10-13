@@ -71,6 +71,7 @@ import AppKit
     @objc var isPlaying: Bool { get }
 
     /// Starts playback from the current position.
+    /// - Note: A playing sound plays to the end, and its callback fires, even if you don't keep a reference to it
     /// - Returns: This sound object, for chaining.
     /// - Example:
     /// ```js
@@ -159,9 +160,21 @@ import AppKit
     private let _name: String?
     private var _callback: JSCallback?
     private var _isDestroyed = false
+    private weak var tracker: HSObjectTracker<HSSound>?
 
-    init(sound: NSSound, name: String? = nil) {
+    // A playing sound is active: it plays to the end, and its callback fires, even if the user
+    // dropped their reference to it. A paused sound nobody references can never be resumed,
+    // so it's ordinary garbage.
+    private var isPlayingActive = false {
+        didSet {
+            tracker?.setActive(self, isPlayingActive, in: JSContext.current() ?? _callback?.value?.context,
+                               finishesOnItsOwn: !sound.loops)
+        }
+    }
+
+    init(sound: NSSound, name: String? = nil, tracker: HSObjectTracker<HSSound>) {
         self.sound = sound
+        self.tracker = tracker
         // Capture the name at init time; NSSound.name on a copy is unreliable
         // under concurrent access to the shared named-sound cache.
         self._name = name ?? sound.name.map { String($0) }
@@ -177,6 +190,7 @@ import AppKit
     private func _teardown() {
         guard !_isDestroyed else { return }
         _isDestroyed = true
+        isPlayingActive = false
         _ = sound.stop()
         sound.delegate = nil
         _callback?.detach(from: self)
@@ -207,21 +221,27 @@ import AppKit
     @objc var isPlaying: Bool { sound.isPlaying }
 
     @objc @discardableResult func play() -> HSSound {
-        if !sound.play() {
+        if sound.play() {
+            isPlayingActive = true
+        } else {
             AKWarning("hs.sound: play() failed for sound \(identifier)")
         }
         return self
     }
 
     @objc @discardableResult func pause() -> HSSound {
-        if !sound.pause() {
+        if sound.pause() {
+            isPlayingActive = false
+        } else {
             AKWarning("hs.sound: pause() failed for sound \(identifier)")
         }
         return self
     }
 
     @objc @discardableResult func resume() -> HSSound {
-        if !sound.resume() {
+        if sound.resume() {
+            isPlayingActive = true
+        } else {
             AKWarning("hs.sound: resume() failed for sound \(identifier)")
         }
         return self
@@ -231,6 +251,7 @@ import AppKit
         if !sound.stop() {
             AKWarning("hs.sound: stop() failed for sound \(identifier)")
         }
+        isPlayingActive = false
         return self
     }
 
@@ -257,6 +278,7 @@ extension HSSound: NSSoundDelegate {
     // NSSound guarantees delivery on the main thread; assumeIsolated asserts this.
     nonisolated func sound(_ sound: NSSound, didFinishPlaying flag: Bool) {
         MainActor.assumeIsolated {
+            defer { isPlayingActive = false }
             _ = _callback?.value?.call(withArguments: [self, flag])
         }
     }
