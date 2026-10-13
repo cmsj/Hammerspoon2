@@ -679,3 +679,28 @@ struct HSAudioDeviceTests {
         }
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSAudioDeviceTests.HSAudioDeviceIntegrationTests {
+    // A watching device is also kept alive by its own emitter (its _watcherEmitter's start
+    // closure captures the device, a cycle _removeWatcher() breaks), so the first half holds
+    // even without the tracker; the second half is what catches a device that never un-pins.
+    @Test("A watching device the caller didn't keep survives garbage collection, and is collected once the watcher is removed")
+    func testWatchingDeviceLifetime() throws {
+        let harness = makeHarness()
+        weak var device: HSAudioDevice?
+        autoreleasepool {
+            harness.eval("var d = hs.audiodevice.defaultOutputDevice() || hs.audiodevice.all()[0]; d.on('vmout', function() {}); void 0")
+            device = harness.evalValue("d")?.toObjectOf(HSAudioDevice.self) as? HSAudioDevice
+            harness.eval("d = null; void 0")
+        }
+        #expect(!harness.hasException)
+        harness.collectGarbage()
+        #expect(device != nil, "A watching device must not be collected")
+
+        autoreleasepool { device?._removeWatcher() }
+        harness.collectGarbage()
+        #expect(device == nil, "A device with no watcher must not be kept alive")
+    }
+}

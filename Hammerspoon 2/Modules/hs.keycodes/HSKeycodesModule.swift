@@ -233,7 +233,7 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var watcherCallback: JSFunction?
+    private var watcherCallback: JSCallback?
     private var sourceChangeObserver: NSObjectProtocol?
 
     // MARK: - Lifecycle
@@ -258,6 +258,7 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
             DistributedNotificationCenter.default().removeObserver(obs)
             sourceChangeObserver = nil
         }
+        watcherCallback?.detach(from: self)
         watcherCallback = nil
         _watcherEmitter = nil
         on = nil
@@ -363,12 +364,13 @@ nonisolated enum HSKeycodesEvent: String, HSEventName {
             AKWarning("hs.keycodes._addWatcher: already watching — refusing second subscription")
             return false
         }
-        watcherCallback = callback
+        watcherCallback = JSCallback(value: callback, owner: self)
         AKDebug("hs.keycodes._addWatcher: started")
         return true
     }
 
     @objc func _removeWatcher() {
+        watcherCallback?.detach(from: self)
         watcherCallback = nil
         AKDebug("hs.keycodes._removeWatcher: stopped")
     }

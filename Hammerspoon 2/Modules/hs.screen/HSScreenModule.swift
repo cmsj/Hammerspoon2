@@ -126,7 +126,7 @@ nonisolated enum HSScreenEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var watcherCallback: JSFunction?
+    private var watcherCallback: JSCallback?
     private var watcherObserver: NSObjectProtocol?
 
     required init(engineID: UUID) {
@@ -178,7 +178,7 @@ nonisolated enum HSScreenEvent: String, HSEventName {
             AKWarning("hs.screen._addWatcher: already watching — refusing second subscription")
             return false
         }
-        watcherCallback = callback
+        watcherCallback = JSCallback(value: callback, owner: self)
 
         watcherObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
@@ -199,6 +199,7 @@ nonisolated enum HSScreenEvent: String, HSEventName {
             NotificationCenter.default.removeObserver(observer)
             watcherObserver = nil
         }
+        watcherCallback?.detach(from: self)
         watcherCallback = nil
 
         AKDebug("hs.screen._removeWatcher: stopped")

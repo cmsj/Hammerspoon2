@@ -258,20 +258,21 @@ nonisolated enum HSStreamDeckEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var moduleCallback: JSFunction? = nil
+    private var moduleCallback: JSCallback?
 
     @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
         guard moduleCallback == nil else {
             AKWarning("hs.streamdeck._addWatcher(): Already watching. Refusing to create a second.")
             return false
         }
-        moduleCallback = listener
+        moduleCallback = JSCallback(value: listener, owner: self)
         AKDebug("hs.streamdeck._addWatcher(): Started")
         return true
     }
 
     @objc func _removeWatcher() {
         guard moduleCallback != nil else { return }
+        moduleCallback?.detach(from: self)
         moduleCallback = nil
         AKDebug("hs.streamdeck._removeWatcher(): Stopped")
     }

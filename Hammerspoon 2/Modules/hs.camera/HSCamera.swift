@@ -227,11 +227,18 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     // MARK: - Per-camera watcher
 
     @objc var _watcherEmitter: JSFunction? = nil
-    private var watcherCallback: JSFunction? = nil
+    // The module keeps one object per camera alive itself (so JS always gets the same one),
+    // but this callback is owned by the camera's JS wrapper. So a watching camera is active:
+    // its wrapper, and so the callback, stay alive until the watcher is removed, even if the
+    // user dropped their reference to it.
+    private var watcherCallback: JSCallback? {
+        didSet {
+            cameraModule?.watchingCameras.setActive(self, watcherCallback != nil,
+                                                    in: JSContext.current() ?? watcherCallback?.value?.context)
+        }
+    }
     private var cmioListenerBlock: CMIOObjectPropertyListenerBlock? = nil
     private var watcherCMIOID: CMIOObjectID? = nil
-    // Self-retain while a watcher is active — keeps the object alive across GC cycles.
-    private var selfRetain: HSCamera? = nil
 
     // A camera only has one kind of event (its in-use state changing), so on/off/once hide the
     // event name from the public per-camera API and always use this fixed internal name when
@@ -321,9 +328,8 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             return false
         }
 
-        watcherCallback = listener
+        watcherCallback = JSCallback(value: listener, owner: self)
         watcherCMIOID = cmioID
-        selfRetain = self
         unsafe cmioListenerBlock = block
         AKDebug("hs.camera._addWatcher(): Started watching '\(name)'")
         return true
@@ -343,8 +349,8 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         unsafe CMIOObjectRemovePropertyListenerBlock(cmioID, &address, .main, block)
         unsafe cmioListenerBlock = nil
         watcherCMIOID = nil
+        watcherCallback?.detach(from: self)
         watcherCallback = nil
-        selfRetain = nil
         AKDebug("hs.camera._removeWatcher(): Stopped watching '\(name)'")
     }
 

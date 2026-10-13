@@ -168,6 +168,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
     func shutdown() {
         _removeWatcher()
         HSAudioDeviceManager.shared.stopAllWatchers()
+        watchingDevices.removeAllObjects()
         _watcherEmitter = nil
         _makeDeviceEmitter = nil
         on = nil
@@ -192,7 +193,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
 
     @objc func all() -> [HSAudioDevice] {
         HSAudioDeviceManager.shared.prune()
-        return allDeviceIDs().map { HSAudioDeviceManager.shared.device(for: $0) }
+        return allDeviceIDs().map { vend($0) }
     }
 
     @objc func allOutputDevices() -> [HSAudioDevice] { all().filter { $0.isOutput } }
@@ -226,7 +227,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var moduleCallback: JSFunction? = nil
+    private var moduleCallback: JSCallback?
     private var moduleRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:]
     private var previousDeviceIDs: Set<AudioObjectID> = []
 
@@ -235,7 +236,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
             AKWarning("hs.audiodevice._addWatcher(): Already watching. Refusing to create a second.")
             return false
         }
-        moduleCallback = listener
+        moduleCallback = JSCallback(value: listener, owner: self)
         let sysObjID = AudioObjectID(kAudioObjectSystemObject)
 
         let propertyEvents: [(HSAudioDeviceEvent, AudioObjectPropertySelector)] = [
@@ -247,7 +248,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
             let eventName = event.rawValue
             var a = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
             let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
-                self?.moduleCallback?.call(withArguments: [eventName])
+                _ = self?.moduleCallback?.call(withArguments: [eventName])
             }
             if unsafe AudioObjectAddPropertyListenerBlock(sysObjID, &a, .main, block) == noErr {
                 unsafe moduleRegistrations[eventName] = (address: a, block: block)
@@ -259,8 +260,8 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
         let devBlock: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
             guard let self else { return }
             let current = Set(self.allDeviceIDs())
-            for _ in current.subtracting(self.previousDeviceIDs) { self.moduleCallback?.call(withArguments: [HSAudioDeviceEvent.deviceAdded.rawValue]) }
-            for _ in self.previousDeviceIDs.subtracting(current) { self.moduleCallback?.call(withArguments: [HSAudioDeviceEvent.deviceRemoved.rawValue]) }
+            for _ in current.subtracting(self.previousDeviceIDs) { _ = self.moduleCallback?.call(withArguments: [HSAudioDeviceEvent.deviceAdded.rawValue]) }
+            for _ in self.previousDeviceIDs.subtracting(current) { _ = self.moduleCallback?.call(withArguments: [HSAudioDeviceEvent.deviceRemoved.rawValue]) }
             self.previousDeviceIDs = current
         }
         if unsafe AudioObjectAddPropertyListenerBlock(sysObjID, &devAddr, .main, devBlock) == noErr {
@@ -269,6 +270,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
 
         guard unsafe !moduleRegistrations.isEmpty else {
             AKError("hs.audiodevice._addWatcher(): Failed to register any property listeners")
+            moduleCallback?.detach(from: self)
             moduleCallback = nil
             return false
         }
@@ -284,6 +286,7 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
             unsafe AudioObjectRemovePropertyListenerBlock(sysObjID, &reg.address, .main, reg.block)
         }
         unsafe moduleRegistrations.removeAll()
+        moduleCallback?.detach(from: self)
         moduleCallback = nil
     }
 
@@ -317,7 +320,17 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
         var deviceID: AudioObjectID = 0
         guard unsafe AudioObjectGetPropertyData(sysObjID, &a, 0, nil, &size, &deviceID) == noErr,
               deviceID != kAudioObjectUnknown else { return nil }
-        return HSAudioDeviceManager.shared.device(for: deviceID)
+        return vend(deviceID)
+    }
+
+    // Devices with a watcher are kept alive by this tracker while active
+    private let watchingDevices = HSObjectTracker<HSAudioDevice>()
+
+    /// Every device handed to JS goes through here, so it marks itself active in this module's tracker
+    private func vend(_ objectID: AudioObjectID) -> HSAudioDevice {
+        let device = HSAudioDeviceManager.shared.device(for: objectID)
+        device.tracker = watchingDevices
+        return device
     }
 
 }

@@ -110,7 +110,7 @@ nonisolated enum HSUSBEvent: String, HSEventName {
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
 
-    private var listener: JSFunction?
+    private var listener: JSCallback?
     private var notificationPort: IONotificationPortRef?
     private var runLoopSource: CFRunLoopSource?
     private var addedIterator: io_iterator_t = IO_OBJECT_NULL
@@ -168,10 +168,11 @@ nonisolated enum HSUSBEvent: String, HSEventName {
             return false
         }
 
-        self.listener = listener
+        self.listener = JSCallback(value: listener, owner: self)
 
         guard let port = unsafe IONotificationPortCreate(kIOMainPortDefault) else {
             AKError("hs.usb._addWatcher(): Failed to create IOKit notification port")
+            self.listener?.detach(from: self)
             self.listener = nil
             return false
         }
@@ -252,6 +253,7 @@ nonisolated enum HSUSBEvent: String, HSEventName {
         unsafe selfRef?.release()
         unsafe selfRef = nil
 
+        listener?.detach(from: self)
         listener = nil
 
         AKDebug("hs.usb._removeWatcher(): Stopped")

@@ -121,7 +121,11 @@ nonisolated enum HSCameraEvent: String, HSEventName {
     var moduleName = "hs.camera"
     let engineID: UUID
 
+    // One object per camera, owned by the module so JS always gets the same one
     private var cameraCache: [String: HSCamera] = [:]
+    // Cameras with a watcher are active here, which keeps their callbacks alive. Internal so
+    // each camera can mark itself active.
+    let watchingCameras = HSObjectTracker<HSCamera>()
     private var connectObserver: NSObjectProtocol?
     private var disconnectObserver: NSObjectProtocol?
 
@@ -137,6 +141,7 @@ nonisolated enum HSCameraEvent: String, HSEventName {
             camera._removeWatcher()
         }
         cameraCache.removeAll()
+        watchingCameras.removeAllObjects()
         _watcherEmitter = nil
         _makeCameraEmitter = nil
         on = nil
@@ -196,7 +201,7 @@ nonisolated enum HSCameraEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var moduleCallback: JSFunction? = nil
+    private var moduleCallback: JSCallback?
 
     @objc(_addWatcher:) func _addWatcher(_ listener: JSFunction) -> Bool {
         guard moduleCallback == nil else {
@@ -206,7 +211,7 @@ nonisolated enum HSCameraEvent: String, HSEventName {
         // Populate the cache now so any camera that disconnects before all() is ever
         // called still has an HSCamera entry — not a raw UID string — in the callback.
         _ = all()
-        moduleCallback = listener
+        moduleCallback = JSCallback(value: listener, owner: self)
 
         let nc = NotificationCenter.default
 
@@ -253,6 +258,7 @@ nonisolated enum HSCameraEvent: String, HSEventName {
         let nc = NotificationCenter.default
         if let obs = connectObserver { nc.removeObserver(obs); connectObserver = nil }
         if let obs = disconnectObserver { nc.removeObserver(obs); disconnectObserver = nil }
+        moduleCallback?.detach(from: self)
         moduleCallback = nil
         AKDebug("hs.camera._removeWatcher(): Stopped")
     }

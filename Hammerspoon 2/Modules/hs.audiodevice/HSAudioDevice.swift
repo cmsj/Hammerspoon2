@@ -521,6 +521,9 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
     }
 
     let objectID: AudioObjectID
+    /// Set by the module each time it hands this device to JS. Device objects are cached across
+    /// engines, so this is whichever engine's module most recently vended it.
+    weak var tracker: HSObjectTracker<HSAudioDevice>?
 
     init(objectID: AudioObjectID) {
         self.objectID = objectID
@@ -736,9 +739,16 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
     @objc var _eventNames: [String] { HSAudioDevicePropertyEvent.allNames }
     // Registrations keyed by event name: each value holds the CoreAudio address and
     // the heap-allocated ObjC block (stored to guarantee pointer equality on removal).
-    private var deviceRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:]
-    // Strong self-reference to keep the device alive while any watcher is active.
-    private var selfRetain: HSAudioDevice? = nil
+    //
+    // A watching device is active: it stays alive until the watcher is removed, even if the
+    // user dropped their reference to it.
+    private var deviceRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:] {
+        didSet {
+            unsafe tracker?.setActive(self, !deviceRegistrations.isEmpty,
+                                      in: JSContext.current() ?? watcherCallback?.value?.context)
+        }
+    }
+    private var watcherCallback: JSCallback?
 
     /// Lazily creates this device's JS watcher emitter (via the module's `_makeDeviceEmitter`
     /// factory) if one doesn't already exist. Returns nil (having already set `ctx.exception`)
@@ -792,7 +802,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
             AKWarning("HSAudioDevice id=\(objectID): Already watching. Refusing to create a second.")
             return false
         }
-        selfRetain = self
+        watcherCallback = JSCallback(value: listener, owner: self)
 
         let candidates: [(AudioObjectPropertySelector, AudioObjectPropertyScope, HSAudioDevicePropertyEvent)] = [
             (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, .outputVolume),
@@ -808,8 +818,11 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
             let eventName = event.rawValue
             guard caHasProperty(objectID, selector, scope) else { continue }
             var a = caAddr(selector, scope)
-            let block: AudioObjectPropertyListenerBlock = { _, _ in
-                listener.call(withArguments: [eventName])
+            // Delivered on .main (see AudioObjectAddPropertyListenerBlock below)
+            let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+                MainActor.assumeIsolated {
+                    _ = self?.watcherCallback?.call(withArguments: [eventName])
+                }
             }
             if unsafe AudioObjectAddPropertyListenerBlock(objectID, &a, .main, block) == noErr {
                 unsafe deviceRegistrations[eventName] = (address: a, block: block)
@@ -818,7 +831,8 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
 
         guard unsafe !deviceRegistrations.isEmpty else {
             AKError("HSAudioDevice id=\(objectID): Failed to register any property listeners")
-            selfRetain = nil
+            watcherCallback?.detach(from: self)
+            watcherCallback = nil
             return false
         }
         AKDebug(unsafe "HSAudioDevice id=\(objectID): watcher started (\(deviceRegistrations.count) listeners)")
@@ -837,7 +851,8 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
             unsafe AudioObjectRemovePropertyListenerBlock(objectID, &registration.address, .main, registration.block)
         }
         unsafe deviceRegistrations.removeAll()
-        selfRetain = nil
+        watcherCallback?.detach(from: self)
+        watcherCallback = nil
         AKDebug("HSAudioDevice id=\(objectID): watcher stopped")
     }
 

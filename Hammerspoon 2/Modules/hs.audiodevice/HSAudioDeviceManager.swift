@@ -8,8 +8,8 @@ import CoreAudio
 
 /// A manager that caches weak references to ``HSAudioDevice`` instances.
 ///
-/// Devices with active watchers retain themselves, so they remain alive even
-/// when JavaScript has dropped its reference. Devices without watchers are
+/// Devices with active watchers are kept alive by their module's HSObjectTracker, so they
+/// remain alive even when JavaScript has dropped its reference. Devices without watchers are
 /// eligible for garbage collection once JS no longer holds them.
 class HSAudioDeviceManager {
     static let shared = HSAudioDeviceManager()

@@ -27,8 +27,6 @@ const MODULES_DIR = path.join(REPO_ROOT, 'Hammerspoon 2', 'Modules');
 // "<file relative to Modules/>:<property name, or selfRetain>" → reason
 const ALLOWED = {
     // Awaiting migration to HSObjectTracker (pending-activity rollout)
-    'hs.audiodevice/HSAudioDevice.swift:selfRetain': 'rollout',
-    'hs.camera/HSCamera.swift:selfRetain': 'rollout',
 
     // Justified: module-owned objects, or transient lookups that aren't the objects' lifetime
     'hs.camera/HSCameraModule.swift:cameraCache': 'one object per physical camera, owned by the module so JS always gets the same one',

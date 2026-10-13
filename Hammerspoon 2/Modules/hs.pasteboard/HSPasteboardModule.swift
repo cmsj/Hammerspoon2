@@ -338,7 +338,7 @@ nonisolated enum HSPasteboardEvent: String, HSEventName {
     @objc var once: JSFunction? = nil
 
     private var watcherTimer: Timer? = nil
-    private var watcherCallback: JSFunction? = nil
+    private var watcherCallback: JSCallback?
     private var lastChangeCount: Int = 0
 
     required init(engineID: UUID) {
@@ -486,14 +486,14 @@ nonisolated enum HSPasteboardEvent: String, HSEventName {
     @objc(_startWatcher::) func _startWatcher(_ interval: Double, _ listener: JSFunction) -> Bool {
         _stopWatcher()
         lastChangeCount = NSPasteboard.general.changeCount
-        watcherCallback = listener
+        watcherCallback = JSCallback(value: listener, owner: self)
         watcherTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
                 let current = NSPasteboard.general.changeCount
                 if current != self.lastChangeCount {
                     self.lastChangeCount = current
-                    self.watcherCallback?.call(withArguments: [HSPasteboardEvent.change.rawValue, current])
+                    _ = self.watcherCallback?.call(withArguments: [HSPasteboardEvent.change.rawValue, current])
                 }
             }
         }
@@ -505,6 +505,7 @@ nonisolated enum HSPasteboardEvent: String, HSEventName {
         guard watcherTimer != nil else { return }
         watcherTimer?.invalidate()
         watcherTimer = nil
+        watcherCallback?.detach(from: self)
         watcherCallback = nil
         AKDebug("hs.pasteboard._stopWatcher(): Polling stopped")
     }

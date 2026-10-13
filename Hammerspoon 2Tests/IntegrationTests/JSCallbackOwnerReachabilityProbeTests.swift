@@ -14,6 +14,10 @@
 //  Plain JSFunction storage (no JSCallback/JSManagedValue) does not have this problem, because
 //  it is unconditionally retained by ARC regardless of the owning object's own JS reachability.
 //
+//  ModuleRoot now pins every module's wrapper (issue #267), so real modules use
+//  JSCallback(owner: self) safely; these probes use their own unpinned accessor and still
+//  document the underlying JSC behaviour. See HSObjectLifetimeTests for the pinned case.
+//
 
 import Testing
 import JavaScriptCore

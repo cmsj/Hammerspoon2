@@ -257,12 +257,12 @@ nonisolated enum HSPowerEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var eventWatcherCallback: JSFunction?
+    private var eventWatcherCallback: JSCallback?
     private var workspaceObservers: [NSObjectProtocol] = []
     private var distributedObservers: [NSObjectProtocol] = []
 
     @objc var _batteryWatcherEmitter: JSFunction? = nil
-    private var batteryWatcherCallback: JSFunction?
+    private var batteryWatcherCallback: JSCallback?
     private var batteryRunLoopSource: CFRunLoopSource?
     private var batteryContextPointer: UnsafeMutableRawPointer?
 
@@ -536,7 +536,7 @@ nonisolated enum HSPowerEvent: String, HSEventName {
             AKWarning("hs.power._addEventWatcher: already watching — refusing second subscription")
             return false
         }
-        eventWatcherCallback = callback
+        eventWatcherCallback = JSCallback(value: callback, owner: self)
 
         for (name, event) in HSPowerModule.workspaceEvents {
             let obs = NSWorkspace.shared.notificationCenter.addObserver(
@@ -575,6 +575,7 @@ nonisolated enum HSPowerEvent: String, HSEventName {
         }
         workspaceObservers.removeAll()
         distributedObservers.removeAll()
+        eventWatcherCallback?.detach(from: self)
         eventWatcherCallback = nil
 
         AKDebug("hs.power._removeEventWatcher: stopped")
@@ -587,7 +588,7 @@ nonisolated enum HSPowerEvent: String, HSEventName {
             AKWarning("hs.power._addBatteryWatcher: already watching — refusing second subscription")
             return false
         }
-        batteryWatcherCallback = callback
+        batteryWatcherCallback = JSCallback(value: callback, owner: self)
 
         let ptr = unsafe Unmanaged.passRetained(self).toOpaque()
         unsafe batteryContextPointer = ptr
@@ -608,6 +609,7 @@ nonisolated enum HSPowerEvent: String, HSEventName {
             AKError("hs.power._addBatteryWatcher: IOPSNotificationCreateRunLoopSource failed")
             unsafe Unmanaged<HSPowerModule>.fromOpaque(ptr).release()
             unsafe batteryContextPointer = nil
+            batteryWatcherCallback?.detach(from: self)
             batteryWatcherCallback = nil
             return false
         }
@@ -629,6 +631,7 @@ nonisolated enum HSPowerEvent: String, HSEventName {
             unsafe Unmanaged<HSPowerModule>.fromOpaque(ptr).release()
             unsafe batteryContextPointer = nil
         }
+        batteryWatcherCallback?.detach(from: self)
         batteryWatcherCallback = nil
 
         AKDebug("hs.power._removeBatteryWatcher: stopped")

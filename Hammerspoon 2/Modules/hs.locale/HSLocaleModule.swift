@@ -221,7 +221,7 @@ nonisolated enum HSLocaleEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    private var watcherCallback: JSFunction?
+    private var watcherCallback: JSCallback?
     private var localeChangeObserver: NSObjectProtocol?
 
     // MARK: - Lifecycle
@@ -305,7 +305,7 @@ nonisolated enum HSLocaleEvent: String, HSEventName {
             AKWarning("hs.locale._addWatcher: already watching — refusing second subscription")
             return false
         }
-        watcherCallback = callback
+        watcherCallback = JSCallback(value: callback, owner: self)
         localeChangeObserver = NotificationCenter.default.addObserver(
             forName: NSLocale.currentLocaleDidChangeNotification,
             object: nil,
@@ -322,6 +322,7 @@ nonisolated enum HSLocaleEvent: String, HSEventName {
             NotificationCenter.default.removeObserver(observer)
             localeChangeObserver = nil
         }
+        watcherCallback?.detach(from: self)
         watcherCallback = nil
         AKDebug("hs.locale._removeWatcher: stopped")
     }

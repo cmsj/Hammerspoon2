@@ -207,13 +207,8 @@ nonisolated enum HSSerialEvent: String, HSEventName {
     @objc var on: JSFunction? = nil
     @objc var off: JSFunction? = nil
     @objc var once: JSFunction? = nil
-    // A plain strong reference, not a JSCallback/JSManagedValue - see HSUSBModule.listener for
-    // the full rationale (ModuleRoot.serial is an unpinned computed accessor; JSManagedValue's
-    // owner-reachability condition silently kills a module-level callback once the registering
-    // call's stack frame goes cold, confirmed by direct reproduction in
-    // JSCallbackOwnerReachabilityProbeTests). shutdown()/_removeWatcher() already nil this out
-    // deterministically, so there is no leak risk.
-    private var listener: JSFunction?
+    // Owned by this module, whose JS wrapper ModuleRoot pins, so it lives until _removeWatcher()
+    private var listener: JSCallback?
     private var notificationPort: IONotificationPortRef?
     private var runLoopSource: CFRunLoopSource?
     private var addedIterator: io_iterator_t = IO_OBJECT_NULL
@@ -310,10 +305,11 @@ nonisolated enum HSSerialEvent: String, HSEventName {
             return false
         }
 
-        self.listener = listener
+        self.listener = JSCallback(value: listener, owner: self)
 
         guard let port = unsafe IONotificationPortCreate(kIOMainPortDefault) else {
             AKError("hs.serial._addWatcher(): Failed to create IOKit notification port")
+            self.listener?.detach(from: self)
             self.listener = nil
             return false
         }
@@ -390,6 +386,7 @@ nonisolated enum HSSerialEvent: String, HSEventName {
         unsafe selfRef?.release()
         unsafe selfRef = nil
 
+        listener?.detach(from: self)
         listener = nil
 
         AKDebug("hs.serial._removeWatcher(): Stopped")
