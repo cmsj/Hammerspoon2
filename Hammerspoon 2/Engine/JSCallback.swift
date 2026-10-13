@@ -71,6 +71,18 @@ final class JSCallback {
         return value?.call(withArguments: arguments)
     }
 
+    /// Moves the callback to a new owner, so it lives as long as `newOwner` is reachable from JS
+    /// rather than `oldOwner`. For example, a web view element hands its callbacks to the window
+    /// it's attached to, since the user holds the window, not the element.
+    /// - Parameters:
+    ///   - oldOwner: The current owner
+    ///   - newOwner: The new owner, which must be a JS-exported object
+    func transferOwnership(from oldOwner: AnyObject, to newOwner: AnyObject) {
+        guard let managed, let vm else { return }
+        vm.addManagedReference(managed, withOwner: newOwner)
+        vm.removeManagedReference(managed, withOwner: oldOwner)
+    }
+
     /// Removes the VM-managed reference, allowing both the callback and owner to be collected.
     ///
     /// Call this before the owner is deallocated. Pass the owner explicitly — do not rely

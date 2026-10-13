@@ -94,10 +94,8 @@ import AppKit
     var moduleName = "hs.sharing"
     let engineID: UUID
 
+    // Shares in flight are kept alive by the tracker while active
     private var shares = HSObjectTracker<HSSharingService>()
-    // Strong retention for shares mid-flight (between shareItems() and the terminal
-    // delegate callback), since JS may not keep a reference to a one-liner share chain.
-    private var activeShares = Set<HSSharingService>()
 
     required init(engineID: UUID) {
         self.engineID = engineID
@@ -110,7 +108,7 @@ import AppKit
     }
 
     @objc func toString() -> String {
-        let n = shares.allObjects.count
+        let n = shares.activeCount
         return "<\(moduleName): \(n) active share\(n == 1 ? "" : "s")>"
     }
 
@@ -121,7 +119,6 @@ import AppKit
     func shutdown() {
         shares.allObjects.forEach { $0.destroy() }
         shares.removeAllObjects()
-        activeShares.removeAll()
     }
 
     // MARK: - HSSharingModuleAPI
@@ -158,16 +155,8 @@ import AppKit
     // MARK: - Internal
 
     private func wrap(_ service: NSSharingService) -> HSSharingService {
-        let share = HSSharingService(service: service, module: self)
+        let share = HSSharingService(service: service, tracker: shares)
         shares.add(share)
         return share
-    }
-
-    func markActive(_ share: HSSharingService) {
-        activeShares.insert(share)
-    }
-
-    func markInactive(_ share: HSSharingService) {
-        activeShares.remove(share)
     }
 }

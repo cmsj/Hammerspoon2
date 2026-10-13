@@ -31,10 +31,11 @@ import SwiftUI
     // MARK: Window lifecycle
 
     /// Show the canvas window
+    /// - Note: A shown canvas stays on screen, with its callbacks, until it's hidden or destroyed, even if you don't keep a reference to it
     /// - Returns: Self for chaining
     @objc func show() -> HSCanvas
 
-    /// Hide the canvas window (keeps it in memory; elements and window config are preserved)
+    /// Hide the canvas window (elements and window config are preserved while you keep a reference to it)
     /// - Returns: Self for chaining
     @objc func hide() -> HSCanvas
 
@@ -397,8 +398,17 @@ import SwiftUI
 
     private var canvasFrame: CGRect
     private var nsWindow: NSWindow?
-    private let canvasID = UUID()
     private weak var module: HSCanvasModule?
+
+    // A shown canvas is active: it stays on screen, with its callbacks, until it's hidden or
+    // destroyed, even if the user dropped their reference to it. A hidden canvas nobody
+    // references can never be shown again, so it's ordinary garbage.
+    private var isShown = false {
+        didSet {
+            module?.canvases.setActive(self, isShown,
+                                       in: JSContext.current() ?? (mouseCallbackRef ?? draggingCallbackRef)?.value?.context)
+        }
+    }
 
     private let elementStore = CanvasElementStore()
 
@@ -418,6 +428,7 @@ import SwiftUI
         self.canvasFrame = frame
         self.module = module
         super.init()
+        module.canvases.add(self)
     }
 
     convenience init(dict: [String: Any], module: HSCanvasModule) {
@@ -435,10 +446,7 @@ import SwiftUI
         draggingCallbackRef?.detach(from: self)
 
         guard let window = nsWindow else { return }
-        let capturedModule = module
-        let id = canvasID
         DispatchQueue.main.async {
-            capturedModule?.unregister(canvas: id)
             window.contentView = nil
             window.close()
         }
@@ -482,16 +490,17 @@ import SwiftUI
             window.contentView = hostingView
 
             self.nsWindow = window
-            module?.register(self, id: canvasID)
         }
 
         nsWindow?.makeKeyAndOrderFront(nil)
         nsWindow?.orderFrontRegardless()
+        isShown = true
         return self
     }
 
     @objc func hide() -> HSCanvas {
         nsWindow?.orderOut(nil)
+        isShown = false
         return self
     }
 
@@ -500,12 +509,12 @@ import SwiftUI
         mouseCallbackRef = nil
         draggingCallbackRef?.detach(from: self)
         draggingCallbackRef = nil
+        isShown = false
 
         guard let window = nsWindow else { return }
         window.contentView = nil
         window.close()
         nsWindow = nil
-        module?.unregister(canvas: canvasID)
     }
 
     @objc func isShowing() -> Bool {

@@ -29,13 +29,6 @@ const ALLOWED = {
     // Awaiting migration to HSObjectTracker (pending-activity rollout)
     'hs.audiodevice/HSAudioDevice.swift:selfRetain': 'rollout',
     'hs.camera/HSCamera.swift:selfRetain': 'rollout',
-    'hs.serial/HSSerialPort.swift:selfRetain': 'rollout',
-    'hs.streamdeck/HSStreamDeckDevice.swift:selfRetain': 'rollout',
-    'hs.sharing/HSSharingModule.swift:activeShares': 'rollout',
-    'hs.ui/HSUIModule.swift:activeWindows': 'rollout',
-    'hs.ui/HSUIModule.swift:activeAlerts': 'rollout',
-    'hs.ui/HSUIModule.swift:activeDialogs': 'rollout',
-    'hs.canvas/HSCanvasModule.swift:activeCanvases': 'rollout',
 
     // Justified: module-owned objects, or transient lookups that aren't the objects' lifetime
     'hs.camera/HSCameraModule.swift:cameraCache': 'one object per physical camera, owned by the module so JS always gets the same one',

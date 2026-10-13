@@ -506,6 +506,50 @@ struct HSSerialTests {
             harness.eval("p.close()")
         }
 
+        // MARK: Garbage collection (issue #267)
+
+        @Test("An open port the caller didn't keep still receives data after garbage collection")
+        func testUnreferencedOpenPortSurvivesGC() async throws {
+            let pty = try TempPTY()
+            let harness = JSTestHarness()
+            harness.loadModule(HSSerialModule.self, as: "serial")
+
+            var receivedData: String?
+            harness.registerCallback("onReceived") { (data: String) in receivedData = data }
+
+            // `void` so the script's completion value doesn't pin the port's wrapper
+            autoreleasepool {
+                _ = harness.eval("""
+                    void hs.serial.createPortAtPath('\(pty.slavePath)').setCallback((event, data) => {
+                        if (event === 'received') { onReceived(data) }
+                    }).open()
+                """)
+            }
+            #expect(!harness.hasException)
+            harness.collectGarbage()
+
+            pty.writeToMaster("still here")
+            let fired = await harness.waitForAsync(timeout: 5.0) { receivedData != nil }
+            #expect(fired, "An unreferenced open port must keep its callback")
+        }
+
+        @Test("A closed port the caller didn't keep is garbage collected")
+        func testClosedPortIsCollected() throws {
+            let pty = try TempPTY()
+            let harness = JSTestHarness()
+            harness.loadModule(HSSerialModule.self, as: "serial")
+
+            weak var port: HSSerialPort?
+            autoreleasepool {
+                harness.eval("var p = hs.serial.createPortAtPath('\(pty.slavePath)').setCallback(function() {}).open(); void 0")
+                port = harness.evalValue("p")?.toObjectOf(HSSerialPort.self) as? HSSerialPort
+                harness.eval("p.close(); p = null; void 0")
+            }
+            #expect(port != nil)
+            harness.collectGarbage()
+            #expect(port == nil, "A closed port must not be kept alive")
+        }
+
         @Test("sendData() delivers bytes to the far end of the pty")
         func testSendDataDeliversToFarEnd() throws {
             let pty = try TempPTY()

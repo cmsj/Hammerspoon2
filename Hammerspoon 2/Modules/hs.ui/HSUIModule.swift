@@ -398,10 +398,12 @@ import SwiftUI
     var moduleName = "hs.ui"
     let engineID: UUID
 
-    // Keep strong references to active windows to prevent premature deallocation
-    private var activeWindows: [UUID: HSUIWindow] = [:]
-    private var activeAlerts: [UUID: HSUIAlert] = [:]
-    private var activeDialogs: [UUID: HSUIDialog] = [:]
+    // Shown windows, alerts and dialogs are kept alive by these trackers while active; hidden
+    // or closed ones are ordinary garbage once JS drops them. Internal so each object can
+    // register itself.
+    let windows = HSObjectTracker<HSUIWindow>()
+    let alerts = HSObjectTracker<HSUIAlert>()
+    let dialogs = HSObjectTracker<HSUIDialog>()
 
     // Single shared window for auto-positioned (stacked) alerts
     private let alertStackManager = HSUIAlertStackManager()
@@ -421,22 +423,22 @@ import SwiftUI
         alertStackManager.alerts.removeAll()
 
         // Destroy all windows
-        for window in activeWindows.values {
+        for window in windows.allObjects {
             window.destroy()
         }
-        activeWindows.removeAll()
+        windows.removeAllObjects()
 
         // Close all alerts
-        for alert in activeAlerts.values {
+        for alert in alerts.allObjects {
             alert.close()
         }
-        activeAlerts.removeAll()
+        alerts.removeAllObjects()
 
         // Close all dialogs
-        for dialog in activeDialogs.values {
+        for dialog in dialogs.allObjects {
             dialog.close()
         }
-        activeDialogs.removeAll()
+        dialogs.removeAllObjects()
     }
 
     isolated deinit {
@@ -444,37 +446,11 @@ import SwiftUI
     }
 
     @objc func toString() -> String {
-        return "<\(moduleName): \(activeWindows.count) window(s), \(activeAlerts.count) alert(s), \(activeDialogs.count) dialog(s)>"
+        return "<\(moduleName): \(windows.activeCount) window(s), \(alerts.activeCount) alert(s), \(dialogs.activeCount) dialog(s)>"
     }
 
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
-    }
-
-    // MARK: - Object Registration (called by UI objects when shown/closed)
-
-    func register(_ window: HSUIWindow, id: UUID) {
-        activeWindows[id] = window
-    }
-
-    func unregister(window id: UUID) {
-        activeWindows.removeValue(forKey: id)
-    }
-
-    func register(_ alert: HSUIAlert, id: UUID) {
-        activeAlerts[id] = alert
-    }
-
-    func unregister(alert id: UUID) {
-        activeAlerts.removeValue(forKey: id)
-    }
-
-    func register(_ dialog: HSUIDialog, id: UUID) {
-        activeDialogs[id] = dialog
-    }
-
-    func unregister(dialog id: UUID) {
-        activeDialogs.removeValue(forKey: id)
     }
 
     // MARK: - Alert Stack Management

@@ -96,7 +96,7 @@ import AppKit
     /// — use `setCallback()` to find out when it completes.
     /// - Parameter items: {Array<string|HSImage>} The items to share
     /// - Returns: true if the share was started
-    /// - Note: Unsupported items will be ignored
+    /// - Note: Unsupported items will be ignored. A share that has started, and its callback, stay alive until it succeeds or fails, even if you don't keep a reference to it
     /// - Example:
     /// ```js
     /// share.shareItems(['Check this out', 'https://www.hammerspoon.org'])
@@ -135,12 +135,19 @@ import AppKit
     @objc let identifier = UUID().uuidString
 
     let service: NSSharingService
-    weak var module: HSSharingModule?
+    private weak var tracker: HSObjectTracker<HSSharingService>?
     private var callback: JSCallback?
 
-    init(service: NSSharingService, module: HSSharingModule) {
+    // A share in flight is active: it stays alive with its callback from shareItems() until
+    // it succeeds or fails, even if the user dropped their reference to it (e.g. a one-line
+    // share chain). Not finishesOnItsOwn: it usually waits for the user to complete the UI.
+    private var isSharing = false {
+        didSet { tracker?.setActive(self, isSharing, in: JSContext.current() ?? callback?.value?.context) }
+    }
+
+    init(service: NSSharingService, tracker: HSObjectTracker<HSSharingService>) {
         self.service = service
-        self.module = module
+        self.tracker = tracker
         super.init()
         service.delegate = self
         AKGarbage("Init of HSSharingService(\(identifier)): \(service.title)")
@@ -155,6 +162,7 @@ import AppKit
         service.delegate = nil
         callback?.detach(from: self)
         callback = nil
+        isSharing = false
     }
 
     // MARK: - HSSharingServiceAPI
@@ -188,7 +196,7 @@ import AppKit
             AKWarning("hs.sharing: '\(service.title)' cannot share the given items")
             return false
         }
-        module?.markActive(self)
+        isSharing = true
         service.perform(withItems: coerced)
         return true
     }
@@ -208,13 +216,13 @@ import AppKit
     }
 
     func sharingService(_ sharingService: NSSharingService, didShareItems items: [Any]) {
+        defer { isSharing = false }
         _ = callback?.call(withArguments: ["didShare", items])
-        module?.markInactive(self)
     }
 
     func sharingService(_ sharingService: NSSharingService, didFailToShareItems items: [Any], error: Error) {
+        defer { isSharing = false }
         _ = callback?.call(withArguments: ["didFail", items, error.localizedDescription])
-        module?.markInactive(self)
     }
 
     // MARK: - Item coercion

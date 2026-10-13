@@ -428,12 +428,92 @@ struct HSUITests {
         }
     }
 
+    // MARK: - Garbage collection (issue #267)
+
+    @Test("A shown window the caller didn't keep stays alive with its callbacks, and is collected once hidden")
+    func testShownWindowLifetime() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSUIModule.self, as: "ui")
+
+        weak var window: HSUIWindow?
+        autoreleasepool {
+            harness.eval("""
+                var hidden = false
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100}).text("Test").onHide(() => { hidden = true })
+                w.show()
+                void 0
+            """)
+            window = harness.evalValue("w")?.toObjectOf(HSUIWindow.self) as? HSUIWindow
+            harness.eval("w = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(window != nil, "A shown window must not be collected")
+
+        autoreleasepool { window?.hide() }
+        #expect(harness.evalBool("hidden") == true, "An unreferenced shown window must keep its callbacks")
+        // Let AppKit release the ordered-out window's views before collecting
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
+        harness.collectGarbage()
+        #expect(window == nil, "A hidden window nobody references must not be kept alive")
+    }
+
+    @Test("A web view's callbacks live as long as the window it's in, not its own wrapper")
+    func testWebViewCallbacksOwnedByWindow() throws {
+        let harness = JSTestHarness()
+        harness.loadModule(HSUIModule.self, as: "ui")
+
+        // The window stays referenced from JS; the web view element doesn't, which is how a
+        // builder chain is usually written. The Swift reference below keeps the element
+        // itself alive without pinning its JS wrapper.
+        var webView: UIWebView?
+        autoreleasepool {
+            harness.eval("""
+                var wv = hs.ui.webview().onNavigationDecision(() => true)
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100}).webview(wv)
+                void 0
+            """)
+            webView = harness.evalValue("wv")?.toObjectOf(UIWebView.self) as? UIWebView
+            harness.eval("wv = null; void 0")
+        }
+        let element = try #require(webView)
+        harness.collectGarbage()
+
+        #expect(element.navigationDecisionCallback?.value != nil,
+                "A web view's callbacks must survive while its window is referenced")
+        harness.eval("w.destroy()")
+        #expect(!harness.hasException)
+    }
+
+    @Test("A showing dialog the caller didn't keep stays alive with its callback, and is collected once closed")
+    func testShowingDialogLifetime() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSUIModule.self, as: "ui")
+
+        weak var dialog: HSUIDialog?
+        autoreleasepool {
+            harness.eval("var pressed = -1; var d = hs.ui.dialog('GC test').onButton((i) => { pressed = i }); d.show(); void 0")
+            dialog = harness.evalValue("d")?.toObjectOf(HSUIDialog.self) as? HSUIDialog
+            harness.eval("d = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(dialog != nil, "A showing dialog must not be collected")
+
+        dialog?.handleButtonPress(buttonIndex: 0)
+        let pressed = await harness.waitForAsync(timeout: 2.0) { harness.evalInt("pressed") == 0 }
+        #expect(pressed, "An unreferenced showing dialog must keep its callback")
+
+        autoreleasepool { dialog?.close() }
+        // Let AppKit release the closed window's views before collecting
+        try? await Task.sleep(for: .milliseconds(500))
+        harness.collectGarbage()
+        #expect(dialog == nil, "A closed dialog must not be kept alive")
+    }
+
     // MARK: - Memory Leak Tests
     //
-    // HSUIWindow, HSUIAlert, and HSUIDialog register themselves in strong dictionaries
-    // inside HSUIModule when show() is called, so they stay alive until shutdown()
-    // explicitly tears them down (destroy() for windows, close() for alerts/dialogs)
-    // and clears those dictionaries.
+    // Shown HSUIWindow, HSUIAlert, and HSUIDialog objects are active in HSUIModule's
+    // trackers, so they stay alive until shutdown() explicitly tears them down (destroy()
+    // for windows, close() for alerts/dialogs) and calls removeAllObjects().
 
     @Test("Shown HSUIWindow is released after shutdown")
     func testWindowDoesNotLeakAfterReload() {
@@ -446,10 +526,9 @@ struct HSUITests {
         autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSUIModule.self, as: "ui")
-            // show() registers the window in HSUIModule.activeWindows (strong dictionary).
-            // Without shutdown(), the window would be held alive by the module even after
-            // the JS reference is dropped. shutdown() calls destroy() on each window and
-            // then clears activeWindows, releasing the strong ref.
+            // show() makes the window active in HSUIModule's tracker, which keeps it alive
+            // even after the JS reference is dropped. shutdown() calls destroy() on each
+            // window and then removeAllObjects(), releasing it.
             // Content is required — show() guards on rootElement being set.
             harness.eval("""
                 var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
@@ -472,8 +551,8 @@ struct HSUITests {
             let harness = JSTestHarness()
             harness.loadModule(HSUIModule.self, as: "ui")
             // A 60-second duration prevents auto-dismiss from racing with the shutdown.
-            // show() registers the alert in HSUIModule.activeAlerts (strong dictionary);
-            // shutdown() calls close() and clears activeAlerts.
+            // show() makes the alert active in HSUIModule's tracker; shutdown() calls close()
+            // and removeAllObjects().
             harness.eval("""
                 var a = hs.ui.alert('HS2 Leak Test')
                 a.duration(60).show()
@@ -494,9 +573,8 @@ struct HSUITests {
         autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSUIModule.self, as: "ui")
-            // show() creates a non-modal NSWindow and registers the dialog in
-            // HSUIModule.activeDialogs (strong dictionary); shutdown() calls close()
-            // and clears activeDialogs.
+            // show() creates a non-modal NSWindow and makes the dialog active in HSUIModule's
+            // tracker; shutdown() calls close() and removeAllObjects().
             harness.eval("""
                 var d = hs.ui.dialog('HS2 Leak Test')
                 d.show()

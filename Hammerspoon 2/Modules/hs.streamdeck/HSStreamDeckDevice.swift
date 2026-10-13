@@ -198,19 +198,33 @@ nonisolated private func hsStreamDeckInputReportCallback(
 
     let device: IOHIDDevice
     let model: HSStreamDeckModel
-    private(set) var isValid = true
-
-    // Self-retain while connected, so the object survives independent of JS references —
-    // mirrors HSCamera's watcher selfRetain pattern. Cleared in destroy().
-    private var selfRetain: HSStreamDeckDevice?
+    private(set) var isValid = true {
+        didSet { updateActivity() }
+    }
+    private weak var tracker: HSObjectTracker<HSStreamDeckDevice>?
 
     private var serialNumberCache: String?
     private var buttonStateCache: [Int]
     private var encoderStateCache: [Int]
 
-    private var onButtonHandler: JSCallback?
-    private var onEncoderHandler: JSCallback?
-    private var onScreenHandler: JSCallback?
+    private var onButtonHandler: JSCallback? {
+        didSet { updateActivity() }
+    }
+    private var onEncoderHandler: JSCallback? {
+        didSet { updateActivity() }
+    }
+    private var onScreenHandler: JSCallback? {
+        didSet { updateActivity() }
+    }
+
+    // The module keeps a connected device alive itself (one object per device, so JS always
+    // gets the same one), but its handlers are owned by its JS wrapper. So a connected device
+    // with a handler is active: its wrapper, and so its handlers, stay alive until it's
+    // disconnected or the handlers are removed, even if the user dropped their reference to it.
+    private func updateActivity() {
+        let handler = onButtonHandler ?? onEncoderHandler ?? onScreenHandler
+        tracker?.setActive(self, isValid && handler != nil, in: JSContext.current() ?? handler?.value?.context)
+    }
 
     // Fixed, persistently-allocated buffer IOKit writes input reports into. Must not move
     // for as long as IOHIDDeviceRegisterInputReportCallback is registered, so it can't be a
@@ -218,9 +232,10 @@ nonisolated private func hsStreamDeckInputReportCallback(
     private static let reportBufferLength = 1024
     private let reportBuffer: UnsafeMutablePointer<UInt8>
 
-    init(device: IOHIDDevice, model: HSStreamDeckModel) {
+    init(device: IOHIDDevice, model: HSStreamDeckModel, tracker: HSObjectTracker<HSStreamDeckDevice>) {
         self.device = device
         self.model = model
+        self.tracker = tracker
         unsafe self.reportBuffer = .allocate(capacity: HSStreamDeckDevice.reportBufferLength)
         unsafe self.reportBuffer.initialize(repeating: 0, count: HSStreamDeckDevice.reportBufferLength)
         self.buttonStateCache = Array(repeating: 0, count: model.keyCount + 1)
@@ -237,7 +252,6 @@ nonisolated private func hsStreamDeckInputReportCallback(
     /// Begins delivering input reports. Called once by the module right after the device
     /// is discovered.
     func startReceivingInputReports() {
-        selfRetain = self
         unsafe IOHIDDeviceRegisterInputReportCallback(
             device, reportBuffer, HSStreamDeckDevice.reportBufferLength,
             hsStreamDeckInputReportCallback, Unmanaged.passUnretained(self).toOpaque()
@@ -254,7 +268,6 @@ nonisolated private func hsStreamDeckInputReportCallback(
         onEncoderHandler = nil
         onScreenHandler?.detach(from: self)
         onScreenHandler = nil
-        selfRetain = nil
     }
 
     @objc func toString() -> String {

@@ -604,6 +604,34 @@ struct HSCanvasTests {
         }
     }
 
+    // MARK: - Garbage collection (issue #267)
+
+    @Test("A shown canvas the caller didn't keep stays on screen after garbage collection, and is collected once hidden")
+    @MainActor
+    func testShownCanvasLifetime() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSCanvasModule.self, as: "canvas")
+
+        weak var canvas: HSCanvas?
+        autoreleasepool {
+            harness.eval("""
+                var c = hs.canvas.create({x: 0, y: 0, w: 50, h: 50})
+                c.appendElements([{ type: "rectangle", action: "fill", fillColor: { alpha: 1 } }])
+                c.mouseCallback(() => {})
+                c.show()
+                void 0
+            """)
+            canvas = harness.evalValue("c")?.toObjectOf(HSCanvas.self) as? HSCanvas
+            harness.eval("c = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(canvas?.isShowing() == true, "A shown canvas must not be collected")
+
+        _ = canvas?.hide()
+        harness.collectGarbage()
+        #expect(canvas == nil, "A hidden canvas nobody references must not be kept alive")
+    }
+
     // MARK: - Memory leak tests
 
     @Test("Shown HSCanvas is released after shutdown")
@@ -616,10 +644,9 @@ struct HSCanvasTests {
         autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSCanvasModule.self, as: "canvas")
-            // show() registers the canvas in HSCanvasModule.activeCanvases (strong
-            // dictionary). Without shutdown(), it would be held alive by the module
-            // even after the JS reference is dropped. shutdown() calls destroy() on
-            // each canvas and then clears activeCanvases, releasing the strong ref.
+            // show() makes the canvas active in the module's tracker, which keeps it alive
+            // even after the JS reference is dropped. shutdown() calls destroy() on each
+            // canvas and then removeAllObjects(), releasing it.
             // Also set mouseCallback/draggingCallback so this test exercises the
             // JSCallback-detach paths in destroy() -- not just the window-registration path.
             harness.eval("""
@@ -641,10 +668,10 @@ struct HSCanvasTests {
     @Test("shutdown() with multiple shown canvases destroys all of them without trapping")
     @MainActor
     func testShutdownWithMultipleCanvases() {
-        // Regression test: HSCanvasModule.shutdown() used to iterate activeCanvases.values
-        // directly while each canvas.destroy() call synchronously mutated that same
-        // dictionary via unregister(canvas:) -- mutating a Dictionary while enumerating it
-        // traps at runtime. A single canvas doesn't reliably exercise this; several do.
+        // Regression test: HSCanvasModule.shutdown() used to iterate its canvas dictionary
+        // directly while each canvas.destroy() call synchronously mutated it -- mutating a
+        // Dictionary while enumerating it traps at runtime. A single canvas doesn't reliably
+        // exercise this; several do.
         let trackers = (0..<5).map { _ in WeakLeakTracker() }
         autoreleasepool {
             let harness = JSTestHarness()

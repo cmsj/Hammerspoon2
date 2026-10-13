@@ -486,6 +486,24 @@ final class UIWebViewToolbarEntry: Identifiable {
     private var onNavigateCallback: JSCallback?
     private var onTitleChangeCallback: JSCallback?
 
+    // The window this web view is attached to. It owns the web view's callbacks, so they live as
+    // long as the window does (the user holds the window, or it's kept alive while shown),
+    // rather than as long as this element's own JS wrapper, which nothing usually references.
+    private weak var hostWindow: HSUIWindow?
+    private var callbackOwner: AnyObject { hostWindow ?? self }
+
+    /// Hands this web view's callbacks to `window`. Called when it's added to a window.
+    func attach(to window: HSUIWindow) {
+        let oldOwner = callbackOwner
+        guard oldOwner !== window else { return }
+        let callbacks = [navigationDecisionCallback, onLoadChangeCallback, onNavigateCallback, onTitleChangeCallback]
+            + toolbarEntries.map(\.callback)
+        for callback in callbacks {
+            callback?.transferOwnership(from: oldOwner, to: window)
+        }
+        hostWindow = window
+    }
+
     // Observation tasks start at init and cancel when destroy() is called
     private var navigationEventTask: Task<Void, Never>?
     private var stateObservationTask: Task<Void, Never>?
@@ -520,15 +538,15 @@ final class UIWebViewToolbarEntry: Identifiable {
         stateObservationTask?.cancel()
         stateObservationTask = nil
 
-        onLoadChangeCallback?.detach(from: self)
+        onLoadChangeCallback?.detach(from: callbackOwner)
         onLoadChangeCallback = nil
-        onNavigateCallback?.detach(from: self)
+        onNavigateCallback?.detach(from: callbackOwner)
         onNavigateCallback = nil
-        onTitleChangeCallback?.detach(from: self)
+        onTitleChangeCallback?.detach(from: callbackOwner)
         onTitleChangeCallback = nil
-        navigationDecisionCallback?.detach(from: self)
+        navigationDecisionCallback?.detach(from: callbackOwner)
         navigationDecisionCallback = nil
-        for entry in toolbarEntries { entry.detachCallback(from: self) }
+        for entry in toolbarEntries { entry.detachCallback(from: callbackOwner) }
         toolbarEntries.removeAll()
     }
 
@@ -583,7 +601,7 @@ final class UIWebViewToolbarEntry: Identifiable {
     }
 
     @objc func toolbar(_ items: JSValue) -> UIWebView {
-        for entry in toolbarEntries { entry.detachCallback(from: self) }
+        for entry in toolbarEntries { entry.detachCallback(from: callbackOwner) }
         toolbarEntries.removeAll()
 
         guard items.isArray else {
@@ -611,7 +629,7 @@ final class UIWebViewToolbarEntry: Identifiable {
                     AKWarning("hs.ui.webview.toolbar: custom button missing 'callback' function")
                     continue
                 }
-                let cb = JSCallback(value: cbValue, owner: self)
+                let cb = JSCallback(value: cbValue, owner: callbackOwner)
                 let titleVal = item.objectForKeyedSubscript("title")
                 let sysImgVal = item.objectForKeyedSubscript("systemImage")
                 toolbarEntries.append(UIWebViewToolbarEntry(
@@ -659,29 +677,29 @@ final class UIWebViewToolbarEntry: Identifiable {
     // MARK: Callbacks
 
     @objc func onLoadChange(_ callback: JSFunction) -> UIWebView {
-        onLoadChangeCallback?.detach(from: self)
-        onLoadChangeCallback = JSCallback(value: callback, owner: self)
+        onLoadChangeCallback?.detach(from: callbackOwner)
+        onLoadChangeCallback = JSCallback(value: callback, owner: callbackOwner)
         ensureStateObservationStarted()
         return self
     }
 
     @objc func onNavigate(_ callback: JSFunction) -> UIWebView {
-        onNavigateCallback?.detach(from: self)
-        onNavigateCallback = JSCallback(value: callback, owner: self)
+        onNavigateCallback?.detach(from: callbackOwner)
+        onNavigateCallback = JSCallback(value: callback, owner: callbackOwner)
         ensureNavigationEventObservationStarted()
         return self
     }
 
     @objc func onTitleChange(_ callback: JSFunction) -> UIWebView {
-        onTitleChangeCallback?.detach(from: self)
-        onTitleChangeCallback = JSCallback(value: callback, owner: self)
+        onTitleChangeCallback?.detach(from: callbackOwner)
+        onTitleChangeCallback = JSCallback(value: callback, owner: callbackOwner)
         ensureStateObservationStarted()
         return self
     }
 
     @objc func onNavigationDecision(_ callback: JSFunction) -> UIWebView {
-        navigationDecisionCallback?.detach(from: self)
-        navigationDecisionCallback = JSCallback(value: callback, owner: self)
+        navigationDecisionCallback?.detach(from: callbackOwner)
+        navigationDecisionCallback = JSCallback(value: callback, owner: callbackOwner)
         return self
     }
 
@@ -701,12 +719,13 @@ final class UIWebViewToolbarEntry: Identifiable {
 
     @objc(evalJS:result:)
     func evalJSResult(_ script: String, _ callback: JSFunction) -> UIWebView {
-        guard let capturedCallback = JSCallback(value: callback, owner: self) else {
+        let owner = callbackOwner
+        guard let capturedCallback = JSCallback(value: callback, owner: owner) else {
             return self
         }
         Task { @MainActor [weak self] in
             guard let self else { return }
-            defer { capturedCallback.detach(from: self) }
+            defer { capturedCallback.detach(from: owner) }
             do {
                 let result = try await self.page.callJavaScript(script, arguments: [:])
                 _ = capturedCallback.call(withArguments: [result as Any, NSNull()])

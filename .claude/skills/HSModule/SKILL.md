@@ -180,7 +180,8 @@ What counts as "active":
 | Playing media (`HSSound`) | `play()` | finished playing, or `stop()` |
 
 Rules:
-- Activity MUST be derived from a single state property, with `setActive` called only from its `didSet`. If no existing property captures it, add a `State` enum (see `HSTask`).
+- Activity MUST be derived from a single state property, with `setActive` called only from its `didSet`. If no existing property captures it, add a `State` enum (see `HSTask`). If activity genuinely depends on several properties (e.g. `HSStreamDeckDevice`: connected *and* has a handler), give each of them a `didSet` that calls one private `updateActivity()`, which computes the condition and calls `setActive`.
+- Property observers don't fire inside the class's own `init`, so an object that starts its activity on creation (e.g. `HSNetworkPing`) must set its state from a method called by `init`, not from `init` itself.
 - The state MUST become inactive on every path where the activity stops, including failures, the OS stopping it on its own (e.g. a process exiting), and `destroy()`.
 - Becoming active should happen in the JS-facing method that starts the activity, so `JSContext.current()` is available. Fall back to a callback's context.
 - Pass `finishesOnItsOwn: true` to `setActive` when the activity ends without being stopped (a process exiting, a one-shot timer firing, a sound finishing, a ping completing). The `JSTestHarness` fails any test that ends with such an object still active, which catches objects that never become inactive.
@@ -238,6 +239,8 @@ private var _callbackPressed: JSCallback?
 **Usage — callback stored on a module:** the same, with the module as owner. `ModuleRoot` pins every module's wrapper, so the callback lives until the module detaches it (in `_removeWatcher()`/`shutdown()`).
 
 **The owner must be JS-exported.** An internal helper that isn't (e.g. `HSAXWatcherObject`, bonjour's `AdvertisedService`) has no wrapper, so a `JSCallback` it owns is collected at the first GC. Make the module or the JS-facing object the owner instead.
+
+**The owner should be the object the user holds.** An element added to a container (e.g. a `UIWebView` in an `HSUIWindow`) is usually built inline and never referenced again, so its own wrapper is collectable even while the user holds the container. Hand its callbacks to the container when it's added (`JSCallback.transferOwnership(from:to:)`, see `UIWebView.attach(to:)`) and create later ones with the container as owner.
 
 A `JSCallback` only stays alive while its owner's JS wrapper is reachable. If the owner must keep calling back after the user drops it, make it active in its tracker (see **Object lifetime** above), not Swift-side retention.
 

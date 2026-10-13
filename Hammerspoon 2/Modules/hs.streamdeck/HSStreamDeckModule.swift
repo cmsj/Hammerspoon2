@@ -104,7 +104,10 @@ nonisolated enum HSStreamDeckEvent: String, HSEventName {
     let engineID: UUID
 
     private let ioHIDManager: IOHIDManager
+    // One object per connected device, owned by the module so JS always gets the same one
     private var devices: [UInt64: HSStreamDeckDevice] = [:]
+    // Connected devices with handlers are active here, which keeps their handlers alive
+    private var activeDevices = HSObjectTracker<HSStreamDeckDevice>()
     private var hasShutDown = false
 
     // Retained reference passed as the IOHIDManager callback context; balanced by
@@ -161,6 +164,7 @@ nonisolated enum HSStreamDeckEvent: String, HSEventName {
 
         for device in devices.values { device.destroy() }
         devices.removeAll()
+        activeDevices.removeAllObjects()
 
         unsafe selfRef?.release()
         unsafe selfRef = nil
@@ -225,7 +229,7 @@ nonisolated enum HSStreamDeckEvent: String, HSEventName {
             return nil
         }
 
-        let deck = HSStreamDeckDevice(device: device, model: model)
+        let deck = HSStreamDeckDevice(device: device, model: model, tracker: activeDevices)
         devices[entryID] = deck
         deck.startReceivingInputReports()
         AKDebug("hs.streamdeck: connected \(model.deckType) (\(deck.serialNumber))")

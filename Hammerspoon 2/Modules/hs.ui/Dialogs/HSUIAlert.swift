@@ -108,14 +108,21 @@ import SwiftUI
     private var nsWindow: NSWindow?
     let alertID: UUID = UUID()
     private var isStacked = false
-    private var isShowing = false
     private var dismissTask: Task<Void, Never>?
     private weak var module: HSUIModule?
+
+    // A showing alert is active: it stays on screen until it's dismissed, even if the user
+    // dropped their reference to it. Not finishesOnItsOwn, although its timer dismisses it:
+    // tests showing alerts shouldn't have to wait out the duration.
+    private var isShowing = false {
+        didSet { module?.alerts.setActive(self, isShowing, in: JSContext.current()) }
+    }
 
     init(message: String, module: HSUIModule) {
         self.message = message
         self.module = module
         super.init()
+        module.alerts.add(self)
     }
 
     deinit {
@@ -124,10 +131,7 @@ import SwiftUI
         // close() being called, dispatch AppKit cleanup to the main thread without retaining
         // self (capturing only the NSWindow and UUID values).
         guard let window = nsWindow else { return }
-        let id = alertID
-        let capturedModule = module
         DispatchQueue.main.async {
-            capturedModule?.unregister(alert: id)
             window.contentView = nil
             window.delegate = nil
             window.close()
@@ -163,8 +167,6 @@ import SwiftUI
     @objc func show() -> HSUIAlert {
         guard !isShowing else { return self }
         isShowing = true
-
-        module?.register(self, id: alertID)
 
         let dismissDelay: Double
         if position != nil {
@@ -222,10 +224,8 @@ import SwiftUI
 
         if isStacked {
             isStacked = false
-            module?.unregister(alert: alertID)
             module?.removeAlertFromStack(self)
         } else {
-            module?.unregister(alert: alertID)
             nsWindow?.delegate = nil
             nsWindow?.orderOut(nil)
             nsWindow?.close()

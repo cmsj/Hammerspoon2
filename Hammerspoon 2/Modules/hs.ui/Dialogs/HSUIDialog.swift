@@ -72,6 +72,7 @@ import SwiftUI
     @objc func onButton(_ callback: JSFunction) -> HSUIDialog
 
     /// Show the dialog
+    /// - Note: A showing dialog, and its callback, stay alive until it's closed, even if you don't keep a reference to it
     /// - Returns: Self for chaining
     /// - Example:
     /// ```js
@@ -105,15 +106,22 @@ import SwiftUI
     var buttons: [String] = ["OK"]
     var style: String = "informational"
 
-    private var buttonCallback: JSFunction?
-    private var nsWindow: NSWindow?
-    private let dialogID: UUID = UUID()
+    private var buttonCallback: JSCallback?
     private weak var module: HSUIModule?
+
+    // A showing dialog is active: it stays on screen, with its callback, until it's closed,
+    // even if the user dropped their reference to it.
+    private var nsWindow: NSWindow? {
+        didSet {
+            module?.dialogs.setActive(self, nsWindow != nil, in: JSContext.current() ?? buttonCallback?.value?.context)
+        }
+    }
 
     init(message: String, module: HSUIModule) {
         self.message = message
         self.module = module
         super.init()
+        module.dialogs.add(self)
     }
 
     deinit {
@@ -122,10 +130,7 @@ import SwiftUI
         // close() being called, dispatch AppKit cleanup to the main thread without retaining
         // self (capturing only the NSWindow and UUID values).
         guard let window = nsWindow else { return }
-        let id = dialogID
-        let capturedModule = module
         DispatchQueue.main.async {
-            capturedModule?.unregister(dialog: id)
             window.contentView = nil
             window.delegate = nil
             window.close()
@@ -152,7 +157,8 @@ import SwiftUI
     }
 
     @objc func onButton(_ callback: JSFunction) -> HSUIDialog {
-        self.buttonCallback = callback
+        buttonCallback?.detach(from: self)
+        buttonCallback = JSCallback(value: callback, owner: self)
         return self
     }
 
@@ -195,16 +201,11 @@ import SwiftUI
 
         self.nsWindow = window
 
-        // Register with module to prevent premature deallocation
-        module?.register(self, id: dialogID)
-
         return self
     }
 
     @objc func close() {
         guard nsWindow != nil else { return } // Already closed
-
-        module?.unregister(dialog: dialogID)
 
         // Explicitly nil the contentView so UIDialogView (which holds a strong ref back
         // to self) is released synchronously before AppKit's async window cleanup runs.
@@ -214,7 +215,7 @@ import SwiftUI
         nsWindow?.close()
         nsWindow = nil
 
-        // Release the callback so its captured JSValue doesn't hold the old JSContext alive.
+        buttonCallback?.detach(from: self)
         buttonCallback = nil
     }
 
@@ -230,10 +231,11 @@ import SwiftUI
 
     // MARK: - Callback Handling
 
-    private func handleButtonPress(buttonIndex: Int) {
+    // Internal rather than private so tests can press buttons
+    func handleButtonPress(buttonIndex: Int) {
         // Invoke callback
         Task { @MainActor in
-            guard let callback = self.buttonCallback else {
+            guard let callback = self.buttonCallback?.value else {
                 // No callback, just close the dialog
                 close()
                 return

@@ -93,7 +93,9 @@ import AppKit
 
     // Keep strong references to shown canvases so they aren't deallocated while on screen,
     // mirroring HSUIModule's activeWindows tracking.
-    private var activeCanvases: [UUID: HSCanvas] = [:]
+    // Shown canvases are kept alive by the tracker while active; hidden ones are ordinary
+    // garbage once JS drops them. Internal so each HSCanvas can register itself.
+    let canvases = HSObjectTracker<HSCanvas>()
 
     static let windowLevelValues: [String: Int] = [
         "desktop": Int(CGWindowLevelForKey(.desktopWindow)),
@@ -146,14 +148,10 @@ import AppKit
     }
 
     func shutdown() {
-        // Snapshot into an Array first -- canvas.destroy() synchronously calls back into
-        // unregister(canvas:), which mutates activeCanvases. Iterating the dictionary's
-        // .values directly while that happens traps ("Dictionary was mutated while being
-        // enumerated").
-        for canvas in Array(activeCanvases.values) {
+        for canvas in canvases.allObjects {
             canvas.destroy()
         }
-        activeCanvases.removeAll()
+        canvases.removeAllObjects()
     }
 
     isolated deinit {
@@ -161,7 +159,7 @@ import AppKit
     }
 
     @objc func toString() -> String {
-        "<\(moduleName): \(activeCanvases.count) canvas(es)>"
+        "<\(moduleName): \(canvases.activeCount) canvas(es)>"
     }
 
     nonisolated override var description: String {
@@ -174,15 +172,5 @@ import AppKit
 
     @objc func create(_ rect: [String: Any]) -> HSCanvas {
         HSCanvas(dict: rect, module: self)
-    }
-
-    // MARK: - Object registration (called by HSCanvas when shown/destroyed)
-
-    func register(_ canvas: HSCanvas, id: UUID) {
-        activeCanvases[id] = canvas
-    }
-
-    func unregister(canvas id: UUID) {
-        activeCanvases.removeValue(forKey: id)
     }
 }

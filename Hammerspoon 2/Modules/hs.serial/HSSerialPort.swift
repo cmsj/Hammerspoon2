@@ -149,6 +149,7 @@ private let ioctlIOSSIOSPEED: UInt = {
     @objc var shouldEchoReceivedData: Bool { get set }
 
     /// Opens the port using its current configuration.
+    /// - Note: An open port, and its callback, stay alive until it's closed, even if you don't keep a reference to it
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
@@ -228,12 +229,22 @@ private let ioctlIOSSIOSPEED: UInt = {
     // Safe without atomics: open() writes fd/generation before resuming the read source
     // (happens-before all its events); close() writes after ioQueue.sync (happens-after all
     // in-flight reads), mirroring the pattern in HSPathWatcher.
-    nonisolated(unsafe) private var fd: Int32 = -1
+    //
+    // An open port is active: it stays alive with its callback until it's closed, even if the
+    // user dropped their reference to it.
+    nonisolated(unsafe) private var fd: Int32 = -1 {
+        didSet {
+            // Only ever written on the main actor (see above)
+            MainActor.assumeIsolated {
+                unsafe tracker?.setActive(self, fd != -1, in: JSContext.current() ?? callback?.value?.context)
+            }
+        }
+    }
     nonisolated(unsafe) fileprivate var generation: Int = 0
 
     private var readSource: DispatchSourceRead?
     private var callback: JSCallback?
-    private var selfRetain: HSSerialPort?
+    private weak var tracker: HSObjectTracker<HSSerialPort>?
 
     @objc var isOpen: Bool { unsafe fd != -1 }
 
@@ -333,9 +344,10 @@ private let ioctlIOSSIOSPEED: UInt = {
 
     @objc var shouldEchoReceivedData = false
 
-    init(name: String, path: String) {
+    init(name: String, path: String, tracker: HSObjectTracker<HSSerialPort>) {
         self.name = name
         self.path = path
+        self.tracker = tracker
         super.init()
     }
 
@@ -363,7 +375,6 @@ private let ioctlIOSSIOSPEED: UInt = {
         applyControlLine(bit: TIOCM_DTR, enabled: _dtr)
         applyControlLine(bit: TIOCM_RTS, enabled: _rts)
         startReading()
-        selfRetain = self
         AKDebug("HSSerialPort(\(identifier)): opened \(path)")
         fireCallback(event: "opened", data: "")
         return self
@@ -460,7 +471,6 @@ private let ioctlIOSSIOSPEED: UInt = {
         unsafe Darwin.close(fd)
         unsafe fd = -1
         readSource = nil
-        selfRetain = nil
         AKDebug("HSSerialPort(\(identifier)): closed")
     }
 

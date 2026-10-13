@@ -17,11 +17,13 @@ import SwiftUI
 /// `HSUIWindow` allows you to create custom windows with a SwiftUI-like
 /// declarative syntax. Build interfaces using shapes, text, images, and layout containers.
 ///
-/// ** Note: ** Clicking the macOS close button only **hides** the window (firing the `onHide()`
-/// callback, if you have one configured) — it does not destroy the window while you hold a reference to it in
-/// JavaScript. Call `destroy()` explicitly (for example from within an `onHide()` handler)
-/// if you want to release it. See `onShow()`, `onHide()`, and `onDestroy()` below for the
-/// full set of lifecycle callbacks.
+/// ** Note: ** A shown window stays on screen, with its callbacks, until it's hidden or destroyed,
+/// even if you don't keep a reference to it. Clicking the macOS close button only **hides** the
+/// window (firing the `onHide()` callback, if you have one configured) — it does not destroy the
+/// window while you hold a reference to it in JavaScript, so you can show it again. Call
+/// `destroy()` explicitly (for example from within an `onHide()` handler) if you want to release
+/// it sooner. See `onShow()`, `onHide()`, and `onDestroy()` below for the full set of lifecycle
+/// callbacks.
 ///
 /// ## Building UI Elements
 ///
@@ -76,6 +78,7 @@ import SwiftUI
     // MARK: Window Management
 
     /// Show the window
+    /// - Note: A shown window, and its callbacks, stay alive until it's hidden, closed or destroyed, even if you don't keep a reference to it
     /// - Returns: Self for chaining
     @objc func show() -> HSUIWindow
 
@@ -420,8 +423,18 @@ import SwiftUI
     private var windowFrame: CGRect
     private var nsWindow: NSWindow?
     private var windowBackgroundColor: Color = .clear
-    private let windowID: UUID = UUID()
     private weak var module: HSUIModule?
+
+    // A shown window is active: it stays on screen, with its callbacks (and those of any web
+    // views in it), until it's hidden, closed or destroyed, even if the user dropped their
+    // reference to it. A hidden window nobody references can never be shown again, so it's
+    // ordinary garbage.
+    private var isShown = false {
+        didSet {
+            module?.windows.setActive(self, isShown,
+                                      in: JSContext.current() ?? (showCallback ?? hideCallback ?? destroyCallback)?.value?.context)
+        }
+    }
 
     // Style configuration
     private var isTitled: Bool = true
@@ -449,6 +462,7 @@ import SwiftUI
         self.windowFrame = frame
         self.module = module
         super.init()
+        module.windows.add(self)
     }
 
     convenience init(dict: [String: Any], module: HSUIModule) {
@@ -468,10 +482,7 @@ import SwiftUI
         // object is freed without destroy() being called, dispatch AppKit cleanup to the
         // main thread without retaining self (capturing only the NSWindow and UUID values).
         guard let window = nsWindow else { return }
-        let id = windowID
-        let capturedModule = module
         DispatchQueue.main.async {
-            capturedModule?.unregister(window: id)
             window.contentView = nil
             window.delegate = nil
             window.close()
@@ -512,9 +523,7 @@ import SwiftUI
         window.orderFrontRegardless()
 
         self.nsWindow = window
-
-        // Register with module to prevent premature deallocation
-        module?.register(self, id: windowID)
+        isShown = true
 
         _ = showCallback?.call(withArguments: [])
 
@@ -524,6 +533,7 @@ import SwiftUI
     @objc func hide() {
         guard nsWindow != nil else { return }
         nsWindow?.orderOut(nil)
+        isShown = false
         _ = hideCallback?.call(withArguments: [])
     }
 
@@ -542,8 +552,7 @@ import SwiftUI
         rootElement = nil
         currentElement = nil
         containerStack.removeAll()
-
-        module?.unregister(window: windowID)
+        isShown = false
 
         // Explicitly nil the contentView so UICanvasView (and any element closures it
         // holds) are released synchronously before AppKit's async window cleanup runs.
@@ -591,6 +600,7 @@ import SwiftUI
         // hide(), and we notify via onHide, not onDestroy.
         Task { @MainActor in
             // This is defered to a later tick of the runloop to run after the window has closed.
+            self.isShown = false
             _ = self.hideCallback?.call(withArguments: [])
         }
     }
@@ -882,6 +892,7 @@ import SwiftUI
         addToCurrentContainer(element)
         currentElement = element
         embeddedWebViews.append(element)
+        element.attach(to: self)
         return self
     }
 

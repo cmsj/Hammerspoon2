@@ -245,7 +245,7 @@ nonisolated enum HSSerialEvent: String, HSEventName {
     }
 
     @objc func toString() -> String {
-        let n = ports.allObjects.count
+        let n = ports.activeCount
         return "<\(moduleName): \(n) open port\(n == 1 ? "" : "s")>"
     }
 
@@ -290,14 +290,14 @@ nonisolated enum HSSerialEvent: String, HSEventName {
             AKWarning("hs.serial.createPortNamed(): No port found named '\(name)'")
             return nil
         }
-        let port = HSSerialPort(name: identity.name, path: identity.path)
+        let port = HSSerialPort(name: identity.name, path: identity.path, tracker: ports)
         ports.add(port)
         return port
     }
 
     @objc func createPortAtPath(_ path: String) -> HSSerialPort {
         let name = (path as NSString).lastPathComponent
-        let port = HSSerialPort(name: name, path: path)
+        let port = HSSerialPort(name: name, path: path, tracker: ports)
         ports.add(port)
         return port
     }
