@@ -387,16 +387,17 @@ func testFooDoesNotLeakAfterReload() {
 
 ### The harness teardown check (automatic)
 
-`JSTestHarness` fails any test that ends with an object still active in an
-`HSObjectTracker` (it records an issue naming the objects). So every test MUST stop what it
-starts: `stop()` timers and watchers, wait for tasks to exit (`await
-harness.waitForTasksToComplete()`), and so on. That's what catches an object that never
-becomes inactive (a one-shot timer still pinned after it fires, a task still pinned after
-it exits), which would otherwise leak until the next reload.
+`JSTestHarness` fails any test that ends with an object still active that should have
+finished on its own: one its module marks `finishesOnItsOwn` in `setActive` (a task, a
+one-shot timer, a playing sound, a ping). It records an issue naming the objects. That's what
+catches an object that never becomes inactive (a one-shot timer still pinned after it fires,
+a task still pinned after it exits), which would otherwise leak until the next reload. So
+tests MUST wait for such objects to finish (`await harness.waitForTasksToComplete()`, a
+`waitFor` on their callback) or stop them.
 
-A test that deliberately ends with something active, usually because nothing can reach it
-to stop it (an unreferenced `doEvery`), sets `harness.allowsActiveObjectsAtTeardown = true`.
-Module shutdown then stops it.
+Objects that run until they're stopped (watchers, hotkeys, repeating timers) may be left
+active; module shutdown stops them. A test that deliberately ends with a self-finishing object
+still running sets `harness.allowsActiveObjectsAtTeardown = true`.
 
 Synchronous tests can't wait for anything delivered through a main-actor `Task`, such as an
 `HSTask`'s termination: `waitFor` spins the run loop, but a main-actor job can't run while
@@ -669,7 +670,7 @@ and record all call arguments so tests can assert on them.
 - [ ] Permission/hardware-gated suites use `.disabled(if: ...)` with a `nonisolated` guard
 - [ ] `#expect(!harness.hasException)` after every non-trivial `eval()`
 - [ ] Async tests use `waitForAsync` or `waitFor` rather than `Thread.sleep` where possible
-- [ ] Every test stops what it starts, or the harness teardown check fails it
+- [ ] Every test waits for (or stops) anything that finishes on its own, or the harness teardown check fails it
 - [ ] State-mutating tests use `.serialized` and save/restore shared state
 - [ ] Nothing triggers permission dialogs, hardware mutations, or live network calls
 - [ ] **If the module creates child JS objects**: a `testFooDoesNotLeakAfterReload()` test exists that (a) creates AND actively starts the object, (b) tracks it with `WeakLeakTracker`, (c) wraps the harness in an `autoreleasepool {}` block, and (d) calls `tracker.assertNoLeaks()` after the block

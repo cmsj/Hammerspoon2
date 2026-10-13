@@ -57,6 +57,7 @@ import Carbon
     @objc var onRepeat: JSFunction? { get set }
 
     /// Enable the hotkey
+    /// - Note: An enabled hotkey, and its callbacks, stay alive until it's disabled, even if you don't keep a reference to it
     /// - Returns: True if the hotkey was enabled, otherwise False
     /// - Example:
     /// ```js
@@ -156,19 +157,32 @@ import Carbon
     }
 
     nonisolated(unsafe) private var carbonHotKeyRef: EventHotKeyRef?
-    private var enabled = false
     private let hotkeyID: UInt32
+    private weak var tracker: HSObjectTracker<HSHotkey>?
+
+    // An enabled hotkey is active: it stays alive with its callbacks until it's disabled, even
+    // if the user dropped their reference to it (e.g. an unstored `hs.hotkey.bind(...)`).
+    private var enabled = false {
+        didSet {
+            tracker?.setActive(self, enabled, in: JSContext.current() ?? callbackContext)
+        }
+    }
+
+    private var callbackContext: JSContext? {
+        _onPressed?.value?.context ?? _onReleased?.value?.context ?? _onRepeat?.value?.context
+    }
     private var repeatDelayTimer: Timer?
     private var repeatIntervalTimer: Timer?
 
     init(keyCode: UInt32, modifiers: UInt32, mods: [String], key: KeyArgument,
          onPressed: JSFunction? = nil, onReleased: JSFunction? = nil,
-         onRepeat: JSFunction? = nil) {
+         onRepeat: JSFunction? = nil, tracker: HSObjectTracker<HSHotkey>) {
         self.carbonKeyCode = keyCode
         self.modifiers = modifiers
         self.mods = mods
         self.keyArgument = key
         self.hotkeyID = HotkeyManager.shared.nextID
+        self.tracker = tracker
         super.init()
 
         self.onPressed = onPressed
@@ -327,7 +341,11 @@ class HotkeyManager {
         defer { _nextID += 1 }
         return _nextID
     }
-    private var hotkeys: [UInt32: HSHotkey] = [:]
+    // Dispatch lookup only. Enabled hotkeys are kept alive by their module's HSObjectTracker.
+    private struct WeakHotkey {
+        weak var hotkey: HSHotkey?
+    }
+    private var hotkeys: [UInt32: WeakHotkey] = [:]
     nonisolated(unsafe) private var eventHandler: EventHandlerRef?
     nonisolated(unsafe) private var contextPtr: UnsafeMutablePointer<HotkeyManager>?
 
@@ -387,7 +405,7 @@ class HotkeyManager {
     }
 
     func register(hotkeyID: UInt32, hotkey: HSHotkey) {
-        hotkeys[hotkeyID] = hotkey
+        hotkeys[hotkeyID] = WeakHotkey(hotkey: hotkey)
     }
 
     func unregister(hotkeyID: UInt32) {
@@ -395,7 +413,7 @@ class HotkeyManager {
     }
 
     private func dispatch(hotkeyID: UInt32, eventKind: UInt32) {
-        hotkeys[hotkeyID]?.trigger(eventKind: eventKind)
+        hotkeys[hotkeyID]?.hotkey?.trigger(eventKind: eventKind)
     }
 }
 

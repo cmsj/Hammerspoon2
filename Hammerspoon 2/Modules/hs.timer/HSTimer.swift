@@ -101,7 +101,10 @@ import JavaScriptCore
     // the user dropped their reference to it. The run loop retaining the Timer's target is not
     // enough on its own: that keeps this object alive, but not its JSCallback.
     private var timer: Timer? {
-        didSet { tracker?.setActive(self, timer != nil, in: JSContext.current() ?? callback?.value?.context) }
+        didSet {
+            tracker?.setActive(self, timer != nil, in: JSContext.current() ?? callback?.value?.context,
+                               finishesOnItsOwn: !repeats)
+        }
     }
 
     @objc let interval: TimeInterval

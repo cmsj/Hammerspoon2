@@ -13,6 +13,7 @@ import Carbon
 /// Module for creating and managing system-wide hotkeys
 @objc protocol HSHotkeyModuleAPI: JSExport {
     /// Bind a hotkey
+    /// - Note: The hotkey stays bound until you disable it, even if you don't keep a reference to it.
     /// - Parameters:
     ///   - mods: An array of modifier key strings (e.g., `["cmd", "shift"]`). Supported names:
     ///     `cmd` / `command` / `⌘`, `shift` / `⇧`, `alt` / `option` / `⌥`, `ctrl` / `control` / `⌃`.
@@ -166,7 +167,8 @@ import Carbon
     var moduleName = "hs.hotkey"
     let engineID: UUID
 
-    // Weak refs: disabled/dropped hotkeys can be GC'd.
+    // Enabled hotkeys are kept alive by the tracker while active; disabled ones are ordinary
+    // garbage once JS drops them.
     private var activeHotkeys = HSObjectTracker<HSHotkey>()
 
     // MARK: - Swift-retained storage for JS-defined functions
@@ -226,7 +228,7 @@ import Carbon
     }
 
     @objc func toString() -> String {
-        let n = activeHotkeys.allObjects.count
+        let n = activeHotkeys.activeCount
         return "<\(moduleName): \(n) bound hotkey\(n == 1 ? "" : "s")>"
     }
 
@@ -292,7 +294,8 @@ import Carbon
             key: keyArgument,
             onPressed: onPressed.isFunction ? onPressed : nil,
             onReleased: onReleased.isFunction ? onReleased : nil,
-            onRepeat: onRepeat.isFunction ? onRepeat : nil
+            onRepeat: onRepeat.isFunction ? onRepeat : nil,
+            tracker: activeHotkeys
         )
 
         activeHotkeys.add(hotkey)

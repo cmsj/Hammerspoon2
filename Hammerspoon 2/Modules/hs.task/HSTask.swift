@@ -175,7 +175,8 @@ import JavaScriptCoreExtras
     private var state = State.notStarted {
         didSet {
             tracker?.setActive(self, state == .running,
-                               in: JSContext.current() ?? onTermination?.value?.context ?? onOutput?.value?.context)
+                               in: JSContext.current() ?? onTermination?.value?.context ?? onOutput?.value?.context,
+                               finishesOnItsOwn: true)
         }
     }
     private var hasStarted: Bool { state != .notStarted }

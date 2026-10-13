@@ -137,14 +137,21 @@ struct HSObjectLifetimeTests {
 
     // MARK: - JSTestHarness
 
-    @Test("The harness fails a test that ends with objects still active")
+    @Test("The harness fails a test that ends with an unfinished one-shot object still active")
     func testHarnessTeardownCheck() {
         withKnownIssue {
             do {
                 let harness = JSTestHarness()
                 harness.loadModule(HSTimerModule.self, as: "timer")
-                harness.eval("void hs.timer.doEvery(60, function() {})")
+                harness.eval("void hs.timer.doAfter(60, function() {})")
             }
         }
+    }
+
+    @Test("The harness leaves objects that run until stopped to module shutdown")
+    func testHarnessTeardownIgnoresIndefiniteActivity() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTimerModule.self, as: "timer")
+        harness.eval("void hs.timer.doEvery(60, function() {})")
     }
 }

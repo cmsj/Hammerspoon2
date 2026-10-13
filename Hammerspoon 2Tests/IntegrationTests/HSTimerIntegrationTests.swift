@@ -411,8 +411,6 @@ struct HSTimerIntegrationTests {
 
         let success = harness.waitFor(timeout: 0.5) { count >= 3 }
         #expect(success, "Unreferenced repeating timer should keep firing")
-        // Nothing can reach the timer to stop it; module shutdown does
-        harness.allowsActiveObjectsAtTeardown = true
     }
 
     @Test("A stopped timer the caller didn't keep is garbage collected")

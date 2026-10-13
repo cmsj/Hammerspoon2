@@ -470,6 +470,51 @@ struct HSHotkeyTests {
             harness.expectTrue("typeof hk === 'object' && hk !== null")
             #expect(!harness.hasException)
         }
+
+        // MARK: Garbage collection (issue #267)
+
+        /// Runs the synchronous collector twice, so that anything only weakly reachable is reclaimed
+        private func collectGarbage(_ harness: JSTestHarness) {
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+        }
+
+        @Test("A bound hotkey the caller didn't keep still fires after garbage collection")
+        func testUnreferencedBoundHotkeySurvivesGC() {
+            let harness = makeHarness()
+            var pressed = false
+            harness.registerCallback("onPressed") { pressed = true }
+
+            // Grab a Swift handle without keeping a JS one: `void` so the script's completion
+            // value doesn't pin the wrapper, and the var is cleared before the collection
+            weak var hotkey: HSHotkey?
+            autoreleasepool {
+                harness.eval("var hk = hs.hotkey.bind(['ctrl', 'alt'], '7', function() { __test_callback('onPressed'); }); void 0")
+                hotkey = harness.evalValue("hk")?.toObjectOf(HSHotkey.self) as? HSHotkey
+                harness.eval("hk = null; void 0")
+            }
+            collectGarbage(harness)
+
+            #expect(hotkey != nil, "An enabled hotkey must not be collected")
+            hotkey?.trigger(eventKind: UInt32(kEventHotKeyPressed))
+            #expect(pressed, "An unreferenced enabled hotkey must keep its callback")
+            hotkey?.trigger(eventKind: UInt32(kEventHotKeyReleased))
+            #expect(!harness.hasException)
+        }
+
+        @Test("A disabled hotkey the caller didn't keep is garbage collected")
+        func testDisabledHotkeyIsCollected() {
+            let harness = makeHarness()
+            weak var hotkey: HSHotkey?
+            autoreleasepool {
+                harness.eval("var hk = hs.hotkey.bind(['ctrl', 'alt'], '8', function() {}); void 0")
+                hotkey = harness.evalValue("hk")?.toObjectOf(HSHotkey.self) as? HSHotkey
+                harness.eval("hk.disable(); hk = null; void 0")
+            }
+            #expect(hotkey != nil)
+            collectGarbage(harness)
+            #expect(hotkey == nil, "A disabled hotkey must not be kept alive")
+        }
     }
 
     // MARK: - Keyboard layouts (issue #270)
@@ -744,9 +789,9 @@ struct HSHotkeyTests {
         autoreleasepool {
             let harness = JSTestHarness()
             harness.loadModule(HSHotkeyModule.self, as: "hotkey")
-            // bind() auto-enables the hotkey (adding it to the strong enabledHotkeys array).
-            // We exercise disable/enable cycling to use the hotkey actively, then verify
-            // shutdown() clears enabledHotkeys and calls destroy() on all hotkeys.
+            // bind() auto-enables the hotkey, which pins it in the module's tracker. We exercise
+            // disable/enable cycling to use the hotkey actively, then verify shutdown() releases
+            // the pin and calls destroy() on all hotkeys.
             harness.eval("""
                 var hk = hs.hotkey.bind(['cmd'], 'h', function() {}, function() {})
                 hk.disable()

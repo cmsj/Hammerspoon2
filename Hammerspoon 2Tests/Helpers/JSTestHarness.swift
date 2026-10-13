@@ -47,8 +47,8 @@ class JSTestHarness {
     /// it must be shut down or it keeps this harness's JSContext alive.
     private var moduleRoot: ModuleRoot?
 
-    /// Set this in a test that deliberately ends with objects still active (e.g. one checking
-    /// that module shutdown stops a running timer), to skip the teardown check below.
+    /// Set this in a test that deliberately ends with an object still active that would
+    /// finish on its own (e.g. a long one-shot timer), to skip the teardown check below.
     var allowsActiveObjectsAtTeardown = false
 
     // Deliberately not `isolated deinit`: that runs without the test's task-local state, so
@@ -56,15 +56,16 @@ class JSTestHarness {
     // on the main actor, at the end of the test that created it.
     deinit {
         MainActor.assumeIsolated {
-            // Every test must stop what it started, and anything that finishes on its own (a
-            // task exiting, a one-shot timer firing) must stop being active. An object still
-            // active here is either a test that didn't clean up, or a module that never un-pins
-            // it, which would keep it alive, with its callbacks, until the next reload.
+            // Anything that finishes on its own (a task exiting, a one-shot timer firing) must
+            // have stopped being active by now. If it's still active, either the test didn't
+            // wait for it or stop it, or its module never un-pins it, which would keep it alive,
+            // with its callbacks, until the next reload. Things that run until they're stopped
+            // (watchers, hotkeys, repeating timers) are left to module shutdown.
             if !allowsActiveObjectsAtTeardown {
-                let active = HSActiveObjects.wrappers(in: context)
+                let active = HSActiveObjects.wrappers(in: context, finishingOnTheirOwnOnly: true)
                 if !active.isEmpty {
                     let names = active.map { $0.toString() ?? "?" }.joined(separator: ", ")
-                    Issue.record("Test ended with \(active.count) object(s) still active: \(names). Stop them, or set allowsActiveObjectsAtTeardown if that's deliberate.")
+                    Issue.record("Test ended with \(active.count) object(s) still active: \(names). Wait for them to finish or stop them, or set allowsActiveObjectsAtTeardown if that's deliberate.")
                 }
             }
             for module in loadedModuleObjects {

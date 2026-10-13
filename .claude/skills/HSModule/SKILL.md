@@ -183,7 +183,8 @@ Rules:
 - Activity MUST be derived from a single state property, with `setActive` called only from its `didSet`. If no existing property captures it, add a `State` enum (see `HSTask`).
 - The state MUST become inactive on every path where the activity stops, including failures, the OS stopping it on its own (e.g. a process exiting), and `destroy()`.
 - Becoming active should happen in the JS-facing method that starts the activity, so `JSContext.current()` is available. Fall back to a callback's context.
-- An object that is created but never started, or that has finished, MUST still be collectable. Test both directions (see the HSTests skill). The `JSTestHarness` fails any test that ends with an object still active, which catches objects that never become inactive.
+- Pass `finishesOnItsOwn: true` to `setActive` when the activity ends without being stopped (a process exiting, a one-shot timer firing, a sound finishing, a ping completing). The `JSTestHarness` fails any test that ends with such an object still active, which catches objects that never become inactive.
+- An object that is created but never started, or that has finished, MUST still be collectable. Test both directions (see the HSTests skill).
 - A user who wants an activity to stop must stop it explicitly (`stop()`, `terminate()`, `disable()`, ...). Dropping the reference is not a way to cancel. Module `shutdown()` (i.e. `hs.reload()`) stops everything, and `hs.activeObjects()` lists what's still running.
 
 ## JS callback memory management

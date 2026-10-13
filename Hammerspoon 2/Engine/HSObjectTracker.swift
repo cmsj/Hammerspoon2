@@ -41,8 +41,8 @@ import JavaScriptCore
 /// and `shutdown()` always reaches it.
 ///
 /// Active objects are also recorded in `HSActiveObjects`, so they can be listed per context, for
-/// users (`hs.activeObjects()`) and for tests (`JSTestHarness` fails a test that ends with objects
-/// still active).
+/// users (`hs.activeObjects()`) and for tests (`JSTestHarness` fails a test that ends with an
+/// object still active that should have finished on its own, see `setActive`).
 ///
 /// Preferred over NSHashTable.weakObjects(), which has documented autoreleasepool
 /// interactions that can cause entries to persist or zero unpredictably.
@@ -122,10 +122,15 @@ final class HSObjectTracker<T: AnyObject> {
     ///   - object: The object
     ///   - active: Whether the object has pending activity
     ///   - context: The JSContext the object's wrapper lives in. Only used when becoming active.
-    func setActive(_ object: T, _ active: Bool, in context: JSContext?) {
+    ///   - finishesOnItsOwn: Whether the activity ends without being stopped (a task exiting, a
+    ///     one-shot timer firing), rather than running until it's stopped (a watcher, a hotkey).
+    ///     Tests fail if such an object is still active when they end, since it should have
+    ///     finished by then.
+    func setActive(_ object: T, _ active: Bool, in context: JSContext?, finishesOnItsOwn: Bool = false) {
         if active {
             storage[ObjectIdentifier(object)] = WeakBox(object)
-            HSActiveObjects.insert(object, trackedBy: ObjectIdentifier(self), in: context)
+            HSActiveObjects.insert(object, trackedBy: ObjectIdentifier(self), in: context,
+                                   finishesOnItsOwn: finishesOnItsOwn)
         } else {
             HSActiveObjects.remove(object)
         }
@@ -153,11 +158,12 @@ enum HSActiveObjects {
         /// nil if no JSContext was available, in which case the object is only counted.
         let wrapper: JSValue?
         let contextRef: JSGlobalContextRef?
+        let finishesOnItsOwn: Bool
     }
 
     private static var entries: [ObjectIdentifier: Entry] = [:]
 
-    static func insert(_ object: AnyObject, trackedBy tracker: ObjectIdentifier, in context: JSContext?) {
+    static func insert(_ object: AnyObject, trackedBy tracker: ObjectIdentifier, in context: JSContext?, finishesOnItsOwn: Bool) {
         if let existing = entries[ObjectIdentifier(object)], existing.object === object { return }
 
         let wrapper = context.flatMap { JSValue(object: object, in: $0) }
@@ -167,7 +173,8 @@ enum HSActiveObjects {
         entries[ObjectIdentifier(object)] = Entry(tracker: tracker,
                                                   object: object,
                                                   wrapper: wrapper,
-                                                  contextRef: context?.jsGlobalContextRef)
+                                                  contextRef: context?.jsGlobalContextRef,
+                                                  finishesOnItsOwn: finishesOnItsOwn)
     }
 
     static func remove(_ object: AnyObject) {
@@ -193,8 +200,12 @@ enum HSActiveObjects {
     }
 
     /// The JS wrappers of every active object in a context
-    static func wrappers(in context: JSContext) -> [JSValue] {
-        live.filter { $0.contextRef == context.jsGlobalContextRef }.compactMap(\.wrapper)
+    /// - Parameters:
+    ///   - context: The context
+    ///   - finishingOnTheirOwnOnly: Only include objects whose activity ends without being stopped
+    static func wrappers(in context: JSContext, finishingOnTheirOwnOnly: Bool = false) -> [JSValue] {
+        live.filter { $0.contextRef == context.jsGlobalContextRef && (!finishingOnTheirOwnOnly || $0.finishesOnItsOwn) }
+            .compactMap(\.wrapper)
     }
 
     /// Entries whose object is still alive. An object pinned without a context isn't retained,

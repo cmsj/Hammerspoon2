@@ -41,7 +41,6 @@ const ALLOWED = {
     'hs.ui/HSUIModule.swift:activeWindows': 'rollout',
     'hs.ui/HSUIModule.swift:activeAlerts': 'rollout',
     'hs.ui/HSUIModule.swift:activeDialogs': 'rollout',
-    'hs.hotkey/HSHotkey.swift:hotkeys': 'rollout',
     'hs.canvas/HSCanvasModule.swift:activeCanvases': 'rollout',
 
     // Justified: module-owned objects, or transient lookups that aren't the objects' lifetime
