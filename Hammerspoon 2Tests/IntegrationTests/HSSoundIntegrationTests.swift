@@ -314,4 +314,34 @@ extension HSSoundTests {
         harness.collectGarbage()
         #expect(sound == nil, "A finished sound must not be kept alive")
     }
+
+    @Test("A sound the caller didn't keep, restarted from its callback, survives garbage collection and finishes again")
+    func testSoundRestartedFromCallbackStaysAlive() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSSoundModule.self, as: "sound")
+
+        var finishes = 0
+        harness.registerCallback("onDone") { finishes += 1 }
+
+        weak var sound: HSSound?
+        autoreleasepool {
+            harness.eval("""
+                var s = hs.sound.named('Basso').setCallback(function(snd) {
+                    __test_callback('onDone')
+                    if (!snd.__restarted) { snd.__restarted = true; snd.currentTime = 0; snd.play() }
+                })
+                s.play(); void 0
+                """)
+            sound = harness.evalValue("s")?.toObjectOf(HSSound.self) as? HSSound
+            harness.eval("s = null; void 0")
+        }
+
+        #expect(harness.waitFor(timeout: 3.0) { finishes == 1 }, "The first playback must finish")
+        harness.collectGarbage()
+        #expect(sound != nil, "A sound restarted from its callback must not be collected")
+
+        #expect(harness.waitFor(timeout: 3.0) { finishes == 2 }, "The restarted playback must also call back")
+        harness.collectGarbage()
+        #expect(sound == nil, "A finished sound must not be kept alive")
+    }
 }

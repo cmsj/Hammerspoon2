@@ -278,8 +278,13 @@ extension HSSound: NSSoundDelegate {
     // NSSound guarantees delivery on the main thread; assumeIsolated asserts this.
     nonisolated func sound(_ sound: NSSound, didFinishPlaying flag: Bool) {
         MainActor.assumeIsolated {
-            defer { isPlayingActive = false }
-            _ = _callback?.value?.call(withArguments: [self, flag])
+            // Playback has ended, so drop the pin before calling back: the callback may play the
+            // sound again, and that new pin must survive. The local wrapper and callback keep
+            // both alive until the call returns.
+            let callback = _callback?.value
+            let wrapper = callback.flatMap { JSValue(object: self, in: $0.context) }
+            isPlayingActive = false
+            _ = callback?.call(withArguments: [wrapper ?? self, flag])
         }
     }
 }
