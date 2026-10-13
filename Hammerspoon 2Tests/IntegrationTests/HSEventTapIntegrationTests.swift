@@ -7,6 +7,7 @@ import Testing
 import JavaScriptCore
 import ApplicationServices
 import Carbon
+import AppKit
 @testable import Hammerspoon_2
 
 @Suite("hs.eventtap tests")
@@ -627,6 +628,59 @@ struct HSEventTapTests {
             harness.eval("var copy = hs.eventtap.makeSystemKeyEvent('NEXT', false).duplicate()")
             #expect(harness.evalString("copy.systemKey.key") == "NEXT")
             #expect(harness.evalBool("copy.systemKey.isDown") == false)
+            #expect(!harness.hasException)
+        }
+
+        /// Exposes a hand-built systemDefined event to JS as `evt`, without going through
+        /// SystemKey, so the decoder is checked against fixed data1 values rather than its builder.
+        private func makeHarness(systemDefinedSubtype subtype: Int16, data1: Int) throws -> JSTestHarness {
+            let harness = makeHarness()
+            let nsEvent = try #require(NSEvent.otherEvent(with: .systemDefined, location: .zero,
+                                                          modifierFlags: [], timestamp: 0, windowNumber: 0,
+                                                          context: nil, subtype: subtype,
+                                                          data1: data1, data2: -1))
+            let cgEvent = try #require(nsEvent.cgEvent)
+            harness.context.setObject(HSEventTapEvent(cgEvent: cgEvent), forKeyedSubscript: "evt" as NSString)
+            return harness
+        }
+
+        @Test("systemKey decodes a hand-built key down event")
+        func testSystemKeyDecodesFixtureKeyDown() throws {
+            // NX_KEYTYPE_NEXT (17) in the high word, 0xA (down) in bits 8-15
+            let harness = try makeHarness(systemDefinedSubtype: 8, data1: 0x0011_0A00)
+            #expect(harness.evalString("evt.systemKey.key") == "NEXT")
+            #expect(harness.evalInt("evt.systemKey.keyCode") == 17)
+            #expect(harness.evalBool("evt.systemKey.isDown") == true)
+            #expect(harness.evalBool("evt.systemKey.isRepeat") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("systemKey reports auto-repeat")
+        func testSystemKeyDecodesRepeat() throws {
+            // NX_KEYTYPE_SOUND_UP (0), key down, with the repeat bit set
+            let harness = try makeHarness(systemDefinedSubtype: 8, data1: 0x0000_0A01)
+            #expect(harness.evalString("evt.systemKey.key") == "SOUND_UP")
+            #expect(harness.evalBool("evt.systemKey.isDown") == true)
+            #expect(harness.evalBool("evt.systemKey.isRepeat") == true)
+            #expect(!harness.hasException)
+        }
+
+        @Test("systemKey names an unrecognised key code 'unknown'")
+        func testSystemKeyDecodesUnknownCode() throws {
+            // Key code 0x7F, key up (0xB)
+            let harness = try makeHarness(systemDefinedSubtype: 8, data1: 0x007F_0B00)
+            #expect(harness.evalString("evt.systemKey.key") == "unknown")
+            #expect(harness.evalInt("evt.systemKey.keyCode") == 0x7F)
+            #expect(harness.evalBool("evt.systemKey.isDown") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("systemKey is undefined for systemDefined events of other subtypes")
+        func testSystemKeyUndefinedForOtherSubtypes() throws {
+            // Same data1 as a PLAY key down, but not the aux control buttons subtype (8)
+            let harness = try makeHarness(systemDefinedSubtype: 7, data1: 0x0010_0A00)
+            #expect(harness.evalInt("evt.type") == harness.evalInt("hs.eventtap.eventTypes.systemDefined"))
+            #expect(harness.evalTypeOf("evt.systemKey") == "undefined")
             #expect(!harness.hasException)
         }
 
