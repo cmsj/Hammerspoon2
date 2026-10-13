@@ -85,9 +85,8 @@ if (win) {
 ```
 
 Nothing here differs from the plain-JS version in the [Getting Started guide](getting-started.html)
-— the same [object lifecycle rule](getting-started.html#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time)
-applies, hotkeys and timers still need a kept reference, and `hs.ui` is built the same chained
-way. TypeScript only adds the type layer on top; it doesn't change how any of these APIs
+— the same [object lifecycle rule](getting-started.html#object-lifecycle-running-things-keep-running)
+applies, and `hs.ui` is built the same chained way. TypeScript only adds the type layer on top; it doesn't change how any of these APIs
 behave.
 
 ### 4. Compile and load it

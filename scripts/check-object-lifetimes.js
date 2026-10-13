@@ -12,10 +12,9 @@
  *  2. A `private var` stored property that's a strong collection of HS* objects
  *     (`[HSFoo]`, `Set<HSFoo>`, `[Key: HSFoo]`)
  *
- * Existing uses are listed in ALLOWED below: either awaiting migration (see the pending-activity
- * rollout), or justified because the objects are owned by the module rather than handed to JS
- * for the user to drop. Entries that no longer match anything also fail the check, so the list
- * only ever shrinks.
+ * Existing uses are listed in ALLOWED below, justified because the objects are owned by the
+ * module rather than handed to JS for the user to drop. Entries that no longer match anything
+ * also fail the check, so the list never goes stale.
  */
 
 const fs = require('fs');
@@ -26,8 +25,6 @@ const MODULES_DIR = path.join(REPO_ROOT, 'Hammerspoon 2', 'Modules');
 
 // "<file relative to Modules/>:<property name, or selfRetain>" → reason
 const ALLOWED = {
-    // Awaiting migration to HSObjectTracker (pending-activity rollout)
-
     // Justified: module-owned objects, or transient lookups that aren't the objects' lifetime
     'hs.camera/HSCameraModule.swift:cameraCache': 'one object per physical camera, owned by the module so JS always gets the same one',
     'hs.streamdeck/HSStreamDeckModule.swift:devices': 'one object per connected device, owned by the module while it is connected',
@@ -76,5 +73,4 @@ if (errors.length) {
     for (const error of errors) console.error(`❌ ${error}`);
     process.exit(1);
 }
-const rollout = Object.values(ALLOWED).filter(reason => reason === 'rollout').length;
-console.log(`✓ No new object retention mechanisms (${rollout} awaiting migration to HSObjectTracker)`);
+console.log('✓ No new object retention mechanisms');

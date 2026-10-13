@@ -3,8 +3,7 @@ JavaScript access to a large surface of system APIs — windows, hotkeys, the fi
 Wi-Fi, AppleScript, notifications, and a SwiftUI-backed UI toolkit, among others. This guide
 gets you from an empty config to a handful of working automations, and flags the handful of
 conventions that aren't obvious from the API reference alone — most importantly, how object
-lifetime works, since it's the single most common source of "this stopped working for no
-reason" bug reports. If you're arriving from Hammerspoon 1, read the
+lifetime works. If you're arriving from Hammerspoon 1, read the
 [migration guide](migration-guide.html) instead — it assumes v1 knowledge; this guide
 doesn't.
 
@@ -38,56 +37,56 @@ up there first, as a thrown JS exception with a file/line number.
 **Offline docs:** `hs.docs.show()` opens the full API reference bundled into the app, in case
 you're scripting somewhere without a browser handy.
 
-## Object lifecycle: the one habit that saves you the most debugging time
+## Object lifecycle: running things keep running
 
-Almost everything Hammerspoon hands back to you — a hotkey, a timer, a path watcher, a
-UI window, a reactive value — is a live JavaScript object backed by a real native resource
-underneath. As long as your JavaScript keeps a reference to it, that resource stays alive. The
-moment nothing in your JS references it any more, JavaScriptCore's garbage collector is free
-to collect it — and Hammerspoon then tears down whatever it was backing: the hotkey stops
-firing, the timer stops ticking, the window closes. This is normal JS garbage collection
-behavior, not a Hammerspoon bug, but it catches people because the failure is silent and can
-take a while to show up (GC doesn't necessarily run the instant the object becomes
-unreachable).
+Almost everything Hammerspoon hands back to you — a hotkey, a timer, a path watcher, a UI
+window, a running task — is a JavaScript object backed by a real native resource. The rule for
+how long it lives is the same one browsers and Node use for `setTimeout()` or a child process:
 
-Concretely, this is the mistake:
+**Anything that is running keeps running, with its callbacks, until it finishes or you stop
+it — whether or not you keep a reference to it.** A bound hotkey keeps firing, a started timer
+keeps ticking, a running task keeps running until it exits, a shown window stays on screen.
+So this works, and keeps working:
 
 ```js
-// Nothing keeps a reference to what bind() returns. It works today, and may
-// simply stop firing after the next garbage collection.
 hs.hotkey.bind(["cmd", "alt"], "h", () => {
     console.log("hello")
 }, null, null)
 ```
 
-And this is the fix — capture the return value in a variable that lives as long as your
-config does, typically a top-level `const` in `init.js`:
+"Running" means: a bound or enabled hotkey, a started timer, watcher, event tap, query or
+search, a running task, a shown window, canvas, chooser, dialog, alert or menu bar item, a
+playing sound, an open serial port, WebSocket or HTTP server, and a ping or share in flight.
+
+**Keep a reference when you want to control it later.** Dropping the reference is *not* how
+you stop something — call its `stop()`, `disable()`, `hide()`, `terminate()` or `destroy()`
+instead, so you'll want the object around if you might do that:
 
 ```js
-const helloHotkey = hs.hotkey.bind(["cmd", "alt"], "h", () => {
-    console.log("hello")
-}, null, null)
+const ticker = hs.timer.doEvery(60, () => console.log("still here"))
+// ... later ...
+ticker.stop()
 ```
 
-`helloHotkey` never needs to be read again for this to work — its mere existence as a
-reachable variable is what keeps the hotkey alive. The same rule applies to anything returned
-from a factory-style call: `hs.hotkey.bind()`/`bindSpec()`, `hs.timer.create()`/`doEvery()`/
-`doAfter()`, `hs.fs.createPathWatcher()`, `hs.ui.window()`/`alert()`/`dialog()` while it's
-still showing, and any reactive value (`HSString`, `HSColor`, `HSImage`) you intend to update
-later. If you're building several of these, a single top-level array works well as a catch-all:
+The same goes for anything you want to update later, such as a reactive value (`HSString`,
+`HSColor`, `HSImage`) feeding a window.
+
+**Things that aren't running are ordinary JavaScript objects.** A timer you created but never
+started, a watcher you stopped, a task that has exited, or a window you hid is garbage collected
+once nothing references it, like any other JS value. In particular, if you hide a window or
+canvas and might show it again later, keep a reference to it.
+
+`hs.reload()` stops everything, and if you've lost track of something you started,
+`hs.activeObjects()` lists everything that's currently running:
 
 ```js
-const keepAlive = []
-keepAlive.push(hs.hotkey.bind(["cmd", "alt"], "h", () => console.log("hello")))
-keepAlive.push(hs.timer.doEvery(60, () => console.log("still here")))
+hs.activeObjects().forEach(obj => console.log(obj.toString()))
 ```
 
-One family of APIs behaves differently: modules with `on()`/`off()`/`once()` (`hs.pasteboard`,
-`hs.application`, `hs.usb`, and others) take your callback function directly rather than
-handing back a separate object — the module itself holds the
-reference, so you don't need a variable just to keep it alive. You *do* still need to keep a
-reference to the function if you ever want to call `off()` with it later, since removal matches
-on function identity, not on when/how it was registered:
+Modules with `on()`/`off()`/`once()` (`hs.pasteboard`, `hs.application`, `hs.usb`, and
+others) take your callback function directly rather than handing back a separate object. You
+need to keep a reference to the function only if you ever want to call `off()` with it later,
+since removal matches on function identity, not on when/how it was registered:
 
 ```js
 const onPaste = () => console.log("clipboard changed")
@@ -98,9 +97,6 @@ hs.pasteboard.off('change', onPaste)  // only works because we kept `onPaste` ar
 
 Use `once()` instead of `on()` if you only care about the next occurrence of an event — it
 removes itself automatically, so there's no listener reference to track for removal at all.
-
-If a hotkey, timer, or watcher you built mysteriously stops working after your config has been
-running a while, this is the first thing to check.
 
 ## Hotkeys
 
@@ -114,7 +110,7 @@ const lockScreen = hs.hotkey.bind(["cmd", "ctrl"], "l", () => {
 ```
 
 The returned object supports `.enable()`, `.disable()`, `.isEnabled()`, and `.destroy()` if
-you want to toggle or tear down a hotkey deliberately, rather than waiting on GC. There's also
+you want to toggle or tear down a hotkey later; keep it in a variable if you might. There's also
 `hs.hotkey.bindSpec(spec)`, which takes a single options object (`mods`, `key`, `pressed`,
 `released`, `repeat`) instead of positional arguments, plus a `message` field for when you
 want to self-document what a hotkey is for:
@@ -168,12 +164,11 @@ try {
 
 A handful of modules instead return a configurable watcher object rather than taking your
 callback directly — `hs.location`, `hs.eventtap` (whose `addWatcher()` also takes an event-types
-array and a listen-only flag), and `hs.fs`'s path watcher. The same lifecycle rule from above
-applies to those: the object itself is what needs to stay referenced, not a callback you passed
-in.
+array and a listen-only flag), and `hs.fs`'s path watcher. Once started, these keep running
+until you stop them, so keep a reference to the object if you'll want to.
 
 For filesystem changes specifically, `hs.fs.createPathWatcher(path)` returns an object you
-configure and start (remember: keep a reference to it):
+configure and start:
 
 ```js
 const docsWatcher = hs.fs.createPathWatcher("~/Documents")
@@ -274,10 +269,9 @@ const win = hs.ui.window({ x: 100, y: 100, w: 240, h: 120 })
     .show()
 ```
 
-(Note the same lifecycle rule applies here — `win` needs to stay referenced for as long as you
-want the window to exist. `hs.ui` windows are also usually kept open indefinitely on purpose,
-unlike a hotkey you set up once and forget about, so it's common to see them assigned to a
-top-level `const` right alongside your hotkeys.)
+(A shown window stays on screen whether or not you keep `win`, but here the Close button hides
+it, and a hidden window nobody references is garbage collected. Keep `win` in a top-level
+`const`, as here, if you want to `show()` it again later.)
 
 And a window whose text updates live via a reactive value, driven by a timer:
 
@@ -351,10 +345,8 @@ A few things worth knowing about how paths resolve:
 **Scope:** each required file's top-level code runs inside its own private function, not
 global scope — a `var`/`let`/`const`/function declared at the top of `window-management.js` is
 invisible everywhere else, including `init.js`; `module.exports` is the only way to hand
-anything back. `init.js` itself is the one exception — it runs unwrapped at true global scope,
-specifically so hotkeys/timers/watchers it creates
-[stay alive](#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time) — so a
-required file *can* read whatever `init.js` declared at its own top level, but not the other
+anything back. `init.js` itself is the one exception — it runs unwrapped at true global scope —
+so a required file *can* read whatever `init.js` declared at its own top level, but not the other
 way around, and two required files can't see each other's declarations either. Don't lean on
 that asymmetry deliberately; pass values between files through `module.exports` instead.
 

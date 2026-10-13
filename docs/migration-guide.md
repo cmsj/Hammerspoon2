@@ -226,8 +226,8 @@ modify tap (`listenOnly` omitted/`false`) the callback's return value does the c
 return `hs.eventtap.consume` to suppress the event or `hs.eventtap.emit` to pass it through
 (there's no settable `consume` property); a listen-only tap's return value is ignored and events
 always pass through. Call `hs.eventtap.removeWatcher(tap)` with the watcher `addWatcher()`
-returned (not the callback) to tear it down — unlike most other watchers, it is **not**
-automatically cleaned up by garbage collection.
+returned (not the callback) to tear it down. Like every started watcher in Hammerspoon 2, it
+keeps running until you stop or remove it, whether or not you keep a reference to it.
 
 **`hs.http`** — every request method returns a Promise resolving to `{status, body, headers}`;
 there's no callback argument any more. A network failure *resolves* with `status: -1`, it

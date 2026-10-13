@@ -2,7 +2,7 @@ Spoons are packaged, reusable pieces of Hammerspoon configuration — a way to i
 else's automation (or share your own) without copy-pasting code into `init.js`. This guide
 covers installing and using a Spoon first, then how to write one, with a complete worked
 example. If you haven't read the [Getting Started guide](getting-started.html) yet, especially
-its section on [object lifecycle](getting-started.html#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time)
+its section on [object lifecycle](getting-started.html#object-lifecycle-running-things-keep-running)
 and [splitting a config across multiple files](getting-started.html#splitting-a-growing-config-into-multiple-files),
 start there — everything below builds on it.
 
@@ -104,9 +104,9 @@ JS, so this works too) — `hs.loadSpoon()` throws if it doesn't, since that's w
 metadata needs to attach itself to. Keep the top level of `init.js` light: build the object and
 return it, but avoid starting timers, watchers, or hotkeys until `start()` is called (or, for a
 Spoon simple enough not to need a `start()`/`stop()` split at all, until the caller invokes
-whatever method actually needs them). This mirrors the [same lifecycle habit](getting-started.html#object-lifecycle-the-one-habit-that-saves-you-the-most-debugging-time)
-that applies everywhere else in Hammerspoon 2 — something needs to keep a reference alive for as
-long as it should keep running.
+whatever method actually needs them). Anything started keeps running until it's stopped
+(see [object lifecycle](getting-started.html#object-lifecycle-running-things-keep-running)), so
+`stop()` needs references to what `start()` started.
 
 **If the returned object has an `init()` method, it's called automatically** — matching
 Hammerspoon 1, where `:init()` ran the same way. Use it for setup that needs to happen once the

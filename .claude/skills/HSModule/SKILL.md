@@ -67,9 +67,9 @@ Hammerspoon 2 has exactly two ways of keeping JS-facing objects alive from Swift
 
 Module JS wrappers are pinned by `ModuleRoot` for the engine's lifetime, so `JSCallback(owner: self)` on a module is safe and is never collected.
 
-**Never** use `selfRetain = self`, a strong collection of child objects (`[UUID: HSFoo]`, `Set<HSFoo>`, `[HSFoo]`), or a per-object strong `JSValue` of the object's own wrapper. `npm run docs:test` (`scripts/check-object-lifetimes.js`) fails on the first two. The existing uses are listed there as awaiting migration, or justified because the objects are owned by the module and never dropped by the user (e.g. one `HSCamera` per physical camera).
+**Never** use `selfRetain = self`, a strong collection of child objects (`[UUID: HSFoo]`, `Set<HSFoo>`, `[HSFoo]`), or a per-object strong `JSValue` of the object's own wrapper. `npm run docs:test` (`scripts/check-object-lifetimes.js`) fails on the first two. The few existing strong collections are listed there as justified, because the objects are owned by the module and never dropped by the user (e.g. one `HSCamera` per physical camera); adding one needs a reason there.
 
-Stored `JSValue`s on a module are only for slots the module's hs.foo.js assigns (`_watcherEmitter`, `on`/`off`/`once`, helper functions), and are nilled in `shutdown()`. Some older modules still keep their watcher callback as a strong `JSFunction?` nilled in `shutdown()`. That's correct but inconsistent, so new code uses `JSCallback`.
+Stored `JSValue`s on a module are only for slots the module's hs.foo.js assigns (`_watcherEmitter`, `on`/`off`/`once`, helper functions), and are nilled in `shutdown()`. The one other sanctioned strong `JSValue` is a modal one-shot's callback (`HSUITextPrompt`, `HSUIFilePicker`), held only until `show()` invokes it, so it can't be collected while the modal runs.
 
 ## Child object tracking: HSObjectTracker
 
@@ -258,9 +258,12 @@ A closure that closes over a `JSValue` parameter is functionally identical to st
 // WRONG — the closure captures `callback` by value; JSValue is retained
 interactive.clickCallback = { callback.call(withArguments: []) }
 
-// WRONG — equivalent problem; isHovered is Bool but callback is captured
-interactive.hoverCallback = { isHovered in callback.call(withArguments: [isHovered]) }
+// RIGHT — capture a JSCallback owned by the object the user holds (see HSUIWindow.elementCallback)
+let cb = JSCallback(value: callback, owner: self)   // detached in destroy()/deinit
+interactive.clickCallback = { _ = cb?.call(withArguments: []) }
 ```
+
+A strongly captured callback that closes over its own owner from JS (e.g. a window's `onClick` that calls `win.hide()`) is a Swift/JS cycle the GC can't break, so the owner leaks until reload even once it's inactive and unreferenced. That's why closures capture a `JSCallback` instead.
 
 Any closure stored in a property (even a non-`JSValue` typed property like `(() -> Void)?`) that was created by capturing a `JSValue` must be cleared during shutdown with the same urgency as a raw `JSValue`.
 
