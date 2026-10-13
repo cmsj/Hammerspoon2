@@ -154,7 +154,10 @@ nonisolated enum HSApplicationEvent: String, HSEventName {
 }
 
 class HSApplicationWatcherObject {
-    let callback: JSFunction
+    // Owned by the module: this object isn't JS-exported, so it has no wrapper to keep a
+    // callback alive, while the module's wrapper is pinned by ModuleRoot
+    private let callback: JSCallback?
+    private weak var owner: AnyObject?
 
     static let notificationToEventName: [NSNotification.Name: HSApplicationEvent] = [
         NSWorkspace.willLaunchApplicationNotification: .willLaunch,
@@ -166,8 +169,13 @@ class HSApplicationWatcherObject {
         NSWorkspace.didDeactivateApplicationNotification: .didDeactivate,
     ]
 
-    init(callback: JSFunction) {
-        self.callback = callback
+    init(callback: JSFunction, owner: AnyObject) {
+        self.callback = JSCallback(value: callback, owner: owner)
+        self.owner = owner
+    }
+
+    isolated deinit {
+        if let owner { callback?.detach(from: owner) }
     }
 
     @objc func handleEvent(notification: NSNotification) {
@@ -176,7 +184,7 @@ class HSApplicationWatcherObject {
             return
         }
         let eventApp = (notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.asHSApplication()
-        callback.call(withArguments: [eventName.rawValue, eventApp as Any])
+        _ = callback?.call(withArguments: [eventName.rawValue, eventApp as Any])
     }
 }
 
@@ -255,7 +263,7 @@ class HSApplicationWatcherObject {
             return false
         }
 
-        let watcherObject = HSApplicationWatcherObject(callback: listener)
+        let watcherObject = HSApplicationWatcherObject(callback: listener, owner: self)
         let selector = #selector(HSApplicationWatcherObject.handleEvent(notification:))
 
         for notificationName in HSApplicationWatcherObject.notificationToEventName.keys {

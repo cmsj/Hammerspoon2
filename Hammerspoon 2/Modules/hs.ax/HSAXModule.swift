@@ -527,7 +527,7 @@ import AXSwift
         }
 
         // Create the watcher object
-        let watcherObject = HSAXWatcherObject(element: element.element, notification: notifType, callback: listener, isApplicationElement: element.role == "AXApplication")
+        let watcherObject = HSAXWatcherObject(element: element.element, notification: notifType, callback: listener, owner: self, isApplicationElement: element.role == "AXApplication")
         watchers[key] = watcherObject
 
         // Add the notification to the observer

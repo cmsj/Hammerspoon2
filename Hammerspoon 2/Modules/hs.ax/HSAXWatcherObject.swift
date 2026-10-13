@@ -13,7 +13,10 @@ import AXSwift
 class HSAXWatcherObject {
     let element: UIElement
     let notification: UIElement.AXNotification
-    let callback: JSFunction
+    // Owned by the module: this object isn't JS-exported, so it has no wrapper to keep a
+    // callback alive, while the module's wrapper is pinned by ModuleRoot
+    private let callback: JSCallback?
+    private weak var owner: AnyObject?
 
     /// True if `element` is an application element. AX bubbles some notifications (e.g.
     /// AXWindowCreated) to application-level observers with the actual originating
@@ -21,15 +24,20 @@ class HSAXWatcherObject {
     /// those notifications by PID rather than requiring an exact element match.
     let isApplicationElement: Bool
 
-    init(element: UIElement, notification: UIElement.AXNotification, callback: JSFunction, isApplicationElement: Bool) {
+    init(element: UIElement, notification: UIElement.AXNotification, callback: JSFunction, owner: AnyObject, isApplicationElement: Bool) {
         self.element = element
         self.notification = notification
-        self.callback = callback
+        self.callback = JSCallback(value: callback, owner: owner)
+        self.owner = owner
         self.isApplicationElement = isApplicationElement
+    }
+
+    isolated deinit {
+        if let owner { callback?.detach(from: owner) }
     }
 
     /// Handle the notification event by calling the JavaScript callback
     func handleEvent(element: HSAXElement, notification: String) {
-        callback.call(withArguments: [notification, element])
+        _ = callback?.call(withArguments: [notification, element])
     }
 }

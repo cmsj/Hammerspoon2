@@ -311,7 +311,7 @@ private enum HSWifiError: LocalizedError {
     let engineID: UUID
 
     private let client = CWWiFiClient()
-    private var watcherCallbacks: [String: JSFunction] = [:]
+    private var watcherCallbacks: [String: JSCallback] = [:]
 
     @objc var _watcherEmitter: JSFunction? = nil
     @objc var _eventNames: [String] { HSWifiEvent.allNames }
@@ -327,6 +327,7 @@ private enum HSWifiError: LocalizedError {
     }
 
     func shutdown() {
+        for callback in watcherCallbacks.values { callback.detach(from: self) }
         watcherCallbacks.removeAll()
         _watcherEmitter = nil
         on = nil
@@ -455,18 +456,23 @@ private enum HSWifiError: LocalizedError {
             // native delivery still active. Either way, reuse the existing registration rather
             // than attempting (and likely failing identically) a redundant startMonitoringEvent.
             AKWarning("hs.wifi.on(): '\(event)' is already active; reusing the existing registration")
-            watcherCallbacks[event] = listener
+            setWatcherCallback(listener, for: event)
             return true
         }
         do {
             try client.startMonitoringEvent(with: type)
-            watcherCallbacks[event] = listener
+            setWatcherCallback(listener, for: event)
             AKDebug("hs.wifi.on(): started watching '\(event)'")
             return true
         } catch {
             AKError("hs.wifi.on(): failed to start monitoring '\(event)': \(error.localizedDescription)")
             return false
         }
+    }
+
+    private func setWatcherCallback(_ listener: JSFunction, for event: String) {
+        watcherCallbacks.removeValue(forKey: event)?.detach(from: self)
+        watcherCallbacks[event] = JSCallback(value: listener, owner: self)
     }
 
     /// Stops native CoreWLAN monitoring for one event type. Called only on a 1->0 listener
@@ -483,7 +489,7 @@ private enum HSWifiError: LocalizedError {
             AKError("hs.wifi.off(): failed to stop monitoring '\(event)' - leaving watcher state intact: \(error.localizedDescription)")
             return
         }
-        watcherCallbacks.removeValue(forKey: event)
+        watcherCallbacks.removeValue(forKey: event)?.detach(from: self)
         AKDebug("hs.wifi.off(): stopped watching '\(event)'")
     }
 

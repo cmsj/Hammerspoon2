@@ -67,7 +67,8 @@ import JavaScriptCore
     @objc let identifier: String
 
     fileprivate let content: UNMutableNotificationContent
-    fileprivate let callback: JSFunction?
+    // Held until send() hands it to the module, which owns it from then on
+    fileprivate var callback: JSCallback?
 
     // Injected by HSNotifyModule so send() can register the callback without importing the module.
     fileprivate var registerCallback: (@MainActor (String, JSValue) -> Void)?
@@ -86,12 +87,17 @@ import JavaScriptCore
          registerCallback: (@MainActor (String, JSValue) -> Void)?) {
         self.identifier = identifier
         self.content = content
-        self.callback = callback
         self.registerCallback = registerCallback
+        super.init()
+        self.callback = callback.flatMap { JSCallback(value: $0, owner: self) }
+    }
+
+    isolated deinit {
+        callback?.detach(from: self)
     }
 
     @objc @discardableResult func send() -> HSNotification {
-        if let cb = callback {
+        if let cb = callback?.value {
             registerCallback?(identifier, cb)
         }
 

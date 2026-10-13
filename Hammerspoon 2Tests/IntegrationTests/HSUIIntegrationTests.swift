@@ -457,6 +457,33 @@ struct HSUITests {
         #expect(window == nil, "A hidden window nobody references must not be kept alive")
     }
 
+    @Test("A hidden window whose element callbacks reference it is still collected")
+    func testHiddenWindowWithSelfReferencingCallbackIsCollected() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSUIModule.self, as: "ui")
+
+        // The onClick callback closes over a local binding to the window. Captured strongly by
+        // the element, that would be a Swift/JS cycle the GC can't collect.
+        weak var window: HSUIWindow?
+        autoreleasepool {
+            harness.eval("""
+                (function() {
+                    var win = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                    win.text("Test").onClick(() => { win.hide() })
+                    win.show()
+                    win.hide()
+                    globalThis.wRef = win
+                })()
+                void 0
+            """)
+            window = harness.evalValue("wRef")?.toObjectOf(HSUIWindow.self) as? HSUIWindow
+            harness.eval("wRef = null; void 0")
+        }
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
+        harness.collectGarbage()
+        #expect(window == nil, "A hidden window nobody references must not be kept alive by its own callbacks")
+    }
+
     @Test("A web view's callbacks live as long as the window it's in, not its own wrapper")
     func testWebViewCallbacksOwnedByWindow() throws {
         let harness = JSTestHarness()

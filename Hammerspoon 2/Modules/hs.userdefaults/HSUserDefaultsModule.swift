@@ -116,7 +116,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
     let engineID: UUID
 
     private let suite: UserDefaults?
-    private var watcherCallbacks: [String: JSFunction] = [:]
+    private var watcherCallbacks: [String: JSCallback] = [:]
 
     @objc var _watcherEmitter: JSFunction?
     @objc var on: JSFunction? = nil
@@ -139,6 +139,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
                 suite.removeObserver(self, forKeyPath: key)
             }
         }
+        for callback in watcherCallbacks.values { callback.detach(from: self) }
         watcherCallbacks.removeAll()
         _watcherEmitter = nil
         on = nil
@@ -211,7 +212,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
             AKWarning("hs.userdefaults.on(): Already watching '\(key)'. Refusing to create a second.")
             return false
         }
-        watcherCallbacks[key] = listener
+        watcherCallbacks[key] = JSCallback(value: listener, owner: self)
         unsafe suite.addObserver(self, forKeyPath: key, options: [.new], context: nil)
         AKDebug("hs.userdefaults.on(): Started watching '\(key)'")
         return true
@@ -224,7 +225,7 @@ private let hsUserDefaultsSuiteName = "hs.userdefaults"
         }
         guard watcherCallbacks[key] != nil else { return }
         suite.removeObserver(self, forKeyPath: key)
-        watcherCallbacks.removeValue(forKey: key)
+        watcherCallbacks.removeValue(forKey: key)?.detach(from: self)
         AKDebug("hs.userdefaults.off(): Stopped watching '\(key)'")
     }
 
