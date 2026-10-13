@@ -151,7 +151,7 @@ final class HSObjectTracker<T: AnyObject> {
 /// The record of every active object, across all trackers. Owned by `HSObjectTracker`; nothing
 /// else should insert or remove entries.
 enum HSActiveObjects {
-    private struct Entry {
+    @safe private struct Entry {
         let tracker: ObjectIdentifier
         weak var object: AnyObject?
         /// Holds the object's JS wrapper, which keeps the object and its callbacks alive.
@@ -170,7 +170,7 @@ enum HSActiveObjects {
         if wrapper == nil {
             AKError("HSObjectTracker: no JSContext available, \(object) may be garbage collected while active")
         }
-        entries[ObjectIdentifier(object)] = Entry(tracker: tracker,
+        entries[ObjectIdentifier(object)] = unsafe Entry(tracker: tracker,
                                                   object: object,
                                                   wrapper: wrapper,
                                                   contextRef: context?.jsGlobalContextRef,
@@ -204,7 +204,7 @@ enum HSActiveObjects {
     ///   - context: The context
     ///   - finishingOnTheirOwnOnly: Only include objects whose activity ends without being stopped
     static func wrappers(in context: JSContext, finishingOnTheirOwnOnly: Bool = false) -> [JSValue] {
-        live.filter { $0.contextRef == context.jsGlobalContextRef && (!finishingOnTheirOwnOnly || $0.finishesOnItsOwn) }
+        live.filter { unsafe $0.contextRef == context.jsGlobalContextRef && (!finishingOnTheirOwnOnly || $0.finishesOnItsOwn) }
             .compactMap(\.wrapper)
     }
 

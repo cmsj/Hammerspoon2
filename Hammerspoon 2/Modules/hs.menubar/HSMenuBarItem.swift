@@ -304,7 +304,7 @@ import JavaScriptCore
     /// the menu bar.
     func itemScreenFrame() -> CGRect? {
         guard statusItem?.isVisible == true,
-              let frame = statusItem?.button?.window?.frame,
+              let frame = unsafe statusItem?.button?.window?.frame,
               let primaryHeight = NSScreen.screens.first?.frame.height else { return nil }
         return CGRect(x: frame.minX, y: primaryHeight - frame.maxY, width: frame.width, height: frame.height)
     }
@@ -390,7 +390,7 @@ import JavaScriptCore
         guard let menu = makePopUpMenu(from: entries) else { return }
 
         guard let button = statusItem?.button,
-              let window = button.window,
+              let window = unsafe button.window,
               statusItem?.isVisible == true else {
             menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
             return
