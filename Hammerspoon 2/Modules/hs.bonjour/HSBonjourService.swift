@@ -251,7 +251,8 @@ import Darwin
         monitorCallback = nil
     }
 
-    /// Stops resolving and monitoring, and releases the callbacks, at module shutdown
+    /// Stops resolving and monitoring, and releases the callbacks, when the search that found
+    /// it is destroyed or the module shuts down
     func destroy() {
         clearCallbacks()
         service.stop()

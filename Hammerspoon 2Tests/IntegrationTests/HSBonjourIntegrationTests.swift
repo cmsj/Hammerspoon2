@@ -368,4 +368,35 @@ extension HSBonjourTests {
         service.netService(netService, didUpdateTXTRecord: Data())
         #expect(updates == 1, "A service must not call back after module shutdown")
     }
+
+    /// Records stopMonitoring(), which leaves nothing else observable once callbacks are cleared
+    private nonisolated final class MonitorProbeService: NetService {
+        var stoppedMonitoring = false
+        override func stopMonitoring() {
+            stoppedMonitoring = true
+            super.stopMonitoring()
+        }
+    }
+
+    @Test("Destroying a search stops monitoring the services it found")
+    func testSearchDestroyStopsMonitoringFoundServices() throws {
+        let harness = JSTestHarness()
+        harness.loadModule(HSBonjourModule.self, as: "bonjour")
+
+        harness.eval("""
+            var s = hs.bonjour.createSearch()
+            s.findServices('_hs2test._tcp.', 'local.', function(event, svc) {
+                if (event === 'serviceFound') svc.monitor(function() {})
+            })
+            void 0
+            """)
+        let search = try #require(harness.evalValue("s")?.toObjectOf(HSBonjourSearch.self) as? HSBonjourSearch)
+
+        let probe = MonitorProbeService(domain: "local.", type: "_hs2test._tcp.", name: "probe")
+        search.netServiceBrowser(NetServiceBrowser(), didFind: probe, moreComing: false)
+        #expect(!probe.stoppedMonitoring)
+
+        search.destroy()
+        #expect(probe.stoppedMonitoring, "A destroyed search must stop monitoring its services")
+    }
 }

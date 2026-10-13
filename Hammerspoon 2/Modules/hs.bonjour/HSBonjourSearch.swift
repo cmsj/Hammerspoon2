@@ -245,10 +245,7 @@ import JavaScriptCore
     // MARK: - Internal shutdown helper
 
     func stopAllDiscoveredServices() {
-        serviceTable.values.forEach {
-            $0.clearCallbacks()
-            _ = $0.stop()
-        }
+        serviceTable.values.forEach { $0.destroy() }
     }
 
     // MARK: - NetServiceBrowserDelegate
