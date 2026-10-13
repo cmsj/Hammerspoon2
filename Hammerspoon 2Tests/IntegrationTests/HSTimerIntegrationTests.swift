@@ -373,11 +373,6 @@ struct HSTimerIntegrationTests {
 
     // MARK: - Garbage Collection Tests (issue #267)
 
-    /// Runs the synchronous collector twice, so that anything only weakly reachable is reclaimed
-    private func collectGarbage(_ harness: JSTestHarness) {
-        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-    }
 
     @Test("A doAfter timer the caller didn't keep still fires after garbage collection")
     func testUnreferencedDoAfterSurvivesGC() {
@@ -390,7 +385,7 @@ struct HSTimerIntegrationTests {
         // `void` so the script's completion value doesn't hand the test a JSValue pinning the timer
         autoreleasepool { _ = harness.eval("void hs.timer.doAfter(0.05, function() { __test_callback('onFire'); })") }
         #expect(!harness.hasException)
-        collectGarbage(harness)
+        harness.collectGarbage()
 
         let success = harness.waitFor(timeout: 0.5) { fired }
         #expect(success, "Unreferenced one-shot timer should still fire")
@@ -407,7 +402,7 @@ struct HSTimerIntegrationTests {
         // `void` so the script's completion value doesn't hand the test a JSValue pinning the timer
         autoreleasepool { _ = harness.eval("void hs.timer.doEvery(0.02, function() { __test_callback('onFire'); })") }
         #expect(!harness.hasException)
-        collectGarbage(harness)
+        harness.collectGarbage()
 
         let success = harness.waitFor(timeout: 0.5) { count >= 3 }
         #expect(success, "Unreferenced repeating timer should keep firing")
@@ -429,7 +424,7 @@ struct HSTimerIntegrationTests {
 
         // Let the run loop release its reference to the invalidated Timer's target
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
-        collectGarbage(harness)
+        harness.collectGarbage()
         #expect(timer == nil, "A stopped timer must not be kept alive")
     }
 

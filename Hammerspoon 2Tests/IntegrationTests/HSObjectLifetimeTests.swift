@@ -13,11 +13,6 @@ import JavaScriptCore
 @Suite("Object lifetime tests")
 struct HSObjectLifetimeTests {
 
-    /// Runs the synchronous collector twice, so that anything only weakly reachable is reclaimed
-    private func collectGarbage(_ harness: JSTestHarness) {
-        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-    }
 
     // MARK: - HSObjectTracker
 
@@ -50,12 +45,12 @@ struct HSObjectLifetimeTests {
             tracker.add(object)
             tracker.setActive(object, true, in: harness.context)
         }
-        collectGarbage(harness)
+        harness.collectGarbage()
         #expect(weakObject != nil, "An active object must not be released")
 
         tracker.removeAllObjects()
         #expect(tracker.activeCount == 0)
-        collectGarbage(harness)
+        harness.collectGarbage()
         #expect(weakObject == nil, "removeAllObjects() must release every active object")
     }
 
@@ -79,7 +74,7 @@ struct HSObjectLifetimeTests {
 
         // A plain JS property with no @objc backing only survives if the same wrapper does
         autoreleasepool { _ = harness.eval("hs.timer.__lifetimeProbe = 42; void 0") }
-        collectGarbage(harness)
+        harness.collectGarbage()
         harness.expectTrue("hs.timer.__lifetimeProbe === 42")
     }
 
@@ -95,7 +90,7 @@ struct HSObjectLifetimeTests {
             let function = harness.evalValue("(function() { return 42; })")!
             callback = JSCallback(value: function, owner: module)
         }
-        collectGarbage(harness)
+        harness.collectGarbage()
 
         #expect(callback?.value != nil, "A module-owned JSCallback must not be collected")
         #expect(callback?.call(withArguments: [])?.toInt32() == 42)
@@ -131,7 +126,7 @@ struct HSObjectLifetimeTests {
         root.shutdown()
         #expect(HSActiveObjects.wrappers(in: harness.context).isEmpty)
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
-        collectGarbage(harness)
+        harness.collectGarbage()
         #expect(timer == nil, "Shutdown must not leave anything active")
     }
 

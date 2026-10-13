@@ -473,11 +473,6 @@ struct HSHotkeyTests {
 
         // MARK: Garbage collection (issue #267)
 
-        /// Runs the synchronous collector twice, so that anything only weakly reachable is reclaimed
-        private func collectGarbage(_ harness: JSTestHarness) {
-            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-            unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-        }
 
         @Test("A bound hotkey the caller didn't keep still fires after garbage collection")
         func testUnreferencedBoundHotkeySurvivesGC() {
@@ -493,7 +488,7 @@ struct HSHotkeyTests {
                 hotkey = harness.evalValue("hk")?.toObjectOf(HSHotkey.self) as? HSHotkey
                 harness.eval("hk = null; void 0")
             }
-            collectGarbage(harness)
+            harness.collectGarbage()
 
             #expect(hotkey != nil, "An enabled hotkey must not be collected")
             hotkey?.trigger(eventKind: UInt32(kEventHotKeyPressed))
@@ -512,7 +507,7 @@ struct HSHotkeyTests {
                 harness.eval("hk.disable(); hk = null; void 0")
             }
             #expect(hotkey != nil)
-            collectGarbage(harness)
+            harness.collectGarbage()
             #expect(hotkey == nil, "A disabled hotkey must not be kept alive")
         }
     }

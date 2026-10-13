@@ -62,6 +62,7 @@ import CoreServices
     @objc var identifier: String { get }
 
     /// Starts monitoring the watched path for filesystem changes.
+    /// - Note: A started watcher, and its callback, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
@@ -122,12 +123,19 @@ import CoreServices
 
     private let watchedPath: String
     private var callback: JSCallback?
-    private var stream: FSEventStreamRef?
-    private var selfRetain: HSPathWatcher?
+    private weak var tracker: HSObjectTracker<HSPathWatcher>?
+
+    // A watcher with a stream is active: it stays alive with its callback until it's stopped,
+    // even if the user dropped their reference to it. That also keeps the stream's unretained
+    // info pointer valid: the watcher can only be freed after stop() has drained eventsQueue.
+    private var stream: FSEventStreamRef? {
+        didSet { unsafe tracker?.setActive(self, stream != nil, in: JSContext.current() ?? callback?.value?.context) }
+    }
     private let latency: CFTimeInterval = 1.0
 
-    init(path: String) {
+    init(path: String, tracker: HSObjectTracker<HSPathWatcher>) {
         self.watchedPath = path
+        self.tracker = tracker
         super.init()
     }
 
@@ -176,7 +184,6 @@ import CoreServices
             return self
         }
         unsafe stream = newStream
-        selfRetain = self
         AKDebug("HSPathWatcher(\(identifier)): started watching \(watchedPath)")
         return self
     }
@@ -186,13 +193,12 @@ import CoreServices
         unsafe FSEventStreamStop(s)
         // Drain any callbacks already queued on eventsQueue before Stop was called.
         // This ensures takeUnretainedValue() in those callbacks completes while
-        // selfRetain still holds the watcher alive.
+        // the tracker still holds the watcher alive.
         HSPathWatcher.eventsQueue.sync {}
         unsafe generation &+= 1  // after sync, so all in-flight callbacks have already captured the old value
         unsafe FSEventStreamInvalidate(s)
         unsafe FSEventStreamRelease(s)
         unsafe stream = nil
-        selfRetain = nil
         AKDebug("HSPathWatcher(\(identifier)): stopped")
         return self
     }

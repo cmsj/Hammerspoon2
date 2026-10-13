@@ -120,6 +120,7 @@ private func pathToString(_ path: NWPath) -> String {
     ///
     /// After calling `start()`, the callback registered with `setCallback()` is invoked
     /// whenever the reachability status changes.
+    /// - Note: A started object, and its callback, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Returns: This reachability object for chaining.
     /// - Example:
     /// ```js
@@ -158,10 +159,16 @@ private func pathToString(_ path: NWPath) -> String {
     private let monitor = NWPathMonitor()
     private var lastKnownPath: NWPath?
     private var _callback: JSCallback?
-    private var _isWatching = false
-    private var selfRetain: HSNetworkReachability?   // keeps self alive while watching
+    private weak var tracker: HSObjectTracker<HSNetworkReachability>?
 
-    override init() {
+    // A watching object is active: it stays alive with its callback until it's stopped, even if
+    // the user dropped their reference to it.
+    private var _isWatching = false {
+        didSet { tracker?.setActive(self, _isWatching, in: JSContext.current() ?? _callback?.value?.context) }
+    }
+
+    init(tracker: HSObjectTracker<HSNetworkReachability>) {
+        self.tracker = tracker
         super.init()
         monitor.pathUpdateHandler = { [weak self] path in
             MainActor.assumeIsolated {
@@ -195,7 +202,6 @@ private func pathToString(_ path: NWPath) -> String {
     @objc @discardableResult func start() -> HSNetworkReachability {
         guard !_isWatching else { return self }
         _isWatching = true
-        selfRetain = self
         AKDebug("HSNetworkReachability.start()")
         return self
     }
@@ -225,7 +231,6 @@ private func pathToString(_ path: NWPath) -> String {
     private func stopWatching() {
         guard _isWatching else { return }
         _isWatching = false
-        selfRetain = nil
         AKDebug("HSNetworkReachability.stop()")
     }
 }

@@ -389,6 +389,7 @@ import AppKit
     ///
     /// Requires Accessibility permission.
     ///
+    /// - Note: The hotkey stays bound until you disable it, even if you don't keep a reference to it.
     /// - Parameters:
     ///   - mods: An array of modifier key strings. Supports generic names (`cmd`, `shift`, `alt`,
     ///     `ctrl`, `fn`) and side-specific names (`leftCmd`, `rightCmd`, `leftAlt`, `rightAlt`,
@@ -458,15 +459,19 @@ import AppKit
 @objc class HSEventTapModule: NSObject, HSModuleAPI, HSEventTapModuleAPI, EventTapHotkeyCoordinator {
     var moduleName = "hs.eventtap"
     let engineID: UUID
-    // Strong references: started taps keep themselves alive via selfRetain, so weak refs
-    // would be nil'd after JS GC — shutdown() would never find them to call destroy().
-    private var taps: [HSEventTap] = []
+    // Started taps are kept alive by the tracker while active; stopped ones are ordinary
+    // garbage once JS drops them.
+    private var taps = HSObjectTracker<HSEventTap>()
 
     // Hotkey dispatch infrastructure — a single shared modify tap for all bound hotkeys.
-    // Weak refs allow disabled/dropped hotkeys to be GC'd; enabled hotkeys are also in
-    // enabledTapHotkeys (strong) so their weak entries here remain valid until disabled.
+    // Enabled hotkeys are kept alive by the tracker; disabled/dropped ones can be GC'd.
     private var allTapHotkeys = HSObjectTracker<HSEventTapHotkey>()
-    private var enabledTapHotkeys: [HSEventTapHotkey] = []
+    // Enabled hotkeys, in the order they were enabled, for dispatch. Weak: their lifetime is
+    // the tracker's business, this is only the lookup order.
+    private struct WeakTapHotkey {
+        weak var hotkey: HSEventTapHotkey?
+    }
+    private var enabledTapHotkeys: [WeakTapHotkey] = []
     // The hotkey that consumed each currently held key's press, keyed by the key code the event
     // reported. The key-up goes to that hotkey even if its key code or the modifiers have changed
     // since (e.g. the keyboard layout switched while the key was held).
@@ -506,8 +511,8 @@ import AppKit
             self.layoutChangeObserver = nil
         }
 
-        for tap in taps { tap.destroy() }
-        taps.removeAll()
+        for tap in taps.allObjects { tap.destroy() }
+        taps.removeAllObjects()
 
         enabledTapHotkeys.removeAll()
         heldTapHotkeys.removeAll()
@@ -523,7 +528,8 @@ import AppKit
     }
 
     @objc func toString() -> String {
-        return "<\(moduleName): \(taps.count) active tap\(taps.count == 1 ? "" : "s")>"
+        let n = taps.activeCount
+        return "<\(moduleName): \(n) active tap\(n == 1 ? "" : "s")>"
     }
 
     nonisolated override var description: String {
@@ -595,15 +601,15 @@ import AppKit
             return nil
         }
         let mask = types.reduce(CGEventMask(0)) { $0 | (CGEventMask(1) << $1) }
-        let tap = HSEventTap(eventMask: mask, listenOnly: listenOnly)
+        let tap = HSEventTap(eventMask: mask, listenOnly: listenOnly, tracker: taps)
         _ = tap.setCallback(callback)
-        taps.append(tap)
+        taps.add(tap)
         return tap
     }
 
     @objc func removeWatcher(_ tap: HSEventTap) {
         tap.destroy()
-        taps.removeAll { $0 === tap }
+        taps.remove(tap)
     }
 
     // MARK: - Event constructors
@@ -899,7 +905,8 @@ import AppKit
             requiredDeviceBits: deviceBits,
             coordinator: self,
             onPressed: onPressed.isNull ? nil : onPressed,
-            onReleased: onReleased.isNull ? nil : onReleased
+            onReleased: onReleased.isNull ? nil : onReleased,
+            tracker: allTapHotkeys
         )
 
         guard hotkey.enable() else {
@@ -934,13 +941,13 @@ import AppKit
     // MARK: - EventTapHotkeyCoordinator
 
     func tapHotkeyDidEnable(_ hotkey: HSEventTapHotkey) -> Bool {
-        enabledTapHotkeys.append(hotkey)
+        enabledTapHotkeys.append(WeakTapHotkey(hotkey: hotkey))
         _ = startDispatchTapIfNeeded()  // best-effort — fails silently without Accessibility
         return true
     }
 
     func tapHotkeyDidDisable(_ hotkey: HSEventTapHotkey) {
-        enabledTapHotkeys.removeAll { $0 === hotkey }
+        enabledTapHotkeys.removeAll { $0.hotkey == nil || $0.hotkey === hotkey }
         heldTapHotkeys = heldTapHotkeys.filter { $0.value !== hotkey }
         if enabledTapHotkeys.isEmpty {
             dispatchTap?.stop()
@@ -1012,7 +1019,7 @@ import AppKit
         guard type == .keyDown, event.getIntegerValueField(.keyboardEventAutorepeat) == 0 else {
             return event
         }
-        for hotkey in enabledTapHotkeys {
+        for case let hotkey? in enabledTapHotkeys.map(\.hotkey) {
             if hotkey.matches(keyCode: eventKeyCode, maskedFlags: maskedFlags, rawFlagsValue: rawFlagsValue) {
                 heldTapHotkeys[eventKeyCode] = hotkey
                 hotkey.trigger(type: .keyDown)

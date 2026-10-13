@@ -861,8 +861,8 @@ import UniformTypeIdentifiers
     }
 
     @objc func toString() -> String {
-        let v = volumeWatchers.allObjects.count
-        let p = pathWatchers.allObjects.count
+        let v = volumeWatchers.activeCount
+        let p = pathWatchers.activeCount
         let f = openFiles.allObjects.filter(\.isOpen).count
         return "<\(moduleName): \(v) volume watcher\(v == 1 ? "" : "s"), \(p) path watcher\(p == 1 ? "" : "s"), \(f) open file\(f == 1 ? "" : "s")>"
     }
@@ -1484,7 +1484,7 @@ import UniformTypeIdentifiers
     }
 
     @objc func addVolumeWatcher() -> HSVolumeWatcher {
-        let watcher = HSVolumeWatcher()
+        let watcher = HSVolumeWatcher(tracker: volumeWatchers)
         volumeWatchers.add(watcher)
         return watcher
     }
@@ -1497,7 +1497,7 @@ import UniformTypeIdentifiers
     // MARK: - Path watchers
 
     @objc func createPathWatcher(_ path: String) -> HSPathWatcher {
-        let watcher = HSPathWatcher(path: expand(path))
+        let watcher = HSPathWatcher(path: expand(path), tracker: pathWatchers)
         pathWatchers.add(watcher)
         return watcher
     }

@@ -30,6 +30,7 @@ import CoreGraphics
     @objc var identifier: String { get }
 
     /// Start receiving events. Requires Accessibility permission.
+    /// - Note: A started tap, and its callback, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Returns: This tap, for chaining
     /// - Example:
     /// ```js
@@ -117,15 +118,20 @@ import CoreGraphics
     // and the static C callback guarantees main-thread delivery via CFRunLoopGetMain().
     nonisolated(unsafe) private var tapPort: CFMachPort?
     nonisolated(unsafe) private var runLoopSource: CFRunLoopSource?
-    private var running = false
+    private weak var tracker: HSObjectTracker<HSEventTap>?
 
-    // Strong self-retain while tap is active so the C callback userInfo pointer is safe.
-    // Written only on the MainActor; the C callback reads it from the main run loop thread.
-    nonisolated(unsafe) private var selfRetain: HSEventTap?
+    // A running tap is active: it stays alive with its callback until it's stopped, even if the
+    // user dropped their reference to it. The C callback's userInfo pointer is unretained, which
+    // is safe because a tap is always stopped (in destroy(), from deinit) before it's freed.
+    private var running = false {
+        didSet { tracker?.setActive(self, running, in: JSContext.current() ?? callback?.value?.context) }
+    }
 
-    init(eventMask: CGEventMask, listenOnly: Bool = false) {
+    /// - Parameter tracker: The module's tracker, or nil for an internal tap the module retains itself
+    init(eventMask: CGEventMask, listenOnly: Bool = false, tracker: HSObjectTracker<HSEventTap>? = nil) {
         self.eventMask = eventMask
         self.listenOnly = listenOnly
+        self.tracker = tracker
         super.init()
     }
 
@@ -149,8 +155,6 @@ import CoreGraphics
             return self
         }
 
-        unsafe selfRetain = self
-
         let port = unsafe CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
@@ -162,7 +166,6 @@ import CoreGraphics
 
         guard let port else {
             AKError("hs.eventtap: Failed to create event tap for \(identifier) — Accessibility permission may be required")
-            unsafe selfRetain = nil
             return self
         }
 
@@ -191,7 +194,6 @@ import CoreGraphics
         unsafe tapPort = nil
         unsafe runLoopSource = nil
         running = false
-        unsafe selfRetain = nil
         AKDebug("hs.eventtap: tap \(identifier) stopped")
         return self
     }

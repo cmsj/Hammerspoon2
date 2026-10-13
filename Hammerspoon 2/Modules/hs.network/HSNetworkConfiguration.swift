@@ -81,6 +81,7 @@ private nonisolated func scConfigWatcherCallback(
     /// The callback registered with `setCallback()` will be invoked whenever a key matching the
     /// patterns registered with `setKeys()` changes. Call `setKeys()` and `setCallback()` before
     /// calling `start()`.
+    /// - Note: A started watcher, and its callback, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Returns: This watcher for chaining.
     /// - Example:
     /// ```js
@@ -116,10 +117,18 @@ private nonisolated func scConfigWatcherCallback(
 
     private var store: SCDynamicStore?
     private var _callback: JSCallback?
-    private var _isWatching = false
-    private var selfRetain: HSNetworkConfigurationWatcher?
+    private weak var tracker: HSObjectTracker<HSNetworkConfigurationWatcher>?
 
-    override init() {
+    // A watching object is active: it stays alive with its callback until it's stopped, even if
+    // the user dropped their reference to it. The store's info pointer is unretained, which is
+    // safe because stopWatching() (called from destroy(), from deinit) detaches the store from
+    // its queue before the watcher is freed.
+    private var _isWatching = false {
+        didSet { tracker?.setActive(self, _isWatching, in: JSContext.current() ?? _callback?.value?.context) }
+    }
+
+    init(tracker: HSObjectTracker<HSNetworkConfigurationWatcher>) {
+        self.tracker = tracker
         super.init()
         var ctx = unsafe SCDynamicStoreContext(version: 0, info: nil, retain: nil, release: nil, copyDescription: nil)
         unsafe ctx.info = unsafe Unmanaged.passUnretained(self).toOpaque()
@@ -157,7 +166,6 @@ private nonisolated func scConfigWatcherCallback(
     @objc @discardableResult func start() -> HSNetworkConfigurationWatcher {
         guard !_isWatching, let store = store else { return self }
         _isWatching = true
-        selfRetain = self
         SCDynamicStoreSetDispatchQueue(store, .main)
         AKDebug("HSNetworkConfigurationWatcher.start()")
         return self
@@ -187,10 +195,9 @@ private nonisolated func scConfigWatcherCallback(
     private func stopWatching() {
         guard _isWatching else { return }
         _isWatching = false
-        // Remove from dispatch queue BEFORE releasing selfRetain to guarantee the
-        // callback cannot fire after this point (even if selfRetain was the last ref).
+        // Remove from the dispatch queue so the callback can't fire after this point, even if
+        // un-pinning the watcher releases the last reference to it.
         if let s = store { SCDynamicStoreSetDispatchQueue(s, nil) }
-        selfRetain = nil
         AKDebug("HSNetworkConfigurationWatcher.stop()")
     }
 }

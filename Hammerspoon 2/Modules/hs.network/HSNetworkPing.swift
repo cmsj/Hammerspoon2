@@ -285,7 +285,21 @@ private func readICMPReply(fd: Int32, family: Int32,
     }
 
     // MARK: Internal state
-    private var _isDone: Bool = false
+    private weak var tracker: HSObjectTracker<HSNetworkPing>?
+
+    private enum Phase {
+        case notStarted, pinging, done
+    }
+
+    // A ping is active from when it starts resolving until it finishes, fails or is cancelled:
+    // it stays alive with its callback even if the user dropped their reference to it.
+    private var phase = Phase.notStarted {
+        didSet {
+            tracker?.setActive(self, phase == .pinging, in: JSContext.current() ?? _callback?.value?.context,
+                               finishesOnItsOwn: true)
+        }
+    }
+    private var _isDone: Bool { phase == .done }
     private var _received: Int = 0
     private var _pendingReplies: Int = 0
     private var _packets: [Int: [String: Any]] = [:]
@@ -304,7 +318,7 @@ private func readICMPReply(fd: Int32, family: Int32,
     // MARK: Init
 
     init(server: String, count: Int, interval: TimeInterval, timeout: TimeInterval,
-         preferFamily: Int32, callbackValue: JSValue?) {
+         preferFamily: Int32, callbackValue: JSValue?, tracker: HSObjectTracker<HSNetworkPing>) {
         _server = server
         self.server = server
         self.count = max(1, count)
@@ -312,6 +326,7 @@ private func readICMPReply(fd: Int32, family: Int32,
         _timeout = max(0.1, timeout)
         _preferFamily = preferFamily
         pingID = UInt16.random(in: 1...UInt16.max)
+        self.tracker = tracker
         super.init()
 
         if let cbVal = callbackValue, cbVal.isFunction {
@@ -382,6 +397,7 @@ private func readICMPReply(fd: Int32, family: Int32,
     // MARK: - Private: resolution & setup
 
     private func startResolvingAndPing() {
+        phase = .pinging
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
@@ -525,7 +541,7 @@ private func readICMPReply(fd: Int32, family: Int32,
 
     private func teardown(fireFinish: Bool) {
         guard !_isDone else { return }
-        _isDone = true
+        phase = .done
         isRunning = false
         isPaused = false
 
@@ -549,7 +565,7 @@ private func readICMPReply(fd: Int32, family: Int32,
 
     private func handleFatalError(_ message: String) {
         guard !_isDone else { return }
-        _isDone = true
+        phase = .done
         fireCallback("didFail", message)
         _callback?.detach(from: self)
         _callback = nil

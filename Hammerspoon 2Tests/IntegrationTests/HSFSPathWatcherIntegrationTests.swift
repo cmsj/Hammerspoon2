@@ -287,6 +287,46 @@ struct HSFSPathWatcherTests {
             _ = await harness.waitForAsync(timeout: 2.0) { callCount > 0 }
             #expect(callCount == 0, "callback should not fire after stop()")
         }
+
+        // MARK: Garbage collection (issue #267)
+
+        @Test("A started watcher the caller didn't keep still fires after garbage collection")
+        func testUnreferencedWatcherSurvivesGC() async throws {
+            let tmp = try TempWatchDir()
+            let harness = JSTestHarness()
+            harness.loadModule(HSFSModule.self, as: "fs")
+
+            var callbackFired = false
+            harness.registerCallback("onChanged") { callbackFired = true }
+
+            // `void` so the script's completion value doesn't pin the watcher's wrapper
+            autoreleasepool {
+                _ = harness.eval("void hs.fs.createPathWatcher('\(tmp.path)').setCallback(function() { __test_callback('onChanged') }).start()")
+            }
+            #expect(!harness.hasException)
+            harness.collectGarbage()
+
+            try tmp.touch("gc.txt")
+            let fired = await harness.waitForAsync(timeout: 5.0) { callbackFired }
+            #expect(fired, "An unreferenced started watcher must keep its callback")
+        }
+
+        @Test("A stopped watcher the caller didn't keep is garbage collected")
+        func testStoppedWatcherIsCollected() throws {
+            let tmp = try TempWatchDir()
+            let harness = JSTestHarness()
+            harness.loadModule(HSFSModule.self, as: "fs")
+
+            weak var watcher: HSPathWatcher?
+            autoreleasepool {
+                harness.eval("var w = hs.fs.createPathWatcher('\(tmp.path)').setCallback(function() {}).start(); void 0")
+                watcher = harness.evalValue("w")?.toObjectOf(HSPathWatcher.self) as? HSPathWatcher
+                harness.eval("w.stop(); w = null; void 0")
+            }
+            #expect(watcher != nil)
+            harness.collectGarbage()
+            #expect(watcher == nil, "A stopped watcher must not be kept alive")
+        }
     }
 
     // MARK: - Memory leak test

@@ -318,7 +318,8 @@ private func queryPrimaryInterface() -> String? {
     /// Sends ICMP Echo Requests to `server` and reports results via a callback.
     ///
     /// DNS resolution and the first ping begin immediately. The returned object can be used to
-    /// pause, resume, or cancel the ping, and to read statistics.
+    /// pause, resume, or cancel the ping, and to read statistics. The ping runs to completion,
+    /// with its callback, even if you don't keep a reference to it.
     ///
     /// The `options` argument may be:
     /// - Omitted (or `undefined`) — uses all defaults.
@@ -388,7 +389,7 @@ private func queryPrimaryInterface() -> String? {
     }
 
     @objc func toString() -> String {
-        let n = pings.allObjects.count + reachabilityObjects.allObjects.count + configurationWatchers.allObjects.count
+        let n = pings.activeCount + reachabilityObjects.activeCount + configurationWatchers.activeCount
         return "<\(moduleName): \(n) active watcher\(n == 1 ? "" : "s")>"
     }
 
@@ -437,7 +438,7 @@ private func queryPrimaryInterface() -> String? {
     @objc func reachabilityLinkLocal() -> HSNetworkReachability { makeReachability() }
 
     private func makeReachability() -> HSNetworkReachability {
-        let obj = HSNetworkReachability()
+        let obj = HSNetworkReachability(tracker: reachabilityObjects)
         reachabilityObjects.add(obj)
         return obj
     }
@@ -486,7 +487,7 @@ private func queryPrimaryInterface() -> String? {
     }
 
     @objc func configurationWatcher() -> HSNetworkConfigurationWatcher {
-        let watcher = HSNetworkConfigurationWatcher()
+        let watcher = HSNetworkConfigurationWatcher(tracker: configurationWatchers)
         configurationWatchers.add(watcher)
         return watcher
     }
@@ -572,7 +573,7 @@ private func queryPrimaryInterface() -> String? {
 
         let ping = HSNetworkPing(server: server, count: count, interval: interval,
                                   timeout: timeout, preferFamily: preferFamily,
-                                  callbackValue: callbackValue)
+                                  callbackValue: callbackValue, tracker: pings)
         pings.add(ping)
         return ping
     }

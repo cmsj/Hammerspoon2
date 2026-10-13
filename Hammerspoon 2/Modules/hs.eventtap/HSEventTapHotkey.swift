@@ -39,6 +39,7 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     @objc var keyCode: Int { get }
 
     /// Enable the hotkey
+    /// - Note: An enabled hotkey, and its callbacks, stay alive until it's disabled, even if you don't keep a reference to it
     /// - Returns: True if the hotkey was enabled, otherwise False
     /// - Example:
     /// ```js
@@ -123,7 +124,16 @@ protocol EventTapHotkeyCoordinator: AnyObject {
         }
     }
 
-    private var _isEnabled = false
+    private weak var tracker: HSObjectTracker<HSEventTapHotkey>?
+
+    // An enabled hotkey is active: it stays alive with its callbacks until it's disabled, even
+    // if the user dropped their reference to it.
+    private var _isEnabled = false {
+        didSet {
+            tracker?.setActive(self, _isEnabled,
+                               in: JSContext.current() ?? _onPressed?.value?.context ?? _onReleased?.value?.context)
+        }
+    }
     weak var coordinator: (any EventTapHotkeyCoordinator)?
 
     // Key code pre-cast to the type events report, to avoid a UInt16→Int64 conversion on every event.
@@ -152,12 +162,14 @@ protocol EventTapHotkeyCoordinator: AnyObject {
          requiredDeviceBits: UInt64,
          coordinator: any EventTapHotkeyCoordinator,
          onPressed: JSFunction? = nil,
-         onReleased: JSFunction? = nil) {
+         onReleased: JSFunction? = nil,
+         tracker: HSObjectTracker<HSEventTapHotkey>? = nil) {
         self.keyArgument = key ?? .keyCode(Int(keyCode))
         self.cachedKeyCode = Int64(keyCode)
         self.requiredFlags = requiredFlags
         self.requiredDeviceBits = requiredDeviceBits
         self.coordinator = coordinator
+        self.tracker = tracker
         super.init()
         // Phase 2 — JSContext.current() is valid because this init is called from a JS bridge method
         if let cb = onPressed { self.onPressed = cb }

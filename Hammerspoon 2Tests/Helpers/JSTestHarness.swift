@@ -276,6 +276,15 @@ class JSTestHarness {
         unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
     }
 
+    /// Runs the synchronous collector twice, so that anything only weakly reachable is reclaimed.
+    /// For garbage-collection tests: anything the test still references (including the JSValue
+    /// returned by an `eval` whose script ends in an expression) stays alive, so evaluate the
+    /// setup with `void` inside `autoreleasepool {}`.
+    func collectGarbage() {
+        unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
+        unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
+    }
+
     /// Load the full ModuleRoot as 'hs' (mimics real environment). It's shut down when the
     /// harness is, as JSEngine does on reload.
     @discardableResult

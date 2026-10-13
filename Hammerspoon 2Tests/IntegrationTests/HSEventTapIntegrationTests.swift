@@ -755,6 +755,24 @@ struct HSEventTapTests {
             #expect(!harness.hasException)
         }
 
+
+        @Test("A started tap the caller didn't keep survives garbage collection, and is collected once stopped")
+        func testStartedTapLifetime() {
+            let harness = makeHarness()
+            weak var tap: HSEventTap?
+            autoreleasepool {
+                harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(e) { return true }, true); tap.start(); void 0")
+                tap = harness.evalValue("tap")?.toObjectOf(HSEventTap.self) as? HSEventTap
+                harness.eval("tap = null; void 0")
+            }
+            harness.collectGarbage()
+            #expect(tap?.isEnabled() == true, "A started tap must not be collected")
+
+            tap?.stop()
+            harness.collectGarbage()
+            #expect(tap == nil, "A stopped tap must not be kept alive")
+        }
+
         @Test("listen-only tap start/stop lifecycle works")
         func testListenOnlyWatcherStartStop() {
             let harness = makeHarness()
@@ -1052,6 +1070,38 @@ struct HSEventTapTests {
             #expect(!harness.hasException)
         }
 
+
+        @Test("A bound hotkey the caller didn't keep still fires after garbage collection")
+        func testUnreferencedBoundHotkeySurvivesGC() throws {
+            let harness = makeHarness()
+            let module = try #require(harness.evalValue("hs.eventtap")?.toObjectOf(HSEventTapModule.self) as? HSEventTapModule)
+            // `void` so the script's completion value doesn't pin the hotkey's wrapper
+            autoreleasepool {
+                _ = harness.eval("var pressed = 0; void hs.eventtap.bindHotkey(['ctrl', 'alt'], 'f5', () => pressed++, null)")
+            }
+            harness.collectGarbage()
+
+            let f5 = CGKeyCode(kVK_F5)
+            #expect(try dispatch(module, .keyDown, keyCode: f5, flags: [.maskControl, .maskAlternate]))
+            #expect(harness.evalInt("pressed") == 1, "An unreferenced bound hotkey must keep its callback")
+            _ = try dispatch(module, .keyUp, keyCode: f5, flags: [.maskControl, .maskAlternate])
+            #expect(!harness.hasException)
+        }
+
+        @Test("A removed hotkey the caller didn't keep is garbage collected")
+        func testRemovedHotkeyIsCollected() {
+            let harness = makeHarness()
+            weak var hotkey: HSEventTapHotkey?
+            autoreleasepool {
+                harness.eval("var hk = hs.eventtap.bindHotkey(['ctrl', 'alt'], 'f6', () => {}, null); void 0")
+                hotkey = harness.evalValue("hk")?.toObjectOf(HSEventTapHotkey.self) as? HSEventTapHotkey
+                harness.eval("hs.eventtap.removeHotkey(hk); hk = null; void 0")
+            }
+            #expect(hotkey != nil)
+            harness.collectGarbage()
+            #expect(hotkey == nil, "A disabled hotkey must not be kept alive")
+        }
+
         @Test("keys that always report fn match hotkeys with or without fn")
         func testImplicitFn() throws {
             let harness = makeHarness()
@@ -1290,10 +1340,10 @@ struct HSEventTapTests {
             autoreleasepool {
                 let harness = JSTestHarness()
                 harness.loadModule(HSEventTapModule.self, as: "eventtap")
-                // Create and start the tap. start() sets selfRetain=self (if Accessibility is
-                // granted, creating a real CGEventTap) or immediately clears it (if not). Either
-                // way, shutdown() → destroy() → stop() clears selfRetain and the module's strong
-                // taps array, freeing the tap regardless of whether it actually captured events.
+                // Create and start the tap. start() makes it active in the module's tracker (if
+                // Accessibility is granted, creating a real CGEventTap) or leaves it inactive (if
+                // not). Either way, shutdown() → destroy() → stop() and removeAllObjects() release
+                // it, regardless of whether it actually captured events.
                 harness.eval("var tap = hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], function(e) { return true }, true)")
                 harness.eval("tap.start()")
                 if let obj = harness.evalValue("tap")?.toObjectOf(HSEventTap.self) as? HSEventTap {

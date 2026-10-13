@@ -263,6 +263,27 @@ struct HSFSVolumeTests {
         }
     }
 
+    // MARK: - Garbage collection (issue #267)
+
+    @Test("A started volume watcher the caller didn't keep survives garbage collection, and is collected once stopped")
+    func testVolumeWatcherLifetime() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSFSModule.self, as: "fs")
+
+        weak var watcher: HSVolumeWatcher?
+        autoreleasepool {
+            harness.eval("var w = hs.fs.addVolumeWatcher().setCallback(function() {}).start(); void 0")
+            watcher = harness.evalValue("w")?.toObjectOf(HSVolumeWatcher.self) as? HSVolumeWatcher
+            harness.eval("w = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(watcher != nil, "A started watcher must not be collected")
+
+        watcher?.stop()
+        harness.collectGarbage()
+        #expect(watcher == nil, "A stopped watcher must not be kept alive")
+    }
+
     // MARK: - Memory leak test
 
     @Test("active HSVolumeWatcher is released after shutdown")

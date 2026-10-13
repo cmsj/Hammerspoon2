@@ -414,12 +414,10 @@ garbage-collection tests, in addition to the leak test:
 2. **Inactive and unreferenced → collected.** Hold it in a `weak var`, stop it (or let it
    finish), drop the JS reference, force a collection, and check the `weak var` is nil.
 
-```swift
-private func collectGarbage(_ harness: JSTestHarness) {
-    unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-    unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-}
+`harness.collectGarbage()` runs the synchronous collector (twice, so anything only weakly
+reachable is reclaimed).
 
+```swift
 @Test("A doAfter timer the caller didn't keep still fires after garbage collection")
 func testUnreferencedDoAfterSurvivesGC() {
     let harness = JSTestHarness()
@@ -430,7 +428,7 @@ func testUnreferencedDoAfterSurvivesGC() {
     // `void` + autoreleasepool: otherwise eval's result is a JSValue holding the
     // timer's wrapper, which pins it and makes the test pass even without the fix
     autoreleasepool { _ = harness.eval("void hs.timer.doAfter(0.05, function() { __test_callback('onFire'); })") }
-    collectGarbage(harness)
+    harness.collectGarbage()
 
     #expect(harness.waitFor(timeout: 0.5) { fired })
 }
@@ -446,7 +444,7 @@ func testStoppedTimerIsCollected() {
         harness.eval("t.stop(); t = null")
     }
     RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
-    collectGarbage(harness)
+    harness.collectGarbage()
     #expect(timer == nil)
 }
 ```

@@ -1185,11 +1185,6 @@ import JavaScriptCore
 
     // MARK: - Garbage Collection Tests (issue #267)
 
-    /// Runs the synchronous collector twice, so that anything only weakly reachable is reclaimed
-    private func collectGarbage(_ harness: JSTestHarness) {
-        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
-    }
 
     @Test("A running task the caller didn't keep survives garbage collection")
     func testUnreferencedRunningTaskSurvivesGC() async {
@@ -1204,7 +1199,7 @@ import JavaScriptCore
         // `void` so the script's completion value doesn't hand the test a JSValue pinning the task
         autoreleasepool { _ = harness.eval("void hs.task.create('/bin/sleep', ['0.3'], function(code) { onDone(code); }).start()") }
         #expect(!harness.hasException)
-        collectGarbage(harness)
+        harness.collectGarbage()
 
         let success = await harness.waitForAsync(timeout: 3.0) { exitCode != nil }
         #expect(success, "Termination callback should fire after a collection")
@@ -1224,7 +1219,7 @@ import JavaScriptCore
 
         autoreleasepool { _ = harness.eval("void hs.task.shell('sleep 0.3; echo hi').then(function(r) { onResolve(r.stdout); })") }
         #expect(!harness.hasException)
-        collectGarbage(harness)
+        harness.collectGarbage()
 
         let success = await harness.waitForAsync(timeout: 3.0) { output != nil }
         #expect(success, "shell() promise should settle after a collection")
@@ -1252,7 +1247,7 @@ import JavaScriptCore
         #expect(success, "Task should terminate")
         await harness.cleanup()
 
-        collectGarbage(harness)
+        harness.collectGarbage()
         #expect(task == nil, "A terminated task must not be kept alive")
     }
 

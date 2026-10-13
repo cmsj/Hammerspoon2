@@ -41,6 +41,7 @@ import AppKit
     @objc var identifier: String { get }
 
     /// Starts monitoring volume events.
+    /// - Note: A started watcher, and its callback, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Returns: self, for chaining
     /// - Example:
     /// ```js
@@ -92,9 +93,16 @@ import AppKit
     }
     @objc let identifier = UUID().uuidString
     private var callback: JSCallback?
-    private var isRunning = false
+    private weak var tracker: HSObjectTracker<HSVolumeWatcher>?
 
-    override init() {
+    // A running watcher is active: it stays alive with its callback until it's stopped, even if
+    // the user dropped their reference to it.
+    private var isRunning = false {
+        didSet { tracker?.setActive(self, isRunning, in: JSContext.current() ?? callback?.value?.context) }
+    }
+
+    init(tracker: HSObjectTracker<HSVolumeWatcher>) {
+        self.tracker = tracker
         super.init()
     }
 

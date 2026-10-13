@@ -1039,4 +1039,80 @@ struct HSNetworkTests {
             tracker.assertNoLeaks()
         }
     }
+
+    // MARK: - Garbage collection (issue #267)
+
+    @Suite("hs.network garbage collection tests")
+    struct HSNetworkGCTests {
+
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSNetworkModule.self, as: "network")
+            return harness
+        }
+
+        @Test("A ping the caller didn't keep still finishes after garbage collection, and is then collected")
+        @MainActor
+        func testUnreferencedPingLifetime() async {
+            let harness = makeHarness()
+            weak var ping: HSNetworkPing?
+            autoreleasepool {
+                harness.eval("""
+                    var __done = false;
+                    var p = hs.network.ping('127.0.0.1', {
+                        count: 1,
+                        timeout: 2.0,
+                        callback: function(ping, event) {
+                            if (event === 'didFinish' || event === 'didFail') { __done = true; }
+                        }
+                    });
+                    void 0
+                """)
+                ping = harness.evalValue("p")?.toObjectOf(HSNetworkPing.self) as? HSNetworkPing
+                harness.eval("p = null; void 0")
+            }
+            harness.collectGarbage()
+            #expect(ping != nil, "A running ping must not be collected")
+
+            let ok = await harness.waitForAsync(timeout: 10.0) { harness.evalBool("__done") == true }
+            #expect(ok, "An unreferenced ping must still deliver its final callback")
+
+            harness.collectGarbage()
+            #expect(ping == nil, "A finished ping must not be kept alive")
+        }
+
+        @Test("A started reachability object the caller didn't keep survives garbage collection, and is collected once stopped")
+        func testReachabilityLifetime() {
+            let harness = makeHarness()
+            weak var reachability: HSNetworkReachability?
+            autoreleasepool {
+                harness.eval("var r = hs.network.reachabilityInternet().setCallback(function() {}).start(); void 0")
+                reachability = harness.evalValue("r")?.toObjectOf(HSNetworkReachability.self) as? HSNetworkReachability
+                harness.eval("r = null; void 0")
+            }
+            harness.collectGarbage()
+            #expect(reachability != nil, "A started reachability object must not be collected")
+
+            reachability?.stop()
+            harness.collectGarbage()
+            #expect(reachability == nil, "A stopped reachability object must not be kept alive")
+        }
+
+        @Test("A started configuration watcher the caller didn't keep survives garbage collection, and is collected once stopped")
+        func testConfigurationWatcherLifetime() {
+            let harness = makeHarness()
+            weak var watcher: HSNetworkConfigurationWatcher?
+            autoreleasepool {
+                harness.eval("var w = hs.network.configurationWatcher().setKeys(['State:/Network/Global/IPv4'], false).setCallback(function() {}).start(); void 0")
+                watcher = harness.evalValue("w")?.toObjectOf(HSNetworkConfigurationWatcher.self) as? HSNetworkConfigurationWatcher
+                harness.eval("w = null; void 0")
+            }
+            harness.collectGarbage()
+            #expect(watcher != nil, "A started watcher must not be collected")
+
+            watcher?.stop()
+            harness.collectGarbage()
+            #expect(watcher == nil, "A stopped watcher must not be kept alive")
+        }
+    }
 }
