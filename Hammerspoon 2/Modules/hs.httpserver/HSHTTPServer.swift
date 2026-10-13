@@ -296,7 +296,7 @@ struct ParsedHTTPRequest {
 
     // WebSocket state
     private var _wsCallbacks: [String: JSCallback] = [:]
-    private var _wsConnections = HSWeakObjectSet<HSWebSocketConnection>()
+    private var _wsConnections = HSObjectTracker<HSWebSocketConnection>()
 
     // Callbacks (JSCallback prevents retain cycles)
     private var _callback: JSCallback?

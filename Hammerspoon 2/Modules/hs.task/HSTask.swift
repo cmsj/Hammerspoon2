@@ -12,6 +12,7 @@ import JavaScriptCoreExtras
 /// Object representing an external process task
 @objc protocol HSTaskAPI: HSTypeAPI, JSExport {
     /// Start the task
+    /// - Note: A running task, and its callbacks, stay alive until it terminates, even if you don't keep a reference to it. Use `terminate()` to stop it early.
     /// - Returns: The task object for chaining
     /// - Example:
     /// ```js
@@ -165,12 +166,25 @@ import JavaScriptCoreExtras
     private var onTermination: JSCallback?
     private var onOutput: JSCallback?
 
+    private enum State {
+        case notStarted, running, finished
+    }
+
+    // A running task is active: it stays alive with its callbacks from start() until its
+    // termination has been delivered, even if the user dropped their reference to it.
+    private var state = State.notStarted {
+        didSet {
+            tracker?.setActive(self, state == .running,
+                               in: JSContext.current() ?? onTermination?.value?.context ?? onOutput?.value?.context)
+        }
+    }
+    private var hasStarted: Bool { state != .notStarted }
+
     private var process: Process?
     private var stdoutPipe: Pipe?
     private var stderrPipe: Pipe?
     private var stdinPipe: Pipe?
 
-    private var hasStarted = false
     private var exitCode: Int32?
     private var exitReason: String?
 
@@ -182,8 +196,7 @@ import JavaScriptCoreExtras
     private var stdoutEOF = true
     private var stderrEOF = true
 
-    // Reference to module for task tracking
-    private weak var module: HSTaskModule?
+    private weak var tracker: HSObjectTracker<HSTask>?
 
     /// The environment variables for the task
     @objc var environment: [String: String] {
@@ -217,11 +230,11 @@ import JavaScriptCoreExtras
         return process?.isRunning ?? false
     }
 
-    init(launchPath: String, arguments: [String], environment: [String: String]?, onTermination: JSFunction?, onOutput: JSFunction?, module: HSTaskModule?) {
+    init(launchPath: String, arguments: [String], environment: [String: String]?, onTermination: JSFunction?, onOutput: JSFunction?, tracker: HSObjectTracker<HSTask>) {
         self.launchPath = launchPath
         self.arguments = arguments
         self._environment = environment ?? ProcessInfo.processInfo.environment
-        self.module = module
+        self.tracker = tracker
         super.init()
         self.onTermination = onTermination.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
         self.onOutput = onOutput.flatMap { JSCallback(value: $0, owner: self, silentOnUndefined: true) }
@@ -237,8 +250,11 @@ import JavaScriptCoreExtras
         onTermination = nil
         onOutput?.detach(from: self)
         onOutput = nil
+        state = .finished
 
         // This is called when HS is reloading/exiting, or when this HSTask is garbage collected.
+        // A running task cannot be garbage collected (see `state`), so the latter only
+        // happens to tasks that were never started or have already terminated.
         // Send the process SIGTERM, and hand it to the reaper, which will SIGKILL it if it
         // hasn't exited after a grace period. If the app is quitting, it blocks on the reaper
         // so that happens before Hammerspoon exits.
@@ -253,10 +269,7 @@ import JavaScriptCoreExtras
             return self
         }
 
-        hasStarted = true
-
-        // Register this task as active
-        module?.registerActiveTask(self)
+        state = .running
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: launchPath)
@@ -311,8 +324,7 @@ import JavaScriptCoreExtras
             try process.run()
         } catch {
             AKError("hs.task:start(): Failed to start task: \(error.localizedDescription)")
-            // Unregister if we failed to start
-            module?.unregisterActiveTask(self)
+            state = .finished
         }
 
         return self
@@ -441,21 +453,17 @@ import JavaScriptCoreExtras
     }
 
     private func callTerminationCallbackIfReady() {
-        guard processExited && stdoutEOF && stderrEOF else { return }
+        guard state == .running, processExited && stdoutEOF && stderrEOF else { return }
+        defer { state = .finished }
 
         if let cb = onTermination?.value, cb.isFunction, !cb.isUndefined {
-            guard let context = cb.context else {
-                module?.unregisterActiveTask(self)
-                return
-            }
+            guard let context = cb.context else { return }
             cb.call(withArguments: [exitCode ?? 0, exitReason ?? "unknown"])
             if let exception = context.exception, !exception.isUndefined {
                 AKError("hs.task: Error in termination callback: \(exception.toString() ?? "unknown error")")
                 context.exception = nil
             }
         }
-
-        module?.unregisterActiveTask(self)
     }
 
     private func getTerminationReasonString(_ reason: Process.TerminationReason) -> String {

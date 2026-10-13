@@ -167,7 +167,7 @@ import Carbon
     let engineID: UUID
 
     // Weak refs: disabled/dropped hotkeys can be GC'd.
-    private var activeHotkeys = HSWeakObjectSet<HSHotkey>()
+    private var activeHotkeys = HSObjectTracker<HSHotkey>()
 
     // MARK: - Swift-retained storage for JS-defined functions
     @objc var createModal: JSFunction? = nil

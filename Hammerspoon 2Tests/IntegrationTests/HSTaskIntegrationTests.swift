@@ -203,7 +203,7 @@ import JavaScriptCore
     }
 
     @Test("pid returns valid process ID")
-    func testPid() {
+    func testPid() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -229,7 +229,8 @@ import JavaScriptCore
         harness.expectTrue("capturedPid > 0")
 
         // Wait for task to complete
-        Thread.sleep(forTimeInterval: 0.3)
+        let finished = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(finished, "Task should have terminated")
     }
 
     @Test("terminationStatus returns exit code")
@@ -487,7 +488,7 @@ import JavaScriptCore
     }
 
     @Test("Cannot modify environment after task starts")
-    func testEnvironmentImmutableAfterStart() {
+    func testEnvironmentImmutableAfterStart() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -500,11 +501,12 @@ import JavaScriptCore
 
         // Should see a warning but not crash
         // The test just verifies it doesn't crash
-        Thread.sleep(forTimeInterval: 0.2)
+        let finished = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(finished, "Task should have terminated")
     }
 
     @Test("Cannot modify working directory after task starts")
-    func testWorkingDirectoryImmutableAfterStart() {
+    func testWorkingDirectoryImmutableAfterStart() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -516,7 +518,8 @@ import JavaScriptCore
         """)
 
         // Should see a warning but not crash
-        Thread.sleep(forTimeInterval: 0.2)
+        let finished = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(finished, "Task should have terminated")
     }
 
     // MARK: - JavaScript Enhancement Tests - async/await API
@@ -922,7 +925,7 @@ import JavaScriptCore
     }
 
     @Test("TaskBuilder.build() creates task without running")
-    func testBuilderBuild() {
+    func testBuilderBuild() async {
         let harness = JSTestHarness()
         harness.loadModule(HSTaskModule.self, as: "task")
 
@@ -938,7 +941,8 @@ import JavaScriptCore
 
         // Should be able to start it
         harness.eval("task.start()")
-        Thread.sleep(forTimeInterval: 0.2)
+        let finished = await harness.waitForTasksToComplete(timeout: 2.0)
+        #expect(finished, "Task should have terminated")
     }
 
     @Test("TaskBuilder supports method chaining")
@@ -1177,6 +1181,79 @@ import JavaScriptCore
 
         let exited = await harness.waitForAsync(timeout: 2.0) { kill(pid, 0) != 0 }
         #expect(exited, "Task should have been killed by the reaper")
+    }
+
+    // MARK: - Garbage Collection Tests (issue #267)
+
+    /// Runs the synchronous collector twice, so that anything only weakly reachable is reclaimed
+    private func collectGarbage(_ harness: JSTestHarness) {
+        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+    }
+
+    @Test("A running task the caller didn't keep survives garbage collection")
+    func testUnreferencedRunningTaskSurvivesGC() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var exitCode: Int?
+        harness.registerCallback("onDone") { (code: Int) in
+            exitCode = code
+        }
+
+        // `void` so the script's completion value doesn't hand the test a JSValue pinning the task
+        autoreleasepool { _ = harness.eval("void hs.task.create('/bin/sleep', ['0.3'], function(code) { onDone(code); }).start()") }
+        #expect(!harness.hasException)
+        collectGarbage(harness)
+
+        let success = await harness.waitForAsync(timeout: 3.0) { exitCode != nil }
+        #expect(success, "Termination callback should fire after a collection")
+        #expect(exitCode == 0, "The process should exit normally, not be killed")
+        await harness.cleanup()
+    }
+
+    @Test("hs.task.shell() settles even if a collection runs while the command is running")
+    func testShellPromiseSettlesAfterGC() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var output: String?
+        harness.registerCallback("onResolve") { (stdout: String) in
+            output = stdout
+        }
+
+        autoreleasepool { _ = harness.eval("void hs.task.shell('sleep 0.3; echo hi').then(function(r) { onResolve(r.stdout); })") }
+        #expect(!harness.hasException)
+        collectGarbage(harness)
+
+        let success = await harness.waitForAsync(timeout: 3.0) { output != nil }
+        #expect(success, "shell() promise should settle after a collection")
+        #expect(output == "hi\n")
+        await harness.cleanup()
+    }
+
+    @Test("A terminated task the caller didn't keep is garbage collected")
+    func testTerminatedTaskIsCollected() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTaskModule.self, as: "task")
+
+        var done = false
+        harness.registerCallback("onDone") { done = true }
+
+        weak var task: HSTask?
+        autoreleasepool {
+            harness.eval("var t = hs.task.create('/usr/bin/true', [], function() { __test_callback('onDone'); }).start()")
+            task = harness.evalValue("t")?.toObjectOf(HSTask.self) as? HSTask
+            harness.eval("t = null")
+        }
+        #expect(task != nil)
+
+        let success = await harness.waitForAsync(timeout: 3.0) { done }
+        #expect(success, "Task should terminate")
+        await harness.cleanup()
+
+        collectGarbage(harness)
+        #expect(task == nil, "A terminated task must not be kept alive")
     }
 
     // MARK: - Memory Leak Tests

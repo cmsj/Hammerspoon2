@@ -94,7 +94,7 @@ import AppKit
     var moduleName = "hs.sharing"
     let engineID: UUID
 
-    private var shares = HSWeakObjectSet<HSSharingService>()
+    private var shares = HSObjectTracker<HSSharingService>()
     // Strong retention for shares mid-flight (between shareItems() and the terminal
     // delegate callback), since JS may not keep a reference to a one-liner share chain.
     private var activeShares = Set<HSSharingService>()

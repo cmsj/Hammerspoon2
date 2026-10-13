@@ -17,6 +17,8 @@ private final class LoadSpoonContext {
     let context: JSContext
     let configDir: URL
     private(set) var lastException: JSValue?
+    // Shut down in deinit, as JSEngine does on reload, so it releases the JSContext
+    private let moduleRoot: ModuleRoot
 
     init() throws {
         let vm = JSVirtualMachine()
@@ -28,17 +30,19 @@ private final class LoadSpoonContext {
             .appendingPathComponent("hs_loadspoon_\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
 
+        let settings = MockSettingsManager()
+        settings.configLocation = configDir.appendingPathComponent("init.js")
+        moduleRoot = ModuleRoot(engineID: UUID(), settings: settings)
+
         ctx.exceptionHandler = { [weak self] _, exc in self?.lastException = exc }
         try NodeBuiltinModulesInstaller().install(in: ctx)
         try RequireInstaller().install(in: ctx)
 
-        let settings = MockSettingsManager()
-        settings.configLocation = configDir.appendingPathComponent("init.js")
-        let moduleRoot = ModuleRoot(engineID: UUID(), settings: settings)
         ctx.setObject(moduleRoot, forKeyedSubscript: "hs" as NSString)
     }
 
-    deinit {
+    isolated deinit {
+        moduleRoot.shutdown()
         try? FileManager.default.removeItem(at: configDir)
     }
 

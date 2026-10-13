@@ -48,6 +48,11 @@ echo
 echo "Checking watcher event names..."
 node scripts/check-event-names.js
 
+# Check modules retain their child objects only through HSObjectTracker
+echo
+echo "Checking object lifetimes..."
+node scripts/check-object-lifetimes.js
+
 # Run HTML generation
 echo
 echo "Running HTML documentation generation..."

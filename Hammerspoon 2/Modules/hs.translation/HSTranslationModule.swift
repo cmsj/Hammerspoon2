@@ -93,7 +93,7 @@ import JavaScriptCore
 
     // Weak refs: sessions are released when JS GC drops them.
     // allObjects returns only live sessions; dead entries are compacted on each access.
-    private var sessions = HSWeakObjectSet<HSTranslationSession>()
+    private var sessions = HSObjectTracker<HSTranslationSession>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

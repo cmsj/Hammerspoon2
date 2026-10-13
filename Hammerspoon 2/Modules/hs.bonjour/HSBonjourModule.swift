@@ -173,7 +173,7 @@ import dnssd
 
     // Weak refs: searches stay active via their NSNetServiceBrowser delegate chain;
     // weak refs allow dropped searches to be GC'd without an explicit removeSearch() call.
-    private var searches = HSWeakObjectSet<HSBonjourSearch>()
+    private var searches = HSObjectTracker<HSBonjourSearch>()
     private var advertisedServices: [String: AdvertisedService] = [:]
 
     required init(engineID: UUID) {

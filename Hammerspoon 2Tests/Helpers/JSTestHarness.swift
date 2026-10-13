@@ -43,9 +43,34 @@ class JSTestHarness {
     /// Track loaded modules by name for shutdownForLeakTest()
     private var loadedModulesDict: [String: any HSModuleAPI] = [:]
 
-    isolated deinit {
-        for module in loadedModuleObjects {
-            module.shutdown()
+    /// The ModuleRoot loaded by loadModuleRoot(), if any. It holds its modules' JS wrappers, so
+    /// it must be shut down or it keeps this harness's JSContext alive.
+    private var moduleRoot: ModuleRoot?
+
+    /// Set this in a test that deliberately ends with objects still active (e.g. one checking
+    /// that module shutdown stops a running timer), to skip the teardown check below.
+    var allowsActiveObjectsAtTeardown = false
+
+    // Deliberately not `isolated deinit`: that runs without the test's task-local state, so
+    // Issue.record() couldn't tell which test the issue belongs to. A harness is always released
+    // on the main actor, at the end of the test that created it.
+    deinit {
+        MainActor.assumeIsolated {
+            // Every test must stop what it started, and anything that finishes on its own (a
+            // task exiting, a one-shot timer firing) must stop being active. An object still
+            // active here is either a test that didn't clean up, or a module that never un-pins
+            // it, which would keep it alive, with its callbacks, until the next reload.
+            if !allowsActiveObjectsAtTeardown {
+                let active = HSActiveObjects.wrappers(in: context)
+                if !active.isEmpty {
+                    let names = active.map { $0.toString() ?? "?" }.joined(separator: ", ")
+                    Issue.record("Test ended with \(active.count) object(s) still active: \(names). Stop them, or set allowsActiveObjectsAtTeardown if that's deliberate.")
+                }
+            }
+            for module in loadedModuleObjects {
+                module.shutdown()
+            }
+            moduleRoot?.shutdown()
         }
     }
 
@@ -245,14 +270,19 @@ class JSTestHarness {
             module.shutdown()
         }
         loadedModulesDict.removeAll()
+        moduleRoot?.shutdown()
         context.globalObject.deleteProperty("hs")
         unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
     }
 
-    /// Load the full ModuleRoot as 'hs' (mimics real environment)
-    func loadModuleRoot() {
+    /// Load the full ModuleRoot as 'hs' (mimics real environment). It's shut down when the
+    /// harness is, as JSEngine does on reload.
+    @discardableResult
+    func loadModuleRoot() -> ModuleRoot {
         let moduleRoot = ModuleRoot(engineID: UUID())
+        self.moduleRoot = moduleRoot
         context.setObject(moduleRoot, forKeyedSubscript: "hs" as NSString)
+        return moduleRoot
     }
 
     // MARK: - Script Execution

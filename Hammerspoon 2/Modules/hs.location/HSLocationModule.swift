@@ -145,7 +145,7 @@ import CoreLocation
     private var _lastLocation: CLLocation?
     // Weak refs: watchers stay active while CLLocationManager is alive inside them;
     // weak refs allow dropped watchers to be GC'd without an explicit removeWatcher() call.
-    private var watchers = HSWeakObjectSet<HSLocationWatcher>()
+    private var watchers = HSObjectTracker<HSLocationWatcher>()
 
     @objc var geocoder: HSLocationGeocoder { _geocoder }
 

@@ -63,36 +63,15 @@ import JavaScriptCoreExtras
 
 // MARK: - Implementation
 
-// Actor to safely track active tasks across threads
-struct TaskTracker {
-    private var activeTasks = Set<ObjectIdentifier>()
-
-    mutating func register(_ task: HSTask) {
-        activeTasks.insert(ObjectIdentifier(task))
-    }
-
-    mutating func unregister(_ task: HSTask) {
-        activeTasks.remove(ObjectIdentifier(task))
-    }
-
-    func count() -> Int {
-        return activeTasks.count
-    }
-
-    mutating func clear() {
-        activeTasks.removeAll()
-    }
-}
-
 @_documentation(visibility: private)
 @MainActor
 @objc class HSTaskModule: NSObject, HSModuleAPI, HSTaskModuleAPI {
     var moduleName = "hs.task"
     let engineID: UUID
 
-    // Weak refs: running tasks stay alive via their Process termination handler closure;
-    // weak refs allow completed/GC'd tasks to be reclaimed while supporting shutdown().
-    private var tasks = HSWeakObjectSet<HSTask>()
+    // Running tasks are kept alive by the tracker while active; completed/never-started tasks
+    // are ordinary garbage once JS drops them.
+    private var tasks = HSObjectTracker<HSTask>()
 
     // Swift-retained storage for JS-defined functions
     @objc var runAsync: JSFunction? = nil
@@ -101,9 +80,6 @@ struct TaskTracker {
     @objc var sequence: JSFunction? = nil
     @objc var builder: JSFunction? = nil
     @objc var TaskBuilder: JSFunction? = nil
-
-    // Track active tasks for testing purposes (thread-safe via actor)
-    private var taskTracker = TaskTracker()
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
@@ -114,7 +90,6 @@ struct TaskTracker {
 
     func shutdown() {
         for task in tasks.allObjects {
-            taskTracker.unregister(task)
             task.destroy()
         }
         tasks.removeAllObjects()
@@ -131,7 +106,7 @@ struct TaskTracker {
     }
 
     @objc func toString() -> String {
-        let n = tasks.allObjects.count
+        let n = tasks.activeCount
         return "<\(moduleName): \(n) running task\(n == 1 ? "" : "s")>"
     }
 
@@ -141,22 +116,12 @@ struct TaskTracker {
 
     // MARK: - Task Tracking (for testing)
 
-    func registerActiveTask(_ task: HSTask) {
-        taskTracker.register(task)
-    }
-
-    func unregisterActiveTask(_ task: HSTask) {
-        taskTracker.unregister(task)
-    }
-
     @MainActor
     func waitForAllTasksToComplete(timeout: TimeInterval = 5.0) async -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
 
         while Date() < deadline {
-            let count = taskTracker.count()
-
-            if count == 0 {
+            if tasks.activeCount == 0 {
                 return true
             }
 
@@ -176,7 +141,7 @@ struct TaskTracker {
             environment: environment,
             onTermination: onTermination,
             onOutput: onOutput,
-            module: self
+            tracker: tasks
         )
 
         tasks.add(task)

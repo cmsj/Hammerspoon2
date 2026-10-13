@@ -357,9 +357,9 @@ private func queryPrimaryInterface() -> String? {
 @objc class HSNetworkModule: NSObject, HSModuleAPI, HSNetworkModuleAPI {
     var moduleName = "hs.network"
     let engineID: UUID
-    private var pings = HSWeakObjectSet<HSNetworkPing>()
-    private var reachabilityObjects = HSWeakObjectSet<HSNetworkReachability>()
-    private var configurationWatchers = HSWeakObjectSet<HSNetworkConfigurationWatcher>()
+    private var pings = HSObjectTracker<HSNetworkPing>()
+    private var reachabilityObjects = HSObjectTracker<HSNetworkReachability>()
+    private var configurationWatchers = HSObjectTracker<HSNetworkConfigurationWatcher>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

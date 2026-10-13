@@ -27,6 +27,7 @@ import JavaScriptCore
     @objc var repeats: Bool { get }
 
     /// Start the timer
+    /// - Note: A running timer keeps firing until it is stopped, even if you don't keep a reference to it
     /// - Returns: The HSTimer object, for chaining
     /// - Example:
     /// ```js
@@ -92,17 +93,25 @@ import JavaScriptCore
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
-    private var timer: Timer?
     private var callback: JSCallback?
     private let continueOnError: Bool
+    private weak var tracker: HSObjectTracker<HSTimer>?
+
+    // A scheduled timer is active: it stays alive with its callback until it's stopped, even if
+    // the user dropped their reference to it. The run loop retaining the Timer's target is not
+    // enough on its own: that keeps this object alive, but not its JSCallback.
+    private var timer: Timer? {
+        didSet { tracker?.setActive(self, timer != nil, in: JSContext.current() ?? callback?.value?.context) }
+    }
 
     @objc let interval: TimeInterval
     @objc let repeats: Bool
 
-    init(interval: TimeInterval, repeats: Bool, callback: JSFunction, continueOnError: Bool = false) {
+    init(interval: TimeInterval, repeats: Bool, callback: JSFunction, continueOnError: Bool = false, tracker: HSObjectTracker<HSTimer>) {
         self.interval = interval
         self.repeats = repeats
         self.continueOnError = continueOnError
+        self.tracker = tracker
         super.init()
         self.callback = JSCallback(value: callback, owner: self)
     }

@@ -837,9 +837,9 @@ import UniformTypeIdentifiers
         AKGarbage("Init of \(moduleName): \(engineID)")
     }
 
-    private var volumeWatchers = HSWeakObjectSet<HSVolumeWatcher>()
-    private var pathWatchers = HSWeakObjectSet<HSPathWatcher>()
-    private var openFiles = HSWeakObjectSet<HSFile>()
+    private var volumeWatchers = HSObjectTracker<HSVolumeWatcher>()
+    private var pathWatchers = HSObjectTracker<HSPathWatcher>()
+    private var openFiles = HSObjectTracker<HSFile>()
 
     /// The `{code, message}` of the most recent failure, exposed to JS as `lastError`.
     private(set) var lastErrorInfo: [String: Any]?

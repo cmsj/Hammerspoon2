@@ -349,7 +349,7 @@ func testFooDoesNotLeakAfterReload() {
 | Extract the Swift object with `toObjectOf(T.self)` | All child types are `@objc class` NSObject subclasses; this cast is safe |
 | Call `shutdownForLeakTest()` **inside** the `autoreleasepool {}` block | Sync GC must run while the context is still alive |
 | Call `assertNoLeaks()` **outside** the `autoreleasepool {}` block | The context (and any bridged objects) must be released first |
-| **Start/use the object actively** — see table below | An unstarted object skips the interesting cleanup paths (selfRetain, NSNotificationCenter observers, OS browser delegates, taskTracker strong refs, etc.) |
+| **Start/use the object actively** — see table below | An unstarted object skips the interesting cleanup paths (pending activity, NSNotificationCenter observers, OS browser delegates, etc.) |
 
 ### What "actively using" means per object type
 
@@ -367,9 +367,9 @@ func testFooDoesNotLeakAfterReload() {
 
 ### Why each object type needs specific handling
 
-- **Timers** — Foundation `Timer(target:selector:)` holds a strong ref to `HSTimer`
-  as its target until `invalidate()` is called. `shutdown()` → `destroy()` → `stop()`
-  → `invalidate()` is the only release path.
+- **Timers** — a running `HSTimer` is active in its module's `HSObjectTracker` (and
+  retained by Foundation's `Timer` target ref) until `stop()`. `shutdown()` → `destroy()` →
+  `stop()` ends both, and `removeAllObjects()` drops any pin left behind.
 - **Hotkeys** — `enabledHotkeys` is a **strong** array in `HSHotkeyModule`. Enabled
   hotkeys are not freed until `shutdown()` clears the array.
 - **EventTaps** — `start()` sets `selfRetain = self` to keep the tap alive while
@@ -377,8 +377,86 @@ func testFooDoesNotLeakAfterReload() {
 - **SpotlightQuery / BonjourSearch** — `NSNotificationCenter` and
   `NSNetServiceBrowser` hold strong delegate/observer refs. `destroy()` removes
   them; without `destroy()` these objects can never be freed.
-- **Tasks** — `registerActiveTask()` stores the task in a **strong** `taskTracker`
-  inside the module. It is released only when the module itself is freed.
+- **Tasks** — a running `HSTask` is active in its module's `HSObjectTracker` until it
+  terminates. `shutdown()` → `destroy()` ends it (and SIGTERMs the process).
+- **Anything else with pending activity** — an active object is pinned through its JS
+  wrapper, which holds the `JSContext`. A module whose `shutdown()` skips
+  `removeAllObjects()` shows up as a leak here.
+
+## Pending-activity tests (mandatory for objects that can be active)
+
+### The harness teardown check (automatic)
+
+`JSTestHarness` fails any test that ends with an object still active in an
+`HSObjectTracker` (it records an issue naming the objects). So every test MUST stop what it
+starts: `stop()` timers and watchers, wait for tasks to exit (`await
+harness.waitForTasksToComplete()`), and so on. That's what catches an object that never
+becomes inactive (a one-shot timer still pinned after it fires, a task still pinned after
+it exits), which would otherwise leak until the next reload.
+
+A test that deliberately ends with something active, usually because nothing can reach it
+to stop it (an unreferenced `doEvery`), sets `harness.allowsActiveObjectsAtTeardown = true`.
+Module shutdown then stops it.
+
+Synchronous tests can't wait for anything delivered through a main-actor `Task`, such as an
+`HSTask`'s termination: `waitFor` spins the run loop, but a main-actor job can't run while
+the test itself is running on the main actor. Make those tests `async` and use
+`waitForAsync`/`waitForTasksToComplete()`. Never `Thread.sleep` to wait for a task.
+
+### The two GC tests
+
+Any object that can be active (see "Object lifetime" in the HSModule skill) also needs two
+garbage-collection tests, in addition to the leak test:
+
+1. **Active and unreferenced → keeps working.** Start the object *without* storing it in
+   a JS variable, force a collection, and check that its callback still fires.
+2. **Inactive and unreferenced → collected.** Hold it in a `weak var`, stop it (or let it
+   finish), drop the JS reference, force a collection, and check the `weak var` is nil.
+
+```swift
+private func collectGarbage(_ harness: JSTestHarness) {
+    unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+    unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+}
+
+@Test("A doAfter timer the caller didn't keep still fires after garbage collection")
+func testUnreferencedDoAfterSurvivesGC() {
+    let harness = JSTestHarness()
+    harness.loadModule(HSTimerModule.self, as: "timer")
+    var fired = false
+    harness.registerCallback("onFire") { fired = true }
+
+    // `void` + autoreleasepool: otherwise eval's result is a JSValue holding the
+    // timer's wrapper, which pins it and makes the test pass even without the fix
+    autoreleasepool { _ = harness.eval("void hs.timer.doAfter(0.05, function() { __test_callback('onFire'); })") }
+    collectGarbage(harness)
+
+    #expect(harness.waitFor(timeout: 0.5) { fired })
+}
+
+@Test("A stopped timer the caller didn't keep is garbage collected")
+func testStoppedTimerIsCollected() {
+    let harness = JSTestHarness()
+    harness.loadModule(HSTimerModule.self, as: "timer")
+    weak var timer: HSTimer?
+    autoreleasepool {   // drains the JSValue returned by evalValue
+        harness.eval("var t = hs.timer.doEvery(60, function() {})")
+        timer = harness.evalValue("t")?.toObjectOf(HSTimer.self) as? HSTimer
+        harness.eval("t.stop(); t = null")
+    }
+    RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+    collectGarbage(harness)
+    #expect(timer == nil)
+}
+```
+
+Test 1 is the one that catches `selfRetain`-style bugs: the Swift object survives but its
+`JSCallback` is collected, so the callback silently never fires. Check that it fails with
+the `setActive` call removed before relying on it. If it doesn't fail, something in the test
+is still holding the wrapper — most often the script's completion value: a script ending in
+`hs.foo.create(...).start()` *returns* the object, and `harness.eval` hands that back as an
+autoreleased `JSValue` that keeps the wrapper alive. Prefix with `void` and wrap the eval in
+`autoreleasepool {}`.
 
 ### One test per object type is sufficient
 
@@ -591,6 +669,7 @@ and record all call arguments so tests can assert on them.
 - [ ] Permission/hardware-gated suites use `.disabled(if: ...)` with a `nonisolated` guard
 - [ ] `#expect(!harness.hasException)` after every non-trivial `eval()`
 - [ ] Async tests use `waitForAsync` or `waitFor` rather than `Thread.sleep` where possible
+- [ ] Every test stops what it starts, or the harness teardown check fails it
 - [ ] State-mutating tests use `.serialized` and save/restore shared state
 - [ ] Nothing triggers permission dialogs, hardware mutations, or live network calls
 - [ ] **If the module creates child JS objects**: a `testFooDoesNotLeakAfterReload()` test exists that (a) creates AND actively starts the object, (b) tracks it with `WeakLeakTracker`, (c) wraps the harness in an `autoreleasepool {}` block, and (d) calls `tracker.assertNoLeaks()` after the block

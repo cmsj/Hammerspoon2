@@ -26,6 +26,7 @@ import JavaScriptCore
     @objc func create(_ interval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool) -> HSTimer
 
     /// Create and start a one-shot timer
+    /// - Note: The timer fires even if you don't keep a reference to it. Keep one if you might want to stop it.
     /// - Parameters:
     ///   - seconds: Number of seconds to wait before firing
     ///   - callback: {() => void} A JavaScript function to call when the timer fires
@@ -37,6 +38,7 @@ import JavaScriptCore
     @objc func doAfter(_ seconds: TimeInterval, _ callback: JSFunction) -> HSTimer
 
     /// Create and start a repeating timer
+    /// - Note: The timer keeps firing until `stop()` is called, even if you don't keep a reference to it.
     /// - Parameters:
     ///   - interval: The interval in seconds at which the timer should fire
     ///   - callback: {() => void} A JavaScript function to call when the timer fires
@@ -152,9 +154,9 @@ import JavaScriptCore
     var moduleName = "hs.timer"
     let engineID: UUID
 
-    // Weak refs: running timers stay alive via the Foundation run loop (Timer target);
-    // stopped/GC'd timers are automatically zeroed. allObjects only returns live timers.
-    private var timers = HSWeakObjectSet<HSTimer>()
+    // Running timers are kept alive by the tracker while active; stopped timers are ordinary
+    // garbage once JS drops them. allObjects only returns live timers.
+    private var timers = HSObjectTracker<HSTimer>()
 
     // MARK: - Module lifecycle
     required init(engineID: UUID) {
@@ -179,7 +181,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        let n = timers.allObjects.count
+        let n = timers.activeCount
         return "<\(moduleName): \(n) active timer\(n == 1 ? "" : "s")>"
     }
 
@@ -196,19 +198,19 @@ import JavaScriptCore
     // MARK: - Timer constructors
 
     @objc func create(_ interval: TimeInterval, _ callback: JSFunction, _ continueOnError: Bool = false) -> HSTimer {
-        let timer = HSTimer(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError)
+        let timer = HSTimer(interval: interval, repeats: true, callback: callback, continueOnError: continueOnError, tracker: timers)
         timers.add(timer)
         return timer
     }
 
     @objc func doAfter(_ seconds: TimeInterval, _ callback: JSFunction) -> HSTimer {
-        let timer = HSTimer(interval: seconds, repeats: false, callback: callback)
+        let timer = HSTimer(interval: seconds, repeats: false, callback: callback, tracker: timers)
         timers.add(timer)
         return timer.start()
     }
 
     @objc func doEvery(_ interval: TimeInterval, _ callback: JSFunction) -> HSTimer {
-        let timer = HSTimer(interval: interval, repeats: true, callback: callback)
+        let timer = HSTimer(interval: interval, repeats: true, callback: callback, tracker: timers)
         timers.add(timer)
         return timer.start()
     }
@@ -223,7 +225,7 @@ import JavaScriptCore
             secondsUntilTarget += 86400 // Add 24 hours
         }
 
-        let timer = HSTimer(interval: secondsUntilTarget, repeats: false, callback: callback, continueOnError: continueOnError)
+        let timer = HSTimer(interval: secondsUntilTarget, repeats: false, callback: callback, continueOnError: continueOnError, tracker: timers)
         timers.add(timer)
         return timer.start()
     }

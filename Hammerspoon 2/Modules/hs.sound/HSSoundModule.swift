@@ -52,7 +52,7 @@ import AppKit
 @objc class HSSoundModule: NSObject, HSModuleAPI, HSSoundModuleAPI {
     var moduleName = "hs.sound"
     let engineID: UUID
-    private var sounds = HSWeakObjectSet<HSSound>()
+    private var sounds = HSObjectTracker<HSSound>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

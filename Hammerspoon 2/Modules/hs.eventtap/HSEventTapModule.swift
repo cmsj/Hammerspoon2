@@ -465,7 +465,7 @@ import AppKit
     // Hotkey dispatch infrastructure — a single shared modify tap for all bound hotkeys.
     // Weak refs allow disabled/dropped hotkeys to be GC'd; enabled hotkeys are also in
     // enabledTapHotkeys (strong) so their weak entries here remain valid until disabled.
-    private var allTapHotkeys = HSWeakObjectSet<HSEventTapHotkey>()
+    private var allTapHotkeys = HSObjectTracker<HSEventTapHotkey>()
     private var enabledTapHotkeys: [HSEventTapHotkey] = []
     // The hotkey that consumed each currently held key's press, keyed by the key code the event
     // reported. The key-up goes to that hotkey even if its key code or the modifiers have changed

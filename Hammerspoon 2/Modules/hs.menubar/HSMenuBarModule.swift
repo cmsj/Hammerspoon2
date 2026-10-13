@@ -67,7 +67,7 @@ import JavaScriptCore
     var moduleName = "hs.menubar"
     let engineID: UUID
 
-    private var items = HSWeakObjectSet<HSMenuBarItem>()
+    private var items = HSObjectTracker<HSMenuBarItem>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

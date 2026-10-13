@@ -213,7 +213,7 @@ struct HSNotifyTests {
             // send() schedules the notification and exercises the JSCallback/JSManagedValue
             // ownership path. The notification attempt may fail in test runners without
             // notification permission; that is fine — the object is still created and used.
-            // HSNotification is purely JS-owned (no HSWeakObjectSet in the module), so after
+            // HSNotification is purely JS-owned (no HSObjectTracker in the module), so after
             // JS drops it and sync GC runs, the JSManagedValue loses its owner and the
             // notification is freed.
             harness.eval("""

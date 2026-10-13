@@ -84,7 +84,7 @@ import JavaScriptCore
 @objc class HSHTTPServerModule: NSObject, HSModuleAPI, HSHTTPServerModuleAPI {
     var moduleName = "hs.httpserver"
     let engineID: UUID
-    private var servers = HSWeakObjectSet<HSHTTPServer>()
+    private var servers = HSObjectTracker<HSHTTPServer>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

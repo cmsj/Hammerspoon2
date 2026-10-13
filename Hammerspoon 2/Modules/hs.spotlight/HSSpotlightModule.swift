@@ -190,7 +190,7 @@ import JavaScriptCore
     var moduleName = "hs.spotlight"
     let engineID: UUID
 
-    private var queries = HSWeakObjectSet<HSSpotlightQuery>()
+    private var queries = HSObjectTracker<HSSpotlightQuery>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

@@ -222,7 +222,7 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
     private var client = MIDIClientRef()
     private var outputPort = MIDIPortRef()
     private var deviceCallbackHandler: JSCallback?
-    private var children = HSWeakObjectSet<HSMIDIDevice>()
+    private var children = HSObjectTracker<HSMIDIDevice>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

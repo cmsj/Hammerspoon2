@@ -109,6 +109,8 @@ struct HSTimerIntegrationTests {
 
         let success = harness.waitFor(timeout: 0.2) { callbackFired }
         #expect(success, "hs.timer should fire after start() is called")
+
+        harness.eval("manualTimer.stop()")
     }
 
     // MARK: - Timer Object Tests
@@ -123,6 +125,8 @@ struct HSTimerIntegrationTests {
         #expect(harness.evalTypeOf("t.start") == "function")
         #expect(harness.evalTypeOf("t.stop") == "function")
         #expect(harness.evalTypeOf("t.running") == "function")
+
+        harness.eval("t.stop()")
     }
 
     @Test("running() returns correct state")
@@ -365,6 +369,70 @@ struct HSTimerIntegrationTests {
 
         let success = harness.waitFor(timeout: 0.2) { timeoutFired }
         #expect(success, "Timeout should fire when operation doesn't complete")
+    }
+
+    // MARK: - Garbage Collection Tests (issue #267)
+
+    /// Runs the synchronous collector twice, so that anything only weakly reachable is reclaimed
+    private func collectGarbage(_ harness: JSTestHarness) {
+        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+        unsafe JSSynchronousGarbageCollectForDebugging(harness.context.jsGlobalContextRef)
+    }
+
+    @Test("A doAfter timer the caller didn't keep still fires after garbage collection")
+    func testUnreferencedDoAfterSurvivesGC() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTimerModule.self, as: "timer")
+
+        var fired = false
+        harness.registerCallback("onFire") { fired = true }
+
+        // `void` so the script's completion value doesn't hand the test a JSValue pinning the timer
+        autoreleasepool { _ = harness.eval("void hs.timer.doAfter(0.05, function() { __test_callback('onFire'); })") }
+        #expect(!harness.hasException)
+        collectGarbage(harness)
+
+        let success = harness.waitFor(timeout: 0.5) { fired }
+        #expect(success, "Unreferenced one-shot timer should still fire")
+    }
+
+    @Test("A doEvery timer the caller didn't keep keeps firing after garbage collection")
+    func testUnreferencedDoEverySurvivesGC() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTimerModule.self, as: "timer")
+
+        var count = 0
+        harness.registerCallback("onFire") { count += 1 }
+
+        // `void` so the script's completion value doesn't hand the test a JSValue pinning the timer
+        autoreleasepool { _ = harness.eval("void hs.timer.doEvery(0.02, function() { __test_callback('onFire'); })") }
+        #expect(!harness.hasException)
+        collectGarbage(harness)
+
+        let success = harness.waitFor(timeout: 0.5) { count >= 3 }
+        #expect(success, "Unreferenced repeating timer should keep firing")
+        // Nothing can reach the timer to stop it; module shutdown does
+        harness.allowsActiveObjectsAtTeardown = true
+    }
+
+    @Test("A stopped timer the caller didn't keep is garbage collected")
+    func testStoppedTimerIsCollected() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTimerModule.self, as: "timer")
+
+        weak var timer: HSTimer?
+        autoreleasepool {
+            harness.eval("var t = hs.timer.doEvery(60, function() {})")
+            timer = harness.evalValue("t")?.toObjectOf(HSTimer.self) as? HSTimer
+            harness.eval("t.stop(); t = null")
+        }
+        #expect(timer != nil)
+        #expect(!harness.hasException)
+
+        // Let the run loop release its reference to the invalidated Timer's target
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+        collectGarbage(harness)
+        #expect(timer == nil, "A stopped timer must not be kept alive")
     }
 
     // MARK: - Memory Leak Tests

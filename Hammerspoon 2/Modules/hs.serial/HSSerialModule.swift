@@ -200,7 +200,7 @@ nonisolated enum HSSerialEvent: String, HSEventName {
 @objc class HSSerialModule: NSObject, HSModuleAPI, HSSerialModuleAPI {
     var moduleName = "hs.serial"
     let engineID: UUID
-    private var ports = HSWeakObjectSet<HSSerialPort>()
+    private var ports = HSObjectTracker<HSSerialPort>()
 
     @objc var _watcherEmitter: JSFunction? = nil
     @objc var _eventNames: [String] { HSSerialEvent.allNames }

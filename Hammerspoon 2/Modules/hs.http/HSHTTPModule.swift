@@ -137,7 +137,7 @@ import JavaScriptCore
 @objc class HSHTTPModule: NSObject, HSModuleAPI, HSHTTPModuleAPI {
     var moduleName = "hs.http"
     let engineID: UUID
-    private var webSockets = HSWeakObjectSet<HSWebSocket>()
+    private var webSockets = HSObjectTracker<HSWebSocket>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

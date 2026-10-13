@@ -84,7 +84,7 @@ import JavaScriptCore
 @objc class HSChooserModule: NSObject, HSModuleAPI, HSChooserModuleAPI {
     var moduleName: String = "hs.chooser"
     let engineID: UUID
-    private var choosers = HSWeakObjectSet<HSChooser>()
+    private var choosers = HSObjectTracker<HSChooser>()
 
     required init(engineID: UUID) {
         self.engineID = engineID

@@ -28,6 +28,17 @@ import JavaScriptCoreExtras
     /// ```
     @objc func collectGarbage()
 
+    /// Get every object that is currently active: running tasks, scheduled timers, started
+    /// watchers and so on. An active object keeps running, and its callbacks keep being called,
+    /// until it finishes or you stop it, whether or not you kept a reference to it. Use this to
+    /// find something you started and lost track of.
+    /// - Returns: {any[]} The active objects
+    /// - Example:
+    /// ```js
+    /// hs.activeObjects().forEach(obj => console.log(obj.toString()))
+    /// ```
+    @objc func activeObjects() -> JSValue
+
     /// Open the Hammerspoon Console window
     /// - Example:
     /// ```js
@@ -147,6 +158,12 @@ import JavaScriptCoreExtras
     let spoonManager: SpoonManager
     @objc var modules: [String: HSModuleAPI] = [:]
 
+    // Each module's JS wrapper, held so it's never garbage collected. Module properties are
+    // computed, so nothing in JS holds the wrapper. Without this, callbacks a module owns
+    // (`JSCallback(owner: module)`) and properties its hs.foo.js sets on it would be collected.
+    // Retains the JSContext, so shutdown() must release it.
+    private var moduleWrappers: [String: JSValue] = [:]
+
     init(engineID: UUID, settings: SettingsManagerProtocol = SettingsManager.shared, spoonManager: SpoonManager = .shared) {
         self.engineID = engineID
         self.settings = settings
@@ -156,11 +173,13 @@ import JavaScriptCoreExtras
 
     private func getOrCreate<T>(name: String, type: T.Type) -> T where T:HSModuleAPI {
         if let result = modules[name] as? T {
+            pinWrapper(of: result, named: name)
             return result
         } else {
             AKDebug("Loading module: \(name)")
             let module = type.init(engineID: engineID)
             modules[name] = module
+            pinWrapper(of: module, named: name)
 
             if let moduleJS = Bundle.main.url(forResource: "hs.\(name)", withExtension: "js") {
                 try? _ = JSEngine.shared.evalFromURL(moduleJS)
@@ -170,6 +189,12 @@ import JavaScriptCoreExtras
         }
     }
 
+    // Pins lazily, on JS access, since that's when the current context is known
+    private func pinWrapper(of module: HSModuleAPI, named name: String) {
+        guard moduleWrappers[name] == nil, let context = JSContext.current() else { return }
+        moduleWrappers[name] = JSValue(object: module, in: context)
+    }
+
     func shutdown() {
         let names = Array(modules.keys)
         for moduleName in names {
@@ -177,6 +202,7 @@ import JavaScriptCoreExtras
             modules[moduleName]?.shutdown()
         }
         modules.removeAll()
+        moduleWrappers.removeAll()
         _spoons = nil
     }
 
@@ -195,6 +221,15 @@ import JavaScriptCoreExtras
         // For now we're using a private API synchronous garbage collector
 //        unsafe JavaScriptCore.JSGarbageCollect(JSContext.current().jsGlobalContextRef)
         unsafe JSSynchronousGarbageCollectForDebugging(JSContext.current().jsGlobalContextRef)
+    }
+
+    @objc func activeObjects() -> JSValue {
+        let context = JSContext.current()!
+        let result = JSValue(newArrayIn: context)!
+        for (index, wrapper) in HSActiveObjects.wrappers(in: context).enumerated() {
+            result.setValue(wrapper, at: index)
+        }
+        return result
     }
 
     // MARK: - Console

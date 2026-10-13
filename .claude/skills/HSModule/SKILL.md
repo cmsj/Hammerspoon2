@@ -56,23 +56,43 @@ For the case of a module that we intend to be accessible in JS as "hs.foo", the 
  * NEVER choose method names that start with "new", "alloc" or "copy" since these can fall foul of ObjC's implicit ARC rules and the objects those methods create will have one un-balanced retains.
  * NEVER name a method "delete" since this is a reserved keyword in JavaScript and cannot be called as a method (e.g. `obj.delete()` is a syntax error). Use a descriptive alternative such as `deletePath()`, `destroy()`, or `remove()` instead.
 
-## Child object tracking
+## Object retention: the two mechanisms
 
-When a module creates child objects that are returned to JavaScript (e.g. `HSTimer`, `HSHotkey`, `HSBonjourSearch`), it must track them so `shutdown()` can clean them all up.
+Hammerspoon 2 has exactly two ways of keeping JS-facing objects alive from Swift. Don't add others.
 
-**The canonical pattern is `HSWeakObjectSet<T>` (`Engine/HSWeakObjectSet.swift`):**
+| What | Mechanism |
+|---|---|
+| A callback stored by any JS-exported object, module or child | `JSCallback(value:owner: self)`, see **JS callback memory management** |
+| A child object handed to JS (`HSTimer`, `HSTask`, `HSHotkey`, ...) | the module's `HSObjectTracker<T>`, see below |
+
+Module JS wrappers are pinned by `ModuleRoot` for the engine's lifetime, so `JSCallback(owner: self)` on a module is safe and is never collected.
+
+**Never** use `selfRetain = self`, a strong collection of child objects (`[UUID: HSFoo]`, `Set<HSFoo>`, `[HSFoo]`), or a per-object strong `JSValue` of the object's own wrapper. `npm run docs:test` (`scripts/check-object-lifetimes.js`) fails on the first two. The existing uses are listed there as awaiting migration, or justified because the objects are owned by the module and never dropped by the user (e.g. one `HSCamera` per physical camera).
+
+Stored `JSValue`s on a module are only for slots the module's hs.foo.js assigns (`_watcherEmitter`, `on`/`off`/`once`, helper functions), and are nilled in `shutdown()`. Some older modules still keep their watcher callback as a strong `JSFunction?` nilled in `shutdown()`. That's correct but inconsistent, so new code uses `JSCallback`.
+
+## Child object tracking: HSObjectTracker
+
+When a module creates child objects that are returned to JavaScript (e.g. `HSTimer`, `HSHotkey`, `HSBonjourSearch`), it tracks them in an `HSObjectTracker<T>` (`Engine/HSObjectTracker.swift`). The tracker does two jobs:
+
+- **Tracking (weak):** every child is added, so `shutdown()` can reach it. An inactive child the user drops is ordinary garbage.
+- **Active (pinned):** while a child has pending activity, the tracker holds its JS wrapper, so it stays alive with its callbacks (see **Object lifetime** below).
 
 ```swift
-// Declaration (in the module class body)
-private var children = HSWeakObjectSet<HSChild>()
+// In the module class body
+private var children = HSObjectTracker<HSChild>()
 
-// Adding a new child
-children.add(child)
+@objc func create(...) -> HSChild {
+    let child = HSChild(..., tracker: children)
+    children.add(child)
+    return child
+}
 
 // Removing an explicit child (e.g. in removeSearch/removeWatcher)
 children.remove(child)
 
-// Shutdown — allObjects returns only live entries (dead ones are compacted on access)
+// Shutdown: allObjects returns only live entries (dead ones are compacted on access).
+// removeAllObjects() drops every pin, so nothing outlives the old JSContext.
 func shutdown() {
     for child in children.allObjects {
         child.destroy()
@@ -82,7 +102,7 @@ func shutdown() {
 ```
 
 **Every child object returned to JS must have a `destroy()` method** that:
-1. Deactivates the object (stops timers, disables hotkeys, stops OS updates, etc.)
+1. Deactivates the object (stops timers, disables hotkeys, stops OS updates, etc.), which un-pins it
 2. Detaches all JS callbacks (see JS callback memory management below)
 3. Clears all references
 
@@ -105,12 +125,66 @@ Both `isolated deinit` and the hosting module's `shutdown()` must call `destroy(
 }
 ```
 
-**Why `HSWeakObjectSet` and not `NSHashTable.weakObjects()`?**
-- `NSHashTable.weakObjects()` has documented autoreleasepool interactions where entries can persist or zero out unpredictably (see https://github.com/GitHawkApp/FlatCache/issues/3 and http://cocoamine.net/blog/2013/12/13/nsmaptable-and-zeroing-weak-references/). `HSWeakObjectSet` uses plain Swift `weak var` references which zero correctly per ARC semantics.
-- `HSWeakObjectSet` stores entries in a `[ObjectIdentifier: WeakBox]` dictionary, giving O(1) `add`/`remove`. Dead entries are compacted lazily on `allObjects` access.
-- Centralising the implementation means we can change the backing storage in one place without touching every module.
-- Weak refs allow the JS garbage collector to reclaim objects the user has dropped, without requiring an explicit `removeXxx()` call.
-- The underlying OS keeps active objects alive independently (e.g. the Carbon event handler keeps `HSHotkey` alive while enabled; the run loop `Timer` keeps `HSTimer` alive while running; `CLLocationManager` holds `HSLocationWatcher` alive via its delegate). Module tracking is only needed for `shutdown()`.
+**Why `HSObjectTracker` and not `NSHashTable.weakObjects()`?**
+- `NSHashTable.weakObjects()` has documented autoreleasepool interactions where entries can persist or zero out unpredictably (see https://github.com/GitHawkApp/FlatCache/issues/3 and http://cocoamine.net/blog/2013/12/13/nsmaptable-and-zeroing-weak-references/). `HSObjectTracker` uses plain Swift `weak var` references which zero correctly per ARC semantics.
+- Entries are stored in a `[ObjectIdentifier: WeakBox]` dictionary, giving O(1) `add`/`remove`. Dead entries are compacted lazily on `allObjects` access.
+- Pins live in the tracker (in `HSActiveObjects`), not in the objects, so `removeAllObjects()` releases them all at once. A child that fails to un-pin itself stays alive until the next reload at worst, never beyond it, and can't keep an old `JSContext` alive.
+- A pinned object is alive, so it's always still tracked, and `shutdown()` always reaches it.
+- Active objects can be listed per context: `hs.activeObjects()` for users, and the `JSTestHarness` teardown check for tests.
+
+## Object lifetime: pending activity keeps objects alive
+
+**The rule:** a JS-exported object that has *pending activity* — anything that can still call back into JavaScript or has a user-visible effect — MUST stay alive, along with its callbacks, until that activity ends or is explicitly stopped, whether or not the user kept a reference to it. Once it is inactive, it is ordinary garbage.
+
+**Why:** JavaScript garbage collection must be unobservable. A collection must never kill a process, stop a timer, unbind a hotkey or remove a menubar item. If it can, a config's behaviour depends on heap pressure (issue #267: `hs.task.shell()` promises never settled, because capturing large output triggered the very collection that destroyed the task). This is what every JS host does: Node keeps running child processes, timers and watchers alive through their active handles, and the HTML spec/WebKit keep any object with pending activity (`hasPendingActivity()`) alive. So `hs.timer.doAfter(5, fn)` must work without storing the result, exactly like `setTimeout(fn, 5000)`.
+
+**The mechanism is `HSObjectTracker.setActive(_:_:in:)`, called from the `didSet` of the one piece of state that defines the object's activity.** Never call it from individual start/stop/failure paths: deriving it from state means every path that ends the activity (stop, natural completion, failure, `destroy()`) un-pins automatically, and a forgotten call site can't leak the object.
+
+```swift
+private weak var tracker: HSObjectTracker<HSXxx>?   // the module owns it
+
+// Use the state the object already has, if one property captures "active". For example,
+// HSTimer uses its `Timer?`; HSTask has a `State` enum (.notStarted/.running/.finished).
+private var observer: OSObserver? {
+    didSet { tracker?.setActive(self, observer != nil, in: JSContext.current() ?? callback?.value?.context) }
+}
+
+init(..., tracker: HSObjectTracker<HSXxx>) {
+    self.tracker = tracker
+    // ...
+}
+
+@objc @discardableResult func start() -> HSXxx {
+    observer = OSObserver(...)    // pins
+    return self
+}
+
+@objc @discardableResult func stop() -> HSXxx {
+    observer?.invalidate()
+    observer = nil                // un-pins
+    return self
+}
+```
+
+The tracker holds the object's JS **wrapper**, not just the Swift object. That matters: a `JSCallback` is only kept alive while its owner's wrapper is reachable, so Swift-side retention alone (`selfRetain = self`, a strong module array, a run-loop `Timer` target, a strong delegate/registry) keeps the object alive with its callbacks silently collected.
+
+What counts as "active":
+
+| Object kind | Active from | Until |
+|---|---|---|
+| Process (`HSTask`) | `start()` | termination delivered to JS, or failed launch |
+| Timer (`HSTimer`) | `start()` | `stop()`, or a one-shot timer firing |
+| Watcher / listener / tap / query / browser / server | `start()` / `enable()` / `open()` | `stop()` / `disable()` / `close()` |
+| One-shot async operation with a callback (ping, share, resolve) | when it begins | after the final callback is delivered |
+| Visible UI (window, canvas, menubar item, chooser) | `show()` / creation if visible | `hide()` / `close()` / `destroy()` |
+| Playing media (`HSSound`) | `play()` | finished playing, or `stop()` |
+
+Rules:
+- Activity MUST be derived from a single state property, with `setActive` called only from its `didSet`. If no existing property captures it, add a `State` enum (see `HSTask`).
+- The state MUST become inactive on every path where the activity stops, including failures, the OS stopping it on its own (e.g. a process exiting), and `destroy()`.
+- Becoming active should happen in the JS-facing method that starts the activity, so `JSContext.current()` is available. Fall back to a callback's context.
+- An object that is created but never started, or that has finished, MUST still be collectable. Test both directions (see the HSTests skill). The `JSTestHarness` fails any test that ends with an object still active, which catches objects that never become inactive.
+- A user who wants an activity to stop must stop it explicitly (`stop()`, `terminate()`, `disable()`, ...). Dropping the reference is not a way to cancel. Module `shutdown()` (i.e. `hs.reload()`) stops everything, and `hs.activeObjects()` lists what's still running.
 
 ## JS callback memory management
 
@@ -160,12 +234,11 @@ private var _callbackPressed: JSCallback?
 }
 ```
 
-**Do not use `JSCallback` for:**
-- Objects that intentionally self-retain while active (e.g. `HSCamera`, `HSAudioDevice` use `selfRetain = self` while a watcher is registered). The retain cycle is intentional there; breaking it would cause premature deallocation.
-- Internal helper objects not exported to JS (e.g. `HSAXWatcherObject`).
+**Usage — callback stored on a module:** the same, with the module as owner. `ModuleRoot` pins every module's wrapper, so the callback lives until the module detaches it (in `_removeWatcher()`/`shutdown()`).
 
-**Exception — strong refs for visible UI objects:**
-`hs.ui` intentionally uses `[UUID: HSUIWindow]` (strong) for windows, alerts, and dialogs. These must stay alive on screen even if JS drops the reference. This is the only legitimate reason to use strong tracking. UI objects call back to the module to `register`/`unregister` themselves when shown/closed.
+**The owner must be JS-exported.** An internal helper that isn't (e.g. `HSAXWatcherObject`, bonjour's `AdvertisedService`) has no wrapper, so a `JSCallback` it owns is collected at the first GC. Make the module or the JS-facing object the owner instead.
+
+A `JSCallback` only stays alive while its owner's JS wrapper is reachable. If the owner must keep calling back after the user drops it, make it active in its tracker (see **Object lifetime** above), not Swift-side retention.
 
 ## JSValue retention and JSContext leaks
 
@@ -253,9 +326,10 @@ When writing or reviewing a module's `shutdown()`, verify:
 - [ ] `_watcherEmitter = nil` set after `_removeWatcher()`
 - [ ] Every other `JSValue?` property stored on the module is nilled
 - [ ] Every `JSValue?`-capturing closure stored on the module or its sub-objects is cleared
-- [ ] `destroy()` called on all tracked child objects (which detach their own `JSCallback`s)
+- [ ] `destroy()` called on all tracked child objects (which detach their own `JSCallback`s), then `removeAllObjects()` on every `HSObjectTracker`, which releases any object still active
+- [ ] Module-owned `JSCallback`s detached (`detach(from: self)`)
 - [ ] `close()` on long-lived UI objects clears element trees and callback properties eagerly
- * If HSFooModule includes an hs.foo.js file, and that file needs to store any properties/methods/objects/etc in the hs.foo namespace, there must be a declaration in HSFooModuleAPI to hold it. JavaScriptCore cannot modify HSFooModule instances at runtime to add additional properties/methods and they will go silently out of scope in unpredictable ways.
+ * If HSFooModule includes an hs.foo.js file, and that file needs to store any properties/methods/objects/etc in the hs.foo namespace, there must be a declaration in HSFooModuleAPI to hold it. A plain JS property lives only on the module's JS wrapper. `ModuleRoot` now pins module wrappers, which keeps such properties from going out of scope (#185), but a declared property also makes the slot part of the documented API and lets `shutdown()` nil it.
  * In general we should avoid creating an hs.foo.js file unless absolutely necessary - it is strongly preferred to keep all code together in Swift. Legitimate uses of a .js file would include the watcher patterns mentioned below
 
 ## JavaScript API considerations
@@ -422,7 +496,7 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   @objc var on: JSFunction? = nil
   @objc var off: JSFunction? = nil
   @objc var once: JSFunction? = nil
-  private var watcherCallback: JSFunction?
+  private var watcherCallback: JSCallback?
 
   @objc(_addWatcher:) func _addWatcher(_ callback: JSFunction) -> Bool {
       guard watcherCallback == nil else {
@@ -431,7 +505,7 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
       }
       // ... register with the OS API here. If that can fail, check it and return false
       // BEFORE setting any state, so a failed attempt leaves nothing to clean up ...
-      watcherCallback = callback
+      watcherCallback = JSCallback(value: callback, owner: self)
       AKDebug("hs.xxx._addWatcher: started")
       return true
   }
@@ -439,6 +513,7 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   @objc func _removeWatcher() {
       guard watcherCallback != nil else { return }
       // ... unregister from the OS API ...
+      watcherCallback?.detach(from: self)
       watcherCallback = nil
       AKDebug("hs.xxx._removeWatcher: stopped")
   }
@@ -562,8 +637,16 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
       @objc var typeName = "HSXxxWatcher"
       @objc let identifier = UUID().uuidString
       private var callback: JSCallback?
+      private weak var tracker: HSObjectTracker<HSXxxWatcher>?
 
-      override init() {
+      // Active while started: pinned by the tracker, so a started watcher keeps working
+      // after the user drops their reference
+      private var isStarted = false {
+          didSet { tracker?.setActive(self, isStarted, in: JSContext.current() ?? callback?.value?.context) }
+      }
+
+      init(tracker: HSObjectTracker<HSXxxWatcher>) {
+          self.tracker = tracker
           super.init()
           // set self as OS delegate if needed
       }
@@ -581,11 +664,13 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
 
       @objc @discardableResult func start() -> HSXxxWatcher {
           // begin OS updates
+          isStarted = true
           return self
       }
 
       @objc @discardableResult func stop() -> HSXxxWatcher {
           // end OS updates
+          isStarted = false
           return self
       }
 
@@ -615,10 +700,10 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
 
   In the module's Swift implementation:
 
-  private var watchers = HSWeakObjectSet<HSXxxWatcher>()
+  private var watchers = HSObjectTracker<HSXxxWatcher>()
 
   func addWatcher() -> HSXxxWatcher {
-      let w = HSXxxWatcher()
+      let w = HSXxxWatcher(tracker: watchers)
       watchers.add(w)
       return w
   }
@@ -635,16 +720,10 @@ If the natural default behaviour maps to `true`, invert the parameter name so `f
   }
 
   Key rules:
-  - The module MUST track all created watcher objects in `private var watchers = HSWeakObjectSet<HSXxxWatcher>()`.
-  - Every watcher MUST have a `destroy()` method (see Child object tracking section).
-  - shutdown() MUST call `destroy()` on all tracked watchers, not just `stop()`.
-  - start()/stop() and setCallback() MUST return self for chaining.
-  - typeName MUST be set to match the Swift class name for JS introspection.
-  - identifier MUST be a UUID().uuidString assigned at init time.
-  }
-
-  Key rules:
-  - The module MUST track all created watcher objects in `private var watchers = HSWeakObjectSet<HSXxxWatcher>()`.
+  - The module MUST track all created watcher objects in `private var watchers = HSObjectTracker<HSXxxWatcher>()`,
+    and pass it to each watcher, which holds it weakly.
+  - A watcher MUST be active in the tracker while started, set from a single state's didSet,
+    so a started watcher keeps working after the user drops their reference (see Object lifetime).
   - Every watcher MUST have a `destroy()` method (see Child object tracking section).
   - shutdown() MUST call `destroy()` on all tracked watchers, not just `stop()`.
   - start()/stop() and setCallback() MUST return self for chaining.
