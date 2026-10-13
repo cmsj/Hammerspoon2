@@ -69,6 +69,7 @@ import JavaScriptCore
     /// new one. Domain searches are unaffected. The callback receives
     /// `(event, service, moreComing)` — see the type documentation for the
     /// complete event table.
+    /// - Note: A running search, and its callback, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Parameter type: service type string, e.g. `"_http._tcp."` or `"_ssh._tcp."`
     /// - Parameter domain: mDNS domain; `"local."` for the local link, `""` for all domains
     /// - Parameter callback: {(event: string, service: HSBonjourService, moreComing: boolean) => void} Called for each result with event name, service object, and whether more results are expected
@@ -140,9 +141,27 @@ import JavaScriptCore
     private let domainsBrowser = NetServiceBrowser()
     private let registrationBrowser = NetServiceBrowser()
 
-    private var servicesCallback: JSCallback?
-    private var domainsCallback: JSCallback?
-    private var registrationCallback: JSCallback?
+    // Each search's callback is set while that search runs, and cleared by stop()
+    private var servicesCallback: JSCallback? {
+        didSet { updateActivity() }
+    }
+    private var domainsCallback: JSCallback? {
+        didSet { updateActivity() }
+    }
+    private var registrationCallback: JSCallback? {
+        didSet { updateActivity() }
+    }
+    private weak var tracker: HSObjectTracker<HSBonjourSearch>?
+    // Passed to the services this search finds, so a service that's resolving or being
+    // monitored stays alive too
+    private weak var serviceTracker: HSObjectTracker<HSBonjourService>?
+
+    // A running search is active: it stays alive with its callbacks until it's stopped, even if
+    // the user dropped their reference to it.
+    private func updateActivity() {
+        let callback = servicesCallback ?? domainsCallback ?? registrationCallback
+        tracker?.setActive(self, callback != nil, in: JSContext.current() ?? callback?.value?.context)
+    }
 
     // Tracks NetService → HSBonjourService identity so the same wrapper object
     // is delivered for both "found" and "removed" events.
@@ -157,7 +176,9 @@ import JavaScriptCore
         }
     }
 
-    override init() {
+    init(tracker: HSObjectTracker<HSBonjourSearch>, serviceTracker: HSObjectTracker<HSBonjourService>) {
+        self.tracker = tracker
+        self.serviceTracker = serviceTracker
         super.init()
         unsafe servicesBrowser.delegate = self
         unsafe domainsBrowser.delegate = self
@@ -239,7 +260,7 @@ import JavaScriptCore
         if let existing = serviceTable[key] {
             wrapper = existing
         } else {
-            wrapper = HSBonjourService(netService: service)
+            wrapper = HSBonjourService(netService: service, tracker: serviceTracker)
             serviceTable[key] = wrapper
         }
         AKDebug("HSBonjourSearch(\(identifier)): serviceFound '\(service.name)' (moreComing: \(moreComing))")
@@ -248,7 +269,7 @@ import JavaScriptCore
 
     func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
         let key = ObjectIdentifier(service)
-        let wrapper = serviceTable.removeValue(forKey: key) ?? HSBonjourService(netService: service)
+        let wrapper = serviceTable.removeValue(forKey: key) ?? HSBonjourService(netService: service, tracker: serviceTracker)
         AKDebug("HSBonjourSearch(\(identifier)): serviceRemoved '\(service.name)' (moreComing: \(moreComing))")
         _ = servicesCallback?.value?.call(withArguments: ["serviceRemoved", wrapper, moreComing])
     }

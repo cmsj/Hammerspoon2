@@ -478,3 +478,37 @@ struct HSMenuBarTests {
         tracker.assertNoLeaks()
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSMenuBarTests {
+    @Test("A visible item the caller didn't keep stays with its callbacks after garbage collection, and is collected once hidden")
+    @MainActor
+    func testVisibleItemLifetime() throws {
+        let harness = JSTestHarness()
+        harness.loadModule(HSMenuBarModule.self, as: "menubar")
+
+        weak var item: HSMenuBarItem?
+        autoreleasepool {
+            harness.eval("""
+                var opened = false
+                var item = hs.menubar.create()
+                item.setMenu(() => { opened = true; return [{ title: 'A' }] })
+                void 0
+            """)
+            item = harness.evalValue("item")?.toObjectOf(HSMenuBarItem.self) as? HSMenuBarItem
+            harness.eval("item = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(item?.isVisible() == true, "A visible item must not be collected")
+
+        autoreleasepool {
+            if let item, let menu = item.attachedMenu { item.populateDynamicMenu(menu) }
+        }
+        #expect(harness.evalBool("opened") == true, "An unreferenced visible item must keep its callbacks")
+
+        autoreleasepool { item?.hide() }
+        harness.collectGarbage()
+        #expect(item == nil, "A hidden item nobody references must not be kept alive")
+    }
+}

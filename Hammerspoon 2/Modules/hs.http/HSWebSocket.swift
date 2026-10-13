@@ -148,7 +148,16 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
 
     private let url: URL
     private var session: URLSession?
-    private var task: URLSessionWebSocketTask?
+    private weak var tracker: HSObjectTracker<HSWebSocket>?
+
+    // A connecting or open socket is active: it stays alive with its callbacks until it's
+    // closed (by either end) or fails, even if the user dropped their reference to it.
+    private var task: URLSessionWebSocketTask? {
+        didSet {
+            let callback = _messageCallback ?? _openCallback ?? _closeCallback ?? _errorCallback
+            tracker?.setActive(self, task != nil, in: JSContext.current() ?? callback?.value?.context)
+        }
+    }
     // URLSession holds its delegate weakly; we must keep a strong reference here.
     private var sessionDelegate: WebSocketSessionDelegate?
 
@@ -160,8 +169,9 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
     private var _closeCallback: JSCallback?
     private var _errorCallback: JSCallback?
 
-    init(url: URL) {
+    init(url: URL, tracker: HSObjectTracker<HSWebSocket>) {
         self.url = url
+        self.tracker = tracker
         super.init()
     }
 
@@ -194,6 +204,7 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
     fileprivate func handleClose(code: Int, reason: String) {
         guard _readyState == 1 else { return }
         _readyState = 3
+        defer { task = nil }
         _ = _closeCallback?.value?.call(withArguments: [code, reason])
         AKDebug("HSWebSocket(\(identifier)): Closed by remote (code \(code))")
     }

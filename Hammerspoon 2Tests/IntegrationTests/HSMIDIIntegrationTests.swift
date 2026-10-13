@@ -731,3 +731,38 @@ struct HSMIDITests {
         tracker.assertNoLeaks()
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSMIDITests {
+    @Test("A device with a callback the caller didn't keep still receives messages after garbage collection")
+    func testUnreferencedDeviceSurvivesGC() async throws {
+        let source = try TestMIDIVirtualSource(name: "HSMIDITestGC-\(UUID().uuidString)")
+        let harness = JSTestHarness()
+        harness.loadModule(HSMIDIModule.self, as: "midi")
+
+        var received = false
+        harness.registerCallback("onMessage") { received = true }
+
+        weak var device: HSMIDIDevice?
+        autoreleasepool {
+            harness.eval("""
+                var d = hs.midi.virtualSourceNamed('\(source.name)')
+                d.setCallback(() => { __test_callback('onMessage') })
+                void 0
+            """)
+            device = harness.evalValue("d")?.toObjectOf(HSMIDIDevice.self) as? HSMIDIDevice
+            harness.eval("d = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(device != nil, "A device with a callback must not be collected")
+
+        source.send(commandType: "noteOn", metadata: ["note": 60, "velocity": 100, "channel": 0])
+        let fired = await harness.waitForAsync(timeout: 3.0) { received }
+        #expect(fired, "An unreferenced device must keep its callback")
+
+        autoreleasepool { _ = device?.setCallback(nil) }
+        harness.collectGarbage()
+        #expect(device == nil, "A device with no callback must not be kept alive")
+    }
+}

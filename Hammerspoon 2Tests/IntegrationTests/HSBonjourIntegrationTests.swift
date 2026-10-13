@@ -320,3 +320,26 @@ struct HSBonjourTests {
         tracker.assertNoLeaks()
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSBonjourTests {
+    @Test("A running search the caller didn't keep survives garbage collection, and is collected once stopped")
+    func testRunningSearchLifetime() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSBonjourModule.self, as: "bonjour")
+
+        weak var search: HSBonjourSearch?
+        autoreleasepool {
+            harness.eval("var s = hs.bonjour.createSearch(); s.findServices('_http._tcp.', 'local.', function() {}); void 0")
+            search = harness.evalValue("s")?.toObjectOf(HSBonjourSearch.self) as? HSBonjourSearch
+            harness.eval("s = null; void 0")
+        }
+        harness.collectGarbage()
+        #expect(search != nil, "A running search must not be collected")
+
+        autoreleasepool { _ = search?.stop() }
+        harness.collectGarbage()
+        #expect(search == nil, "A stopped search must not be kept alive")
+    }
+}

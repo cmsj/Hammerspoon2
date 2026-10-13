@@ -171,9 +171,11 @@ import dnssd
         "workstation":  "_workstation._tcp.",
     ]
 
-    // Weak refs: searches stay active via their NSNetServiceBrowser delegate chain;
-    // weak refs allow dropped searches to be GC'd without an explicit removeSearch() call.
+    // Running searches, and found services that are resolving or monitored, are kept alive by
+    // these trackers while active; stopped ones are ordinary garbage once JS drops them.
     private var searches = HSObjectTracker<HSBonjourSearch>()
+    private var services = HSObjectTracker<HSBonjourService>()
+    // Module-owned records of what's being advertised, keyed by name and type
     private var advertisedServices: [String: AdvertisedService] = [:]
 
     required init(engineID: UUID) {
@@ -187,6 +189,7 @@ import dnssd
             search.destroy()
         }
         searches.removeAllObjects()
+        services.removeAllObjects()
         advertisedServices.values.forEach { $0.stop() }
         advertisedServices.removeAll()
     }
@@ -196,7 +199,7 @@ import dnssd
     }
 
     @objc func toString() -> String {
-        let s = searches.allObjects.count
+        let s = searches.activeCount
         let a = advertisedServices.count
         return "<\(moduleName): \(s) search\(s == 1 ? "" : "es"), \(a) advertised service\(a == 1 ? "" : "s")>"
     }
@@ -208,7 +211,7 @@ import dnssd
     // MARK: - HSBonjourModuleAPI
 
     @objc func createSearch() -> HSBonjourSearch {
-        let search = HSBonjourSearch()
+        let search = HSBonjourSearch(tracker: searches, serviceTracker: services)
         searches.add(search)
         AKGarbage("HSBonjourModule: Created search \(search.identifier)")
         return search
@@ -231,7 +234,7 @@ import dnssd
             AKWarning("hs.bonjour.advertise: '\(name)' (\(type)) is already being advertised — ignoring")
             return
         }
-        let handle = AdvertisedService(name: name, type: type, port: port, domain: effectiveDomain, callback: effectiveCallback)
+        let handle = AdvertisedService(name: name, type: type, port: port, domain: effectiveDomain, callback: effectiveCallback, owner: self)
         advertisedServices[key] = handle
         handle.publish()
         AKDebug("hs.bonjour.advertise: Started advertising '\(name)' (\(type)) port \(port) in \(effectiveDomain)")
@@ -300,15 +303,19 @@ import dnssd
 private class AdvertisedService: NSObject, NetServiceDelegate {
     private var service: NetService?
     private var callback: JSCallback?
+    // Owns the callback. This object isn't JS-exported, so it has no wrapper to keep a
+    // callback alive; the module's wrapper is pinned by ModuleRoot.
+    private weak var owner: HSBonjourModule?
 
-    init(name: String, type: String, port: Int, domain: String, callback: JSFunction?) {
+    init(name: String, type: String, port: Int, domain: String, callback: JSFunction?, owner: HSBonjourModule) {
+        self.owner = owner
         super.init()
 
         self.service = NetService(domain: domain, type: type, name: name, port: Int32(port))
         unsafe self.service?.delegate = self
 
         if let callback {
-            self.callback = JSCallback(value: callback, owner: self)
+            self.callback = JSCallback(value: callback, owner: owner)
         }
     }
 
@@ -319,7 +326,7 @@ private class AdvertisedService: NSObject, NetServiceDelegate {
     func stop() {
         service?.stop()
         unsafe service?.delegate = nil
-        self.callback?.detach(from: self)
+        if let owner { callback?.detach(from: owner) }
         callback = nil
         service = nil
     }
@@ -341,6 +348,7 @@ private class AdvertisedService: NSObject, NetServiceDelegate {
         guard let service else { return }
         AKDebug("hs.bonjour: Stopped '\(service.name)'")
         _ = callback?.call(withArguments: ["stopped"])
+        if let owner { callback?.detach(from: owner) }
         callback = nil
     }
 }

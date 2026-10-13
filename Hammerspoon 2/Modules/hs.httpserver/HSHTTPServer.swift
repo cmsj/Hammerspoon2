@@ -170,6 +170,7 @@ import UniformTypeIdentifiers
     /// The server must be configured before calling `start()`. To restart the server with new
     /// settings, call `stop()` followed by `start()`.
     ///
+    /// - Note: A running server, and its callbacks, stay alive until it's stopped, even if you don't keep a reference to it
     /// - Returns: This server, for chaining.
     /// - Example:
     /// ```js
@@ -292,7 +293,16 @@ struct ParsedHTTPRequest {
     // Runtime state
     private var listener: NWListener?
     private var connections: [ObjectIdentifier: NWConnection] = [:]
-    private var isRunning = false
+    private weak var tracker: HSObjectTracker<HSHTTPServer>?
+
+    // A running server is active: it stays alive with its callbacks until it's stopped, even if
+    // the user dropped their reference to it.
+    private var isRunning = false {
+        didSet {
+            tracker?.setActive(self, isRunning,
+                               in: JSContext.current() ?? (_callback ?? _wsCallbacks.values.first)?.value?.context)
+        }
+    }
 
     // WebSocket state
     private var _wsCallbacks: [String: JSCallback] = [:]
@@ -301,7 +311,8 @@ struct ParsedHTTPRequest {
     // Callbacks (JSCallback prevents retain cycles)
     private var _callback: JSCallback?
 
-    override init() {
+    init(tracker: HSObjectTracker<HSHTTPServer>) {
+        self.tracker = tracker
         super.init()
     }
 

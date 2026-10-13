@@ -913,3 +913,84 @@ struct HSHTTPTests {
         tracker.assertNoLeaks()
     }
 }
+
+// MARK: - Garbage collection (issue #267)
+
+extension HSHTTPTests {
+    @Test("A running server the caller didn't keep still serves requests after garbage collection")
+    func testRunningServerSurvivesGC() async {
+        await JSTestHarness.drainMainActorQueue()
+        let h = JSTestHarness()
+        h.loadModule(HSHTTPServerModule.self, as: "httpserver")
+        h.loadModule(HSHTTPModule.self, as: "http")
+
+        weak var server: HSHTTPServer?
+        autoreleasepool {
+            h.eval("""
+                var s = hs.httpserver.create()
+                    .setPort(0)
+                    .setCallback(() => ({body: "still here", status: 200, headers: {}}))
+                    .start()
+                void 0
+            """)
+            server = h.evalValue("s")?.toObjectOf(HSHTTPServer.self) as? HSHTTPServer
+        }
+        let portReady = await h.waitForAsync(timeout: 2.0) { (h.eval("s.getPort()") as? Int ?? 0) > 0 }
+        #expect(portReady, "Server should be ready")
+        guard portReady else { autoreleasepool { _ = server?.stop() }; return }
+        autoreleasepool { _ = h.eval("var port = s.getPort(); s = null; void 0") }
+        h.collectGarbage()
+        #expect(server != nil, "A running server must not be collected")
+
+        var gotResponse = false
+        h.registerCallback("ok") { gotResponse = true }
+        h.eval("""
+            hs.http.get("http://localhost:" + port + "/").then(r => {
+                if (r.status === 200 && r.body === "still here") __test_callback('ok')
+            })
+        """)
+        let ok = await h.waitForAsync(timeout: 3.0) { gotResponse }
+        #expect(ok, "An unreferenced running server must keep its callback")
+
+        autoreleasepool { _ = server?.stop() }
+        h.collectGarbage()
+        #expect(server == nil, "A stopped server must not be kept alive")
+    }
+}
+
+extension HSHTTPTests {
+    @Test("A WebSocket the caller didn't keep still receives messages after garbage collection")
+    func testUnreferencedWebSocketSurvivesGC() async {
+        await JSTestHarness.drainMainActorQueue()
+        let h = JSTestHarness()
+        h.loadModule(HSHTTPServerModule.self, as: "httpserver")
+        h.loadModule(HSHTTPModule.self, as: "http")
+
+        // The server greets each client as soon as it connects
+        h.eval("""
+            var server = hs.httpserver.create()
+                .setPort(0)
+                .setWebSocketCallback('/ws', (event, conn, msg) => {
+                    if (event === 'connected') conn.send('greetings')
+                })
+                .start()
+        """)
+        let portReady = await h.waitForAsync(timeout: 2.0) { (h.eval("server.getPort()") as? Int ?? 0) > 0 }
+        #expect(portReady, "Server should be ready")
+        guard portReady else { h.eval("server.stop()"); return }
+
+        var greeted = false
+        h.registerCallback("greeted") { greeted = true }
+        autoreleasepool {
+            _ = h.eval("""
+                void hs.http.openWebSocket('ws://localhost:' + server.getPort() + '/ws')
+                    .setMessageCallback(msg => { if (msg === 'greetings') __test_callback('greeted') })
+            """)
+        }
+        h.collectGarbage()
+
+        let ok = await h.waitForAsync(timeout: 5.0) { greeted }
+        #expect(ok, "An unreferenced open WebSocket must keep its callbacks")
+        h.eval("server.stop()")
+    }
+}

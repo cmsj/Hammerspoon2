@@ -104,7 +104,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        let n = servers.allObjects.count
+        let n = servers.activeCount
         return "<\(moduleName): \(n) running server\(n == 1 ? "" : "s")>"
     }
 
@@ -113,7 +113,7 @@ import JavaScriptCore
     }
 
     @objc func create() -> HSHTTPServer {
-        let server = HSHTTPServer()
+        let server = HSHTTPServer(tracker: servers)
         servers.add(server)
         return server
     }

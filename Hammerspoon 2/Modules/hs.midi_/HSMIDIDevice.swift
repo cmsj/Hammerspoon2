@@ -104,6 +104,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     ///
     /// Note: most MIDI keyboards send `noteOn` when a key is pressed and `noteOff`
     /// when released, but some send `noteOn` with `velocity` 0 instead of `noteOff`.
+    /// - Note: A device with a callback, and the callback, stay alive until the callback is removed or the device is destroyed, even if you don't keep a reference to it
     /// - Parameter fn: {((device: HSMIDIDevice, deviceName: string, commandType: string, description: string, metadata: object) => void) | null} The function to call on each received message, or `null` to remove it
     /// - Returns: This device object, for chaining
     /// - Example:
@@ -180,10 +181,15 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     let destinationEndpoint: MIDIEndpointRef?
     @objc let isVirtual: Bool
 
-    private var inputPort = MIDIPortRef()
-    // Retains self while `inputPort` is connected — CoreMIDI's C callback only has a raw
-    // pointer to us, which ARC knows nothing about, so nothing else keeps us alive for it.
-    private var selfRef: Unmanaged<HSMIDIDevice>?
+    // A device with a connected input port (i.e. a callback set) is active: it stays alive with
+    // its callback until the callback is removed or the device is destroyed, even if the user
+    // dropped their reference to it. That also keeps CoreMIDI's unretained pointer to us valid:
+    // the port is always disposed (in destroy(), from deinit) before we're freed.
+    private var inputPort = MIDIPortRef() {
+        didSet {
+            module?.children.setActive(self, inputPort != 0, in: JSContext.current() ?? _callback?.value?.context)
+        }
+    }
     private var sysexAccumulator: [UInt8]?
     private var _callback: JSCallback?
     private var isDestroyed = false
@@ -278,13 +284,9 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
         let client = module.midiClient
         guard client != 0 else { return }
 
-        unsafe selfRef = unsafe Unmanaged.passRetained(self)
-
-        let status = unsafe MIDIInputPortCreateWithProtocol(client, "Hammerspoon 2 Input" as CFString, ._1_0, &inputPort, hsMIDIMakeReceiveHandler(deviceRef: selfRef!))
+        let status = unsafe MIDIInputPortCreateWithProtocol(client, "Hammerspoon 2 Input" as CFString, ._1_0, &inputPort, hsMIDIMakeReceiveHandler(deviceRef: Unmanaged.passUnretained(self)))
         guard status == noErr else {
             AKError("hs.midi: Failed to create input port for '\(name)' (error \(status))")
-            unsafe selfRef?.release()
-            unsafe selfRef = nil
             inputPort = MIDIPortRef()
             return
         }
@@ -304,8 +306,6 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
         }
         MIDIPortDispose(inputPort)
         inputPort = MIDIPortRef()
-        unsafe selfRef?.release()
-        unsafe selfRef = nil
     }
 
     // MARK: - Fileprivate (called from the file-scope receive handler above)

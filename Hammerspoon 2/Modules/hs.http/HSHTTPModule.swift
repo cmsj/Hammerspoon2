@@ -115,8 +115,9 @@ import JavaScriptCore
     /// Open a WebSocket connection to the given URL.
     ///
     /// The connection begins immediately. Use the returned object's chainable setter methods to
-    /// register event callbacks. The connection is automatically closed when `hs.reload()` is
-    /// called or the engine shuts down.
+    /// register event callbacks. The connection stays open, with its callbacks, until either end
+    /// closes it, even if you don't keep a reference to it. It is automatically closed when
+    /// `hs.reload()` is called or the engine shuts down.
     ///
     /// - Parameter url: The WebSocket URL (`ws://` or `wss://`).
     /// - Returns: An `HSWebSocket` object, or `null` if the URL is invalid.
@@ -155,7 +156,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        let n = webSockets.allObjects.count
+        let n = webSockets.activeCount
         return "<\(moduleName): \(n) open WebSocket\(n == 1 ? "" : "s")>"
     }
 
@@ -242,7 +243,7 @@ import JavaScriptCore
             AKWarning("hs.http.openWebSocket: Invalid URL: \(url)")
             return nil
         }
-        let ws = HSWebSocket(url: parsedURL)
+        let ws = HSWebSocket(url: parsedURL, tracker: webSockets)
         webSockets.add(ws)
         ws.connect()
         return ws

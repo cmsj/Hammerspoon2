@@ -116,7 +116,7 @@ import JavaScriptCore
     /// ```
     @objc func popUpMenu(_ entries: JSValue)
 
-    /// Remove this item from the menu bar. The item is retained and can be shown again with show().
+    /// Remove this item from the menu bar. It can be shown again with show() while you keep a reference to it.
     /// - Example:
     /// ```js
     /// const item = hs.menubar.create()
@@ -125,6 +125,7 @@ import JavaScriptCore
     @objc func hide()
 
     /// Show this item in the menu bar.
+    /// - Note: A visible item, and its callbacks, stay in the menu bar until it's hidden or destroyed, even if you don't keep a reference to it
     /// - Example:
     /// ```js
     /// item.show()
@@ -178,6 +179,17 @@ import JavaScriptCore
     }
 
     private var statusItem: NSStatusItem?
+    private weak var tracker: HSObjectTracker<HSMenuBarItem>?
+
+    // A visible item is active: it stays in the menu bar, with its callbacks, until it's hidden
+    // or destroyed, even if the user dropped their reference to it. A hidden item nobody
+    // references can never be shown or clicked again, so it's ordinary garbage.
+    private var isShown = false {
+        didSet {
+            tracker?.setActive(self, isShown,
+                               in: JSContext.current() ?? (_clickCallback ?? _menuCallback)?.value?.context)
+        }
+    }
     private var _title: String?
     private var _icon: NSImage?
     private var _clickCallback: JSCallback?
@@ -192,14 +204,21 @@ import JavaScriptCore
     /// The button number of an other-button press that began on this item, until it is released.
     private var otherButtonPressed: Int?
 
-    init(inMenuBar: Bool) {
+    init(inMenuBar: Bool, tracker: HSObjectTracker<HSMenuBarItem>) {
+        self.tracker = tracker
         super.init()
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.isVisible = inMenuBar
         item.button?.target = self
         item.button?.action = #selector(statusButtonClicked)
         item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem = item
+        // Through a method: property observers don't fire for assignments in init itself
+        setShown(inMenuBar)
+    }
+
+    private func setShown(_ shown: Bool) {
+        statusItem?.isVisible = shown
+        isShown = shown && statusItem != nil
     }
 
     /// The internal object the status item's button sends its action to. Exposed for tests.
@@ -219,6 +238,7 @@ import JavaScriptCore
         _menuCallback?.detach(from: self)
         _menuCallback = nil
         menuDelegate = nil
+        isShown = false
         if let item = statusItem {
             NSStatusBar.system.removeStatusItem(item)
             statusItem = nil
@@ -401,11 +421,11 @@ import JavaScriptCore
     var attachedMenu: NSMenu? { statusItem?.menu }
 
     @objc func hide() {
-        statusItem?.isVisible = false
+        setShown(false)
     }
 
     @objc func show() {
-        statusItem?.isVisible = true
+        setShown(true)
     }
 
     @objc func isVisible() -> Bool {

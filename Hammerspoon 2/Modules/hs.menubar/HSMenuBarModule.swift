@@ -47,6 +47,7 @@ import JavaScriptCore
 /// ```
 @objc protocol HSMenuBarModuleAPI: JSExport {
     /// Create a new menu bar item
+    /// - Note: A visible item stays in the menu bar, with its callbacks, until it's hidden or destroyed, even if you don't keep a reference to it
     /// - Parameter hidden?: Pass true to create the item hidden (not shown in the menu bar). Defaults to false (immediately visible).
     /// - Returns: A new HSMenuBarItem
     /// - Example:
@@ -87,7 +88,7 @@ import JavaScriptCore
     }
 
     @objc func toString() -> String {
-        let n = items.allObjects.count
+        let n = items.activeCount
         return "<\(moduleName): \(n) menu bar item\(n == 1 ? "" : "s")>"
     }
 
@@ -96,7 +97,7 @@ import JavaScriptCore
     }
 
     @objc func create(_ hidden: Bool) -> HSMenuBarItem {
-        let item = HSMenuBarItem(inMenuBar: !hidden)
+        let item = HSMenuBarItem(inMenuBar: !hidden, tracker: items)
         items.add(item)
         return item
     }

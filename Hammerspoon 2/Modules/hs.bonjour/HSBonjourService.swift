@@ -100,6 +100,7 @@ import Darwin
     /// - `"resolved"` — resolution complete; read `hostname`, `port`, `addresses`, `txtRecord`
     /// - `"stopped"` — resolution stopped before completing
     /// - `"error"` — resolution failed; error message in second argument
+    /// - Note: A resolving or monitored service, and its callbacks, stay alive until that finishes or is stopped, even if you don't keep a reference to it
     /// - Parameter timeout: seconds before giving up; pass `0` for no timeout
     /// - Parameter callback: {(event: string, error?: string) => void} Called on status changes with event name and optional error message
     /// - Returns: self, for chaining
@@ -158,11 +159,28 @@ import Darwin
     @objc let identifier = UUID().uuidString
 
     let service: NetService
-    private var resolveCallback: JSCallback?
-    private var monitorCallback: JSCallback?
+    private weak var tracker: HSObjectTracker<HSBonjourService>?
 
-    init(netService: NetService) {
+    // Set while resolving and while monitoring respectively
+    private var resolveCallback: JSCallback? {
+        didSet { updateActivity() }
+    }
+    private var monitorCallback: JSCallback? {
+        didSet { updateActivity() }
+    }
+
+    // A service that's resolving or being monitored is active: it stays alive with its
+    // callbacks until that finishes or is stopped, even if the user dropped their reference
+    // to it. Not finishesOnItsOwn: resolving with no timeout, or monitoring, never ends.
+    private func updateActivity() {
+        let callback = resolveCallback ?? monitorCallback
+        tracker?.setActive(self, callback != nil, in: JSContext.current() ?? callback?.value?.context)
+    }
+
+    /// - Parameter tracker: The module's service tracker, or nil if the search that found it has gone
+    init(netService: NetService, tracker: HSObjectTracker<HSBonjourService>?) {
         self.service = netService
+        self.tracker = tracker
         super.init()
         unsafe service.delegate = self
     }
@@ -195,6 +213,7 @@ import Darwin
 
     @objc @discardableResult func resolve(_ timeout: Double, _ callback: JSFunction) -> HSBonjourService {
         service.stop()
+        resolveCallback?.detach(from: self)
         resolveCallback = callback.isObject ? JSCallback(value: callback, owner: self) : nil
         service.resolve(withTimeout: timeout)
         AKDebug("HSBonjourService(\(identifier)).resolve(): Resolving '\(name)' (timeout: \(timeout)s)")
@@ -202,6 +221,7 @@ import Darwin
     }
 
     @objc @discardableResult func monitor(_ callback: JSFunction) -> HSBonjourService {
+        monitorCallback?.detach(from: self)
         monitorCallback = callback.isObject ? JSCallback(value: callback, owner: self) : nil
         service.startMonitoring()
         AKDebug("HSBonjourService(\(identifier)).monitor(): Started TXT monitoring for '\(name)'")
@@ -216,6 +236,7 @@ import Darwin
 
     @objc @discardableResult func stopMonitoring() -> HSBonjourService {
         service.stopMonitoring()
+        monitorCallback?.detach(from: self)
         monitorCallback = nil
         AKDebug("HSBonjourService(\(identifier)).stopMonitoring(): Stopped TXT monitoring for '\(name)'")
         return self
@@ -247,6 +268,7 @@ import Darwin
     func netServiceDidStop(_ sender: NetService) {
         AKDebug("HSBonjourService(\(identifier)): Stopped '\(name)'")
         _ = resolveCallback?.call(withArguments: ["stopped"])
+        resolveCallback?.detach(from: self)
         resolveCallback = nil
     }
 
