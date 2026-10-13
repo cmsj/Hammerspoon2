@@ -342,4 +342,30 @@ extension HSBonjourTests {
         harness.collectGarbage()
         #expect(search == nil, "A stopped search must not be kept alive")
     }
+
+    @Test("Module shutdown stops a monitored service whose search has already stopped")
+    func testShutdownStopsServiceOfStoppedSearch() throws {
+        let harness = JSTestHarness()
+        let root = harness.loadModuleRoot()
+        autoreleasepool { _ = harness.eval("void hs.bonjour") }
+        let module = try #require(root.modules["bonjour"] as? HSBonjourModule)
+
+        // Stands in for a service found by a search that has since stopped, emptying its
+        // service table: the module's tracker is the only way left to reach it
+        let netService = NetService(domain: "local.", type: "_hs2test._tcp.", name: "probe")
+        let service = HSBonjourService(netService: netService, tracker: module.services)
+        var updates = 0
+        harness.registerCallback("onTXT") { updates += 1 }
+        harness.context.setObject(service, forKeyedSubscript: "svc" as NSString)
+        harness.eval("svc.monitor(function() { __test_callback('onTXT') }); void 0")
+
+        service.netService(netService, didUpdateTXTRecord: Data())
+        #expect(updates == 1)
+        #expect(module.services.isActive(service))
+
+        root.shutdown()
+        #expect(!module.services.isActive(service))
+        service.netService(netService, didUpdateTXTRecord: Data())
+        #expect(updates == 1, "A service must not call back after module shutdown")
+    }
 }

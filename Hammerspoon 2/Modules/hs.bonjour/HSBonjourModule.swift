@@ -174,7 +174,8 @@ import dnssd
     // Running searches, and found services that are resolving or monitored, are kept alive by
     // these trackers while active; stopped ones are ordinary garbage once JS drops them.
     private var searches = HSObjectTracker<HSBonjourSearch>()
-    private var services = HSObjectTracker<HSBonjourService>()
+    // Can reach services whose search has stopped, or been collected, so shutdown stops them here
+    let services = HSObjectTracker<HSBonjourService>()
     // Module-owned records of what's being advertised, keyed by name and type
     private var advertisedServices: [String: AdvertisedService] = [:]
 
@@ -189,6 +190,9 @@ import dnssd
             search.destroy()
         }
         searches.removeAllObjects()
+        for service in services.allObjects {
+            service.destroy()
+        }
         services.removeAllObjects()
         advertisedServices.values.forEach { $0.stop() }
         advertisedServices.removeAll()

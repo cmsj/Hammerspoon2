@@ -251,6 +251,13 @@ import Darwin
         monitorCallback = nil
     }
 
+    /// Stops resolving and monitoring, and releases the callbacks, at module shutdown
+    func destroy() {
+        clearCallbacks()
+        service.stop()
+        service.stopMonitoring()
+    }
+
     // MARK: - NetServiceDelegate
     // Apple guarantees main-thread delivery, so these are inferred @MainActor.
 
