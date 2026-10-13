@@ -454,8 +454,14 @@ import SwiftUI
     private var currentElement: (any HSUIElement)?
     private var containerStack: [any UIContainer] = []
 
-    // Callbacks set with onClick()/onHover(), owned by this window. See elementCallback().
-    private var elementCallbacks: [JSCallback] = []
+    // Callbacks set with onClick()/onHover(), owned by this window, one per element and event.
+    // See elementCallback().
+    private enum ElementEvent { case click, hover }
+    private struct ElementCallbackKey: Hashable {
+        let element: ObjectIdentifier
+        let event: ElementEvent
+    }
+    private var elementCallbacks: [ElementCallbackKey: JSCallback] = [:]
 
     // Type-erased refs to UIWebView elements (macOS 26+) for eager resource cleanup on destroy.
     private var embeddedWebViews: [AnyObject] = []
@@ -479,7 +485,7 @@ import SwiftUI
 
     isolated deinit {
         AKGarbage("deinit of HSUIWindow(\(identifier))")
-        for cb in elementCallbacks { cb.detach(from: self) }
+        for cb in elementCallbacks.values { cb.detach(from: self) }
 
         // In the normal shutdown path destroy() has already been called, so nsWindow and
         // rootElement are nil and this is a no-op. In the unexpected edge case where the
@@ -574,7 +580,7 @@ import SwiftUI
         showCallback = nil
         hideCallback = nil
         destroyCallback = nil
-        for cb in elementCallbacks { cb.detach(from: self) }
+        for cb in elementCallbacks.values { cb.detach(from: self) }
         elementCallbacks.removeAll()
     }
 
@@ -875,7 +881,7 @@ import SwiftUI
 
     @objc func onClick(_ callback: JSFunction) -> HSUIWindow {
         if let interactive = currentElement as? any InteractiveModifiable {
-            guard let cb = elementCallback(callback) else { return self }
+            guard let cb = elementCallback(callback, for: interactive, .click) else { return self }
             interactive.clickCallback = { _ = cb.call(withArguments: []) }
         } else {
             AKWarning("hs.ui: onClick() called on an element that does not support interactions")
@@ -885,7 +891,7 @@ import SwiftUI
 
     @objc func onHover(_ callback: JSFunction) -> HSUIWindow {
         if let interactive = currentElement as? any InteractiveModifiable {
-            guard let cb = elementCallback(callback) else { return self }
+            guard let cb = elementCallback(callback, for: interactive, .hover) else { return self }
             interactive.hoverCallback = { isHovered in _ = cb.call(withArguments: [isHovered]) }
         } else {
             AKWarning("hs.ui: onHover() called on an element that does not support interactions")
@@ -895,10 +901,14 @@ import SwiftUI
 
     /// Elements' callbacks are owned by the window, which the user holds (or which is kept alive
     /// while shown), rather than captured strongly by the element closures: a strong JSValue
-    /// there, referencing the window from JS, would be a cycle the GC can't break.
-    private func elementCallback(_ callback: JSFunction) -> JSCallback? {
+    /// there, referencing the window from JS, would be a cycle the GC can't break. Setting an
+    /// element's callback again replaces it, detaching the old one.
+    private func elementCallback(_ callback: JSFunction, for element: any InteractiveModifiable,
+                                 _ event: ElementEvent) -> JSCallback? {
+        let key = ElementCallbackKey(element: ObjectIdentifier(element), event: event)
+        elementCallbacks.removeValue(forKey: key)?.detach(from: self)
         guard let cb = JSCallback(value: callback, owner: self) else { return nil }
-        elementCallbacks.append(cb)
+        elementCallbacks[key] = cb
         return cb
     }
 

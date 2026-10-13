@@ -484,6 +484,33 @@ struct HSUITests {
         #expect(window == nil, "A hidden window nobody references must not be kept alive by its own callbacks")
     }
 
+    @Test("Replacing an element's callback releases the old one while the window lives on")
+    func testReplacedElementCallbackIsReleased() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSUIModule.self, as: "ui")
+
+        // The first callback closes over a native object, which is released only when JS
+        // collects that callback. It's made in its own scope: the second callback would
+        // otherwise share the scope holding the object, and keep it alive itself.
+        weak var probe: NSObject?
+        autoreleasepool {
+            let object = NSObject()
+            probe = object
+            harness.context.setObject(object, forKeyedSubscript: "__probe" as NSString)
+            harness.eval("""
+                var clicks = 0
+                var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100})
+                function makeFirst() { var captured = __probe; return () => { captured } }
+                w.text("Test").onClick(makeFirst()).onClick(() => { clicks++ })
+                __probe = undefined
+                void 0
+                """)
+        }
+        harness.collectGarbage()
+        #expect(probe == nil, "A replaced callback must not be kept alive by the window")
+        harness.expectTrue("w !== null")
+    }
+
     @Test("A web view's callbacks live as long as the window it's in, not its own wrapper")
     func testWebViewCallbacksOwnedByWindow() throws {
         let harness = JSTestHarness()
