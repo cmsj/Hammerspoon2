@@ -196,7 +196,17 @@ import JavaScriptCore
             return
         }
 
-        callbackValue.call(withArguments: [])
+        // A one-shot timer's activity ends as it fires, so stop it before calling back: the
+        // callback may start it again, and that new run (and its pin) must survive. The local
+        // wrapper and callback keep both alive until the call returns.
+        let wrapper = JSValue(object: self, in: callbackValue.context)
+        if !repeats {
+            stop()
+        }
+
+        withExtendedLifetime(wrapper) {
+            _ = callbackValue.call(withArguments: [])
+        }
 
         if let context = callbackValue.context,
            let exception = context.exception,
@@ -206,11 +216,6 @@ import JavaScriptCore
             if !continueOnError {
                 stop()
             }
-        }
-
-        // For one-shot timers, clean up after firing
-        if !repeats {
-            stop()
         }
     }
 }

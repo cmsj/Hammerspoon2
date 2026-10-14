@@ -408,6 +408,39 @@ struct HSTimerIntegrationTests {
         #expect(success, "Unreferenced repeating timer should keep firing")
     }
 
+    @Test("A one-shot timer restarted from its own callback fires again")
+    func testOneShotRestartedFromCallbackFiresAgain() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSTimerModule.self, as: "timer")
+
+        var fires = 0
+        harness.registerCallback("onFire") { fires += 1 }
+
+        // Only the timer's own callback references it
+        weak var timer: HSTimer?
+        autoreleasepool {
+            timer = harness.evalValue("""
+                (function() {
+                    var t = hs.timer.doAfter(0.05, function() {
+                        __test_callback('onFire')
+                        if (!t.__restarted) { t.__restarted = true; t.start() }
+                    })
+                    return t
+                })()
+                """)?.toObjectOf(HSTimer.self) as? HSTimer
+        }
+        #expect(!harness.hasException)
+
+        #expect(harness.waitFor(timeout: 0.5) { fires == 1 }, "The timer must fire")
+        harness.collectGarbage()
+        #expect(timer?.running() == true, "A timer started from its callback must still be running")
+
+        #expect(harness.waitFor(timeout: 0.5) { fires == 2 }, "The restarted timer must fire again")
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+        harness.collectGarbage()
+        #expect(timer == nil, "A finished one-shot timer must not be kept alive")
+    }
+
     @Test("A stopped timer the caller didn't keep is garbage collected")
     func testStoppedTimerIsCollected() {
         let harness = JSTestHarness()
