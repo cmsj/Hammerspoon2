@@ -112,7 +112,7 @@ import CoreLocation
     // the user dropped their reference to it. (CLLocationManager's delegate is weak, so nothing
     // else keeps it alive.)
     private var isUpdating = false {
-        didSet { tracker?.setActive(self, isUpdating, in: JSContext.current() ?? callback?.value?.context) }
+        didSet { tracker?.setActive(self, isUpdating) }
     }
 
     @objc var distanceFilter: Double {

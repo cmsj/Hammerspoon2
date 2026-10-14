@@ -98,7 +98,7 @@ import AppKit
     // A running watcher is active: it stays alive with its callback until it's stopped, even if
     // the user dropped their reference to it.
     private var isRunning = false {
-        didSet { tracker?.setActive(self, isRunning, in: JSContext.current() ?? callback?.value?.context) }
+        didSet { tracker?.setActive(self, isRunning) }
     }
 
     init(tracker: HSObjectTracker<HSVolumeWatcher>) {

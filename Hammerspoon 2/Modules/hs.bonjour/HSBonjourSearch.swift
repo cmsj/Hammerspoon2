@@ -159,8 +159,7 @@ import JavaScriptCore
     // A running search is active: it stays alive with its callbacks until it's stopped, even if
     // the user dropped their reference to it.
     private func updateActivity() {
-        let callback = servicesCallback ?? domainsCallback ?? registrationCallback
-        tracker?.setActive(self, callback != nil, in: JSContext.current() ?? callback?.value?.context)
+        tracker?.setActive(self, servicesCallback != nil || domainsCallback != nil || registrationCallback != nil)
     }
 
     // Tracks NetService → HSBonjourService identity so the same wrapper object

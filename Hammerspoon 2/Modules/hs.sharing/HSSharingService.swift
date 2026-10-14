@@ -142,7 +142,7 @@ import AppKit
     // it succeeds or fails, even if the user dropped their reference to it (e.g. a one-line
     // share chain). Not finishesOnItsOwn: it usually waits for the user to complete the UI.
     private var isSharing = false {
-        didSet { tracker?.setActive(self, isSharing, in: JSContext.current() ?? callback?.value?.context) }
+        didSet { tracker?.setActive(self, isSharing) }
     }
 
     init(service: NSSharingService, tracker: HSObjectTracker<HSSharingService>) {

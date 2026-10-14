@@ -124,7 +124,7 @@ import CoreGraphics
     // user dropped their reference to it. The C callback's userInfo pointer is unretained, which
     // is safe because a tap is always stopped (in destroy(), from deinit) before it's freed.
     private var running = false {
-        didSet { tracker?.setActive(self, running, in: JSContext.current() ?? callback?.value?.context) }
+        didSet { tracker?.setActive(self, running) }
     }
 
     /// - Parameter tracker: The module's tracker, or nil for an internal tap the module retains itself

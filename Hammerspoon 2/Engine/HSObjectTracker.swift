@@ -24,9 +24,9 @@ import JavaScriptCore
 /// stopping it) isn't allowed. This is the "pending activity" rule from Node (active handles),
 /// the HTML spec, and WebKit's `ActiveDOMObject::hasPendingActivity()`.
 ///
-/// `setActive(_:_:in:)` pins the child by holding its JS *wrapper*, not just the Swift object:
-/// a `JSCallback` only survives while its owner's wrapper is reachable, so retaining the Swift
-/// object alone keeps it alive with its callbacks silently collected.
+/// `setActive(_:_:finishesOnItsOwn:)` pins the child by holding its JS *wrapper*, not just the
+/// Swift object: a `JSCallback` only survives while its owner's wrapper is reachable, so retaining
+/// the Swift object alone keeps it alive with its callbacks silently collected.
 ///
 /// **Rules for child objects:**
 /// - Derive activity from a single piece of state, and call `setActive` only from that state's
@@ -67,7 +67,7 @@ import JavaScriptCore
 /// // In the child
 /// private weak var tracker: HSObjectTracker<HSTimer>?
 /// private var timer: Timer? {
-///     didSet { tracker?.setActive(self, timer != nil, in: JSContext.current() ?? callback?.value?.context) }
+///     didSet { tracker?.setActive(self, timer != nil) }
 /// }
 /// ```
 final class HSObjectTracker<T: AnyObject> {
@@ -77,6 +77,12 @@ final class HSObjectTracker<T: AnyObject> {
     }
 
     private var storage: [ObjectIdentifier: WeakBox] = [:]
+
+    /// The JSContext the tracked objects' wrappers live in. A module only runs in one context, so
+    /// this is recorded from whichever JS call adds or activates an object, and used to pin
+    /// objects that become active outside a JS call (from a system event). Released by
+    /// `removeAllObjects()`.
+    var context: JSContext?
 
     /// All currently-alive objects, active or not. Dead entries are compacted on each access.
     var allObjects: [T] {
@@ -91,6 +97,7 @@ final class HSObjectTracker<T: AnyObject> {
 
     /// Add an object. Replaces any existing entry for the same identity.
     func add(_ object: T) {
+        recordCurrentContext()
         storage[ObjectIdentifier(object)] = WeakBox(object)
         DispatchQueue.main.async {
             self.compact()
@@ -114,6 +121,7 @@ final class HSObjectTracker<T: AnyObject> {
             AKDebug("HSObjectTracker<\(T.self)>: released \(released) active object\(released == 1 ? "" : "s") at shutdown")
         }
         storage.removeAll()
+        context = nil
     }
 
     /// Marks an object active (pinned, so it and its callbacks stay alive) or inactive (ordinary
@@ -122,13 +130,13 @@ final class HSObjectTracker<T: AnyObject> {
     /// - Parameters:
     ///   - object: The object
     ///   - active: Whether the object has pending activity
-    ///   - context: The JSContext the object's wrapper lives in. Only used when becoming active.
     ///   - finishesOnItsOwn: Whether the activity ends without being stopped (a task exiting, a
     ///     one-shot timer firing), rather than running until it's stopped (a watcher, a hotkey).
     ///     Tests fail if such an object is still active when they end, since it should have
     ///     finished by then.
-    func setActive(_ object: T, _ active: Bool, in context: JSContext?, finishesOnItsOwn: Bool = false) {
+    func setActive(_ object: T, _ active: Bool, finishesOnItsOwn: Bool = false) {
         if active {
+            recordCurrentContext()
             storage[ObjectIdentifier(object)] = WeakBox(object)
             HSActiveObjects.insert(object, trackedBy: ObjectIdentifier(self), in: context,
                                    finishesOnItsOwn: finishesOnItsOwn)
@@ -143,6 +151,12 @@ final class HSObjectTracker<T: AnyObject> {
     }
 
     // MARK: - Private
+
+    private func recordCurrentContext() {
+        if let current = JSContext.current() {
+            context = current
+        }
+    }
 
     private func compact() {
         storage = storage.filter { $0.value.value != nil }

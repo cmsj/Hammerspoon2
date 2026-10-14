@@ -299,8 +299,7 @@ struct ParsedHTTPRequest {
     // the user dropped their reference to it.
     private var isRunning = false {
         didSet {
-            tracker?.setActive(self, isRunning,
-                               in: JSContext.current() ?? (_callback ?? _wsCallbacks.values.first)?.value?.context)
+            tracker?.setActive(self, isRunning)
         }
     }
 

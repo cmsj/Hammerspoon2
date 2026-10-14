@@ -236,7 +236,7 @@ private let ioctlIOSSIOSPEED: UInt = {
         didSet {
             // Only ever written on the main actor (see above)
             MainActor.assumeIsolated {
-                unsafe tracker?.setActive(self, fd != -1, in: JSContext.current() ?? callback?.value?.context)
+                unsafe tracker?.setActive(self, fd != -1)
             }
         }
     }

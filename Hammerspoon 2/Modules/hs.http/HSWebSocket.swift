@@ -154,8 +154,7 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
     // closed (by either end) or fails, even if the user dropped their reference to it.
     private var task: URLSessionWebSocketTask? {
         didSet {
-            let callback = _messageCallback ?? _openCallback ?? _closeCallback ?? _errorCallback
-            tracker?.setActive(self, task != nil, in: JSContext.current() ?? callback?.value?.context)
+            tracker?.setActive(self, task != nil)
         }
     }
     // URLSession holds its delegate weakly; we must keep a strong reference here.

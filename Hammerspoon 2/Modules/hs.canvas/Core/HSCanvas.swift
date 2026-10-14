@@ -405,8 +405,7 @@ import SwiftUI
     // references can never be shown again, so it's ordinary garbage.
     private var isShown = false {
         didSet {
-            module?.canvases.setActive(self, isShown,
-                                       in: JSContext.current() ?? (mouseCallbackRef ?? draggingCallbackRef)?.value?.context)
+            module?.canvases.setActive(self, isShown)
         }
     }
 

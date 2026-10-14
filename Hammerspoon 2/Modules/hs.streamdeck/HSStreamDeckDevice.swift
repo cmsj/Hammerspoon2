@@ -222,8 +222,8 @@ nonisolated private func hsStreamDeckInputReportCallback(
     // with a handler is active: its wrapper, and so its handlers, stay alive until it's
     // disconnected or the handlers are removed, even if the user dropped their reference to it.
     private func updateActivity() {
-        let handler = onButtonHandler ?? onEncoderHandler ?? onScreenHandler
-        tracker?.setActive(self, isValid && handler != nil, in: JSContext.current() ?? handler?.value?.context)
+        let hasHandler = onButtonHandler != nil || onEncoderHandler != nil || onScreenHandler != nil
+        tracker?.setActive(self, isValid && hasHandler)
     }
 
     // Fixed, persistently-allocated buffer IOKit writes input reports into. Must not move

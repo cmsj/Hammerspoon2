@@ -744,8 +744,7 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
     // user dropped their reference to it.
     private var deviceRegistrations: [String: (address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = unsafe [:] {
         didSet {
-            unsafe tracker?.setActive(self, !deviceRegistrations.isEmpty,
-                                      in: JSContext.current() ?? watcherCallback?.value?.context)
+            unsafe tracker?.setActive(self, !deviceRegistrations.isEmpty)
         }
     }
     private var watcherCallback: JSCallback?

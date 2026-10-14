@@ -295,8 +295,7 @@ private func readICMPReply(fd: Int32, family: Int32,
     // it stays alive with its callback even if the user dropped their reference to it.
     private var phase = Phase.notStarted {
         didSet {
-            tracker?.setActive(self, phase == .pinging, in: JSContext.current() ?? _callback?.value?.context,
-                               finishesOnItsOwn: true)
+            tracker?.setActive(self, phase == .pinging, finishesOnItsOwn: true)
         }
     }
     private var _isDone: Bool { phase == .done }

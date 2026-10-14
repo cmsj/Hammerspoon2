@@ -130,8 +130,7 @@ protocol EventTapHotkeyCoordinator: AnyObject {
     // if the user dropped their reference to it.
     private var _isEnabled = false {
         didSet {
-            tracker?.setActive(self, _isEnabled,
-                               in: JSContext.current() ?? _onPressed?.value?.context ?? _onReleased?.value?.context)
+            tracker?.setActive(self, _isEnabled)
         }
     }
     weak var coordinator: (any EventTapHotkeyCoordinator)?

@@ -187,7 +187,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     // the port is always disposed (in destroy(), from deinit) before we're freed.
     private var inputPort = MIDIPortRef() {
         didSet {
-            module?.children.setActive(self, inputPort != 0, in: JSContext.current() ?? _callback?.value?.context)
+            module?.children.setActive(self, inputPort != 0)
         }
     }
     private var sysexAccumulator: [UInt8]?

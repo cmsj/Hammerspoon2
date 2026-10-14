@@ -186,8 +186,7 @@ import JavaScriptCore
     // references can never be shown or clicked again, so it's ordinary garbage.
     private var isShown = false {
         didSet {
-            tracker?.setActive(self, isShown,
-                               in: JSContext.current() ?? (_clickCallback ?? _menuCallback)?.value?.context)
+            tracker?.setActive(self, isShown)
         }
     }
     private var _title: String?

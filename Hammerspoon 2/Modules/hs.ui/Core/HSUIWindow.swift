@@ -431,8 +431,7 @@ import SwiftUI
     // ordinary garbage.
     private var isShown = false {
         didSet {
-            module?.windows.setActive(self, isShown,
-                                      in: JSContext.current() ?? (showCallback ?? hideCallback ?? destroyCallback)?.value?.context)
+            module?.windows.setActive(self, isShown)
         }
     }
 

@@ -174,9 +174,7 @@ import JavaScriptCoreExtras
     // termination has been delivered, even if the user dropped their reference to it.
     private var state = State.notStarted {
         didSet {
-            tracker?.setActive(self, state == .running,
-                               in: JSContext.current() ?? onTermination?.value?.context ?? onOutput?.value?.context,
-                               finishesOnItsOwn: true)
+            tracker?.setActive(self, state == .running, finishesOnItsOwn: true)
         }
     }
     private var hasStarted: Bool { state != .notStarted }

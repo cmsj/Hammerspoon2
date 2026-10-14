@@ -129,7 +129,7 @@ import CoreServices
     // even if the user dropped their reference to it. That also keeps the stream's unretained
     // info pointer valid: the watcher can only be freed after stop() has drained eventsQueue.
     private var stream: FSEventStreamRef? {
-        didSet { unsafe tracker?.setActive(self, stream != nil, in: JSContext.current() ?? callback?.value?.context) }
+        didSet { unsafe tracker?.setActive(self, stream != nil) }
     }
     private let latency: CFTimeInterval = 1.0
 

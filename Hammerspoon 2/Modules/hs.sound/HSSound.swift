@@ -167,8 +167,7 @@ import AppKit
     // so it's ordinary garbage.
     private var isPlayingActive = false {
         didSet {
-            tracker?.setActive(self, isPlayingActive, in: JSContext.current() ?? _callback?.value?.context,
-                               finishesOnItsOwn: !sound.loops)
+            tracker?.setActive(self, isPlayingActive, finishesOnItsOwn: !sound.loops)
         }
     }
 

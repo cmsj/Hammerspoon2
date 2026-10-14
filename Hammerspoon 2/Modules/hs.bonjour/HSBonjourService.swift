@@ -173,8 +173,7 @@ import Darwin
     // callbacks until that finishes or is stopped, even if the user dropped their reference
     // to it. Not finishesOnItsOwn: resolving with no timeout, or monitoring, never ends.
     private func updateActivity() {
-        let callback = resolveCallback ?? monitorCallback
-        tracker?.setActive(self, callback != nil, in: JSContext.current() ?? callback?.value?.context)
+        tracker?.setActive(self, resolveCallback != nil || monitorCallback != nil)
     }
 
     /// - Parameter tracker: The module's service tracker, or nil if the search that found it has gone

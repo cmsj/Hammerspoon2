@@ -102,8 +102,7 @@ import JavaScriptCore
     // enough on its own: that keeps this object alive, but not its JSCallback.
     private var timer: Timer? {
         didSet {
-            tracker?.setActive(self, timer != nil, in: JSContext.current() ?? callback?.value?.context,
-                               finishesOnItsOwn: !repeats)
+            tracker?.setActive(self, timer != nil, finishesOnItsOwn: !repeats)
         }
     }
 

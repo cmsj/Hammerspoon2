@@ -25,16 +25,17 @@ struct HSObjectLifetimeTests {
     func testTrackerActiveCount() {
         let harness = JSTestHarness()
         let tracker = HSObjectTracker<NSObject>()
+        tracker.context = harness.context
         let object = NSObject()
         tracker.add(object)
         #expect(tracker.activeCount == 0)
 
-        tracker.setActive(object, true, in: harness.context)
-        tracker.setActive(object, true, in: harness.context)
+        tracker.setActive(object, true)
+        tracker.setActive(object, true)
         #expect(tracker.activeCount == 1)
         #expect(tracker.isActive(object))
 
-        tracker.setActive(object, false, in: harness.context)
+        tracker.setActive(object, false)
         #expect(tracker.activeCount == 0)
         #expect(!tracker.isActive(object))
     }
@@ -43,12 +44,13 @@ struct HSObjectLifetimeTests {
     func testTrackerPinsUntilRemoveAll() {
         let harness = JSTestHarness()
         let tracker = HSObjectTracker<NSObject>()
+        tracker.context = harness.context
         weak var weakObject: NSObject?
         autoreleasepool {
             let object = NSObject()
             weakObject = object
             tracker.add(object)
-            tracker.setActive(object, true, in: harness.context)
+            tracker.setActive(object, true)
         }
         harness.collectGarbage()
         #expect(weakObject != nil, "An active object must not be released")
@@ -64,21 +66,44 @@ struct HSObjectLifetimeTests {
         let tracker = HSObjectTracker<NSObject>()
         autoreleasepool {
             let object = NSObject()
-            tracker.setActive(object, true, in: nil)
+            tracker.setActive(object, true)
             #expect(tracker.activeCount == 1)
         }
         #expect(tracker.activeCount == 0)
+    }
+
+    @Test("An object activated outside a JS call is pinned in the context recorded from an earlier one")
+    func testTrackerRecordsContextFromJSCalls() {
+        let harness = JSTestHarness()
+        let tracker = HSObjectTracker<NSObject>()
+        weak var weakObject: NSObject?
+        autoreleasepool {
+            let object = NSObject()
+            weakObject = object
+            let add: @convention(block) () -> Void = { tracker.add(object) }
+            harness.context.setObject(add, forKeyedSubscript: "__add" as NSString)
+            harness.eval("__add(); delete globalThis.__add")
+            // As a system event would, with no JS on the stack
+            tracker.setActive(object, true)
+        }
+        harness.collectGarbage()
+        #expect(weakObject != nil, "An object activated outside a JS call must still be pinned")
+        #expect(HSActiveObjects.wrappers(in: harness.context).count == 1)
+
+        tracker.removeAllObjects()
+        #expect(tracker.context == nil, "removeAllObjects() must release the context")
     }
 
     @Test("A tracker's shutdown() destroys every tracked object, active or not, and drops the pins")
     func testTrackerShutdown() {
         let harness = JSTestHarness()
         let tracker = HSObjectTracker<DestroyProbe>()
+        tracker.context = harness.context
         let idle = DestroyProbe()
         let active = DestroyProbe()
         tracker.add(idle)
         tracker.add(active)
-        tracker.setActive(active, true, in: harness.context)
+        tracker.setActive(active, true)
 
         tracker.shutdown()
         #expect(idle.destroyed)
@@ -160,11 +185,12 @@ struct HSObjectLifetimeTests {
 
         // Stands in for a module whose shutdown() forgets to shut its tracker down
         let tracker = HSObjectTracker<NSObject>()
+        tracker.context = harness.context
         weak var weakObject: NSObject?
         autoreleasepool {
             let object = NSObject()
             weakObject = object
-            tracker.setActive(object, true, in: harness.context)
+            tracker.setActive(object, true)
         }
 
         let leftovers = root.shutdown()
@@ -195,7 +221,8 @@ struct HSObjectLifetimeTests {
         withKnownIssue {
             do {
                 let harness = JSTestHarness()
-                tracker.setActive(object, true, in: harness.context)
+                tracker.context = harness.context
+                tracker.setActive(object, true)
             }
         }
     }

@@ -164,13 +164,10 @@ import Carbon
     // if the user dropped their reference to it (e.g. an unstored `hs.hotkey.bind(...)`).
     private var enabled = false {
         didSet {
-            tracker?.setActive(self, enabled, in: JSContext.current() ?? callbackContext)
+            tracker?.setActive(self, enabled)
         }
     }
 
-    private var callbackContext: JSContext? {
-        _onPressed?.value?.context ?? _onReleased?.value?.context ?? _onRepeat?.value?.context
-    }
     private var repeatDelayTimer: Timer?
     private var repeatIntervalTimer: Timer?
 

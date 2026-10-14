@@ -164,7 +164,7 @@ private func pathToString(_ path: NWPath) -> String {
     // A watching object is active: it stays alive with its callback until it's stopped, even if
     // the user dropped their reference to it.
     private var _isWatching = false {
-        didSet { tracker?.setActive(self, _isWatching, in: JSContext.current() ?? _callback?.value?.context) }
+        didSet { tracker?.setActive(self, _isWatching) }
     }
 
     init(tracker: HSObjectTracker<HSNetworkReachability>) {

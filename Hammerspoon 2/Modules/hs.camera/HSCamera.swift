@@ -233,8 +233,7 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     // user dropped their reference to it.
     private var watcherCallback: JSCallback? {
         didSet {
-            cameraModule?.watchingCameras.setActive(self, watcherCallback != nil,
-                                                    in: JSContext.current() ?? watcherCallback?.value?.context)
+            cameraModule?.watchingCameras.setActive(self, watcherCallback != nil)
         }
     }
     private var cmioListenerBlock: CMIOObjectPropertyListenerBlock? = nil

@@ -113,7 +113,7 @@ import SwiftUI
     // even if the user dropped their reference to it.
     private var nsWindow: NSWindow? {
         didSet {
-            module?.dialogs.setActive(self, nsWindow != nil, in: JSContext.current() ?? buttonCallback?.value?.context)
+            module?.dialogs.setActive(self, nsWindow != nil)
         }
     }
 

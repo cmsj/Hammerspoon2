@@ -282,7 +282,7 @@ import JavaScriptCore
     // the user dropped their reference to it. A query keeps updating its results after the
     // initial gathering finishes, so it runs until stopped.
     private var isQuerying = false {
-        didSet { tracker?.setActive(self, isQuerying, in: JSContext.current() ?? callback?.value?.context) }
+        didSet { tracker?.setActive(self, isQuerying) }
     }
 
     init(tracker: HSObjectTracker<HSSpotlightQuery>) {

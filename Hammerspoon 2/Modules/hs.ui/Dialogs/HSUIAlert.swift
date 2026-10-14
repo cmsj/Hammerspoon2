@@ -115,7 +115,7 @@ import SwiftUI
     // dropped their reference to it. Not finishesOnItsOwn, although its timer dismisses it:
     // tests showing alerts shouldn't have to wait out the duration.
     private var isShowing = false {
-        didSet { module?.alerts.setActive(self, isShowing, in: JSContext.current()) }
+        didSet { module?.alerts.setActive(self, isShowing) }
     }
 
     init(message: String, module: HSUIModule) {

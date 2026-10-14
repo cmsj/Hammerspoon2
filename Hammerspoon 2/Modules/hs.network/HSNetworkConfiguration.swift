@@ -124,7 +124,7 @@ private nonisolated func scConfigWatcherCallback(
     // safe because stopWatching() (called from destroy(), from deinit) detaches the store from
     // its queue before the watcher is freed.
     private var _isWatching = false {
-        didSet { tracker?.setActive(self, _isWatching, in: JSContext.current() ?? _callback?.value?.context) }
+        didSet { tracker?.setActive(self, _isWatching) }
     }
 
     init(tracker: HSObjectTracker<HSNetworkConfigurationWatcher>) {

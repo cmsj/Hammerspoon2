@@ -366,8 +366,7 @@ import SwiftUI
     // never be shown again, so it's ordinary garbage.
     private var isShown = false {
         didSet {
-            tracker?.setActive(self, isShown,
-                               in: JSContext.current() ?? (_onSelect ?? _choicesFunction)?.value?.context)
+            tracker?.setActive(self, isShown)
         }
     }
 
