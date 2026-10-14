@@ -137,6 +137,12 @@ nonisolated enum HSCameraEvent: String, HSEventName {
 
     func shutdown() {
         _removeWatcher()
+        // Every cached camera, not just the watching ones: a camera whose watcher failed to
+        // start still holds its emitter, whose closures hold the camera's wrapper - a cycle
+        // that would keep the camera and the JSContext alive past reload.
+        for camera in cameraCache.values {
+            camera.destroy()
+        }
         watchingCameras.shutdown()
         cameraCache.removeAll()
         _watcherEmitter = nil
