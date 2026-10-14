@@ -369,7 +369,7 @@ func testFooDoesNotLeakAfterReload() {
 
 - **Timers** — a running `HSTimer` is active in its module's `HSObjectTracker` (and
   retained by Foundation's `Timer` target ref) until `stop()`. `shutdown()` → `destroy()` →
-  `stop()` ends both, and `removeAllObjects()` drops any pin left behind.
+  `stop()` ends both, and the tracker's `shutdown()` drops any pin left behind.
 - **Hotkeys** — `enabledHotkeys` is a **strong** array in `HSHotkeyModule`. Enabled
   hotkeys are not freed until `shutdown()` clears the array.
 - **EventTaps** — `start()` sets `selfRetain = self` to keep the tap alive while
@@ -380,8 +380,8 @@ func testFooDoesNotLeakAfterReload() {
 - **Tasks** — a running `HSTask` is active in its module's `HSObjectTracker` until it
   terminates. `shutdown()` → `destroy()` ends it (and SIGTERMs the process).
 - **Anything else with pending activity** — an active object is pinned through its JS
-  wrapper, which holds the `JSContext`. A module whose `shutdown()` skips
-  `removeAllObjects()` shows up as a leak here.
+  wrapper, which holds the `JSContext`. A module whose `shutdown()` skips a tracker's
+  `shutdown()` shows up as a leak here, and fails the harness's post-shutdown check below.
 
 ## Pending-activity tests (mandatory for objects that can be active)
 
@@ -398,6 +398,11 @@ tests MUST wait for such objects to finish (`await harness.waitForTasksToComplet
 Objects that run until they're stopped (watchers, hotkeys, repeating timers) may be left
 active; module shutdown stops them. A test that deliberately ends with a self-finishing object
 still running sets `harness.allowsActiveObjectsAtTeardown = true`.
+
+After that, the harness shuts every module down and fails the test if *anything* is still
+pinned in its context, whatever kind of activity it was: in a real reload that pin would keep
+the old `JSContext` alive. There's no opt-out; it always means a module's `shutdown()` missed a
+tracker.
 
 Synchronous tests can't wait for anything delivered through a main-actor `Task`, such as an
 `HSTask`'s termination: `waitFor` spins the run loop, but a main-actor job can't run while
@@ -456,6 +461,17 @@ is still holding the wrapper — most often the script's completion value: a scr
 `hs.foo.create(...).start()` *returns* the object, and `harness.eval` hands that back as an
 autoreleased `JSValue` that keeps the wrapper alive. Prefix with `void` and wrap the eval in
 `autoreleasepool {}`.
+
+### Restarting from a callback
+
+If an object's activity ends with a callback (a one-shot timer firing, a sound finishing, a
+share completing), also test that the callback can start it again: with the object
+unreferenced, restart it once from its own callback, collect garbage, and check that it's still
+running and calls back a second time, then that it's collected after the second finish. This
+catches a module that un-pins *after* calling back, which silently undoes the restart. See
+`testOneShotRestartedFromCallbackFiresAgain` (hs.timer) and
+`testSoundRestartedFromCallbackStaysAlive` (hs.sound). Capture the object in the callback's
+closure (or receive it as an argument); don't store it in a global, or the test can't fail.
 
 ### One test per object type is sufficient
 

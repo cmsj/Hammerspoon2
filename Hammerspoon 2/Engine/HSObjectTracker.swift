@@ -32,7 +32,12 @@ import JavaScriptCore
 /// - Derive activity from a single piece of state, and call `setActive` only from that state's
 ///   `didSet`. Then every path that ends the activity (stop, natural completion, failure,
 ///   `destroy()`) un-pins it automatically, and a missed call site can't leak the object.
+/// - When the activity ends with a callback (a one-shot timer firing, a sound finishing), make
+///   the state inactive *before* calling back, holding the callback (and the wrapper, if it's an
+///   argument) in locals. The callback may start the object again, and un-pinning afterwards
+///   would undo that.
 /// - Hold the tracker `weak`; the module owns it.
+/// - Conform to `HSTrackedObject`, so the module's `shutdown()` can call `tracker.shutdown()`.
 ///
 /// **Why this can't leak across reloads:** pins live here, not in the objects, and
 /// `tracker.shutdown()` (called from the module's `shutdown()`) drops all of them at once. A child
