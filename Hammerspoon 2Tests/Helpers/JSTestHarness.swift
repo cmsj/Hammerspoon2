@@ -71,7 +71,15 @@ class JSTestHarness {
             for module in loadedModuleObjects {
                 module.shutdown()
             }
-            moduleRoot?.shutdown()
+
+            // Shutdown must leave nothing pinned in this context, whatever kind of activity it
+            // was: a pin that survives a real reload keeps the old JSContext alive. ModuleRoot
+            // drops (and returns) its leftovers itself; anything else is dropped here.
+            var leftovers = moduleRoot?.shutdown() ?? []
+            leftovers += HSActiveObjects.removeAll(in: context)
+            if !leftovers.isEmpty {
+                Issue.record("Module shutdown left \(leftovers.count) object(s) active: \(leftovers.joined(separator: ", ")). Its module's shutdown() must destroy every tracked object and call removeAllObjects().")
+            }
         }
     }
 

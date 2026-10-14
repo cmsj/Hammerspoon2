@@ -165,6 +165,19 @@ struct HSObjectLifetimeTests {
         }
     }
 
+    @Test("The harness fails a test whose modules leave an object active after shutdown")
+    func testHarnessFailsOnPinsLeftAfterShutdown() {
+        // Stands in for a module whose shutdown() forgets to call removeAllObjects()
+        let tracker = HSObjectTracker<NSObject>()
+        let object = NSObject()
+        withKnownIssue {
+            do {
+                let harness = JSTestHarness()
+                tracker.setActive(object, true, in: harness.context)
+            }
+        }
+    }
+
     @Test("The harness leaves objects that run until stopped to module shutdown")
     func testHarnessTeardownIgnoresIndefiniteActivity() {
         let harness = JSTestHarness()
