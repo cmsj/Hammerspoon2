@@ -238,6 +238,9 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     }
     private var cmioListenerBlock: CMIOObjectPropertyListenerBlock? = nil
     private var watcherCMIOID: CMIOObjectID? = nil
+    // Ends the watch when the camera is unplugged: its CMIO device is gone, so the watcher could
+    // never fire again, and it would otherwise stay active until reload
+    private var disconnectObserver: NSObjectProtocol?
 
     // A camera only has one kind of event (its in-use state changing), so on/off/once hide the
     // event name from the public per-camera API and always use this fixed internal name when
@@ -330,12 +333,25 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         watcherCallback = JSCallback(value: listener, owner: self)
         watcherCMIOID = cmioID
         unsafe cmioListenerBlock = block
+        let uid = device.uniqueID
+        disconnectObserver = NotificationCenter.default.addObserver(
+            forName: AVCaptureDevice.wasDisconnectedNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard (notification.object as? AVCaptureDevice)?.uniqueID == uid else { return }
+            MainActor.assumeIsolated { self?._removeWatcher() }
+        }
         AKDebug("hs.camera._addWatcher(): Started watching '\(name)'")
         return true
     }
 
     @objc func _removeWatcher() {
         _watcherEmitter = nil
+        if let disconnectObserver {
+            NotificationCenter.default.removeObserver(disconnectObserver)
+            self.disconnectObserver = nil
+        }
         guard watcherCallback != nil,
               let cmioID = watcherCMIOID,
               let block = unsafe cmioListenerBlock else { return }

@@ -286,14 +286,26 @@ import JavaScriptCore
         let code = errorDict["NSNetServicesErrorCode"]?.intValue ?? -1
         let message = "Bonjour search failed (error code \(code))"
         AKError("HSBonjourSearch(\(identifier)): \(message)")
-        let cb: JSCallback?
+        // The failed search is over, so release its callback (un-pinning the search unless
+        // another of its searches is running) before calling it, so it can search again.
+        let function: JSValue?
         switch browser {
-        case servicesBrowser:     cb = servicesCallback
-        case domainsBrowser:      cb = domainsCallback
-        case registrationBrowser: cb = registrationCallback
-        default:                  cb = nil
+        case servicesBrowser:
+            function = servicesCallback?.value
+            servicesCallback?.detach(from: self)
+            servicesCallback = nil
+        case domainsBrowser:
+            function = domainsCallback?.value
+            domainsCallback?.detach(from: self)
+            domainsCallback = nil
+        case registrationBrowser:
+            function = registrationCallback?.value
+            registrationCallback?.detach(from: self)
+            registrationCallback = nil
+        default:
+            function = nil
         }
-        _ = cb?.value?.call(withArguments: ["error", message])
+        _ = function?.call(withArguments: ["error", message])
     }
 
     func netServiceBrowserDidStopSearch(_ browser: NetServiceBrowser) {

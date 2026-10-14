@@ -609,8 +609,12 @@ import SwiftUI
         // The user clicked the macOS close button. This only hides the window from
         // Hammerspoon's perspective — it does not destroy it — so it is analogous to
         // hide(), and we notify via onHide, not onDestroy.
+        let closedWindow = (notification.object as AnyObject?).map(ObjectIdentifier.init)
         Task { @MainActor in
             // This is defered to a later tick of the runloop to run after the window has closed.
+            // If the window was shown again in the meantime (show() makes a new NSWindow), that
+            // newer showing is still active and must keep its pin.
+            guard let current = self.nsWindow, ObjectIdentifier(current) == closedWindow else { return }
             self.isShown = false
             _ = self.hideCallback?.call(withArguments: [])
         }

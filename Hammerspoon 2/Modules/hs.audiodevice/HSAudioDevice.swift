@@ -748,6 +748,8 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
         }
     }
     private var watcherCallback: JSCallback?
+    // Not an event name: ends the watch when the device goes away (see _addWatcher)
+    private static let deviceIsAliveRegistration = "_deviceIsAlive"
 
     /// Lazily creates this device's JS watcher emitter (via the module's `_makeDeviceEmitter`
     /// factory) if one doesn't already exist. Returns nil (having already set `ctx.exception`)
@@ -833,6 +835,21 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
             watcherCallback?.detach(from: self)
             watcherCallback = nil
             return false
+        }
+
+        // End the watch when the device goes away (unplugged, or an aggregate device removed):
+        // its listeners can never fire again, and it would otherwise stay active until reload.
+        // Removed on the next tick, rather than from inside CoreAudio's own listener call.
+        var aliveAddress = caAddr(kAudioDevicePropertyDeviceIsAlive)
+        let aliveBlock: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            MainActor.assumeIsolated {
+                guard let self, caGetUInt32(self.objectID, kAudioDevicePropertyDeviceIsAlive) != 1 else { return }
+                AKDebug("HSAudioDevice id=\(self.objectID): device went away, stopping its watcher")
+                DispatchQueue.main.async { self._removeWatcher() }
+            }
+        }
+        if unsafe AudioObjectAddPropertyListenerBlock(objectID, &aliveAddress, .main, aliveBlock) == noErr {
+            unsafe deviceRegistrations[Self.deviceIsAliveRegistration] = (address: aliveAddress, block: aliveBlock)
         }
         AKDebug(unsafe "HSAudioDevice id=\(objectID): watcher started (\(deviceRegistrations.count) listeners)")
         return true

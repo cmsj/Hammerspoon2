@@ -296,7 +296,9 @@ struct HSUITests {
             // from Hammerspoon's perspective, so it should fire onHide, not onDestroy.
             // windowWillClose defers to a MainActor Task, so this needs an async wait
             // rather than firing synchronously.
-            win.windowWillClose(Notification(name: NSWindow.willCloseNotification))
+            let nsWindow = NSApp.windows.first { ($0.delegate as AnyObject?) === win }
+            #expect(nsWindow != nil)
+            win.windowWillClose(Notification(name: NSWindow.willCloseNotification, object: nsWindow))
             let fired = await harness.waitForAsync { harness.evalInt("hideCount") == 1 }
             #expect(fired)
             #expect(harness.evalInt("destroyCount") == 0)
@@ -455,6 +457,29 @@ struct HSUITests {
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
         harness.collectGarbage()
         #expect(window == nil, "A hidden window nobody references must not be kept alive")
+    }
+
+    @Test("A window shown again straight after the user closes it stays active")
+    func testWindowReshownAfterCloseStaysActive() async throws {
+        let harness = JSTestHarness()
+        harness.loadModule(HSUIModule.self, as: "ui")
+
+        harness.eval("""
+            var w = hs.ui.window({x: 0, y: 0, w: 100, h: 100}).titled(true).closable(true).text("Test")
+            w.show()
+            void 0
+            """)
+        let window = try #require(harness.evalValue("w")?.toObjectOf(HSUIWindow.self) as? HSUIWindow)
+        let firstWindow = try #require(NSApp.windows.first { ($0.delegate as AnyObject?) === window })
+
+        // The user closes it, and the config shows it again before the close is handled
+        firstWindow.close()
+        harness.eval("w.show(); void 0")
+        try await Task.sleep(for: .milliseconds(100))
+
+        #expect(HSActiveObjects.wrappers(in: harness.context).count == 1,
+                "Handling the earlier close must not un-pin the window shown since")
+        harness.eval("w.hide(); void 0")
     }
 
     @Test("A hidden window whose element callbacks reference it is still collected")

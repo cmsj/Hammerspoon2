@@ -269,14 +269,23 @@ import Darwin
     func netService(_ sender: NetService, didNotResolve errorDict: [String: NSNumber]) {
         let msg = Self.errorMessage(from: errorDict)
         AKError("HSBonjourService(\(identifier)): Failed to resolve '\(name)': \(msg)")
-        _ = resolveCallback?.call(withArguments: ["error", msg])
+        // A failed resolve is over, so it must stop pinning the service
+        _ = endResolve()?.call(withArguments: ["error", msg])
     }
 
     func netServiceDidStop(_ sender: NetService) {
         AKDebug("HSBonjourService(\(identifier)): Stopped '\(name)'")
-        _ = resolveCallback?.call(withArguments: ["stopped"])
+        _ = endResolve()?.call(withArguments: ["stopped"])
+    }
+
+    /// Releases the resolve callback, un-pinning the service unless it's being monitored, and
+    /// returns the function so it can still be called. Releasing it first means the callback can
+    /// resolve again without that new resolve being released straight after.
+    private func endResolve() -> JSValue? {
+        let function = resolveCallback?.value
         resolveCallback?.detach(from: self)
         resolveCallback = nil
+        return function
     }
 
     func netService(_ sender: NetService, didUpdateTXTRecord data: Data) {

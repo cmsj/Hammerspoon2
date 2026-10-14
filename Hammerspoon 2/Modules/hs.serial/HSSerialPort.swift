@@ -581,8 +581,9 @@ nonisolated private func hsSerialPortReadHandler(fd: Int32, generation: Int, por
         } else if count == 0 {
             Task { @MainActor in
                 guard unsafe port.generation == generation else { return }
-                port.fireCallback(event: "removed", data: "")
+                // Close first, so the callback can reopen the port
                 port.performClose()
+                port.fireCallback(event: "removed", data: "")
             }
         } else {
             let err = errno
@@ -590,8 +591,9 @@ nonisolated private func hsSerialPortReadHandler(fd: Int32, generation: Int, por
             let message = unsafe String(cString: strerror(err))
             Task { @MainActor in
                 guard unsafe port.generation == generation else { return }
-                port.fireCallback(event: "error", data: message)
+                // Close first, so the callback can reopen the port
                 port.performClose()
+                port.fireCallback(event: "error", data: message)
             }
         }
     }

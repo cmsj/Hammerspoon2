@@ -441,7 +441,8 @@ struct ParsedHTTPRequest {
                         AKDebug("HSHTTPServer(\(self.identifier)): Listening on port \(self.getPort())")
                     case .failed(let error):
                         AKError("HSHTTPServer(\(self.identifier)): Failed: \(error)")
-                        self.isRunning = false
+                        // Release the failed listener and its connections, not just the pin
+                        self.stop()
                     default:
                         break
                     }

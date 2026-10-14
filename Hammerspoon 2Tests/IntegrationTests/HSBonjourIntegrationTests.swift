@@ -369,6 +369,40 @@ extension HSBonjourTests {
         #expect(updates == 1, "A service must not call back after module shutdown")
     }
 
+    @Test("A failed resolve stops pinning its service, unless the callback resolves again")
+    func testFailedResolveUnpinsService() throws {
+        let harness = JSTestHarness()
+        let root = harness.loadModuleRoot()
+        autoreleasepool { _ = harness.eval("void hs.bonjour") }
+        let module = try #require(root.modules["bonjour"] as? HSBonjourModule)
+
+        let netService = NetService(domain: "local.", type: "_hs2test._tcp.", name: "probe")
+        let service = HSBonjourService(netService: netService, tracker: module.services)
+        var errors = 0
+        harness.registerCallback("onError") { errors += 1 }
+        harness.context.setObject(service, forKeyedSubscript: "svc" as NSString)
+        // Retries once from its own error callback
+        harness.eval("""
+            var retried = false
+            function onResolve(state) {
+                if (state !== 'error') return
+                __test_callback('onError')
+                if (!retried) { retried = true; svc.resolve(30, onResolve) }
+            }
+            svc.resolve(30, onResolve); void 0
+            """)
+        #expect(!harness.hasException)
+        #expect(module.services.isActive(service))
+
+        service.netService(netService, didNotResolve: ["NSNetServicesErrorCode": -72007])
+        #expect(errors == 1)
+        #expect(module.services.isActive(service), "A resolve started from the callback must stay pinned")
+
+        service.netService(netService, didNotResolve: ["NSNetServicesErrorCode": -72007])
+        #expect(errors == 2)
+        #expect(!module.services.isActive(service), "A failed resolve must not keep its service pinned")
+    }
+
     /// Records stopMonitoring(), which leaves nothing else observable once callbacks are cleared
     private nonisolated final class MonitorProbeService: NetService {
         var stoppedMonitoring = false

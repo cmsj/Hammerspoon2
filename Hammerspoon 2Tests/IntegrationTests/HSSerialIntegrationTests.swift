@@ -506,6 +506,33 @@ struct HSSerialTests {
             harness.eval("p.close()")
         }
 
+        @Test("A port whose far end goes away is closed before its callback runs, so it can reopen")
+        func testPortClosedBeforeRemovedCallback() async throws {
+            var pty: TempPTY? = try TempPTY()
+            let path = try #require(pty?.slavePath)
+            let harness = JSTestHarness()
+            harness.loadModule(HSSerialModule.self, as: "serial")
+
+            var openWhenNotified: Bool?
+            harness.registerCallback("onGone") { (isOpen: Bool) in openWhenNotified = isOpen }
+
+            harness.eval("""
+                var p = hs.serial.createPortAtPath('\(path)')
+                p.setCallback((event, data) => {
+                    if (event === 'removed' || event === 'error') { onGone(p.isOpen) }
+                }).open()
+            """)
+            #expect(!harness.hasException)
+            harness.expectTrue("p.isOpen")
+
+            // Closing the master end makes reads on the port fail, as unplugging does
+            pty = nil
+
+            let notified = await harness.waitForAsync(timeout: 5.0) { openWhenNotified != nil }
+            #expect(notified, "Losing the far end must call back")
+            #expect(openWhenNotified == false, "The port must already be closed when its callback runs")
+        }
+
         // MARK: Garbage collection (issue #267)
 
         @Test("An open port the caller didn't keep still receives data after garbage collection")

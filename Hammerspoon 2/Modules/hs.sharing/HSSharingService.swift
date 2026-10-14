@@ -215,14 +215,18 @@ import AppKit
         _ = callback?.call(withArguments: ["willShare", items])
     }
 
+    // The share is over, so drop the pin before calling back: the callback may share again, and
+    // that new pin must survive. The local function stays alive until the call returns.
     func sharingService(_ sharingService: NSSharingService, didShareItems items: [Any]) {
-        defer { isSharing = false }
-        _ = callback?.call(withArguments: ["didShare", items])
+        let function = callback?.value
+        isSharing = false
+        _ = function?.call(withArguments: ["didShare", items])
     }
 
     func sharingService(_ sharingService: NSSharingService, didFailToShareItems items: [Any], error: Error) {
-        defer { isSharing = false }
-        _ = callback?.call(withArguments: ["didFail", items, error.localizedDescription])
+        let function = callback?.value
+        isSharing = false
+        _ = function?.call(withArguments: ["didFail", items, error.localizedDescription])
     }
 
     // MARK: - Item coercion
