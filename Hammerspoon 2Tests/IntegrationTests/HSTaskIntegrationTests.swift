@@ -1143,6 +1143,8 @@ import JavaScriptCore
 
         let success = await harness.waitForAsync(timeout: 1.0) { timeoutFired }
         #expect(success, "Timeout should fire and terminate task")
+        // terminate() only signals the process: wait for its termination to be delivered
+        #expect(await harness.waitForTasksToComplete(), "The terminated task should finish")
     }
 
     // MARK: - Shutdown Tests
