@@ -38,7 +38,9 @@ import JavaScriptCore
 /// `removeAllObjects()` (called from the module's `shutdown()`) drops all of them at once. A child
 /// that fails to un-pin itself is kept alive until the next reload at worst, never beyond it, so
 /// it can't keep an old `JSContext` alive. A pinned object is alive, so it's always still tracked
-/// and `shutdown()` always reaches it.
+/// and `shutdown()` always reaches it. As a backstop for a module that forgets
+/// `removeAllObjects()`, `ModuleRoot.shutdown()` drops every pin left in its context afterwards,
+/// and logs each one as an error.
 ///
 /// Active objects are also recorded in `HSActiveObjects`, so they can be listed per context, for
 /// users (`hs.activeObjects()`) and for tests (`JSTestHarness` fails a test that ends with an
@@ -195,6 +197,20 @@ enum HSActiveObjects {
         let released = ids.count(where: { entries[$0]?.object != nil })
         for id in ids {
             entries.removeValue(forKey: id)
+        }
+        return released
+    }
+
+    /// Drops every pin held for a context, whichever tracker holds it, returning a description of
+    /// each object that was still active. Module shutdown should already have stopped them all,
+    /// so anything left is a bug, but its pin would keep the whole context alive.
+    static func removeAll(in context: JSContext) -> [String] {
+        let ids = entries.filter { unsafe $0.value.contextRef == context.jsGlobalContextRef }.keys
+        var released: [String] = []
+        for id in ids {
+            if let object = entries.removeValue(forKey: id)?.object {
+                released.append(String(describing: object))
+            }
         }
         return released
     }

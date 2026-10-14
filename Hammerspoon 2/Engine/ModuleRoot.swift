@@ -164,6 +164,10 @@ import JavaScriptCoreExtras
     // Retains the JSContext, so shutdown() must release it.
     private var moduleWrappers: [String: JSValue] = [:]
 
+    // The context the modules were first used from, recorded with their wrappers, so shutdown()
+    // can drop any pins its modules left behind.
+    private var context: JSContext?
+
     init(engineID: UUID, settings: SettingsManagerProtocol = SettingsManager.shared, spoonManager: SpoonManager = .shared) {
         self.engineID = engineID
         self.settings = settings
@@ -193,17 +197,35 @@ import JavaScriptCoreExtras
     private func pinWrapper(of module: HSModuleAPI, named name: String) {
         guard moduleWrappers[name] == nil, let context = JSContext.current() else { return }
         moduleWrappers[name] = JSValue(object: module, in: context)
+        self.context = self.context ?? context
     }
 
-    func shutdown() {
+    /// Shuts down every module, then drops any pins they left behind
+    /// - Returns: A description of each object that was still active after its module shut down.
+    ///   This should always be empty; anything in it is a module bug, already logged.
+    @discardableResult
+    func shutdown() -> [String] {
         let names = Array(modules.keys)
         for moduleName in names {
             AKDebug("Destroying module: \(moduleName)")
             modules[moduleName]?.shutdown()
         }
+
+        // A module's shutdown() should have dropped all its pins. One that didn't would keep its
+        // object's wrapper, and with it this whole context, alive after reload.
+        var leftovers: [String] = []
+        if let context {
+            leftovers = HSActiveObjects.removeAll(in: context)
+            for object in leftovers {
+                AKError("ModuleRoot: \(object) was still active after its module shut down")
+            }
+        }
+
         modules.removeAll()
         moduleWrappers.removeAll()
+        context = nil
         _spoons = nil
+        return leftovers
     }
 
     // MARK: - ModuleRootAPI conformance

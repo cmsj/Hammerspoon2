@@ -130,6 +130,28 @@ struct HSObjectLifetimeTests {
         #expect(timer == nil, "Shutdown must not leave anything active")
     }
 
+    @Test("ModuleRoot shutdown drops pins a module left behind, so they can't keep the context alive")
+    func testShutdownDropsLeftoverPins() {
+        let harness = JSTestHarness()
+        let root = harness.loadModuleRoot()
+        autoreleasepool { _ = harness.eval("void hs.timer") }
+
+        // Stands in for a module whose shutdown() forgets to call removeAllObjects()
+        let tracker = HSObjectTracker<NSObject>()
+        weak var weakObject: NSObject?
+        autoreleasepool {
+            let object = NSObject()
+            weakObject = object
+            tracker.setActive(object, true, in: harness.context)
+        }
+
+        let leftovers = root.shutdown()
+        #expect(leftovers.count == 1)
+        #expect(HSActiveObjects.wrappers(in: harness.context).isEmpty)
+        harness.collectGarbage()
+        #expect(weakObject == nil, "ModuleRoot shutdown must drop every pin left in its context")
+    }
+
     // MARK: - JSTestHarness
 
     @Test("The harness fails a test that ends with an unfinished one-shot object still active")
