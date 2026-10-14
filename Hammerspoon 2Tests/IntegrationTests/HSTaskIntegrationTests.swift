@@ -153,6 +153,9 @@ import JavaScriptCore
         """)
 
         let success = await harness.waitForAsync(timeout: 2.0) { stderrReceived }
+        harness.eval("""
+            task.terminate();
+            """)
         #expect(success, "Should receive stderr output")
         #expect(capturedError.contains("Error message"), "Error output should contain expected text")
     }
@@ -452,6 +455,9 @@ import JavaScriptCore
         """)
 
         let success = await harness.waitForAsync(timeout: 2.0) { outputReceived }
+        harness.eval("""
+            task.terminate();
+            """)
         #expect(success, "Should receive output")
         #expect(capturedOutput.contains("CustomValue123"), "Should see custom environment variable value")
     }
