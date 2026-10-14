@@ -256,3 +256,10 @@ import SwiftUI
         }
     }
 }
+
+extension HSUIDialog: HSTrackedObject {
+    /// Closes the dialog, at module shutdown
+    func destroy() {
+        close()
+    }
+}

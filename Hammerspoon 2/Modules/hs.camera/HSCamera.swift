@@ -455,3 +455,10 @@ private class CameraCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         return nil
     }
 }
+
+extension HSCamera: HSTrackedObject {
+    /// Stops watching the camera, at module shutdown
+    func destroy() {
+        _removeWatcher()
+    }
+}

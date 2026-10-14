@@ -217,10 +217,7 @@ import Carbon
         bindSpec = nil
         showHotkeys = nil
 
-        for hotkey in activeHotkeys.allObjects {
-            hotkey.destroy()
-        }
-        activeHotkeys.removeAllObjects()
+        activeHotkeys.shutdown()
     }
 
     isolated deinit {

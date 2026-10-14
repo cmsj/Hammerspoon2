@@ -383,7 +383,7 @@ import SwiftUI
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSCanvas: NSObject, HSCanvasAPI {
+@objc class HSCanvas: NSObject, HSCanvasAPI, HSTrackedObject {
     @objc var typeName = "HSCanvas"
 
     @objc func toString() -> String {

@@ -167,7 +167,7 @@ import JavaScriptCore
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSMenuBarItem: NSObject, HSMenuBarItemAPI {
+@objc class HSMenuBarItem: NSObject, HSMenuBarItemAPI, HSTrackedObject {
     @objc var typeName = "HSMenuBarItem"
 
     @objc func toString() -> String {

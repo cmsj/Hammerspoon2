@@ -262,7 +262,7 @@ import JavaScriptCore
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSSpotlightQuery: NSObject, HSSpotlightQueryAPI {
+@objc class HSSpotlightQuery: NSObject, HSSpotlightQueryAPI, HSTrackedObject {
     @objc var typeName = "HSSpotlightQuery"
 
     @objc func toString() -> String {

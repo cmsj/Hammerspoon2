@@ -423,22 +423,13 @@ import SwiftUI
         alertStackManager.alerts.removeAll()
 
         // Destroy all windows
-        for window in windows.allObjects {
-            window.destroy()
-        }
-        windows.removeAllObjects()
+        windows.shutdown()
 
         // Close all alerts
-        for alert in alerts.allObjects {
-            alert.close()
-        }
-        alerts.removeAllObjects()
+        alerts.shutdown()
 
         // Close all dialogs
-        for dialog in dialogs.allObjects {
-            dialog.close()
-        }
-        dialogs.removeAllObjects()
+        dialogs.shutdown()
     }
 
     isolated deinit {

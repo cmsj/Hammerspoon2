@@ -228,10 +228,7 @@ nonisolated enum HSSerialEvent: String, HSEventName {
         on = nil
         off = nil
         once = nil
-        for port in ports.allObjects {
-            port.destroy()
-        }
-        ports.removeAllObjects()
+        ports.shutdown()
     }
 
     isolated deinit {

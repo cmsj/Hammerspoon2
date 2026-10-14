@@ -587,3 +587,10 @@ private func readICMPReply(fd: Int32, family: Int32,
         return d
     }
 }
+
+extension HSNetworkPing: HSTrackedObject {
+    /// Cancels the ping, at module shutdown
+    func destroy() {
+        cancel()
+    }
+}

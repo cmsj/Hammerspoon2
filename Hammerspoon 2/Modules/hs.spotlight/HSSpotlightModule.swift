@@ -212,8 +212,7 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        queries.allObjects.forEach { q in q.destroy() }
-        queries.removeAllObjects()
+        queries.shutdown()
         AKGarbage("Shutdown of \(moduleName): \(engineID)")
     }
 

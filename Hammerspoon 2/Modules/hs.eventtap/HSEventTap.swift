@@ -91,7 +91,7 @@ import CoreGraphics
 @_documentation(visibility: private)
 @MainActor
 @safe
-@objc class HSEventTap: NSObject, HSEventTapAPI {
+@objc class HSEventTap: NSObject, HSEventTapAPI, HSTrackedObject {
     @objc var typeName = "HSEventTap"
 
     @objc func toString() -> String {

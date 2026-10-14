@@ -206,7 +206,7 @@ private let ioctlIOSSIOSPEED: UInt = {
 
 @safe @_documentation(visibility: private)
 @MainActor
-@objc class HSSerialPort: NSObject, HSSerialPortAPI {
+@objc class HSSerialPort: NSObject, HSSerialPortAPI, HSTrackedObject {
     @objc var typeName = "HSSerialPort"
 
     @objc func toString() -> String {

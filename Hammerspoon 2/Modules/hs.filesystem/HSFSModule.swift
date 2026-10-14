@@ -848,12 +848,9 @@ import UniformTypeIdentifiers
     @objc var lastError: JSValue? { HSFSSupport.jsValueOrNull(lastErrorInfo) }
 
     func shutdown() {
-        for watcher in volumeWatchers.allObjects { watcher.destroy() }
-        volumeWatchers.removeAllObjects()
-        for watcher in pathWatchers.allObjects { watcher.destroy() }
-        pathWatchers.removeAllObjects()
-        for file in openFiles.allObjects { file.destroy() }
-        openFiles.removeAllObjects()
+        volumeWatchers.shutdown()
+        pathWatchers.shutdown()
+        openFiles.shutdown()
     }
 
     isolated deinit {

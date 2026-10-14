@@ -35,11 +35,11 @@ import JavaScriptCore
 /// - Hold the tracker `weak`; the module owns it.
 ///
 /// **Why this can't leak across reloads:** pins live here, not in the objects, and
-/// `removeAllObjects()` (called from the module's `shutdown()`) drops all of them at once. A child
+/// `tracker.shutdown()` (called from the module's `shutdown()`) drops all of them at once. A child
 /// that fails to un-pin itself is kept alive until the next reload at worst, never beyond it, so
 /// it can't keep an old `JSContext` alive. A pinned object is alive, so it's always still tracked
 /// and `shutdown()` always reaches it. As a backstop for a module that forgets
-/// `removeAllObjects()`, `ModuleRoot.shutdown()` drops every pin left in its context afterwards,
+/// `tracker.shutdown()`, `ModuleRoot.shutdown()` drops every pin left in its context afterwards,
 /// and logs each one as an error.
 ///
 /// Active objects are also recorded in `HSActiveObjects`, so they can be listed per context, for
@@ -61,8 +61,7 @@ import JavaScriptCore
 /// }
 ///
 /// func shutdown() {
-///     for t in timers.allObjects { t.destroy() }
-///     timers.removeAllObjects()
+///     timers.shutdown()  // HSTimer conforms to HSTrackedObject
 /// }
 ///
 /// // In the child
@@ -107,8 +106,8 @@ final class HSObjectTracker<T: AnyObject> {
         }
     }
 
-    /// Remove all objects and drop every pin. Call this at the end of the module's `shutdown()`,
-    /// after destroying the objects.
+    /// Remove all objects and drop every pin, without destroying them. Modules should call
+    /// `shutdown()` instead, which destroys them first.
     func removeAllObjects() {
         let released = HSActiveObjects.removeAll(trackedBy: ObjectIdentifier(self))
         if released > 0 {
@@ -147,6 +146,24 @@ final class HSObjectTracker<T: AnyObject> {
 
     private func compact() {
         storage = storage.filter { $0.value.value != nil }
+    }
+}
+
+/// A child object tracked by an `HSObjectTracker`, so module shutdown can stop it
+protocol HSTrackedObject: AnyObject {
+    /// Ends all of the object's activity and releases its callbacks. It must be safe to call more
+    /// than once, and on an object that was never active.
+    func destroy()
+}
+
+extension HSObjectTracker where T: HSTrackedObject {
+    /// Destroys every tracked object, then drops every pin. Call this from the module's
+    /// `shutdown()`, once per tracker.
+    func shutdown() {
+        for object in allObjects {
+            object.destroy()
+        }
+        removeAllObjects()
     }
 }
 

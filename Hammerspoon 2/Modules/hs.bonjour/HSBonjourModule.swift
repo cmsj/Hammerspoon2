@@ -186,14 +186,8 @@ import dnssd
     }
 
     func shutdown() {
-        for search in searches.allObjects {
-            search.destroy()
-        }
-        searches.removeAllObjects()
-        for service in services.allObjects {
-            service.destroy()
-        }
-        services.removeAllObjects()
+        searches.shutdown()
+        services.shutdown()
         advertisedServices.values.forEach { $0.stop() }
         advertisedServices.removeAll()
     }

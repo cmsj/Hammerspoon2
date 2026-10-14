@@ -241,3 +241,10 @@ import SwiftUI
         }
     }
 }
+
+extension HSUIAlert: HSTrackedObject {
+    /// Closes the alert, at module shutdown
+    func destroy() {
+        close()
+    }
+}

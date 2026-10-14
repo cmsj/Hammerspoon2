@@ -236,10 +236,7 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
         deviceCallbackHandler?.detach(from: self)
         deviceCallbackHandler = nil
 
-        for device in children.allObjects {
-            device.destroy()
-        }
-        children.removeAllObjects()
+        children.shutdown()
 
         if outputPort != 0 {
             MIDIPortDispose(outputPort)

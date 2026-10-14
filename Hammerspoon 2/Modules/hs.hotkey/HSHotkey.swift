@@ -113,7 +113,7 @@ import Carbon
 @_documentation(visibility: private)
 @MainActor
 @safe
-@objc class HSHotkey: NSObject, HSHotkeyAPI {
+@objc class HSHotkey: NSObject, HSHotkeyAPI, HSTrackedObject {
     @objc var typeName = "HSHotkey"
 
     @objc func toString() -> String {

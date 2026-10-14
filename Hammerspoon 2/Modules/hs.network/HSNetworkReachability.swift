@@ -145,7 +145,7 @@ private func pathToString(_ path: NWPath) -> String {
 
 @_documentation(visibility: private)
 @MainActor
-@objc final class HSNetworkReachability: NSObject, HSNetworkReachabilityAPI {
+@objc final class HSNetworkReachability: NSObject, HSNetworkReachabilityAPI, HSTrackedObject {
     @objc var typeName = "HSNetworkReachability"
 
     @objc func toString() -> String {

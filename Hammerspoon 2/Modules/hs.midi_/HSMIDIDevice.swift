@@ -163,7 +163,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
 
 @safe @_documentation(visibility: private)
 @MainActor
-@objc class HSMIDIDevice: NSObject, HSMIDIDeviceAPI {
+@objc class HSMIDIDevice: NSObject, HSMIDIDeviceAPI, HSTrackedObject {
     @objc var typeName = "HSMIDIDevice"
 
     @objc func toString() -> String {

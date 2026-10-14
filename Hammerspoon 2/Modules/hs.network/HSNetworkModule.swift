@@ -370,18 +370,9 @@ private func queryPrimaryInterface() -> String? {
 
     func shutdown() {
         AKGarbage("Shutdown of \(moduleName): \(engineID)")
-        for ping in pings.allObjects {
-            ping.cancel()
-        }
-        pings.removeAllObjects()
-        for obj in reachabilityObjects.allObjects {
-            obj.destroy()
-        }
-        reachabilityObjects.removeAllObjects()
-        for watcher in configurationWatchers.allObjects {
-            watcher.destroy()
-        }
-        configurationWatchers.removeAllObjects()
+        pings.shutdown()
+        reachabilityObjects.shutdown()
+        configurationWatchers.shutdown()
     }
 
     isolated deinit {

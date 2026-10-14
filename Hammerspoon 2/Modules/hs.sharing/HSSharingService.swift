@@ -122,7 +122,7 @@ import AppKit
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSSharingService: NSObject, HSSharingServiceAPI, NSSharingServiceDelegate {
+@objc class HSSharingService: NSObject, HSSharingServiceAPI, NSSharingServiceDelegate, HSTrackedObject {
     @objc var typeName = "HSSharingService"
 
     @objc func toString() -> String {

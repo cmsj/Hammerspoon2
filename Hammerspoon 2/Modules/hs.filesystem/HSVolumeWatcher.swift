@@ -81,7 +81,7 @@ import AppKit
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSVolumeWatcher: NSObject, HSVolumeWatcherAPI {
+@objc class HSVolumeWatcher: NSObject, HSVolumeWatcherAPI, HSTrackedObject {
     @objc var typeName = "HSVolumeWatcher"
 
     @objc func toString() -> String {

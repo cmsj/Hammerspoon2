@@ -148,10 +148,7 @@ import AppKit
     }
 
     func shutdown() {
-        for canvas in canvases.allObjects {
-            canvas.destroy()
-        }
-        canvases.removeAllObjects()
+        canvases.shutdown()
     }
 
     isolated deinit {

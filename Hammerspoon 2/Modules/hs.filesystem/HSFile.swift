@@ -395,7 +395,7 @@ import Darwin
 
 @safe @_documentation(visibility: private)
 @MainActor
-@objc class HSFile: NSObject, HSFileAPI {
+@objc class HSFile: NSObject, HSFileAPI, HSTrackedObject {
     @objc var typeName = "HSFile"
     @objc private(set) var path: String
     @objc let mode: String

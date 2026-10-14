@@ -87,7 +87,7 @@ protocol EventTapHotkeyCoordinator: AnyObject {
 @_documentation(visibility: private)
 @MainActor
 @safe
-@objc class HSEventTapHotkey: NSObject, HSEventTapHotkeyAPI {
+@objc class HSEventTapHotkey: NSObject, HSEventTapHotkeyAPI, HSTrackedObject {
     @objc var typeName = "HSEventTapHotkey"
 
     @objc func toString() -> String {

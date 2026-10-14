@@ -137,11 +137,8 @@ nonisolated enum HSCameraEvent: String, HSEventName {
 
     func shutdown() {
         _removeWatcher()
-        for camera in cameraCache.values {
-            camera._removeWatcher()
-        }
+        watchingCameras.shutdown()
         cameraCache.removeAll()
-        watchingCameras.removeAllObjects()
         _watcherEmitter = nil
         _makeCameraEmitter = nil
         on = nil

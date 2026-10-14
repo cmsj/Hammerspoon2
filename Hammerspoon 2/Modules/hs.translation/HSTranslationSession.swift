@@ -104,3 +104,10 @@ import JavaScriptCore
         AKGarbage("Deinit of HSTranslationSession: \(sourceLanguage) -> \(targetLanguage)")
     }
 }
+
+extension HSTranslationSession: HSTrackedObject {
+    /// Cancels the session, at module shutdown
+    func destroy() {
+        cancel()
+    }
+}

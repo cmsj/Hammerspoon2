@@ -93,10 +93,7 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        for server in servers.allObjects {
-            server.destroy()
-        }
-        servers.removeAllObjects()
+        servers.shutdown()
     }
 
     isolated deinit {

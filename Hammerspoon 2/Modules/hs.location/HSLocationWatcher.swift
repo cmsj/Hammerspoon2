@@ -92,7 +92,7 @@ import CoreLocation
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSLocationWatcher: NSObject, HSLocationWatcherAPI, CLLocationManagerDelegate {
+@objc class HSLocationWatcher: NSObject, HSLocationWatcherAPI, CLLocationManagerDelegate, HSTrackedObject {
     @objc var typeName = "HSLocationWatcher"
 
     @objc func toString() -> String {

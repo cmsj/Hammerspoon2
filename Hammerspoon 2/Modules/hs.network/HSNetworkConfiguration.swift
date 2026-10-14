@@ -104,7 +104,7 @@ private nonisolated func scConfigWatcherCallback(
 
 @_documentation(visibility: private)
 @MainActor
-@objc final class HSNetworkConfigurationWatcher: NSObject, HSNetworkConfigurationWatcherAPI {
+@objc final class HSNetworkConfigurationWatcher: NSObject, HSNetworkConfigurationWatcherAPI, HSTrackedObject {
     @objc var typeName = "HSNetworkConfigurationWatcher"
 
     @objc func toString() -> String {

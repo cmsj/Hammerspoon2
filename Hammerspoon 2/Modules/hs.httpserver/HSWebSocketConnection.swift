@@ -63,7 +63,7 @@ struct ParsedWebSocketFrame {
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSWebSocketConnection: NSObject, HSWebSocketConnectionAPI {
+@objc class HSWebSocketConnection: NSObject, HSWebSocketConnectionAPI, HSTrackedObject {
     @objc var typeName = "HSWebSocketConnection"
 
     @objc func toString() -> String {

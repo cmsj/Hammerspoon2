@@ -148,7 +148,7 @@ import JavaScriptCoreExtras
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSTask: NSObject, HSTaskAPI {
+@objc class HSTask: NSObject, HSTaskAPI, HSTrackedObject {
     @objc var typeName = "HSTask"
 
     @objc func toString() -> String {

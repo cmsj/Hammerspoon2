@@ -10,6 +10,11 @@ import JavaScriptCore
 /// Tests for the engine's object lifetime mechanisms: HSObjectTracker's active objects,
 /// ModuleRoot's module wrapper pinning, hs.activeObjects(), and the JSTestHarness teardown check.
 /// Per-module lifetime behaviour is tested in each module's own suite.
+private final class DestroyProbe: NSObject, HSTrackedObject {
+    var destroyed = false
+    func destroy() { destroyed = true }
+}
+
 @Suite("Object lifetime tests")
 struct HSObjectLifetimeTests {
 
@@ -63,6 +68,23 @@ struct HSObjectLifetimeTests {
             #expect(tracker.activeCount == 1)
         }
         #expect(tracker.activeCount == 0)
+    }
+
+    @Test("A tracker's shutdown() destroys every tracked object, active or not, and drops the pins")
+    func testTrackerShutdown() {
+        let harness = JSTestHarness()
+        let tracker = HSObjectTracker<DestroyProbe>()
+        let idle = DestroyProbe()
+        let active = DestroyProbe()
+        tracker.add(idle)
+        tracker.add(active)
+        tracker.setActive(active, true, in: harness.context)
+
+        tracker.shutdown()
+        #expect(idle.destroyed)
+        #expect(active.destroyed)
+        #expect(tracker.activeCount == 0)
+        #expect(tracker.allObjects.isEmpty)
     }
 
     // MARK: - ModuleRoot
@@ -136,7 +158,7 @@ struct HSObjectLifetimeTests {
         let root = harness.loadModuleRoot()
         autoreleasepool { _ = harness.eval("void hs.timer") }
 
-        // Stands in for a module whose shutdown() forgets to call removeAllObjects()
+        // Stands in for a module whose shutdown() forgets to shut its tracker down
         let tracker = HSObjectTracker<NSObject>()
         weak var weakObject: NSObject?
         autoreleasepool {
@@ -167,7 +189,7 @@ struct HSObjectLifetimeTests {
 
     @Test("The harness fails a test whose modules leave an object active after shutdown")
     func testHarnessFailsOnPinsLeftAfterShutdown() {
-        // Stands in for a module whose shutdown() forgets to call removeAllObjects()
+        // Stands in for a module whose shutdown() forgets to shut its tracker down
         let tracker = HSObjectTracker<NSObject>()
         let object = NSObject()
         withKnownIssue {

@@ -407,7 +407,7 @@ import SwiftUI
 }
 
 @MainActor
-@objc class HSUIWindow: NSObject, HSUIWindowAPI, NSWindowDelegate {
+@objc class HSUIWindow: NSObject, HSUIWindowAPI, NSWindowDelegate, HSTrackedObject {
     @objc var typeName = "HSUIWindow"
 
     @objc func toString() -> String {

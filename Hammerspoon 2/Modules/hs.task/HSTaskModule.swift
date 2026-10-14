@@ -89,10 +89,7 @@ import JavaScriptCoreExtras
     }
 
     func shutdown() {
-        for task in tasks.allObjects {
-            task.destroy()
-        }
-        tasks.removeAllObjects()
+        tasks.shutdown()
         runAsync = nil
         shell = nil
         parallel = nil

@@ -511,13 +511,11 @@ import AppKit
             self.layoutChangeObserver = nil
         }
 
-        for tap in taps.allObjects { tap.destroy() }
-        taps.removeAllObjects()
+        taps.shutdown()
 
         enabledTapHotkeys.removeAll()
         heldTapHotkeys.removeAll()
-        for hotkey in allTapHotkeys.allObjects { hotkey.destroy() }
-        allTapHotkeys.removeAllObjects()
+        allTapHotkeys.shutdown()
 
         dispatchTap?.stop()
         dispatchTap = nil

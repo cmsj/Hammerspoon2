@@ -61,10 +61,7 @@ import AppKit
     }
 
     func shutdown() {
-        for sound in sounds.allObjects {
-            sound.destroy()
-        }
-        sounds.removeAllObjects()
+        sounds.shutdown()
     }
 
     isolated deinit {

@@ -162,9 +162,10 @@ nonisolated enum HSStreamDeckEvent: String, HSEventName {
         IOHIDManagerUnscheduleFromRunLoop(ioHIDManager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
         IOHIDManagerClose(ioHIDManager, IOOptionBits(kIOHIDOptionsTypeNone))
 
+        // Every connected device, not just the active (tracked) ones
         for device in devices.values { device.destroy() }
         devices.removeAll()
-        activeDevices.removeAllObjects()
+        activeDevices.shutdown()
 
         unsafe selfRef?.release()
         unsafe selfRef = nil

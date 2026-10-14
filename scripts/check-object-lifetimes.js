@@ -11,6 +11,8 @@
  *  1. `selfRetain = self`
  *  2. A `private var` stored property that's a strong collection of HS* objects
  *     (`[HSFoo]`, `Set<HSFoo>`, `[Key: HSFoo]`)
+ *  3. `removeAllObjects()` on a tracker. Modules call `tracker.shutdown()`, which destroys every
+ *     tracked object before dropping the pins, so the two steps can't be separated or forgotten.
  *
  * Existing uses are listed in ALLOWED below, justified because the objects are owned by the
  * module rather than handed to JS for the user to drop. Entries that no longer match anything
@@ -35,6 +37,7 @@ const ALLOWED = {
 
 const COLLECTION = /^\s*private\s+var\s+(\w+)\s*(?::\s*(?:\[[\w.]+\s*:\s*HS\w+\]|Set<HS\w+>|\[HS\w+\])|=\s*(?:\[[\w.]+\s*:\s*HS\w+\]|Set<HS\w+>|\[HS\w+\])\(\))/;
 const SELF_RETAIN = /\bselfRetain\s*=\s*self\b/;
+const REMOVE_ALL_OBJECTS = /\.removeAllObjects\(\)/;
 
 function swiftFiles(dir) {
     return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
@@ -45,18 +48,21 @@ function swiftFiles(dir) {
 }
 
 const found = new Map(); // key → "file:line"
+const errors = [];
 for (const file of swiftFiles(MODULES_DIR)) {
     const rel = path.relative(MODULES_DIR, file).split(path.sep).join('/');
     fs.readFileSync(file, 'utf8').split('\n').forEach((line, i) => {
         if (/^\s*\/\//.test(line)) return;
         const where = `${rel}:${i + 1}`;
         if (SELF_RETAIN.test(line)) found.set(`${rel}:selfRetain`, where);
+        if (REMOVE_ALL_OBJECTS.test(line)) {
+            errors.push(`${where}: \`removeAllObjects()\`. Call the tracker's \`shutdown()\` instead, so its objects are destroyed before their pins are dropped.`);
+        }
         const match = COLLECTION.exec(line);
         if (match) found.set(`${rel}:${match[1]}`, where);
     });
 }
 
-const errors = [];
 for (const [key, where] of found) {
     if (!(key in ALLOWED)) {
         const what = key.endsWith(':selfRetain') ? '`selfRetain = self`' : `strong collection \`${key.split(':')[1]}\``;
@@ -73,4 +79,4 @@ if (errors.length) {
     for (const error of errors) console.error(`❌ ${error}`);
     process.exit(1);
 }
-console.log('✓ No new object retention mechanisms');
+console.log('✓ No new object retention mechanisms, and every tracker is shut down with shutdown()');

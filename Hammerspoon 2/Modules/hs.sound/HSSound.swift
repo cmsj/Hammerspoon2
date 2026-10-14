@@ -144,7 +144,7 @@ import AppKit
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSSound: NSObject, HSSoundAPI {
+@objc class HSSound: NSObject, HSSoundAPI, HSTrackedObject {
     @objc var typeName = "HSSound"
 
     @objc func toString() -> String {

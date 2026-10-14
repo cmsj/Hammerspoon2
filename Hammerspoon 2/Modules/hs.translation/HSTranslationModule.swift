@@ -102,8 +102,7 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        sessions.allObjects.forEach { $0.cancel() }
-        sessions.removeAllObjects()
+        sessions.shutdown()
     }
 
     isolated deinit {

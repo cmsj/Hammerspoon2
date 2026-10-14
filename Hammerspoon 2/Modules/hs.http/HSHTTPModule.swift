@@ -147,8 +147,7 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        for ws in webSockets.allObjects { ws.destroy() }
-        webSockets.removeAllObjects()
+        webSockets.shutdown()
     }
 
     isolated deinit {

@@ -77,10 +77,7 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        for item in items.allObjects {
-            item.destroy()
-        }
-        items.removeAllObjects()
+        items.shutdown()
     }
 
     isolated deinit {

@@ -134,7 +134,7 @@ private final class WebSocketSessionDelegate: NSObject, URLSessionWebSocketDeleg
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSWebSocket: NSObject, HSWebSocketAPI {
+@objc class HSWebSocket: NSObject, HSWebSocketAPI, HSTrackedObject {
     @objc var typeName = "HSWebSocket"
 
     @objc func toString() -> String {

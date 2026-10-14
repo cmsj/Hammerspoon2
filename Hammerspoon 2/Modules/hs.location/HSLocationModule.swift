@@ -158,8 +158,7 @@ import CoreLocation
     }
 
     func shutdown() {
-        for watcher in watchers.allObjects { watcher.destroy() }
-        watchers.removeAllObjects()
+        watchers.shutdown()
         locationManager.stopUpdatingLocation()
         locationManager.delegate = nil
     }

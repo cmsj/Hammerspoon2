@@ -117,8 +117,7 @@ import AppKit
     }
 
     func shutdown() {
-        shares.allObjects.forEach { $0.destroy() }
-        shares.removeAllObjects()
+        shares.shutdown()
     }
 
     // MARK: - HSSharingModuleAPI

@@ -345,7 +345,7 @@ import SwiftUI
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSChooser: NSObject, HSChooserAPI {
+@objc class HSChooser: NSObject, HSChooserAPI, HSTrackedObject {
     @objc var typeName = "HSChooser"
 
     @objc func toString() -> String {

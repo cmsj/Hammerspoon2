@@ -106,10 +106,7 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        for chooser in choosers.allObjects {
-            chooser.destroy()
-        }
-        choosers.removeAllObjects()
+        choosers.shutdown()
         AKGarbage("\(moduleName) shutdown: \(engineID)")
     }
 

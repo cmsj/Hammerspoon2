@@ -166,10 +166,7 @@ import JavaScriptCore
     }
 
     func shutdown() {
-        for timer in timers.allObjects {
-            timer.destroy()
-        }
-        timers.removeAllObjects()
+        timers.shutdown()
         doUntil = nil
         doWhile = nil
         waitUntil = nil

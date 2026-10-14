@@ -861,3 +861,10 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
         _removeWatcher()
     }
 }
+
+extension HSAudioDevice: HSTrackedObject {
+    /// Stops watching the device, at module shutdown
+    func destroy() {
+        _removeWatcher()
+    }
+}

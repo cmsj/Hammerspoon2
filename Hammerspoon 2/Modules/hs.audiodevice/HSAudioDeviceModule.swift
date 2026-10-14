@@ -167,8 +167,8 @@ nonisolated enum HSAudioDeviceEvent: String, HSEventName {
 
     func shutdown() {
         _removeWatcher()
+        watchingDevices.shutdown()
         HSAudioDeviceManager.shared.stopAllWatchers()
-        watchingDevices.removeAllObjects()
         _watcherEmitter = nil
         _makeDeviceEmitter = nil
         on = nil

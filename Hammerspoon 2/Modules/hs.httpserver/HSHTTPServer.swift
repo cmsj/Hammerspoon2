@@ -266,7 +266,7 @@ struct ParsedHTTPRequest {
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSHTTPServer: NSObject, HSHTTPServerAPI {
+@objc class HSHTTPServer: NSObject, HSHTTPServerAPI, HSTrackedObject {
     @objc var typeName = "HSHTTPServer"
 
     @objc func toString() -> String {
@@ -327,7 +327,7 @@ struct ParsedHTTPRequest {
         _callback = nil
         for (_, cb) in _wsCallbacks { cb.detach(from: self) }
         _wsCallbacks.removeAll()
-        _wsConnections.removeAllObjects()
+        _wsConnections.shutdown()
         _tlsIdentity = nil
     }
 

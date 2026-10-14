@@ -83,7 +83,7 @@ import JavaScriptCore
 }
 
 @_documentation(visibility: private)
-@objc class HSTimer: NSObject, HSTimerAPI {
+@objc class HSTimer: NSObject, HSTimerAPI, HSTrackedObject {
     @objc var typeName = "HSTimer"
 
     @objc func toString() -> String {

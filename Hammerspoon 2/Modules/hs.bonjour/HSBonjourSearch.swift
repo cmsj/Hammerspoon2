@@ -125,7 +125,7 @@ import JavaScriptCore
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSBonjourSearch: NSObject, HSBonjourSearchAPI, NetServiceBrowserDelegate {
+@objc class HSBonjourSearch: NSObject, HSBonjourSearchAPI, NetServiceBrowserDelegate, HSTrackedObject {
     @objc var typeName = "HSBonjourSearch"
 
     @objc func toString() -> String {

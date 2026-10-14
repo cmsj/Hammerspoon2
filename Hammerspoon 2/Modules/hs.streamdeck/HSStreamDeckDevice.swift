@@ -192,7 +192,7 @@ nonisolated private func hsStreamDeckInputReportCallback(
 
 @safe @_documentation(visibility: private)
 @MainActor
-@objc class HSStreamDeckDevice: NSObject, HSStreamDeckDeviceAPI {
+@objc class HSStreamDeckDevice: NSObject, HSStreamDeckDeviceAPI, HSTrackedObject {
     @objc var typeName = "HSStreamDeckDevice"
     @objc let identifier = UUID().uuidString
 

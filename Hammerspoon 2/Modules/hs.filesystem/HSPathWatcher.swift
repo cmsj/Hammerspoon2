@@ -102,7 +102,7 @@ import CoreServices
 
 @safe @_documentation(visibility: private)
 @MainActor
-@objc class HSPathWatcher: NSObject, HSPathWatcherAPI {
+@objc class HSPathWatcher: NSObject, HSPathWatcherAPI, HSTrackedObject {
     @objc var typeName = "HSPathWatcher"
 
     @objc func toString() -> String {

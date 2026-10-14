@@ -146,7 +146,7 @@ import Darwin
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSBonjourService: NSObject, HSBonjourServiceAPI, NetServiceDelegate {
+@objc class HSBonjourService: NSObject, HSBonjourServiceAPI, NetServiceDelegate, HSTrackedObject {
     @objc var typeName = "HSBonjourService"
 
     @objc func toString() -> String {
