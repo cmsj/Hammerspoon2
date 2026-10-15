@@ -510,37 +510,11 @@ import SwiftUI
             return self
         }
 
-        let contentView = UICanvasView(
-            element: root,
-            backgroundColor: windowBackgroundColor,
-            containerSize: windowFrame.size
-        )
-
-        // The NSWindow and its hosting view are made once and reused until destroy(): hide() only
-        // takes the window off screen. Making a new one for each show() would put the content's
-        // views into a second hierarchy while the hidden one still holds them, which a web view's
-        // WebPage can't survive (#286).
-        let window: NSWindow
-        if let existing = nsWindow, let hostingView = existing.contentView as? NSHostingView<UICanvasView> {
-            window = existing
-            window.styleMask = resolvedStyleMask()
-            hostingView.rootView = contentView
-        } else {
-            window = NSWindow(
-                contentRect: windowFrame,
-                styleMask: resolvedStyleMask(),
-                backing: .buffered,
-                defer: false
-            )
-            window.contentView = NSHostingView(rootView: contentView)
-            window.isOpaque = false
-            window.isReleasedWhenClosed = false
-            window.delegate = self
-            nsWindow = window
-        }
-        window.backgroundColor = NSColor(windowBackgroundColor)
-        window.level = resolvedLevel()
-        window.title = windowTitleText
+        // The NSWindow is made on the first show() and kept until destroy(): hide() only orders it
+        // out, so showing it again just orders it back in. Making a new one for each show() would
+        // put the content's views into a second hierarchy while the hidden one still holds them,
+        // which a web view's WebPage can't survive (#286).
+        let window = nsWindow ?? makeWindow(root: root)
 
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
@@ -551,6 +525,33 @@ import SwiftUI
         _ = showCallback?.call(withArguments: [])
 
         return self
+    }
+
+    private func makeWindow(root: any HSUIElement) -> NSWindow {
+        let window = NSWindow(
+            contentRect: windowFrame,
+            styleMask: resolvedStyleMask(),
+            backing: .buffered,
+            defer: false
+        )
+
+        let contentView = UICanvasView(
+            element: root,
+            backgroundColor: windowBackgroundColor,
+            containerSize: windowFrame.size
+        )
+        window.contentView = NSHostingView(rootView: contentView)
+        window.isOpaque = false
+        window.backgroundColor = NSColor(windowBackgroundColor)
+        window.level = resolvedLevel()
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        if !windowTitleText.isEmpty {
+            window.title = windowTitleText
+        }
+
+        nsWindow = window
+        return window
     }
 
     @objc func hide() {
