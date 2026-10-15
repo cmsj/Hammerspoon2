@@ -6,6 +6,7 @@
 import Testing
 import Foundation
 import JavaScriptCore
+import AppKit
 @testable import Hammerspoon_2
 
 // Note: hs.ui.webview requires macOS 26.0. Tests are written using the JS harness
@@ -500,6 +501,35 @@ struct HSUIWebViewTests {
                 wv.userAgent("TestAgent/2.0")
             """)
             #expect(!harness.hasException)
+        }
+
+        @Test(
+            "A window holding a web view can be shown again after it's hidden, and is the same window",
+            .disabled(if: isRunningInCI(), "WebKit CVDisplayLink UAF crash in GitHub's virtualized macOS runner — see QUARANTINED IN CI comment below")
+        )
+        func testWebViewWindowReshownAfterHide() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var w = hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+                    .webview(hs.ui.webview().loadHTML("hi"))
+                w.show()
+                void 0
+            """)
+            let window = try #require(harness.evalValue("w")?.toObjectOf(HSUIWindow.self) as? HSUIWindow)
+            let firstWindow = try #require(NSApp.windows.first { ($0.delegate as AnyObject?) === window })
+
+            // Each step needs a pass of the run loop: the crash (#286) came as SwiftUI laid out
+            // the reshown window's web view
+            for step in ["w.hide()", "w.show()", "w.hide()", "w.show()"] {
+                harness.eval("\(step); void 0")
+                RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+            }
+
+            #expect(!harness.hasException)
+            #expect(firstWindow.isVisible)
+            #expect(NSApp.windows.filter { ($0.delegate as AnyObject?) === window }.count == 1,
+                    "Showing a hidden window again must reuse its NSWindow, not make another")
+            harness.eval("w.destroy()")
         }
     }
 

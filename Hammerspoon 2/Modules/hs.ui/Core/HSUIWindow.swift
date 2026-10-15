@@ -82,7 +82,8 @@ import SwiftUI
     /// - Returns: Self for chaining
     @objc func show() -> HSUIWindow
 
-    /// Hide the window (keeps it in memory)
+    /// Hide the window without destroying it
+    /// - Note: The window and its contents are kept, so `show()` puts the same window back where it was. Call `destroy()` to release them.
     @objc func hide()
 
     /// Destroy the window
@@ -434,6 +435,9 @@ import SwiftUI
             module?.windows.setActive(self, isShown)
         }
     }
+    // Counts calls to show(), so the deferred close handling can tell whether the window it was
+    // told about has been shown again since.
+    private var showCount = 0
 
     // Style configuration
     private var isTitled: Bool = true
@@ -506,32 +510,42 @@ import SwiftUI
             return self
         }
 
-        let window = NSWindow(
-            contentRect: windowFrame,
-            styleMask: resolvedStyleMask(),
-            backing: .buffered,
-            defer: false
-        )
-
         let contentView = UICanvasView(
             element: root,
             backgroundColor: windowBackgroundColor,
             containerSize: windowFrame.size
         )
-        window.contentView = NSHostingView(rootView: contentView)
-        window.isOpaque = false
+
+        // The NSWindow and its hosting view are made once and reused until destroy(): hide() only
+        // takes the window off screen. Making a new one for each show() would put the content's
+        // views into a second hierarchy while the hidden one still holds them, which a web view's
+        // WebPage can't survive (#286).
+        let window: NSWindow
+        if let existing = nsWindow, let hostingView = existing.contentView as? NSHostingView<UICanvasView> {
+            window = existing
+            window.styleMask = resolvedStyleMask()
+            hostingView.rootView = contentView
+        } else {
+            window = NSWindow(
+                contentRect: windowFrame,
+                styleMask: resolvedStyleMask(),
+                backing: .buffered,
+                defer: false
+            )
+            window.contentView = NSHostingView(rootView: contentView)
+            window.isOpaque = false
+            window.isReleasedWhenClosed = false
+            window.delegate = self
+            nsWindow = window
+        }
         window.backgroundColor = NSColor(windowBackgroundColor)
         window.level = resolvedLevel()
-        window.isReleasedWhenClosed = false
-        window.delegate = self
-        if !windowTitleText.isEmpty {
-            window.title = windowTitleText
-        }
+        window.title = windowTitleText
 
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
 
-        self.nsWindow = window
+        showCount += 1
         isShown = true
 
         _ = showCallback?.call(withArguments: [])
@@ -540,7 +554,7 @@ import SwiftUI
     }
 
     @objc func hide() {
-        guard nsWindow != nil else { return }
+        guard isShown else { return }
         nsWindow?.orderOut(nil)
         isShown = false
         _ = hideCallback?.call(withArguments: [])
@@ -609,12 +623,12 @@ import SwiftUI
         // The user clicked the macOS close button. This only hides the window from
         // Hammerspoon's perspective — it does not destroy it — so it is analogous to
         // hide(), and we notify via onHide, not onDestroy.
-        let closedWindow = (notification.object as AnyObject?).map(ObjectIdentifier.init)
+        let closedShowing = MainActor.assumeIsolated { showCount }
         Task { @MainActor in
             // This is defered to a later tick of the runloop to run after the window has closed.
-            // If the window was shown again in the meantime (show() makes a new NSWindow), that
-            // newer showing is still active and must keep its pin.
-            guard let current = self.nsWindow, ObjectIdentifier(current) == closedWindow else { return }
+            // If the window was shown again in the meantime, that newer showing is still active
+            // and must keep its pin.
+            guard self.isShown, self.showCount == closedShowing else { return }
             self.isShown = false
             _ = self.hideCallback?.call(withArguments: [])
         }
