@@ -447,6 +447,7 @@ struct HSHTTPTests {
                 let port = h.eval("server.getPort()") as? Int ?? 0
                 return port > 0
             }
+            #expect(portReady, "Server should be ready")
             guard portReady else { h.eval("server.stop()"); return }
 
             h.eval("hs.http.get('http://localhost:' + server.getPort() + '/cb?code=abc%20123&scope=openid&scope=email')")
