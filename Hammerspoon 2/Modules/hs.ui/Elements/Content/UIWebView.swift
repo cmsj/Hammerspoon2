@@ -5,6 +5,7 @@
 
 import Foundation
 import JavaScriptCore
+import JavaScriptCoreExtras
 import SwiftUI
 import WebKit
 import _WebKit_SwiftUI
@@ -40,6 +41,33 @@ private final class UIWebViewNavigationDecider: WebPage.NavigationDeciding {
         for challenge: URLAuthenticationChallenge
     ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
         (.performDefaultHandling, nil)
+    }
+}
+
+// MARK: - Script Message Handler
+
+/// Forwards `webkit.messageHandlers.<name>.postMessage()` calls from the page to UIWebView
+/// without creating a retain cycle. The page's WKUserContentController holds this object
+/// strongly; this object holds UIWebView weakly.
+@available(macOS 26.0, *)
+@MainActor
+private final class UIWebViewScriptMessageHandler: NSObject, WKScriptMessageHandlerWithReply {
+    weak var owner: UIWebView?
+
+    init(owner: UIWebView) {
+        self.owner = owner
+    }
+
+    func userContentController(
+        _ userContentController: WKUserContentController,
+        didReceive message: WKScriptMessage,
+        replyHandler: @escaping @MainActor (Any?, String?) -> Void
+    ) {
+        guard let owner else {
+            replyHandler(nil, "hs.ui.webview: the web view has been destroyed")
+            return
+        }
+        owner.handleScriptMessage(message, replyHandler: replyHandler)
     }
 }
 
@@ -156,6 +184,28 @@ final class UIWebViewToolbarEntry: Identifiable {
 /// hs.ui.window({x: 100, y: 100, w: 1024, h: 768})
 ///     .webview(wv)
 ///     .show()
+/// ```
+///
+/// ## Page Messages Example
+///
+/// The page can call back into your config with
+/// `webkit.messageHandlers.<name>.postMessage(body)`, which returns a Promise that settles
+/// with whatever your callback returns:
+///
+/// ```javascript
+/// const wv = hs.ui.webview()
+///     .onMessage("hs", (body) => {
+///         console.log("Page says: " + body.text)
+///         return "Thanks!"
+///     })
+///     .loadHTML(`<button onclick="send()">Send</button><script>
+///         async function send() {
+///             const reply = await webkit.messageHandlers.hs.postMessage({text: "hello"})
+///             document.body.append(reply)
+///         }
+///     </script>`)
+///
+/// hs.ui.window({x: 100, y: 100, w: 400, h: 300}).webview(wv).show()
 /// ```
 ///
 /// ## JavaScript Evaluation Example
@@ -420,6 +470,48 @@ final class UIWebViewToolbarEntry: Identifiable {
     /// ```
     @objc func onNavigationDecision(_ callback: JSFunction) -> UIWebView
 
+    // MARK: Page Messages
+
+    /// Let the page send messages to a callback
+    ///
+    /// Adds `webkit.messageHandlers.<name>` to the page, for this and every later page the web
+    /// view loads. When the page calls `webkit.messageHandlers.<name>.postMessage(body)`, the
+    /// callback is called with `body`, and the Promise `postMessage()` returns settles with the
+    /// callback's result:
+    /// - a plain value resolves it with that value
+    /// - a Promise resolves or rejects it once that Promise settles
+    /// - a thrown error rejects it with the error's message
+    ///
+    /// The body and the result can be strings, numbers, booleans, `null`, dates, and arrays and
+    /// plain objects of those. Calling this again with the same name replaces the callback.
+    ///
+    /// - Parameter name: The handler name the page uses, as in `webkit.messageHandlers.<name>`
+    /// - Parameter callback: {(body: any) => any} Called with each message the page sends. Its result is the reply
+    /// - Returns: Self for chaining
+    /// - Note: Any page loaded in the web view can send these messages, so treat them as untrusted input
+    /// - Example:
+    /// ```js
+    /// wv.onMessage("clipboard", (body) => {
+    ///     hs.pasteboard.setString(body)
+    ///     return true
+    /// })
+    /// // In the page:
+    /// // await webkit.messageHandlers.clipboard.postMessage("copied from a web page")
+    /// ```
+    @objc func onMessage(_ name: String, _ callback: JSFunction) -> UIWebView
+
+    /// Stop the page from sending messages with a name registered by `onMessage()`
+    ///
+    /// Removes `webkit.messageHandlers.<name>` from the page.
+    ///
+    /// - Parameter name: The handler name passed to `onMessage()`
+    /// - Returns: Self for chaining
+    /// - Example:
+    /// ```js
+    /// wv.removeMessageHandler("clipboard")
+    /// ```
+    @objc func removeMessageHandler(_ name: String) -> UIWebView
+
     // MARK: JavaScript Execution
 
     /// Execute JavaScript in the web page without capturing the result
@@ -471,6 +563,8 @@ final class UIWebViewToolbarEntry: Identifiable {
 
     var page: WebPage!
     private var navigationDecider: UIWebViewNavigationDecider!
+    private let userContentController = WKUserContentController()
+    private var scriptMessageHandler: UIWebViewScriptMessageHandler!
 
     private var customUserAgentString: String?
     private var isInspectableValue: Bool = false
@@ -485,6 +579,7 @@ final class UIWebViewToolbarEntry: Identifiable {
     private var onLoadChangeCallback: JSCallback?
     private var onNavigateCallback: JSCallback?
     private var onTitleChangeCallback: JSCallback?
+    private var messageCallbacks: [String: JSCallback] = [:]
 
     // The window this web view is attached to. It owns the web view's callbacks, so they live as
     // long as the window does (the user holds the window, or it's kept alive while shown),
@@ -498,6 +593,7 @@ final class UIWebViewToolbarEntry: Identifiable {
         guard oldOwner !== window else { return }
         let callbacks = [navigationDecisionCallback, onLoadChangeCallback, onNavigateCallback, onTitleChangeCallback]
             + toolbarEntries.map(\.callback)
+            + messageCallbacks.values.map(Optional.some)
         for callback in callbacks {
             callback?.transferOwnership(from: oldOwner, to: window)
         }
@@ -513,7 +609,10 @@ final class UIWebViewToolbarEntry: Identifiable {
     override init() {
         super.init()
         self.navigationDecider = UIWebViewNavigationDecider(owner: self)
-        self.page = WebPage(navigationDecider: self.navigationDecider)
+        self.scriptMessageHandler = UIWebViewScriptMessageHandler(owner: self)
+        var configuration = WebPage.Configuration()
+        configuration.userContentController = userContentController
+        self.page = WebPage(configuration: configuration, navigationDecider: self.navigationDecider)
         AKGarbage("Init of UIWebView")
     }
 
@@ -548,6 +647,9 @@ final class UIWebViewToolbarEntry: Identifiable {
         navigationDecisionCallback = nil
         for entry in toolbarEntries { entry.detachCallback(from: callbackOwner) }
         toolbarEntries.removeAll()
+        userContentController.removeAllScriptMessageHandlers()
+        for callback in messageCallbacks.values { callback.detach(from: callbackOwner) }
+        messageCallbacks.removeAll()
     }
 
     // MARK: Navigation
@@ -701,6 +803,79 @@ final class UIWebViewToolbarEntry: Identifiable {
         navigationDecisionCallback?.detach(from: callbackOwner)
         navigationDecisionCallback = JSCallback(value: callback, owner: callbackOwner)
         return self
+    }
+
+    // MARK: Page Messages
+
+    @objc func onMessage(_ name: String, _ callback: JSFunction) -> UIWebView {
+        guard !name.isEmpty else {
+            AKError("hs.ui.webview.onMessage: the handler name must not be empty")
+            return self
+        }
+        guard let newCallback = JSCallback(value: callback, owner: callbackOwner) else {
+            return self
+        }
+        // WebKit raises an exception if a name is added twice, so replace rather than add
+        _ = removeMessageHandler(name)
+        messageCallbacks[name] = newCallback
+        userContentController.addScriptMessageHandler(scriptMessageHandler, contentWorld: .page, name: name)
+        return self
+    }
+
+    @objc func removeMessageHandler(_ name: String) -> UIWebView {
+        guard let callback = messageCallbacks.removeValue(forKey: name) else { return self }
+        callback.detach(from: callbackOwner)
+        userContentController.removeScriptMessageHandler(forName: name, contentWorld: .page)
+        return self
+    }
+
+    /// Calls the `onMessage()` callback for `message`, and replies to the page with its result.
+    fileprivate func handleScriptMessage(
+        _ message: WKScriptMessage,
+        replyHandler: @escaping @MainActor (Any?, String?) -> Void
+    ) {
+        guard let function = messageCallbacks[message.name]?.value, let context = function.context else {
+            replyHandler(nil, "hs.ui.webview: no handler for message '\(message.name)'")
+            return
+        }
+
+        // The reply must be sent exactly once, however the callback ends
+        var thrown: JSValue?
+        let previousHandler = context.exceptionHandler
+        context.exceptionHandler = { context, exception in
+            thrown = exception
+            previousHandler?(context, exception)
+        }
+        let result = function.call(withArguments: [message.body])
+        context.exceptionHandler = previousHandler
+
+        if let thrown {
+            replyHandler(nil, Self.errorMessage(from: thrown))
+            return
+        }
+        guard let result, result.isObject, result.forProperty("then")?.isFunction == true else {
+            replyHandler(result?.toObject(), nil)
+            return
+        }
+
+        let resolve: @convention(block) (JSValue) -> Void = { value in
+            MainActor.assumeIsolated { replyHandler(value.toObject(), nil) }
+        }
+        let reject: @convention(block) (JSValue) -> Void = { reason in
+            MainActor.assumeIsolated { replyHandler(nil, Self.errorMessage(from: reason)) }
+        }
+        result.invokeMethod("then", withArguments: [
+            JSValue(object: resolve, in: context) as Any,
+            JSValue(object: reject, in: context) as Any,
+        ])
+    }
+
+    /// The message of a thrown JS error, or the thrown value as a string
+    private static func errorMessage(from error: JSValue) -> String {
+        if error.isObject, let message = error.forProperty("message"), message.isString {
+            return message.toString()
+        }
+        return error.toString() ?? "Unknown error"
     }
 
     // MARK: JavaScript Execution

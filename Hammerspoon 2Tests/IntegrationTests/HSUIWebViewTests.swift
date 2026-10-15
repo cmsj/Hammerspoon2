@@ -153,6 +153,16 @@ struct HSUIWebViewTests {
             #expect(makeHarness().evalTypeOf("hs.ui.webview().onNavigationDecision") == "function")
         }
 
+        @Test("onMessage is a function")
+        func testOnMessageIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().onMessage") == "function")
+        }
+
+        @Test("removeMessageHandler is a function")
+        func testRemoveMessageHandlerIsFunction() {
+            #expect(makeHarness().evalTypeOf("hs.ui.webview().removeMessageHandler") == "function")
+        }
+
         @Test("execJS is a function")
         func testExecJSIsFunction() {
             #expect(makeHarness().evalTypeOf("hs.ui.webview().execJS") == "function")
@@ -367,6 +377,20 @@ struct HSUIWebViewTests {
             harness.expectTrue("wv.onNavigationDecision(() => true) === wv")
         }
 
+        @Test("onMessage returns self")
+        func testOnMessageReturnsSelf() {
+            let harness = makeHarness()
+            harness.eval("var wv = hs.ui.webview()")
+            harness.expectTrue("wv.onMessage('hs', () => {}) === wv")
+        }
+
+        @Test("removeMessageHandler returns self, even for a name never registered")
+        func testRemoveMessageHandlerReturnsSelf() {
+            let harness = makeHarness()
+            harness.eval("var wv = hs.ui.webview()")
+            harness.expectTrue("wv.removeMessageHandler('never') === wv")
+        }
+
         @Test("evalJSResult returns self")
         func testEvalJSResultReturnsSelf() {
             let harness = makeHarness()
@@ -530,6 +554,169 @@ struct HSUIWebViewTests {
             #expect(NSApp.windows.filter { ($0.delegate as AnyObject?) === window }.count == 1,
                     "Showing a hidden window again must reuse its NSWindow, not make another")
             harness.eval("w.destroy()")
+        }
+    }
+
+    // MARK: - Page Messages
+
+    /// These load real pages, but into a WebPage with no window, so they don't hit the WebKit
+    /// CVDisplayLink crash that window teardown causes in CI (see QUARANTINED IN CI below).
+    @Suite("Page messages")
+    struct PageMessageTests {
+
+        /// A harness with `wv`, a web view, and `postingPage(name, body)`, which makes a page
+        /// that posts `body` to `webkit.messageHandlers[name]` as it loads, then sets its title to
+        /// `ok:<reply as JSON>` or `error:<rejection message>`.
+        private func makeHarness() -> JSTestHarness {
+            let harness = JSTestHarness()
+            harness.loadModule(HSUIModule.self, as: "ui")
+            harness.eval(#"""
+                var wv = hs.ui.webview()
+                function postingPage(name, body) {
+                    return "<script>webkit.messageHandlers[" + JSON.stringify(name) + "]" +
+                        ".postMessage(" + JSON.stringify(body) + ")" +
+                        ".then(r => document.title = 'ok:' + JSON.stringify(r)," +
+                        " e => document.title = 'error:' + e.message)</script>"
+                }
+                """#)
+            return harness
+        }
+
+        private func waitForTitle(_ harness: JSTestHarness, prefix: String) async -> String? {
+            _ = await harness.waitForAsync(timeout: 5.0) {
+                harness.evalString("wv.title")?.hasPrefix(prefix) == true
+            }
+            return harness.evalString("wv.title")
+        }
+
+        @Test("The page's message reaches the callback, and the callback's result is the page's reply")
+        func testMessageRoundTrip() async {
+            let harness = makeHarness()
+            harness.eval("""
+                var received = null
+                wv.onMessage("hs", (body) => { received = body; return [body.text, body.n + 1] })
+                    .loadHTML(postingPage("hs", {text: "hello", n: 41}))
+                """)
+            #expect(!harness.hasException)
+
+            let title = await waitForTitle(harness, prefix: "ok:")
+            #expect(title == #"ok:["hello",42]"#)
+            #expect(harness.evalString("received.text") == "hello")
+            #expect(harness.evalInt("received.n") == 41)
+        }
+
+        @Test("A Promise returned by the callback settles the page's reply")
+        func testPromiseReply() async {
+            let harness = makeHarness()
+            harness.eval("""
+                wv.onMessage("hs", (body) => Promise.resolve(body).then(b => b + "!"))
+                    .loadHTML(postingPage("hs", "later"))
+                """)
+
+            let title = await waitForTitle(harness, prefix: "ok:")
+            #expect(title == #"ok:"later!""#)
+        }
+
+        @Test("A rejected Promise rejects the page's reply")
+        func testRejectedPromiseReply() async {
+            let harness = makeHarness()
+            harness.eval("""
+                wv.onMessage("hs", () => Promise.reject(new Error("nope")))
+                    .loadHTML(postingPage("hs", null))
+                """)
+
+            let title = await waitForTitle(harness, prefix: "error:")
+            #expect(title == "error:nope")
+        }
+
+        @Test("An error thrown by the callback rejects the page's reply")
+        func testThrowRejects() async {
+            let harness = makeHarness()
+            harness.eval("""
+                wv.onMessage("hs", () => { throw new Error("boom") })
+                    .loadHTML(postingPage("hs", 1))
+                """)
+
+            let title = await waitForTitle(harness, prefix: "error:")
+            #expect(title == "error:boom")
+        }
+
+        @Test("Registering a name again replaces its callback")
+        func testReplaceCallback() async {
+            let harness = makeHarness()
+            harness.eval("""
+                wv.onMessage("hs", () => "first")
+                    .onMessage("hs", () => "second")
+                    .loadHTML(postingPage("hs", 1))
+                """)
+            #expect(!harness.hasException)
+
+            let title = await waitForTitle(harness, prefix: "ok:")
+            #expect(title == #"ok:"second""#)
+        }
+
+        @Test("removeMessageHandler removes only that name from the page")
+        func testRemoveMessageHandler() async {
+            let harness = makeHarness()
+            harness.eval("""
+                wv.onMessage("kept", () => 1)
+                    .onMessage("gone", () => 2)
+                    .removeMessageHandler("gone")
+                    .loadHTML("<script>var h = webkit.messageHandlers;" +
+                        "document.title = 'done:' + (h.kept !== undefined) + '-' + (h.gone !== undefined)</script>")
+                """)
+
+            let title = await waitForTitle(harness, prefix: "done:")
+            #expect(title == "done:true-false")
+        }
+
+        @Test("A handler added after the page loaded is available to it")
+        func testHandlerAddedAfterLoad() async {
+            let harness = makeHarness()
+            harness.eval("wv.loadHTML('<title>loaded</title>')")
+            _ = await waitForTitle(harness, prefix: "loaded")
+
+            harness.eval("""
+                wv.onMessage("late", (body) => body * 2)
+                    .execJS("webkit.messageHandlers.late.postMessage(21).then(r => document.title = 'ok:' + r)")
+                """)
+
+            let title = await waitForTitle(harness, prefix: "ok:")
+            #expect(title == "ok:42")
+        }
+
+        @Test("A web view with a message handler is released once the page has messaged it")
+        func testMessageHandlerDoesNotLeak() async {
+            let tracker = WeakLeakTracker()
+            let harness = JSTestHarness()
+            harness.loadModule(HSUIModule.self, as: "ui")
+            var webView: UIWebView?
+            autoreleasepool {
+                harness.eval("""
+                    var wv = hs.ui.webview()
+                    wv.onMessage("hs", (body) => body)
+                        .loadHTML("<script>webkit.messageHandlers.hs.postMessage('hi')" +
+                            ".then(r => document.title = 'reply:' + r)</script>")
+                    void 0
+                    """)
+                webView = harness.evalValue("wv")?.toObjectOf(UIWebView.self) as? UIWebView
+                if let webView { tracker.track(webView) }
+            }
+            guard webView != nil else {
+                Issue.record("Could not resolve UIWebView from JS value")
+                return
+            }
+
+            // Poll the Swift object, so no JSValues are left outside the pool
+            let replied = await harness.waitForAsync(timeout: 5.0) { webView?.title == "reply:hi" }
+            #expect(replied)
+
+            autoreleasepool {
+                harness.eval("wv = null")
+                harness.shutdownForLeakTest()
+            }
+            webView = nil
+            tracker.assertNoLeaks(timeout: 2.0)
         }
     }
 

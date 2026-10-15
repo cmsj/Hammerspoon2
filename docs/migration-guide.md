@@ -570,11 +570,13 @@ Where each v1 module's job landed:
 - **`hs.webview.toolbar`** → only partially recreated, as `hs.ui.webview().toolbar()` — scoped
   to that one webview's own navigation toolbar, not a general `NSToolbar` attachable to any
   window with arbitrary item types.
-- **`hs.webview.usercontent`** → gone. There's no JS→native message-passing bridge
-  (`WKUserContentController`/`postMessage`). `hs.ui.webview()` interaction is one-directional
-  and host-initiated only — Hammerspoon can push code into the page and read a result, but
-  the page can't proactively call back into your config. If you need that, poll page state
-  with `.evalJSResult()` instead.
+- **`hs.webview.usercontent`** → `hs.ui.webview().onMessage(name, callback)`. The page calls
+  `webkit.messageHandlers.<name>.postMessage(body)` as in v1, but there's no separate
+  usercontent object: register handlers directly on the webview, and remove them with
+  `.removeMessageHandler(name)`. `postMessage()` now returns a Promise that settles with your
+  callback's return value (or its Promise's result), so the page can get a reply.
+  Injecting user scripts (v1's `injectScript`) isn't supported; use `.execJS()` after the page
+  loads instead.
 
 ## hs.spoons and Spoons
 
@@ -655,9 +657,9 @@ distributed notifications — v2 uses `NSDistributedNotificationCenter` internal
 of places, but doesn't expose it to JS).
 
 **From the `hs.ui` rewrite specifically:** `hs.canvas.matrix` (2D transform math),
-`hs.webview.datastore` (per-webview cookie/storage isolation), `hs.webview.usercontent`
-(page-to-native message passing), and the system color-picker panel previously reachable via
-`hs.dialog.color` — see [Rebuilding UI with hs.ui](#rebuilding-ui-with-hsui) for details.
+`hs.webview.datastore` (per-webview cookie/storage isolation), and the system color-picker
+panel previously reachable via `hs.dialog.color` — see [Rebuilding UI with
+hs.ui](#rebuilding-ui-with-hsui) for details.
 
 ## hs and hs.appinfo
 
