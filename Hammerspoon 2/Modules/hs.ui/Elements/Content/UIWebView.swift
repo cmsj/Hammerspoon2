@@ -834,40 +834,64 @@ final class UIWebViewToolbarEntry: Identifiable {
         _ message: WKScriptMessage,
         replyHandler: @escaping @MainActor (Any?, String?) -> Void
     ) {
+        // WebKit allows exactly one reply, but a thenable can call its callbacks any number of times
+        var replied = false
+        let reply: @MainActor (Any?, String?) -> Void = { value, error in
+            guard !replied else { return }
+            replied = true
+            replyHandler(value, error)
+        }
+
         guard let function = messageCallbacks[message.name]?.value, let context = function.context else {
-            replyHandler(nil, "hs.ui.webview: no handler for message '\(message.name)'")
+            reply(nil, "hs.ui.webview: no handler for message '\(message.name)'")
             return
         }
 
-        // The reply must be sent exactly once, however the callback ends
+        let (result, thrown) = Self.callCatchingException(in: context) {
+            function.call(withArguments: [message.body])
+        }
+        if let thrown {
+            reply(nil, Self.errorMessage(from: thrown))
+            return
+        }
+        guard let result, result.isObject, result.forProperty("then")?.isFunction == true else {
+            reply(result?.toObject(), nil)
+            return
+        }
+
+        let resolve: @convention(block) (JSValue) -> Void = { value in
+            MainActor.assumeIsolated { reply(value.toObject(), nil) }
+        }
+        let reject: @convention(block) (JSValue) -> Void = { reason in
+            MainActor.assumeIsolated { reply(nil, Self.errorMessage(from: reason)) }
+        }
+        // As with Promise resolution, a throw from `then` rejects, unless it already settled
+        let (_, thenThrown) = Self.callCatchingException(in: context) {
+            result.invokeMethod("then", withArguments: [
+                JSValue(object: resolve, in: context) as Any,
+                JSValue(object: reject, in: context) as Any,
+            ])
+        }
+        if let thenThrown {
+            reply(nil, Self.errorMessage(from: thenThrown))
+        }
+    }
+
+    /// Calls `body`, returning its result and the JS exception it raised, if any. The exception is
+    /// still passed on to the context's handler, so it's logged like any other.
+    private static func callCatchingException(
+        in context: JSContext,
+        _ body: () -> JSValue?
+    ) -> (result: JSValue?, exception: JSValue?) {
         var thrown: JSValue?
         let previousHandler = context.exceptionHandler
         context.exceptionHandler = { context, exception in
             thrown = exception
             previousHandler?(context, exception)
         }
-        let result = function.call(withArguments: [message.body])
+        let result = body()
         context.exceptionHandler = previousHandler
-
-        if let thrown {
-            replyHandler(nil, Self.errorMessage(from: thrown))
-            return
-        }
-        guard let result, result.isObject, result.forProperty("then")?.isFunction == true else {
-            replyHandler(result?.toObject(), nil)
-            return
-        }
-
-        let resolve: @convention(block) (JSValue) -> Void = { value in
-            MainActor.assumeIsolated { replyHandler(value.toObject(), nil) }
-        }
-        let reject: @convention(block) (JSValue) -> Void = { reason in
-            MainActor.assumeIsolated { replyHandler(nil, Self.errorMessage(from: reason)) }
-        }
-        result.invokeMethod("then", withArguments: [
-            JSValue(object: resolve, in: context) as Any,
-            JSValue(object: reject, in: context) as Any,
-        ])
+        return (result, thrown)
     }
 
     /// The message of a thrown JS error, or the thrown value as a string

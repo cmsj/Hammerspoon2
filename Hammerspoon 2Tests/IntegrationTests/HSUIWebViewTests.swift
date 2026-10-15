@@ -629,6 +629,58 @@ struct HSUIWebViewTests {
             #expect(title == "error:nope")
         }
 
+        @Test("A reply still pending after the callback returns reaches the page when it settles")
+        func testDelayedReply() async {
+            let harness = makeHarness()
+            harness.eval("""
+                var settle = null
+                wv.onMessage("hs", () => new Promise(resolve => { settle = resolve }))
+                    .loadHTML(postingPage("hs", null))
+                """)
+            let received = await harness.waitForAsync(timeout: 5.0) {
+                harness.evalTypeOf("settle") == "function"
+            }
+            #expect(received)
+
+            // The reply's callbacks are only held by the pending Promise
+            harness.collectGarbage()
+            harness.eval("settle('later')")
+
+            let title = await waitForTitle(harness, prefix: "ok:")
+            #expect(title == #"ok:"later""#)
+        }
+
+        @Test("A thenable whose then() throws rejects the page's reply")
+        func testThrowingThenable() async {
+            let harness = makeHarness()
+            harness.eval("""
+                wv.onMessage("hs", () => ({ then() { throw new Error("bad then") } }))
+                    .loadHTML(postingPage("hs", null))
+                """)
+
+            let title = await waitForTitle(harness, prefix: "error:")
+            #expect(title == "error:bad then")
+        }
+
+        @Test("Only the first settlement of a thenable reaches the page")
+        func testThenableSettlingTwice() async {
+            let harness = makeHarness()
+            harness.eval("""
+                wv.onMessage("hs", () => ({
+                    then(resolve, reject) {
+                        resolve("first")
+                        resolve("second")
+                        reject(new Error("third"))
+                        throw new Error("fourth")
+                    }
+                }))
+                    .loadHTML(postingPage("hs", null))
+                """)
+
+            let title = await waitForTitle(harness, prefix: "ok:")
+            #expect(title == #"ok:"first""#)
+        }
+
         @Test("An error thrown by the callback rejects the page's reply")
         func testThrowRejects() async {
             let harness = makeHarness()
