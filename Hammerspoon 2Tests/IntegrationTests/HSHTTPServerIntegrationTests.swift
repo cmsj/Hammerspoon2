@@ -280,6 +280,66 @@ struct HSHTTPTests {
         }
     }
 
+    // MARK: - Query string parsing (pure Swift)
+
+    @Suite("Query string parsing tests")
+    @MainActor
+    struct QueryStringParsingTests {
+
+        @Test("no query string produces an empty dictionary", arguments: [nil, ""] as [String?])
+        func testEmptyQuery(query: String?) {
+            #expect(HSHTTPServer.parseQueryParameters(query).isEmpty)
+        }
+
+        @Test("a parameter that appears once maps to a string")
+        func testSingleValues() {
+            let params = HSHTTPServer.parseQueryParameters("code=abc123&state=xyz")
+            #expect(params.count == 2)
+            #expect(params["code"] as? String == "abc123")
+            #expect(params["state"] as? String == "xyz")
+        }
+
+        @Test("a repeated parameter maps to an array of its values in order")
+        func testRepeatedValues() {
+            let params = HSHTTPServer.parseQueryParameters("tag=a&other=x&tag=b&tag=c")
+            #expect(params["tag"] as? [String] == ["a", "b", "c"])
+            #expect(params["other"] as? String == "x")
+        }
+
+        @Test("names and values are percent-decoded, with + as a space")
+        func testDecoding() {
+            let params = HSHTTPServer.parseQueryParameters("redirect%5Furi=http%3A%2F%2Flocalhost%2Fcb&q=hello+world%21")
+            #expect(params["redirect_uri"] as? String == "http://localhost/cb")
+            #expect(params["q"] as? String == "hello world!")
+        }
+
+        @Test("an encoded %2B decodes to a literal +, unlike a bare +")
+        func testEncodedPlus() {
+            let params = HSHTTPServer.parseQueryParameters("expr=1%2B1+is+2")
+            #expect(params["expr"] as? String == "1+1 is 2")
+        }
+
+        @Test("a parameter without = maps to an empty string, and empty names are skipped")
+        func testFlagsAndEmptyNames() {
+            let params = HSHTTPServer.parseQueryParameters("flag&&=orphan&empty=")
+            #expect(params.count == 2)
+            #expect(params["flag"] as? String == "")
+            #expect(params["empty"] as? String == "")
+        }
+
+        @Test("only the first = splits the name from the value")
+        func testEqualsInValue() {
+            let params = HSHTTPServer.parseQueryParameters("token=a=b==")
+            #expect(params["token"] as? String == "a=b==")
+        }
+
+        @Test("invalid percent-encoding is passed through undecoded")
+        func testInvalidPercentEncoding() {
+            let params = HSHTTPServer.parseQueryParameters("bad=100%zz")
+            #expect(params["bad"] as? String == "100%zz")
+        }
+    }
+
     // MARK: - Integration: hs.http client ↔ hs.httpserver
 
     // These tests start a real local TCP server and verify end-to-end request/response.
@@ -362,6 +422,37 @@ struct HSHTTPTests {
             let ok = await h.waitForAsync(timeout: 3.0) { bodyReceived }
             h.eval("server.stop()")
             #expect(ok, "Server callback should receive the POST body")
+        }
+
+        @Test("query parameters are delivered to callback and stripped from path")
+        func testQueryParameters() async {
+            let h = makeHarness()
+            var sawQuery = false
+
+            h.eval("""
+            var server = hs.httpserver.create()
+                .setPort(0)
+                .setCallback((method, path, headers, body, query) => {
+                    if (path === '/cb' &&
+                        query.code === 'abc 123' &&
+                        Array.isArray(query.scope) &&
+                        query.scope.join(',') === 'openid,email') __test_callback('queryok')
+                    return {body: "ok", status: 200, headers: {}}
+                })
+                .start()
+        """)
+            h.registerCallback("queryok") { sawQuery = true }
+
+            let portReady = await h.waitForAsync(timeout: 2.0) {
+                let port = h.eval("server.getPort()") as? Int ?? 0
+                return port > 0
+            }
+            guard portReady else { h.eval("server.stop()"); return }
+
+            h.eval("hs.http.get('http://localhost:' + server.getPort() + '/cb?code=abc%20123&scope=openid&scope=email')")
+            let ok = await h.waitForAsync(timeout: 3.0) { sawQuery }
+            h.eval("server.stop()")
+            #expect(ok, "Server callback should receive the parsed query parameters")
         }
 
         @Test("request method is delivered correctly")
