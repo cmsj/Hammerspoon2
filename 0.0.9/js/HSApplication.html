@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSApplication - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSApplication</span>
+</nav>
+<div class="page-header">
+    <h1>HSApplication</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>Object representing an application. You should not instantiate this directly in JavaScript, but rather, use the methods from hs.application which will return appropriate HSApplication objects.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="pid">
+        <h3><a href="#pid">pid</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">POSIX Process Identifier</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L21" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:21</a>
+        </div>
+    </div>
+    <div class="property" id="bundleID">
+        <h3><a href="#bundleID">bundleID</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">Bundle Identifier (e.g. com.apple.Safari)</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L29" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:29</a>
+        </div>
+    </div>
+    <div class="property" id="title">
+        <h3><a href="#title">title</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The application&#39;s title</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L37" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:37</a>
+        </div>
+    </div>
+    <div class="property" id="bundlePath">
+        <h3><a href="#bundlePath">bundlePath</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">Location of the application on disk</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L45" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:45</a>
+        </div>
+    </div>
+    <div class="property" id="isHidden">
+        <h3><a href="#isHidden">isHidden</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Is the application hidden</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L53" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:53</a>
+        </div>
+    </div>
+    <div class="property" id="isActive">
+        <h3><a href="#isActive">isActive</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Is the application focused</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L61" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:61</a>
+        </div>
+    </div>
+    <div class="property" id="mainWindow">
+        <h3><a href="#mainWindow">mainWindow</a></h3>
+        <div class="prop-type">HSWindow</div>
+        <div class="description">The main window of this application, or nil if there is no main window</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L87" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:87</a>
+        </div>
+    </div>
+    <div class="property" id="focusedWindow">
+        <h3><a href="#focusedWindow">focusedWindow</a></h3>
+        <div class="prop-type">HSWindow</div>
+        <div class="description">The focused window of this application, or nil if there is no focused window</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L95" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:95</a>
+        </div>
+    </div>
+    <div class="property" id="allWindows">
+        <h3><a href="#allWindows">allWindows</a></h3>
+        <div class="prop-type">HSWindow[]</div>
+        <div class="description">All windows of this application</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L103" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:103</a>
+        </div>
+    </div>
+    <div class="property" id="visibleWindows">
+        <h3><a href="#visibleWindows">visibleWindows</a></h3>
+        <div class="prop-type">HSWindow[]</div>
+        <div class="description">All visible (ie non-hidden) windows of this application</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L111" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:111</a>
+        </div>
+    </div>
+    <div class="property" id="isRunning">
+        <h3><a href="#isRunning">isRunning</a></h3>
+        <div class="prop-type">boolean</div>
+        <div class="description">Whether the application process is still running</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L156" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:156</a>
+        </div>
+    </div>
+    <div class="property" id="kind">
+        <h3><a href="#kind">kind</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">The kind of application: &quot;standard&quot; (regular dock app), &quot;accessory&quot; (no dock), or &quot;background&quot; (agent)</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L164" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:164</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="kill">
+        <h3>
+<a href="#kill">kill() -> boolean</a>
+        </h3>
+
+        <div class="description">Terminate the application</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">kill() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">True if the application was terminated, otherwise false</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.matchingName(&quot;Calculator&quot;)
+app.kill()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L70" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:70</a>
+        </div>
+    </div>
+    <div class="method" id="kill9">
+        <h3>
+<a href="#kill9">kill9() -> boolean</a>
+        </h3>
+
+        <div class="description">Force-terminate the application</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">kill9() -> boolean</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">True if the application was force-terminated, otherwise false</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.matchingName(&quot;Calculator&quot;)
+app.kill9()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:79</a>
+        </div>
+    </div>
+    <div class="method" id="axElement">
+        <h3>
+<a href="#axElement">axElement() -> HSAXElement</a>
+        </h3>
+
+        <div class="description">The application&#39;s HSAXElement object, for use with the hs.ax APIs</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">axElement() -> HSAXElement</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSAXElement</div>
+        <div class="return-desc">An HSAXElement object, or nil if it could not be obtained</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.frontmost()
+const ax = app.axElement()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L120" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:120</a>
+        </div>
+    </div>
+    <div class="method" id="activate">
+        <h3>
+<a href="#activate">activate(allWindows) -> None</a>
+        </h3>
+
+        <div class="description">Bring this application to the foreground</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">activate(allWindows) -> None</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">allWindows</td>
+                    <td class="param-type">boolean</td>
+                    <td class="param-desc">Pass true to raise all application windows. Defaults to false.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.matchingName(&quot;Safari&quot;)
+app.activate()
+app.activate(true)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L130" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:130</a>
+        </div>
+    </div>
+    <div class="method" id="hide">
+        <h3>
+<a href="#hide">hide() -> None</a>
+        </h3>
+
+        <div class="description">Hide this application and all its windows</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hide() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.matchingName(&quot;Safari&quot;)
+app.hide()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L138" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:138</a>
+        </div>
+    </div>
+    <div class="method" id="unhide">
+        <h3>
+<a href="#unhide">unhide() -> None</a>
+        </h3>
+
+        <div class="description">Unhide this application</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">unhide() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.matchingName(&quot;Safari&quot;)
+app.unhide()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L146" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:146</a>
+        </div>
+    </div>
+    <div class="method" id="getMenuItems">
+        <h3>
+<a href="#getMenuItems">getMenuItems() -> [[String: Any]]</a>
+        </h3>
+
+        <div class="description">Get the full menu structure of this application</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">getMenuItems() -> [[String: Any]]</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[[String: Any]]</div>
+        <div class="return-desc">An array of top-level menu objects, each with title and items keys, or null if unavailable</div>
+
+        <div class="card-section-label">Notes</div>
+        <div class="note">This traverses the accessibility hierarchy and may be slow for apps with large menus.</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.frontmost()
+app.getMenuItems().forEach(m =&gt; console.log(m.title))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L174" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:174</a>
+        </div>
+    </div>
+    <div class="method" id="findMenuItemByName">
+        <h3>
+<a href="#findMenuItemByName">findMenuItemByName(name) -> [String: Any]</a>
+        </h3>
+
+        <div class="description">Find a menu item by searching all menus for a matching title (case-insensitive)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">findMenuItemByName(name) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The menu item title to search for</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">An object with title and enabled keys, or null if not found</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.frontmost()
+const item = app.findMenuItemByName(&quot;Select All&quot;)
+console.log(item.enabled)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L185" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:185</a>
+        </div>
+    </div>
+    <div class="method" id="findMenuItemByPath">
+        <h3>
+<a href="#findMenuItemByPath">findMenuItemByPath(path) -> [String: Any]</a>
+        </h3>
+
+        <div class="description">Find a menu item by following a hierarchical path of titles</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">findMenuItemByPath(path) -> [String: Any]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string[]</td>
+                    <td class="param-desc">An array of menu titles forming a path from the top-level menu to the item, e.g. [&quot;Edit&quot;, &quot;Select All&quot;]</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">[String: Any]</div>
+        <div class="return-desc">An object with title and enabled keys, or null if not found</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.frontmost()
+const item = app.findMenuItemByPath([&quot;Edit&quot;, &quot;Select All&quot;])
+console.log(item.enabled)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L196" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:196</a>
+        </div>
+    </div>
+    <div class="method" id="selectMenuItemByName">
+        <h3>
+<a href="#selectMenuItemByName">selectMenuItemByName(name) -> boolean</a>
+        </h3>
+
+        <div class="description">Click a menu item found by searching all menus for a matching title (case-insensitive)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">selectMenuItemByName(name) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">name</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The menu item title to search for</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the menu item was found and clicked, false otherwise</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const safari = hs.application.matchingName(&quot;Safari&quot;)
+safari.selectMenuItemByName(&quot;New Window&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L206" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:206</a>
+        </div>
+    </div>
+    <div class="method" id="selectMenuItemByPath">
+        <h3>
+<a href="#selectMenuItemByPath">selectMenuItemByPath(path) -> boolean</a>
+        </h3>
+
+        <div class="description">Click a menu item found by following a hierarchical path of titles</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">selectMenuItemByPath(path) -> boolean</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">path</td>
+                    <td class="param-type">string[]</td>
+                    <td class="param-desc">An array of menu titles forming a path from the top-level menu to the item, e.g. [&quot;File&quot;, &quot;New Window&quot;]</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">boolean</div>
+        <div class="return-desc">true if the menu item was found and clicked, false otherwise</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const safari = hs.application.matchingName(&quot;Safari&quot;)
+safari.selectMenuItemByPath([&quot;File&quot;, &quot;New Window&quot;])</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L216" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:216</a>
+        </div>
+    </div>
+    <div class="method" id="findWindow">
+        <h3>
+<a href="#findWindow">findWindow(pattern) -> HSWindow[]</a>
+        </h3>
+
+        <div class="description">Find windows whose title contains the given string (case-insensitive)</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">findWindow(pattern) -> HSWindow[]</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">pattern</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">A string to search for in window titles</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindow[]</div>
+        <div class="return-desc">An array of matching HSWindow objects</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.frontmost()
+app.findWindow(&quot;untitled&quot;).forEach(w =&gt; console.log(w.title))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L226" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:226</a>
+        </div>
+    </div>
+    <div class="method" id="getWindow">
+        <h3>
+<a href="#getWindow">getWindow(title) -> HSWindow</a>
+        </h3>
+
+        <div class="description">Get the first window with exactly the given title</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">getWindow(title) -> HSWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">title</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The exact window title to search for</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWindow</div>
+        <div class="return-desc">The matching HSWindow, or null if not found</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const app = hs.application.frontmost()
+const win = app.getWindow(&quot;index.html&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.application/HSApplication.swift#L236" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.application/HSApplication.swift:236</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSApplication');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

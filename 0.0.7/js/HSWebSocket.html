@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSWebSocket - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">HSWebSocket</span>
+</nav>
+<div class="page-header">
+    <h1>HSWebSocket</h1>
+    <span class="page-badge">Type</span>
+</div>
+
+<div class="module-description"><p>A WebSocket client connection created by <code>hs.http.openWebSocket()</code>.</p>
+<p>The connection opens immediately when returned. Use the chainable setter methods to register
+event callbacks, then call <code>send()</code> to transmit messages.</p>
+<p>Do not instantiate <code>HSWebSocket</code> directly — use <code>hs.http.openWebSocket()</code>.</p>
+</div>
+
+<h2 class="section-heading">Properties</h2>
+    <div class="property" id="identifier">
+        <h3><a href="#identifier">identifier</a></h3>
+        <div class="prop-type">string</div>
+        <div class="description">A unique identifier for this connection (UUID string).</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L19" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:19</a>
+        </div>
+    </div>
+    <div class="property" id="readyState">
+        <h3><a href="#readyState">readyState</a></h3>
+        <div class="prop-type">number</div>
+        <div class="description">The current connection state.</div>
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L27" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:27</a>
+        </div>
+    </div>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="setOpenCallback">
+        <h3>
+<a href="#setOpenCallback">setOpenCallback(callback) -> HSWebSocket</a>
+        </h3>
+
+        <div class="description">Set the callback invoked when the connection is established.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setOpenCallback(callback) -> HSWebSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function | null</td>
+                    <td class="param-desc">Called when the connection opens.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWebSocket</div>
+        <div class="return-desc">This WebSocket, for chaining.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">ws.setOpenCallback(() =&gt; console.log(&quot;Connected!&quot;))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L37" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:37</a>
+        </div>
+    </div>
+    <div class="method" id="setMessageCallback">
+        <h3>
+<a href="#setMessageCallback">setMessageCallback(callback) -> HSWebSocket</a>
+        </h3>
+
+        <div class="description">Set the callback invoked when a text message is received from the server.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setMessageCallback(callback) -> HSWebSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function | null</td>
+                    <td class="param-desc">Called with each received message.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWebSocket</div>
+        <div class="return-desc">This WebSocket, for chaining.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">ws.setMessageCallback(msg =&gt; console.log(&quot;Got: &quot; + msg))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L47" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:47</a>
+        </div>
+    </div>
+    <div class="method" id="setCloseCallback">
+        <h3>
+<a href="#setCloseCallback">setCloseCallback(callback) -> HSWebSocket</a>
+        </h3>
+
+        <div class="description">Set the callback invoked when the connection is closed by the remote end.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setCloseCallback(callback) -> HSWebSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function | null</td>
+                    <td class="param-desc">Called with the WebSocket close code and reason.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWebSocket</div>
+        <div class="return-desc">This WebSocket, for chaining.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">ws.setCloseCallback((code, reason) =&gt; console.log(&quot;Closed: &quot; + code))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L57" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:57</a>
+        </div>
+    </div>
+    <div class="method" id="setErrorCallback">
+        <h3>
+<a href="#setErrorCallback">setErrorCallback(callback) -> HSWebSocket</a>
+        </h3>
+
+        <div class="description">Set the callback invoked when a connection or protocol error occurs.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">setErrorCallback(callback) -> HSWebSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">callback</td>
+                    <td class="param-type">function | null</td>
+                    <td class="param-desc">Called with the error description.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWebSocket</div>
+        <div class="return-desc">This WebSocket, for chaining.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">ws.setErrorCallback(err =&gt; console.log(&quot;Error: &quot; + err))</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L67" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:67</a>
+        </div>
+    </div>
+    <div class="method" id="send">
+        <h3>
+<a href="#send">send(message) -> HSWebSocket</a>
+        </h3>
+
+        <div class="description">Send a text message to the server.
+The connection must be open (`readyState === 1`).</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">send(message) -> HSWebSocket</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">message</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The text message to send.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSWebSocket</div>
+        <div class="return-desc">This WebSocket, for chaining.</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">ws.send(&quot;Hello, server!&quot;)</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L79" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:79</a>
+        </div>
+    </div>
+    <div class="method" id="close">
+        <h3>
+<a href="#close">close() -> None</a>
+        </h3>
+
+        <div class="description">Close the WebSocket connection with a normal closure code (1000).
+If a close callback is registered, it is invoked synchronously.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">close() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">ws.close()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L89" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:89</a>
+        </div>
+    </div>
+    <div class="method" id="destroy">
+        <h3>
+<a href="#destroy">destroy() -> None</a>
+        </h3>
+
+        <div class="description">Destroy this WebSocket, releasing all resources without invoking callbacks.
+Called automatically by `hs.http.shutdown()`. After `destroy()`, do not use this object.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">destroy() -> None</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-desc" style="color: var(--text-muted);">None</div>
+
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">ws.destroy()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.http/HSWebSocket.swift#L99" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.http/HSWebSocket.swift:99</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('HSWebSocket');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hs.ui - Hammerspoon 2 API</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="highlight.min.js"></script>
+</head>
+<body>
+    <!-- Top header bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="index.html" class="site-logo">Hammerspoon 2</a>
+            <span class="version-badge">API Docs</span>
+        </div>
+        <div class="header-center">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06L10.68 11.74z"></path>
+                </svg>
+                <input type="search" id="search-input" class="search-input" placeholder="Search properties and methods…" aria-label="Search">
+            <div id="search-results" class="search-results" hidden></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="https://github.com/cmsj/Hammerspoon2" class="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+                <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-body">
+        <!-- Left sidebar -->
+        <nav class="sidebar-left" aria-label="Site navigation">
+            <div class="nav-section" id="modules-section">
+                <div class="nav-section-label">MODULES</div>
+                <div id="modules-nav"></div>
+            </div>
+            <div class="nav-section" id="types-section">
+                <div class="nav-section-label">TYPES</div>
+                <div id="types-nav"></div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="content" id="main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">API Reference</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">hs.ui</span>
+</nav>
+<div class="page-header">
+    <h1>hs.ui</h1>
+    <span class="page-badge">Module</span>
+</div>
+
+<div class="module-description"><h1>hs.ui</h1>
+<p><strong>Create custom user interfaces, alerts, dialogs, and file pickers</strong></p>
+<p>The <code>hs.ui</code> module provides a set of tools for creating custom user interfaces
+in Hammerspoon with SwiftUI-like declarative syntax.</p>
+<h2>Key Features</h2>
+<ul>
+<li><strong>Custom Windows</strong>: Build custom UI windows with shapes, text, and layouts</li>
+<li><strong>Alerts</strong>: Display temporary on-screen notifications</li>
+<li><strong>Dialogs</strong>: Show modal dialogs with custom buttons and callbacks</li>
+<li><strong>Text Input</strong>: Prompt users for text input</li>
+<li><strong>File Pickers</strong>: Let users select files or directories</li>
+<li><strong>Reactive Colors</strong>: Pass an <code>HSColor</code> object to <code>.fill()</code>, <code>.stroke()</code>, or <code>.foregroundColor()</code>,
+then call <code>.set()</code> on it from any callback to re-render the canvas automatically</li>
+<li><strong>Reactive Text</strong>: Create a string with <code>hs.ui.string()</code>, pass it to <code>.text()</code>,
+then call <code>.set()</code> on it to update the displayed content live</li>
+<li><strong>Reactive Images</strong>: Pass an <code>HSImage</code> object to <code>.image()</code>, then call <code>.set()</code> on it
+to swap the image without rebuilding the window</li>
+</ul>
+<h2>Basic Examples</h2>
+<h3>Simple Alert</h3>
+<pre><code class="language-javascript">hs.ui.alert(&quot;Task completed!&quot;)
+    .duration(3)
+    .show();
+</code></pre>
+<h3>Dialog with Buttons</h3>
+<pre><code class="language-javascript">hs.ui.dialog(&quot;Save changes?&quot;)
+    .informativeText(&quot;Your document has unsaved changes.&quot;)
+    .buttons([&quot;Save&quot;, &quot;Don&#39;t Save&quot;, &quot;Cancel&quot;])
+    .onButton((index) =&gt; {
+        if (index === 0) print(&quot;Saving...&quot;);
+    })
+    .show();
+</code></pre>
+<h3>Text Input Prompt</h3>
+<pre><code class="language-javascript">hs.ui.textPrompt(&quot;Enter your name&quot;)
+    .defaultText(&quot;John Doe&quot;)
+    .onButton((buttonIndex, text) =&gt; {
+        print(&quot;User entered: &quot; + text);
+    })
+    .show();
+</code></pre>
+<h3>File Picker</h3>
+<pre><code class="language-javascript">hs.ui.filePicker()
+    .message(&quot;Choose a file&quot;)
+    .allowedFileTypes([&quot;txt&quot;, &quot;md&quot;])
+    .onSelection((path) =&gt; {
+        if (path) print(&quot;Selected: &quot; + path);
+    })
+    .show();
+</code></pre>
+<h3>Custom Window</h3>
+<pre><code class="language-javascript">hs.ui.window({x: 100, y: 100, w: 300, h: 200})
+    .vstack()
+        .spacing(10)
+        .padding(20)
+        .text(&quot;Hello, World!&quot;)
+            .font(HSFont.title())
+            .foregroundColor(&quot;#FFFFFF&quot;)
+        .rectangle()
+            .fill(&quot;#4A90E2&quot;)
+            .cornerRadius(10)
+            .frame({w: &quot;100%&quot;, h: 60})
+    .end()
+    .backgroundColor(&quot;#2C3E50&quot;)
+    .show();
+</code></pre>
+<h3>Reactive Color on Hover</h3>
+<pre><code class="language-javascript">// Create a mutable color, then mutate it inside the hover callback
+const btnColor = HSColor.hex(&quot;#4A90E2&quot;);
+
+hs.ui.window({x: 100, y: 100, w: 160, h: 60})
+    .rectangle()
+        .fill(btnColor)
+        .cornerRadius(8)
+        .frame({w: &quot;100%&quot;, h: &quot;100%&quot;})
+        .onHover((isHovered) =&gt; {
+            btnColor.set(isHovered ? &quot;#E24A4A&quot; : &quot;#4A90E2&quot;);
+        })
+    .show();
+</code></pre>
+<h3>Reactive Text on Hover</h3>
+<pre><code class="language-javascript">// Create a mutable string, then mutate it inside the hover callback
+const label = hs.ui.string(&quot;Move your mouse here&quot;);
+
+hs.ui.window({x: 100, y: 200, w: 220, h: 50})
+    .text(label)
+        .font(HSFont.body())
+        .foregroundColor(&quot;#FFFFFF&quot;)
+        .onHover((isHovered) =&gt; {
+            label.set(isHovered ? &quot;You&#39;re hovering!&quot; : &quot;Move your mouse here&quot;);
+        })
+    .show();
+</code></pre>
+<h3>Reactive Image on Click</h3>
+<pre><code class="language-javascript">// Toggle between two system icons on each click
+const icon = HSImage.fromName(&quot;NSStatusAvailable&quot;);
+
+hs.ui.window({x: 100, y: 300, w: 80, h: 80})
+    .image(icon)
+        .resizable()
+        .aspectRatio(&quot;fit&quot;)
+        .frame({w: 64, h: 64})
+        .onClick(() =&gt; {
+            const next = (icon.name() === &quot;NSStatusAvailable&quot;)
+                ? HSImage.fromName(&quot;NSStatusUnavailable&quot;)
+                : HSImage.fromName(&quot;NSStatusAvailable&quot;);
+            icon.set(next);
+        })
+    .show();
+</code></pre>
+<h2>Complete Example: Status Dashboard</h2>
+<p>Here&#39;s a more complex example showing how to build an interactive status dashboard
+that combines multiple UI elements:</p>
+<pre><code class="language-javascript">// Create a status dashboard window
+const statusWindow = hs.ui.window({x: 100, y: 100, w: 400, h: 500})
+    .vstack()
+        .spacing(15)
+        .padding(20)
+
+        // Header
+        .text(&quot;System Status Dashboard&quot;)
+            .font(HSFont.largeTitle())
+            .foregroundColor(&quot;#FFFFFF&quot;)
+
+        // Status cards
+        .hstack()
+            .spacing(10)
+            .vstack()
+                .spacing(5)
+                .rectangle()
+                    .fill(&quot;#4CAF50&quot;)
+                    .cornerRadius(8)
+                    .frame({w: 180, h: 100})
+                .text(&quot;CPU: 45%&quot;)
+                    .font(HSFont.headline())
+                    .foregroundColor(&quot;#FFFFFF&quot;)
+            .end()
+            .vstack()
+                .spacing(5)
+                .rectangle()
+                    .fill(&quot;#2196F3&quot;)
+                    .cornerRadius(8)
+                    .frame({w: 180, h: 100})
+                .text(&quot;Memory: 8.2GB&quot;)
+                    .font(HSFont.headline())
+                    .foregroundColor(&quot;#FFFFFF&quot;)
+            .end()
+        .end()
+
+        // Activity indicator with image
+        .hstack()
+            .spacing(10)
+            .image(HSImage.fromName(&quot;NSComputer&quot;))
+                .resizable()
+                .aspectRatio(&quot;fit&quot;)
+                .frame({w: 64, h: 64})
+            .vstack()
+                .text(&quot;System Running&quot;)
+                    .font(HSFont.title())
+                .text(&quot;All services operational&quot;)
+                    .font(HSFont.caption())
+                    .foregroundColor(&quot;#A0A0A0&quot;)
+            .end()
+        .end()
+
+        // Circle status indicators
+        .hstack()
+            .spacing(20)
+            .circle()
+                .fill(&quot;#4CAF50&quot;)
+                .frame({w: 30, h: 30})
+            .circle()
+                .fill(&quot;#FFC107&quot;)
+                .frame({w: 30, h: 30})
+            .circle()
+                .fill(&quot;#F44336&quot;)
+                .frame({w: 30, h: 30})
+        .end()
+    .end()
+    .backgroundColor(&quot;#2C3E50&quot;);
+
+// Show the dashboard
+statusWindow.show();
+
+// Later, interact with dialogs
+hs.ui.dialog(&quot;Shutdown system?&quot;)
+    .informativeText(&quot;This will close all applications.&quot;)
+    .buttons([&quot;Shutdown&quot;, &quot;Cancel&quot;])
+    .onButton((index) =&gt; {
+        if (index === 0) {
+            hs.ui.alert(&quot;Shutting down...&quot;)
+                .duration(3)
+                .show();
+        }
+    })
+    .show();
+</code></pre>
+<h2>Complete Example: Reactive Hover Card</h2>
+<p>Demonstrates reactive colors and reactive text together — a single <code>.onHover()</code>
+callback updates both the fill color of a shape and the content of a text label:</p>
+<pre><code class="language-javascript">const cardColor = HSColor.hex(&quot;#3498DB&quot;);
+const cardLabel = hs.ui.string(&quot;Hover the card&quot;);
+
+hs.ui.window({x: 100, y: 100, w: 220, h: 120})
+    .vstack()
+        .spacing(12)
+        .padding(16)
+        .rectangle()
+            .fill(cardColor)
+            .cornerRadius(10)
+            .frame({w: &quot;100%&quot;, h: 60})
+            .onHover((isHovered) =&gt; {
+                cardColor.set(isHovered ? &quot;#E74C3C&quot; : &quot;#3498DB&quot;);
+                cardLabel.set(isHovered ? &quot;You found it!&quot; : &quot;Hover the card&quot;);
+            })
+        .text(cardLabel)
+            .font(HSFont.headline())
+            .foregroundColor(&quot;#FFFFFF&quot;)
+    .end()
+    .backgroundColor(&quot;#1A252F&quot;)
+    .show();
+</code></pre>
+</div>
+
+<h2 class="section-heading">Types</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 0.75rem;">This module provides the following types:</p>
+<ul class="type-list">
+    <li>
+        <a href="HSUIWindow.html">HSUIWindow</a>
+    </li>
+    <li>
+        <a href="HSUIAlert.html">HSUIAlert</a>
+    </li>
+    <li>
+        <a href="HSUIDialog.html">HSUIDialog</a>
+    </li>
+    <li>
+        <a href="HSUIFilePicker.html">HSUIFilePicker</a>
+    </li>
+    <li>
+        <a href="HSUITextPrompt.html">HSUITextPrompt</a>
+    </li>
+</ul>
+
+<h2 class="section-heading">Properties</h2>
+<p style="color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem;">This module has no properties.</p>
+
+<h2 class="section-heading">Methods</h2>
+    <div class="method" id="window">
+        <h3><a href="#window">hs.ui.window(dict) -> HSUIWindow</a></h3>
+
+        <div class="description">Create a custom UI window
+Creates a borderless window that can contain custom UI elements built using a declarative,
+SwiftUI-like syntax with shapes, text, and layout containers.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.ui.window(dict) -> HSUIWindow</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">dict</td>
+                    <td class="param-type">{[key: string]: any}</td>
+                    <td class="param-desc">Dictionary with keys: `x`, `y`, `w`, `h` (all numbers)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIWindow</div>
+        <div class="return-desc">An `HSUIWindow` object for chaining</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.window({x: 100, y: 100, w: 400, h: 300})
+    .rectangle()
+        .fill(&quot;#FF0000&quot;)
+        .frame({w: &quot;100%&quot;, h: &quot;100%&quot;})
+    .show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/HSUIModule.swift#L279" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/HSUIModule.swift:279</a>
+        </div>
+    </div>
+    <div class="method" id="alert">
+        <h3><a href="#alert">hs.ui.alert(message) -> HSUIAlert</a></h3>
+
+        <div class="description">Create a temporary on-screen alert
+Displays a temporary notification that automatically dismisses after the specified duration.
+Similar to the old `hs.alert` module but with more features.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.ui.alert(message) -> HSUIAlert</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">message</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The message text to display</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIAlert</div>
+        <div class="return-desc">An `HSUIAlert` object for chaining</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.alert(&quot;Task completed successfully!&quot;)
+    .duration(3)
+    .show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/HSUIModule.swift#L294" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/HSUIModule.swift:294</a>
+        </div>
+    </div>
+    <div class="method" id="dialog">
+        <h3><a href="#dialog">hs.ui.dialog(message) -> HSUIDialog</a></h3>
+
+        <div class="description">Create a modal dialog with buttons
+Shows a blocking dialog with customizable message, informative text, and buttons.
+Use the callback to handle button presses.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.ui.dialog(message) -> HSUIDialog</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">message</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The main message text</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIDialog</div>
+        <div class="return-desc">An `HSUIDialog` object for chaining</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.dialog(&quot;Continue with this action?&quot;)
+    .buttons([&quot;Continue&quot;, &quot;Cancel&quot;])
+    .onButton((index) =&gt; {
+        if (index === 0) console.log(&quot;User chose to continue&quot;)
+    })
+    .show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/HSUIModule.swift#L312" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/HSUIModule.swift:312</a>
+        </div>
+    </div>
+    <div class="method" id="textPrompt">
+        <h3><a href="#textPrompt">hs.ui.textPrompt(message) -> HSUITextPrompt</a></h3>
+
+        <div class="description">Create a text input prompt
+Shows a modal dialog with a text input field. The callback receives the button index
+and the entered text.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.ui.textPrompt(message) -> HSUITextPrompt</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">message</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The prompt message</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUITextPrompt</div>
+        <div class="return-desc">An `HSUITextPrompt` object for chaining</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.textPrompt(&quot;Enter your name&quot;)
+    .onButton((buttonIndex, text) =&gt; {
+        if (buttonIndex === 0) console.log(&quot;Hello, &quot; + text + &quot;!&quot;)
+    })
+    .show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/HSUIModule.swift#L329" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/HSUIModule.swift:329</a>
+        </div>
+    </div>
+    <div class="method" id="string">
+        <h3><a href="#string">hs.ui.string(initialValue) -> HSString</a></h3>
+
+        <div class="description">Create a reactive string for binding text element content to a dynamic value
+An `HSString` is a reactive value container. When passed to `.text()`,
+the canvas automatically re-renders whenever `.set()` is called from JavaScript.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.ui.string(initialValue) -> HSString</code></pre>
+
+        <div class="card-section-label">Parameters</div>
+        <table class="params-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="param-name">initialValue</td>
+                    <td class="param-type">string</td>
+                    <td class="param-desc">The starting string value</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSString</div>
+        <div class="return-desc">An `HSString` object whose value can be updated with `.set()`</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">const label = hs.ui.string(&quot;Not hovered&quot;)
+hs.ui.window({x: 100, y: 100, w: 200, h: 100})
+    .text(label)
+        .onHover((isHovered) =&gt; {
+            label.set(isHovered ? &quot;Hovered!&quot; : &quot;Not hovered&quot;)
+        })
+    .show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/HSUIModule.swift#L348" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/HSUIModule.swift:348</a>
+        </div>
+    </div>
+    <div class="method" id="filePicker">
+        <h3><a href="#filePicker">hs.ui.filePicker() -> HSUIFilePicker</a></h3>
+
+        <div class="description">Create a file or directory picker
+Shows a standard macOS file picker dialog. Can be configured to select files,
+directories, or both, with support for file type filtering and multiple selection.</div>
+
+        <div class="card-section-label">Declaration</div>
+        <pre><code class="language-javascript">hs.ui.filePicker() -> HSUIFilePicker</code></pre>
+
+
+        <div class="card-section-label">Returns</div>
+        <div class="return-type">HSUIFilePicker</div>
+        <div class="return-desc">An `HSUIFilePicker` object for chaining</div>
+
+        <div class="card-section-label">Example</div>
+        <pre><code class="language-js">hs.ui.filePicker()
+    .message(&quot;Choose a file to open&quot;)
+    .allowedFileTypes([&quot;txt&quot;, &quot;md&quot;, &quot;js&quot;])
+    .onSelection((path) =&gt; {
+        if (path) console.log(&quot;Selected: &quot; + path)
+    })
+    .show()</code></pre>
+
+        <div class="source-link">
+            <a href="https://github.com/cmsj/Hammerspoon2/blob/main/Hammerspoon%202/Modules/hs.ui/HSUIModule.swift#L366" target="_blank" rel="noopener noreferrer">Hammerspoon 2/Modules/hs.ui/HSUIModule.swift:366</a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Right TOC sidebar -->
+        <aside class="toc-sidebar" aria-label="On this page">
+            <div class="toc-label">ON THIS PAGE</div>
+            <nav id="toc-nav"></nav>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNavigation('hs.ui');
+            generateTOC();
+            addCopyButtons();
+            initSearch();
+            initTOCObserver();
+        });
+    </script>
+</body>
+</html>
