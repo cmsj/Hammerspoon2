@@ -14,11 +14,8 @@ struct SettingsAdvancedView: View {
     @State private var automaticallyChecksForUpdates: Bool = false
     @ScaledMetric(relativeTo: .body) var iconSize: CGFloat = 12
 
-    private let updaterController: SPUStandardUpdaterController
-
     init() {
-        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
-        self._automaticallyChecksForUpdates = State(initialValue: updaterController.updater.automaticallyChecksForUpdates)
+        self._automaticallyChecksForUpdates = State(initialValue: AppUpdater.updater.automaticallyChecksForUpdates)
     }
 
     var body: some View {
@@ -33,7 +30,7 @@ struct SettingsAdvancedView: View {
                             .labelsHidden()
                             .gridColumnAlignment(.leading)
                             .onChange(of: automaticallyChecksForUpdates) { _, newValue in
-                                updaterController.updater.automaticallyChecksForUpdates = newValue
+                                AppUpdater.updater.automaticallyChecksForUpdates = newValue
                             }
                     }
                     GridRow {

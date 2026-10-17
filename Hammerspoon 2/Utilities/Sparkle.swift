@@ -9,6 +9,13 @@ import SwiftUI
 import Sparkle
 import Combine
 
+// Sparkle supports a single updater per bundle, so everything that needs one shares this.
+@_documentation(visibility: private)
+enum AppUpdater {
+    static let controller = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    static var updater: SPUUpdater { controller.updater }
+}
+
 // This view model class publishes when new updates can be checked by the user
 @_documentation(visibility: private)
 final class CheckForUpdatesViewModel: ObservableObject {

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Sparkle
 
 @_documentation(visibility: private)
 enum ConfigFilePickerValues: String, CaseIterable, Identifiable {
@@ -21,12 +20,6 @@ struct SettingsConfigView: View {
     @State private var icon = NSImage(size: .init(width: 12, height: 12))
 
     @ScaledMetric(relativeTo: .body) var iconSize: CGFloat = 12
-
-    private let updaterController: SPUStandardUpdaterController
-
-    init() {
-        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
-    }
 
     fileprivate func handleConfigFilePickerChange() {
         if configFilePicker == .select {

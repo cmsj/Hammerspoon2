@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>SUPublicEDKey</key>
+	<string>b80Gr+Jah+XpfNQYFHJRJylnYjTI+Wod047mzjS7OuI=</string>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -63,7 +69,7 @@
 	<key>NSAccessibilityUsageDescription</key>
 	<string>Hammerspoon 2 requires accessibility permissions to control your Mac</string>
 	<key>SUFeedURL</key>
-	<string>https://www.hammerspoon.org/appcast2.xml</string>
+	<string>https://cmsj.github.io/Hammerspoon2/appcast.xml</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

@@ -1,0 +1,157 @@
+name: Publish Sparkle Appcast
+
+# scripts/release/release.sh pushes a tag and creates a GitHub release holding
+# the notarised zip, binary deltas, release notes, and an appcast.xml that it
+# has already extended with the release and signed with the Sparkle EdDSA key.
+# When that release is published, this workflow checks the appcast is still
+# current and copies it, unmodified, to GitHub Pages. It never edits the feed:
+# that would invalidate the signature, which the app requires
+# (SURequireSignedFeed).
+#
+# This triggers on publication rather than on the tag push itself because the
+# tag is pushed before the release's signed artefacts exist, and because
+# drafts shouldn't go live.
+
+on:
+  release:
+    types: [published]
+
+  # Manual trigger to re-publish a release's appcast, e.g. after
+  # `release.sh --update-appcast` replaced it (which runs this for you).
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag whose appcast to publish (e.g. "0.0.15")'
+        required: true
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Shares a group with publish-docs.yml: both rewrite the gh-pages branch and
+# deploy Pages from it, so they must not interleave.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  appcast:
+    runs-on: ubuntu-latest
+    outputs:
+      updated: ${{ steps.release.outputs.has_metadata }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+
+    steps:
+      # Always use the default branch's tooling, whatever the release's tag
+      # points at.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Inspect release
+        id: release
+        run: |
+          gh release view "$TAG" --json isDraft,assets > release.json
+          if [ "$(jq -r .isDraft release.json)" = "true" ]; then
+            echo "::error::Release $TAG is still a draft"
+            exit 1
+          fi
+          has_asset() { jq -e --arg name "$1" '.assets | any(.name == $name)' release.json > /dev/null; }
+          if ! has_asset sparkle.json; then
+            echo "::notice::Release $TAG has no sparkle.json (it wasn't made by scripts/release/release.sh), so the appcast is unchanged"
+            echo "has_metadata=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          for asset in appcast.xml release-notes.md; do
+            if ! has_asset "$asset"; then
+              echo "::error::Release $TAG has sparkle.json but no $asset. Run \`scripts/release/release.sh --update-appcast $TAG\`."
+              exit 1
+            fi
+          done
+          echo "has_metadata=true" >> "$GITHUB_OUTPUT"
+
+      - name: Download signed appcast
+        if: steps.release.outputs.has_metadata == 'true'
+        run: |
+          mkdir incoming
+          for asset in appcast.xml release-notes.md sparkle.json; do
+            gh release download "$TAG" --pattern "$asset" --dir incoming
+          done
+          gh release view "$TAG" --json body --jq .body > incoming/release-body.md
+
+      - name: Fetch existing site
+        if: steps.release.outputs.has_metadata == 'true'
+        run: |
+          mkdir -p site
+          if git ls-remote --exit-code origin refs/heads/gh-pages > /dev/null 2>&1; then
+            git clone \
+              --branch gh-pages \
+              --single-branch \
+              --depth 1 \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" \
+              site-existing
+            rsync -a --exclude='.git' site-existing/ site/
+            rm -rf site-existing
+          fi
+
+      - name: Check appcast is current
+        if: steps.release.outputs.has_metadata == 'true'
+        run: |
+          node scripts/release/check-appcast.js \
+            --candidate incoming/appcast.xml \
+            --live site/appcast.xml \
+            --metadata incoming/sparkle.json \
+            --signed-notes incoming/release-notes.md \
+            --release-notes incoming/release-body.md
+
+      - name: Install appcast into site
+        if: steps.release.outputs.has_metadata == 'true'
+        run: |
+          # Copied byte for byte: any change would break the feed signature.
+          cp incoming/appcast.xml site/appcast.xml
+          cat site/appcast.xml
+
+      - name: Persist full site to gh-pages branch
+        if: steps.release.outputs.has_metadata == 'true'
+        run: |
+          # Same scheme as publish-docs.yml: a single orphan commit holding the
+          # complete site, force-pushed.
+          cd site
+          git init
+          git checkout --orphan gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "appcast: publish ${TAG}"
+          git push --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" \
+            gh-pages
+
+      - name: Upload Pages artifact
+        if: steps.release.outputs.has_metadata == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: appcast
+    if: needs.appcast.outputs.updated == 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
