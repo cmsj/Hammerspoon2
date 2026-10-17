@@ -56,33 +56,33 @@ nonisolated private func hsMIDIMakeSetupNotifyHandler(module: HSMIDIModule) -> (
     }
 }
 
-/// A MIDI endpoint is "virtual" when it has no owning entity — i.e. it was published
-/// directly by another app/driver (IAC bus, software instrument, etc.) rather than
-/// belonging to a physical device's entity/endpoint hierarchy.
-private func midiEndpointIsVirtual(_ endpoint: MIDIEndpointRef) -> Bool {
-    var entity = MIDIEntityRef()
-    return unsafe MIDIEndpointGetEntity(endpoint, &entity) != noErr
-}
-
 private func allMIDIDevices() -> [MIDIDeviceRef] {
     (0..<MIDIGetNumberOfDevices()).map { MIDIGetDevice($0) }
 }
 
-private func allVirtualSourceEndpoints() -> [MIDIEndpointRef] {
-    (0..<MIDIGetNumberOfSources()).map { MIDIGetSource($0) }.filter { midiEndpointIsVirtual($0) }
+/// Every source endpoint in the system — both those published directly by an app (a
+/// software instrument, another automation tool) and those owned by a device's entities
+/// (each port of a multi-port interface, each IAC Driver bus). Matches v1, whose
+/// `virtualSources()` listed all of these so that individual ports could be opened.
+private func allSourceEndpoints() -> [MIDIEndpointRef] {
+    (0..<MIDIGetNumberOfSources()).map { MIDIGetSource($0) }
 }
 
-/// Returns the first entity on `device` that has a source and/or destination endpoint.
-private func firstSourceAndDestination(of device: MIDIDeviceRef) -> (source: MIDIEndpointRef?, destination: MIDIEndpointRef?) {
+private func allDestinationEndpoints() -> [MIDIEndpointRef] {
+    (0..<MIDIGetNumberOfDestinations()).map { MIDIGetDestination($0) }
+}
+
+/// Every source and destination endpoint across all of `device`'s entities (ports), in
+/// entity order.
+private func endpoints(of device: MIDIDeviceRef) -> (sources: [MIDIEndpointRef], destinations: [MIDIEndpointRef]) {
+    var sources: [MIDIEndpointRef] = []
+    var destinations: [MIDIEndpointRef] = []
     for entityIndex in 0..<MIDIDeviceGetNumberOfEntities(device) {
         let entity = MIDIDeviceGetEntity(device, entityIndex)
-        let source = MIDIEntityGetNumberOfSources(entity) > 0 ? MIDIEntityGetSource(entity, 0) : nil
-        let destination = MIDIEntityGetNumberOfDestinations(entity) > 0 ? MIDIEntityGetDestination(entity, 0) : nil
-        if source != nil || destination != nil {
-            return (source, destination)
-        }
+        sources += (0..<MIDIEntityGetNumberOfSources(entity)).map { MIDIEntityGetSource(entity, $0) }
+        destinations += (0..<MIDIEntityGetNumberOfDestinations(entity)).map { MIDIEntityGetDestination(entity, $0) }
     }
-    return (nil, nil)
+    return (sources, destinations)
 }
 
 /// Builds `MIDIEventList`(s) from `packets` (each inner array is one packet's UMP words —
@@ -158,10 +158,11 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
     /// ```
     @objc func devices() -> [String]
 
-    /// Returns the names of all available virtual MIDI sources — endpoints published
-    /// by other apps/drivers (e.g. the IAC Driver, virtual instruments) rather than
-    /// belonging to a physical device.
-    /// - Returns: An array of virtual source name strings
+    /// Returns the names of all available MIDI sources. This includes endpoints published
+    /// by other apps (e.g. virtual instruments) as well as each individual port of a device
+    /// (e.g. each IAC Driver bus, or each port of a multi-port MIDI interface), so a single
+    /// port can be opened with `virtualSourceNamed()`.
+    /// - Returns: An array of source name strings
     /// - Example:
     /// ```js
     /// console.log(hs.midi.virtualSources())
@@ -184,6 +185,11 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
 
     /// Creates an `hs.midi` object for a physical device.
     ///
+    /// For a device with several ports, the callback receives messages from the device's
+    /// first source, and `sendCommand()` sends to its first destination. `sendSysex()` and
+    /// `identityRequest()` send to every destination on the device. To use a specific
+    /// port, open it by name with `virtualSourceNamed()`.
+    ///
     /// Note: named `deviceNamed()` rather than v1's `new()` — Hammerspoon 2 avoids
     /// `new`/`alloc`/`copy`-prefixed method names, which have special meaning under
     /// Objective-C's ARC ownership conventions.
@@ -195,8 +201,9 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
     /// ```
     @objc func deviceNamed(_ deviceName: String) -> HSMIDIDevice?
 
-    /// Creates an `hs.midi` object for an existing virtual source (receive-only —
-    /// a "source" endpoint can only be read from).
+    /// Creates an `hs.midi` object for a single MIDI source, such as one port of a
+    /// multi-port device. Messages sent with `sendCommand()`, `sendSysex()` and
+    /// `identityRequest()` go to the destination with the same name, if there is one.
     ///
     /// Note: named `virtualSourceNamed()` rather than v1's `newVirtualSource()`, for
     /// the same ARC-related reason as `deviceNamed()`.
@@ -269,7 +276,7 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
     }
 
     @objc func virtualSources() -> [String] {
-        allVirtualSourceEndpoints().map { midiStringProperty($0, kMIDIPropertyName) }
+        allSourceEndpoints().map { midiStringProperty($0, kMIDIPropertyName) }
     }
 
     @objc func deviceCallback(_ fn: JSValue?) {
@@ -285,18 +292,22 @@ private func sendMIDIEventList(_ packets: [[UInt32]], via port: MIDIPortRef, to 
             AKWarning("hs.midi.deviceNamed(): No device named '\(deviceName)'")
             return nil
         }
-        let (source, destination) = firstSourceAndDestination(of: device)
-        let midiDevice = HSMIDIDevice(module: self, infoObject: device, sourceEndpoint: source, destinationEndpoint: destination, isVirtual: false)
+        let (sources, destinations) = endpoints(of: device)
+        let midiDevice = HSMIDIDevice(module: self, infoObject: device, sourceEndpoint: sources.first, destinationEndpoints: destinations, isVirtual: false)
         children.add(midiDevice)
         return midiDevice
     }
 
     @objc func virtualSourceNamed(_ virtualSourceName: String) -> HSMIDIDevice? {
-        guard let endpoint = allVirtualSourceEndpoints().first(where: { midiStringProperty($0, kMIDIPropertyName) == virtualSourceName }) else {
+        let hasName = { (endpoint: MIDIEndpointRef) in midiStringProperty(endpoint, kMIDIPropertyName) == virtualSourceName }
+        guard let endpoint = allSourceEndpoints().first(where: hasName) else {
             AKWarning("hs.midi.virtualSourceNamed(): No virtual source named '\(virtualSourceName)'")
             return nil
         }
-        let midiDevice = HSMIDIDevice(module: self, infoObject: endpoint, sourceEndpoint: endpoint, destinationEndpoint: nil, isVirtual: true)
+        // Like v1, messages are sent to the destination with the same name as the source —
+        // e.g. an IAC bus, or one port of a multi-port device, is both a source and a destination.
+        let destinations = allDestinationEndpoints().first(where: hasName).map { [$0] } ?? []
+        let midiDevice = HSMIDIDevice(module: self, infoObject: endpoint, sourceEndpoint: endpoint, destinationEndpoints: destinations, isVirtual: true)
         children.add(midiDevice)
         return midiDevice
     }

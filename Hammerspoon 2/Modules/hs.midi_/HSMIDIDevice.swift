@@ -87,8 +87,8 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     /// ```
     @objc var isOnline: Bool { get }
 
-    /// Whether this is a virtual source (created via `hs.midi.virtualSourceNamed()`)
-    /// rather than a physical device.
+    /// Whether this object was created for a single source via `hs.midi.virtualSourceNamed()`,
+    /// rather than for a whole device via `hs.midi.deviceNamed()`.
     /// - Example:
     /// ```js
     /// console.log(kb.isVirtual)
@@ -127,14 +127,16 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     /// - Parameter commandType: The command type string
     /// - Parameter metadata: {object} A table of command-specific fields
     /// - Returns: `true` if the command was sent, `false` if the device has no
-    ///   destination (e.g. a virtual source) or `commandType`/`metadata` was invalid
+    ///   destination (e.g. a source with no destination of the same name) or
+    ///   `commandType`/`metadata` was invalid
     /// - Example:
     /// ```js
     /// kb.sendCommand("noteOn", { note: 60, velocity: 100, channel: 0 })
     /// ```
     @objc func sendCommand(_ commandType: String, _ metadata: [String: Any]) -> Bool
 
-    /// Sends a System Exclusive command to the device.
+    /// Sends a System Exclusive command to the device. For a device with several ports,
+    /// the command is sent to every port.
     /// - Parameter command: A hex string (whitespace ignored), e.g. `"F0 7E 7F 06 01 F7"`
     /// - Example:
     /// ```js
@@ -178,7 +180,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     private weak var module: HSMIDIModule?
     private let infoObject: MIDIObjectRef
     let sourceEndpoint: MIDIEndpointRef?
-    let destinationEndpoint: MIDIEndpointRef?
+    let destinationEndpoints: [MIDIEndpointRef]
     @objc let isVirtual: Bool
 
     // A device with a connected input port (i.e. a callback set) is active: it stays alive with
@@ -194,11 +196,11 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     private var _callback: JSCallback?
     private var isDestroyed = false
 
-    init(module: HSMIDIModule, infoObject: MIDIObjectRef, sourceEndpoint: MIDIEndpointRef?, destinationEndpoint: MIDIEndpointRef?, isVirtual: Bool) {
+    init(module: HSMIDIModule, infoObject: MIDIObjectRef, sourceEndpoint: MIDIEndpointRef?, destinationEndpoints: [MIDIEndpointRef], isVirtual: Bool) {
         self.module = module
         self.infoObject = infoObject
         self.sourceEndpoint = sourceEndpoint
-        self.destinationEndpoint = destinationEndpoint
+        self.destinationEndpoints = destinationEndpoints
         self.isVirtual = isVirtual
         super.init()
     }
@@ -236,7 +238,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     }
 
     @objc func sendCommand(_ commandType: String, _ metadata: [String: Any]) -> Bool {
-        guard let destination = destinationEndpoint, let port = module?.ensureOutputPort() else {
+        guard let destination = destinationEndpoints.first, let port = module?.ensureOutputPort() else {
             AKWarning("hs.midi: sendCommand() failed for '\(name)' — no destination endpoint")
             return false
         }
@@ -248,7 +250,7 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     }
 
     @objc func sendSysex(_ command: String) {
-        guard let destination = destinationEndpoint, let port = module?.ensureOutputPort() else {
+        guard !destinationEndpoints.isEmpty, let port = module?.ensureOutputPort() else {
             AKWarning("hs.midi: sendSysex() failed for '\(name)' — no destination endpoint")
             return
         }
@@ -256,16 +258,24 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
             AKWarning("hs.midi: sendSysex() failed for '\(name)' — malformed hex string")
             return
         }
-        _ = sendMIDIPackets(encodeSysexWords(stripSysexFraming(bytes)), via: port, to: destination)
+        sendToAllDestinations(encodeSysexWords(stripSysexFraming(bytes)), via: port)
     }
 
     @objc func identityRequest() {
-        guard let destination = destinationEndpoint, let port = module?.ensureOutputPort() else {
+        guard !destinationEndpoints.isEmpty, let port = module?.ensureOutputPort() else {
             AKWarning("hs.midi: identityRequest() failed for '\(name)' — no destination endpoint")
             return
         }
         let identityRequestPayload: [UInt8] = [0x7E, 0x7F, 0x06, 0x01] // Universal Non-Realtime Identity Request, F0/F7 framing implicit in UMP
-        _ = sendMIDIPackets(encodeSysexWords(identityRequestPayload), via: port, to: destination)
+        sendToAllDestinations(encodeSysexWords(identityRequestPayload), via: port)
+    }
+
+    /// Sysex goes to every port of the device, as in v1 — the port a device listens on for
+    /// sysex isn't necessarily its first one.
+    private func sendToAllDestinations(_ packets: [[UInt32]], via port: MIDIPortRef) {
+        for destination in destinationEndpoints {
+            _ = sendMIDIPackets(packets, via: port, to: destination)
+        }
     }
 
     @objc func destroy() {

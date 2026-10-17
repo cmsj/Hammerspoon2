@@ -6,6 +6,7 @@
 import Testing
 import Foundation
 import CoreMIDI
+import Synchronization
 @testable import Hammerspoon_2
 
 // MARK: - Helpers
@@ -132,8 +133,93 @@ private final class TestMIDIVirtualSource {
     }
 }
 
+/// Messages received by a `TestMIDIVirtualDestination`. A class so CoreMIDI's receive block
+/// (which runs on its own thread) can share it with the test.
+private nonisolated final class ReceivedMIDIMessages: Sendable {
+    private let messages = Mutex<[MIDIUniversalMessage]>([])
+
+    var all: [MIDIUniversalMessage] { messages.withLock { $0 } }
+
+    func append(_ newMessages: [MIDIUniversalMessage]) {
+        messages.withLock { $0 += newMessages }
+    }
+}
+
+/// A virtual MIDI destination created by the test itself, recording every message sent to it.
+/// Given the same name as a `TestMIDIVirtualSource`, the pair stands in for one port of a
+/// device (which is both a source and a destination), so the send path can be exercised
+/// without hardware.
+private final class TestMIDIVirtualDestination {
+    let name: String
+    private var client = MIDIClientRef()
+    private var destination = MIDIEndpointRef()
+    private let received = ReceivedMIDIMessages()
+
+    /// Every message received so far, in arrival order.
+    var messages: [MIDIUniversalMessage] { received.all }
+
+    init(name: String) throws {
+        self.name = name
+        _ = keepAliveMIDIClient // see its declaration
+
+        let clientStatus = MIDIClientCreateWithBlock(name as CFString, &client) { _ in }
+        guard clientStatus == noErr else {
+            throw NSError(domain: "TestMIDIVirtualDestination", code: 1, userInfo: [NSLocalizedDescriptionKey: "MIDIClientCreateWithBlock failed (\(clientStatus))"])
+        }
+
+        let destinationStatus = MIDIDestinationCreateWithProtocol(client, name as CFString, ._1_0, &destination, makeRecordingReceiveBlock(received))
+        guard destinationStatus == noErr else {
+            MIDIClientDispose(client)
+            throw NSError(domain: "TestMIDIVirtualDestination", code: 2, userInfo: [NSLocalizedDescriptionKey: "MIDIDestinationCreateWithProtocol failed (\(destinationStatus))"])
+        }
+    }
+
+    deinit {
+        MIDIEndpointDispose(destination)
+        MIDIClientDispose(client)
+    }
+}
+
+/// CoreMIDI calls a destination's receive block on its own thread. A closure written inside a
+/// MainActor-isolated context would inherit that isolation and trap there, so it's built here.
+private nonisolated func makeRecordingReceiveBlock(_ received: ReceivedMIDIMessages) -> MIDIReceiveBlock {
+    { eventList, _ in
+        var collected: [MIDIUniversalMessage] = []
+        withUnsafeMutablePointer(to: &collected) { collectedPtr in
+            MIDIEventListForEachEvent(eventList, { context, _, message in
+                guard let context else { return }
+                context.assumingMemoryBound(to: [MIDIUniversalMessage].self).pointee.append(message)
+            }, UnsafeMutableRawPointer(collectedPtr))
+        }
+        received.append(collected)
+    }
+}
+
 private nonisolated func hasPhysicalMIDIDevice() -> Bool {
     MIDIGetNumberOfDevices() > 0
+}
+
+/// The names of every source owned by an online device's entities (e.g. each enabled IAC
+/// Driver bus, each port of a multi-port interface).
+private nonisolated func deviceOwnedSourceNames() -> [String] {
+    var names: [String] = []
+    for deviceIndex in 0..<MIDIGetNumberOfDevices() {
+        let device = MIDIGetDevice(deviceIndex)
+        var offline: Int32 = 0
+        _ = MIDIObjectGetIntegerProperty(device, kMIDIPropertyOffline, &offline)
+        guard offline == 0 else { continue }
+        for entityIndex in 0..<MIDIDeviceGetNumberOfEntities(device) {
+            let entity = MIDIDeviceGetEntity(device, entityIndex)
+            for sourceIndex in 0..<MIDIEntityGetNumberOfSources(entity) {
+                var name: Unmanaged<CFString>?
+                if MIDIObjectGetStringProperty(MIDIEntityGetSource(entity, sourceIndex), kMIDIPropertyName, &name) == noErr,
+                   let name = name?.takeRetainedValue() as String?, !name.isEmpty {
+                    names.append(name)
+                }
+            }
+        }
+    }
+    return names
 }
 
 // MARK: - Test suite
@@ -306,7 +392,7 @@ struct HSMIDITests {
             harness.eval("d.setCallback(null)")
         }
 
-        @Test("sendCommand on a virtual source (no destination) returns false")
+        @Test("sendCommand on a source with no destination of the same name returns false")
         func testSendCommandNoDestination() throws {
             let source = try TestMIDIVirtualSource(name: "HSMIDITestSendFail-\(UUID().uuidString)")
             let harness = makeHarness(virtualSourceName: source.name)
@@ -653,6 +739,34 @@ struct HSMIDITests {
             harness.eval("d.destroy()")
         }
 
+        @Test("virtualSourceNamed sends to the destination with the same name, as v1 did")
+        func testSendsToSameNamedDestination() async throws {
+            let name = "HSMIDITestPort-\(UUID().uuidString)"
+            let source = try TestMIDIVirtualSource(name: name)
+            let destination = try TestMIDIVirtualDestination(name: name)
+            let harness = JSTestHarness()
+            harness.loadModule(HSMIDIModule.self, as: "midi")
+
+            harness.eval("var d = hs.midi.virtualSourceNamed('\(name)')")
+            #expect(harness.evalBool("d.sendCommand('noteOn', { note: 60, velocity: 100, channel: 3 })") == true)
+            harness.eval("d.sendSysex('F0 7E 7F 06 01 F7')")
+            #expect(!harness.hasException)
+
+            // One channel voice message, then the sysex.
+            let arrived = await harness.waitForAsync(timeout: 3.0) { destination.messages.count >= 2 }
+            #expect(arrived, "both messages should reach the destination with the source's name")
+            let messages = destination.messages
+            let noteOn = try #require(messages.first)
+            #expect(noteOn.type == .channelVoice1)
+            #expect(noteOn.channelVoice1.status == .noteOn)
+            #expect(noteOn.channelVoice1.channel == 3)
+            #expect(noteOn.channelVoice1.note.number == 60)
+            #expect(messages.dropFirst().first?.type == .sysEx)
+
+            harness.eval("d.destroy()")
+            withExtendedLifetime(source) {}
+        }
+
         @Test("setCallback(null) stops further messages from being delivered")
         func testSetCallbackNullStopsDelivery() async throws {
             let source = try TestMIDIVirtualSource(name: "HSMIDITestStopDelivery-\(UUID().uuidString)")
@@ -681,6 +795,28 @@ struct HSMIDITests {
 
             harness.eval("d.destroy()")
         }
+    }
+
+    // MARK: - Device-owned ports (require e.g. an enabled IAC Driver bus)
+
+    // Each port of a device is listed by virtualSources() and can be opened on its own, as in
+    // v1 (#275). Tests can't create device-owned endpoints (that needs a MIDI driver), so this
+    // only runs where one already exists.
+    @Test("virtualSources lists each port owned by a device, and each can be opened",
+          .enabled(if: !deviceOwnedSourceNames().isEmpty, "No online MIDI device with a source port"))
+    func testDeviceOwnedPortsAreListed() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSMIDIModule.self, as: "midi")
+        // Port names are user-editable, so they go through the bridge rather than into JS source.
+        harness.context.setObject(deviceOwnedSourceNames(), forKeyedSubscript: "portNames" as NSString)
+        harness.expectEqual("portNames.filter(n => !hs.midi.virtualSources().includes(n)).length", 0)
+        harness.expectEqual("""
+            portNames.filter(n => {
+                const d = hs.midi.virtualSourceNamed(n)
+                if (d) d.destroy()
+                return !d
+            }).length
+            """, 0)
     }
 
     // MARK: - Physical device tests (require a real, connected MIDI device)
