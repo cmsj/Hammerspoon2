@@ -13,6 +13,10 @@ import Synchronization
 /// is torn down (not silently reconnected) when its peer disappears, but it
 /// reports this via a cancellation handler, so the cached session is cleared
 /// there and lazily recreated - relaunching the helper process - on next use.
+///
+/// Sharing one session doesn't serialise scripts: the helper hands each request
+/// off to a concurrent queue, so any number of `run` calls can be in flight at
+/// once and their replies arrive in completion order.
 final class HSOSAScriptRunner: Sendable {
 
     private let cachedSession = Mutex<XPCSession?>(nil)
@@ -65,8 +69,10 @@ final class HSOSAScriptRunner: Sendable {
 
     /// Execute an OSA script in the helper process synchronously.
     ///
-    /// Blocks the calling thread until the helper responds.  Use only when an
-    /// async context is not available; prefer `run(source:language:)` otherwise.
+    /// Blocks the calling thread until the helper responds. That is the main
+    /// thread when called from JS, so Hammerspoon hangs until the script finishes
+    /// or its AppleEvents time out. Use only when an async context is not
+    /// available; prefer `run(source:language:)` otherwise.
     ///
     /// - Parameters:
     ///   - source: Script source code.

@@ -8,11 +8,9 @@ Hammerspoon 2 is currently considered *EXPERIMENTAL*. There may be crashes, memo
 
 ## Minimum requirements
 
-Hammerspoon 2 is targeting to release with macOS 27 as the minium supported version.
+Hammerspoon 2 requires macOS 27 or later.
 
-Pre-releases up to (and including) 0.0.6 target macOS 15.6 and support both Apple Silicon and Intel
-
-From a future pre-release onwards, builds will require at least macOS 26, and once macOS 27 releases, that will become the minimum target.
+Pre-releases up to (and including) 0.0.6 target macOS 15.6 and support both Apple Silicon and Intel. Later pre-releases up to (and including) 0.0.15 require macOS 26.
 
 ## Using Hammerspoon
 
