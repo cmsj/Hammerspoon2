@@ -611,6 +611,8 @@ extension JSTestHarness {
                 loadModule(HSStreamDeckModule.self, as: name)
             case "sharing":
                 loadModule(HSSharingModule.self, as: name)
+            case "dockicon":
+                loadModule(HSDockIconModule.self, as: name)
             case "menubar":
                 loadModule(HSMenuBarModule.self, as: name)
             case "midi":

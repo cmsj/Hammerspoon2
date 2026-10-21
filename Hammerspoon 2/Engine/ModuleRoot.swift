@@ -136,6 +136,7 @@ import JavaScriptCoreExtras
     @objc var application: HSApplicationModule { get }
     @objc var chooser: HSChooserModule { get }
     @objc var docs: HSDocsModule { get }
+    @objc var dockicon: HSDockIconModule { get }
     @objc var eventtap: HSEventTapModule { get }
     @objc var audiodevice: HSAudioDeviceModule { get }
     @objc var ax: HSAXModule { get }
@@ -434,6 +435,7 @@ import JavaScriptCoreExtras
     @objc var application: HSApplicationModule { get { getOrCreate(name: "application", type: HSApplicationModule.self)}}
     @objc var chooser: HSChooserModule { get { getOrCreate(name: "chooser", type: HSChooserModule.self)}}
     @objc var docs: HSDocsModule { get { getOrCreate(name: "docs", type: HSDocsModule.self)}}
+    @objc var dockicon: HSDockIconModule { get { getOrCreate(name: "dockicon", type: HSDockIconModule.self)}}
     @objc var eventtap: HSEventTapModule { get { getOrCreate(name: "eventtap", type: HSEventTapModule.self)}}
     @objc var audiodevice: HSAudioDeviceModule { get { getOrCreate(name: "audiodevice", type: HSAudioDeviceModule.self)}}
     @objc var ax: HSAXModule { get { getOrCreate(name: "ax", type: HSAXModule.self)}}
