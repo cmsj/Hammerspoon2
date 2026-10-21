@@ -24,6 +24,14 @@ final class HSIPCBrokerConnection {
     private var reconnectAttempts = 0
     private static let maxReconnectAttempts = 5
 
+    /// Whether the broker we're connected to understands `goodbye` and `exitStaleBroker`.
+    private var brokerSupportsLifecycleMessages = false
+    /// Set once we've asked a broker from another build to exit, so that if launchd starts one that
+    /// still doesn't match, we use it rather than asking again (and again).
+    private var hasRestartedStaleBroker = false
+    /// Set while waiting for a broker we asked to exit to go away, so its disappearance isn't an error.
+    private var isWaitingForStaleBrokerToExit = false
+
     /// The lowest log level any connected hs2 wants, as told to us by the broker.
     private var minLogLevel = HSIPC.noLogging
     /// Whether the broker has pushed a log level on the current session. Pushes are always at
@@ -44,13 +52,33 @@ final class HSIPCBrokerConnection {
         guard registerBroker() else { return }
         isWanted = true
         reconnectAttempts = 0
+        hasRestartedStaleBroker = false
         connect()
     }
 
     func stop() {
         isWanted = false
+        sayGoodbye()
         disconnect(reason: "hs.ipc stopped")
         AKDebug("hs.ipc: Stopped")
+    }
+
+    /// Tell the broker we're going, so it can exit soon after rather than lingering until its idle
+    /// timeout. This also runs as the app quits (e.g. to install an update), so it waits for the
+    /// broker's reply: an asynchronous send could be lost when the process exits. `sendSync` traps
+    /// if called on the session's target queue (main), so it runs on another queue, and quitting
+    /// doesn't wait long for a broker that is stuck.
+    private func sayGoodbye() {
+        guard let session, isConnected, brokerSupportsLifecycleMessages else { return }
+        let replied = DispatchSemaphore(value: 0)
+        DispatchQueue.global(qos: .userInitiated).async {
+            // A failure means the broker has gone, which is what we're telling it to do anyway.
+            let _: HSIPCAcknowledgement? = try? session.sendSync(HSIPCHostToBroker.goodbye)
+            replied.signal()
+        }
+        if replied.wait(timeout: .now() + .seconds(1)) == .timedOut {
+            AKDebug("hs.ipc: The IPC broker didn't acknowledge our goodbye")
+        }
     }
 
     isolated deinit {
@@ -104,6 +132,8 @@ final class HSIPCBrokerConnection {
         }
 
         hasReceivedLogLevelUpdate = false
+        brokerSupportsLifecycleMessages = false
+        isWaitingForStaleBrokerToExit = false
 
         let session: XPCSession
         do {
@@ -137,7 +167,7 @@ final class HSIPCBrokerConnection {
         self.session = session
 
         do {
-            try session.send(HSIPCHostToBroker.hello(protocolVersion: HSIPC.protocolVersion)) { [weak self, weak session] (result: Result<HSIPCHelloReply, any Error>) in
+            try session.send(HSIPCHostToBroker.hello(protocolVersion: HSIPC.protocolVersion, buildVersion: HSIPC.buildVersion)) { [weak self, weak session] (result: Result<HSIPCHelloReply, any Error>) in
                 Task { @MainActor in
                     guard let self, let session, self.session === session else { return }
                     self.helloReplied(result)
@@ -155,12 +185,24 @@ final class HSIPCBrokerConnection {
             // The session's cancellation handler deals with reconnecting.
             AKError("hs.ipc: The IPC broker did not respond: \(error)")
         case .success(let reply):
+            brokerSupportsLifecycleMessages = reply.buildVersion != nil
+            let isFromThisCopy = reply.brokerPath.hasPrefix(Bundle.main.bundlePath + "/")
+            // A broker from this copy of the app but another build was left running while the app
+            // was updated, so it's running the old code. Brokers from before builds were compared
+            // can't be asked to exit, so they're used until they exit by themselves.
+            if isFromThisCopy, let brokerBuild = reply.buildVersion, brokerBuild != HSIPC.buildVersion {
+                if !hasRestartedStaleBroker {
+                    restartStaleBroker(build: brokerBuild)
+                    return
+                }
+                AKWarning("hs.ipc: The IPC broker is build \(brokerBuild), but this Hammerspoon 2 is build \(HSIPC.buildVersion ?? "unknown"), even after restarting it")
+            }
             guard reply.protocolVersion == HSIPC.protocolVersion else {
                 AKError("hs.ipc: The running IPC broker (\(reply.brokerPath)) speaks protocol version \(reply.protocolVersion), but this Hammerspoon 2 speaks \(HSIPC.protocolVersion).")
                 stop()
                 return
             }
-            if !reply.brokerPath.hasPrefix(Bundle.main.bundlePath + "/") {
+            if !isFromThisCopy {
                 AKWarning("hs.ipc: launchd is running the IPC broker from another copy of Hammerspoon 2 (\(reply.brokerPath))")
             }
             isConnected = true
@@ -172,11 +214,32 @@ final class HSIPCBrokerConnection {
         }
     }
 
+    /// Ask a broker from another build to exit. Once it has, our session is cancelled, and
+    /// `sessionCancelled()` reconnects, which makes launchd start the broker from our bundle.
+    private func restartStaleBroker(build: String) {
+        guard let session else { return }
+        AKInfo("hs.ipc: Restarting the IPC broker, which is from build \(build) rather than this build (\(HSIPC.buildVersion ?? "unknown")), probably because Hammerspoon 2 was updated while it was running")
+        hasRestartedStaleBroker = true
+        do {
+            try session.send(HSIPCHostToBroker.exitStaleBroker)
+            isWaitingForStaleBrokerToExit = true
+        } catch {
+            AKWarning("hs.ipc: Unable to restart the IPC broker: \(error)")
+            disconnect(reason: "Unable to restart the IPC broker")
+            scheduleReconnect()
+        }
+    }
+
     private func sessionCancelled(_ error: XPCRichError) {
         let wasConnected = isConnected
+        let wasWaitingForStaleBrokerToExit = isWaitingForStaleBrokerToExit
         disconnect(reason: nil)
 
         guard isWanted else { return }
+        if wasWaitingForStaleBrokerToExit {
+            scheduleReconnect()
+            return
+        }
         guard error.canRetry || wasConnected, reconnectAttempts < Self.maxReconnectAttempts else {
             AKError("hs.ipc: Lost connection to the IPC broker: \(error)")
             isWanted = false
@@ -185,6 +248,10 @@ final class HSIPCBrokerConnection {
 
         reconnectAttempts += 1
         AKWarning("hs.ipc: Lost connection to the IPC broker, reconnecting (attempt \(reconnectAttempts) of \(Self.maxReconnectAttempts))")
+        scheduleReconnect()
+    }
+
+    private func scheduleReconnect() {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(1))
             guard let self, self.isWanted, self.session == nil else { return }

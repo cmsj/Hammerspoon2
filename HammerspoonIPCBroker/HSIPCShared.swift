@@ -13,6 +13,8 @@
 //      hs2  --(clientServiceName)-->  HammerspoonIPCBroker  <--(hostServiceName)--  Hammerspoon 2
 //
 
+import Foundation
+import MachO
 import XPC
 
 nonisolated enum HSIPC {
@@ -37,6 +39,26 @@ nonisolated enum HSIPC {
 
     /// What Hammerspoon 2 and hs2 require of the broker they connect to.
     static let brokerRequirement = XPCPeerRequirement.isFromSameTeam(andMatchesSigningIdentifier: brokerSigningIdentifier)
+
+    /// This binary's CFBundleShortVersionString and CFBundleVersion. Every target shares the
+    /// project's version settings, so these only differ between binaries from different builds.
+    static let marketingVersion = ownInfoDictionary()["CFBundleShortVersionString"] as? String
+    static let buildVersion = ownInfoDictionary()["CFBundleVersion"] as? String
+
+    /// The broker and hs2 are built with CREATE_INFOPLIST_SECTION_IN_BINARY, so their Info.plist is
+    /// in their own image. Reading it from there rather than from disk means a broker that was left
+    /// running while Hammerspoon 2 was updated still reports the build it was launched from.
+    /// Hammerspoon 2 itself has no such section, so falls back to its bundle's Info.plist.
+    private static func ownInfoDictionary() -> [String: Any] {
+        var size: UInt = 0
+        let header = unsafe #dsohandle.assumingMemoryBound(to: mach_header_64.self)
+        if let bytes = unsafe getsectiondata(header, "__TEXT", "__info_plist", &size), size > 0,
+           let info = try? PropertyListSerialization.propertyList(from: unsafe Data(bytes: bytes, count: Int(size)),
+                                                                  format: nil) as? [String: Any] {
+            return info
+        }
+        return Bundle.main.infoDictionary ?? [:]
+    }
 }
 
 // MARK: - hs2 <-> broker
@@ -59,10 +81,18 @@ nonisolated enum HSIPCBrokerToClient: Codable {
 
 /// Sent by Hammerspoon 2 to the broker.
 nonisolated enum HSIPCHostToBroker: Codable {
-    /// Expects a reply: `HSIPCHelloReply`.
-    case hello(protocolVersion: Int)
+    /// Expects a reply: `HSIPCHelloReply`. `buildVersion` is nil from builds that predate it.
+    case hello(protocolVersion: Int, buildVersion: String?)
     /// No reply.
     case log(level: Int, message: String)
+    /// Expects a reply: `HSIPCAcknowledgement`. Hammerspoon 2 is about to disconnect (hs.ipc.stop(),
+    /// a reload, or quitting), so if no hs2 is connected, the broker exits soon after rather than
+    /// lingering until its idle timeout. Only sent to brokers whose hello reply had a `buildVersion`.
+    case goodbye
+    /// No reply. The broker is from a different build of this copy of Hammerspoon 2 (it was left
+    /// running while the app was updated), so it disconnects everyone and exits, and launchd starts
+    /// the current one on the next connection. Only sent to brokers whose hello reply had a `buildVersion`.
+    case exitStaleBroker
 }
 
 /// Sent by the broker to Hammerspoon 2.
@@ -87,6 +117,12 @@ nonisolated struct HSIPCHelloReply: Codable {
     /// Path of the running broker executable, so the host can spot a broker that
     /// launchd is running from a different copy of the app.
     let brokerPath: String
+    /// The broker's CFBundleVersion, so the host can spot a broker left running from before an
+    /// update. Nil from brokers that predate it, which also don't understand `goodbye` or `exitStaleBroker`.
+    let buildVersion: String?
+    /// The connected Hammerspoon 2's CFBundleVersion, so hs2 can spot that it's from another build.
+    /// Nil when Hammerspoon 2 isn't connected, or it or the broker predate it.
+    let hostBuildVersion: String?
 }
 
 nonisolated struct HSIPCAcknowledgement: Codable {}

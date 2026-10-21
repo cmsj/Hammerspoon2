@@ -423,6 +423,16 @@ EOF
     [ "$(plutil -extract CFBundleShortVersionString raw "$app_plist")" = "$VERSION" ] || die "app has the wrong CFBundleShortVersionString"
     [ "$(plutil -extract CFBundleVersion raw "$app_plist")" = "$BUILD_NUMBER" ] || die "app has the wrong CFBundleVersion"
     [ "$(plutil -extract SUPublicEDKey raw "$app_plist")" = "$PLIST_KEY" ] || die "app is missing SUPublicEDKey"
+    # The app compares its build number with the IPC broker's to spot a broker left running across
+    # an update, and hs2 compares with the app's, so every binary we ship must carry the same one.
+    # The command line tools have their Info.plist embedded in a __TEXT,__info_plist section.
+    local helper_plist="$app/Contents/XPCServices/HammerspoonOSAScriptHelper.xpc/Contents/Info.plist"
+    [ "$(plutil -extract CFBundleVersion raw "$helper_plist")" = "$BUILD_NUMBER" ] || die "HammerspoonOSAScriptHelper has the wrong CFBundleVersion"
+    local tool
+    for tool in HammerspoonIPCBroker hs2; do
+        [ "$(xcrun otool -X -s __TEXT __info_plist -v "$app/Contents/MacOS/$tool" | plutil -extract CFBundleVersion raw -)" = "$BUILD_NUMBER" ] \
+            || die "$tool has the wrong CFBundleVersion"
+    done
     local min_system_version
     min_system_version="$(plutil -extract LSMinimumSystemVersion raw "$app_plist")"
     codesign --verify --deep --strict "$app"
