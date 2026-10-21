@@ -142,6 +142,9 @@ import JavaScriptCoreExtras
         let result = callback.call(withArguments: [modifiers])
         logJSException(from: callback, context: "menu callback")
 
+        // If the function set a new array menu, show that instead, whatever the function returned
+        guard generation == menuGeneration else { return staticMenu }
+
         guard let result, result.isArray else {
             AKError("hs.dockicon: Menu callback must return an array")
             return nil
@@ -149,7 +152,7 @@ import JavaScriptCoreExtras
 
         var builder = makeMenuBuilder()
         let menu = builder.makeMenu(from: result)
-        // If the function (or an entry's properties) set a new array menu, show that instead
+        // If an entry's properties set a new array menu, show that instead
         guard store(builder.handlers, ifStill: generation) else { return staticMenu }
         return menu
     }

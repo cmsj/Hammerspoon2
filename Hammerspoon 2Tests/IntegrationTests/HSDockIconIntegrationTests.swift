@@ -156,14 +156,15 @@ struct HSDockIconTests {
             #expect(!harness.hasException)
         }
 
-        @Test("An array menu set from inside a menu function replaces it straight away")
-        func testSetMenuFromMenuFunction() throws {
+        @Test("An array menu set from inside a menu function replaces it straight away, whatever the function returns",
+              arguments: ["[{ title: 'Old', fn: () => chosen.push('old') }]", "undefined", "'nope'"])
+        func testSetMenuFromMenuFunction(returnValue: String) throws {
             let (harness, module) = makeHarness()
             harness.eval("""
                 var chosen = []
                 hs.dockicon.setMenu(() => {
                     hs.dockicon.setMenu([{ title: 'Replacement', fn: () => chosen.push('replacement') }])
-                    return [{ title: 'Old', fn: () => chosen.push('old') }]
+                    return \(returnValue)
                 })
             """)
             let menu = try #require(module.makeDockMenu())
