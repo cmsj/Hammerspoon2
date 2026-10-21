@@ -12,6 +12,11 @@ import Sparkle
 class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate! = nil
 
+    // Files opened before the config has loaded (e.g. the one that launched us, which AppKit
+    // delivers before applicationDidFinishLaunching), held until hs.onOpenFile can be set
+    private var hasBooted = false
+    private var pendingOpenFiles: [URL] = []
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         AKGarbage("applicationDidFinishLaunching: Creating/booting shared manager")
 
@@ -23,6 +28,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             fatalError(error.localizedDescription)
         }
+
+        hasBooted = true
+        let files = pendingOpenFiles
+        pendingOpenFiles.removeAll()
+        files.forEach(openFile)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -62,9 +72,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         for url in urls {
             if url.isFileURL, url.pathExtension.lowercased() == "spoon2" {
                 importSpoon(at: url)
+            } else if url.isFileURL {
+                if hasBooted {
+                    openFile(url)
+                } else {
+                    pendingOpenFiles.append(url)
+                }
             } else {
                 URLEventDispatcher.shared.dispatch(url)
             }
+        }
+    }
+
+    private func openFile(_ url: URL) {
+        if JSEngine.shared.moduleRoot?.callOnOpenFile(url.path) != true {
+            AKWarning("Opened \(url.path), but hs.onOpenFile isn't set, so ignoring it")
         }
     }
 
