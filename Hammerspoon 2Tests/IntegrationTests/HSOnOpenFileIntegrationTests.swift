@@ -96,3 +96,60 @@ struct HSOnOpenFileTests {
         #expect(calls == 0)
     }
 }
+
+/// Tests for `OpenFileQueue`, which holds files opened before the config has loaded. Each queue
+/// delivers to `hs.onOpenFile`, as `AppDelegate`'s does.
+@Suite("OpenFileQueue tests")
+struct OpenFileQueueTests {
+    /// A harness whose `hs.onOpenFile` records the paths it's called with, and a queue that
+    /// delivers to it. Keep the harness alive for the whole test, or its context goes with it.
+    private func makeQueue(paths: @escaping (String) -> Void) -> (JSTestHarness, OpenFileQueue) {
+        let harness = JSTestHarness()
+        let root = harness.loadModuleRoot()
+        harness.registerCallback("openedFile", callback: paths)
+        harness.eval("hs.onOpenFile = function(path) { openedFile(path) }")
+        let queue = OpenFileQueue { url in root.callOnOpenFile(url.path) }
+        return (harness, queue)
+    }
+
+    @Test("Files opened before the queue is ready are held, then delivered once each, in order")
+    func testFilesOpenedBeforeReadyAreHeld() {
+        var paths: [String] = []
+        let (harness, queue) = makeQueue { paths.append($0) }
+
+        queue.open(URL(filePath: "/tmp/one.txt"))
+        queue.open(URL(filePath: "/tmp/two.txt"))
+        queue.open(URL(filePath: "/tmp/three", directoryHint: .isDirectory))
+        #expect(paths.isEmpty)
+
+        queue.markReady()
+        #expect(paths == ["/tmp/one.txt", "/tmp/two.txt", "/tmp/three"])
+        #expect(!harness.hasException)
+    }
+
+    @Test("Files opened once the queue is ready are delivered immediately")
+    func testFilesOpenedAfterReadyAreDeliveredImmediately() {
+        var paths: [String] = []
+        let (harness, queue) = makeQueue { paths.append($0) }
+
+        queue.open(URL(filePath: "/tmp/early.txt"))
+        queue.markReady()
+        queue.open(URL(filePath: "/tmp/late.txt"))
+
+        #expect(paths == ["/tmp/early.txt", "/tmp/late.txt"])
+        #expect(!harness.hasException)
+    }
+
+    @Test("Marking the queue ready again doesn't deliver held files twice")
+    func testMarkingReadyAgainDoesNotRedeliver() {
+        var paths: [String] = []
+        let (harness, queue) = makeQueue { paths.append($0) }
+
+        queue.open(URL(filePath: "/tmp/one.txt"))
+        queue.markReady()
+        queue.markReady()
+
+        #expect(paths == ["/tmp/one.txt"])
+        #expect(!harness.hasException)
+    }
+}
