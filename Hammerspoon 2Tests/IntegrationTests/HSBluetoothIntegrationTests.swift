@@ -46,7 +46,13 @@ struct HSBluetoothTests {
         @Test("listeners only receive the event they registered for, once fires once")
         func testEmitterRouting() {
             let harness = makeHarness()
+            // The first on() would start the native watcher, which registers with IOBluetooth and
+            // lists paired devices. Stub the emitter's start/stop hooks so this stays a pure
+            // routing test that never needs Bluetooth access.
             harness.eval("""
+                var nativeStarted = false;
+                hs.bluetooth._watcherEmitter._start = function() { nativeStarted = true; return true; };
+                hs.bluetooth._watcherEmitter._stop = function() {};
                 var connectedCount = 0, disconnectedCount = 0, onceCount = 0;
                 hs.bluetooth.on('connected', function() { connectedCount++; });
                 hs.bluetooth.on('disconnected', function() { disconnectedCount++; });
@@ -57,6 +63,7 @@ struct HSBluetoothTests {
             harness.expectEqual("connectedCount", 2)
             harness.expectEqual("disconnectedCount", 0)
             harness.expectEqual("onceCount", 1)
+            harness.expectTrue("nativeStarted")
             #expect(!harness.hasException)
         }
 
