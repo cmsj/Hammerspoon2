@@ -51,7 +51,7 @@ import IOBluetooth
     /// Scans for discoverable devices nearby. Only one scan can run at a time.
     ///
     /// - Parameter seconds: How long to scan for; `0` uses the system default (10 seconds).
-    /// - Returns: {Promise<object[]>} A Promise resolving to the devices found, see `pairedDevices()` for the shape.
+    /// - Returns: {Promise<object[]>} A Promise resolving to the devices found, see `pairedDevices()` for the shape. Rejects if the scan fails or is aborted, for example because Bluetooth was switched off.
     /// - Example:
     /// ```js
     /// const nearby = await hs.bluetooth.availableDevices(5)
@@ -208,10 +208,19 @@ nonisolated enum HSBluetoothEvent: String, HSEventName {
 
     nonisolated func deviceInquiryComplete(_ sender: IOBluetoothDeviceInquiry!, error: IOReturn, aborted: Bool) {
         onMain { module in
-            let devices = module.inquiry?.foundDevices() as? [IOBluetoothDevice] ?? []
-            module.inquiryPromise?.resolveWith(devices.map(module.deviceInfo))
+            let found = module.inquiry?.foundDevices() as? [IOBluetoothDevice] ?? []
+            let promise = module.inquiryPromise
             module.inquiryPromise = nil
             module.inquiry = nil
+            if error != kIOReturnSuccess {
+                AKError("hs.bluetooth.availableDevices(): scan failed (error \(error))")
+                promise?.rejectWithMessage("hs.bluetooth.availableDevices(): scan failed (error \(error))")
+            } else if aborted {
+                AKWarning("hs.bluetooth.availableDevices(): scan was aborted")
+                promise?.rejectWithMessage("hs.bluetooth.availableDevices(): scan was aborted")
+            } else {
+                promise?.resolveWith(found.map(module.deviceInfo))
+            }
         }
     }
 
