@@ -270,19 +270,27 @@ nonisolated enum HSBluetoothEvent: String, HSEventName {
                                                            selector: #selector(deviceDisconnected(_:device:)))
     }
 
+    // Both selectors hop to the main actor, so they can run after _removeWatcher() has already
+    // cleaned up, or after a later _addWatcher() has started a new subscription. Each checks that
+    // its notification still belongs to the current watcher before registering or firing anything.
+
     @objc private nonisolated func deviceConnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+        nonisolated(unsafe) let notification = notification
         nonisolated(unsafe) let device = device
         onMain { module in
+            guard module.connectNotification === notification else { return }
             module.watchForDisconnect(device)
             module.fire(.connected, device)
         }
     }
 
     @objc private nonisolated func deviceDisconnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+        nonisolated(unsafe) let notification = notification
         nonisolated(unsafe) let device = device
         onMain { module in
             let address = device.addressString ?? ""
-            module.disconnectNotifications[address]?.unregister()
+            guard module.disconnectNotifications[address] === notification else { return }
+            notification.unregister()
             module.disconnectNotifications[address] = nil
             module.fire(.disconnected, device)
         }
