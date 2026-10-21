@@ -55,24 +55,19 @@ import SwiftUI
     /// - Returns: An HSFont object
     @objc static func title3() -> HSFont
 
-    /// The system font in a custom size
-    /// - Parameter size: The font size in points
-    /// - Returns: An HSFont object
-    @objc static func system(_ size: Double) -> HSFont
-    
     /// The system font in a custom size with a choice of weights
     /// - Parameters:
     ///   - size: The font size in points
-    ///   - weight: The font weight as a string (e.g. "ultralight", "thin", "light", "regular", "medium", "semibold", "bold", "heavy", "black")
+    ///   - weight?: The font weight as a string (e.g. "ultralight", "thin", "light", "regular", "medium", "semibold", "bold", "heavy", "black").  Defaults to "regular".
     /// - Returns: An HSFont object
-    @objc static func system(_ size: Double, weight: String) -> HSFont
+    @objc(system::) static func system(_ size: Double, weight: String?) -> HSFont
 
     /// A font present on the system at a given size
     /// - Parameters:
     ///   - name: A string containing the name of the font to instantiate
     ///   - size: The font size in points
     /// - Returns: An HSFont object
-    @objc static func custom(_ name: String, size: Double) -> HSFont
+    @objc(custom::) static func custom(_ name: String, size: Double) -> HSFont
 }
 
 @objc class HSFont: NSObject, HSFontAPI {
@@ -140,11 +135,8 @@ import SwiftUI
 
     // MARK: - System Fonts
 
-    @objc static func system(_ size: Double) -> HSFont {
-        HSFont(font: .system(size: size))
-    }
-
-    @objc static func system(_ size: Double, weight: String) -> HSFont {
+    @objc static func system(_ size: Double, weight: String?) -> HSFont {
+        let weight = weight == "undefined" ? "regular" : weight!
         let fontWeight: Font.Weight
         switch weight.lowercased() {
         case "ultralight":
