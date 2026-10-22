@@ -194,10 +194,10 @@ import JavaScriptCore
     private var _clickCallback: JSCallback?
     private var _menuCallback: JSCallback?
     private var menuDelegate: MenuBarDelegate?
-    private var menuItemHandlers: [MenuItemHandler] = []
+    private var menuItemHandlers: [JSMenuItemHandler] = []
     /// Handlers for the menu most recently opened by popUpMenu(). Kept until the next one opens, so that
     /// they outlive menu tracking however AppKit orders the item action relative to popUp returning.
-    private var popUpMenuHandlers: [MenuItemHandler] = []
+    private var popUpMenuHandlers: [JSMenuItemHandler] = []
     /// Event monitors watching for middle and other button clicks, installed while there is a click callback.
     private var otherButtonMonitors: [Any] = []
     /// The button number of an other-button press that began on this item, until it is released.
@@ -368,9 +368,9 @@ import JavaScriptCore
             clearMenuHandlers()
         } else if menuOrFn.isArray {
             clearMenuHandlers()
-            var handlers: [MenuItemHandler] = []
-            let menu = buildMenu(from: menuOrFn, handlers: &handlers)
-            guard store(handlers, in: &menuItemHandlers) else { return }
+            var builder = makeMenuBuilder()
+            let menu = builder.makeMenu(from: menuOrFn)
+            guard store(builder.handlers, in: &menuItemHandlers) else { return }
             statusItem?.menu = menu
         } else if menuOrFn.isObject {
             _menuCallback = JSCallback(value: menuOrFn, owner: self)
@@ -410,9 +410,9 @@ import JavaScriptCore
             return nil
         }
         detach(&popUpMenuHandlers)
-        var handlers: [MenuItemHandler] = []
-        let menu = buildMenu(from: entries, handlers: &handlers)
-        guard store(handlers, in: &popUpMenuHandlers) else { return nil }
+        var builder = makeMenuBuilder()
+        let menu = builder.makeMenu(from: entries)
+        guard store(builder.handlers, in: &popUpMenuHandlers) else { return nil }
         return menu
     }
 
@@ -459,8 +459,9 @@ import JavaScriptCore
             return
         }
 
-        var handlers: [MenuItemHandler] = []
-        let items = buildNSMenuItems(from: result, handlers: &handlers)
+        var builder = makeMenuBuilder()
+        let items = builder.makeItems(from: result)
+        let handlers = builder.handlers
         // The menu function, or an entry's properties, may have replaced this menu with setMenu() or destroyed
         // the item. Either way this menu is no longer attached, and menuItemHandlers belongs to whatever is.
         guard statusItem?.menu === menu else {
@@ -505,7 +506,7 @@ import JavaScriptCore
     /// used. The handlers have to be built into a separate array and stored afterwards, because reading the
     /// entries runs JS, which can destroy this item or set another menu (writing to `list`) meanwhile. Anything
     /// stored in `list` since is detached, and if the item was destroyed, so are the new handlers.
-    private func store(_ handlers: [MenuItemHandler], in list: inout [MenuItemHandler]) -> Bool {
+    private func store(_ handlers: [JSMenuItemHandler], in list: inout [JSMenuItemHandler]) -> Bool {
         detach(&list)
         guard statusItem != nil else {
             var orphaned = handlers
@@ -516,88 +517,12 @@ import JavaScriptCore
         return true
     }
 
-    private func detach(_ handlers: inout [MenuItemHandler]) {
-        for handler in handlers {
-            handler.detach(from: self)
-        }
-        handlers.removeAll()
+    private func detach(_ handlers: inout [JSMenuItemHandler]) {
+        handlers.detachAll(from: self)
     }
 
-    /// Builds a menu from an array of JS menu item objects, appending the handlers for its items' callbacks
-    /// to `handlers`, which must outlive the menu.
-    private func buildMenu(from jsArray: JSValue, handlers: inout [MenuItemHandler]) -> NSMenu {
-        let menu = NSMenu()
-        menu.autoenablesItems = false
-        for item in buildNSMenuItems(from: jsArray, handlers: &handlers) {
-            menu.addItem(item)
-        }
-        return menu
-    }
-
-    private func buildNSMenuItems(from jsArray: JSValue, handlers: inout [MenuItemHandler]) -> [NSMenuItem] {
-        var items: [NSMenuItem] = []
-        let count = Int(jsArray.objectForKeyedSubscript("length")?.toInt32() ?? 0)
-        for i in 0..<count {
-            if let jsItem = jsArray.objectAtIndexedSubscript(i),
-               let item = buildNSMenuItem(from: jsItem, handlers: &handlers) {
-                items.append(item)
-            }
-        }
-        return items
-    }
-
-    private func buildNSMenuItem(from jsItem: JSValue, handlers: inout [MenuItemHandler]) -> NSMenuItem? {
-        guard let titleValue = jsItem.objectForKeyedSubscript("title"),
-              !titleValue.isUndefined,
-              let title = titleValue.toString() else { return nil }
-
-        if title == "-" || title == "---" {
-            return NSMenuItem.separator()
-        }
-
-        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-
-        let disabled: Bool
-        if let dv = jsItem.objectForKeyedSubscript("disabled"), dv.isBoolean {
-            disabled = dv.toBool()
-        } else {
-            disabled = false
-        }
-        item.isEnabled = !disabled
-
-        if let cv = jsItem.objectForKeyedSubscript("checked"), cv.isBoolean, cv.toBool() {
-            item.state = .on
-        } else {
-            item.state = .off
-        }
-
-        if let tv = jsItem.objectForKeyedSubscript("tooltip"),
-           !tv.isUndefined, !tv.isNull,
-           let tip = tv.toString() {
-            item.toolTip = tip
-        }
-
-        if let iv = jsItem.objectForKeyedSubscript("icon"),
-           let hsImage = iv.toObjectOf(HSImage.self) as? HSImage,
-           let img = hsImage.image.copy() as? NSImage {
-            img.size = NSSize(width: 16, height: 16)
-            item.image = img
-        }
-
-        if let fv = jsItem.objectForKeyedSubscript("fn"),
-           fv.isObject, !fv.isNull, !fv.isUndefined {
-            let handler = MenuItemHandler(value: fv, owner: self)
-            handlers.append(handler)
-            item.target = handler
-            item.action = #selector(MenuItemHandler.invoke(_:))
-            item.isEnabled = !disabled
-        }
-
-        if let sv = jsItem.objectForKeyedSubscript("menu"), sv.isArray {
-            item.submenu = buildMenu(from: sv, handlers: &handlers)
-        }
-
-        return item
+    private func makeMenuBuilder() -> JSMenuBuilder {
+        JSMenuBuilder(owner: self, logPrefix: "hs.menubar")
     }
 
     private func logJSException(from value: JSValue, context label: String) {
@@ -621,34 +546,6 @@ private class MenuBarDelegate: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         MainActor.assumeIsolated {
             item?.populateDynamicMenu(menu)
-        }
-    }
-}
-
-// MARK: - Menu Item Handler
-
-@MainActor
-private class MenuItemHandler: NSObject {
-    private var callback: JSCallback?
-
-    init(value: JSValue, owner: AnyObject) {
-        self.callback = JSCallback(value: value, owner: owner)
-        super.init()
-    }
-
-    func detach(from owner: AnyObject) {
-        callback?.detach(from: owner)
-        callback = nil
-    }
-
-    @objc func invoke(_ sender: Any?) {
-        guard let value = callback?.value else { return }
-        value.call(withArguments: [])
-        if let ctx = value.context,
-           let exception = ctx.exception,
-           !exception.isUndefined {
-            AKError("hs.menubar: Error in menu item callback: \(exception.toString() ?? "unknown error")")
-            ctx.exception = nil
         }
     }
 }

@@ -59,6 +59,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return false
     }
 
+    /// Called each time the Dock icon's menu opens. The items it returns appear above the Dock's own.
+    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        (JSEngine.shared.moduleRoot?.modules["dockicon"] as? HSDockIconModule)?.makeDockMenu()
+    }
+
     private func showConsole() {
         NSApplication.shared.activate(ignoringOtherApps: true)
         if let url = URL(string: "hammerspoon2://openConsole") {
