@@ -400,6 +400,34 @@ struct NodeSQLiteTests {
                     == #"{"a":7,"b":7}"#)
         }
 
+        @Test("A named-parameter getter that closes the database throws instead of crashing")
+        func testGetterClosesDatabase() throws {
+            let harness = try makeHarness()
+            harness.eval("""
+                var db = new DatabaseSync(':memory:');
+                var stmt = db.prepare('SELECT :a AS a');
+                var error = errorOf(() => stmt.get({ get a() { db.close(); return 1; } }));
+                """)
+            #expect(harness.evalString("error.message") == "statement has been finalized")
+        }
+
+        @Test("A named-parameter getter that runs the same statement doesn't disturb its binding")
+        func testGetterRunsStatement() throws {
+            let harness = try makeHarness()
+            harness.eval("""
+                var stmt = new DatabaseSync(':memory:').prepare('SELECT :a AS a, :b AS b');
+                var row = stmt.get({ get a() { stmt.all({ a: 9, b: 9 }); return 1; }, b: 2 });
+                """)
+            #expect(harness.evalString("JSON.stringify(row)") == #"{"a":1,"b":2}"#)
+        }
+
+        @Test("An exception from a named-parameter getter reaches the caller")
+        func testGetterThrows() throws {
+            let harness = try makeHarness()
+            harness.eval("var stmt = new DatabaseSync(':memory:').prepare('SELECT :a AS a')")
+            #expect(harness.evalString("errorOf(() => stmt.get({ get a() { throw new Error('boom'); } })).message") == "boom")
+        }
+
         @Test("Too many parameters throws a SQLite error")
         func testTooManyParameters() throws {
             let harness = try makeHarness()
@@ -660,6 +688,26 @@ struct NodeSQLiteTests {
             }
             harness.collectGarbage()
             #expect(harness.evalString("stmt.get().a") == "still here")
+        }
+
+        @Test("A partly read iterator the caller dropped releases the database's read lock")
+        func testDroppedIteratorReleasesLock() throws {
+            let (path, cleanup) = try makeDatabasePath()
+            defer { cleanup() }
+            let harness = try makeHarness()
+            harness.eval("""
+                var writer = new DatabaseSync('\(path)');
+                writer.exec('CREATE TABLE t (a); INSERT INTO t VALUES (1), (2)');
+                var reader = new DatabaseSync('\(path)');
+                var stmt = reader.prepare('SELECT a FROM t');
+                """)
+            autoreleasepool {
+                harness.eval("void stmt.iterate().next()")
+            }
+            #expect(harness.evalString("errorOf(() => writer.exec('INSERT INTO t VALUES (3)')).code") == "ERR_SQLITE_ERROR",
+                    "the iterator should hold a read lock while it's alive")
+            harness.collectGarbage()
+            #expect(harness.evalBool("errorOf(() => writer.exec('INSERT INTO t VALUES (3)')) === null") == true)
         }
 
         @Test("Databases, statements and iterators are released after shutdown")

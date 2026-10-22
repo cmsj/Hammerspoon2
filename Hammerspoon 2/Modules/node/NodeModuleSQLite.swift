@@ -425,7 +425,6 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
             return nil
         }
         let statement = unsafe StatementSync(stmt, database: self)
-        statements = statements.filter { $0.value.statement != nil }
         statements[ObjectIdentifier(statement)] = WeakStatement(statement: statement)
         return statement
     }
@@ -448,6 +447,11 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
     }
 
     // MARK: Internals
+
+    /// Stops tracking a statement that's being deallocated.
+    func forgetStatement(_ id: ObjectIdentifier) {
+        statements[id] = nil
+    }
 
     /// The open connection, or nil, with `ERR_INVALID_STATE` thrown, if the database is closed.
     func openHandle() -> OpaquePointer? {
@@ -714,6 +718,7 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
 
     isolated deinit {
         finalizeHandle()
+        database.forgetStatement(ObjectIdentifier(self))
         AKGarbage("Deinit of StatementSync")
     }
 
@@ -882,6 +887,13 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
         return row
     }
 
+    /// Resets the statement if `execution` is still its latest run, releasing the read lock a
+    /// partly stepped run holds. Called when an iterator over that run is dropped.
+    func reset(ifStillRunning execution: Int) {
+        guard executionCount == execution, let handle = unsafe handle else { return }
+        unsafe sqlite3_reset(handle)
+    }
+
     /// The compiled statement, or nil, with `ERR_INVALID_STATE` thrown, if it has been finalized.
     func liveHandle() -> OpaquePointer? {
         guard let handle = unsafe handle else {
@@ -894,18 +906,27 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
     /// Resets the statement and binds the arguments of the JS call in progress, ready to step.
     /// - Returns: The statement, or nil (with an exception thrown) if it couldn't be started
     private func start(in context: JSContext) -> OpaquePointer? {
+        guard unsafe liveHandle() != nil else { return nil }
+
+        // JSExport declares a single parameter, but these methods take any number
+        let arguments = (JSContext.currentArguments() as? [JSValue]) ?? []
+        var anonymous = arguments[...]
+        var named: [(key: String, value: JSValue)] = []
+        if let first = arguments.first, first.isObject, !NodeSQLiteValues.isTypedArray(first) {
+            guard let values = namedValues(of: first, in: context) else { return nil }
+            named = values
+            anonymous = arguments.dropFirst()
+        }
+
+        // Reading the named values can run JS (getters, proxies), which could close the database
+        // or run this statement, so only touch the statement once they've all been read. No JS
+        // runs from here on.
         guard let stmt = unsafe liveHandle(), let db = unsafe database.handle else { return nil }
         executionCount += 1
         unsafe sqlite3_reset(stmt)
         unsafe sqlite3_clear_bindings(stmt)
 
-        // JSExport declares a single parameter, but these methods take any number
-        let arguments = (JSContext.currentArguments() as? [JSValue]) ?? []
-        var anonymous = arguments[...]
-        if let first = arguments.first, first.isObject, !NodeSQLiteValues.isTypedArray(first) {
-            guard unsafe bindNamed(first, to: stmt, db: db, in: context) else { return nil }
-            anonymous = arguments.dropFirst()
-        }
+        guard unsafe bindNamed(named, to: stmt, db: db, in: context) else { return nil }
 
         var index: Int32 = 1
         for value in anonymous {
@@ -919,18 +940,33 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
         return unsafe stmt
     }
 
-    /// Binds the properties of `object` to the statement's named parameters.
-    private func bindNamed(_ object: JSValue, to stmt: OpaquePointer, db: OpaquePointer, in context: JSContext) -> Bool {
+    /// Reads the enumerable properties of a named-parameter object.
+    /// - Returns: The properties, or nil (with the exception thrown) if reading one threw
+    private func namedValues(of object: JSValue, in context: JSContext) -> [(key: String, value: JSValue)]? {
         let ctx = unsafe context.jsGlobalContextRef
-        guard let objectRef = unsafe JSValueToObject(ctx, object.jsValueRef, nil) else { return true }
+        guard let objectRef = unsafe JSValueToObject(ctx, object.jsValueRef, nil) else { return [] }
         let names = unsafe JSObjectCopyPropertyNames(ctx, objectRef)
         defer { unsafe JSPropertyNameArrayRelease(names) }
 
+        var values: [(key: String, value: JSValue)] = []
         let count = unsafe JSPropertyNameArrayGetCount(names)
         for i in 0..<count {
             let nameRef = unsafe JSPropertyNameArrayGetNameAtIndex(names, i)
-            let key = unsafe JSStringCopyCFString(kCFAllocatorDefault, nameRef) as String
+            var exception: JSValueRef?
+            let valueRef = unsafe JSObjectGetProperty(ctx, objectRef, nameRef, &exception)
+            if let exception = unsafe exception {
+                context.exception = unsafe JSValue(jsValueRef: exception, in: context)
+                return nil
+            }
+            guard let value = unsafe JSValue(jsValueRef: valueRef, in: context) else { return nil }
+            values.append((unsafe JSStringCopyCFString(kCFAllocatorDefault, nameRef) as String, value))
+        }
+        return values
+    }
 
+    /// Binds named-parameter values to the statement's named parameters.
+    private func bindNamed(_ values: [(key: String, value: JSValue)], to stmt: OpaquePointer, db: OpaquePointer, in context: JSContext) -> Bool {
+        for (key, value) in values {
             var index = unsafe sqlite3_bind_parameter_index(stmt, key)
             if index == 0 && allowBareNamedParameters {
                 guard let bareNames = unsafe bareParameterNames(stmt, in: context) else { return false }
@@ -943,8 +979,7 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
                 context.exception = NodeSQLiteError.invalidState("Unknown named parameter '\(key)'", in: context)
                 return false
             }
-            guard let value = object.forProperty(key),
-                  unsafe NodeSQLiteValues.bind(value, to: stmt, at: index, db: db, in: context) else { return false }
+            guard unsafe NodeSQLiteValues.bind(value, to: stmt, at: index, db: db, in: context) else { return false }
         }
         return true
     }
@@ -1025,6 +1060,10 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
     }
 
     isolated deinit {
+        // A partly read iterator leaves its statement mid-step, holding the database's read lock
+        if !isDone {
+            statement.reset(ifStillRunning: execution)
+        }
         AKGarbage("Deinit of StatementSyncIterator")
     }
 
