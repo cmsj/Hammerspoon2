@@ -32,6 +32,9 @@ nonisolated final class HSIPCBroker: Sendable {
 
     /// launchd relaunches us on demand, so there's no point lingering once nobody is connected.
     private static let idleExitDelay: DispatchTimeInterval = .seconds(60)
+    /// How long to wait once Hammerspoon 2 has said goodbye. Short, but long enough that a
+    /// reloading Hammerspoon 2 reconnects to us rather than racing our exit.
+    private static let goodbyeExitDelay: DispatchTimeInterval = .seconds(2)
 
     private struct Client {
         let session: XPCSession
@@ -40,6 +43,10 @@ nonisolated final class HSIPCBroker: Sendable {
 
     private struct State {
         var host: XPCSession?
+        /// The current host's CFBundleVersion, from its hello.
+        var hostBuildVersion: String?
+        /// Whether the current host said goodbye, so its disconnecting was deliberate.
+        var hostSaidGoodbye = false
         var clients: [ObjectIdentifier: Client] = [:]
         /// The level most recently given to the host, so we only push changes.
         var hostMinLogLevel = HSIPC.noLogging
@@ -107,6 +114,8 @@ nonisolated final class HSIPCBroker: Sendable {
             let previous = state.withLock { state in
                 defer {
                     state.host = session
+                    state.hostBuildVersion = nil
+                    state.hostSaidGoodbye = false
                     state.activityGeneration += 1
                 }
                 return state.host
@@ -133,16 +142,27 @@ nonisolated final class HSIPCBroker: Sendable {
     }
 
     private func removeHost(id: ObjectIdentifier, error: XPCRichError) {
-        let wasCurrent = state.withLock { state in
-            guard let host = state.host, ObjectIdentifier(host) == id else { return false }
-            state.host = nil
-            state.activityGeneration += 1
-            return true
+        let saidGoodbye = state.withLock { state -> Bool? in
+            guard let host = state.host, ObjectIdentifier(host) == id else { return nil }
+            defer {
+                state.host = nil
+                state.hostBuildVersion = nil
+                state.hostSaidGoodbye = false
+                state.activityGeneration += 1
+            }
+            return state.hostSaidGoodbye
         }
-        guard wasCurrent else { return }
+        guard let saidGoodbye else { return }
         HSIPCBroker.logger.info("Hammerspoon 2 disconnected: \(error, privacy: .public)")
         broadcast(.hostStatus(connected: false))
-        scheduleIdleExitIfNeeded()
+        scheduleIdleExitIfNeeded(after: saidGoodbye ? HSIPCBroker.goodbyeExitDelay : HSIPCBroker.idleExitDelay)
+    }
+
+    private func isCurrentHost(_ id: ObjectIdentifier) -> Bool {
+        state.withLock { state in
+            guard let host = state.host else { return false }
+            return ObjectIdentifier(host) == id
+        }
     }
 
     private func handleHostMessage(_ message: XPCReceivedMessage, from id: ObjectIdentifier) -> (any Encodable)? {
@@ -152,14 +172,35 @@ nonisolated final class HSIPCBroker: Sendable {
         }
 
         switch decoded {
-        case .hello(let version):
+        case .hello(let version, let buildVersion):
             if version != HSIPC.protocolVersion {
                 HSIPCBroker.logger.error("Hammerspoon 2 speaks protocol \(version), broker speaks \(HSIPC.protocolVersion)")
             }
+            if buildVersion != HSIPC.buildVersion {
+                // Hammerspoon 2 decides whether we're stale, since it knows whether we're from its copy of the app.
+                HSIPCBroker.logger.info("Hammerspoon 2 is build \(buildVersion ?? "unknown", privacy: .public), broker is build \(HSIPC.buildVersion ?? "unknown", privacy: .public)")
+            }
             return state.withLock { state in
+                if let host = state.host, ObjectIdentifier(host) == id {
+                    state.hostBuildVersion = buildVersion
+                }
                 state.hostMinLogLevel = state.minLogLevel
                 return helloReply(state)
             }
+
+        case .goodbye:
+            state.withLock { state in
+                if let host = state.host, ObjectIdentifier(host) == id {
+                    state.hostSaidGoodbye = true
+                }
+            }
+            return HSIPCAcknowledgement()
+
+        case .exitStaleBroker:
+            // A replaced host (e.g. another copy of the app) doesn't get to decide this.
+            guard isCurrentHost(id) else { return nil }
+            HSIPCBroker.logger.info("Exiting so launchd can start the IPC broker from the current build of Hammerspoon 2")
+            exit(EXIT_SUCCESS)
 
         case .log(let level, let text):
             // A replaced host stays connected until it acknowledges being replaced, so ignore
@@ -259,7 +300,9 @@ nonisolated final class HSIPCBroker: Sendable {
         HSIPCHelloReply(protocolVersion: HSIPC.protocolVersion,
                         hostConnected: state.host != nil,
                         minLogLevel: state.minLogLevel,
-                        brokerPath: Bundle.main.executablePath ?? CommandLine.arguments[0])
+                        brokerPath: Bundle.main.executablePath ?? CommandLine.arguments[0],
+                        buildVersion: HSIPC.buildVersion,
+                        hostBuildVersion: state.host == nil ? nil : state.hostBuildVersion)
     }
 
     private func broadcast(_ message: HSIPCBrokerToClient) {
@@ -281,12 +324,12 @@ nonisolated final class HSIPCBroker: Sendable {
         try? host.send(HSIPCBrokerToHost.setMinimumLogLevel(level))
     }
 
-    private func scheduleIdleExitIfNeeded() {
+    private func scheduleIdleExitIfNeeded(after delay: DispatchTimeInterval = HSIPCBroker.idleExitDelay) {
         let generation = state.withLock { state -> Int? in
             state.host == nil && state.clients.isEmpty ? state.activityGeneration : nil
         }
         guard let generation else { return }
-        queue.asyncAfter(deadline: .now() + HSIPCBroker.idleExitDelay) { [self] in
+        queue.asyncAfter(deadline: .now() + delay) { [self] in
             let stillIdle = state.withLock { state in
                 state.activityGeneration == generation && state.host == nil && state.clients.isEmpty
             }

@@ -164,6 +164,7 @@ private nonisolated final class HSIPCClient: Sendable {
 private var flags = Flags()
 private let logLevelFlag = flags.string("l", "log-level", description: "Show log messages at or above this level.\nLevels: garbage  debug  info  warning  error  javascript\nDefault: none (no log messages shown)")
 private let noPromptFlag = flags.option(nil, "no-prompt",   description: "Suppress 'hs2> ' prompt (useful when piping input)")
+private let versionFlag  = flags.option(nil, "version",     description: "Show the version of hs2 and exit")
 private let helpFlag     = flags.option("h", "help",        description: "Show this help")
 
 if let failure = flags.parsingFailure() {
@@ -190,6 +191,11 @@ if helpFlag.wasSet {
       65  JavaScript read from a pipe or file threw an error. Every line is still
           evaluated; the status reflects whether any of them threw.
     """)
+    exit(0)
+}
+
+if versionFlag.wasSet {
+    print("hs2 \(HSIPC.marketingVersion ?? "unknown") (build \(HSIPC.buildVersion ?? "unknown"))")
     exit(0)
 }
 
@@ -255,6 +261,11 @@ do {
         writeStderr("Error: Hammerspoon 2 is not connected to the IPC broker.\n")
         writeStderr(notConnectedHelp)
         exit(1)
+    }
+    // Different builds can still work together, as long as they speak the same protocol.
+    if let hostBuild = hello.hostBuildVersion, hostBuild != HSIPC.buildVersion {
+        writeStderr("Warning: This hs2 is from build \(HSIPC.buildVersion ?? "unknown") of Hammerspoon 2, but the running Hammerspoon 2 is build \(hostBuild).\n")
+        writeStderr("Make sure hs2 belongs to the copy of Hammerspoon 2 that is running.\n")
     }
 } catch {
     writeStderr("Error: Cannot connect to Hammerspoon 2: \(error)\n")
