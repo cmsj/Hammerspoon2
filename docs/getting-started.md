@@ -133,7 +133,7 @@ argument is always the event name; most modules emit several, so check the API r
 the exact set a given module supports:
 
 ```js
-hs.application.on('didLaunch', app => console.log(`launched: ${app.title}`))
+hs.application.on('didLaunch', app => console.log(`launched: ${app.name}`))
 ```
 
 `hs.ax` uses the same `on()`/`off()`/`once()` names but a different argument order —

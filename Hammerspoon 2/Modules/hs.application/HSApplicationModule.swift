@@ -20,7 +20,7 @@ import UniformTypeIdentifiers
     /// - Example:
     /// ```js
     /// const apps = hs.application.runningApplications()
-    /// apps.forEach(a => console.log(a.title))
+    /// apps.forEach(a => console.log(a.name))
     /// ```
     @objc func runningApplications() -> [HSApplication]
 
@@ -56,7 +56,7 @@ import UniformTypeIdentifiers
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// console.log(app.title)
+    /// console.log(app.name)
     /// ```
     @objc func frontmost() -> HSApplication?
 
