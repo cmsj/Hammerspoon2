@@ -16,6 +16,7 @@ struct NodeBuiltinModulesInstaller: JSContextInstallable {
     func install(in context: JSContext) throws {
         let builtins = JSValue(newObjectIn: context)!
         builtins.setObject(NodeUtilModule(), forKeyedSubscript: "util" as NSString)
+        builtins.setObject(try NodeSQLiteModule.makeExports(in: context), forKeyedSubscript: "node:sqlite" as NSString)
         context.setObject(builtins, forKeyedSubscript: "_hs_node_builtins" as NSString)
     }
 }

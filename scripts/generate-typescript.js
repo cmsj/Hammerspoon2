@@ -311,7 +311,7 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (initMethod.params || []).map(p => {
-                return `${p.name}: ${resolveParamType(p)}`;
+                return `${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p)}`;
             }).join(', ');
 
             output += `    constructor(${params});\n\n`;
@@ -341,7 +341,8 @@ function generateTypeDefinition(protocol) {
             output += `     */\n`;
 
             const params = (method.params || []).map(p => {
-                return `${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p)}`;
+                const prefix = p.rest ? '...' : '';
+                return `${prefix}${p.name}${p.optional ? '?' : ''}: ${resolveParamType(p)}`;
             }).join(', ');
 
             const returnType = method.returns ? swiftTypeToTS(method.returns.type, method.returns.promiseType) : 'void';

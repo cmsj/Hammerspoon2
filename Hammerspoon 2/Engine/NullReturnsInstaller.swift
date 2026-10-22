@@ -31,6 +31,7 @@ struct NullReturnsInstaller: JSContextInstallable {
     /// from them is deliberate rather than nil, and mustn't become `null`.
     nonisolated static let passthroughMembers: [(cls: AnyClass, member: String)] = [
         (HSFSModule.self, "withFile"),  // the callback's result
+        (StatementSync.self, "get"),    // undefined when there's no row, as in Node
     ]
 
     /// Every class in the app binary that exports a member returning an object. The ObjC runtime

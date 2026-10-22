@@ -93,7 +93,9 @@ function extractVariadicMarker(docLines) {
  * Parse Swift file to extract JSExport protocol information
  */
 function parseSwiftFile(filePath, repoRoot) {
-    const content = fs.readFileSync(filePath, 'utf8');
+    // A method named after a Swift keyword is declared with backticks (eg. func `return`()),
+    // which the parsing below doesn't expect, so drop them. JS sees the bare name.
+    const content = fs.readFileSync(filePath, 'utf8').replace(/\bfunc\s+`(\w+)`/g, 'func $1');
     const protocols = [];
     let moduleDocumentation = null;
 
@@ -631,10 +633,11 @@ function extractReturns(signature, docLines) {
             const trimmed = line.trim();
             // Match both "Returns:" and "- Returns:" with optional {Type} annotation
             // Format: "- Returns: {Promise<boolean>} A promise that resolves to..."
-            const descMatch = trimmed.match(/^-?\s*Returns?\s*:\s*(?:\{([^}]+)\}\s+)?(.*)$/);
+            const descMatch = trimmed.match(/^-?\s*Returns?\s*:\s*(.*)$/);
             if (descMatch) {
-                const typeAnnotation = descMatch[1];
-                returnDesc = descMatch[2].trim();
+                // The annotation may itself contain braces, eg. {{ done: boolean }}
+                const { type: typeAnnotation, rest } = extractBracedType(descMatch[1]);
+                returnDesc = rest.trim();
 
                 if (typeAnnotation) {
                     const promiseMatch = typeAnnotation.match(/^Promise<(.+)>$/);
