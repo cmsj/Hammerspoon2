@@ -217,7 +217,7 @@ final class UIWebViewToolbarEntry: Identifiable {
 /// // Fire and forget
 /// wv.execJS("document.body.style.backgroundColor = 'lightyellow'")
 ///
-/// // With result (note the JS method name is evalJSResult, and the script must `return` its value)
+/// // With result (the script must `return` its value)
 /// wv.evalJSResult("return document.title", (result, error) => {
 ///     if (error) { console.log("Error: " + error) }
 ///     else { console.log("Title: " + result) }
@@ -528,9 +528,6 @@ final class UIWebViewToolbarEntry: Identifiable {
 
     /// Execute JavaScript in the web page and deliver the result to a callback
     ///
-    /// The JavaScript method name is `evalJSResult` — it derives from the internal
-    /// Objective-C selector `evalJS:result:`.
-    ///
     /// The script is not evaluated as an expression: it runs as the body of an async
     /// function, and the result is the value it returns. Use `return` to send a value
     /// back — a script without one, such as `"document.title"`, gives a result of `null`.
@@ -560,8 +557,7 @@ final class UIWebViewToolbarEntry: Identifiable {
     ///     return (await response.json()).state
     /// `, (result, error) => console.log(result))
     /// ```
-    @objc(evalJS:result:)
-    func evalJSResult(_ script: String, _ callback: JSFunction) -> UIWebView
+    @objc func evalJSResult(_ script: String, _ callback: JSFunction) -> UIWebView
 }
 
 // MARK: - Implementation
@@ -938,8 +934,7 @@ final class UIWebViewToolbarEntry: Identifiable {
         return self
     }
 
-    @objc(evalJS:result:)
-    func evalJSResult(_ script: String, _ callback: JSFunction) -> UIWebView {
+    @objc func evalJSResult(_ script: String, _ callback: JSFunction) -> UIWebView {
         let owner = callbackOwner
         guard let capturedCallback = JSCallback(value: callback, owner: owner) else {
             return self

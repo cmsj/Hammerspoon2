@@ -156,12 +156,32 @@ function parseSwiftFile(filePath, repoRoot) {
             continue;
         }
 
-        // Find matching closing brace for the protocol
+        // Find matching closing brace for the protocol, ignoring braces in comments and
+        // string literals (a doc comment quoting `'}'` mustn't end the protocol early)
         let braceCount = 1;
         let pos = match.index + match[0].length;
         const bodyStart = pos;
 
         while (braceCount > 0 && pos < content.length) {
+            if (content.startsWith('//', pos)) {
+                const end = content.indexOf('\n', pos);
+                pos = end === -1 ? content.length : end;
+                continue;
+            }
+            if (content.startsWith('/*', pos)) {
+                const end = content.indexOf('*/', pos + 2);
+                pos = end === -1 ? content.length : end + 2;
+                continue;
+            }
+            if (content[pos] === '"') {
+                const delimiter = content.startsWith('"""', pos) ? '"""' : '"';
+                pos += delimiter.length;
+                while (pos < content.length && !content.startsWith(delimiter, pos)) {
+                    pos += content[pos] === '\\' ? 2 : 1;
+                }
+                pos += delimiter.length;
+                continue;
+            }
             if (content[pos] === '{') braceCount++;
             else if (content[pos] === '}') braceCount--;
             pos++;
@@ -217,7 +237,7 @@ function parseSwiftFile(filePath, repoRoot) {
 
             if (trimmed.startsWith('@objc')) {
                 // @objc func or @objc var
-                methodMatch = trimmed.match(/@objc(?:\([^)]*\))?\s+(?:@\w+\s+)*(?:(?:static\s+)?func\s+(\w+)|var\s+(\w+))/);
+                methodMatch = trimmed.match(/@objc(?:\([^)]*\))?\s+(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:static\s+)?func\s+(\w+)|var\s+(\w+))/);
             } else if (pendingObjcSelector && trimmed.startsWith('func ')) {
                 // This is a func following @objc(selector) on the previous line
                 methodMatch = trimmed.match(/func\s+(\w+)/);
