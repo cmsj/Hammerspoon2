@@ -109,20 +109,26 @@ function collectEntries(commits) {
                 entries[section.title].push({ text: value, sha: commit.sha });
             }
         }
-        // Changelog lines that git didn't parse as trailers. Only the last
-        // paragraph can hold trailers, so a changelog line anywhere else is
-        // ignored, and git takes all of that paragraph's trailers or none.
-        const paragraphs = commit.body.trimEnd().split(/\n[ \t]*\n/);
-        paragraphs.forEach((paragraph, index) => {
-            const isLast = index === paragraphs.length - 1;
-            for (const line of paragraph.split('\n')) {
-                const match = line.match(/^(changelog[\w-]*)\s*:/i);
-                if (!match) continue;
-                const key = match[1].toLowerCase();
-                if (isLast && changelogTrailers.some((trailer) => trailer.key.toLowerCase() === key)) continue;
-                problems.push(`${short} has a "${match[1]}:" line that isn't a trailer, so it will be ignored; move it into the last paragraph of the commit message, with no blank lines between it and any Co-Authored-By lines`);
+        // Changelog lines that git didn't parse as trailers, e.g. because
+        // they're not in the trailer block at the end of the message. Rather
+        // than second-guess where git found that block, count each kind of
+        // line against the trailers git parsed. An indented line is only a
+        // changelog line if it isn't continuing a parsed trailer's value.
+        const ignored = new Map();
+        for (const line of commit.body.split('\n')) {
+            const match = line.match(/^\s*(changelog[\w-]*)\s*:/i);
+            if (!match) continue;
+            if (/^\s/.test(line) && changelogTrailers.some(({ value }) => value.includes(line.trim()))) continue;
+            const key = match[1].toLowerCase();
+            const { count = 0 } = ignored.get(key) || {};
+            ignored.set(key, { name: match[1], count: count + 1 });
+        }
+        for (const [key, { name, count }] of ignored) {
+            const unparsed = count - changelogTrailers.filter((trailer) => trailer.key.toLowerCase() === key).length;
+            if (unparsed > 0) {
+                problems.push(`${short} has ${unparsed === 1 ? 'a' : unparsed} "${name}:" line${unparsed === 1 ? '' : 's'} that git doesn't read as a trailer, so ${unparsed === 1 ? "it'll" : "they'll"} be ignored; put changelog lines in the last paragraph of the commit message, unindented, with no blank lines between them and any Co-Authored-By lines`);
             }
-        });
+        }
     }
 
     // A rebased or cherry-picked commit can carry the same entry twice.

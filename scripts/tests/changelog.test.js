@@ -87,7 +87,7 @@ test('reports a changelog line outside the trailer block', (t) => {
         'Subject\n\nChangelog-Added: misplaced\n\nCo-Authored-By: Someone <someone@example.com>\n');
     assert.deepEqual(texts(entries).Added, []);
     assert.equal(problems.length, 1);
-    assert.match(problems[0], /"Changelog-Added:" line that isn't a trailer/);
+    assert.match(problems[0], /a "Changelog-Added:" line that git doesn't read as a trailer/);
 });
 
 test('reports a misplaced line even when a trailer starts the same way', (t) => {
@@ -97,7 +97,7 @@ test('reports a misplaced line even when a trailer starts the same way', (t) => 
         'Subject\n\nChangelog-Fixed: Fix crash\n\nChangelog-Fixed: Fix crash on startup\n');
     assert.deepEqual(texts(entries).Fixed, ['Fix crash on startup']);
     assert.equal(problems.length, 1);
-    assert.match(problems[0], /"Changelog-Fixed:" line that isn't a trailer/);
+    assert.match(problems[0], /a "Changelog-Fixed:" line that git doesn't read as a trailer/);
 });
 
 test('reports changelog lines in a last paragraph git rejects as trailers', (t) => {
@@ -105,6 +105,35 @@ test('reports changelog lines in a last paragraph git rejects as trailers', (t) 
     t.after(repo.cleanup);
     const { entries, problems } = entriesFor(repo, 'Subject\n\nSome prose.\nChangelog-Added: lost\n');
     assert.deepEqual(texts(entries).Added, []);
+    assert.equal(problems.length, 1);
+});
+
+test('reports an indented changelog line outside the trailer block', (t) => {
+    const repo = makeRepo();
+    t.after(repo.cleanup);
+    const { problems } = entriesFor(repo,
+        'Subject\n\n  Changelog-Added: lost feature\n\nChangelog-Fixed: a bug\n');
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /"Changelog-Added:"/);
+});
+
+test('accepts a continuation line that looks like a changelog line', (t) => {
+    const repo = makeRepo();
+    t.after(repo.cleanup);
+    const { entries, problems } = entriesFor(repo,
+        'Subject\n\nChangelog-Changed: hs.foo now reads\n  Changelog-Added: lines literally\n');
+    assert.deepEqual(problems, []);
+    assert.deepEqual(texts(entries).Changed, ['hs.foo now reads Changelog-Added: lines literally']);
+});
+
+// git interpret-trailers stops at a "---" line, but %(trailers) in git log
+// doesn't, so a trailer above one isn't parsed and must be reported.
+test('reports trailers followed by a --- separator', (t) => {
+    const repo = makeRepo();
+    t.after(repo.cleanup);
+    const { entries, problems } = entriesFor(repo,
+        'Subject\n\nChangelog-Fixed: a bug\n\n---\nNotes after the separator.\n');
+    assert.deepEqual(texts(entries).Fixed, []);
     assert.equal(problems.length, 1);
 });
 
