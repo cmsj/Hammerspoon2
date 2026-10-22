@@ -602,7 +602,7 @@ import UniformTypeIdentifiers
     ///
     /// - Parameters:
     ///   - path: Path to the file or directory. `~` is expanded.
-    ///   - newTags: Array of tag name strings.
+    ///   - newTags: {string[]} Array of tag name strings.
     /// - Returns: `true` on success, `false` on failure.
     /// - Example:
     /// ```js
@@ -615,7 +615,7 @@ import UniformTypeIdentifiers
     ///
     /// - Parameters:
     ///   - path: Path to the file or directory. `~` is expanded.
-    ///   - newTags: Array of tag name strings to add.
+    ///   - newTags: {string[]} Array of tag name strings to add.
     /// - Returns: `true` on success, `false` on failure.
     /// - Example:
     /// ```js
@@ -630,7 +630,7 @@ import UniformTypeIdentifiers
     ///
     /// - Parameters:
     ///   - path: Path to the file or directory. `~` is expanded.
-    ///   - tagsToRemove: Array of tag name strings to remove.
+    ///   - tagsToRemove: {string[]} Array of tag name strings to remove.
     /// - Returns: `true` on success, `false` on failure.
     /// - Example:
     /// ```js

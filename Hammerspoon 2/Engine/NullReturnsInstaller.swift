@@ -137,7 +137,7 @@ struct NullReturnsInstaller: JSContextInstallable {
 
     /// The protocols adopted directly by `cls`, and the protocols they inherit, that inherit from
     /// JSExport.
-    private nonisolated static func exportedProtocols(of cls: AnyClass, jsExport: Protocol) -> [Protocol] {
+    nonisolated static func exportedProtocols(of cls: AnyClass, jsExport: Protocol) -> [Protocol] {
         var seen = Set<String>()
         var result: [Protocol] = []
         func visit(_ proto: Protocol) {

@@ -8,6 +8,7 @@
 import Testing
 import JavaScriptCore
 import CoreGraphics
+import SwiftUI
 @testable import Hammerspoon_2
 
 /// Tests for JavaScript bridge types (HSPoint, HSSize, HSRect)
@@ -699,5 +700,37 @@ struct BridgeTypesTests {
         #expect(harness.evalDouble("r.y") == 0.0)
         #expect(harness.evalDouble("r.w") == 15.0)
         #expect(harness.evalDouble("r.h") == 15.0)
+    }
+
+    // MARK: - HSFont Tests
+
+    @MainActor
+    private func font(_ script: String, in harness: JSTestHarness) -> Font? {
+        (harness.evalValue(script)?.toObjectOf(HSFont.self) as? HSFont)?.font
+    }
+
+    @Test("HSFont.system() makes a regular weight font when the weight is omitted or null")
+    @MainActor
+    func testHSFontSystemDefaultWeight() {
+        let harness = JSTestHarness()
+        #expect(font("HSFont.system(14)", in: harness) == .system(size: 14, weight: .regular))
+        #expect(font("HSFont.system(14, null)", in: harness) == .system(size: 14, weight: .regular))
+        #expect(!harness.hasException)
+    }
+
+    @Test("HSFont.system() uses the weight it's given")
+    @MainActor
+    func testHSFontSystemWeight() {
+        let harness = JSTestHarness()
+        #expect(font("HSFont.system(14, 'bold')", in: harness) == .system(size: 14, weight: .bold))
+        #expect(!harness.hasException)
+    }
+
+    @Test("HSFont.custom() makes the named font at the given size")
+    @MainActor
+    func testHSFontCustom() {
+        let harness = JSTestHarness()
+        #expect(font("HSFont.custom('Menlo', 12)", in: harness) == .custom("Menlo", size: 12))
+        #expect(!harness.hasException)
     }
 }
