@@ -136,7 +136,7 @@ import SwiftUI
     // MARK: - System Fonts
 
     @objc static func system(_ size: Double, weight: String?) -> HSFont {
-        let weight = weight == "undefined" ? "regular" : weight!
+        let weight = weight == "undefined" ? "regular" : (weight ?? "regular")
         let fontWeight: Font.Weight
         switch weight.lowercased() {
         case "ultralight":
