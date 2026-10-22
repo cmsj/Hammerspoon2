@@ -232,18 +232,24 @@ check_build_is_newest() {
     fi
 }
 
-# The newest published release whose tag HEAD contains, or nothing if there
-# isn't one. The changelog covers the commits since it.
+# Set PREVIOUS_RELEASE_TAG to the newest published release whose tag HEAD
+# contains, or nothing if there isn't one. The changelog covers the commits
+# since it. Not a $(...) function, so a failed lookup stops the script
+# instead of looking like there's no earlier release.
 previous_release_tag() {
-    local tag
+    local tags tag
+    tags="$(gh release list --exclude-drafts --limit 100 --json tagName,createdAt \
+        --jq 'sort_by(.createdAt) | reverse | .[].tagName')" \
+        || die "couldn't list the GitHub releases to find the previous one (use --since TAG to name it)"
+    PREVIOUS_RELEASE_TAG=""
     while read -r tag; do
+        [ -n "$tag" ] || continue
         if git rev-parse -q --verify "refs/tags/$tag^{commit}" >/dev/null \
             && git merge-base --is-ancestor "$tag" HEAD; then
-            echo "$tag"
+            PREVIOUS_RELEASE_TAG="$tag"
             return
         fi
-    done < <(gh release list --exclude-drafts --limit 100 --json tagName,createdAt \
-        --jq 'sort_by(.createdAt) | reverse | .[].tagName')
+    done <<<"$tags"
 }
 
 # The commit the tag points at on origin, or nothing if it isn't there.
@@ -548,7 +554,11 @@ EOF
         log "Using release notes from $NOTES_FILE"
         tr -d '\r' < "$NOTES_FILE" > "$NOTES"
     else
-        local since="${SINCE_TAG:-$(previous_release_tag)}"
+        local since="$SINCE_TAG"
+        if [ -z "$since" ]; then
+            previous_release_tag
+            since="$PREVIOUS_RELEASE_TAG"
+        fi
         local since_args=()
         if [ -n "$since" ]; then
             log "Constructing a changelog from commit trailers since $since"

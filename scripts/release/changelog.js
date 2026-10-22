@@ -109,15 +109,20 @@ function collectEntries(commits) {
                 entries[section.title].push({ text: value, sha: commit.sha });
             }
         }
-        // Changelog lines that git didn't parse as trailers, usually because
-        // they're not in the message's last paragraph.
-        for (const line of commit.body.split('\n')) {
-            const match = line.match(/^\s*(changelog[\w-]*)\s*:(.*)$/i);
-            if (match && !changelogTrailers.some(({ key, value }) =>
-                key.toLowerCase() === match[1].toLowerCase() && value.startsWith(match[2].trim()))) {
+        // Changelog lines that git didn't parse as trailers. Only the last
+        // paragraph can hold trailers, so a changelog line anywhere else is
+        // ignored, and git takes all of that paragraph's trailers or none.
+        const paragraphs = commit.body.trimEnd().split(/\n[ \t]*\n/);
+        paragraphs.forEach((paragraph, index) => {
+            const isLast = index === paragraphs.length - 1;
+            for (const line of paragraph.split('\n')) {
+                const match = line.match(/^(changelog[\w-]*)\s*:/i);
+                if (!match) continue;
+                const key = match[1].toLowerCase();
+                if (isLast && changelogTrailers.some((trailer) => trailer.key.toLowerCase() === key)) continue;
                 problems.push(`${short} has a "${match[1]}:" line that isn't a trailer, so it will be ignored; move it into the last paragraph of the commit message, with no blank lines between it and any Co-Authored-By lines`);
             }
-        }
+        });
     }
 
     // A rebased or cherry-picked commit can carry the same entry twice.

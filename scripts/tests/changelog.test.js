@@ -90,6 +90,24 @@ test('reports a changelog line outside the trailer block', (t) => {
     assert.match(problems[0], /"Changelog-Added:" line that isn't a trailer/);
 });
 
+test('reports a misplaced line even when a trailer starts the same way', (t) => {
+    const repo = makeRepo();
+    t.after(repo.cleanup);
+    const { entries, problems } = entriesFor(repo,
+        'Subject\n\nChangelog-Fixed: Fix crash\n\nChangelog-Fixed: Fix crash on startup\n');
+    assert.deepEqual(texts(entries).Fixed, ['Fix crash on startup']);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /"Changelog-Fixed:" line that isn't a trailer/);
+});
+
+test('reports changelog lines in a last paragraph git rejects as trailers', (t) => {
+    const repo = makeRepo();
+    t.after(repo.cleanup);
+    const { entries, problems } = entriesFor(repo, 'Subject\n\nSome prose.\nChangelog-Added: lost\n');
+    assert.deepEqual(texts(entries).Added, []);
+    assert.equal(problems.length, 1);
+});
+
 test('reports unknown and empty changelog trailers', (t) => {
     const repo = makeRepo();
     t.after(repo.cleanup);
