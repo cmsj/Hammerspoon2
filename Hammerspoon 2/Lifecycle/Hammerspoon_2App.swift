@@ -12,6 +12,12 @@ import Sparkle
 class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate! = nil
 
+    private let openFileQueue = OpenFileQueue { url in
+        if JSEngine.shared.moduleRoot?.callOnOpenFile(url.path) != true {
+            AKWarning("Opened \(url.path), but hs.onOpenFile isn't set, so ignoring it")
+        }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         AKGarbage("applicationDidFinishLaunching: Creating/booting shared manager")
 
@@ -23,6 +29,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             fatalError(error.localizedDescription)
         }
+
+        openFileQueue.markReady()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -62,6 +70,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         for url in urls {
             if url.isFileURL, url.pathExtension.lowercased() == "spoon2" {
                 importSpoon(at: url)
+            } else if url.isFileURL {
+                openFileQueue.open(url)
             } else {
                 URLEventDispatcher.shared.dispatch(url)
             }

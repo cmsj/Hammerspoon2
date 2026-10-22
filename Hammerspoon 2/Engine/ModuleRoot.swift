@@ -75,6 +75,21 @@ import JavaScriptCoreExtras
     /// ```
     @objc var onRelaunch: JSFunction? { get set }
 
+    /// {((path: string) => void) | null} Called when a file or folder is opened with Hammerspoon 2,
+    /// e.g. by dropping it on the Dock icon, choosing Hammerspoon 2 from Finder's "Open With" menu,
+    /// or `open -a "Hammerspoon 2" file.txt`, or null to remove it. It's called once for each item,
+    /// with its path. Spoons (`.spoon2` files) are installed as usual rather than passed to it.
+    /// Items opened before your config has loaded (for example, the one that launched
+    /// Hammerspoon 2) are passed to it once your config has loaded.
+    /// - Example:
+    /// ```js
+    /// hs.onOpenFile = (path) => console.log(`Opened ${path}`)
+    ///
+    /// // Remove it again
+    /// hs.onOpenFile = null
+    /// ```
+    @objc var onOpenFile: JSFunction? { get set }
+
     /// Load a Spoon - a packaged, reusable piece of configuration - by name, from the
     /// `Spoons` directory inside your config directory. A Spoon must contain a well-formed
     /// `spoon.json` (with non-empty `name`, `author`, `version`, and `description` fields)
@@ -180,6 +195,7 @@ import JavaScriptCoreExtras
     private var moduleWrappers: [String: JSValue] = [:]
 
     private var _onRelaunch: JSCallback?
+    private var _onOpenFile: JSCallback?
 
     // The context the modules were first used from, recorded with their wrappers, so shutdown()
     // can drop any pins its modules left behind.
@@ -240,6 +256,8 @@ import JavaScriptCoreExtras
 
         _onRelaunch?.detach(from: self)
         _onRelaunch = nil
+        _onOpenFile?.detach(from: self)
+        _onOpenFile = nil
 
         modules.removeAll()
         moduleWrappers.removeAll()
@@ -304,6 +322,27 @@ import JavaScriptCoreExtras
     func callOnRelaunch() -> Bool {
         guard let callback = _onRelaunch?.value else { return false }
         callback.call(withArguments: [])
+        return true
+    }
+
+    // MARK: - Open file
+    @objc var onOpenFile: JSValue? {
+        get { _onOpenFile?.value }
+        set {
+            _onOpenFile?.detach(from: self)
+            _onOpenFile = nil
+            guard let newValue, !newValue.isNull, !newValue.isUndefined else { return }
+            _onOpenFile = JSCallback(value: newValue, owner: self)
+        }
+    }
+
+    /// Calls `hs.onOpenFile` with `path`, if it's set
+    /// - Parameter path: The path of the file or folder that was opened
+    /// - Returns: `true` if there was a callback to call, whether or not it threw
+    @discardableResult
+    func callOnOpenFile(_ path: String) -> Bool {
+        guard let callback = _onOpenFile?.value else { return false }
+        callback.call(withArguments: [path])
         return true
     }
 
