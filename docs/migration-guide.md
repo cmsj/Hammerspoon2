@@ -183,7 +183,7 @@ for what changed within it.
 | `hs.spoons` | Present | [details](#hsspoons-and-spoons) |
 | `hs.spotify` | Gone | drive via `hs.osascript` instead |
 | `hs.spotlight` (+`.group`,`.item`) | Present | reshaped to a query-object/builder pattern |
-| `hs.sqlite3` | Gone | no embedded database |
+| `hs.sqlite3` | → `require("node:sqlite")` | Node's built-in SQLite API — [details](#hssqlite3) |
 | `hs.streamdeck` | Present | watcher folded in |
 | `hs.styledtext` | → `hs.ui` text elements | see [hs.ui](#rebuilding-ui-with-hsui) |
 | `hs.tabs` | Gone | no native window-tabbing control |
@@ -477,6 +477,39 @@ Errors don't come back as Lua's second `nil, err` return value. Check `hs.fs.las
 file's own `f.lastError`, instead. Each holds `{code, message}`, where `code` is a POSIX name
 such as `"ENOENT"`.
 
+### hs.sqlite3
+
+v1's `hs.sqlite3` wrapped the LuaSQLite3 library. v2 implements the synchronous part of Node's
+built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module instead, on the SQLite that
+ships with macOS, so Node's documentation applies:
+
+```js
+const { DatabaseSync } = require("node:sqlite")
+const db = new DatabaseSync("~/notes.db")
+db.exec("CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY, body TEXT)")
+db.prepare("INSERT INTO notes (body) VALUES (?)").run("Buy milk")
+for (const note of db.prepare("SELECT * FROM notes").all()) {
+    console.log(note.id + ": " + note.body)
+}
+```
+
+| v1 (Lua) | v2 |
+|---|---|
+| `hs.sqlite3.open(path)` / `hs.sqlite3.open_memory()` | `new DatabaseSync(path)` / `new DatabaseSync(":memory:")`, with options such as `{ readOnly: true }` |
+| `db:exec(sql)` | `db.exec(sql)` (throws on error instead of returning a result code) |
+| `db:prepare(sql)` | `db.prepare(sql)` |
+| `stmt:bind_values(...)` / `stmt:bind_names(t)` + `stmt:step()` | pass the values to `stmt.run(...)` / `stmt.get(...)` / `stmt.all(...)` / `stmt.iterate(...)` directly; an object binds named parameters |
+| `for row in db:nrows(sql)` | `for (const row of db.prepare(sql).iterate())` |
+| `db:rows(sql)` / `db:urows(sql)` | `stmt.setReturnArrays(true)` before `iterate()`/`all()` |
+| `db:last_insert_rowid()` / `db:changes()` | `stmt.run(...)` returns `{ changes, lastInsertRowid }` |
+| `db:errcode()` / `db:errmsg()` | the thrown error's `errcode` / `message` |
+| `stmt:finalize()` / `db:close()` | statements are finalized when collected or when `db.close()` is called |
+
+Differences from v1 worth knowing: SQL errors throw (catch them with `try`/`catch`), foreign key
+constraints are enforced by default, integers too large for a JS number throw unless you
+`setReadBigInts(true)`, and blobs come back as `Uint8Array`s. User-defined SQL functions
+(`db:create_function`), aggregates, extensions and the backup API aren't available.
+
 ### hs.sound
 
 `hs.sound` is close to feature-complete against v1 despite sounding minimal — `play()`,
@@ -752,7 +785,7 @@ Everything below has no v2 module and no meaningful coverage elsewhere. Grouped 
 doc-generation toolkit that backed Spoon docs and inline help; `hs.docs` is an unrelated
 bundled-doc *viewer*), `hs.logger` (no per-instance, leveled loggers — only flat
 `console.log`/`error`/`warn`), `hs.crash`, `hs.watchable` (no generic pub/sub — only
-per-module watchers), `hs.sqlite3`.
+per-module watchers).
 
 **Window/UI tools with no built-in replacement:** `hs.appfinder` (superseded in v1 itself —
 use `hs.application`/`hs.window` directly), `hs.dockicon`, `hs.expose`, `hs.hints`, `hs.grid`,

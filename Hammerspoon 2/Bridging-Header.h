@@ -56,3 +56,13 @@ hs_SetFrontProcess(pid_t pid, bool allWindows) {
     return SetFrontProcessWithOptions(&psn, allWindows ? 0 : kSetFrontProcessFrontWindowOnly) == noErr;
 #pragma clang diagnostic pop
 }
+
+// sqlite3_db_config is variadic, which Swift can't call, so this wraps the form that sets an
+// integer option (used by require('node:sqlite') to configure foreign keys and double-quoted
+// string literals).
+#import <sqlite3.h>
+
+static inline int
+hs_sqlite3_db_config_int(sqlite3 *db, int option, int value) {
+    return sqlite3_db_config(db, option, value, (int *)NULL);
+}
