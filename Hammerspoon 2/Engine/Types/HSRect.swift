@@ -156,6 +156,16 @@ import CoreGraphics
     /// new HSRect(0, 0, 2, 2).vector(new HSPoint(4, 5)) // new HSPoint(3, 4)
     /// ```
     @objc func vector(_ other: JSValue) -> HSPoint
+
+    /// Returns a plain object containing this rect's origin and size, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with `x`, `y`, `w` and `h` properties
+    /// - Example:
+    /// ```js
+    /// JSON.stringify(hs.screen.main().frame) // '{"x":0,"y":25,"w":1440,"h":875}'
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @objc class HSRect: NSObject, HSRectAPI {
@@ -168,6 +178,11 @@ import CoreGraphics
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        ["x": x, "y": y, "w": w, "h": h]
+    }
+
     var rect: CGRect
 
     var x: Double {

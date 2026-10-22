@@ -140,6 +140,16 @@ import Darwin
     /// service.stopMonitoring()
     /// ```
     @objc @discardableResult func stopMonitoring() -> HSBonjourService
+
+    /// Returns a plain object describing this service, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the service's `name`, `type`, `domain`, `hostname`, `port`, `addresses`, `txtRecord` and `includesPeerToPeer`. `hostname` and `txtRecord` are `null` until the service has been resolved
+    /// - Example:
+    /// ```js
+    /// console.log(JSON.stringify(service))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 // MARK: - Service implementation
@@ -156,6 +166,20 @@ import Darwin
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        [
+            "name": name,
+            "type": type,
+            "domain": domain,
+            "hostname": hostname.orNSNull,
+            "port": port,
+            "addresses": addresses,
+            "txtRecord": txtRecord.orNSNull,
+            "includesPeerToPeer": includesPeerToPeer,
+        ]
+    }
+
     @objc let identifier = UUID().uuidString
 
     let service: NetService

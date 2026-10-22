@@ -124,6 +124,16 @@ import CoreGraphics
     /// new HSPoint(1, 1).vector(new HSPoint(4, 5)) // new HSPoint(3, 4)
     /// ```
     @objc func vector(_ other: JSValue) -> HSPoint
+
+    /// Returns a plain object containing this point's coordinates, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with `x` and `y` properties
+    /// - Example:
+    /// ```js
+    /// JSON.stringify(new HSPoint(10, 20)) // '{"x":10,"y":20}'
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @objc class HSPoint: NSObject, HSPointAPI {
@@ -136,6 +146,11 @@ import CoreGraphics
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        ["x": x, "y": y]
+    }
+
     var point: CGPoint
 
     var x: Double {

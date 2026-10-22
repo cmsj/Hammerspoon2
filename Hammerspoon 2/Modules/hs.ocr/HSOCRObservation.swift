@@ -77,6 +77,17 @@ import JavaScriptCore
     /// }
     /// ```
     @objc var bounds: HSRect { get }
+
+    /// Returns a plain object describing this observation, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the observation's `text`, `confidence` and `bounds`
+    /// - Example:
+    /// ```js
+    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
+    /// console.log(JSON.stringify(result.observations[0]))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @_documentation(visibility: private)
@@ -92,6 +103,11 @@ import JavaScriptCore
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        ["text": text, "confidence": confidence, "bounds": bounds]
+    }
+
     @objc let text: String
     @objc let confidence: Double
     @objc let bounds: HSRect

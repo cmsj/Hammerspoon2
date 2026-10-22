@@ -46,6 +46,16 @@ import Observation
     /// reactive.set(HSColor.named("red"))
     /// ```
     @objc func set(_ value: JSValue)
+
+    /// Returns a plain object containing this color's sRGB components, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with `red`, `green`, `blue` and `alpha` properties, each between 0.0 and 1.0, matching the arguments of `HSColor.rgb()`
+    /// - Example:
+    /// ```js
+    /// JSON.stringify(HSColor.rgb(1, 0, 0, 0.5)) // '{"red":1,"green":0,"blue":0,"alpha":0.5}'
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @Observable
@@ -62,6 +72,16 @@ import Observation
 
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
+    }
+
+    @objc func toJSON() -> [String: Any] {
+        let ns = NSColor(color).usingColorSpace(.sRGB) ?? NSColor(color)
+        return [
+            "red": Double(ns.redComponent),
+            "green": Double(ns.greenComponent),
+            "blue": Double(ns.blueComponent),
+            "alpha": Double(ns.alphaComponent),
+        ]
     }
 
     var color: Color

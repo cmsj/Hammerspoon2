@@ -878,3 +878,28 @@ struct HSApplicationTests {
     }
 
 }
+
+// MARK: - JSON Serialization
+
+extension HSApplicationTests {
+    @Suite("hs.application JSON serialization", .serialized, .testApp)
+    struct HSApplicationJSONTests {
+        @Test("JSON.stringify() of an application includes its identity and state")
+        func testApplicationToJSON() {
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.eval("var testAppPID = \(TestAppControl.pid ?? -1);")
+            TestAppControl.showCurrentTest()
+
+            harness.eval("""
+                var app = hs.application.fromPID(testAppPID);
+                var parsed = JSON.parse(JSON.stringify(app));
+                """)
+            harness.expectTrue("parsed.pid === testAppPID")
+            harness.expectTrue("parsed.bundleID === app.bundleID && parsed.title === app.title && parsed.bundlePath === app.bundlePath")
+            harness.expectTrue("parsed.kind === app.kind && parsed.isRunning === true")
+            harness.expectTrue("typeof parsed.isActive === 'boolean' && typeof parsed.isHidden === 'boolean'")
+            #expect(!harness.hasException)
+        }
+    }
+}

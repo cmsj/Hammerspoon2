@@ -60,6 +60,16 @@ import CoreGraphics
     /// new HSSize(10, 20).scale(2) // new HSSize(20, 40)
     /// ```
     @objc func scale(_ factor: JSValue) -> HSSize
+
+    /// Returns a plain object containing this size's dimensions, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with `w` and `h` properties
+    /// - Example:
+    /// ```js
+    /// JSON.stringify(new HSSize(100, 50)) // '{"w":100,"h":50}'
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @objc class HSSize: NSObject, HSSizeAPI {
@@ -72,6 +82,11 @@ import CoreGraphics
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        ["w": w, "h": h]
+    }
+
     var size: CGSize
 
     var w: Double {

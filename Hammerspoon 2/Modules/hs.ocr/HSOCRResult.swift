@@ -64,6 +64,17 @@ import JavaScriptCore
     /// })
     /// ```
     @objc var observations: [HSOCRObservation] { get }
+
+    /// Returns a plain object describing this result, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the result's `text` and `observations`
+    /// - Example:
+    /// ```js
+    /// const result = await hs.ocr.recognizeText('/tmp/image.png')
+    /// console.log(JSON.stringify(result, null, 2))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @_documentation(visibility: private)
@@ -78,6 +89,11 @@ import JavaScriptCore
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        ["text": text, "observations": observations]
+    }
+
     @objc let text: String
     @objc let observations: [HSOCRObservation]
 

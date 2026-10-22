@@ -626,3 +626,38 @@ struct HSScreenIntegrationTests {
         #expect(!harness.hasException)
     }
 }
+
+// MARK: - JSON Serialization
+
+extension HSScreenIntegrationTests {
+    @Test("JSON.stringify() of a screen includes its identity and geometry", .disabled(if: !hasScreens(), "No screens available"))
+    func testScreenToJSON() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("""
+            var screen = hs.screen.primary();
+            var parsed = JSON.parse(JSON.stringify(screen));
+            """)
+        #expect(harness.evalString("Object.keys(parsed).sort().join(',')") == "frame,fullFrame,id,mode,name,position,rotation,uuid")
+        harness.expectTrue("parsed.id === screen.id && parsed.name === screen.name && parsed.uuid === screen.uuid")
+        harness.expectTrue("""
+            parsed.frame.x === screen.frame.x && parsed.frame.y === screen.frame.y &&
+            parsed.frame.w === screen.frame.w && parsed.frame.h === screen.frame.h
+            """)
+        harness.expectTrue("parsed.fullFrame.w === screen.fullFrame.w && parsed.position.x === screen.position.x")
+        harness.expectTrue("parsed.mode.width === screen.mode.width")
+        #expect(!harness.hasException)
+    }
+
+    @Test("JSON.stringify() of hs.screen.all() lists every screen", .disabled(if: !hasScreens(), "No screens available"))
+    func testAllScreensToJSON() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSScreenModule.self, as: "screen")
+
+        harness.eval("var parsed = JSON.parse(JSON.stringify(hs.screen.all()))")
+        harness.expectTrue("parsed.length === hs.screen.all().length")
+        harness.expectTrue("parsed.every(function(s) { return typeof s.name === 'string' && typeof s.frame.w === 'number' })")
+        #expect(!harness.hasException)
+    }
+}

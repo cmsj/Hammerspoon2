@@ -320,6 +320,16 @@ import ScreenCaptureKit
     /// hs.screen.main().setBrightness(0.5)
     /// ```
     @objc func setBrightness(_ brightness: Double) -> Bool
+
+    /// Returns a plain object describing this screen, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the screen's `id`, `name`, `uuid`, `frame`, `fullFrame`, `position`, `mode` and `rotation`
+    /// - Example:
+    /// ```js
+    /// console.log(JSON.stringify(hs.screen.all(), null, 2))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 // MARK: - CGDisplayMode helpers
@@ -349,6 +359,20 @@ private extension CGDisplayMode {
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        [
+            "id": id,
+            "name": name,
+            "uuid": uuid,
+            "frame": frame,
+            "fullFrame": fullFrame,
+            "position": position,
+            "mode": mode,
+            "rotation": rotation,
+        ]
+    }
+
     let screen: NSScreen
 
     init(screen: NSScreen) {
