@@ -9,10 +9,12 @@ import JavaScriptCore
 import ObjectiveC
 @testable import Hammerspoon_2
 
+/// Checks the names of JSExport protocol methods.
+///
 /// Objective-C methods whose selectors are in the alloc/new/copy/mutableCopy families return an
 /// object with an extra retain that the caller must release. JavaScriptCore doesn't release it, so
 /// every object such a method returns to JS leaks (#309). This checks that no JSExport protocol
-/// declares one.
+/// declares one, and that each method's JS name is the one the docs give it.
 @Suite("JSExport naming tests")
 struct JSExportNamingTests {
 
@@ -102,5 +104,52 @@ struct JSExportNamingTests {
 
         #expect(checked > 0, "Found no JSExport protocols to check")
         #expect(offenders.isEmpty, "JSExport methods in a retained-result method family leak every object they return to JS. Rename them: \(offenders.joined(separator: ", "))")
+    }
+
+    /// Whether a selector has no argument labels: a name followed only by colons, like `foo::`.
+    private static func isUnlabeled(_ selector: String) -> Bool {
+        selector.wholeMatch(of: #/[A-Za-z_][A-Za-z0-9_]*:*/#) != nil
+    }
+
+    @Test("Unlabeled selector detection")
+    func unlabeledDetection() {
+        #expect(Self.isUnlabeled("reload"))
+        #expect(Self.isUnlabeled("custom::"))
+        #expect(Self.isUnlabeled("_addWatcher:"))
+        #expect(!Self.isUnlabeled("custom:size:"))
+        #expect(!Self.isUnlabeled("doThis:withThat:"))
+    }
+
+    /// JavaScriptCore names a method after its whole selector, so `custom(_ name:, size:)` (selector
+    /// `custom:size:`) is `customSize` in JS, but the docs call it `custom` (#331). With every
+    /// argument unlabeled (`_ size:`), the JS name is the Swift base name. A labeled first argument
+    /// (`foo(bar:)` is `fooWithBar:`) looks unlabeled here; JSExportDocsTests catches that one.
+    @Test("Every JSExport method's JS name is its Swift base name")
+    func everyMethodIsUnlabeled() throws {
+        var offenders: [String] = []
+        for proto in try ExportedProtocol.all() {
+            for (selectors, kind) in [(proto.instanceMethods, "-"), (proto.classMethods, "+")] {
+                for selector in selectors where !Self.isUnlabeled(selector) {
+                    offenders.append("\(proto.name) \(kind)\(selector) (\(NullReturnsInstaller.jsName(forSelector: selector)) in JS)")
+                }
+            }
+        }
+        #expect(offenders.isEmpty, "These methods have argument labels, which become part of their JS name. Use `_` for every argument label: \(offenders.joined(separator: ", "))")
+    }
+
+    /// Two selectors with the same JS name, like `system:` and `system::`, clash: only one of them
+    /// is reachable from JS.
+    @Test("No two members of a JSExport protocol have the same JS name")
+    func noJSNameCollisions() throws {
+        var offenders: [String] = []
+        for proto in try ExportedProtocol.all() {
+            let instanceNames = proto.instanceMethods.map(NullReturnsInstaller.jsName(forSelector:)) + proto.instanceProperties
+            let classNames = proto.classMethods.map(NullReturnsInstaller.jsName(forSelector:)) + proto.classProperties
+            for (names, kind) in [(instanceNames, "-"), (classNames, "+")] {
+                let duplicates = Dictionary(grouping: names, by: { $0 }).filter { $0.value.count > 1 }.keys
+                offenders += duplicates.sorted().map { "\(proto.name) \(kind)\($0)" }
+            }
+        }
+        #expect(offenders.isEmpty, "These JS names are declared more than once, so all but one are unreachable: \(offenders.joined(separator: ", "))")
     }
 }
