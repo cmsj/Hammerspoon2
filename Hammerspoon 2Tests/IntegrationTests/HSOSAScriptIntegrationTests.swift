@@ -820,4 +820,63 @@ struct HSOSAScriptIntegrationTests {
         harness.expectTrue("results.indexOf(20) !== -1")
         harness.expectTrue("results.indexOf(30) !== -1")
     }
+
+    @Test("A slow script does not delay a fast one started after it")
+    func testSlowScriptDoesNotBlockFastScript() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        var resolved = false
+        harness.registerCallback("onResolve") { resolved = true }
+
+        // If the helper ran scripts one at a time, "fast" would have to wait
+        // for the 3 second delay and would finish second.
+        harness.eval("""
+        var order = [];
+        function onResult(r) {
+            order.push(r.result);
+            if (order.length === 2) {
+                __test_callback('onResolve');
+            }
+        }
+        hs.osascript.applescript('delay 3\\nreturn "slow"').then(onResult);
+        hs.osascript.applescript('return "fast"').then(onResult);
+        """)
+
+        let completed = await harness.waitForAsync(timeout: 15.0) { resolved }
+        #expect(completed, "Both scripts should complete")
+        harness.expectEqual("order.length", 2)
+        harness.expectEqual("order[0]", "fast")
+        harness.expectEqual("order[1]", "slow")
+    }
+
+    @Test("A sync call is not held up by a slow async script")
+    func testSyncCallNotBlockedBySlowAsyncScript() async {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        var resolved = false
+        harness.registerCallback("onResolve") { resolved = true }
+
+        harness.eval("""
+        hs.osascript.applescript('delay 5\\nreturn "slow"').then(function() {
+            __test_callback('onResolve');
+        });
+        """)
+
+        // Give the slow script time to reach the helper before the sync call.
+        try? await Task.sleep(for: .milliseconds(500))
+
+        let clock = ContinuousClock()
+        let elapsed = clock.measure {
+            harness.eval("var syncResult = hs.osascript.applescriptSync('return 7');")
+        }
+        #expect(harness.evalBool("syncResult.success") == true)
+        harness.expectEqual("syncResult.result", 7)
+        #expect(elapsed < .seconds(3), "Sync call took \(elapsed); it should not wait for the slow script")
+
+        // Let the slow script finish so it doesn't outlive the test.
+        let completed = await harness.waitForAsync(timeout: 15.0) { resolved }
+        #expect(completed, "Slow script should complete")
+    }
 }

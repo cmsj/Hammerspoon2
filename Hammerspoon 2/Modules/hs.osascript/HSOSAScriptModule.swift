@@ -26,11 +26,45 @@ import JavaScriptCore
 /// | `result` | `any` | Parsed return value of the script, or `null` on failure |
 /// | `raw` | `String` | Raw string representation of the result, or the error message on failure |
 ///
+/// ## Parallel execution
+///
+/// Async scripts run **in parallel**, and their Promises resolve in whatever
+/// order the scripts finish, not the order they were started. A slow script
+/// (for example one waiting up to two minutes for an unresponsive application
+/// to answer an AppleEvent) does not hold up any other script.
+///
+/// If your scripts must run in a strict order, chain them so that each one
+/// only starts once the previous one has finished:
+///
+/// ```javascript
+/// hs.osascript.applescript('tell application "Music" to pause')
+///   .then(() => hs.osascript.applescript('tell application "Music" to set sound volume to 50'))
+///   .then(() => hs.osascript.applescript('tell application "Music" to play'));
+/// ```
+///
+/// or, inside an `async` function:
+///
+/// ```javascript
+/// async function restartMusic() {
+///   await hs.osascript.applescript('tell application "Music" to pause');
+///   await hs.osascript.applescript('tell application "Music" to set sound volume to 50');
+///   await hs.osascript.applescript('tell application "Music" to play');
+/// }
+/// ```
+///
 /// ## Sync API
 ///
 /// The `*Sync` variants block until the script completes and return the same
-/// `{ success, result, raw }` object directly.  Use these only when a Promise
-/// chain is impractical; they block the JS thread for the duration of the call.
+/// `{ success, result, raw }` object directly.
+///
+/// **Warning:** while a sync call is running, Hammerspoon's main thread is
+/// blocked. Nothing else in Hammerspoon can run: no timers, hotkeys, event
+/// watchers, UI updates, or console. If the target application is slow to
+/// respond, Hammerspoon hangs until it does, or until the AppleEvent times out
+/// (two minutes by default). If the target application tries to talk back to
+/// Hammerspoon while it is blocked, both wait on each other until that timeout.
+/// Prefer the async API, and only use the `*Sync` variants for scripts that are
+/// known to finish quickly.
 ///
 /// The `result` field is typed based on what the script returned: strings,
 /// numbers, booleans, lists, and records are all mapped to their JavaScript
@@ -79,6 +113,8 @@ import JavaScriptCore
 @objc protocol HSOSAScriptModuleAPI: JSExport {
     /// Run an AppleScript source string.
     ///
+    /// Scripts run in parallel; chain Promises if they must run in order (see the module overview).
+    ///
     /// - Parameter source: The AppleScript source code to compile and execute.
     /// - Returns: A `Promise` resolving to `{ success, result, raw }`.
     /// - Example:
@@ -92,6 +128,8 @@ import JavaScriptCore
     /// OSA JavaScript is Apple's Open Scripting Architecture dialect of
     /// JavaScript, distinct from the JavaScriptCore engine that runs
     /// Hammerspoon scripts themselves.
+    ///
+    /// Scripts run in parallel; chain Promises if they must run in order (see the module overview).
     ///
     /// - Parameter source: The OSA JavaScript source code to compile and execute.
     /// - Returns: A `Promise` resolving to `{ success, result, raw }`.
@@ -149,7 +187,8 @@ import JavaScriptCore
 
     /// Run an AppleScript source string synchronously.
     ///
-    /// Blocks the JS thread until the script completes.
+    /// **Warning:** blocks Hammerspoon's main thread until the script completes, so
+    /// nothing else in Hammerspoon can run in the meantime. Prefer the async API.
     ///
     /// - Parameter source: The AppleScript source code to compile and execute.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
@@ -162,7 +201,8 @@ import JavaScriptCore
 
     /// Run an OSA JavaScript source string synchronously.
     ///
-    /// Blocks the JS thread until the script completes.
+    /// **Warning:** blocks Hammerspoon's main thread until the script completes, so
+    /// nothing else in Hammerspoon can run in the meantime. Prefer the async API.
     ///
     /// - Parameter source: The OSA JavaScript source code to compile and execute.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
@@ -175,6 +215,9 @@ import JavaScriptCore
 
     /// Read a file from disk and execute its contents as AppleScript synchronously.
     ///
+    /// **Warning:** blocks Hammerspoon's main thread until the script completes, so
+    /// nothing else in Hammerspoon can run in the meantime. Prefer the async API.
+    ///
     /// - Parameter path: Absolute path to the AppleScript source file.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
     /// - Example:
@@ -184,6 +227,9 @@ import JavaScriptCore
     @objc func applescriptSyncFromFile(_ path: String) -> [String: Any]?
 
     /// Read a file from disk and execute its contents as OSA JavaScript synchronously.
+    ///
+    /// **Warning:** blocks Hammerspoon's main thread until the script completes, so
+    /// nothing else in Hammerspoon can run in the meantime. Prefer the async API.
     ///
     /// - Parameter path: Absolute path to the OSA JavaScript source file.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
@@ -196,6 +242,9 @@ import JavaScriptCore
     /// Low-level synchronous execution entry point.
     ///
     /// Prefer `applescriptSync()` or `javascriptSync()` over calling this directly.
+    ///
+    /// **Warning:** blocks Hammerspoon's main thread until the script completes, so
+    /// nothing else in Hammerspoon can run in the meantime. Prefer the async API.
     ///
     /// - Parameters:
     ///   - source: The script source code.
