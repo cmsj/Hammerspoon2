@@ -428,6 +428,22 @@ struct NodeSQLiteTests {
             #expect(harness.evalString("errorOf(() => stmt.get({ get a() { throw new Error('boom'); } })).message") == "boom")
         }
 
+        @Test("Getters of properties that match no parameter aren't run, as in Node")
+        func testUnknownGettersNotRead() throws {
+            let harness = try makeHarness()
+            harness.eval("""
+                var reads = 0;
+                var stmt = new DatabaseSync(':memory:').prepare('SELECT :a AS a');
+                var params = { a: 1, get unused() { reads++; throw new Error('boom'); } };
+                var strictError = errorOf(() => stmt.get(params));
+                stmt.setAllowUnknownNamedParameters(true);
+                var row = stmt.get(params);
+                """)
+            #expect(harness.evalString("strictError.message") == "Unknown named parameter 'unused'")
+            #expect(harness.evalInt("row.a") == 1)
+            #expect(harness.evalInt("reads") == 0)
+        }
+
         @Test("Too many parameters throws a SQLite error")
         func testTooManyParameters() throws {
             let harness = try makeHarness()

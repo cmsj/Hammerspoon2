@@ -911,7 +911,7 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
         // JSExport declares a single parameter, but these methods take any number
         let arguments = (JSContext.currentArguments() as? [JSValue]) ?? []
         var anonymous = arguments[...]
-        var named: [(key: String, value: JSValue)] = []
+        var named: [(index: Int32, value: JSValue)] = []
         if let first = arguments.first, first.isObject, !NodeSQLiteValues.isTypedArray(first) {
             guard let values = namedValues(of: first, in: context) else { return nil }
             named = values
@@ -926,7 +926,9 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
         unsafe sqlite3_reset(stmt)
         unsafe sqlite3_clear_bindings(stmt)
 
-        guard unsafe bindNamed(named, to: stmt, db: db, in: context) else { return nil }
+        for (index, value) in named {
+            guard unsafe NodeSQLiteValues.bind(value, to: stmt, at: index, db: db, in: context) else { return nil }
+        }
 
         var index: Int32 = 1
         for value in anonymous {
@@ -940,36 +942,28 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
         return unsafe stmt
     }
 
-    /// Reads the enumerable properties of a named-parameter object.
-    /// - Returns: The properties, or nil (with the exception thrown) if reading one threw
-    private func namedValues(of object: JSValue, in context: JSContext) -> [(key: String, value: JSValue)]? {
+    /// Matches the enumerable properties of a named-parameter object to the statement's
+    /// parameters, and reads the values of those that match. As in Node, properties that don't
+    /// match a parameter are never read, so their getters don't run.
+    /// - Returns: The values with their parameter indexes, or nil (with an exception thrown) if a
+    ///   property matches no parameter (unless that's allowed), or reading one threw
+    private func namedValues(of object: JSValue, in context: JSContext) -> [(index: Int32, value: JSValue)]? {
         let ctx = unsafe context.jsGlobalContextRef
         guard let objectRef = unsafe JSValueToObject(ctx, object.jsValueRef, nil) else { return [] }
+        // Enumerating a proxy runs its ownKeys trap, so the statement is looked up afterwards
         let names = unsafe JSObjectCopyPropertyNames(ctx, objectRef)
         defer { unsafe JSPropertyNameArrayRelease(names) }
+        guard let stmt = unsafe liveHandle() else { return nil }
 
-        var values: [(key: String, value: JSValue)] = []
+        // Match every name before reading any value: no JS runs while matching
+        var matched = unsafe [(index: Int32, name: JSStringRef?)]()
         let count = unsafe JSPropertyNameArrayGetCount(names)
         for i in 0..<count {
             let nameRef = unsafe JSPropertyNameArrayGetNameAtIndex(names, i)
-            var exception: JSValueRef?
-            let valueRef = unsafe JSObjectGetProperty(ctx, objectRef, nameRef, &exception)
-            if let exception = unsafe exception {
-                context.exception = unsafe JSValue(jsValueRef: exception, in: context)
-                return nil
-            }
-            guard let value = unsafe JSValue(jsValueRef: valueRef, in: context) else { return nil }
-            values.append((unsafe JSStringCopyCFString(kCFAllocatorDefault, nameRef) as String, value))
-        }
-        return values
-    }
-
-    /// Binds named-parameter values to the statement's named parameters.
-    private func bindNamed(_ values: [(key: String, value: JSValue)], to stmt: OpaquePointer, db: OpaquePointer, in context: JSContext) -> Bool {
-        for (key, value) in values {
+            let key = unsafe JSStringCopyCFString(kCFAllocatorDefault, nameRef) as String
             var index = unsafe sqlite3_bind_parameter_index(stmt, key)
             if index == 0 && allowBareNamedParameters {
-                guard let bareNames = unsafe bareParameterNames(stmt, in: context) else { return false }
+                guard let bareNames = unsafe bareParameterNames(stmt, in: context) else { return nil }
                 if let fullName = bareNames[key] {
                     index = unsafe sqlite3_bind_parameter_index(stmt, fullName)
                 }
@@ -977,11 +971,23 @@ private func stringArgument(_ value: JSValue, name: String, in context: JSContex
             guard index != 0 else {
                 if allowUnknownNamedParameters { continue }
                 context.exception = NodeSQLiteError.invalidState("Unknown named parameter '\(key)'", in: context)
-                return false
+                return nil
             }
-            guard unsafe NodeSQLiteValues.bind(value, to: stmt, at: index, db: db, in: context) else { return false }
+            unsafe matched.append((index, nameRef))
         }
-        return true
+
+        var values: [(index: Int32, value: JSValue)] = []
+        for unsafe (index, nameRef) in unsafe matched {
+            var exception: JSValueRef?
+            let valueRef = unsafe JSObjectGetProperty(ctx, objectRef, nameRef, &exception)
+            if let exception = unsafe exception {
+                context.exception = unsafe JSValue(jsValueRef: exception, in: context)
+                return nil
+            }
+            guard let value = unsafe JSValue(jsValueRef: valueRef, in: context) else { return nil }
+            values.append((index, value))
+        }
+        return values
     }
 
     /// The statement's named parameters, keyed by their names without the prefix character.
