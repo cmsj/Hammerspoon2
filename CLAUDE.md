@@ -43,6 +43,25 @@ npm run docs:test       # Validate docs
 
 The full pipeline command should be run after every change you make to the codebase, to ensure our docs are always synchronised with the code.
 
+## Commit Messages & Changelog
+
+Release notes are generated from git trailers in commit messages (`scripts/release/changelog.js`, run by `scripts/release/release.sh prepare`). When a commit makes a user-visible change, add one or more trailers to the **last paragraph** of its message, in the same block as the `Co-Authored-By:` line (a blank line between them stops git treating the changelog line as a trailer):
+
+```
+Add hs.foo.bar()
+
+Body explaining the change.
+
+Changelog-Added: `hs.foo.bar()`, which does a thing
+Co-Authored-By: ...
+```
+
+- `Changelog-Added:` new API users can now use.
+- `Changelog-Changed:` existing API whose behaviour has changed.
+- `Changelog-Fixed:` a bug that has been fixed.
+
+Each entry is one line of user-facing markdown; write it for users, not developers. Internal changes (refactors, tests, CI) get no trailer. The `Changelog` workflow comments on PRs whose commits have no (or malformed) trailers.
+
 ## Architecture Overview
 
 Hammerspoon 2 is a macOS automation app that embeds a JavaScript engine (JavaScriptCore) and exposes Swift APIs to JavaScript via `JSExport` protocols. The root JS object is `hs`, which lazily loads modules on first access.

@@ -2,7 +2,7 @@
 #
 # Build, notarise and publish a Hammerspoon 2 release, in two phases.
 #
-#   scripts/release/release.sh prepare [--notes-file FILE] [--edit-notes] <version>
+#   scripts/release/release.sh prepare [--notes-file FILE] [--since TAG] [--edit-notes] <version>
 #   scripts/release/release.sh execute [--dry-run] [--yes] <version>
 #
 # prepare changes nothing outside build/release/<version>. Once it has checked
@@ -16,8 +16,9 @@
 #   3. zips it and signs the zip with the Sparkle EdDSA key
 #   4. builds signed binary deltas against the previous releases that this
 #      script published, and writes sparkle.json to describe all of the above
-#   5. writes a changelog of the pull requests merged since the last release
-#      (or takes yours from --notes-file)
+#   5. writes a changelog from the Changelog-Added/Changed/Fixed trailers in
+#      the commits since the last release (see scripts/release/changelog.js),
+#      or takes yours from --notes-file
 #   6. adds the release to the live appcast.xml and signs the feed, so Sparkle
 #      (with SURequireSignedFeed) can tell it hasn't been tampered with
 #
@@ -87,7 +88,7 @@ DELTA_COUNT="${DELTA_COUNT:-3}"
 
 usage() {
     cat <<EOF
-Usage: $(basename "$0") prepare [--notes-file FILE] [--edit-notes] <version>
+Usage: $(basename "$0") prepare [--notes-file FILE] [--since TAG] [--edit-notes] <version>
        $(basename "$0") appcast <version>
        $(basename "$0") execute [--dry-run] [--yes] <version>
        $(basename "$0") sparkle-bin
@@ -105,7 +106,10 @@ Commands:
 
 Options:
   --notes-file FILE  (prepare) Use FILE (markdown) as the release notes instead
-                     of a changelog generated from merged pull requests.
+                     of a changelog generated from commit message trailers.
+  --since TAG        (prepare) Build the changelog from the commits since TAG,
+                     instead of since the latest published release that HEAD
+                     contains.
   --edit-notes       (prepare) Open the release notes in \$EDITOR before
                      they're signed into the appcast.
   --dry-run          (execute) Run the checks and show what's done and what's
@@ -126,6 +130,7 @@ warn() { printf '\033[33mwarning:\033[0m %s\n' "$*" >&2; }
 COMMAND="${1:-}"
 [ $# -eq 0 ] || shift
 NOTES_FILE=""
+SINCE_TAG=""
 EDIT_NOTES=0
 DRY_RUN=0
 ASSUME_YES=0
@@ -133,6 +138,7 @@ VERSION=""
 while [ $# -gt 0 ]; do
     case "$COMMAND:$1" in
         prepare:--notes-file) NOTES_FILE="${2:?--notes-file needs a path}"; shift ;;
+        prepare:--since) SINCE_TAG="${2:?--since needs a tag}"; shift ;;
         prepare:--edit-notes) EDIT_NOTES=1 ;;
         execute:--dry-run) DRY_RUN=1 ;;
         execute:--yes) ASSUME_YES=1 ;;
@@ -226,6 +232,26 @@ check_build_is_newest() {
     fi
 }
 
+# Set PREVIOUS_RELEASE_TAG to the newest published release whose tag HEAD
+# contains, or nothing if there isn't one. The changelog covers the commits
+# since it. Not a $(...) function, so a failed lookup stops the script
+# instead of looking like there's no earlier release.
+previous_release_tag() {
+    local tags tag
+    tags="$(gh release list --exclude-drafts --limit 100 --json tagName,createdAt \
+        --jq 'sort_by(.createdAt) | reverse | .[].tagName')" \
+        || die "couldn't list the GitHub releases to find the previous one (use --since TAG to name it)"
+    PREVIOUS_RELEASE_TAG=""
+    while read -r tag; do
+        [ -n "$tag" ] || continue
+        if git rev-parse -q --verify "refs/tags/$tag^{commit}" >/dev/null \
+            && git merge-base --is-ancestor "$tag" HEAD; then
+            PREVIOUS_RELEASE_TAG="$tag"
+            return
+        fi
+    done <<<"$tags"
+}
+
 # The commit the tag points at on origin, or nothing if it isn't there.
 remote_tag_commit() {
     # An annotated tag is followed by its peeled ("^{}") commit.
@@ -301,6 +327,7 @@ cmd_prepare() {
         [ -f "$NOTES_FILE" ] || die "notes file not found: $NOTES_FILE"
         NOTES_FILE="$(cd "$(dirname "$NOTES_FILE")" && pwd)/$(basename "$NOTES_FILE")"
     fi
+    [ -z "$NOTES_FILE" ] || [ -z "$SINCE_TAG" ] || die "--since has no effect with --notes-file"
 
     log "Preflight checks"
     require_tools xcodebuild xcrun ditto plutil codesign spctl gh git node jq shasum curl
@@ -326,6 +353,10 @@ cmd_prepare() {
             && die "HEAD is already released as $other_tag, and a second release from the same commit would reuse its build number"
     done
     BUILD_NUMBER="$(git rev-list --count HEAD)"
+    if [ -n "$SINCE_TAG" ]; then
+        git rev-parse -q --verify "refs/tags/$SINCE_TAG^{commit}" >/dev/null || die "--since: no tag $SINCE_TAG"
+        git merge-base --is-ancestor "$SINCE_TAG" HEAD || die "--since: $SINCE_TAG isn't an ancestor of HEAD"
+    fi
     mkdir -p "$WORK_ROOT"
     fetch_live_appcast "$WORK_ROOT/live-$VERSION.xml"
     check_build_is_newest "$BUILD_NUMBER" "$WORK_ROOT/live-$VERSION.xml"
@@ -523,12 +554,23 @@ EOF
         log "Using release notes from $NOTES_FILE"
         tr -d '\r' < "$NOTES_FILE" > "$NOTES"
     else
-        log "Constructing a changelog from pull requests merged since the last release"
-        # GitHub picks the previous release as the starting point. The tag
-        # doesn't exist yet, so tell it which commit the release will be.
-        gh api "repos/$GH_REPO/releases/generate-notes" \
-            -f tag_name="$VERSION" -f target_commitish="$HEAD_SHA" \
-            --jq .body > "$NOTES"
+        local since="$SINCE_TAG"
+        if [ -z "$since" ]; then
+            previous_release_tag
+            since="$PREVIOUS_RELEASE_TAG"
+        fi
+        local since_args=()
+        if [ -n "$since" ]; then
+            log "Constructing a changelog from commit trailers since $since"
+            since_args=(--from "$since")
+        else
+            log "Constructing a changelog from commit trailers in all of history (no earlier release)"
+        fi
+        node "$REPO_ROOT/scripts/release/changelog.js" notes ${since_args[@]+"${since_args[@]}"} \
+            --to "$HEAD_SHA" --repo "$GH_REPO" --version "$VERSION" > "$NOTES"
+        if grep -qx 'No user-facing changes.' "$NOTES"; then
+            warn "no commits since ${since:-the beginning} have Changelog-* trailers; consider --edit-notes or --notes-file"
+        fi
     fi
     if [ "$EDIT_NOTES" = 1 ]; then
         ${EDITOR:-vi} "$NOTES"

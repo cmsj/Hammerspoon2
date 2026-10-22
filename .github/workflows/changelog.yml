@@ -1,0 +1,73 @@
+name: Changelog
+
+# Checks the pull request's commits for Changelog-Added/Changed/Fixed trailers
+# (see scripts/release/changelog.js), and comments to explain them if there
+# are none or some are malformed. It never fails the PR.
+#
+# pull_request_target runs with the base branch's code and a token that can
+# comment on PRs from forks. It must never run code from the PR: the PR's
+# commits are only fetched as data, and the scripts come from the base branch.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+concurrency:
+  group: changelog-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  changelog:
+    name: Changelog entries
+    if: github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch pull request commits
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags origin "+refs/pull/${PR_NUMBER}/head:refs/remotes/pr/head"
+
+      - name: Check changelog trailers
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node scripts/release/changelog.js check --json --from "$BASE_SHA" --to refs/remotes/pr/head > "$RUNNER_TEMP/changelog.json"
+          {
+            echo "## Changelog entries"
+            echo
+            node scripts/release/changelog.js check --from "$BASE_SHA" --to refs/remotes/pr/head
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { changelogComment, MARKER } = require(`${process.env.GITHUB_WORKSPACE}/scripts/release/changelog-comment.js`);
+            const result = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/changelog.json`, 'utf8'));
+            const pr = context.payload.pull_request;
+            const { body, create } = changelogComment(result, pr.user.login);
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: pr.number, per_page: 100,
+            });
+            const existing = comments.find((c) => c.user.type === 'Bot' && c.body.startsWith(MARKER));
+            if (existing) {
+              if (existing.body !== body) {
+                await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+              }
+            } else if (create) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: pr.number, body });
+            }
