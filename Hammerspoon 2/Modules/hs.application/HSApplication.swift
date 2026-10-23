@@ -258,7 +258,7 @@ import AXSwift
     /// Returns a plain object describing this application, for JSON serialisation
     ///
     /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
-    /// - Returns: An object with the application's `pid`, `bundleID`, `title`, `bundlePath`, `kind`, `isRunning`, `isActive` and `isHidden`. Values that can't be read are `null`
+    /// - Returns: An object with the application's `pid`, `bundleID`, `name`, `bundlePath`, `kind`, `isRunning`, `isActive` and `isHidden`. Values that can't be read are `null`
     /// - Example:
     /// ```js
     /// console.log(JSON.stringify(hs.application.frontmost()))

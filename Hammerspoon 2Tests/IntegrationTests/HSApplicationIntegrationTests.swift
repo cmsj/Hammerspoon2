@@ -896,7 +896,7 @@ extension HSApplicationTests {
                 var parsed = JSON.parse(JSON.stringify(app));
                 """)
             harness.expectTrue("parsed.pid === testAppPID")
-            harness.expectTrue("parsed.bundleID === app.bundleID && parsed.title === app.title && parsed.bundlePath === app.bundlePath")
+            harness.expectTrue("parsed.bundleID === app.bundleID && parsed.name === app.name && parsed.bundlePath === app.bundlePath")
             harness.expectTrue("parsed.kind === app.kind && parsed.isRunning === true")
             harness.expectTrue("typeof parsed.isActive === 'boolean' && typeof parsed.isHidden === 'boolean'")
             #expect(!harness.hasException)

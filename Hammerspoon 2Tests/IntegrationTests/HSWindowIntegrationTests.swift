@@ -393,7 +393,7 @@ extension HSWindowIntegrationTests {
                 var parsed = JSON.parse(JSON.stringify(win));
                 """)
             harness.expectTrue("parsed.id === win.id && parsed.pid === testAppPID && parsed.title === win.title")
-            harness.expectTrue("parsed.application === hs.application.fromPID(testAppPID).title")
+            harness.expectTrue("parsed.application === hs.application.fromPID(testAppPID).name")
             harness.expectTrue("""
                 parsed.frame.x === win.frame.x && parsed.frame.y === win.frame.y &&
                 parsed.frame.w === win.frame.w && parsed.frame.h === win.frame.h
