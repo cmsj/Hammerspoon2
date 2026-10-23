@@ -282,7 +282,7 @@ import AXSwift
         [
             "pid": pid,
             "bundleID": bundleID.orNSNull,
-            "title": title.orNSNull,
+            "name": name.orNSNull,
             "bundlePath": bundlePath.orNSNull,
             "kind": kind,
             "isRunning": isRunning,

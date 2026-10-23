@@ -53,7 +53,7 @@ nonisolated enum HSIPC {
         var size: UInt = 0
         let header = unsafe #dsohandle.assumingMemoryBound(to: mach_header_64.self)
         if let bytes = unsafe getsectiondata(header, "__TEXT", "__info_plist", &size), size > 0,
-           let info = try? PropertyListSerialization.propertyList(from: unsafe Data(bytes: bytes, count: Int(size)),
+           let info = try? unsafe PropertyListSerialization.propertyList(from: unsafe Data(bytes: bytes, count: Int(size)),
                                                                   format: nil) as? [String: Any] {
             return info
         }
