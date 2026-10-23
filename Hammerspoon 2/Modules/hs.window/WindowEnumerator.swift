@@ -119,9 +119,10 @@ enum WindowEnumerator {
         let serverIDs = (windowServerIDs ?? windowServerWindowIDs())[pid] ?? []
 
         // Windows found before, which are still around but weren't reported this time. Elements of
-        // windows that have since closed are invalid, and report no window ID.
+        // windows that have since closed are invalid, and report no window ID; windows that have
+        // been ordered out but kept alive are on no Space.
         for (id, element) in knownWindows[pid] ?? [:] where serverIDs.contains(id) && found[id] == nil {
-            if windowID(of: element) == id {
+            if windowID(of: element) == id, isOnAnySpace(id) {
                 add(element)
             }
         }
