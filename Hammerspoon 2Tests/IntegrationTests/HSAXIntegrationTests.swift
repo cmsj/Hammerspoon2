@@ -424,6 +424,23 @@ struct HSAXTests {
             #expect(harness.exceptionMessage?.contains("AXMinimized requires a boolean, got a string") == true)
         }
 
+        @Test("setAttributeValue throws when a boolean attribute is given a number", arguments: ["0", "1"])
+        func testSetAttributeValueBooleanAttributeRejectsNumbers(number: String) {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            harness.eval("elem.setAttributeValue('AXMinimized', \(number))")
+            #expect(harness.exceptionMessage?.contains("AXMinimized requires a boolean, got a number") == true)
+        }
+
+        @Test("setAttributeValue passes booleans for a boolean attribute through to the Accessibility API", arguments: ["true", "false"])
+        func testSetAttributeValueBooleanAttributeAcceptsBooleans(boolean: String) {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            // An application element has no AXMinimized, so the API refuses it, but without a type error.
+            #expect(harness.evalBool("elem.setAttributeValue('AXMinimized', \(boolean))") == false)
+            #expect(!harness.hasException)
+        }
+
         @Test("setAttributeValue moves a window when AXPosition is given an HSPoint")
         func testSetAttributeValuePositionWithHSPoint() {
             let harness = makeHarness()
