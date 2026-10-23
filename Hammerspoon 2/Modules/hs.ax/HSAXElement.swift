@@ -161,10 +161,16 @@ import AXSwift
     /// | `AXSelectedText` | a string |
     ///
     /// Plain objects such as `{x: 1, y: 2}` are not accepted for geometry attributes; use `new HSPoint(1, 2)`.
+    ///
+    /// If the Accessibility API refuses the change, this throws an `Error` whose message says why, and whose
+    /// `code` property is the Accessibility error's name, e.g. `"kAXErrorAttributeUnsupported"` (the element
+    /// doesn't have the attribute), `"kAXErrorIllegalArgument"` (the value isn't valid for it) or
+    /// `"kAXErrorCannotComplete"` (the application didn't respond). A value of the wrong type for one of
+    /// the attributes above throws an `Error` with no `code`.
     /// - Parameters:
     ///   - attribute: The attribute name to set
     ///   - value: {any} The value to set
-    /// - Returns: True if the operation succeeded, otherwise False
+    /// - Returns: `true` if the attribute was set. Failures throw rather than returning `false`.
     /// - Throws: true
     /// - Example:
     /// ```js
@@ -174,6 +180,12 @@ import AXSwift
     /// const win = hs.ax.windowElement(hs.window.focusedWindow())
     /// win.setAttributeValue("AXPosition", new HSPoint(100, 100))
     /// win.setAttributeValue("AXSize", new HSSize(800, 600))
+    ///
+    /// try {
+    ///     win.setAttributeValue("AXFullScreen", true)
+    /// } catch (err) {
+    ///     console.error(err.message, err.code)
+    /// }
     /// ```
     @objc func setAttributeValue(_ attribute: String, _ value: JSValue) -> Bool
 
@@ -199,12 +211,23 @@ import AXSwift
     @objc func actionNames() -> [String]
 
     /// Perform a specific action
+    ///
+    /// If the Accessibility API refuses the action, this throws an `Error` whose message says why, and whose
+    /// `code` property is the Accessibility error's name, e.g. `"kAXErrorActionUnsupported"` or
+    /// `"kAXErrorAttributeUnsupported"` (the element doesn't have the action; AppKit applications report the
+    /// latter) or `"kAXErrorCannotComplete"` (the application didn't respond). Use `actionNames()` to see
+    /// which actions an element supports.
     /// - Parameter action: The action to perform
-    /// - Returns: True if the action succeeded, otherwise False
+    /// - Returns: `true` if the action was performed. Failures throw rather than returning `false`.
+    /// - Throws: true
     /// - Example:
     /// ```js
     /// const el = hs.ax.focusedElement()
-    /// el.performAction("AXPress")
+    /// try {
+    ///     el.performAction("AXPress")
+    /// } catch (err) {
+    ///     console.error(err.message, err.code)
+    /// }
     /// ```
     @objc func performAction(_ action: String) -> Bool
 
@@ -402,14 +425,11 @@ import AXSwift
 
     @objc func setAttributeValue(_ attribute: String, _ value: JSValue) -> Bool {
         if let expected = AXAttributeValueType.known[attribute], !expected.accepts(value) {
-            if let ctx = JSContext.current() {
-                let message = "hs.ax setAttributeValue(): \(attribute) requires \(expected.typeDescription), got \(AXAttributeValueType.describe(value))"
-                ctx.exception = JSValue(newErrorFromMessage: message, in: ctx)
-            }
+            throwJSError("hs.ax setAttributeValue(): \(attribute) requires \(expected.typeDescription), got \(AXAttributeValueType.describe(value))")
             return false
         }
-        guard let object = value.toObject() else {
-            AKError("Failed to set attribute \(attribute): value is null or undefined")
+        guard !value.isNull, let object = value.toObject() else {
+            throwJSError("hs.ax setAttributeValue(): \(attribute) can't be set to \(AXAttributeValueType.describe(value))")
             return false
         }
         let attr = UIElement.Attribute(rawValue: attribute)
@@ -418,7 +438,8 @@ import AXSwift
             try element.setAttribute(attr, value: unbridgeValue(object))
             return true
         } catch {
-            AKError("Failed to set attribute \(attribute): \(error.localizedDescription)")
+            throwJSError("hs.ax setAttributeValue(): failed to set \(attribute): \(error.explanation) (\(error.constantName))",
+                         code: error.constantName)
             return false
         }
     }
@@ -452,9 +473,26 @@ import AXSwift
             try element.performAction(act)
             return true
         } catch {
-            AKError("Failed to perform action \(action): \(error.localizedDescription)")
+            // AppKit reports an action an element doesn't have as kAXErrorAttributeUnsupported, so explain
+            // that as the action being unsupported, but keep the real error name for scripts to check.
+            let explanation = error == .attributeUnsupported ? AXError.actionUnsupported.explanation : error.explanation
+            throwJSError("hs.ax performAction(): failed to perform \(action): \(explanation) (\(error.constantName))",
+                         code: error.constantName)
             return false
         }
+    }
+
+    /// Raise a JS `Error` in the calling context, since Swift `throws` doesn't bridge to JSExport.
+    /// `code`, if given, is set as the error's `code` property so scripts can branch on it.
+    private func throwJSError(_ message: String, code: String? = nil) {
+        guard let ctx = JSContext.current(), let error = JSValue(newErrorFromMessage: message, in: ctx) else {
+            AKError(message)
+            return
+        }
+        if let code {
+            error.setValue(code, forProperty: "code")
+        }
+        ctx.exception = error
     }
 
     // MARK: - Utility
@@ -579,5 +617,46 @@ private enum AXAttributeValueType {
         if value.isArray { return "an array" }
         if let typed = value.toObject() as? HSTypeAPI { return "an \(typed.typeName)" }
         return "a plain object"
+    }
+}
+
+/// Names and plain-language explanations of Accessibility API errors, for the JS errors that
+/// setAttributeValue() and performAction() throw.
+private extension AXError {
+    /// The error's constant name from AXError.h, e.g. "kAXErrorAttributeUnsupported"
+    var constantName: String {
+        switch self {
+        case .success: return "kAXErrorSuccess"
+        case .failure: return "kAXErrorFailure"
+        case .illegalArgument: return "kAXErrorIllegalArgument"
+        case .invalidUIElement: return "kAXErrorInvalidUIElement"
+        case .invalidUIElementObserver: return "kAXErrorInvalidUIElementObserver"
+        case .cannotComplete: return "kAXErrorCannotComplete"
+        case .attributeUnsupported: return "kAXErrorAttributeUnsupported"
+        case .actionUnsupported: return "kAXErrorActionUnsupported"
+        case .notificationUnsupported: return "kAXErrorNotificationUnsupported"
+        case .notImplemented: return "kAXErrorNotImplemented"
+        case .notificationAlreadyRegistered: return "kAXErrorNotificationAlreadyRegistered"
+        case .notificationNotRegistered: return "kAXErrorNotificationNotRegistered"
+        case .apiDisabled: return "kAXErrorAPIDisabled"
+        case .noValue: return "kAXErrorNoValue"
+        case .parameterizedAttributeUnsupported: return "kAXErrorParameterizedAttributeUnsupported"
+        case .notEnoughPrecision: return "kAXErrorNotEnoughPrecision"
+        @unknown default: return "AXError(\(rawValue))"
+        }
+    }
+
+    var explanation: String {
+        switch self {
+        case .illegalArgument: return "the Accessibility API rejected an argument as invalid"
+        case .invalidUIElement: return "the element no longer exists"
+        case .cannotComplete: return "the application did not respond, or refused the request"
+        case .attributeUnsupported: return "the element does not support this attribute"
+        case .actionUnsupported: return "the element does not support this action"
+        case .notImplemented: return "the application does not implement this"
+        case .apiDisabled: return "Hammerspoon does not have Accessibility permission"
+        case .noValue: return "the attribute has no value"
+        default: return "the Accessibility API reported an error"
+        }
     }
 }

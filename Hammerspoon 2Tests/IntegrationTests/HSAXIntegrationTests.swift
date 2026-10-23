@@ -373,8 +373,65 @@ struct HSAXTests {
             """)
             #expect(harness.evalTypeOf("elem.setAttributeValue") == "function")
             #expect(harness.evalTypeOf("elem.setAttributeValueValue") == "undefined")
-            // An attribute the test app doesn't have, so this changes nothing but still reaches the setter.
-            #expect(harness.evalBool("elem.setAttributeValue('AXHammerspoonNonexistent', true)") == false)
+            // An attribute the test app doesn't have, so this changes nothing but still reaches the setter,
+            // whose refusal is thrown (see the Accessibility API error tests below).
+            harness.eval("elem.setAttributeValue('AXHammerspoonNonexistent', true)")
+            #expect(harness.exceptionMessage?.contains("failed to set AXHammerspoonNonexistent") == true)
+        }
+
+        // MARK: - Accessibility API errors are thrown to JS (#344)
+
+        /// Evaluates `call` and returns the `code` of the error it throws, or "no exception".
+        private func thrownErrorCode(_ harness: JSTestHarness, _ call: String) -> String? {
+            harness.evalString("""
+            (function() {
+                try { \(call); return 'no exception'; } catch (e) { return e.code; }
+            })()
+            """)
+        }
+
+        @Test("setAttributeValue throws the Accessibility API's error for an attribute the element doesn't support")
+        func testSetAttributeValueThrowsAXError() {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            #expect(thrownErrorCode(harness, "elem.setAttributeValue('AXHammerspoonNonexistent', true)") == "kAXErrorAttributeUnsupported")
+
+            harness.eval("elem.setAttributeValue('AXHammerspoonNonexistent', true)")
+            harness.expectException()
+            #expect(harness.exceptionMessage?.contains("hs.ax setAttributeValue(): failed to set AXHammerspoonNonexistent: the element does not support this attribute (kAXErrorAttributeUnsupported)") == true)
+        }
+
+        @Test("setAttributeValue's type errors have no code, so they can be told apart from Accessibility API errors")
+        func testSetAttributeValueTypeErrorHasNoCode() {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            #expect(thrownErrorCode(harness, "elem.setAttributeValue('AXPosition', {x: 1, y: 2})") == nil)
+        }
+
+        @Test("setAttributeValue throws, rather than returning false, when given null or undefined", arguments: ["null", "undefined"])
+        func testSetAttributeValueNullThrows(value: String) {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            harness.eval("elem.setAttributeValue('AXValue', \(value))")
+            #expect(harness.exceptionMessage?.contains("AXValue can't be set to \(value)") == true)
+        }
+
+        @Test("performAction throws the Accessibility API's error for an action the element doesn't support")
+        func testPerformActionThrowsAXError() {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            // AppKit reports an unknown action as an unsupported attribute rather than an unsupported action
+            #expect(thrownErrorCode(harness, "elem.performAction('AXNonExistentAction12345')") == "kAXErrorAttributeUnsupported")
+
+            harness.eval("elem.performAction('AXNonExistentAction12345')")
+            #expect(harness.exceptionMessage?.contains("hs.ax performAction(): failed to perform AXNonExistentAction12345: the element does not support this action (kAXErrorAttributeUnsupported)") == true)
+        }
+
+        @Test("performAction returns true without throwing when the action succeeds")
+        func testPerformActionSucceeds() {
+            let harness = makeHarness()
+            harness.eval("var win = hs.ax.applicationElement(hs.application.fromPID(testAppPID)).attributeValue('AXWindows')[0];")
+            #expect(harness.evalBool("win.performAction('AXRaise')") == true)
             #expect(!harness.hasException)
         }
 
@@ -437,8 +494,9 @@ struct HSAXTests {
             let harness = makeHarness()
             harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
             // An application element has no AXMinimized, so the API refuses it, but without a type error.
-            #expect(harness.evalBool("elem.setAttributeValue('AXMinimized', \(boolean))") == false)
-            #expect(!harness.hasException)
+            harness.eval("elem.setAttributeValue('AXMinimized', \(boolean))")
+            #expect(harness.exceptionMessage?.contains("failed to set AXMinimized") == true)
+            #expect(harness.exceptionMessage?.contains("requires") == false)
         }
 
         @Test("setAttributeValue moves a window when AXPosition is given an HSPoint")
@@ -892,18 +950,6 @@ struct HSAXTests {
                 var app = hs.application.fromPID(testAppPID);
                 var elem = hs.ax.applicationElement(app);
                 return elem && Array.isArray(elem.actionNames());
-            })()
-        """)
-        }
-
-        @Test("performAction with an invalid action name returns false")
-        func testPerformActionInvalidReturnsFalse() {
-            let harness = makeHarness()
-            harness.expectFalse("""
-            (function() {
-                var app = hs.application.fromPID(testAppPID);
-                var elem = hs.ax.applicationElement(app);
-                return elem ? elem.performAction('AXNonExistentAction12345') : false;
             })()
         """)
         }
