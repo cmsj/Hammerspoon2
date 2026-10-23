@@ -535,6 +535,16 @@ private func caDataSourceName(_ objectID: AudioObjectID,
     /// The event names `on()`/`once()` accept - see HSAudioDevicePropertyEvent
     /// SKIP_DOCS
     @objc var _eventNames: [String] { get }
+
+    /// Returns a plain object describing this device, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the device's `id`, `name`, `uid`, `isInput`, `isOutput`, `transportType`, `isInUse`, `jackConnected`, `inputChannels`, `outputChannels`, `volume`, `muted`, `balance`, `inputVolume`, `inputMuted` and `sampleRate`. Values the device doesn't support are `null`
+    /// - Example:
+    /// ```js
+    /// console.log(JSON.stringify(hs.audiodevice.defaultOutputDevice(), null, 2))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 // MARK: - Implementation
@@ -564,6 +574,27 @@ nonisolated enum HSAudioDevicePropertyEvent: String, HSEventName {
 
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
+    }
+
+    @objc func toJSON() -> [String: Any] {
+        [
+            "id": id,
+            "name": name,
+            "uid": uid,
+            "isInput": isInput,
+            "isOutput": isOutput,
+            "transportType": transportType,
+            "isInUse": isInUse,
+            "jackConnected": jackConnected,
+            "inputChannels": inputChannels,
+            "outputChannels": outputChannels,
+            "volume": volume.orNSNull,
+            "muted": muted,
+            "balance": balance.orNSNull,
+            "inputVolume": inputVolume.orNSNull,
+            "inputMuted": inputMuted,
+            "sampleRate": sampleRate.orNSNull,
+        ]
     }
 
     let objectID: AudioObjectID

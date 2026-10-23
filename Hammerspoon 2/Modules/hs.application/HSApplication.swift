@@ -254,6 +254,16 @@ import AXSwift
     /// const win = app.getWindow("index.html")
     /// ```
     @objc func getWindow(_ title: String) -> HSWindow?
+
+    /// Returns a plain object describing this application, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the application's `pid`, `bundleID`, `title`, `bundlePath`, `kind`, `isRunning`, `isActive` and `isHidden`. Values that can't be read are `null`
+    /// - Example:
+    /// ```js
+    /// console.log(JSON.stringify(hs.application.frontmost()))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @_documentation(visibility: private)
@@ -267,6 +277,20 @@ import AXSwift
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        [
+            "pid": pid,
+            "bundleID": bundleID.orNSNull,
+            "title": title.orNSNull,
+            "bundlePath": bundlePath.orNSNull,
+            "kind": kind,
+            "isRunning": isRunning,
+            "isActive": isActive,
+            "isHidden": isHidden,
+        ]
+    }
+
     let runningApplication: NSRunningApplication
     let axUIElement: Application?
 

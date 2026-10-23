@@ -372,3 +372,34 @@ struct HSWindowIntegrationTests {
         }
     }
 }
+
+// MARK: - JSON Serialization
+
+extension HSWindowIntegrationTests {
+    @Suite("hs.window JSON serialization", .serialized,
+           .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"),
+           .testApp)
+    struct HSWindowJSONTests {
+        @Test("JSON.stringify() of a window includes its identity and frame")
+        func testWindowToJSON() {
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.loadModule(HSWindowModule.self, as: "window")
+            harness.eval("var testAppPID = \(TestAppControl.pid ?? -1);")
+            TestAppControl.showCurrentTest()
+
+            harness.eval("""
+                var win = hs.application.fromPID(testAppPID).allWindows[0];
+                var parsed = JSON.parse(JSON.stringify(win));
+                """)
+            harness.expectTrue("parsed.id === win.id && parsed.pid === testAppPID && parsed.title === win.title")
+            harness.expectTrue("parsed.application === hs.application.fromPID(testAppPID).title")
+            harness.expectTrue("""
+                parsed.frame.x === win.frame.x && parsed.frame.y === win.frame.y &&
+                parsed.frame.w === win.frame.w && parsed.frame.h === win.frame.h
+                """)
+            harness.expectTrue("parsed.isMinimized === false && typeof parsed.isFullscreen === 'boolean'")
+            #expect(!harness.hasException)
+        }
+    }
+}

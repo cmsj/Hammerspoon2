@@ -543,3 +543,31 @@ struct HSOCRTests {
         }
     }
 }
+
+// MARK: - JSON Serialization
+
+extension HSOCRTests {
+    @Suite("hs.ocr JSON serialization")
+    struct HSOCRJSONTests {
+        @Test("JSON.stringify() of a result includes its text and observations with their bounds")
+        func testResultToJSON() {
+            let harness = JSTestHarness()
+            let result = HSOCRResult(observations: [
+                HSOCRObservation(text: "Hello", confidence: 0.5, boundingBox: CGRect(x: 0.25, y: 0.5, width: 0.5, height: 0.25)),
+                HSOCRObservation(text: "World", confidence: 1, boundingBox: CGRect(x: 0, y: 0, width: 1, height: 0.5)),
+            ])
+            harness.context.setObject(result, forKeyedSubscript: "result" as NSString)
+
+            harness.eval("var parsed = JSON.parse(JSON.stringify(result))")
+            #expect(harness.evalString("parsed.text") == result.text)
+            #expect(harness.evalInt("parsed.observations.length") == 2)
+            #expect(harness.evalString("parsed.observations[0].text") == "Hello")
+            #expect(harness.evalDouble("parsed.observations[0].confidence") == 0.5)
+            harness.expectTrue("""
+                parsed.observations[0].bounds.x === 0.25 && parsed.observations[0].bounds.y === 0.25 &&
+                parsed.observations[0].bounds.w === 0.5 && parsed.observations[0].bounds.h === 0.25
+                """)
+            #expect(!harness.hasException)
+        }
+    }
+}

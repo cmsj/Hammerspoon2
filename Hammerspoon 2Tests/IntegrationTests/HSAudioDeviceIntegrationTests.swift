@@ -894,3 +894,28 @@ extension HSAudioDeviceTests.HSAudioDeviceIntegrationTests {
         #expect(device == nil, "A device with no watcher must not be kept alive")
     }
 }
+
+// MARK: - JSON Serialization
+
+extension HSAudioDeviceTests {
+    @Suite("hs.audiodevice JSON serialization", .disabled(if: hasNoAudioDevices(), "No audio hardware present"))
+    struct HSAudioDeviceJSONTests {
+        @Test("JSON.stringify() of a device includes its identity and state")
+        func testDeviceToJSON() {
+            let harness = JSTestHarness()
+            harness.loadModule(HSAudioDeviceModule.self, as: "audiodevice")
+
+            harness.eval("""
+                var d = hs.audiodevice.all()[0];
+                var parsed = JSON.parse(JSON.stringify(d));
+                """)
+            harness.expectTrue("parsed.id === d.id && parsed.name === d.name && parsed.uid === d.uid")
+            harness.expectTrue("parsed.isInput === d.isInput && parsed.isOutput === d.isOutput")
+            harness.expectTrue("parsed.transportType === d.transportType")
+            // Unsupported values must survive as null rather than vanishing from the output
+            harness.expectTrue("'volume' in parsed && (parsed.volume === null || typeof parsed.volume === 'number')")
+            harness.expectTrue("'sampleRate' in parsed && (parsed.sampleRate === null || typeof parsed.sampleRate === 'number')")
+            #expect(!harness.hasException)
+        }
+    }
+}

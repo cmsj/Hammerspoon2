@@ -434,3 +434,28 @@ extension HSBonjourTests {
         #expect(probe.stoppedMonitoring, "A destroyed search must stop monitoring its services")
     }
 }
+
+// MARK: - JSON Serialization
+
+extension HSBonjourTests {
+    @Test("JSON.stringify() of an unresolved service includes its identity, with unresolved values as null")
+    func testServiceToJSON() throws {
+        let harness = JSTestHarness()
+        let root = harness.loadModuleRoot()
+        autoreleasepool { _ = harness.eval("void hs.bonjour") }
+        let module = try #require(root.modules["bonjour"] as? HSBonjourModule)
+
+        let netService = NetService(domain: "local.", type: "_hs2test._tcp.", name: "probe")
+        let service = HSBonjourService(netService: netService, tracker: module.services)
+        harness.context.setObject(service, forKeyedSubscript: "svc" as NSString)
+
+        harness.eval("var parsed = JSON.parse(JSON.stringify(svc))")
+        #expect(harness.evalString("parsed.name") == "probe")
+        #expect(harness.evalString("parsed.type") == "_hs2test._tcp.")
+        #expect(harness.evalString("parsed.domain") == "local.")
+        harness.expectTrue("Array.isArray(parsed.addresses)")
+        harness.expectTrue("'hostname' in parsed && parsed.hostname === null")
+        harness.expectTrue("'txtRecord' in parsed && parsed.txtRecord === null")
+        #expect(!harness.hasException)
+    }
+}
