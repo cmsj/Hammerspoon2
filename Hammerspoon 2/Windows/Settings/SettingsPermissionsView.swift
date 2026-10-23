@@ -24,8 +24,11 @@ struct PermissionRowView: View {
                     .foregroundStyle(.secondary)
             }
             .gridColumnAlignment(.leading)
-            actionButton
-                .gridColumnAlignment(.trailing)
+            HStack {
+                actionButton
+                settingsButton
+            }
+            .gridColumnAlignment(.trailing)
         }
     }
 
@@ -35,15 +38,23 @@ struct PermissionRowView: View {
         case .trusted:
             Button("Request") {}
                 .disabled(true)
-        case .unknown:
+        case .unknown, .notTrusted:
             Button("Request") {
                 PermissionsManager.shared.request(permType)
             }
-        case .notTrusted:
-            Button("Open Settings") {
-                NSWorkspace.shared.open(permType.settingsURL)
-            }
         }
+    }
+
+    @ViewBuilder
+    private var settingsButton: some View {
+        Button {
+            NSWorkspace.shared.open(permType.settingsURL)
+        } label: {
+            Image(systemName: "gear")
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.borderless)
+
     }
 
     @ViewBuilder
@@ -70,12 +81,6 @@ struct SettingsPermissionsView: View {
     @State private var remainingAllowedAutoRefreshes = 100
 
     var body: some View {
-        ProgressView()
-            .progressViewStyle(.circular)
-            .frame(height: 12.0)
-            .opacity(isRefreshing ? 1.0 : 0.0)
-            .padding([.top])
-
         HStack {
             Spacer()
             VStack {
@@ -87,7 +92,9 @@ struct SettingsPermissionsView: View {
                         )
                     }
                 }
-                Spacer()
+                Text("Click the gear icons to open the relevant page in System Settings")
+                    .font(.caption)
+                    .padding([.top, .bottom])
             }
             .frame(width: 700)
             .padding(.vertical)
@@ -104,6 +111,7 @@ struct SettingsPermissionsView: View {
     }
 
     private func refreshPermissions() {
+        isRefreshing = true
         for permType in PermissionsType.allCases {
             permissionStates[permType] = PermissionsManager.shared.state(permType)
         }
