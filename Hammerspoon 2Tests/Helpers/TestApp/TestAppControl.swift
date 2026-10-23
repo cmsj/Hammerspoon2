@@ -123,7 +123,14 @@ nonisolated enum TestAppControl {
         send("newWindow", to: pid)
     }
 
-    /// Has a copy close the windows `openWindow` opened.
+    /// Has a copy open a window titled "Fullscreen test window" and put it in native fullscreen
+    /// (a Space of its own). This activates the copy and switches to that Space.
+    /// - Parameter pid: The copy; the suite's copy by default
+    static func openFullScreenWindow(in pid: pid_t? = TestAppControl.pid) {
+        send("fullScreenWindow", to: pid)
+    }
+
+    /// Has a copy close the windows `openWindow` and `openFullScreenWindow` opened.
     /// - Parameter pid: The copy; the suite's copy by default
     static func closeWindows(in pid: pid_t? = TestAppControl.pid) {
         send("closeWindows", to: pid)

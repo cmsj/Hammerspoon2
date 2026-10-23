@@ -331,11 +331,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
         self.element = element
         self.app = app
 
-        var winId: CGWindowID = 0
-        if let _AXUIElementGetWindow = unsafe _AXUIElementGetWindow {
-            _ = unsafe _AXUIElementGetWindow(element.element, &winId)
-        }
-        self.id = Int(winId)
+        self.id = Int(WindowEnumerator.windowID(of: element))
 
         super.init()
     }
