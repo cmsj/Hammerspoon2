@@ -27,7 +27,7 @@ enum JSExtraMemory {
 
     private static let reportFunction: ReportFunction? = {
         // RTLD_DEFAULT is a C macro, ((void *)-2), which Swift doesn't import
-        let defaultHandle = UnsafeMutableRawPointer(bitPattern: -2)
+        let defaultHandle = unsafe UnsafeMutableRawPointer(bitPattern: -2)
         guard let symbol = unsafe dlsym(defaultHandle, "JSReportExtraMemoryCost") else {
             AKWarning("JSReportExtraMemoryCost is unavailable; JavaScript garbage collection won't account for native memory")
             return nil
@@ -36,7 +36,7 @@ enum JSExtraMemory {
     }()
 
     /// Whether reports reach JSC. False only if JavaScriptCore no longer exports the function.
-    static var isAvailable: Bool { reportFunction != nil }
+    static var isAvailable: Bool { unsafe reportFunction != nil }
 
     /// Report native memory taken on by a bridged object.
     /// - Parameters:
@@ -46,7 +46,7 @@ enum JSExtraMemory {
     ///     promise resolves).
     static func report(_ byteCount: Int, in context: JSContext? = nil) {
         guard byteCount > 0,
-              let reportFunction,
+              let reportFunction = unsafe reportFunction,
               let context = context ?? JSContext.current() ?? JSEngine.shared.context else { return }
         unsafe reportFunction(context.jsGlobalContextRef, byteCount)
     }

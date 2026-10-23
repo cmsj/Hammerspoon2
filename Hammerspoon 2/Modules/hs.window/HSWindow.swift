@@ -315,7 +315,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
             "id": id,
             "pid": pid,
             "title": title.orNSNull,
-            "application": (application?.title).orNSNull,
+            "application": (application?.name).orNSNull,
             "frame": frame.orNSNull,
             "isMinimized": isMinimized,
             "isFullscreen": isFullscreen,
