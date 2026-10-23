@@ -28,16 +28,17 @@ private let kCGSAllSpacesMask: Int32 = 0x7
 /// 1. Starts with `AXWindows`.
 /// 2. Adds `AXMainWindow` and `AXFocusedWindow`, which the app reports regardless of Space.
 /// 3. Asks the WindowServer (`CGWindowListCopyWindowInfo`, which isn't limited to the current
-///    Space) for the app's off-screen, normal-layer windows, and if any that are on a Space still
-///    haven't been found, probes the app's AX element IDs for them with
+///    Space) for the app's off-screen, normal-layer windows. Any that are still missing are
+///    looked up among the window elements found by earlier calls, and if any that are on a Space
+///    are still missing after that, the app's AX element IDs are probed for them with
 ///    `_AXUIElementCreateWithRemoteToken`.
 ///
-/// The probe in step 3 only runs when the WindowServer reports a window that steps 1 and 2
-/// didn't find. It can only find windows whose AX element the app has already handed to some
-/// accessibility client (Hammerspoon included), e.g. because they were looked at while their
-/// Space was visible; windows that have never been looked at stay hidden until their Space is
-/// visited. Window IDs a complete probe couldn't find are remembered, so they don't trigger it
-/// again, until they turn up some other way.
+/// The probe in step 3 only runs when the WindowServer reports a window that nothing else
+/// found. It can only find windows whose AX element the app has already handed to some
+/// accessibility client, e.g. because they were looked at while their Space was visible, and
+/// only up to `maxProbedElementID`; windows that have never been looked at stay hidden until
+/// their Space is visited. Window IDs a complete probe couldn't find are remembered, so they
+/// don't trigger it again, until they turn up some other way.
 enum WindowEnumerator {
     /// The highest AX element ID probed when looking for missing windows
     private static let maxProbedElementID: UInt64 = 2000
@@ -47,6 +48,10 @@ enum WindowEnumerator {
 
     /// Window IDs, per PID, that the probe has already failed to find
     private static var unresolvableWindowIDs: [pid_t: Set<CGWindowID>] = [:]
+
+    /// Every window element found so far, per PID and window ID, so a window stays reachable after
+    /// it leaves the visible Space(s), wherever the probe would (or wouldn't) find it
+    private static var knownWindows: [pid_t: [CGWindowID: UIElement]] = [:]
 
     /// The IDs of off-screen, normal-layer windows the WindowServer knows about, across all Spaces,
     /// grouped by owning PID. Windows on the visible Space(s) are left out: `AXWindows` reports those.
@@ -68,6 +73,7 @@ enum WindowEnumerator {
 
         // Forget about processes that have gone away
         unresolvableWindowIDs = unresolvableWindowIDs.filter { result[$0.key] != nil }
+        knownWindows = knownWindows.filter { NSRunningApplication(processIdentifier: $0.key) != nil }
 
         return result
     }
@@ -82,12 +88,14 @@ enum WindowEnumerator {
         }
 
         var windows: [UIElement] = []
-        var foundIDs: Set<CGWindowID> = []
+        var found: [CGWindowID: UIElement] = [:]
+        var foundIDs: Set<CGWindowID> { Set(found.keys) }
 
         func add(_ element: UIElement) {
             let id = windowID(of: element)
             if id != 0 {
-                guard foundIDs.insert(id).inserted else { return }
+                guard found[id] == nil else { return }
+                found[id] = element
             } else if windows.contains(where: { CFEqual($0.element, element.element) }) {
                 return
             }
@@ -109,6 +117,15 @@ enum WindowEnumerator {
 
         let pid = app.processIdentifier
         let serverIDs = (windowServerIDs ?? windowServerWindowIDs())[pid] ?? []
+
+        // Windows found before, which are still around but weren't reported this time. Elements of
+        // windows that have since closed are invalid, and report no window ID.
+        for (id, element) in knownWindows[pid] ?? [:] where serverIDs.contains(id) && found[id] == nil {
+            if windowID(of: element) == id {
+                add(element)
+            }
+        }
+
         // Windows that turned up after all (e.g. their Space was visited) no longer count as unresolvable
         unresolvableWindowIDs[pid]?.subtract(foundIDs)
         let missing = serverIDs.subtracting(foundIDs).subtracting(unresolvableWindowIDs[pid] ?? []).filter(isOnAnySpace)
@@ -122,6 +139,9 @@ enum WindowEnumerator {
                 unresolvableWindowIDs[pid, default: []].formUnion(unresolved)
             }
         }
+
+        // Remember what was found, and forget windows that have closed
+        knownWindows[pid] = found
 
         return windows
     }

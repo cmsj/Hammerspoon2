@@ -462,8 +462,9 @@ extension HSWindowIntegrationTests {
             }
 
             // Windows on another Space can only be found once their AX element has been handed to
-            // an accessibility client, as it is here: Hammerspoon has seen the main window before.
-            #expect(harness.evalString("describe(hs.window.windowsForApp(app))") == "\(Self.mainTitle):false")
+            // an accessibility client. Read AXWindows directly, so that hs.window hasn't seen the
+            // main window before and has to find it on the fullscreen window's Space by probing.
+            #expect(axWindowTitles(axApp) == [Self.mainTitle])
 
             // Move to the fullscreen window's Space. AXWindows then leaves the main window out.
             TestAppControl.openFullScreenWindow(in: pid)
@@ -471,7 +472,8 @@ extension HSWindowIntegrationTests {
             try #require(onFullScreenSpace, "AXWindows should list only the fullscreen window, but lists \(axWindowTitles(axApp))")
             expectBothWindowsListed("from the fullscreen window's Space")
 
-            // Back to the desktop's Space. AXWindows then leaves the fullscreen window out.
+            // Back to the desktop's Space. AXWindows then leaves the fullscreen window out, and
+            // hs.window finds it among the windows it has seen before.
             #expect(harness.evalBool("hs.window.windowsForApp(app).find(w => w.title === '\(Self.mainTitle)').focus()") == true)
             let onDesktopSpace = await waitUntil { axWindowTitles(axApp) == [Self.mainTitle] }
             try #require(onDesktopSpace, "AXWindows should list only the main window, but lists \(axWindowTitles(axApp))")
