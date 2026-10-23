@@ -6,6 +6,7 @@
 import Foundation
 import JavaScriptCore
 import CoreGraphics
+import Carbon
 
 // MARK: - Protocol
 
@@ -45,17 +46,26 @@ import CoreGraphics
     /// ```
     @objc var rawFlags: Int { get set }
 
-    /// An array of active modifier key names (e.g. ["cmd", "shift"]).
+    /// An array of active modifier key names (e.g. ["cmd", "shift"]) (get/set).
     ///
     /// When a device-specific modifier is detected, both the generic and side-specific
     /// names are included — e.g. pressing the left Command key yields ["cmd", "leftCmd"].
+    ///
+    /// Setting this replaces the event's modifiers with the named ones, accepting the same names
+    /// as `hs.eventtap.keyStroke()` ("cmd", "shift", "alt", "ctrl", "fn", "capslock", and the
+    /// side-specific forms such as "rightCmd"). Unknown names are ignored. This only changes the
+    /// event's flags: an application that tracks modifier key presses itself may also need to see
+    /// the modifier keys go down and up, which `hs.eventtap.keyStroke(mods, key, app)` does for you.
     /// - Example:
     /// ```js
     /// hs.eventtap.addWatcher([hs.eventtap.eventTypes.keyDown], (event) => {
     ///     if (event.flags.includes("rightCmd")) console.log("Right Cmd held")
     /// })
+    ///
+    /// const evt = hs.eventtap.makeKeyEvent("r", true)
+    /// evt.flags = ["cmd"]
     /// ```
-    @objc var flags: [String] { get }
+    @objc var flags: [String] { get set }
 
     /// The event's screen position as {x, y} in Hammerspoon screen coordinates
     /// (top-left origin of primary display, y increases downward, matching hs.screen).
@@ -192,7 +202,8 @@ import CoreGraphics
     }
 
     @objc var flags: [String] {
-        return CGEventFlags.modifierNames(from: cgEvent.flags)
+        get { CGEventFlags.modifierNames(from: cgEvent.flags) }
+        set { cgEvent.flags = cgEvent.flags.replacingModifiers(with: CGEventFlags.from(modifierNames: newValue)) }
     }
 
     @objc var location: [String: Double] {
@@ -263,6 +274,19 @@ extension CGEventFlags {
     private static let leftAltMask:    UInt64 = 0x00000020
     private static let rightAltMask:   UInt64 = 0x00000040
     private static let rightCtrlMask:  UInt64 = 0x00002000
+
+    /// Every bit that `from(modifierNames:)` can set: the modifier masks and their device bits.
+    private static let allModifierBits: UInt64 =
+        CGEventFlags([.maskCommand, .maskShift, .maskAlternate, .maskControl,
+                      .maskSecondaryFn, .maskAlphaShift]).rawValue
+        | leftCtrlMask | leftShiftMask | rightShiftMask | leftCmdMask
+        | rightCmdMask | leftAltMask | rightAltMask | rightCtrlMask
+
+    /// Returns these flags with their modifiers replaced by `modifiers`, keeping every other bit
+    /// (e.g. `maskNonCoalesced`) as it was.
+    func replacingModifiers(with modifiers: CGEventFlags) -> CGEventFlags {
+        CGEventFlags(rawValue: (rawValue & ~Self.allModifierBits) | (modifiers.rawValue & Self.allModifierBits))
+    }
 
     static func modifierNames(from flags: CGEventFlags) -> [String] {
         var names: [String] = []
@@ -336,5 +360,98 @@ extension CGEventFlags {
             }
         }
         return CGEventFlags(rawValue: flags.rawValue | raw)
+    }
+}
+
+// MARK: - Modifier key presses
+
+/// A modifier key that `hs.eventtap.keyStroke(mods, key, app)` presses around the key, the way a
+/// real keyboard would.
+struct ModifierKey: Equatable {
+    /// The virtual key code of the modifier key (e.g. kVK_Command)
+    let keyCode: CGKeyCode
+    /// The flags this key sets while it's held: the modifier mask plus the device bit for its side
+    let flags: CGEventFlags
+
+    /// Returns the modifier keys for the given modifier names, in the order given, without
+    /// duplicates. Generic names ("cmd") press the left-hand key. Unknown names and "capslock",
+    /// which is a toggle rather than a held key, are skipped.
+    static func keys(forModifierNames names: [String]) -> [ModifierKey] {
+        var keys: [ModifierKey] = []
+        for name in names {
+            let key: ModifierKey?
+            switch name.lowercased() {
+            case "cmd", "command", "⌘", "leftcmd", "leftcommand":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_Command), names: ["leftCmd"])
+            case "rightcmd", "rightcommand":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_RightCommand), names: ["rightCmd"])
+            case "shift", "⇧", "leftshift":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_Shift), names: ["leftShift"])
+            case "rightshift":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_RightShift), names: ["rightShift"])
+            case "alt", "option", "⌥", "leftalt", "leftoption":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_Option), names: ["leftAlt"])
+            case "rightalt", "rightoption":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_RightOption), names: ["rightAlt"])
+            case "ctrl", "control", "⌃", "leftctrl", "leftcontrol":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_Control), names: ["leftCtrl"])
+            case "rightctrl", "rightcontrol":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_RightControl), names: ["rightCtrl"])
+            case "fn":
+                key = ModifierKey(keyCode: CGKeyCode(kVK_Function), names: ["fn"])
+            default:
+                key = nil
+            }
+            if let key, !keys.contains(key) { keys.append(key) }
+        }
+        return keys
+    }
+
+    private init(keyCode: CGKeyCode, names: [String]) {
+        self.keyCode = keyCode
+        self.flags = CGEventFlags.from(modifierNames: names)
+    }
+
+    /// Builds the events for a keystroke with modifiers, as Apple recommends for
+    /// CGEventCreateKeyboardEvent and as a real keyboard produces them: each modifier key goes
+    /// down (a flagsChanged event, adding its flags), then the key goes down and up carrying every
+    /// modifier's flags, then the modifier keys come up in reverse order.
+    ///
+    /// Flags that have no held key of their own (capslock) are applied to every event.
+    static func keyStrokeEvents(keyCode: CGKeyCode, modifierNames: [String],
+                                source: CGEventSource?) -> [CGEvent] {
+        let modifiers = keys(forModifierNames: modifierNames)
+        let allFlags = CGEventFlags.from(modifierNames: modifierNames)
+            .union(CGEventFlags(modifiers.map(\.flags)))
+        let extraFlags = allFlags.subtracting(CGEventFlags(modifiers.map(\.flags)))
+
+        var events: [CGEvent] = []
+        var held = extraFlags
+
+        func appendModifierEvent(_ modifier: ModifierKey, isDown: Bool) {
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: modifier.keyCode,
+                                      keyDown: isDown) else { return }
+            event.type = .flagsChanged
+            event.flags = event.flags.replacingModifiers(with: held)
+            events.append(event)
+        }
+
+        for modifier in modifiers {
+            held.formUnion(modifier.flags)
+            appendModifierEvent(modifier, isDown: true)
+        }
+        for isDown in [true, false] {
+            if let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: isDown) {
+                event.flags = event.flags.replacingModifiers(with: allFlags)
+                events.append(event)
+            }
+        }
+        for (index, modifier) in modifiers.enumerated().reversed() {
+            // Recompute from the keys still held, so a mask shared by both sides of a modifier
+            // isn't dropped while the other side is still down.
+            held = CGEventFlags(modifiers[..<index].map(\.flags)).union(extraFlags)
+            appendModifierEvent(modifier, isDown: false)
+        }
+        return events
     }
 }

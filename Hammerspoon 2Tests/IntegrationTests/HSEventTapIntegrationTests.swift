@@ -495,6 +495,80 @@ struct HSEventTapTests {
             #expect(!harness.hasException)
         }
 
+        @Test("makeKeyEvent applies the modifiers it's given")
+        func testMakeKeyEventWithModifiers() {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeKeyEvent('a', true, ['cmd', 'shift'])")
+            harness.expectTrue("evt.flags.includes('cmd') && evt.flags.includes('shift')")
+            harness.expectTrue("!evt.flags.includes('alt') && !evt.flags.includes('ctrl')")
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeKeyEvent with an empty modifier list has no modifiers")
+        func testMakeKeyEventWithNoModifiers() {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeKeyEvent('a', true, [])")
+            #expect(harness.evalInt("evt.flags.length") == 0)
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeKeyEvent still works without a modifier list")
+        func testMakeKeyEventWithoutModifierList() {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeKeyEvent('a', true)")
+            harness.expectTrue("evt !== null && Array.isArray(evt.flags)")
+            #expect(!harness.hasException)
+        }
+
+        @Test("makeKeyEventWithCode applies the modifiers it's given")
+        func testMakeKeyEventWithCodeWithModifiers() {
+            let harness = makeHarness()
+            harness.eval("var evt = hs.eventtap.makeKeyEventWithCode(15, false, ['rightCmd'])")
+            #expect(harness.evalInt("evt.keyCode") == 15)
+            harness.expectTrue("evt.flags.includes('cmd') && evt.flags.includes('rightCmd')")
+            harness.expectTrue("!evt.flags.includes('leftCmd')")
+            #expect(!harness.hasException)
+        }
+
+        @Test("event flags can be set from modifier names")
+        func testEventFlagsSettable() {
+            let harness = makeHarness()
+            harness.eval("""
+                var evt = hs.eventtap.makeKeyEvent('a', true, [])
+                evt.flags = ['cmd', 'alt']
+            """)
+            harness.expectTrue("evt.flags.includes('cmd') && evt.flags.includes('alt')")
+            #expect(harness.evalInt("evt.rawFlags & hs.eventtap.modifierFlags.cmd") != 0)
+
+            harness.eval("evt.flags = []")
+            #expect(harness.evalInt("evt.flags.length") == 0)
+            #expect(!harness.hasException)
+        }
+
+        @Test("setting event flags replaces the modifiers but keeps other flag bits")
+        func testEventFlagsSetterKeepsOtherBits() throws {
+            let harness = makeHarness()
+            let nonCoalesced = Int(CGEventFlags.maskNonCoalesced.rawValue)
+            harness.eval("""
+                var evt = hs.eventtap.makeKeyEvent('a', true, [])
+                evt.rawFlags = \(nonCoalesced) | hs.eventtap.modifierFlags.leftCmd
+                evt.flags = ['shift']
+            """)
+            let rawFlags = try #require(harness.evalInt("evt.rawFlags"))
+            let shift = try #require(harness.evalInt("hs.eventtap.modifierFlags.shift"))
+            #expect(rawFlags == nonCoalesced | shift)
+            #expect(!harness.hasException)
+        }
+
+        @Test("keyStroke with an unknown key and an app does nothing without throwing")
+        func testKeyStrokeToAppWithUnknownKey() {
+            let harness = makeHarness()
+            harness.context.setObject(HSApplication(runningApplication: .current),
+                                      forKeyedSubscript: "selfApp" as NSString)
+            harness.eval("hs.eventtap.keyStroke(['cmd'], 'notakey', selfApp)")
+            #expect(!harness.hasException)
+        }
+
         @Test("event location returns object with x and y")
         func testEventLocationHasXAndY() {
             let harness = makeHarness()
@@ -991,6 +1065,37 @@ struct HSEventTapTests {
             #expect(!harness.hasException)
         }
 
+        @Test("keyStroke with an app delivers the modifier keys and the key to that app")
+        func testKeyStrokeToApp() {
+            let harness = makeHarness()
+            harness.context.setObject(HSApplication(runningApplication: .current),
+                                      forKeyedSubscript: "selfApp" as NSString)
+
+            let watched: Set<UInt16> = [UInt16(kVK_Command), UInt16(kVK_Shift), UInt16(kVK_ANSI_R)]
+            let mask: NSEvent.EventTypeMask = [.keyDown, .keyUp, .flagsChanged]
+            // Drop anything already queued for these keys, so only this keystroke is seen.
+            while let stale = NSApp.nextEvent(matching: mask, until: .now, inMode: .default, dequeue: true) {
+                _ = stale
+            }
+
+            // A numeric key code, so the test doesn't depend on the keyboard layout.
+            harness.eval("hs.eventtap.keyStroke(['cmd', 'shift'], \(kVK_ANSI_R), selfApp)")
+
+            var received: [NSEvent] = []
+            let deadline = Date().addingTimeInterval(2.0)
+            while received.count < 6, Date() < deadline {
+                guard let event = NSApp.nextEvent(matching: mask, until: Date().addingTimeInterval(0.05),
+                                                  inMode: .default, dequeue: true) else { continue }
+                if watched.contains(event.keyCode) { received.append(event) }
+            }
+
+            let both: NSEvent.ModifierFlags = [.command, .shift]
+            #expect(received.map(\.type) == [.flagsChanged, .flagsChanged, .keyDown, .keyUp, .flagsChanged, .flagsChanged])
+            #expect(received.map(\.keyCode) == [kVK_Command, kVK_Shift, kVK_ANSI_R, kVK_ANSI_R, kVK_Shift, kVK_Command].map(UInt16.init))
+            #expect(received.map { $0.modifierFlags.intersection(both) } == [.command, both, both, both, .command, []])
+            #expect(!harness.hasException)
+        }
+
         @Test("event tap callback fires when synthetic event is posted")
         func testTapCallbackFires() {
             let harness = makeHarness()
@@ -1017,6 +1122,74 @@ struct HSEventTapTests {
             harness.eval("tap.stop()")
             #expect(ok, "Tap callback should have fired")
             #expect(!harness.hasException)
+        }
+    }
+
+    // MARK: - Keystrokes with modifiers (Swift-level)
+
+    @Suite("Keystroke modifier key sequence tests")
+    struct HSEventTapModifierSequenceTests {
+        private let rKey = CGKeyCode(kVK_ANSI_R)
+
+        private func describe(_ events: [CGEvent]) -> [String] {
+            events.map { event in
+                let type = event.type == .flagsChanged ? "flags" : (event.type == .keyDown ? "down" : "up")
+                let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+                let names = CGEventFlags.modifierNames(from: event.flags).joined(separator: "+")
+                return "\(type) \(keyCode) [\(names)]"
+            }
+        }
+
+        @Test("modifier keys go down before the key and come up after it, in reverse order")
+        func testSequenceOrder() {
+            let events = ModifierKey.keyStrokeEvents(keyCode: rKey, modifierNames: ["cmd", "shift"], source: nil)
+            #expect(describe(events) == [
+                "flags \(kVK_Command) [cmd+leftCmd]",
+                "flags \(kVK_Shift) [cmd+leftCmd+shift+leftShift]",
+                "down \(kVK_ANSI_R) [cmd+leftCmd+shift+leftShift]",
+                "up \(kVK_ANSI_R) [cmd+leftCmd+shift+leftShift]",
+                "flags \(kVK_Shift) [cmd+leftCmd]",
+                "flags \(kVK_Command) []",
+            ])
+        }
+
+        @Test("a keystroke without modifiers is just the key down and up")
+        func testSequenceWithoutModifiers() {
+            let events = ModifierKey.keyStrokeEvents(keyCode: rKey, modifierNames: [], source: nil)
+            #expect(describe(events) == ["down \(kVK_ANSI_R) []", "up \(kVK_ANSI_R) []"])
+        }
+
+        @Test("side-specific modifiers press that side's key")
+        func testSequenceRightSideModifier() {
+            let events = ModifierKey.keyStrokeEvents(keyCode: rKey, modifierNames: ["rightAlt"], source: nil)
+            #expect(describe(events).first == "flags \(kVK_RightOption) [alt+rightAlt]")
+            #expect(describe(events).last == "flags \(kVK_RightOption) []")
+        }
+
+        @Test("both sides of one modifier keep its mask until the last one is released")
+        func testSequenceBothSides() {
+            let events = ModifierKey.keyStrokeEvents(keyCode: rKey, modifierNames: ["leftCmd", "rightCmd"], source: nil)
+            #expect(describe(events) == [
+                "flags \(kVK_Command) [cmd+leftCmd]",
+                "flags \(kVK_RightCommand) [cmd+leftCmd+rightCmd]",
+                "down \(kVK_ANSI_R) [cmd+leftCmd+rightCmd]",
+                "up \(kVK_ANSI_R) [cmd+leftCmd+rightCmd]",
+                "flags \(kVK_RightCommand) [cmd+leftCmd]",
+                "flags \(kVK_Command) []",
+            ])
+        }
+
+        @Test("duplicate and unknown modifier names are ignored, capslock is a flag without a key press")
+        func testSequenceDuplicatesUnknownAndCapsLock() {
+            let events = ModifierKey.keyStrokeEvents(keyCode: rKey,
+                                                     modifierNames: ["cmd", "⌘", "bogus", "capslock"],
+                                                     source: nil)
+            #expect(describe(events) == [
+                "flags \(kVK_Command) [cmd+leftCmd+capslock]",
+                "down \(kVK_ANSI_R) [cmd+leftCmd+capslock]",
+                "up \(kVK_ANSI_R) [cmd+leftCmd+capslock]",
+                "flags \(kVK_Command) [capslock]",
+            ])
         }
     }
 
