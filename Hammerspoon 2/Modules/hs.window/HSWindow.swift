@@ -65,7 +65,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// - Example:
     /// ```js
     /// const win = hs.window.focusedWindow()
-    /// console.log(win.application.title)
+    /// console.log(win.application.name)
     /// ```
     @objc var application: HSApplication? { get }
 
@@ -286,6 +286,16 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// const ax = win.axElement()
     /// ```
     @objc func axElement() -> HSAXElement
+
+    /// Returns a plain object describing this window, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the window's `id`, `pid`, `title`, `application` (the owning app's title), `frame`, `isMinimized`, `isFullscreen` and `isStandard`. Values that can't be read are `null`
+    /// - Example:
+    /// ```js
+    /// console.log(JSON.stringify(hs.window.focusedWindow()))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @_documentation(visibility: private)
@@ -299,6 +309,20 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        [
+            "id": id,
+            "pid": pid,
+            "title": title.orNSNull,
+            "application": (application?.name).orNSNull,
+            "frame": frame.orNSNull,
+            "isMinimized": isMinimized,
+            "isFullscreen": isFullscreen,
+            "isStandard": isStandard,
+        ]
+    }
+
     let element: UIElement
     let app: NSRunningApplication
     var id: Int = -1

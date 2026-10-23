@@ -28,13 +28,13 @@ import AXSwift
     /// ```
     @objc var bundleID: String? { get }
 
-    /// The application's title
+    /// The application's name
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
-    /// console.log(app.title)
+    /// console.log(app.name)
     /// ```
-    @objc var title: String? { get }
+    @objc var name: String? { get }
 
     /// Location of the application on disk
     /// - Example:
@@ -254,6 +254,16 @@ import AXSwift
     /// const win = app.getWindow("index.html")
     /// ```
     @objc func getWindow(_ title: String) -> HSWindow?
+
+    /// Returns a plain object describing this application, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the application's `pid`, `bundleID`, `title`, `bundlePath`, `kind`, `isRunning`, `isActive` and `isHidden`. Values that can't be read are `null`
+    /// - Example:
+    /// ```js
+    /// console.log(JSON.stringify(hs.application.frontmost()))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 @_documentation(visibility: private)
@@ -261,12 +271,26 @@ import AXSwift
     @objc var typeName = "HSApplication"
 
     @objc func toString() -> String {
-        return "<\(typeName): \(title ?? "unknown") (pid \(pid))>"
+        return "<\(typeName): \(name ?? "unknown") (pid \(pid))>"
     }
 
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        [
+            "pid": pid,
+            "bundleID": bundleID.orNSNull,
+            "name": name.orNSNull,
+            "bundlePath": bundlePath.orNSNull,
+            "kind": kind,
+            "isRunning": isRunning,
+            "isActive": isActive,
+            "isHidden": isHidden,
+        ]
+    }
+
     let runningApplication: NSRunningApplication
     let axUIElement: Application?
 
@@ -281,7 +305,7 @@ import AXSwift
 
     @objc var pid: Int { Int(self.runningApplication.processIdentifier) }
     @objc var bundleID: String? { self.runningApplication.bundleIdentifier }
-    @objc var title: String? { self.runningApplication.localizedName }
+    @objc var name: String? { self.runningApplication.localizedName }
     @objc var bundlePath: String? { self.runningApplication.bundleURL?.path(percentEncoded: false) }
 
     @objc var isHidden: Bool {
@@ -328,7 +352,7 @@ import AXSwift
 
     @objc func axElement() -> HSAXElement? {
         guard let axApp = Application(self.runningApplication) else {
-            AKError("hs.application.axElement(): Failed to create AXElement for \(self.title ?? "unknown")")
+            AKError("hs.application.axElement(): Failed to create AXElement for \(self.name ?? "unknown")")
             return nil
         }
         return HSAXElement(element: axApp)
@@ -390,7 +414,7 @@ import AXSwift
 
     @objc func getMenuItems() -> [[String: Any]]? {
         guard let menuBar: UIElement = try? axUIElement?.attribute(.menuBar) else {
-            AKError("hs.application.getMenuItems: Failed to get menu bar for \(self.title ?? "unknown")")
+            AKError("hs.application.getMenuItems: Failed to get menu bar for \(self.name ?? "unknown")")
             return nil
         }
         guard let menuBarItems: [UIElement] = try? menuBar.arrayAttribute(.children) else {

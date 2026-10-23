@@ -909,3 +909,23 @@ extension HSMIDITests {
         #expect(device == nil, "A device with no callback must not be kept alive")
     }
 }
+
+// MARK: - JSON serialization
+
+extension HSMIDITests {
+    @Test("JSON.stringify() of a device includes its name and state")
+    func testDeviceToJSON() throws {
+        let source = try TestMIDIVirtualSource(name: "HSMIDITestJSON-\(UUID().uuidString)")
+        let harness = JSTestHarness()
+        harness.loadModule(HSMIDIModule.self, as: "midi")
+
+        harness.eval("""
+            var d = hs.midi.virtualSourceNamed('\(source.name)');
+            var parsed = JSON.parse(JSON.stringify(d));
+            """)
+        #expect(harness.evalString("parsed.name") == source.name)
+        harness.expectTrue("parsed.displayName === d.displayName && parsed.manufacturer === d.manufacturer")
+        harness.expectTrue("parsed.isVirtual === true && parsed.isOnline === d.isOnline")
+        #expect(!harness.hasException)
+    }
+}

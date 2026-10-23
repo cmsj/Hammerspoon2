@@ -159,6 +159,16 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     /// kb.destroy()
     /// ```
     @objc func destroy()
+
+    /// Returns a plain object describing this device, for JSON serialisation
+    ///
+    /// `JSON.stringify()` calls this automatically, so you rarely need to call it yourself.
+    /// - Returns: An object with the device's `name`, `displayName`, `manufacturer`, `model`, `isOnline` and `isVirtual`
+    /// - Example:
+    /// ```js
+    /// console.log(JSON.stringify(kb))
+    /// ```
+    @objc func toJSON() -> [String: Any]
 }
 
 // MARK: - Implementation
@@ -175,6 +185,18 @@ nonisolated private func hsMIDIMakeReceiveHandler(deviceRef: Unmanaged<HSMIDIDev
     nonisolated override var description: String {
         MainActor.assumeIsolated { toString() }
     }
+
+    @objc func toJSON() -> [String: Any] {
+        [
+            "name": name,
+            "displayName": displayName,
+            "manufacturer": manufacturer,
+            "model": model,
+            "isOnline": isOnline,
+            "isVirtual": isVirtual,
+        ]
+    }
+
     @objc let identifier = UUID().uuidString
 
     private weak var module: HSMIDIModule?

@@ -42,6 +42,6 @@ final class MemoryPressureCollector {
         // The synchronous collector runs finalizers before returning, so the native objects behind
         // collected wrappers are freed here, rather than whenever a background sweep gets to them.
         unsafe JSSynchronousGarbageCollectForDebugging(context.jsGlobalContextRef)
-        _ = unsafe malloc_zone_pressure_relief(nil, 0)
+        _ = malloc_zone_pressure_relief(nil, 0)
     }
 }

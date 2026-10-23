@@ -733,4 +733,54 @@ struct BridgeTypesTests {
         #expect(font("HSFont.custom('Menlo', 12)", in: harness) == .custom("Menlo", size: 12))
         #expect(!harness.hasException)
     }
+
+    // MARK: - JSON Serialization Tests
+
+    @Test("JSON.stringify() of an HSPoint includes its coordinates")
+    func testHSPointToJSON() {
+        let harness = JSTestHarness()
+        harness.eval("var parsed = JSON.parse(JSON.stringify(new HSPoint(10, 20.5)))")
+        #expect(harness.evalString("Object.keys(parsed).sort().join(',')") == "x,y")
+        harness.expectTrue("parsed.x === 10 && parsed.y === 20.5")
+        #expect(!harness.hasException)
+    }
+
+    @Test("JSON.stringify() of an HSSize includes its dimensions")
+    func testHSSizeToJSON() {
+        let harness = JSTestHarness()
+        harness.eval("var parsed = JSON.parse(JSON.stringify(new HSSize(100, 50)))")
+        #expect(harness.evalString("Object.keys(parsed).sort().join(',')") == "h,w")
+        harness.expectTrue("parsed.w === 100 && parsed.h === 50")
+        #expect(!harness.hasException)
+    }
+
+    @Test("JSON.stringify() of an HSRect includes its origin and size")
+    func testHSRectToJSON() {
+        let harness = JSTestHarness()
+        harness.eval("var parsed = JSON.parse(JSON.stringify(new HSRect(1, 2, 3, 4)))")
+        #expect(harness.evalString("Object.keys(parsed).sort().join(',')") == "h,w,x,y")
+        harness.expectTrue("parsed.x === 1 && parsed.y === 2 && parsed.w === 3 && parsed.h === 4")
+        #expect(!harness.hasException)
+    }
+
+    @Test("JSON.stringify() serializes geometry nested in arrays and objects")
+    func testNestedGeometryToJSON() {
+        let harness = JSTestHarness()
+        harness.eval("var parsed = JSON.parse(JSON.stringify({ frames: [new HSRect(0, 0, 10, 10)], at: new HSPoint(1, 2) }))")
+        harness.expectTrue("parsed.frames[0].w === 10 && parsed.frames[0].h === 10")
+        harness.expectTrue("parsed.at.x === 1 && parsed.at.y === 2")
+        #expect(!harness.hasException)
+    }
+
+    @Test("JSON.stringify() of an HSColor includes its sRGB components")
+    func testHSColorToJSON() {
+        let harness = JSTestHarness()
+        harness.eval("var parsed = JSON.parse(JSON.stringify(HSColor.rgb(1, 0, 0.5, 0.25)))")
+        #expect(harness.evalString("Object.keys(parsed).sort().join(',')") == "alpha,blue,green,red")
+        harness.expectTrue("""
+            Math.abs(parsed.red - 1) < 0.001 && Math.abs(parsed.green) < 0.001 &&
+            Math.abs(parsed.blue - 0.5) < 0.001 && Math.abs(parsed.alpha - 0.25) < 0.001
+            """)
+        #expect(!harness.hasException)
+    }
 }
