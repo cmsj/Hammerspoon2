@@ -24,6 +24,13 @@ import AXSwift
     @objc func focusedWindow() -> HSWindow?
 
     /// Get all windows from all applications
+    ///
+    /// This includes windows in native fullscreen and on other Spaces, with one limitation: macOS
+    /// only reveals a window on a Space that isn't visible if its app has already handed that
+    /// window to an accessibility client, e.g. because Hammerspoon listed it while its Space was
+    /// visible. A window that no accessibility client has looked at since it was created is
+    /// missing until its Space is next visible, unless it's its app's main or focused window,
+    /// which are always included.
     /// - Returns: An array of all windows
     /// - Example:
     /// ```js
@@ -41,14 +48,17 @@ import AXSwift
     @objc func visibleWindows() -> [HSWindow]
 
     /// Get windows for a specific application
+    ///
+    /// Like `allWindows()`, this includes windows in native fullscreen and on other Spaces, with the
+    /// same limitation.
     /// - Parameter app: An HSApplication object
-    /// - Returns: An array of windows for that application
+    /// - Returns: An array of windows for that application, or an empty array if `app` is null
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
     /// const wins = hs.window.windowsForApp(app)
     /// ```
-    @objc func windowsForApp(_ app: HSApplication) -> [HSWindow]
+    @objc func windowsForApp(_ app: HSApplication?) -> [HSWindow]
 
     /// Get all windows on a specific screen
     /// - Parameter screenIndex: The screen index (0 for main screen)
@@ -196,20 +206,6 @@ import AXSwift
         return true
     }
 
-    private func getWindowElements(for app: NSRunningApplication) -> [UIElement] {
-        guard let axApp = Application(app) else {
-            return []
-        }
-
-        do {
-            let windows: [UIElement] = try axApp.windows() ?? []
-            return windows
-        } catch {
-            AKDebug("Failed to get windows for \(app.localizedName ?? "unknown"): \(error.localizedDescription)")
-            return []
-        }
-    }
-
     /// Apps with an activation policy of `.prohibited` are background/helper
     /// processes that don't respond to the Accessibility APIs, so querying
     /// them stalls on a system timeout instead of returning quickly.
@@ -256,8 +252,9 @@ import AXSwift
         AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25)
         defer { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0) }
 
+        let windowServerIDs = WindowEnumerator.windowServerWindowIDs()
         for app in candidateApplications() {
-            let windowElements = getWindowElements(for: app)
+            let windowElements = WindowEnumerator.windowElements(for: app, windowServerIDs: windowServerIDs)
             windows.append(contentsOf: windowElements.map { HSWindow(element: $0, app: app) })
         }
 
@@ -268,10 +265,10 @@ import AXSwift
         return allWindows().filter { !$0.isMinimized }
     }
 
-    @objc func windowsForApp(_ app: HSApplication) -> [HSWindow] {
-        guard checkAccessibility() else { return [] }
+    @objc func windowsForApp(_ app: HSApplication?) -> [HSWindow] {
+        guard let app, checkAccessibility() else { return [] }
 
-        let windowElements = getWindowElements(for: app.runningApplication)
+        let windowElements = WindowEnumerator.windowElements(for: app.runningApplication)
         return windowElements.map { HSWindow(element: $0, app: app.runningApplication) }
     }
 
@@ -347,9 +344,10 @@ import AXSwift
             }
         }
 
+        let windowServerIDs = WindowEnumerator.windowServerWindowIDs()
         var windows: [HSWindow] = []
         for app in orderedApps {
-            let appWindows = getWindowElements(for: app).map { HSWindow(element: $0, app: app) }
+            let appWindows = WindowEnumerator.windowElements(for: app, windowServerIDs: windowServerIDs).map { HSWindow(element: $0, app: app) }
             windows.append(contentsOf: appWindows)
         }
 

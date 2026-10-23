@@ -94,7 +94,8 @@ import AXSwift
     /// ```
     @objc var focusedWindow: HSWindow? { get }
 
-    /// All windows of this application
+    /// All windows of this application, including windows in native fullscreen and on other Spaces
+    /// (with the limitation described in `hs.window.allWindows()`)
     /// - Example:
     /// ```js
     /// const app = hs.application.frontmost()
@@ -340,10 +341,7 @@ import AXSwift
     }
 
     @objc var allWindows: [HSWindow] {
-        guard let allWindows: [UIElement] = try? self.axUIElement?.arrayAttribute(.windows) else {
-            return []
-        }
-        return allWindows.compactMap { HSWindow(element: $0, app: self.runningApplication) }
+        return WindowEnumerator.windowElements(for: runningApplication).map { HSWindow(element: $0, app: runningApplication) }
     }
 
     @objc var visibleWindows: [HSWindow] {

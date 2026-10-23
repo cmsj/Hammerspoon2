@@ -403,3 +403,81 @@ extension HSWindowIntegrationTests {
         }
     }
 }
+
+// MARK: - Windows on other Spaces (#344)
+
+extension HSWindowIntegrationTests {
+    /// An app's AXWindows attribute only lists windows on the visible Space(s), so a window in
+    /// native fullscreen, or one left behind on the desktop's Space, used to be missing.
+    @Suite("hs.window fullscreen and other-Space windows", .serialized,
+           .disabled(if: !AXIsProcessTrusted(), "Accessibility permission not granted"))
+    struct HSWindowOtherSpaceTests {
+        private static let fullScreenTitle = "Fullscreen test window"
+        private static let mainTitle = "Hammerspoon 2 Test App"
+
+        /// Polls `condition` until it holds or `timeout` elapses.
+        private func waitUntil(timeout: TimeInterval = 10.0, _ condition: () -> Bool) async -> Bool {
+            let deadline = Date().addingTimeInterval(timeout)
+            while Date() < deadline {
+                if condition() { return true }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            return condition()
+        }
+
+        /// The titles of the windows the app's own AXWindows attribute reports.
+        private func axWindowTitles(_ axApp: Application) -> [String] {
+            let windows: [UIElement] = (try? axApp.windows()) ?? []
+            return windows.map { ((try? $0.attribute(.title)) as String?) ?? "" }
+        }
+
+        @Test("windowsForApp(), allWindows() and app.allWindows include a fullscreen window and the windows on other Spaces")
+        func testFullScreenAndOtherSpaceWindowsAreListed() async throws {
+            let app = try #require(await TestAppControl.launch(detail: "Puts a window in native fullscreen and lists the app's windows from both Spaces"))
+            defer { app.terminate() }
+            let pid = app.processIdentifier
+            let axApp = try #require(Application(app))
+
+            let harness = JSTestHarness()
+            harness.loadModule(HSApplicationModule.self, as: "application")
+            harness.loadModule(HSWindowModule.self, as: "window")
+            harness.eval("""
+                var app = hs.application.fromPID(\(pid));
+                function describe(wins) {
+                    return wins.filter(w => w.pid === \(pid)).map(w => w.title + ':' + w.isFullscreen).sort().join(',');
+                }
+                function uniqueIDs(wins) {
+                    var ids = wins.filter(w => w.pid === \(pid)).map(w => w.id);
+                    return ids.every(id => id > 0) && new Set(ids).size === ids.length;
+                }
+                """)
+            let expected = "\(Self.fullScreenTitle):true,\(Self.mainTitle):false"
+            func expectBothWindowsListed(_ comment: Comment) {
+                #expect(harness.evalString("describe(hs.window.windowsForApp(app))") == expected, comment)
+                #expect(harness.evalString("describe(hs.window.allWindows())") == expected, comment)
+                #expect(harness.evalString("describe(app.allWindows)") == expected, comment)
+                #expect(harness.evalBool("uniqueIDs(hs.window.windowsForApp(app))") == true, comment)
+                #expect(harness.evalBool("uniqueIDs(hs.window.allWindows())") == true, comment)
+                #expect(!harness.hasException, comment)
+            }
+
+            // Windows on another Space can only be found once their AX element has been handed to
+            // an accessibility client. Read AXWindows directly, so that hs.window hasn't seen the
+            // main window before and has to find it on the fullscreen window's Space by probing.
+            #expect(axWindowTitles(axApp) == [Self.mainTitle])
+
+            // Move to the fullscreen window's Space. AXWindows then leaves the main window out.
+            TestAppControl.openFullScreenWindow(in: pid)
+            let onFullScreenSpace = await waitUntil { axWindowTitles(axApp) == [Self.fullScreenTitle] }
+            try #require(onFullScreenSpace, "AXWindows should list only the fullscreen window, but lists \(axWindowTitles(axApp))")
+            expectBothWindowsListed("from the fullscreen window's Space")
+
+            // Back to the desktop's Space. AXWindows then leaves the fullscreen window out, and
+            // hs.window finds it among the windows it has seen before.
+            #expect(harness.evalBool("hs.window.windowsForApp(app).find(w => w.title === '\(Self.mainTitle)').focus()") == true)
+            let onDesktopSpace = await waitUntil { axWindowTitles(axApp) == [Self.mainTitle] }
+            try #require(onDesktopSpace, "AXWindows should list only the main window, but lists \(axWindowTitles(axApp))")
+            expectBothWindowsListed("from the desktop's Space")
+        }
+    }
+}

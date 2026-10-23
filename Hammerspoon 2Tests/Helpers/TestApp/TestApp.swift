@@ -17,7 +17,7 @@
 import AppKit
 
 /// Tests send commands as a distributed notification with this name. `userInfo`:
-/// `command` is `show` (with `test` and `detail`), `newWindow` or `closeWindows`; `pid` is the
+/// `command` is `show` (with `test` and `detail`), `newWindow`, `fullScreenWindow` or `closeWindows`; `pid` is the
 /// copy it is meant for, since several can run at once.
 let commandNotification = Notification.Name("net.tenshu.Hammerspoon-2.TestApp.command")
 
@@ -48,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch info?["command"] as? String {
         case "show": show(test: info?["test"] as? String, detail: info?["detail"] as? String)
         case "newWindow": newWindow(nil)
+        case "fullScreenWindow": fullScreenWindow()
         case "closeWindows": closeExtraWindows()
         default: break
         }
@@ -76,6 +77,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         window.orderFrontRegardless()
         extraWindows.append(window)
+    }
+
+    /// Opens a window and puts it in native fullscreen, which moves it to a Space of its own.
+    private func fullScreenWindow() {
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 150),
+                              styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+        window.title = "Fullscreen test window"
+        window.isReleasedWhenClosed = false
+        window.collectionBehavior.insert(.fullScreenPrimary)
+        let test = NSTextField(wrappingLabelWithString: testLabel.stringValue)
+        test.font = .systemFont(ofSize: 32, weight: .bold)
+        window.contentView = padded([test], spacing: 10, inset: 30)
+        extraWindows.append(window)
+
+        // Only the active app's key window can enter fullscreen.
+        NSApp.activate()
+        window.makeKeyAndOrderFront(nil)
+        window.toggleFullScreen(nil)
     }
 
     private func closeExtraWindows() {
