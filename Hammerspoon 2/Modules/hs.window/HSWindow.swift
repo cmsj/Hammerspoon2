@@ -65,7 +65,7 @@ func captureWindowSnapshot(windowID: CGWindowID, keepTransparency: Bool) -> JSPr
     /// - Example:
     /// ```js
     /// const win = hs.window.focusedWindow()
-    /// console.log(win.application.title)
+    /// console.log(win.application.name)
     /// ```
     @objc var application: HSApplication? { get }
 

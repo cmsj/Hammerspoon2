@@ -452,7 +452,7 @@ import Carbon
     /// const pid = hs.eventtap.secureInputPID()
     /// if (pid !== null) {
     ///     const app = hs.application.fromPID(pid)
-    ///     console.warn("Secure Input is on, probably because of " + (app ? app.title : "PID " + pid))
+    ///     console.warn("Secure Input is on, probably because of " + (app ? app.name : "PID " + pid))
     /// }
     /// ```
     @objc func secureInputPID() -> NSNumber?

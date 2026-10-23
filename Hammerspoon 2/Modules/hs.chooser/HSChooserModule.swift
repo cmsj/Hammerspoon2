@@ -41,8 +41,8 @@ import JavaScriptCore
 /// chooser.setChoices((query) => {
 ///     const q = query.toLowerCase()
 ///     return allApps
-///         .filter(a => a.title.toLowerCase().includes(q))
-///         .map(a => ({ text: a.title, subText: a.bundleID }))
+///         .filter(a => a.name.toLowerCase().includes(q))
+///         .map(a => ({ text: a.name, subText: a.bundleID }))
 /// })
 /// ```
 ///

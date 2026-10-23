@@ -26,8 +26,8 @@ hs.application._watcherEmitter = new LazyWatcherEmitter("hs.application", functi
 /// Example:
 /// ```js
 /// try {
-///     hs.application.on('didLaunch', app => console.log("launched: " + app.title))
-///     hs.application.on('didTerminate', app => console.log("terminated: " + (app && app.title)))
+///     hs.application.on('didLaunch', app => console.log("launched: " + app.name))
+///     hs.application.on('didTerminate', app => console.log("terminated: " + (app && app.name)))
 /// } catch (err) {
 ///     console.error(err.message)
 /// }
@@ -42,7 +42,7 @@ hs.application.on = function(event, listener) {
 ///  - listener: {(app: HSApplication | null) => void} The function originally passed to `on`
 /// Example:
 /// ```js
-/// const onLaunch = app => console.log(app.title)
+/// const onLaunch = app => console.log(app.name)
 /// hs.application.on('didLaunch', onLaunch)
 /// // later…
 /// hs.application.off('didLaunch', onLaunch)
@@ -59,7 +59,7 @@ hs.application.off = function(event, listener) {
 /// Example:
 /// ```js
 /// try {
-///     hs.application.once('didLaunch', app => console.log("First launch seen: " + app.title))
+///     hs.application.once('didLaunch', app => console.log("First launch seen: " + app.name))
 /// } catch (err) {
 ///     console.error(err.message)
 /// }

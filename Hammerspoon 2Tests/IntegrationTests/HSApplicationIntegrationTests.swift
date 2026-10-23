@@ -125,7 +125,7 @@ struct HSApplicationTests {
 
             harness.eval("var app = hs.application.matchingName('Finder')")
 
-            let name = harness.eval("app ? app.title : null")
+            let name = harness.eval("app ? app.name : null")
             #expect(name is String, "hs.application title should return a string")
             #expect((name as? String)?.count ?? 0 > 0, "Name should not be empty")
         }
@@ -171,7 +171,7 @@ struct HSApplicationTests {
             // Should be the same application
             harness.eval("""
         var sameName = (originalApp && appByPID) ?
-                       originalApp.title === appByPID.title :
+                       originalApp.name === appByPID.name :
                        false;
         """)
 
@@ -317,7 +317,7 @@ struct HSApplicationTests {
             if (!app) return null;
         
             return {
-                name: app.title,
+                name: app.name,
                 bundleID: app.bundleID,
                 pid: app.pid,
                 path: app.path,
@@ -363,7 +363,7 @@ struct HSApplicationTests {
             harness.eval("""
         function getRunningAppNames() {
             return hs.application.runningApplications()
-                .map(function(app) { return app.title; })
+                .map(function(app) { return app.name; })
                 .sort();
         }
         
