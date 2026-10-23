@@ -159,30 +159,41 @@ import Carbon
     // MARK: Event constructors
 
     /// Create a keyboard event
+    ///
+    /// If `mods` is given, the event carries exactly those modifiers, whatever modifier keys are
+    /// held when it's created. It is a single key event: to send a whole keystroke with modifiers to an
+    /// application, including the modifier key presses some applications need to see, use
+    /// `hs.eventtap.keyStroke(mods, key, app)`.
     /// - Parameters:
     ///   - key: {string | number} A key name or character (e.g. "a", "space", "return", "f1"), resolved
     ///     through the current keyboard layout (see `hs.keycodes.map`), or a numeric virtual key code
     ///   - isDown: true for key down, false for key up
+    ///   - mods?: An array of modifier names (e.g. ["cmd", "shift"]), as accepted by `hs.eventtap.keyStroke()`.
+    ///     Omit to keep the modifiers that are currently held.
     /// - Returns: An HSEventTapEvent, or null if the key name is unknown
     /// - Example:
     /// ```js
-    /// const evt = hs.eventtap.makeKeyEvent("a", true)
-    /// evt.rawFlags = hs.eventtap.modifierFlags.cmd
+    /// const evt = hs.eventtap.makeKeyEvent("a", true, ["cmd"])
     /// evt.post()
     /// ```
-    @objc func makeKeyEvent(_ key: Any?, _ isDown: Bool) -> HSEventTapEvent?
+    @objc func makeKeyEvent(_ key: Any?, _ isDown: Bool, _ mods: [String]?) -> HSEventTapEvent?
 
     /// Create a keyboard event using a raw key code
+    ///
+    /// If `mods` is given, the event carries exactly those modifiers, whatever modifier keys are
+    /// held when it's created.
     /// - Parameters:
     ///   - keyCode: A numeric virtual key code
     ///   - isDown: true for key down, false for key up
+    ///   - mods?: An array of modifier names (e.g. ["cmd", "shift"]), as accepted by `hs.eventtap.keyStroke()`.
+    ///     Omit to keep the modifiers that are currently held.
     /// - Returns: An HSEventTapEvent
     /// - Example:
     /// ```js
-    /// const evt = hs.eventtap.makeKeyEventWithCode(0, true)  // key code 0 = "a"
+    /// const evt = hs.eventtap.makeKeyEventWithCode(0, true, ["ctrl"])  // key code 0 = "a"
     /// evt.post()
     /// ```
-    @objc func makeKeyEventWithCode(_ keyCode: Int, _ isDown: Bool) -> HSEventTapEvent?
+    @objc func makeKeyEventWithCode(_ keyCode: Int, _ isDown: Bool, _ mods: [String]?) -> HSEventTapEvent?
 
     /// Create a mouse event at the given position.
     ///
@@ -243,23 +254,36 @@ import Carbon
 
     // MARK: Convenience senders
 
-    /// Send a key down and key up event with optional modifier keys.
+    /// Send a key down and key up event with optional modifier keys, optionally to a specific
+    /// application.
     ///
     /// A 5 ms pause is inserted between the key-down and key-up events to improve
     /// compatibility with applications that miss very fast synthetic keystrokes.
+    ///
+    /// Without `app`, the keystroke is posted to the system, so it goes to whichever application
+    /// is frontmost. With `app`, it is delivered straight to that application, even if it's in the
+    /// background, without activating it. In that case the modifier keys are also pressed and
+    /// released around the key, as a real keyboard does, so applications that track modifier
+    /// key presses themselves see them held.
     ///
     /// - Parameters:
     ///   - mods: An array of modifier names (e.g. ["cmd", "shift"])
     ///   - key: {string | number} A key name or character (e.g. "a", "space", "return"), resolved
     ///     through the current keyboard layout (see `hs.keycodes.map`), or a numeric virtual key code,
     ///     which always presses the same physical key
+    ///   - app?: {HSApplication | null} The application to send the keystroke to. Omit, or pass null, to
+    ///     send it to the frontmost application.
     /// - Example:
     /// ```js
     /// hs.eventtap.keyStroke(["cmd"], "c")      // Copy
     /// hs.eventtap.keyStroke(["cmd", "shift"], "4")  // Screenshot selection
     /// hs.eventtap.keyStroke(["ctrl"], 0)       // Ctrl + the key US-ANSI calls A, on any layout
+    ///
+    /// // Reload Firefox without bringing it to the front
+    /// const firefox = hs.application.fromBundleID("org.mozilla.firefox")
+    /// if (firefox) hs.eventtap.keyStroke(["cmd"], "r", firefox)
     /// ```
-    @objc func keyStroke(_ mods: [String], _ key: Any?)
+    @objc func keyStroke(_ mods: [String], _ key: Any?, _ app: HSApplication?)
 
     /// Type a string of characters as individual key events.
     ///
@@ -700,18 +724,24 @@ import Carbon
 
     // MARK: - Event constructors
 
-    @objc func makeKeyEvent(_ key: Any?, _ isDown: Bool) -> HSEventTapEvent? {
+    @objc func makeKeyEvent(_ key: Any?, _ isDown: Bool, _ mods: [String]?) -> HSEventTapEvent? {
         guard let keyCode = resolveKeyCode(key, caller: "makeKeyEvent") else { return nil }
-        return makeKeyEventWithCode(Int(keyCode), isDown)
+        return makeKeyEventWithCode(Int(keyCode), isDown, mods)
     }
 
-    @objc func makeKeyEventWithCode(_ keyCode: Int, _ isDown: Bool) -> HSEventTapEvent? {
+    @objc func makeKeyEventWithCode(_ keyCode: Int, _ isDown: Bool, _ mods: [String]?) -> HSEventTapEvent? {
         let source = CGEventSource(stateID: .hidSystemState)
         guard let event = CGEvent(keyboardEventSource: source,
                                   virtualKey: CGKeyCode(keyCode),
                                   keyDown: isDown) else {
             AKError("hs.eventtap.makeKeyEventWithCode: Failed to create event for keyCode \(keyCode)")
             return nil
+        }
+        // Given modifiers replace whatever the .hidSystemState source reports as held right now.
+        // Without them the event keeps that state, so a modifier key event posted just before
+        // (the way Apple recommends building a keystroke) still applies.
+        if let mods {
+            event.flags = event.flags.replacingModifiers(with: CGEventFlags.from(modifierNames: mods))
         }
         return HSEventTapEvent(cgEvent: event)
     }
@@ -789,7 +819,7 @@ import Carbon
 
     // MARK: - Convenience senders
 
-    @objc func keyStroke(_ mods: [String], _ key: Any?) {
+    @objc func keyStroke(_ mods: [String], _ key: Any?, _ app: HSApplication?) {
         guard let keyCode = resolveKeyCode(key, caller: "keyStroke") else { return }
         let flags = CGEventFlags.from(modifierNames: mods)
 
@@ -797,6 +827,20 @@ import Carbon
         // event's flags don't pick up whatever real modifier keys happen to be physically
         // held at post time (e.g. still-down hotkey modifiers) — flags are set explicitly below.
         let source = CGEventSource(stateID: .privateState)
+
+        if let app {
+            // An app that isn't frontmost has never seen the modifier keys go down, and many
+            // (e.g. browsers) track that themselves rather than trusting the key event's flags,
+            // so press and release them around the key, as a real keyboard would. This is only
+            // done for a targeted app: posted to the system, these would change the session's
+            // real modifier state while the user may be holding keys of their own.
+            let pid = pid_t(app.pid)
+            for event in ModifierKey.keyStrokeEvents(keyCode: keyCode, modifierNames: mods, source: source) {
+                event.postToPid(pid)
+                usleep(5000)
+            }
+            return
+        }
 
         if let downEvent = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true) {
             downEvent.flags = flags
