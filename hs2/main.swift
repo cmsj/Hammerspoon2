@@ -81,7 +81,13 @@ private nonisolated func handleBrokerMessage(_ message: HSIPCBrokerToClient) -> 
         printLogEntry(level: level, message: text)
     case .hostStatus(let connected):
         let text = connected ? "Hammerspoon 2 connected" : "Hammerspoon 2 disconnected"
-        print("\n" + TextProperties(.blue, nil).apply(to: text))
+        // On a pipe, stdout carries only results, so the notice goes to stderr instead.
+        // (isInteractive is main-actor isolated; this runs on an XPC queue.)
+        if isatty(STDIN_FILENO) != 0 {
+            print("\n" + TextProperties(.blue, nil).apply(to: text))
+        } else {
+            writeStderr(text + "\n")
+        }
     }
     return nil
 }
@@ -273,8 +279,11 @@ do {
     exit(1)
 }
 
-print(TextProperties(.blue, nil).apply(to: "Connected to Hammerspoon 2"))
-if showPrompt { print("Type JavaScript to evaluate. Use --help for options.") }
+// The greeting is for a person; on a pipe it would be mixed in with the results scripts read.
+if isInteractive {
+    print(TextProperties(.blue, nil).apply(to: "Connected to Hammerspoon 2"))
+    if showPrompt { print("Type JavaScript to evaluate. Use --help for options.") }
+}
 
 let completionTable = await completionLoad
 

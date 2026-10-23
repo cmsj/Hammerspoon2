@@ -243,9 +243,10 @@ cmd_hs() {
     printf '%s\n' "$out"
 }
 
-# hs2_eval <vm> <one line of JS>: prints hs2's output and returns its exit status. Drops hs2's
-# "Connected to Hammerspoon 2" banner (only its first line, and only if it is the banner), and
-# strips colours only from failure output, since a successful value is printed verbatim.
+# hs2_eval <vm> <one line of JS>: prints hs2's output and returns its exit status. Drops the
+# "Connected to Hammerspoon 2" banner that hs2 builds before 2026-10 print even on a pipe (only
+# its first line, and only if it is the banner), since `install --app` can install an older
+# build. Strips colours only from failure output, since a successful value is printed verbatim.
 hs2_eval() {
     local raw rc=0 first
     raw="$(printf '%s\n' "$2" | tart exec -i "$1" "$GUEST_APP/Contents/MacOS/hs2" --no-prompt 2>&1)" || rc=$?
