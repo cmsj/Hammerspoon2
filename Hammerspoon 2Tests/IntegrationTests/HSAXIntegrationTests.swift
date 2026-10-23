@@ -378,6 +378,83 @@ struct HSAXTests {
             #expect(!harness.hasException)
         }
 
+        // MARK: - setAttributeValue type validation
+
+        @Test("setAttributeValue throws, naming HSPoint, when AXPosition is given a plain {x, y} object")
+        func testSetAttributeValuePlainPointThrows() {
+            let harness = makeHarness()
+            harness.eval("""
+            var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));
+            elem.setAttributeValue('AXPosition', {x: 10, y: 20});
+            """)
+            harness.expectException()
+            #expect(harness.exceptionMessage?.contains("AXPosition requires an HSPoint") == true)
+            #expect(harness.exceptionMessage?.contains("got a plain object") == true)
+        }
+
+        @Test("setAttributeValue throws when AXPosition is given the wrong bridged type")
+        func testSetAttributeValueWrongBridgedTypeThrows() {
+            let harness = makeHarness()
+            harness.eval("""
+            var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));
+            elem.setAttributeValue('AXPosition', new HSSize(10, 20));
+            """)
+            harness.expectException()
+            #expect(harness.exceptionMessage?.contains("got an HSSize") == true)
+        }
+
+        @Test("setAttributeValue throws when AXSize or AXFrame are given plain objects")
+        func testSetAttributeValuePlainSizeAndFrameThrow() {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            harness.eval("elem.setAttributeValue('AXSize', {w: 10, h: 20})")
+            #expect(harness.exceptionMessage?.contains("AXSize requires an HSSize") == true)
+            harness.eval("elem.setAttributeValue('AXFrame', {x: 0, y: 0, w: 10, h: 20})")
+            #expect(harness.exceptionMessage?.contains("AXFrame requires an HSRect") == true)
+        }
+
+        @Test("setAttributeValue throws when a boolean attribute is given a string")
+        func testSetAttributeValueBooleanAttributeThrows() {
+            let harness = makeHarness()
+            harness.eval("""
+            var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));
+            elem.setAttributeValue('AXMinimized', 'true');
+            """)
+            harness.expectException()
+            #expect(harness.exceptionMessage?.contains("AXMinimized requires a boolean, got a string") == true)
+        }
+
+        @Test("setAttributeValue throws when a boolean attribute is given a number", arguments: ["0", "1"])
+        func testSetAttributeValueBooleanAttributeRejectsNumbers(number: String) {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            harness.eval("elem.setAttributeValue('AXMinimized', \(number))")
+            #expect(harness.exceptionMessage?.contains("AXMinimized requires a boolean, got a number") == true)
+        }
+
+        @Test("setAttributeValue passes booleans for a boolean attribute through to the Accessibility API", arguments: ["true", "false"])
+        func testSetAttributeValueBooleanAttributeAcceptsBooleans(boolean: String) {
+            let harness = makeHarness()
+            harness.eval("var elem = hs.ax.applicationElement(hs.application.fromPID(testAppPID));")
+            // An application element has no AXMinimized, so the API refuses it, but without a type error.
+            #expect(harness.evalBool("elem.setAttributeValue('AXMinimized', \(boolean))") == false)
+            #expect(!harness.hasException)
+        }
+
+        @Test("setAttributeValue moves a window when AXPosition is given an HSPoint")
+        func testSetAttributeValuePositionWithHSPoint() {
+            let harness = makeHarness()
+            harness.eval("""
+            var win = hs.ax.applicationElement(hs.application.fromPID(testAppPID)).attributeValue('AXWindows')[0];
+            var before = win.attributeValue('AXPosition');
+            var target = new HSPoint(before.x + 10, before.y + 10);
+            """)
+            #expect(harness.evalBool("win.setAttributeValue('AXPosition', target)") == true)
+            #expect(!harness.hasException)
+            harness.expectTrue("win.attributeValue('AXPosition').equals(target)")
+            #expect(harness.evalBool("win.setAttributeValue('AXPosition', before)") == true)
+        }
+
         // MARK: - Element identity
 
         @Test("isEqualToElement is true for two lookups of the same element")

@@ -147,16 +147,35 @@ import AXSwift
     @objc func attributeValue(_ attribute: String) -> Any?
 
     /// Set the value of a specific attribute
+    ///
+    /// The value must be of the type the Accessibility API expects for the attribute. For the
+    /// well-known attributes below the type is checked first, and a value of the wrong type throws
+    /// an error naming the expected type.
+    ///
+    /// | Attribute | Expected value |
+    /// |---|---|
+    /// | `AXPosition` | an `HSPoint` |
+    /// | `AXSize` | an `HSSize` |
+    /// | `AXFrame` | an `HSRect` |
+    /// | `AXFocused`, `AXMain`, `AXMinimized`, `AXHidden`, `AXFrontmost`, `AXFullScreen`, `AXSelected`, `AXExpanded`, `AXDisclosing`, `AXEnhancedUserInterface` | a boolean |
+    /// | `AXSelectedText` | a string |
+    ///
+    /// Plain objects such as `{x: 1, y: 2}` are not accepted for geometry attributes; use `new HSPoint(1, 2)`.
     /// - Parameters:
     ///   - attribute: The attribute name to set
-    ///   - value: The value to set
+    ///   - value: {any} The value to set
     /// - Returns: True if the operation succeeded, otherwise False
+    /// - Throws: true
     /// - Example:
     /// ```js
     /// const el = hs.ax.focusedElement()
     /// el.setAttributeValue("AXValue", "Hello")
+    ///
+    /// const win = hs.ax.windowElement(hs.window.focusedWindow())
+    /// win.setAttributeValue("AXPosition", new HSPoint(100, 100))
+    /// win.setAttributeValue("AXSize", new HSSize(800, 600))
     /// ```
-    @objc func setAttributeValue(_ attribute: String, _ value: Any) -> Bool
+    @objc func setAttributeValue(_ attribute: String, _ value: JSValue) -> Bool
 
     /// Check if an attribute is settable
     /// - Parameter attribute: An attribute name
@@ -381,11 +400,22 @@ import AXSwift
         return bridgeValue(rawValue)
     }
 
-    @objc func setAttributeValue(_ attribute: String, _ value: Any) -> Bool {
+    @objc func setAttributeValue(_ attribute: String, _ value: JSValue) -> Bool {
+        if let expected = AXAttributeValueType.known[attribute], !expected.accepts(value) {
+            if let ctx = JSContext.current() {
+                let message = "hs.ax setAttributeValue(): \(attribute) requires \(expected.typeDescription), got \(AXAttributeValueType.describe(value))"
+                ctx.exception = JSValue(newErrorFromMessage: message, in: ctx)
+            }
+            return false
+        }
+        guard let object = value.toObject() else {
+            AKError("Failed to set attribute \(attribute): value is null or undefined")
+            return false
+        }
         let attr = UIElement.Attribute(rawValue: attribute)
 
         do {
-            try element.setAttribute(attr, value: unbridgeValue(value))
+            try element.setAttribute(attr, value: unbridgeValue(object))
             return true
         } catch {
             AKError("Failed to set attribute \(attribute): \(error.localizedDescription)")
@@ -496,5 +526,58 @@ import AXSwift
             return dict.mapValues { unbridgeValue($0) }
         }
         return value
+    }
+}
+
+/// The value types the Accessibility API requires for well-known settable attributes, so that
+/// setAttributeValue() can reject a mistyped value with a useful error instead of the API's bare
+/// failure (e.g. a plain `{x, y}` object for AXPosition, which bridges to a dictionary).
+private enum AXAttributeValueType {
+    case point, size, rect, boolean, string
+
+    static let known: [String: AXAttributeValueType] = {
+        var types: [String: AXAttributeValueType] = [
+            "AXPosition": .point,
+            "AXSize": .size,
+            "AXFrame": .rect,
+            "AXSelectedText": .string,
+        ]
+        for attribute in ["AXFocused", "AXMain", "AXMinimized", "AXHidden", "AXFrontmost", "AXFullScreen",
+                          "AXSelected", "AXExpanded", "AXDisclosing", "AXEnhancedUserInterface"] {
+            types[attribute] = .boolean
+        }
+        return types
+    }()
+
+    var typeDescription: String {
+        switch self {
+        case .point: return "an HSPoint, e.g. new HSPoint(x, y)"
+        case .size: return "an HSSize, e.g. new HSSize(w, h)"
+        case .rect: return "an HSRect, e.g. new HSRect(x, y, w, h)"
+        case .boolean: return "a boolean"
+        case .string: return "a string"
+        }
+    }
+
+    func accepts(_ value: JSValue) -> Bool {
+        switch self {
+        case .point: return value.toObjectOf(HSPoint.self) is HSPoint
+        case .size: return value.toObjectOf(HSSize.self) is HSSize
+        case .rect: return value.toObjectOf(HSRect.self) is HSRect
+        case .boolean: return value.isBoolean
+        case .string: return value.isString
+        }
+    }
+
+    /// A short description of a value's type for error messages, naming bridged types (e.g. "HSSize")
+    static func describe(_ value: JSValue) -> String {
+        if value.isUndefined { return "undefined" }
+        if value.isNull { return "null" }
+        if value.isBoolean { return "a boolean" }
+        if value.isNumber { return "a number" }
+        if value.isString { return "a string" }
+        if value.isArray { return "an array" }
+        if let typed = value.toObject() as? HSTypeAPI { return "an \(typed.typeName)" }
+        return "a plain object"
     }
 }
