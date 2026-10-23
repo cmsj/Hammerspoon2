@@ -13,7 +13,9 @@
 #      and CURRENT_PROJECT_VERSION=<commit count>, so Sparkle's build numbers
 #      only ever go up
 #   2. exports it signed with Developer ID, notarises it and staples it
-#   3. zips it and signs the zip with the Sparkle EdDSA key
+#   3. zips it and signs the zip with the Sparkle EdDSA key, and zips the
+#      archive's dSYMs (checking every executable of ours has one) so crash
+#      reports from the release can be symbolicated
 #   4. builds signed binary deltas against the previous releases that this
 #      script published, and writes sparkle.json to describe all of the above
 #   5. writes a changelog from the Changelog-Added/Changed/Fixed trailers in
@@ -199,6 +201,25 @@ check_sparkle_key() {
 
 sha256_of() { shasum -a 256 "$1" | cut -d' ' -f1; }
 
+# check_dsyms <app> <dSYMs directory>
+#
+# Check every executable we build into <app> (everything but its frameworks)
+# has a dSYM with a matching UUID for each of its architectures, or crashes in
+# it couldn't be symbolicated.
+check_dsyms() {
+    local app="$1" dsyms="$2" known file uuid missing=""
+    [ -d "$dsyms" ] || die "the archive has no dSYMs; is DEBUG_INFORMATION_FORMAT dwarf-with-dsym for Release?"
+    known="$(find "$dsyms" -path '*.dSYM/Contents/Resources/DWARF/*' -type f -print0 \
+        | xargs -0 xcrun dwarfdump --uuid | awk '/^UUID:/ { print $2 }')"
+    while IFS= read -r -d '' file; do
+        file -b "$file" | grep -q 'Mach-O' || continue
+        for uuid in $(xcrun dwarfdump --uuid "$file" | awk '/^UUID:/ { print $2 }'); do
+            grep -qx "$uuid" <<<"$known" || missing+=" ${file#"$app"/} ($uuid)"
+        done
+    done < <(find "$app" -type f -perm +111 -not -path '*/Frameworks/*' -print0)
+    [ -z "$missing" ] || die "no dSYM matches:$missing"
+}
+
 # fetch_live_appcast <output>
 #
 # Write the appcast on gh-pages (which is what Pages serves) to <output>, or
@@ -330,7 +351,7 @@ cmd_prepare() {
     [ -z "$NOTES_FILE" ] || [ -z "$SINCE_TAG" ] || die "--since has no effect with --notes-file"
 
     log "Preflight checks"
-    require_tools xcodebuild xcrun ditto plutil codesign spctl gh git node jq shasum curl
+    require_tools xcodebuild xcrun ditto plutil codesign spctl gh git node jq shasum curl file
     check_github
 
     [ -z "$(git status --porcelain)" ] || die "working tree is not clean"
@@ -376,6 +397,7 @@ cmd_prepare() {
     local app="$export_dir/$APP_NAME.app"
     local zip_name="$ASSET_BASENAME-$VERSION.zip"
     local zip="$ASSETS/$zip_name"
+    local dsyms_zip="$ASSETS/$ASSET_BASENAME-$VERSION-dSYMs.zip"
 
     echo "Version $VERSION, build $BUILD_NUMBER, commit $HEAD_SHA"
     echo "Working in $WORK"
@@ -474,6 +496,10 @@ EOF
     local zip_signature zip_length
     zip_signature="$("$SPARKLE_BIN/sign_update" --account "$SPARKLE_KEY_ACCOUNT" -p "$zip")"
     zip_length="$(stat -f%z "$zip")"
+
+    log "Packaging dSYMs"
+    check_dsyms "$app" "$archive/dSYMs"
+    ditto -c -k --keepParent "$archive/dSYMs" "$dsyms_zip"
 
     log "Building deltas from up to $DELTA_COUNT previous releases"
     # Only releases made by this script carry sparkle.json, and only their build
