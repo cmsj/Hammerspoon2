@@ -758,6 +758,7 @@ step_appcast() {
         commit="$(git commit-tree "$tree" -p origin/gh-pages -m "appcast: publish $VERSION")"
         # Not forced, so a gh-pages that moved on is never overwritten.
         git push origin "$commit:refs/heads/gh-pages" && return
+        [ "$attempt" -lt 5 ] || break
         warn "gh-pages changed while pushing (probably a docs run); trying again"
         sleep $((attempt * 10))
     done
