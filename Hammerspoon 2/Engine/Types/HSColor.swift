@@ -86,6 +86,9 @@ import Observation
 
     var color: Color
 
+    /// The colour for AppKit APIs
+    var nsColor: NSColor { NSColor(color) }
+
     init(color: Color) {
         self.color = color
         super.init()

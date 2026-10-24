@@ -37,6 +37,7 @@ import JavaScriptCoreExtras
     /// - `checked` (boolean): If true, a checkmark is shown next to the item.
     /// - `disabled` (boolean): If true, the item is greyed out and cannot be chosen.
     /// - `tooltip` (string): Tooltip shown when hovering over the item.
+    /// - `color` (HSColor or hex string): The colour of the item's title text.
     /// - `icon` (HSImage): Icon shown to the left of the title.
     /// - `menu` (array): Nested array of menu item objects to create a submenu.
     ///

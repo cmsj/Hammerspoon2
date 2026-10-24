@@ -69,6 +69,7 @@ import JavaScriptCore
     /// - `checked` (boolean): If true, a checkmark is shown next to the item.
     /// - `disabled` (boolean): If true, the item is greyed out and cannot be chosen.
     /// - `tooltip` (string): Tooltip shown when hovering over the item.
+    /// - `color` (HSColor or hex string): The colour of the item's title text.
     /// - `icon` (HSImage): Icon shown to the left of the title.
     /// - `menu` (array): Nested array of menu item objects to create a submenu.
     ///
@@ -80,7 +81,8 @@ import JavaScriptCore
     /// item.setMenu([
     ///     { title: "Option A", fn: () => console.log("A") },
     ///     { title: "-" },
-    ///     { title: "Option B", checked: true, fn: () => console.log("B") }
+    ///     { title: "Option B", checked: true, fn: () => console.log("B") },
+    ///     { title: "Danger", color: "#FF3B30", fn: () => console.log("danger") }
     /// ])
     ///
     /// // Show extra entries when Option is held
@@ -149,6 +151,21 @@ import JavaScriptCore
     /// ```
     @objc var title: String? { get set }
 
+    /// Get or set the colour of the menu item's title text, or null to use the menu bar's standard text colour.
+    /// - Example:
+    /// ```js
+    /// const item = hs.menubar.create()
+    /// let remaining = 10
+    /// item.title = String(remaining)
+    /// const timer = hs.timer.doEvery(1, () => {
+    ///     remaining -= 1
+    ///     item.title = String(remaining)
+    ///     item.titleColor = remaining <= 3 ? HSColor.hex("#FF3B30") : null
+    ///     if (remaining === 0) timer.stop()
+    /// })
+    /// ```
+    @objc var titleColor: HSColor? { get set }
+
     /// Permanently remove this item from the menu bar and release all resources.
     ///
     /// After calling `destroy()`, the item is no longer usable.
@@ -190,6 +207,7 @@ import JavaScriptCore
         }
     }
     private var _title: String?
+    private var _titleColor: HSColor?
     private var _icon: NSImage?
     private var _clickCallback: JSCallback?
     private var _menuCallback: JSCallback?
@@ -443,6 +461,14 @@ import JavaScriptCore
         }
     }
 
+    @objc var titleColor: HSColor? {
+        get { return _titleColor }
+        set {
+            _titleColor = newValue
+            updateButton()
+        }
+    }
+
     // MARK: - Dynamic menu population (called by delegate)
 
     func populateDynamicMenu(_ menu: NSMenu) {
@@ -484,18 +510,30 @@ import JavaScriptCore
             button.image = icon
             if let title = _title, !title.isEmpty {
                 button.imagePosition = .imageLeft
-                button.title = title
+                setButtonTitle(title)
             } else {
                 button.imagePosition = .imageOnly
                 button.title = ""
             }
         } else if let title = _title, !title.isEmpty {
             button.image = nil
-            button.title = title
+            setButtonTitle(title)
         } else {
             button.image = nil
             button.title = "?"
         }
+    }
+
+    private func setButtonTitle(_ title: String) {
+        guard let button = statusItem?.button else { return }
+        guard let color = _titleColor else {
+            button.title = title
+            return
+        }
+        button.attributedTitle = NSAttributedString(string: title, attributes: [
+            .foregroundColor: color.nsColor,
+            .font: button.font ?? NSFont.menuBarFont(ofSize: 0),
+        ])
     }
 
     private func clearMenuHandlers() {

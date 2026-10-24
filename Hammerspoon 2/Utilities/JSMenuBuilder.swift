@@ -14,6 +14,7 @@ import JavaScriptCore
 /// - `checked` (boolean): Shows a checkmark next to the item.
 /// - `disabled` (boolean): Greys the item out.
 /// - `tooltip` (string): Shown when hovering over the item.
+/// - `color` (HSColor or hex string): The colour of the title text.
 /// - `icon` (HSImage): Shown to the left of the title.
 /// - `menu` (array): Nested menu item objects, making a submenu.
 ///
@@ -85,6 +86,18 @@ struct JSMenuBuilder {
            !tv.isUndefined, !tv.isNull,
            let tip = tv.toString() {
             item.toolTip = tip
+        }
+
+        if let colorValue = entry.objectForKeyedSubscript("color"),
+           !colorValue.isUndefined, !colorValue.isNull {
+            if let color = HSColor.fromJSValue(colorValue) {
+                item.attributedTitle = NSAttributedString(string: title, attributes: [
+                    .foregroundColor: color.nsColor,
+                    .font: NSFont.menuFont(ofSize: 0),
+                ])
+            } else {
+                AKWarning("\(logPrefix): Ignoring menu item color for \"\(title)\": expected an HSColor or a hex string")
+            }
         }
 
         if let iv = entry.objectForKeyedSubscript("icon"),
