@@ -67,8 +67,13 @@ class ManagerManager {
         NSApplication.shared.terminate(nil)
     }
 
+    /// Bumped on every boot so an install still running from an earlier boot doesn't load the
+    /// config into the context of a later one.
+    private var bootGeneration = 0
+
     func boot() throws {
         try engine.resetContext()
+        bootGeneration += 1
 
         let configDir = settings.configLocation.deletingLastPathComponent()
         var configDirExists = ObjCBool(booleanLiteral: false)
@@ -83,6 +88,28 @@ class ManagerManager {
 
         if !fileSystem.fileExists(atPath: settings.configLocation.path) {
             AKError("No config file found at: \(settings.configLocation.path)")
+            return
+        }
+
+        // A package.json next to init.js means npm dependencies: install whatever is missing first
+        // so init.js can require() them, then load the config whether or not that succeeded.
+        // Nothing missing means no network access, just a package.json read per dependency.
+        if fileSystem.fileExists(atPath: configDir.appendingPathComponent("package.json").path) {
+            let generation = bootGeneration
+            Task { @MainActor in
+                do {
+                    let installed = try await NPMInstaller.install(projectDir: configDir)
+                    AKInfo("hs.npm: \(installed.count) package(s) ready: \(installed.joined(separator: ", "))")
+                } catch {
+                    AKError("hs.npm: installing dependencies failed, loading config anyway: \(error.localizedDescription)")
+                }
+                guard generation == bootGeneration else { return }   // reloaded in the meantime
+                do {
+                    try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)
+                } catch {
+                    AKError("Failed to load config: \(error.localizedDescription)")
+                }
+            }
             return
         }
         try engine.evalFromURL(settings.configLocation, wrapInIIFE: false)

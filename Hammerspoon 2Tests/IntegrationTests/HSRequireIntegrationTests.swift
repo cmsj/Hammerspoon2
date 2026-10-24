@@ -12,7 +12,7 @@ import JavaScriptCore
 // RequireContext creates an isolated JSContext with the full CommonJS require()
 // system installed and a temporary directory for test modules.  Each test creates
 // its own instance so there is no shared state between tests.
-private final class RequireContext {
+final class RequireContext {
     let context: JSContext
     let tempDir: URL
     private(set) var lastException: JSValue?
