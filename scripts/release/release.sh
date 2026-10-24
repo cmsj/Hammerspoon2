@@ -722,34 +722,46 @@ step_release() {
 step_appcast() {
     log "Putting $APPCAST_NAME on gh-pages"
     local live="$WORK/live.xml" body="$WORK/release-body.md"
-    fetch_live_appcast "$live"
-    case "$(sha256_of "$live")" in
-        "$APPCAST_SHA") echo "  already there"; return ;;
-        "$LIVE_SHA") ;;
-        *) die "the appcast on gh-pages changed while execute was running; run: $0 appcast $VERSION" ;;
-    esac
-    git rev-parse -q --verify origin/gh-pages >/dev/null \
-        || die "there's no gh-pages branch; publish the docs once to create it"
+    local index="$WORK/gh-pages.index" blob tree commit attempt checked=0
+    # Pushing the tag starts publish-docs.yml, which replaces gh-pages with a
+    # new commit (carrying the live appcast through), so gh-pages can move
+    # between our fetch and our push. When it does, fetch it again, check the
+    # appcast wasn't changed, and commit on top of the new gh-pages.
+    for attempt in 1 2 3 4 5; do
+        fetch_live_appcast "$live"
+        case "$(sha256_of "$live")" in
+            "$APPCAST_SHA") echo "  already there"; return ;;
+            "$LIVE_SHA") ;;
+            *) die "the appcast on gh-pages changed while execute was running; run: $0 appcast $VERSION" ;;
+        esac
+        git rev-parse -q --verify origin/gh-pages >/dev/null \
+            || die "there's no gh-pages branch; publish the docs once to create it"
 
-    gh release view "$VERSION" --json body --jq .body > "$body"
-    node "$REPO_ROOT/scripts/release/check-appcast.js" \
-        --candidate "$APPCAST" \
-        --live "$live" \
-        --metadata "$METADATA" \
-        --signed-notes "$NOTES" \
-        --release-notes "$body"
+        if [ "$checked" = 0 ]; then
+            gh release view "$VERSION" --json body --jq .body > "$body"
+            node "$REPO_ROOT/scripts/release/check-appcast.js" \
+                --candidate "$APPCAST" \
+                --live "$live" \
+                --metadata "$METADATA" \
+                --signed-notes "$NOTES" \
+                --release-notes "$body"
+            checked=1
+        fi
 
-    # Commit on top of gh-pages without a checkout of the whole site.
-    local index="$WORK/gh-pages.index" blob tree commit
-    rm -f "$index"
-    GIT_INDEX_FILE="$index" git read-tree origin/gh-pages
-    blob="$(git hash-object -w "$APPCAST")"
-    GIT_INDEX_FILE="$index" git update-index --add --cacheinfo "100644,$blob,$APPCAST_NAME"
-    tree="$(GIT_INDEX_FILE="$index" git write-tree)"
-    rm -f "$index"
-    commit="$(git commit-tree "$tree" -p origin/gh-pages -m "appcast: publish $VERSION")"
-    # Not forced: if gh-pages has moved on, this fails and execute can be re-run.
-    git push origin "$commit:refs/heads/gh-pages"
+        # Commit on top of gh-pages without a checkout of the whole site.
+        rm -f "$index"
+        GIT_INDEX_FILE="$index" git read-tree origin/gh-pages
+        blob="$(git hash-object -w "$APPCAST")"
+        GIT_INDEX_FILE="$index" git update-index --add --cacheinfo "100644,$blob,$APPCAST_NAME"
+        tree="$(GIT_INDEX_FILE="$index" git write-tree)"
+        rm -f "$index"
+        commit="$(git commit-tree "$tree" -p origin/gh-pages -m "appcast: publish $VERSION")"
+        # Not forced, so a gh-pages that moved on is never overwritten.
+        git push origin "$commit:refs/heads/gh-pages" && return
+        warn "gh-pages changed while pushing (probably a docs run); trying again"
+        sleep $((attempt * 10))
+    done
+    die "gh-pages kept changing; wait for https://github.com/$GH_REPO/actions/workflows/publish-docs.yml to finish, then run execute again"
 }
 
 step_deploy() {
