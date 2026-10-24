@@ -134,6 +134,22 @@ import AVFoundation
     /// hs.permissions.requestInputMonitoring()
     /// ```
     @objc func requestInputMonitoring()
+
+    /// Check if the app has Bluetooth permission, which `hs.bluetooth` needs.
+    /// - Returns: true if permission is granted, false otherwise
+    /// - Example:
+    /// ```js
+    /// console.log(hs.permissions.checkBluetooth())
+    /// ```
+    @objc func checkBluetooth() -> Bool
+
+    /// Request Bluetooth permission (shows the system dialog if the user has not yet decided)
+    /// - Returns: {Promise<boolean>} A Promise that resolves to true if granted, false if denied
+    /// - Example:
+    /// ```js
+    /// hs.permissions.requestBluetooth().then(granted => console.log(granted))
+    /// ```
+    @objc func requestBluetooth() -> JSPromise?
 }
 
 // MARK: - Implementation
@@ -252,5 +268,20 @@ import AVFoundation
 
     @objc func requestInputMonitoring() {
         PermissionsManager.shared.request(.inputMonitoring)
+    }
+
+    // MARK: - Bluetooth
+
+    @objc func checkBluetooth() -> Bool {
+        return PermissionsManager.shared.check(.bluetooth)
+    }
+
+    @objc func requestBluetooth() -> JSPromise? {
+        guard let context = JSContext.current() else { return nil }
+        return wrapAsyncInJSPromise(in: context) { holder in
+            PermissionsManager.shared.request(.bluetooth) { result in
+                Task { @MainActor in holder.resolveWith(result) }
+            }
+        }
     }
 }
