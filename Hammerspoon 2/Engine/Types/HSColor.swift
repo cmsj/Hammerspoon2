@@ -86,6 +86,9 @@ import Observation
 
     var color: Color
 
+    /// The colour for AppKit APIs
+    var nsColor: NSColor { NSColor(color) }
+
     init(color: Color) {
         self.color = color
         super.init()
@@ -171,6 +174,15 @@ import Observation
     }
 
     // MARK: - Helper Methods
+
+    /// The AppKit colour for an HSColor or a valid hex string, or nil for anything else. Unlike
+    /// `fromJSValue`, an invalid hex string is rejected rather than turned into black.
+    static func nsColor(from value: JSValue) -> NSColor? {
+        if value.isString {
+            return value.toString().flatMap(parseHex).map { NSColor($0) }
+        }
+        return (value.toObjectOf(HSColor.self) as? HSColor)?.nsColor
+    }
 
     /// Create an HSColor from a JSValue (supports hex strings or HSColor objects)
     static func fromJSValue(_ value: JSValue) -> HSColor? {

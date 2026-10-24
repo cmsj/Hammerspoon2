@@ -259,6 +259,57 @@ struct HSMenuBarTests {
             #expect(harness.evalString("chosen.join(',')") == "popped,popped,attached")
         }
 
+        @Test("A menu entry's color colours its title, and other entries keep the standard colour")
+        func testMenuEntryColor() throws {
+            let harness = makeHarness()
+            harness.eval("var item = hs.menubar.create(true)")
+            let item = try item(in: harness)
+            defer { item.destroy() }
+            let entries = try #require(harness.evalValue("""
+                [{ title: 'Hex', color: '#FF0000' }, { title: 'Object', color: HSColor.rgb(0, 0, 1, 1) }, { title: 'Plain' }, { title: 'Bad', color: 42 }, { title: 'BadHex', color: '#GGG' }]
+            """))
+            let menu = try #require(item.makePopUpMenu(from: entries))
+            #expect(menu.items.map(\.title) == ["Hex", "Object", "Plain", "Bad", "BadHex"])
+
+            func titleColor(_ index: Int) -> NSColor? {
+                let attributed = menu.items[index].attributedTitle
+                return attributed?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+            }
+            let red = try #require(titleColor(0)?.usingColorSpace(.sRGB))
+            #expect(abs(red.redComponent - 1) < 0.01 && red.greenComponent < 0.01 && red.blueComponent < 0.01)
+            let blue = try #require(titleColor(1)?.usingColorSpace(.sRGB))
+            #expect(abs(blue.blueComponent - 1) < 0.01 && blue.redComponent < 0.01)
+            #expect(menu.items[0].attributedTitle?.string == "Hex")
+            #expect(menu.items[2].attributedTitle == nil)
+            #expect(menu.items[3].attributedTitle == nil)
+            #expect(menu.items[4].attributedTitle == nil)
+            #expect(!harness.hasException)
+        }
+
+        @Test("titleColor colours the menu bar title, and null restores the standard colour")
+        func testTitleColor() throws {
+            let harness = makeHarness()
+            harness.eval("""
+                var item = hs.menubar.create(true)
+                item.title = 'Countdown'
+                item.titleColor = HSColor.hex('#FF0000')
+            """)
+            let item = try item(in: harness)
+            defer { item.destroy() }
+            let button = try #require(item.button)
+            harness.expectEqual("item.titleColor.typeName", "HSColor")
+            #expect(button.title == "Countdown")
+            let color = button.attributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+            let red = try #require(color?.usingColorSpace(.sRGB))
+            #expect(abs(red.redComponent - 1) < 0.01 && red.greenComponent < 0.01)
+
+            harness.eval("item.titleColor = null")
+            harness.expectTrue("item.titleColor === null")
+            #expect(button.title == "Countdown")
+            #expect(button.attributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor != red)
+            #expect(!harness.hasException)
+        }
+
         @Test("Destroying the item disconnects its pop-up menu's functions")
         func testDestroyDisconnectsPopUpMenu() throws {
             let harness = makeHarness()
