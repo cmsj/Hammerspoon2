@@ -501,13 +501,17 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
         isDestroyed = true
         _removeWatcher()
         failAllWaiters(HSBluetoothError("Hammerspoon is shutting down"))
-        if cbConnection != nil || pendingConnection != nil, let record {
+        record?.removeOwner(self)
+        // Another object for the same device may still be using the connection
+        if holdsConnection, let record, !record.allOwners.contains(where: \.holdsConnection) {
             module?.existingCentral?.cancelPeripheralConnection(record.peripheral)
         }
         pendingConnection = nil
         cbConnection = nil
-        record?.removeOwner(self)
     }
+
+    /// Whether this object has opened, or is opening, a CoreBluetooth connection to the peripheral
+    var holdsConnection: Bool { cbConnection != nil || pendingConnection != nil }
 
     private func updateActivity() {
         let held = cbConnection == .explicit || isWatching
@@ -746,11 +750,11 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
                 throw HSBluetoothError("value must be a Uint8Array, an ArrayBuffer, an array of numbers from 0 to 255, or a string")
             }
             let found = try await self.characteristic(try Self.parseUUID(service), try Self.parseUUID(characteristic))
-            guard let peripheral = found.service?.peripheral else { throw HSBluetoothError("the device is no longer available") }
             if withoutResponse {
-                peripheral.writeValue(bytes, for: found, type: .withoutResponse)
+                try Self.connectedPeripheral(of: found).writeValue(bytes, for: found, type: .withoutResponse)
             } else {
                 try await self.serially(Key.write(found)) {
+                    let peripheral = try Self.connectedPeripheral(of: found)
                     try await self.wait(for: Key.write(found)) {
                         peripheral.writeValue(bytes, for: found, type: .withResponse)
                     }
@@ -914,9 +918,17 @@ final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
         // isNotifying only changes when a request finishes, so it's checked once earlier ones have
         try await serially(Key.notify(found)) {
             guard found.isNotifying != enabled else { return }
-            guard let peripheral = found.service?.peripheral else { throw HSBluetoothError("the device is no longer available") }
+            let peripheral = try Self.connectedPeripheral(of: found)
             try await self.wait(for: Key.notify(found)) { peripheral.setNotifyValue(enabled, for: found) }
         }
+    }
+
+    /// The peripheral a characteristic belongs to, checked again by queued requests: the device
+    /// may have disconnected while they waited their turn
+    private static func connectedPeripheral(of characteristic: CBCharacteristic) throws -> CBPeripheral {
+        guard let peripheral = characteristic.service?.peripheral else { throw HSBluetoothError("the device is no longer available") }
+        guard peripheral.state == .connected else { throw HSBluetoothError("the device disconnected") }
+        return peripheral
     }
 
     private static func parseUUID(_ string: String) throws -> CBUUID {
