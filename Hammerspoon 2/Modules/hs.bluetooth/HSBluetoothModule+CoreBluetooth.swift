@@ -205,21 +205,21 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
     nonisolated func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         let identifier = peripheral.identifier
         MainActor.assumeIsolated {
-            existingDevice(identifier: identifier)?.peripheralDidConnect()
+            for device in existingDevices(identifier: identifier) { device.peripheralDidConnect() }
         }
     }
 
     nonisolated func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         let identifier = peripheral.identifier
         MainActor.assumeIsolated {
-            existingDevice(identifier: identifier)?.peripheralDidFailToConnect(error)
+            for device in existingDevices(identifier: identifier) { device.peripheralDidFailToConnect(error) }
         }
     }
 
     nonisolated func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         let identifier = peripheral.identifier
         MainActor.assumeIsolated {
-            existingDevice(identifier: identifier)?.peripheralDidDisconnect(error)
+            for device in existingDevices(identifier: identifier) { device.peripheralDidDisconnect(error) }
         }
     }
 
@@ -254,32 +254,40 @@ extension HSBluetoothModule: CBCentralManagerDelegate, IOBluetoothDeviceInquiryD
             activeScan = scan
             pruneRecords()
 
+            // The countdown starts once BLE is ready, so time spent answering the Bluetooth
+            // permission prompt doesn't use up the scan
+            @MainActor func startCountdown() {
+                scan.timer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self, weak scan] _ in
+                    MainActor.assumeIsolated {
+                        guard let self, let scan, self.activeScan === scan else { return }
+                        self.endScan(nil)
+                    }
+                }
+            }
+
             if classic {
                 startInquiry(seconds: seconds)
             }
-            if lowEnergy {
+            if !lowEnergy {
+                startCountdown()
+            } else {
                 Task {
                     do {
                         let central = try await readyCentral()
                         guard activeScan === scan else { return }
+                        startCountdown()
                         central.scanForPeripherals(withServices: services.isEmpty ? nil : services,
                                                    options: [CBCentralManagerScanOptionAllowDuplicatesKey: allowDuplicates])
                         AKDebug("hs.bluetooth.scan(): scanning for BLE peripherals")
                     } catch {
                         guard activeScan === scan else { return }
                         if classic {
+                            startCountdown()
                             AKWarning("hs.bluetooth.scan(): only scanning for classic devices: \(error.localizedDescription)")
                         } else {
                             endScan(error as? HSBluetoothError ?? HSBluetoothError(error.localizedDescription))
                         }
                     }
-                }
-            }
-
-            scan.timer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self, weak scan] _ in
-                MainActor.assumeIsolated {
-                    guard let self, let scan, self.activeScan === scan else { return }
-                    self.endScan(nil)
                 }
             }
         }

@@ -289,7 +289,12 @@ nonisolated enum HSBluetoothEvent: String, HSEventName {
     }
 
     func existingDevice(identifier: UUID) -> HSBluetoothDevice? {
-        devices.allObjects.first { $0.record?.peripheral.identifier == identifier }
+        existingDevices(identifier: identifier).first
+    }
+
+    /// Every object using a peripheral: a paired device and a scanned BLE object can share one
+    func existingDevices(identifier: UUID) -> [HSBluetoothDevice] {
+        devices.allObjects.filter { $0.record?.peripheral.identifier == identifier }
     }
 
     // MARK: - Watcher

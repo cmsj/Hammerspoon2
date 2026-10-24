@@ -282,7 +282,7 @@ import CoreBluetooth
     ///
     /// Listeners receive:
     ///  - `"connected"`, `"disconnected"`: no arguments
-    ///  - `"value"`: `(service, characteristic, value)`, the UUIDs and the new value (a Uint8Array) of a characteristic you subscribed to
+    ///  - `"value"`: `(service, characteristic, value)`, the UUIDs and the new value (a Uint8Array) of a characteristic you subscribed to. While subscribed, values fetched by `readValue()` arrive here too
     ///
     /// A device with listeners keeps working after you drop your reference to it.
     /// - Parameters:
@@ -357,7 +357,7 @@ nonisolated enum HSBluetoothDeviceEvent: String, HSEventName {
 /// What CoreBluetooth has told us about one BLE peripheral. The module keeps one per peripheral
 /// it has seen, so the latest advertisement and readings survive the device object being
 /// garbage collected and recreated.
-final class BluetoothPeripheralRecord {
+final class BluetoothPeripheralRecord: NSObject, CBPeripheralDelegate {
     struct Advertisement {
         var localName: String?
         var isConnectable: Bool?
@@ -384,14 +384,55 @@ final class BluetoothPeripheralRecord {
     var lastSeen: Date?
     var batteryLevel: Int?
 
+    /// The device objects using this peripheral. Usually one, but a scan can make an object for
+    /// a paired device's BLE side before `pairedDevices()` makes the paired one, so every
+    /// CoreBluetooth callback goes to each of them.
+    private let owners = NSHashTable<HSBluetoothDevice>.weakObjects()
+
     init(peripheral: CBPeripheral) {
         self.peripheral = peripheral
+        super.init()
+        peripheral.delegate = self
+    }
+
+    func addOwner(_ device: HSBluetoothDevice) { owners.add(device) }
+    func removeOwner(_ device: HSBluetoothDevice) { owners.remove(device) }
+    var allOwners: [HSBluetoothDevice] { owners.allObjects }
+
+    // MARK: - CBPeripheralDelegate (delivered on the main queue, see HSBluetoothModule.makeCentral)
+
+    private nonisolated func forEachOwner(_ body: (HSBluetoothDevice) -> Void) {
+        MainActor.assumeIsolated { allOwners }.forEach(body)
+    }
+
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        forEachOwner { $0.peripheral(peripheral, didDiscoverServices: error) }
+    }
+
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        forEachOwner { $0.peripheral(peripheral, didDiscoverCharacteristicsFor: service, error: error) }
+    }
+
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        forEachOwner { $0.peripheral(peripheral, didUpdateValueFor: characteristic, error: error) }
+    }
+
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        forEachOwner { $0.peripheral(peripheral, didWriteValueFor: characteristic, error: error) }
+    }
+
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        forEachOwner { $0.peripheral(peripheral, didUpdateNotificationStateFor: characteristic, error: error) }
+    }
+
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
+        forEachOwner { $0.peripheral(peripheral, didReadRSSI: RSSI, error: error) }
     }
 }
 
 @_documentation(visibility: private)
 @MainActor
-@objc class HSBluetoothDevice: NSObject, HSBluetoothDeviceAPI, HSTrackedObject, CBPeripheralDelegate {
+@objc class HSBluetoothDevice: NSObject, HSBluetoothDeviceAPI, HSTrackedObject {
     @objc var typeName = "HSBluetoothDevice"
 
     private weak var module: HSBluetoothModule?
@@ -401,7 +442,10 @@ final class BluetoothPeripheralRecord {
     let classic: IOBluetoothDevice?
     /// The device's BLE side, once Hammerspoon has seen it through CoreBluetooth
     private(set) var record: BluetoothPeripheralRecord? {
-        didSet { record?.peripheral.delegate = self }
+        didSet {
+            oldValue?.removeOwner(self)
+            record?.addOwner(self)
+        }
     }
 
     /// How Hammerspoon holds a CoreBluetooth connection to the peripheral, if it does
@@ -445,7 +489,7 @@ final class BluetoothPeripheralRecord {
         self.classic = classic
         self.record = record
         super.init()
-        record?.peripheral.delegate = self
+        record?.addOwner(self)
     }
 
     isolated deinit {
@@ -462,9 +506,7 @@ final class BluetoothPeripheralRecord {
         }
         pendingConnection = nil
         cbConnection = nil
-        if record?.peripheral.delegate === self {
-            record?.peripheral.delegate = nil
-        }
+        record?.removeOwner(self)
     }
 
     private func updateActivity() {
@@ -708,8 +750,10 @@ final class BluetoothPeripheralRecord {
             if withoutResponse {
                 peripheral.writeValue(bytes, for: found, type: .withoutResponse)
             } else {
-                try await self.wait(for: Key.write(found)) {
-                    peripheral.writeValue(bytes, for: found, type: .withResponse)
+                try await self.serially(Key.write(found)) {
+                    try await self.wait(for: Key.write(found)) {
+                        peripheral.writeValue(bytes, for: found, type: .withResponse)
+                    }
                 }
             }
             return nil
@@ -743,8 +787,9 @@ final class BluetoothPeripheralRecord {
 
     private func connectLE(_ record: BluetoothPeripheralRecord, as kind: CBConnection) async throws {
         let central = try await requireCentral()
-        if record.peripheral.state == .connected, cbConnection != nil {
-            if kind == .explicit { cbConnection = .explicit }
+        // Already connected through Hammerspoon's central, perhaps by another object for the same device
+        if record.peripheral.state == .connected {
+            if kind == .explicit || cbConnection == nil { cbConnection = kind }
             return
         }
         do {
@@ -863,12 +908,15 @@ final class BluetoothPeripheralRecord {
 
     private func setNotifying(_ enabled: Bool, _ service: String, _ characteristic: String) async throws {
         let found = try await self.characteristic(try Self.parseUUID(service), try Self.parseUUID(characteristic))
-        guard found.isNotifying != enabled else { return }
         guard !enabled || found.properties.contains(.notify) || found.properties.contains(.indicate) else {
             throw HSBluetoothError("characteristic \(found.uuid.uuidString) doesn't support notifications")
         }
-        guard let peripheral = found.service?.peripheral else { throw HSBluetoothError("the device is no longer available") }
-        try await wait(for: Key.notify(found)) { peripheral.setNotifyValue(enabled, for: found) }
+        // isNotifying only changes when a request finishes, so it's checked once earlier ones have
+        try await serially(Key.notify(found)) {
+            guard found.isNotifying != enabled else { return }
+            guard let peripheral = found.service?.peripheral else { throw HSBluetoothError("the device is no longer available") }
+            try await self.wait(for: Key.notify(found)) { peripheral.setNotifyValue(enabled, for: found) }
+        }
     }
 
     private static func parseUUID(_ string: String) throws -> CBUUID {
@@ -892,7 +940,7 @@ final class BluetoothPeripheralRecord {
         return Data(bytes)
     }
 
-    // MARK: - CBPeripheralDelegate (delivered on the main queue, see HSBluetoothModule.makeCentral)
+    // MARK: - CoreBluetooth callbacks, forwarded by the record (on the main queue, see HSBluetoothModule.makeCentral)
 
     nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         MainActor.assumeIsolated { settle(Key.services, error) }
@@ -915,9 +963,10 @@ final class BluetoothPeripheralRecord {
             if error == nil, isBatteryLevel, let level = value.first {
                 record?.batteryLevel = Int(level)
             }
-            if waiters[key] != nil {
-                settle(key, error)
-            } else if error == nil, isNotifying, let serviceUUID {
+            // A read's reply and a notification arrive the same way, so while subscribed every
+            // value goes to "value" listeners, whether or not a read is waiting for it too
+            settle(key, error)
+            if error == nil, isNotifying, let serviceUUID {
                 deliverValue(value, service: serviceUUID, characteristic: uuid)
             }
         }
@@ -989,6 +1038,27 @@ final class BluetoothPeripheralRecord {
                 }
             }
         }
+    }
+
+    /// The last operation queued in each lane of `serially(_:_:)`
+    private var lanes: [String: Task<Void, Never>] = [:]
+
+    /// Runs `body` once every operation queued earlier in `lane` has finished. Used where
+    /// requests mustn't share one callback the way `wait(for:)` lets them: CoreBluetooth answers a
+    /// characteristic's writes (or notification changes) with one callback that doesn't say
+    /// which request it is for, and each write has its own bytes to send.
+    private func serially(_ lane: String, _ body: @escaping @MainActor () async throws -> Void) async throws {
+        let previous = lanes[lane]
+        let operation = Task {
+            await previous?.value
+            try await body()
+        }
+        let finished = Task { _ = await operation.result }
+        lanes[lane] = finished
+        defer {
+            if lanes[lane] == finished { lanes[lane] = nil }
+        }
+        try await operation.value
     }
 
     private func settle(_ key: String, _ error: Error?) {
