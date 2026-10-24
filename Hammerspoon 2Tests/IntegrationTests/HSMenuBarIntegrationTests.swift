@@ -266,10 +266,10 @@ struct HSMenuBarTests {
             let item = try item(in: harness)
             defer { item.destroy() }
             let entries = try #require(harness.evalValue("""
-                [{ title: 'Hex', color: '#FF0000' }, { title: 'Object', color: HSColor.rgb(0, 0, 1, 1) }, { title: 'Plain' }, { title: 'Bad', color: 42 }]
+                [{ title: 'Hex', color: '#FF0000' }, { title: 'Object', color: HSColor.rgb(0, 0, 1, 1) }, { title: 'Plain' }, { title: 'Bad', color: 42 }, { title: 'BadHex', color: '#GGG' }]
             """))
             let menu = try #require(item.makePopUpMenu(from: entries))
-            #expect(menu.items.map(\.title) == ["Hex", "Object", "Plain", "Bad"])
+            #expect(menu.items.map(\.title) == ["Hex", "Object", "Plain", "Bad", "BadHex"])
 
             func titleColor(_ index: Int) -> NSColor? {
                 let attributed = menu.items[index].attributedTitle
@@ -282,6 +282,7 @@ struct HSMenuBarTests {
             #expect(menu.items[0].attributedTitle?.string == "Hex")
             #expect(menu.items[2].attributedTitle == nil)
             #expect(menu.items[3].attributedTitle == nil)
+            #expect(menu.items[4].attributedTitle == nil)
             #expect(!harness.hasException)
         }
 

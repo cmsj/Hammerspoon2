@@ -90,9 +90,9 @@ struct JSMenuBuilder {
 
         if let colorValue = entry.objectForKeyedSubscript("color"),
            !colorValue.isUndefined, !colorValue.isNull {
-            if let color = HSColor.fromJSValue(colorValue) {
+            if let color = HSColor.nsColor(from: colorValue) {
                 item.attributedTitle = NSAttributedString(string: title, attributes: [
-                    .foregroundColor: color.nsColor,
+                    .foregroundColor: color,
                     .font: NSFont.menuFont(ofSize: 0),
                 ])
             } else {
